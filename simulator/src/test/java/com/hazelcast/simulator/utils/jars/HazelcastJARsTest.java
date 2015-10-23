@@ -138,7 +138,7 @@ public class HazelcastJARsTest {
         hazelcastJARs.upload("127.0.0.1", "simulatorHome");
 
         verify(bash, times(1)).ssh(eq("127.0.0.1"), contains(targetDir));
-        verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains(sourceDir), anyString());
+        verify(bash, times(1)).uploadToRemoteSimulatorDir(eq("127.0.0.1"), contains(sourceDir), anyString());
         verifyNoMoreInteractions(bash);
     }
 
@@ -149,7 +149,7 @@ public class HazelcastJARsTest {
         hazelcastJARs.upload("127.0.0.1", "simulatorHome");
 
         verify(bash, times(1)).ssh(eq("127.0.0.1"), contains(targetDir));
-        verify(bash, times(1)).uploadToAgentSimulatorDir(eq("127.0.0.1"), contains("simulatorHome"), anyString());
+        verify(bash, times(1)).uploadToRemoteSimulatorDir(eq("127.0.0.1"), contains("simulatorHome"), anyString());
         verifyNoMoreInteractions(bash);
     }
 

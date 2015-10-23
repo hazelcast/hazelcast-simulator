@@ -81,10 +81,10 @@ public class HazelcastJARs {
 
             if (OUT_OF_THE_BOX.equals(versionSpec)) {
                 // upload Hazelcast JARs
-                bash.uploadToAgentSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "hz-lib/outofthebox");
+                bash.uploadToRemoteSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "hz-lib/outofthebox");
             } else if (!BRING_MY_OWN.equals(versionSpec)) {
                 // upload the actual Hazelcast JARs that are going to be used by the worker
-                bash.uploadToAgentSimulatorDir(ip, stringFileEntry.getValue() + "/*.jar", "hz-lib/" + versionDir);
+                bash.uploadToRemoteSimulatorDir(ip, stringFileEntry.getValue() + "/*.jar", "hz-lib/" + versionDir);
             }
         }
     }

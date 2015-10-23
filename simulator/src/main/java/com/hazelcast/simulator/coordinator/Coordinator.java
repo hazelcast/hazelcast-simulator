@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.GitInfo;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -48,7 +47,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
@@ -59,9 +57,6 @@ import static java.lang.String.format;
 public final class Coordinator {
 
     static final File SIMULATOR_HOME = getSimulatorHome();
-
-    private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
-    private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -149,10 +144,10 @@ public final class Coordinator {
     }
 
     private void uploadFiles() {
-        uploadUploadDirectory();
-        uploadWorkerClassPath();
-        uploadYourKitIfNeeded();
-        // TODO: copy the Hazelcast JARs
+        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(),
+                SIMULATOR_HOME.getAbsolutePath(), null, false, coordinatorParameters.getWorkerClassPath(),
+                workerParameters.getProfiler());
+        uploader.run();
     }
 
     private void startAgents() {
@@ -210,84 +205,6 @@ public final class Coordinator {
             });
         }
         spawner.awaitCompletion();
-    }
-
-    private void uploadUploadDirectory() {
-        try {
-            if (!UPLOAD_DIRECTORY.exists()) {
-                LOGGER.debug("Skipping upload, since no upload file in working directory");
-                return;
-            }
-
-            LOGGER.info(format("Starting uploading '%s' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
-            List<File> files = getFilesFromClassPath(UPLOAD_DIRECTORY.getAbsolutePath());
-            for (AgentData agentData : componentRegistry.getAgents()) {
-                String ip = agentData.getPublicAddress();
-                LOGGER.info(format("Uploading '%s' to agent %s", UPLOAD_DIRECTORY.getAbsolutePath(), ip));
-                for (File file : files) {
-                    bash.execute(format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/",
-                            props.get("SSH_OPTIONS", ""),
-                            file,
-                            props.get("USER"),
-                            ip,
-                            getSimulatorVersion(),
-                            testSuite.getId()));
-                }
-                LOGGER.info("    " + ip + " copied");
-            }
-            LOGGER.info(format("Finished uploading '%s' to agents", UPLOAD_DIRECTORY.getAbsolutePath()));
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not copy upload directory to agents", e);
-        }
-    }
-
-    private void uploadWorkerClassPath() {
-        String workerClassPath = coordinatorParameters.getWorkerClassPath();
-        if (workerClassPath == null) {
-            return;
-        }
-
-        try {
-            List<File> upload = getFilesFromClassPath(workerClassPath);
-            LOGGER.info(format("Copying %d files from workerClasspath '%s' to agents", upload.size(), workerClassPath));
-            for (AgentData agentData : componentRegistry.getAgents()) {
-                String ip = agentData.getPublicAddress();
-                for (File file : upload) {
-                    bash.execute(
-                            format("rsync --ignore-existing -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/workers/%s/lib",
-                                    props.get("SSH_OPTIONS", ""),
-                                    file.getAbsolutePath(),
-                                    props.get("USER"),
-                                    ip,
-                                    getSimulatorVersion(),
-                                    testSuite.getId()));
-                }
-                LOGGER.info("    " + ip + " copied");
-            }
-            LOGGER.info(format("Finished copying workerClasspath '%s' to agents", workerClassPath));
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not upload worker classpath to agents", e);
-        }
-    }
-
-    private void uploadYourKitIfNeeded() {
-        if (workerParameters.getProfiler() != JavaProfiler.YOURKIT) {
-            return;
-        }
-
-        // TODO: in the future we'll only upload the requested YourKit library (32 or 64 bit)
-        LOGGER.info("Uploading YourKit dependencies to agents");
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            String ip = agentData.getPublicAddress();
-            bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/yourkit", getSimulatorVersion()));
-
-            bash.execute(format("rsync --ignore-existing -avv -e \"ssh %s\" %s/yourkit %s@%s:hazelcast-simulator-%s/",
-                    props.get("SSH_OPTIONS", ""),
-                    getSimulatorHome().getAbsolutePath(),
-                    props.get("USER"),
-                    ip,
-                    getSimulatorVersion()));
-        }
     }
 
     private void startWorkers() {
