@@ -4,7 +4,6 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.TestProcessorManager;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
@@ -15,7 +14,7 @@ import static java.lang.String.format;
 
 /**
  * A {@link SimpleChannelInboundHandler} to to deserialize a {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}
- * from a received {@link SimulatorMessage} and execute it on the {@link OperationProcessor} of the addressed Simulator Test.
+ * from a received {@link SimulatorMessage} and execute it on the {@link TestProcessorManager} of the addressed Simulator Test.
  */
 public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<SimulatorMessage> {
 
