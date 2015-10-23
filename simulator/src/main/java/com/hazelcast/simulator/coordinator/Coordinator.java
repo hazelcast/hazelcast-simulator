@@ -315,7 +315,7 @@ public final class Coordinator {
         }
 
         long elapsed = getElapsedSeconds(started);
-        LOGGER.info((format("Successfully started a grand total of %s worker JVMs after %s seconds", totalWorkerCount, elapsed)));
+        LOGGER.info((format("Successfully started a grand total of %s worker JVMs (%s seconds)", totalWorkerCount, elapsed)));
     }
 
     void runTestSuite() {
