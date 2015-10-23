@@ -6,7 +6,6 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,25 +51,23 @@ public class ComponentRegistry {
         return agents.get(0);
     }
 
-    public void addWorkers(SimulatorAddress parentAddress, List<WorkerJvmSettings> settingsList) {
+    public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerJvmSettings> settingsList) {
         for (WorkerJvmSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
             workers.add(workerData);
         }
     }
 
-    public void removeWorker(SimulatorAddress workerAddress) {
-        Iterator<WorkerData> iterator = workers.iterator();
-        while (iterator.hasNext()) {
-            WorkerData workerData = iterator.next();
+    public synchronized void removeWorker(SimulatorAddress workerAddress) {
+        for (WorkerData workerData : workers) {
             if (workerData.getAddress().equals(workerAddress)) {
-                iterator.remove();
+                workers.remove(workerData);
                 break;
             }
         }
     }
 
-    public void removeWorker(WorkerData workerData) {
+    public synchronized void removeWorker(WorkerData workerData) {
         workers.remove(workerData);
     }
 
