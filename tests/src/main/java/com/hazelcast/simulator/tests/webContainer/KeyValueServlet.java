@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.hazelcast.simulator.tests.webContainer;
 
 import com.hazelcast.logging.ILogger;
@@ -29,12 +28,15 @@ import java.util.regex.Pattern;
 
 import static com.hazelcast.logging.Logger.getLogger;
 
-/*
-* A servlet to run inside a web container.  This servlet accepts http Put and Get requests,  and implements a simple
-* key value rest service.  a http put request with a uri of "key/123/789"  will put key 123 and value 789 into the
-* session, for this user,  also the value put "789" is written back to the user.
-* A http get request with a uri of "key/123"  will get the value for key 123 from this clients session.
-* */
+/**
+ * A servlet to run inside a web container. This servlet accepts HTTP PUT and GET requests and implements a simple
+ * key value REST service.
+ *
+ * An HTTP PUT request with a uri of "key/123/789"  will put key 123 and value 789 into the session for this user.
+ * Also the value put "789" is written back to the user.
+ *
+ * An HTTP GET request with a uri of "key/123"  will get the value for key 123 from this clients session.
+ */
 public class KeyValueServlet extends HttpServlet {
 
     private static final ILogger LOGGER = getLogger(KeyValueServlet.class);

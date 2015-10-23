@@ -14,7 +14,6 @@
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
  */
-
 package com.hazelcast.simulator.tests.map.helpers;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
