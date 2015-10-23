@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
@@ -288,7 +289,7 @@ public final class Provisioner {
         echo(format("Pausing for machine warmup... (%d sec)", MACHINE_WARMUP_WAIT_SECONDS));
         sleepSeconds(MACHINE_WARMUP_WAIT_SECONDS);
 
-        echo("Duration: " + secondsToHuman(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)));
+        echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
         echoImportant(format("Successfully provisioned %s %s machines", delta, props.get("CLOUD_PROVIDER")));
     }
 
@@ -317,7 +318,7 @@ public final class Provisioner {
         LOGGER.info("Updating " + agentsFile.getAbsolutePath());
         AgentsFile.save(agentsFile, componentRegistry);
 
-        echo("Duration: " + secondsToHuman(TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started)));
+        echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
         echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, componentRegistry.agentCount());
 
         if (destroyedCount != count) {

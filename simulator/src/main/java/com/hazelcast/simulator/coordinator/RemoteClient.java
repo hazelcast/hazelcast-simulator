@@ -22,10 +22,10 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
+import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
@@ -132,8 +132,9 @@ public class RemoteClient {
             if (complete) {
                 return;
             }
-            long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
-            LOGGER.info(prefix + "Waiting " + secondsToHuman(duration) + " for " + testPhase.desc() + " completion");
+            long elapsed = getElapsedSeconds(started);
+            LOGGER.info(prefix + "Waiting " + secondsToHuman(elapsed) + " for " + testPhase.desc() + " completion");
+
             sleepSeconds(WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS);
         }
     }

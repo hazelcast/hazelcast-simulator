@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public final class CommonUtils {
 
@@ -164,6 +165,10 @@ public final class CommonUtils {
         }
         long randomValue = Math.abs(random.nextLong() + 1);
         sleepNanos(randomValue % maxDelayNanos);
+    }
+
+    public static long getElapsedSeconds(long started) {
+        return NANOSECONDS.toSeconds(System.nanoTime() - started);
     }
 
     public static void exitWithError() {

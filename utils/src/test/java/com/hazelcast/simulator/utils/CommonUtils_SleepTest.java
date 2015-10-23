@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
@@ -23,7 +24,7 @@ public class CommonUtils_SleepTest {
     public void testSleepSecondsZero() {
         long started = System.nanoTime();
         sleepSeconds(0);
-        long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
+        long duration = getElapsedSeconds(started);
 
         long durationLimit = TimeUnit.SECONDS.toSeconds(3);
         assertTrue(format("Expected sleep duration < %d s, but was %d", durationLimit, duration), duration < durationLimit);
@@ -33,7 +34,7 @@ public class CommonUtils_SleepTest {
     public void testSleepSeconds() {
         long started = System.nanoTime();
         sleepSeconds(1);
-        long duration = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
+        long duration = getElapsedSeconds(started);
 
         long durationLimit = TimeUnit.SECONDS.toSeconds(3);
         assertTrue(format("Expected sleep duration > 0 s, but was %d", duration), duration > 0);

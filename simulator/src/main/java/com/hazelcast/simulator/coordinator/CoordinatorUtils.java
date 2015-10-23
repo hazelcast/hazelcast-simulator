@@ -180,8 +180,4 @@ final class CoordinatorUtils {
         LOGGER.info("Shutdown of all workers completed...");
         return true;
     }
-
-    static long getElapsedSeconds(long started) {
-        return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started);
-    }
 }

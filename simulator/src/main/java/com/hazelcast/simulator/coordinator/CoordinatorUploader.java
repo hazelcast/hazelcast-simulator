@@ -14,7 +14,7 @@ import java.util.List;
 
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_VERSION;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getElapsedSeconds;
+import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
