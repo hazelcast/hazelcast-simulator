@@ -37,7 +37,7 @@ public enum OperationType {
 
     INIT_TEST_SUITE(InitTestSuiteOperation.class, 6),
 
-    IS_PHASE_COMPLETED(IsPhaseCompletedOperation.class, 7),
+    PHASE_COMPLETED(PhaseCompletedOperation.class, 7),
     START_TEST_PHASE(StartTestPhaseOperation.class, 8),
     START_TEST(StartTestOperation.class, 9),
     STOP_TEST(StopTestOperation.class, 10),

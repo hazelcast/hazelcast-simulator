@@ -13,28 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.test.TestPhase;
 
-/**
- * Checks if a {@link TestPhase} of a Simulator test is still running.
- */
-public class IsPhaseCompletedOperation implements SimulatorOperation {
+public interface TestPhaseListener {
 
-    private final String testId;
-    private final String testPhase;
-
-    public IsPhaseCompletedOperation(String testId, TestPhase testPhase) {
-        this.testId = testId;
-        this.testPhase = testPhase.name();
-    }
-
-    public String getTestId() {
-        return testId;
-    }
-
-    public TestPhase getTestPhase() {
-        return TestPhase.valueOf(testPhase);
-    }
+    void completed(TestPhase testPhase);
 }

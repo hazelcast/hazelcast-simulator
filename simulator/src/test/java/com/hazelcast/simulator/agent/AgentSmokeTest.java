@@ -8,6 +8,8 @@ import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
+import com.hazelcast.simulator.coordinator.TestPhaseListener;
+import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -34,8 +36,9 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Collections;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
@@ -49,8 +52,8 @@ import static org.junit.Assert.assertTrue;
 
 public class AgentSmokeTest {
 
-    private static final String AGENT_IP_ADDRESS = System.getProperty("agentBindAddress", "127.0.0.1");
-    private static final int TEST_RUNTIME_SECONDS = Integer.parseInt(System.getProperty("testRuntimeSeconds", "5"));
+    private static final String AGENT_IP_ADDRESS = "127.0.0.1";
+    private static final int TEST_RUNTIME_SECONDS = 3;
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
     private static final Logger ROOT_LOGGER = Logger.getRootLogger();
@@ -61,6 +64,7 @@ public class AgentSmokeTest {
 
     private static FailureContainer failureContainer;
 
+    private static TestPhaseListenerContainer testPhaseListenerContainer;
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
 
@@ -82,11 +86,13 @@ public class AgentSmokeTest {
 
         agentStarter = new AgentStarter();
 
+        testPhaseListenerContainer = new TestPhaseListenerContainer();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("agentSmokeTest", null);
 
-        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer, failureContainer);
+        coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer, performanceStateContainer,
+                testHistogramContainer, failureContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
@@ -151,16 +157,19 @@ public class AgentSmokeTest {
         TestSuite testSuite = new TestSuite();
         remoteClient.initTestSuite(testSuite);
 
+        TestPhaseListenerImpl testPhaseListener = new TestPhaseListenerImpl();
+        testPhaseListenerContainer.addListener(testCase.getId(), testPhaseListener);
+
         LOGGER.info("Creating workers...");
         createWorkers();
 
         LOGGER.info("InitTest phase...");
         remoteClient.sendToAllWorkers(new CreateTestOperation(testCase));
 
-        runPhase(testCase, TestPhase.SETUP);
+        runPhase(testPhaseListener, testCase, TestPhase.SETUP);
 
-        runPhase(testCase, TestPhase.LOCAL_WARMUP);
-        runPhase(testCase, TestPhase.GLOBAL_WARMUP);
+        runPhase(testPhaseListener, testCase, TestPhase.LOCAL_WARMUP);
+        runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_WARMUP);
 
         LOGGER.info("Starting run phase...");
         remoteClient.sendToAllWorkers(new StartTestOperation(testCase.getId(), false));
@@ -171,13 +180,13 @@ public class AgentSmokeTest {
 
         LOGGER.info("Stopping test...");
         remoteClient.sendToAllWorkers(new StopTestOperation(testCase.getId()));
-        remoteClient.waitForPhaseCompletion("", testCase.getId(), TestPhase.RUN);
+        testPhaseListener.await(TestPhase.RUN);
 
-        runPhase(testCase, TestPhase.GLOBAL_VERIFY);
-        runPhase(testCase, TestPhase.LOCAL_VERIFY);
+        runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_VERIFY);
+        runPhase(testPhaseListener, testCase, TestPhase.LOCAL_VERIFY);
 
-        runPhase(testCase, TestPhase.GLOBAL_TEARDOWN);
-        runPhase(testCase, TestPhase.LOCAL_TEARDOWN);
+        runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_TEARDOWN);
+        runPhase(testPhaseListener, testCase, TestPhase.LOCAL_TEARDOWN);
 
         LOGGER.info("Terminating workers...");
         remoteClient.terminateWorkers(false);
@@ -205,10 +214,10 @@ public class AgentSmokeTest {
         remoteClient.createWorkers(Collections.singletonList(agentLayout), false);
     }
 
-    private static void runPhase(TestCase testCase, TestPhase testPhase) throws TimeoutException {
+    private static void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
         remoteClient.sendToAllWorkers(new StartTestPhaseOperation(testCase.getId(), testPhase));
-        remoteClient.waitForPhaseCompletion("", testCase.getId(), testPhase);
+        listener.await(testPhase);
     }
 
     private static Queue<FailureOperation> getFailureOperations(final int expectedFailures) {
@@ -222,6 +231,26 @@ public class AgentSmokeTest {
             });
         }
         return failureContainer.getFailureOperations();
+    }
+
+    private static final class TestPhaseListenerImpl implements TestPhaseListener {
+
+        private final ConcurrentMap<TestPhase, CountDownLatch> latches = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+
+        public TestPhaseListenerImpl() {
+            for (TestPhase testPhase : TestPhase.values()) {
+                latches.put(testPhase, new CountDownLatch(1));
+            }
+        }
+
+        @Override
+        public void completed(TestPhase testPhase) {
+            latches.get(testPhase).countDown();
+        }
+
+        public void await(TestPhase testPhase) throws Exception {
+            latches.get(testPhase).await();
+        }
     }
 
     private static final class AgentStarter {

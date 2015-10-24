@@ -122,6 +122,30 @@ public class WorkerParametersTest {
         assertFalse(workerParameters.getClientHzConfig().contains("<!--MEMBERS-->"));
     }
 
+    @Test
+    public void testGetRunPhaseLogIntervalSeconds_noPerformanceMonitor() {
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
+
+        int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(5);
+        assertEquals(5, intervalSeconds);
+    }
+
+    @Test
+    public void testGetRunPhaseLogIntervalSeconds_withPerformanceMonitor_overPerformanceMonitorInterval() {
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true);
+
+        int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(5000);
+        assertEquals(1234, intervalSeconds);
+    }
+
+    @Test
+    public void testGetRunPhaseLogIntervalSeconds_withPerformanceMonitor_belowPerformanceMonitorInterval() {
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true);
+
+        int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(30);
+        assertEquals(30, intervalSeconds);
+    }
+
     private ComponentRegistry getComponentRegistryMock() {
         List<AgentData> agents = new ArrayList<AgentData>();
         for (int i = 1; i <= 5; i++) {

@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -194,11 +195,21 @@ public class CoordinatorUtilsTest {
 
     @Test(timeout = 10000)
     public void testWaitForWorkerShutdown_withTimeout() {
-        final ConcurrentHashMap<SimulatorAddress, Boolean> finishedWorkers = new ConcurrentHashMap<SimulatorAddress, Boolean>();
+        ConcurrentHashMap<SimulatorAddress, Boolean> finishedWorkers = new ConcurrentHashMap<SimulatorAddress, Boolean>();
         finishedWorkers.put(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), true);
 
         boolean success = waitForWorkerShutdown(3, finishedWorkers.keySet(), 1);
         assertFalse(success);
+    }
+
+    @Test
+    public void testLogFailureInfo_noFailures() {
+        logFailureInfo(0);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testLogFailureInfo_withFailures() {
+        logFailureInfo(1);
     }
 
     private void assertAgentMemberLayout(int index, AgentMemberMode mode, int memberCount, int clientCount) {

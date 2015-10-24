@@ -1,9 +1,13 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -14,12 +18,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Collections;
 
 import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
+import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doThrow;
@@ -160,9 +166,19 @@ public class CoordinatorRunTestSuiteTest {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
+        when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
 
         Coordinator coordinator = new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite);
         coordinator.setRemoteClient(remoteClient);
+
+        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
+        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
+
+        ComponentRegistry componentRegistry = coordinator.getComponentRegistry();
+        SimulatorAddress agentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
+
+        new TestPhaseCompleter(coordinator);
 
         return coordinator;
     }
@@ -170,9 +186,8 @@ public class CoordinatorRunTestSuiteTest {
     private void verifyRemoteClient(Coordinator coordinator) throws Exception {
         boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = testSuite.size();
-        int phaseNumber = TestPhase.values().length;
         int executeOnFirstWorkerTimes = 0;
-        int executeOnAllWorkersTimes = 2; // InitCommand and StopCommand
+        int executeOnAllWorkersTimes = 2; // CreateTestOperation and StopTestOperation
         for (TestPhase testPhase : TestPhase.values()) {
             if (testPhase.desc().startsWith("global")) {
                 executeOnFirstWorkerTimes++;
@@ -180,20 +195,17 @@ public class CoordinatorRunTestSuiteTest {
                 executeOnAllWorkersTimes++;
             }
         }
-        int waitForPhaseCompletionTimes = phaseNumber;
         if (testSuite.getDurationSeconds() == 0) {
             // no StopCommand is sent
             executeOnAllWorkersTimes--;
         } else if (testSuite.isWaitForTestCase()) {
             // has duration and waitForTestCase
-            waitForPhaseCompletionTimes++;
             verifyExecuteOnAllWorkersWithRange = true;
         }
         if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
             // no GenericCommand for global and local verify phase are sent
             executeOnFirstWorkerTimes--;
             executeOnAllWorkersTimes--;
-            waitForPhaseCompletionTimes -= 2;
         }
 
         if (verifyExecuteOnAllWorkersWithRange) {
@@ -204,16 +216,38 @@ public class CoordinatorRunTestSuiteTest {
             verify(remoteClient, times(executeOnAllWorkersTimes * numberOfTests)).sendToAllWorkers(any(SimulatorOperation.class));
         }
         verify(remoteClient, times(executeOnFirstWorkerTimes * numberOfTests)).sendToFirstWorker(any(SimulatorOperation.class));
-        if (verifyExecuteOnAllWorkersWithRange) {
-            verify(remoteClient, atLeast(waitForPhaseCompletionTimes - 1))
-                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), any(TestPhase.class));
-            verify(remoteClient, atMost(waitForPhaseCompletionTimes))
-                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest1"), any(TestPhase.class));
-            verify(remoteClient, atLeast(waitForPhaseCompletionTimes - 1))
-                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
-            verify(remoteClient, atMost(waitForPhaseCompletionTimes))
-                    .waitForPhaseCompletion(anyString(), eq("CoordinatorTest2"), any(TestPhase.class));
-        }
         verify(remoteClient, times(1)).terminateWorkers(true);
+    }
+
+    private class TestPhaseCompleter extends Thread {
+
+        private final TestPhaseListenerContainer testPhaseListenerContainer;
+        private final FailureContainer failureContainer;
+
+        public TestPhaseCompleter(Coordinator coordinator) {
+            super("TestPhaseCompleter");
+
+            this.testPhaseListenerContainer = coordinator.getTestPhaseListenerContainer();
+            this.failureContainer = coordinator.getFailureContainer();
+
+            setDaemon(true);
+            start();
+        }
+
+        @Override
+        public void run() {
+            for (TestPhase testPhase : TestPhase.values()) {
+                sleepMillis(100);
+                for (TestCase testCase : testSuite.getTestCaseList()) {
+                    testPhaseListenerContainer.updatePhaseCompletion(testCase.getId(), testPhase);
+                }
+            }
+
+            sleepMillis(100);
+            SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
+            FailureOperation operation = new FailureOperation("worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
+                    "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
+            failureContainer.addFailureOperation(operation);
+        }
     }
 }

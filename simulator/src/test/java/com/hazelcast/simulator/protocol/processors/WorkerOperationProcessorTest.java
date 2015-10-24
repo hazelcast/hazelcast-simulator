@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
-import com.hazelcast.simulator.protocol.operation.IsPhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
@@ -27,14 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.protocol.core.ResponseType.TEST_PHASE_IS_RUNNING;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -53,6 +51,8 @@ public class WorkerOperationProcessorTest {
 
     private final HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
+    private final ServerConnector workerConnector = mock(ServerConnector.class);
+
     private final Worker worker = mock(Worker.class);
 
     private Map<String, String> properties;
@@ -69,6 +69,7 @@ public class WorkerOperationProcessorTest {
         when(hazelcastInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
 
         when(worker.startPerformanceMonitor()).thenReturn(true);
+        when(worker.getServerConnector()).thenReturn(workerConnector);
 
         processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker);
     }
@@ -212,7 +213,7 @@ public class WorkerOperationProcessorTest {
 
         runPhase(DEFAULT_TEST_ID, TestPhase.LOCAL_VERIFY, EXCEPTION_DURING_OPERATION_EXECUTION);
 
-        exceptionLogger.assertException(IllegalStateException.class, IllegalStateException.class);
+        exceptionLogger.assertException(IllegalStateException.class);
     }
 
     @Test
@@ -246,19 +247,6 @@ public class WorkerOperationProcessorTest {
         return processor.process(operation, COORDINATOR);
     }
 
-    private void waitForPhaseCompletion(String testId, TestPhase testPhase) {
-        IsPhaseCompletedOperation operation = new IsPhaseCompletedOperation(testId, testPhase);
-        ResponseType responseType;
-        do {
-            sleepMillis(100);
-            responseType = processor.process(operation, COORDINATOR);
-            if (responseType == null) {
-                fail("Got null response on IsPhaseCompletedCommand");
-            }
-            LOGGER.info("Phase " + testPhase + ": " + responseType);
-        } while (TEST_PHASE_IS_RUNNING.equals(responseType));
-    }
-
     private void runPhase(String testId, TestPhase testPhase) {
         runPhase(testId, testPhase, SUCCESS);
     }
@@ -289,5 +277,11 @@ public class WorkerOperationProcessorTest {
             }
         };
         stopThread.start();
+    }
+
+    private void waitForPhaseCompletion(String testId, TestPhase testPhase) {
+        while (processor.getTestPhase(testId) == testPhase) {
+            sleepMillis(100);
+        }
     }
 }

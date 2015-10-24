@@ -24,6 +24,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
@@ -118,6 +119,11 @@ public final class MemberWorker implements Worker {
         if (workerPerformanceMonitor != null) {
             workerPerformanceMonitor.shutdown();
         }
+    }
+
+    @Override
+    public ServerConnector getServerConnector() {
+        return workerConnector;
     }
 
     private HazelcastInstance getHazelcastInstance() throws Exception {

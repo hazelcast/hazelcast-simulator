@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
 
 final class CoordinatorUtils {
@@ -179,5 +180,17 @@ final class CoordinatorUtils {
         }
         LOGGER.info("Shutdown of all workers completed...");
         return true;
+    }
+
+    static void logFailureInfo(int failureCount) {
+        if (failureCount > 0) {
+            LOGGER.fatal(HORIZONTAL_RULER);
+            LOGGER.fatal(failureCount + " failures have been detected!!!");
+            LOGGER.fatal(HORIZONTAL_RULER);
+            throw new CommandLineExitException(failureCount + " failures have been detected");
+        }
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("No failures have been detected!");
+        LOGGER.info(HORIZONTAL_RULER);
     }
 }

@@ -22,12 +22,10 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.IsPhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -40,15 +38,12 @@ import java.util.Map;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
-import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.String.format;
 
 public class RemoteClient {
 
-    private static final int WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS = 5;
     private static final int WORKER_POKE_INTERVAL_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
@@ -129,29 +124,6 @@ public class RemoteClient {
 
     public void initTestSuite(TestSuite testSuite) {
         sendToAllAgents(new InitTestSuiteOperation(testSuite));
-    }
-
-    public void waitForPhaseCompletion(String prefix, String testId, TestPhase testPhase) {
-        long started = System.nanoTime();
-        IsPhaseCompletedOperation operation = new IsPhaseCompletedOperation(testId, testPhase);
-        for (; ; ) {
-            Response response = coordinatorConnector.write(ALL_WORKERS, operation);
-            boolean complete = true;
-            for (Map.Entry<SimulatorAddress, ResponseType> responseTypeEntry : response.entrySet()) {
-                ResponseType responseType = responseTypeEntry.getValue();
-                if (responseType == ResponseType.TEST_PHASE_IS_RUNNING) {
-                    complete = false;
-                    break;
-                }
-            }
-            if (complete) {
-                return;
-            }
-            long elapsed = getElapsedSeconds(started);
-            LOGGER.info(prefix + "Waiting " + secondsToHuman(elapsed) + " for " + testPhase.desc() + " completion");
-
-            sleepSeconds(WAIT_FOR_PHASE_COMPLETION_INTERVAL_SECONDS);
-        }
     }
 
     public void sendToAllAgents(SimulatorOperation operation) {
