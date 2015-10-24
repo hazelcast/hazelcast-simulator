@@ -25,6 +25,7 @@ import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLay
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -55,11 +56,20 @@ public class RemoteClientTest {
     }
 
     @Test
-    public void testLogOnAllWorkers() {
+    public void testLogOnAllAgents() {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.logOnAllAgents("test");
 
         verify(coordinatorConnector).write(eq(ALL_AGENTS), any(LogOperation.class));
+        verifyNoMoreInteractions(coordinatorConnector);
+    }
+
+    @Test
+    public void testLogOnAllWorkers() {
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        remoteClient.logOnAllWorkers("test");
+
+        verify(coordinatorConnector).write(eq(ALL_WORKERS), any(LogOperation.class));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -101,6 +111,20 @@ public class RemoteClientTest {
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts, false);
+    }
+
+    @Test
+    public void testCreateWorkersAndTerminateWorkers_withPokeThread() {
+        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
+
+        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
+
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        remoteClient.createWorkers(memberLayouts, true);
+
+        sleepSeconds(1);
+
+        remoteClient.terminateWorkers(true);
     }
 
     @Test

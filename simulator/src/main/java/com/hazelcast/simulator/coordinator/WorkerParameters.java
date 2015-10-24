@@ -21,6 +21,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 /**
@@ -140,6 +141,13 @@ public class WorkerParameters {
 
     public int getWorkerPerformanceMonitorIntervalSeconds() {
         return workerPerformanceMonitorIntervalSeconds;
+    }
+
+    public int getRunPhaseLogIntervalSeconds(int runPhaseLogIntervalSeconds) {
+        if (!monitorPerformance) {
+            return runPhaseLogIntervalSeconds;
+        }
+        return min(workerPerformanceMonitorIntervalSeconds, runPhaseLogIntervalSeconds);
     }
 
     public JavaProfiler getProfiler() {

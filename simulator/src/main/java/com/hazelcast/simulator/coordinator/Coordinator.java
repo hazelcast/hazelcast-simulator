@@ -29,7 +29,6 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -40,6 +39,7 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
@@ -62,6 +62,7 @@ public final class Coordinator {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
+    private final TestPhaseListenerContainer testPhaseListenerContainer = new TestPhaseListenerContainer();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
     private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
 
@@ -116,14 +117,30 @@ public final class Coordinator {
         return testSuite;
     }
 
-    // just for testing
+    ComponentRegistry getComponentRegistry() {
+        return componentRegistry;
+    }
+
     FailureContainer getFailureContainer() {
         return failureContainer;
+    }
+
+    PerformanceStateContainer getPerformanceStateContainer() {
+        return performanceStateContainer;
+    }
+
+    RemoteClient getRemoteClient() {
+        return remoteClient;
     }
 
     // just for testing
     void setRemoteClient(RemoteClient remoteClient) {
         this.remoteClient = remoteClient;
+    }
+
+    // just for testing
+    TestPhaseListenerContainer getTestPhaseListenerContainer() {
+        return testPhaseListenerContainer;
     }
 
     private void logHeader(int agentCount) {
@@ -151,7 +168,7 @@ public final class Coordinator {
             startWorkers();
 
             runTestSuite();
-            logFailureInfo();
+            logFailureInfo(failureContainer.getFailureCount());
         } finally {
             shutdown();
         }
@@ -207,7 +224,8 @@ public final class Coordinator {
     }
 
     private void startCoordinatorConnector() {
-        coordinatorConnector = new CoordinatorConnector(performanceStateContainer, testHistogramContainer, failureContainer);
+        coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer, performanceStateContainer,
+                testHistogramContainer, failureContainer);
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
@@ -263,20 +281,18 @@ public final class Coordinator {
         echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
         echo(HORIZONTAL_RULER);
 
-        List<TestCaseRunner> testCaseRunners = new ArrayList<TestCaseRunner>(testCount);
         for (TestCase testCase : testSuite.getTestCaseList()) {
             echo(format("Configuration for test: %s%n%s", testCase.getId(), testCase));
-            TestCaseRunner runner = new TestCaseRunner(testCase, testSuite, this, remoteClient, failureContainer,
-                    performanceStateContainer, maxTestCaseIdLength, testPhaseSyncs);
-            testCaseRunners.add(runner);
+            TestCaseRunner runner = new TestCaseRunner(testCase, this, maxTestCaseIdLength, testPhaseSyncs);
+            testPhaseListenerContainer.addListener(testCase.getId(), runner);
         }
         echo(HORIZONTAL_RULER);
 
         long started = System.nanoTime();
         if (isParallel) {
-            runParallel(testCaseRunners);
+            runParallel();
         } else {
-            runSequential(testCaseRunners);
+            runSequential();
         }
 
         remoteClient.terminateWorkers(true);
@@ -308,14 +324,14 @@ public final class Coordinator {
         }
     }
 
-    private void runParallel(List<TestCaseRunner> testCaseRunners) {
+    private void runParallel() {
         ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
-        for (final TestCaseRunner runner : testCaseRunners) {
+        for (final TestPhaseListener testCaseRunner : testPhaseListenerContainer.getListeners()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        boolean success = runner.run();
+                        boolean success = ((TestCaseRunner) testCaseRunner).run();
                         if (!success && testSuite.isFailFast()) {
                             LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
                             // FIXME: we should abort here as logged
@@ -329,9 +345,9 @@ public final class Coordinator {
         spawner.awaitCompletion();
     }
 
-    private void runSequential(List<TestCaseRunner> testCaseRunners) {
-        for (TestCaseRunner runner : testCaseRunners) {
-            boolean success = runner.run();
+    private void runSequential() {
+        for (TestPhaseListener testCaseRunner : testPhaseListenerContainer.getListeners()) {
+            boolean success = ((TestCaseRunner) testCaseRunner).run();
             if (!success && testSuite.isFailFast()) {
                 LOGGER.info("Aborting testsuite due to failure");
                 break;
@@ -340,19 +356,6 @@ public final class Coordinator {
                 startWorkers();
             }
         }
-    }
-
-    private void logFailureInfo() {
-        int failureCount = failureContainer.getFailureCount();
-        if (failureCount > 0) {
-            LOGGER.fatal(HORIZONTAL_RULER);
-            LOGGER.fatal(failureCount + " failures have been detected!!!");
-            LOGGER.fatal(HORIZONTAL_RULER);
-            throw new CommandLineExitException(failureCount + " failures have been detected");
-        }
-        LOGGER.info(HORIZONTAL_RULER);
-        LOGGER.info("No failures have been detected!");
-        LOGGER.info(HORIZONTAL_RULER);
     }
 
     private void shutdown() throws Exception {
@@ -365,10 +368,10 @@ public final class Coordinator {
     }
 
     private void stopAgents() {
-        ThreadSpawner spawner = new ThreadSpawner("killAgents", true);
         final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
 
         echoLocal("Stopping %s Agents", componentRegistry.agentCount());
+        ThreadSpawner spawner = new ThreadSpawner("killAgents", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
@@ -393,12 +396,9 @@ public final class Coordinator {
     }
 
     private void echo(String msg, Object... args) {
-        echo(format(msg, args));
-    }
-
-    private void echo(String msg) {
-        remoteClient.logOnAllAgents(msg);
-        LOGGER.info(msg);
+        String message = format(msg, args);
+        remoteClient.logOnAllAgents(message);
+        LOGGER.info(message);
     }
 
     public static void main(String[] args) {

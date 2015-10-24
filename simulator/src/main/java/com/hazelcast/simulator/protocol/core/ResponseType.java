@@ -55,17 +55,7 @@ public enum ResponseType {
      * Is returned when an exception occurs during the execution of a
      * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}.
      */
-    EXCEPTION_DURING_OPERATION_EXECUTION(6),
-
-    /**
-     * Is returned if a {@link com.hazelcast.simulator.test.TestPhase} is still running.
-     */
-    TEST_PHASE_IS_RUNNING(7),
-
-    /**
-     * Is returned if a {@link com.hazelcast.simulator.test.TestPhase} is completed.
-     */
-    TEST_PHASE_IS_COMPLETED(8);
+    EXCEPTION_DURING_OPERATION_EXECUTION(6);
 
     private final int ordinal;
 

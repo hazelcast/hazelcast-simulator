@@ -13,17 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.test.TestPhase;
 
-public interface Worker {
+/**
+ * Notifies the Coordinator which {@link TestPhase} of a Simulator test is completed.
+ */
+public class PhaseCompletedOperation implements SimulatorOperation {
 
-    void shutdown();
+    private final String testId;
+    private final String testPhase;
 
-    boolean startPerformanceMonitor();
+    public PhaseCompletedOperation(String testId, TestPhase testPhase) {
+        this.testId = testId;
+        this.testPhase = testPhase.name();
+    }
 
-    void shutdownPerformanceMonitor();
+    public String getTestId() {
+        return testId;
+    }
 
-    ServerConnector getServerConnector();
+    public TestPhase getTestPhase() {
+        return TestPhase.valueOf(testPhase);
+    }
 }
