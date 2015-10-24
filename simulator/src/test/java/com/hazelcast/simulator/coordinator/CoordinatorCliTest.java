@@ -2,6 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,11 +14,14 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class CoordinatorCliTest {
+
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorCliTest.class);
 
     private static String userDir;
     private static File agentsFile;
@@ -35,6 +39,10 @@ public class CoordinatorCliTest {
 
         testSuiteFile = new File("test.properties");
         appendText("# CoordinatorCliTest", testSuiteFile);
+
+        LOGGER.info("old userDir: " + userDir);
+        LOGGER.info("new userDir: " + System.getProperty("user.dir"));
+        LOGGER.info("SIMULATOR_HOME: " + getSimulatorHome());
     }
 
     @AfterClass
