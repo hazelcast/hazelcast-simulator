@@ -167,7 +167,7 @@ final class CoordinatorUtils {
 
     static boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<SimulatorAddress> finishedWorkers,
                                          int timeoutSeconds) {
-        LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", expectedFinishedWorkerCount, timeoutSeconds));
+        LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", timeoutSeconds, expectedFinishedWorkerCount));
         long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
         while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
             sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
