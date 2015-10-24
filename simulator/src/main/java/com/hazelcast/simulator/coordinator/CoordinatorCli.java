@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
 
@@ -159,7 +160,7 @@ final class CoordinatorCli {
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
-            return SIMULATOR_HOME + File.separator + "conf" + File.separator + "hazelcast.xml";
+            return getSimulatorHome() + "/conf/hazelcast.xml";
         }
     }
 
@@ -169,7 +170,7 @@ final class CoordinatorCli {
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
-            return SIMULATOR_HOME + File.separator + "conf" + File.separator + "client-hazelcast.xml";
+            return getSimulatorHome() + "/conf/client-hazelcast.xml";
         }
     }
 
