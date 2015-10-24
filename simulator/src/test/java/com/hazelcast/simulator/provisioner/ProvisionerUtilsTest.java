@@ -13,6 +13,7 @@ import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScript
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -40,14 +41,14 @@ public class ProvisionerUtilsTest {
 
     @Test
     public void testGetInitScriptFile_loadFromSimulatorHome() {
-        File directory = new File("./conf/");
-        File initScriptFile = new File("./conf/" + INIT_SH_SCRIPT_NAME);
+        File directory = new File("conf/");
+        File initScriptFile = new File("conf/" + INIT_SH_SCRIPT_NAME);
         try {
             ensureExistingDirectory(directory);
             ensureExistingFile(initScriptFile);
 
-            File actualInitScriptFile = getInitScriptFile(".");
-            assertEquals(initScriptFile, actualInitScriptFile);
+            File actualInitScriptFile = getInitScriptFile(getSimulatorHome().getAbsolutePath());
+            assertEquals(initScriptFile.getAbsolutePath(), actualInitScriptFile.getAbsolutePath());
         } finally {
             deleteQuiet(initScriptFile);
             deleteQuiet(directory);

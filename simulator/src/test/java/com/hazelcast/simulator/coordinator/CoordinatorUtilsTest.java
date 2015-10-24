@@ -68,7 +68,7 @@ public class CoordinatorUtilsTest {
 
     @Test
     public void testGetPort() {
-        String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
+        String memberConfig = FileUtils.fileAsText("dist/src/main/dist/conf/hazelcast.xml");
 
         int port = getPort(memberConfig);
         assertEquals(5701, port);

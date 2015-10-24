@@ -11,6 +11,8 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -65,9 +67,7 @@ public class SimulatorUtilsTest {
 
     @Test
     public void testLoadSimulatorProperties() {
-        String userDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", "./dist/src/main/dist");
-
+        setDistributionUserDir();
         try {
             OptionSet options = mock(OptionSet.class);
             when(options.has(any(OptionSpec.class))).thenReturn(false);
@@ -75,7 +75,7 @@ public class SimulatorUtilsTest {
             SimulatorProperties properties = loadSimulatorProperties(options, null);
             assertNotNull(properties);
         } finally {
-            System.setProperty("user.dir", userDir);
+            resetUserDir();
         }
     }
 

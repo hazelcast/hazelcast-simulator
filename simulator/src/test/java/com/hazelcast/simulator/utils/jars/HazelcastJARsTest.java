@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -35,7 +36,7 @@ public class HazelcastJARsTest {
 
     @After
     public void tearDown() {
-        deleteQuiet(new File("./logs"));
+        deleteLogs();
     }
 
     @Test

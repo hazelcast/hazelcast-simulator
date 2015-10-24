@@ -20,6 +20,8 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Collections;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
 import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -36,8 +38,6 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorRunTestSuiteTest {
 
-    private static String userDir;
-
     private TestSuite testSuite;
     private SimulatorProperties simulatorProperties;
     private RemoteClient remoteClient;
@@ -47,14 +47,13 @@ public class CoordinatorRunTestSuiteTest {
     private boolean monitorPerformance = false;
 
     @BeforeClass
-    public static void prepareEnvironment() throws Exception {
-        userDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", "./dist/src/main/dist");
+    public static void prepareEnvironment() {
+        setDistributionUserDir();
     }
 
     @AfterClass
     public static void resetEnvironment() {
-        System.setProperty("user.dir", userDir);
+        resetUserDir();
     }
 
     @Before

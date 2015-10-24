@@ -4,7 +4,6 @@ import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +11,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -94,7 +94,7 @@ public class WorkerParametersTest {
         when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("http://localhost:8080");
         when(properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL")).thenReturn("60");
 
-        String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
+        String memberConfig = fileAsText("dist/src/main/dist/conf/hazelcast.xml");
         ComponentRegistry componentRegistry = getComponentRegistryMock();
 
         WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, memberConfig, null, null,
@@ -109,8 +109,8 @@ public class WorkerParametersTest {
 
     @Test
     public void testInitClientHzConfig() {
-        String memberConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/hazelcast.xml");
-        String clientConfig = FileUtils.fileAsText("./dist/src/main/dist/conf/client-hazelcast.xml");
+        String memberConfig = fileAsText("dist/src/main/dist/conf/hazelcast.xml");
+        String clientConfig = fileAsText("dist/src/main/dist/conf/client-hazelcast.xml");
 
         ComponentRegistry componentRegistry = getComponentRegistryMock();
 

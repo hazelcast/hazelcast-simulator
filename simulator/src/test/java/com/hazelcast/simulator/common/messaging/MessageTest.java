@@ -3,9 +3,7 @@ package com.hazelcast.simulator.common.messaging;
 import org.junit.After;
 import org.junit.Test;
 
-import java.io.File;
-
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -13,13 +11,13 @@ public class MessageTest {
 
     @After
     public void tearDown() {
-        deleteQuiet(new File("./logs"));
+        deleteLogs();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void message_address_cannot_be_null() {
-       new Message(null) {
-       };
+        new Message(null) {
+        };
     }
 
     @Test

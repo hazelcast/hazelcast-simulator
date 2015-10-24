@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,18 +11,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class CoordinatorCliTest {
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorCliTest.class);
-
-    private static String userDir;
     private static File agentsFile;
     private static File testSuiteFile;
 
@@ -31,23 +28,18 @@ public class CoordinatorCliTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        userDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", "./dist/src/main/dist");
+        setDistributionUserDir();
 
         agentsFile = new File("agents.txt");
         appendText("127.0.0.1", agentsFile);
 
         testSuiteFile = new File("test.properties");
         appendText("# CoordinatorCliTest", testSuiteFile);
-
-        LOGGER.info("old userDir: " + userDir);
-        LOGGER.info("new userDir: " + System.getProperty("user.dir"));
-        LOGGER.info("SIMULATOR_HOME: " + getSimulatorHome());
     }
 
     @AfterClass
     public static void tearDown() {
-        System.setProperty("user.dir", userDir);
+        resetUserDir();
 
         deleteQuiet(agentsFile);
         deleteQuiet(testSuiteFile);

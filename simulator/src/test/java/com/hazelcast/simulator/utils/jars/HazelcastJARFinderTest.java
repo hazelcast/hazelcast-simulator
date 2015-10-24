@@ -16,7 +16,7 @@ public class HazelcastJARFinderTest {
 
     private HazelcastJARFinder hazelcastJARFinder = new HazelcastJARFinder();
 
-    private File path = new File("./jarFinder");
+    private File path = new File("jarFinder");
     private File existingFile = new File(path, "hazelcast/target/hazelcast-3.6.jar");
 
     @Before
@@ -63,6 +63,6 @@ public class HazelcastJARFinderTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testFind_pathNotExists() {
-        hazelcastJARFinder.find(new File("./notExists"));
+        hazelcastJARFinder.find(new File("notExists"));
     }
 }

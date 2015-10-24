@@ -41,6 +41,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -59,7 +62,6 @@ public class AgentSmokeTest {
     private static final Logger ROOT_LOGGER = Logger.getRootLogger();
     private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
 
-    private static String userDir;
     private static AgentStarter agentStarter;
 
     private static FailureContainer failureContainer;
@@ -74,9 +76,7 @@ public class AgentSmokeTest {
             ROOT_LOGGER.setLevel(Level.TRACE);
         }
 
-        userDir = System.getProperty("user.dir");
-
-        System.setProperty("user.dir", "./dist/src/main/dist");
+        setDistributionUserDir();
 
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
@@ -109,12 +109,9 @@ public class AgentSmokeTest {
         } finally {
             Hazelcast.shutdownAll();
 
-            System.setProperty("user.dir", userDir);
-
-            deleteQuiet(new File("./dist/src/main/dist/workers"));
-            deleteQuiet(new File("./logs"));
-            deleteQuiet(new File("./workers"));
-            deleteQuiet(new File("./failures-agentSmokeTest.txt"));
+            resetUserDir();
+            deleteLogs();
+            deleteQuiet(new File("failures-agentSmokeTest.txt"));
 
             Level level = LOGGER_LEVEL.get();
             if (level != null && LOGGER_LEVEL.compareAndSet(level, null)) {
@@ -201,9 +198,9 @@ public class AgentSmokeTest {
                 60000,
                 "",
                 "",
-                fileAsText("./simulator/src/test/resources/hazelcast.xml"),
+                fileAsText("simulator/src/test/resources/hazelcast.xml"),
                 "",
-                fileAsText("./dist/src/main/dist/conf/worker-log4j.xml"),
+                fileAsText("dist/src/main/dist/conf/worker-log4j.xml"),
                 false
         );
 

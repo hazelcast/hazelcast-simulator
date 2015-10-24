@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -22,19 +24,16 @@ import static org.junit.Assert.assertTrue;
 
 public class HarakiriMonitorUtilsTest {
 
-    private static String userDir;
-
     private final SimulatorProperties properties = new SimulatorProperties();
 
     @BeforeClass
-    public static void setUp() throws Exception {
-        userDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", "./dist/src/main/dist");
+    public static void setUp() {
+        setDistributionUserDir();
     }
 
     @AfterClass
     public static void tearDown() {
-        System.setProperty("user.dir", userDir);
+        resetUserDir();
     }
 
     @Test

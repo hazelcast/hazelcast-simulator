@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
@@ -19,22 +21,19 @@ import static org.junit.Assert.assertTrue;
 
 public class SimulatorPropertiesTest {
 
-    private static String userDir;
-
     private final SimulatorProperties simulatorProperties = new SimulatorProperties();
 
     private File workingDirFile;
     private File customFile;
 
     @BeforeClass
-    public static void setUp() throws Exception {
-        userDir = System.getProperty("user.dir");
-        System.setProperty("user.dir", "./dist/src/main/dist");
+    public static void setUp() {
+        setDistributionUserDir();
     }
 
     @AfterClass
     public static void tearDown() {
-        System.setProperty("user.dir", userDir);
+        resetUserDir();
     }
 
     @Before
@@ -166,7 +165,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGet_systemProperty() throws Exception {
-        assertEquals("./dist/src/main/dist", simulatorProperties.get("user.dir", "ignored"));
+        assertEquals(File.pathSeparator, simulatorProperties.get("path.separator", "ignored"));
     }
 
     @Test

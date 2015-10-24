@@ -5,11 +5,10 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -25,7 +24,7 @@ public class AgentCliTest {
         if (agent != null) {
             agent.shutdown();
         }
-        deleteQuiet(new File("./logs"));
+        deleteLogs();
     }
 
     @Test

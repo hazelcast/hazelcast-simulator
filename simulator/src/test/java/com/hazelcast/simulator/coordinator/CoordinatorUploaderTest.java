@@ -33,8 +33,8 @@ public class CoordinatorUploaderTest {
     private String testSuiteId = "testSuiteId";
 
     private File notExists = new File("/notExists");
-    private File uploadDirectory = new File("./upload");
-    private File workerClassPathFile = new File("./workerClassPath");
+    private File uploadDirectory = new File("upload");
+    private File workerClassPathFile = new File("workerClassPath");
     private String workerClassPath = workerClassPathFile.getAbsolutePath();
 
     private CoordinatorUploader coordinatorUploader;
