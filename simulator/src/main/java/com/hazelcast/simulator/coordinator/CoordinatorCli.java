@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
-import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
 import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
@@ -194,7 +193,7 @@ final class CoordinatorCli {
                 options.valueOf(cli.dedicatedMemberMachinesSpec),
                 options.valueOf(cli.clientWorkerCountSpec),
                 options.valueOf(cli.memberWorkerCountSpec)
-                );
+        );
         if (clusterLayoutParameters.getDedicatedMemberMachineCount() < 0) {
             throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
         }
@@ -241,7 +240,7 @@ final class CoordinatorCli {
     }
 
     private static String loadLog4jConfig() {
-        return getFileAsTextFromWorkingDirOrBaseDir(SIMULATOR_HOME, "worker-log4j.xml", "Log4j configuration for worker");
+        return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for worker");
     }
 
     private static File getTestSuiteFile(OptionSet options) {

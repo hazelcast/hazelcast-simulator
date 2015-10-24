@@ -28,7 +28,6 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -57,7 +56,6 @@ import static java.lang.String.format;
 
 public final class Coordinator {
 
-    static final File SIMULATOR_HOME = getSimulatorHome();
     static final String SIMULATOR_VERSION = getSimulatorVersion();
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
@@ -146,7 +144,7 @@ public final class Coordinator {
     private void logHeader(int agentCount) {
         echoLocal("Hazelcast Simulator Coordinator");
         echoLocal("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime());
-        echoLocal("SIMULATOR_HOME: %s", SIMULATOR_HOME);
+        echoLocal("SIMULATOR_HOME: %s", getSimulatorHome());
 
         boolean performanceEnabled = workerParameters.isMonitorPerformance();
         int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();

@@ -27,10 +27,10 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.List;
 
-import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_HOME;
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_VERSION;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
 
@@ -41,7 +41,7 @@ class CoordinatorUploader {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUploader.class);
 
-    private final String simulatorHome = SIMULATOR_HOME.getAbsolutePath();
+    private final String simulatorHome = getSimulatorHome().getAbsolutePath();
 
     private final ComponentRegistry componentRegistry;
     private final Bash bash;
