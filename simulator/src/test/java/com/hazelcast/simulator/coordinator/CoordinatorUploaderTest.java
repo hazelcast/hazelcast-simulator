@@ -74,6 +74,16 @@ public class CoordinatorUploaderTest {
     }
 
     @Test
+    public void testUploadHazelcastJARs_isNull() {
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, null, false, workerClassPath,
+                YOURKIT);
+
+        coordinatorUploader.uploadHazelcastJARs();
+
+        verifyNoMoreInteractions(bash);
+    }
+
+    @Test
     public void testUploadUploadDirectory() {
         coordinatorUploader.uploadUploadDirectory();
 

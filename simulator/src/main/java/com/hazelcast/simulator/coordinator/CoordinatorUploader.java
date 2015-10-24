@@ -86,6 +86,10 @@ class CoordinatorUploader {
     }
 
     void uploadHazelcastJARs() {
+        if (hazelcastJARs == null) {
+            return;
+        }
+
         LOGGER.info("Preparing Hazelcast JARs...");
         hazelcastJARs.prepare(isEnterpriseEnabled);
 
