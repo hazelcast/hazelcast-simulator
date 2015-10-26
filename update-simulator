@@ -1,8 +1,8 @@
 #!/bin/bash
 
-VERSION=$(grep -m 1 "<version>.*</version>" pom.xml | awk -F'[><]' '{print $3}')
-if [ -z "${VERSION}" ]; then
-    VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -vi 'download')
+SIMULATOR_VERSION=$(grep -m 1 "<version>.*</version>" pom.xml | awk -F'[><]' '{print $3}')
+if [ -z "${SIMULATOR_VERSION}" ]; then
+    SIMULATOR_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -vi 'download')
 fi
 PROJECT_HOME=~
 if [ -n "$1" ]; then
@@ -11,9 +11,9 @@ elif [ -n "${SIMULATOR_HOME}" ]; then
     PROJECT_HOME=$(dirname "${SIMULATOR_HOME}")
 fi
 
-echo SIMULATOR_VERSION = ${VERSION}
+echo SIMULATOR_VERSION = ${SIMULATOR_VERSION}
 echo PROJECT_HOME = ${PROJECT_HOME}
 
 mvn clean install -DskipTests
-rm -fr ${PROJECT_HOME}/hazelcast-simulator-${VERSION}
-unzip -q -d ${PROJECT_HOME} dist/target/hazelcast-simulator-${VERSION}-dist.zip
+rm -fr ${PROJECT_HOME}/hazelcast-simulator-${SIMULATOR_VERSION}
+unzip -q -d ${PROJECT_HOME} dist/target/hazelcast-simulator-${SIMULATOR_VERSION}-dist.zip
