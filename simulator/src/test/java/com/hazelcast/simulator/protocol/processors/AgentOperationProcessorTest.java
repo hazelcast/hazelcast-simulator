@@ -29,11 +29,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -50,18 +57,20 @@ public class AgentOperationProcessorTest {
 
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
     private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
+    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
 
     private TestSuite testSuite;
     private File testSuiteDir;
-
-    private WorkerJvmManager workerJvmManager = new WorkerJvmManager();
 
     private AgentOperationProcessor processor;
 
     @Before
     public void setUp() {
+        setDistributionUserDir();
+
+        File workersDir = new File(getSimulatorHome(), "workers");
         testSuite = new TestSuite("AgentOperationProcessorTest");
-        testSuiteDir = new File("workers", testSuite.getId()).getAbsoluteFile();
+        testSuiteDir = new File(workersDir, testSuite.getId()).getAbsoluteFile();
 
         AgentConnector agentConnector = mock(AgentConnector.class);
         CoordinatorLogger coordinatorLogger = mock(CoordinatorLogger.class);
@@ -80,6 +89,7 @@ public class AgentOperationProcessorTest {
 
     @After
     public void tearDown() {
+        resetUserDir();
         deleteLogs();
     }
 
@@ -113,40 +123,52 @@ public class AgentOperationProcessorTest {
 
     @Test
     public void testCreateWorkerOperation() throws Exception {
-        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-        when(workerJvmSettings.getWorkerType()).thenReturn(WorkerType.INTEGRATION_TEST);
-        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
-        when(workerJvmSettings.getHazelcastConfig()).thenReturn("");
-        when(workerJvmSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        when(workerJvmSettings.getProfiler()).thenReturn(JavaProfiler.NONE);
-        when(workerJvmSettings.getNumaCtl()).thenReturn("none");
-        when(workerJvmSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
-        when(workerJvmSettings.getWorkerStartupTimeout()).thenReturn(60);
+        ResponseType responseType = testCreateWorkerOperation(false, 5);
+        assertEquals(SUCCESS, responseType);
+        assertWorkerLifecycle();
+    }
 
-        SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerJvmSettings));
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+    @Test
+    public void testCreateWorkerOperation_withStartupException() throws Exception {
+        ResponseType responseType = testCreateWorkerOperation(true, 5);
+        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
+    }
 
+    @Test
+    public void testCreateWorkerOperation_withStartupTimeout() throws Exception {
+        ResponseType responseType = testCreateWorkerOperation(false, 0);
+        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
+    }
+
+    @Test
+    public void testCreateWorkerOperation_withUploadDirectory() throws Exception {
+        File uploadDir = new File(testSuiteDir, "upload");
+        ensureExistingDirectory(uploadDir);
+
+        File uploadFile = new File(uploadDir, "testFile");
+        ensureExistingFile(uploadFile);
+
+        ResponseType responseType = testCreateWorkerOperation(false, 5);
         assertEquals(SUCCESS, responseType);
 
         for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
             File workerDir = new File(testSuiteDir, workerJvm.getId());
             assertTrue(workerDir.exists());
 
-            assertTrue(workerJvm.getProcess().isAlive());
-
-            File pidFile = new File(workerDir, "worker.pid");
-            String pid = fileAsText(pidFile);
-            execute("kill " + pid);
-
-            workerJvm.getProcess().waitFor(10, TimeUnit.SECONDS);
-            assertFalse(workerJvm.getProcess().isAlive());
+            File uploadCopy = new File(workerDir, "testFile");
+            assertTrue(uploadCopy.exists());
         }
+
+        assertWorkerLifecycle();
     }
 
     @Test
     public void testInitTestSuiteOperation() throws Exception {
         SimulatorOperation operation = new InitTestSuiteOperation(testSuite);
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        System.out.println(getSimulatorHome());
+        System.out.println(testSuiteDir.getAbsolutePath());
 
         assertEquals(SUCCESS, responseType);
         assertTrue(testSuiteDir.exists());
@@ -160,5 +182,39 @@ public class AgentOperationProcessorTest {
         assertEquals(SUCCESS, responseType);
 
         verify(failureMonitor).stopTimeoutDetection();
+    }
+
+    private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
+        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
+        when(workerJvmSettings.getWorkerType()).thenReturn(WorkerType.INTEGRATION_TEST);
+        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
+        when(workerJvmSettings.getHazelcastConfig()).thenReturn("");
+        when(workerJvmSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
+        when(workerJvmSettings.getProfiler()).thenReturn(JavaProfiler.NONE);
+        when(workerJvmSettings.getNumaCtl()).thenReturn(withStartupException ? null : "none");
+        when(workerJvmSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
+        when(workerJvmSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
+        when(workerJvmSettings.getJvmOptions()).thenReturn("-verbose:gc");
+
+        SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerJvmSettings));
+        return processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+    }
+
+    private void assertWorkerLifecycle() throws InterruptedException {
+        for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
+            File workerDir = new File(testSuiteDir, workerJvm.getId());
+            assertTrue(workerDir.exists());
+
+            assertTrue(workerJvm.getProcess().isAlive());
+
+            File pidFile = new File(workerDir, "worker.pid");
+            String pid = fileAsText(pidFile);
+            execute("kill " + pid);
+
+            workerJvm.getProcess().waitFor(5, TimeUnit.SECONDS);
+            assertFalse(workerJvm.getProcess().isAlive());
+
+            deleteQuiet(pidFile);
+        }
     }
 }

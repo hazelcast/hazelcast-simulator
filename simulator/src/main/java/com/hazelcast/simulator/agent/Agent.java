@@ -41,8 +41,6 @@ import static java.lang.String.format;
 
 public class Agent {
 
-    public static final File WORKERS_HOME = new File(getSimulatorHome(), "workers");
-
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
@@ -65,7 +63,6 @@ public class Agent {
 
     public Agent(int addressIndex, String publicAddress, String cloudProvider, String cloudIdentity, String cloudCredential) {
         SHUTDOWN_STARTED.set(false);
-        ensureExistingDirectory(WORKERS_HOME);
 
         this.addressIndex = addressIndex;
         this.publicAddress = publicAddress;
@@ -122,7 +119,10 @@ public class Agent {
         if (testSuite == null) {
             return null;
         }
-        return new File(WORKERS_HOME, testSuite.getId());
+        File workersDir = new File(getSimulatorHome(), "workers");
+        ensureExistingDirectory(workersDir);
+
+        return new File(workersDir, testSuite.getId());
     }
 
     void shutdown() throws Exception {

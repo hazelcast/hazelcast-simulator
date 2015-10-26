@@ -42,6 +42,7 @@ import static com.hazelcast.simulator.protocol.configuration.Ports.WORKER_START_
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 /**
@@ -119,7 +120,8 @@ public class AgentOperationProcessor extends OperationProcessor {
     private void processInitTestSuite(InitTestSuiteOperation operation) {
         agent.setTestSuite(operation.getTestSuite());
 
-        File testSuiteDir = new File(Agent.WORKERS_HOME, operation.getTestSuite().getId());
+        File workersHome = new File(getSimulatorHome(), "workers");
+        File testSuiteDir = new File(workersHome, operation.getTestSuite().getId());
         ensureExistingDirectory(testSuiteDir);
 
         File libDir = new File(testSuiteDir, "lib");

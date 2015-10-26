@@ -46,12 +46,10 @@ public class WorkerJvmLauncher {
 
     private static final int WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS = 500;
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerJvmLauncher.class);
-
     private static final String CLASSPATH = System.getProperty("java.class.path");
-    private static final File SIMULATOR_HOME = getSimulatorHome();
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
-    private static final String WORKERS_PATH = getSimulatorHome().getAbsolutePath() + "/workers";
+
+    private static final Logger LOGGER = Logger.getLogger(WorkerJvmLauncher.class);
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
@@ -177,20 +175,21 @@ public class WorkerJvmLauncher {
     }
 
     private void copyResourcesToWorkerId(String workerId) {
+        File workersDir = new File(getSimulatorHome(), "workers");
         String testSuiteId = agent.getTestSuite().getId();
-        File uploadDirectory = new File(WORKERS_PATH + '/' + testSuiteId + "/upload/");
+        File uploadDirectory = new File(workersDir, testSuiteId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
         String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
-                WORKERS_PATH,
+                workersDir,
                 testSuiteId,
-                WORKERS_PATH,
+                workersDir,
                 testSuiteId,
                 workerId);
         execute(copyCommand);
-        LOGGER.info(format("Finished copying '+%s+' to worker", WORKERS_PATH));
+        LOGGER.info(format("Finished copying '+%s+' to worker", workersDir));
     }
 
     private boolean hasExited(WorkerJvm workerJvm) {
@@ -230,7 +229,7 @@ public class WorkerJvmLauncher {
         args.add("-Dhazelcast.logging.type=log4j");
         args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
 
-        args.add("-DSIMULATOR_HOME=" + SIMULATOR_HOME);
+        args.add("-DSIMULATOR_HOME=" + getSimulatorHome());
         args.add("-DworkerId=" + workerJvm.getId());
         args.add("-DworkerType=" + type);
         args.add("-DpublicAddress=" + agent.getPublicAddress());
@@ -260,7 +259,7 @@ public class WorkerJvmLauncher {
             case YOURKIT:
                 args.add(javaExecutable);
                 String agentSetting = workerJvmSettings.getProfilerSettings()
-                        .replace("${SIMULATOR_HOME}", SIMULATOR_HOME.getAbsolutePath())
+                        .replace("${SIMULATOR_HOME}", getSimulatorHome().getAbsolutePath())
                         .replace("${WORKER_HOME}", workerJvm.getWorkerHome().getAbsolutePath());
                 args.add(agentSetting);
                 break;
@@ -283,8 +282,8 @@ public class WorkerJvmLauncher {
     private String getClasspath() {
         String hzVersionDirectory = directoryForVersionSpec(workerJvmSettings.getHazelcastVersionSpec());
         return CLASSPATH
-                + CLASSPATH_SEPARATOR + SIMULATOR_HOME + "/hz-lib/" + hzVersionDirectory + "/*"
-                + CLASSPATH_SEPARATOR + SIMULATOR_HOME + "/user-lib/*"
+                + CLASSPATH_SEPARATOR + getSimulatorHome() + "/hz-lib/" + hzVersionDirectory + "/*"
+                + CLASSPATH_SEPARATOR + getSimulatorHome() + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + new File(agent.getTestSuiteDir(), "lib/*").getAbsolutePath();
     }
 

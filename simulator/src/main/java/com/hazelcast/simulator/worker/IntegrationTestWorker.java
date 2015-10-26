@@ -32,7 +32,7 @@ public class IntegrationTestWorker implements Worker {
         writeObject("127.0.0.1:5701", addressFile);
 
         LOGGER.info("Waiting for shutdown...");
-        latch.await(3, TimeUnit.SECONDS);
+        latch.await(5, TimeUnit.SECONDS);
 
         LOGGER.info("Done!");
     }
