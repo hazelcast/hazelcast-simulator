@@ -37,6 +37,7 @@ public class FailingTest {
 
     public enum Failure {
         EXCEPTION,
+        ERROR,
         OOME,
         EXIT
     }
@@ -45,6 +46,7 @@ public class FailingTest {
 
     // properties
     public Failure failure = Failure.EXCEPTION;
+    public boolean throwError = false;
 
     private TestContext testContext;
 
@@ -54,10 +56,13 @@ public class FailingTest {
     }
 
     @Run
-    public void run() {
+    public void run() throws Throwable {
         switch (failure) {
             case EXCEPTION:
-                ExceptionReporter.report(testContext.getTestId(), new TestException("Wanted exception"));
+                handleError(new TestException("Wanted exception"));
+                break;
+            case ERROR:
+                handleError(new AssertionError("Wanted error"));
                 break;
             case OOME:
                 List<byte[]> list = new LinkedList<byte[]>();
@@ -77,6 +82,13 @@ public class FailingTest {
             default:
                 throw new UnsupportedOperationException("Unknown failure " + failure);
         }
+    }
+
+    private void handleError(Throwable t) throws Throwable {
+        if (throwError) {
+            throw t;
+        }
+        ExceptionReporter.report(testContext.getTestId(), t);
     }
 
     public static void main(String[] args) throws Exception {
