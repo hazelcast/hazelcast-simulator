@@ -20,13 +20,11 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.Logger;
 
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -60,7 +58,6 @@ final class TestCaseRunner implements TestPhaseListener {
     private final TestCase testCase;
     private final String testCaseId;
     private final TestSuite testSuite;
-    private final Set<FailureType> nonCriticalFailures;
 
     private final RemoteClient remoteClient;
     private final FailureContainer failureContainer;
@@ -82,7 +79,6 @@ final class TestCaseRunner implements TestPhaseListener {
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
         this.testSuite = coordinator.getTestSuite();
-        this.nonCriticalFailures = testSuite.getTolerableFailures();
 
         this.remoteClient = coordinator.getRemoteClient();
         this.failureContainer = coordinator.getFailureContainer();
@@ -113,8 +109,7 @@ final class TestCaseRunner implements TestPhaseListener {
         phaseCompletedMap.get(testPhase).incrementAndGet();
     }
 
-    boolean run() {
-        int oldFailureCount = failureContainer.getFailureCount();
+    void run() {
         try {
             createTest();
             runOnAllWorkers(TestPhase.SETUP);
@@ -134,8 +129,6 @@ final class TestCaseRunner implements TestPhaseListener {
 
             runOnFirstWorker(TestPhase.GLOBAL_TEARDOWN);
             runOnAllWorkers(TestPhase.LOCAL_TEARDOWN);
-
-            return (failureContainer.getFailureCount() == oldFailureCount);
         } catch (Exception e) {
             throw rethrow(e);
         }
@@ -200,7 +193,8 @@ final class TestCaseRunner implements TestPhaseListener {
         while (completedWorkers < expectedWorkers) {
             sleepSeconds(1);
 
-            if (hasCriticalTestFailure()) {
+            if (failureContainer.hasCriticalFailure(testCaseId)) {
+                echo(format("Waiting for %s completion aborted (critical failure)", testPhase.desc()));
                 break;
             }
 
@@ -239,14 +233,6 @@ final class TestCaseRunner implements TestPhaseListener {
         return (isGlobal) ? 1 : workerCount;
     }
 
-    private boolean hasCriticalTestFailure() {
-        if (failureContainer.hasCriticalFailure(nonCriticalFailures)) {
-            echo("Critical failure detected, aborting execution of test");
-            return true;
-        }
-        return false;
-    }
-
     private void echo(String msg) {
         remoteClient.logOnAllAgents(prefix + msg);
         LOGGER.info(prefix + msg);
@@ -279,7 +265,8 @@ final class TestCaseRunner implements TestPhaseListener {
         private void sleepUntilFailure(int sleepSeconds) {
             int sleepLoops = sleepSeconds / logRunPhaseIntervalSeconds;
             for (int i = 1; i <= sleepLoops && isRunning; i++) {
-                if (hasCriticalTestFailure()) {
+                if (failureContainer.hasCriticalFailure(testCaseId)) {
+                    echo("Critical failure detected, aborting execution of test");
                     return;
                 }
 

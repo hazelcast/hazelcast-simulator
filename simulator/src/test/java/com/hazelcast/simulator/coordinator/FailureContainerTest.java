@@ -84,10 +84,15 @@ public class FailureContainerTest {
     @Test
     public void testHasCriticalFailure() {
         failureContainer.addFailureOperation(exceptionOperation);
+        assertTrue(failureContainer.hasCriticalFailure());
+    }
 
+    @Test
+    public void testHasCriticalFailure_withNonCriticalFailures() {
         Set<FailureType> nonCriticalFailures = Collections.singleton(exceptionOperation.getType());
-        assertFalse(failureContainer.hasCriticalFailure(nonCriticalFailures));
+        failureContainer = new FailureContainer("testSuite", componentRegistry, nonCriticalFailures);
 
-        assertTrue(failureContainer.hasCriticalFailure(Collections.<FailureType>emptySet()));
+        failureContainer.addFailureOperation(exceptionOperation);
+        assertFalse(failureContainer.hasCriticalFailure());
     }
 }

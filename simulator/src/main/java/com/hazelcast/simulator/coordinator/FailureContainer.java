@@ -19,15 +19,18 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
+import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 
@@ -39,28 +42,40 @@ public class FailureContainer {
     private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
 
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
-    private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkersList
+    private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkers
             = new ConcurrentHashMap<SimulatorAddress, FailureType>();
+
+    private final AtomicBoolean hasCriticalFailure = new AtomicBoolean();
+    private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
     private final ComponentRegistry componentRegistry;
+    private final Set<FailureType> nonCriticalFailures;
+
+    public FailureContainer(TestSuite testSuite, ComponentRegistry componentRegistry) {
+        this(testSuite.getId(), componentRegistry, testSuite.getTolerableFailures());
+    }
 
     public FailureContainer(String testSuiteId, ComponentRegistry componentRegistry) {
+        this(testSuiteId, componentRegistry, Collections.<FailureType>emptySet());
+    }
+
+    public FailureContainer(String testSuiteId, ComponentRegistry componentRegistry, Set<FailureType> nonCriticalFailures) {
         this.file = new File("failures-" + testSuiteId + ".txt");
         this.componentRegistry = componentRegistry;
+        this.nonCriticalFailures = nonCriticalFailures;
     }
 
     public int getFailureCount() {
         return failureOperations.size();
     }
 
-    public boolean hasCriticalFailure(Set<FailureType> nonCriticalFailures) {
-        for (FailureOperation operation : failureOperations) {
-            if (!nonCriticalFailures.contains(operation.getType())) {
-                return true;
-            }
-        }
-        return false;
+    public boolean hasCriticalFailure() {
+        return hasCriticalFailure.get();
+    }
+
+    public boolean hasCriticalFailure(String testId) {
+        return hasCriticalFailuresMap.containsKey(testId);
     }
 
     public Queue<FailureOperation> getFailureOperations() {
@@ -68,14 +83,14 @@ public class FailureContainer {
     }
 
     public Set<SimulatorAddress> getFinishedWorkers() {
-        return finishedWorkersList.keySet();
+        return finishedWorkers.keySet();
     }
 
     public void addFailureOperation(FailureOperation operation) {
         FailureType failureType = operation.getType();
         if (failureType.isWorkerFinishedFailure()) {
             SimulatorAddress workerAddress = operation.getWorkerAddress();
-            finishedWorkersList.put(workerAddress, failureType);
+            finishedWorkers.put(workerAddress, failureType);
             componentRegistry.removeWorker(workerAddress);
         }
         if (failureType.isPoisonPill()) {
@@ -83,6 +98,14 @@ public class FailureContainer {
         }
 
         failureOperations.add(operation);
+
+        if (!nonCriticalFailures.contains(failureType)) {
+            hasCriticalFailure.set(true);
+            String testId = operation.getTestId();
+            if (testId != null) {
+                hasCriticalFailuresMap.put(testId, true);
+            }
+        }
 
         LOGGER.error(operation.getLogMessage(failureOperations.size()));
         appendText(operation.getFileMessage(), file);

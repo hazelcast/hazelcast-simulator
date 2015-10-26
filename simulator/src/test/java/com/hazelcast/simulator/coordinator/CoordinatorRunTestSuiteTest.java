@@ -23,6 +23,7 @@ import java.util.Collections;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
+import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -124,6 +125,21 @@ public class CoordinatorRunTestSuiteTest {
         coordinator.getFailureContainer().addFailureOperation(
                 new FailureOperation("expected critical failure", NETTY_EXCEPTION, null, "127.0.0.1", "127.0.0.1:5701",
                         "workerId", "testId", testSuite, "stacktrace")
+        );
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator);
+    }
+
+    @Test
+    public void runTestSuiteParallel_hasCriticalFailures() throws Exception {
+        testSuite.setDurationSeconds(4);
+        parallel = true;
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.getFailureContainer().addFailureOperation(
+                new FailureOperation("expected critical failure", WORKER_EXCEPTION, null, "127.0.0.1", "127.0.0.1:5701",
+                        "workerId", "CoordinatorTest1", testSuite, "stacktrace")
         );
         coordinator.runTestSuite();
 

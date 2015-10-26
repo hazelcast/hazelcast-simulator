@@ -86,7 +86,7 @@ public final class Coordinator {
         this.testSuite = testSuite;
 
         this.componentRegistry = loadComponentRegister(coordinatorParameters.getAgentsFile());
-        this.failureContainer = new FailureContainer(testSuite.getId(), componentRegistry);
+        this.failureContainer = new FailureContainer(testSuite, componentRegistry);
 
         this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);
@@ -329,8 +329,8 @@ public final class Coordinator {
                 @Override
                 public void run() {
                     try {
-                        boolean success = ((TestCaseRunner) testCaseRunner).run();
-                        if (!success && testSuite.isFailFast()) {
+                        ((TestCaseRunner) testCaseRunner).run();
+                        if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
                             LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
                             // FIXME: we should abort here as logged
                         }
@@ -345,12 +345,13 @@ public final class Coordinator {
 
     private void runSequential() {
         for (TestPhaseListener testCaseRunner : testPhaseListenerContainer.getListeners()) {
-            boolean success = ((TestCaseRunner) testCaseRunner).run();
-            if (!success && testSuite.isFailFast()) {
-                LOGGER.info("Aborting testsuite due to failure");
+            ((TestCaseRunner) testCaseRunner).run();
+            boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
+            if (hasCriticalFailure && testSuite.isFailFast()) {
+                LOGGER.info("Aborting testsuite due to critical failure");
                 break;
             }
-            if (!success || coordinatorParameters.isRefreshJvm()) {
+            if (hasCriticalFailure || coordinatorParameters.isRefreshJvm()) {
                 startWorkers();
             }
         }
