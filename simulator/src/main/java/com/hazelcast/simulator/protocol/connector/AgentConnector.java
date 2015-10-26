@@ -34,7 +34,7 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
-public final class AgentConnector extends AbstractServerConnector {
+public class AgentConnector extends AbstractServerConnector {
 
     private final AgentServerConfiguration serverConfiguration;
 

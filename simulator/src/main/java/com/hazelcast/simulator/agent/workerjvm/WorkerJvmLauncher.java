@@ -70,14 +70,14 @@ public class WorkerJvmLauncher {
     }
 
     public void launch() {
-        testSuiteDir = agent.getTestSuiteDir();
-        ensureExistingDirectory(testSuiteDir);
-
-        WorkerType type = workerJvmSettings.getWorkerType();
-        int workerIndex = workerJvmSettings.getWorkerIndex();
-        LOGGER.info(format("Starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
-
         try {
+            testSuiteDir = agent.getTestSuiteDir();
+            ensureExistingDirectory(testSuiteDir);
+
+            WorkerType type = workerJvmSettings.getWorkerType();
+            int workerIndex = workerJvmSettings.getWorkerIndex();
+            LOGGER.info(format("Starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
+
             String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
             hzConfigFile = createTmpXmlFile(hzConfigFileName, workerJvmSettings.getHazelcastConfig());
             log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.getLog4jConfig());
@@ -87,7 +87,8 @@ public class WorkerJvmLauncher {
             LOGGER.info(format("Finished starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
 
             waitForWorkersStartup(worker, workerJvmSettings.getWorkerStartupTimeout());
-        } catch (IOException e) {
+        } catch (Exception e) {
+            LOGGER.error("Failed to start worker", e);
             throw new SpawnWorkerFailedException("Failed to start worker", e);
         }
     }
@@ -134,8 +135,9 @@ public class WorkerJvmLauncher {
     private void waitForWorkersStartup(WorkerJvm worker, int workerTimeoutSec) {
         for (int i = 0; i < workerTimeoutSec; i++) {
             if (hasExited(worker)) {
-                throw new SpawnWorkerFailedException(format("Startup failure: worker on host %s failed during startup,"
-                        + " check '%s/out.log' for more information!", agent.getPublicAddress(), worker.getWorkerHome()));
+                throw new SpawnWorkerFailedException(format(
+                        "Startup of Worker on host %s failed, check log files in %s for more information!",
+                        agent.getPublicAddress(), worker.getWorkerHome()));
             }
 
             String address = readAddress(worker);
