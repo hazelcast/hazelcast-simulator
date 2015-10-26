@@ -92,6 +92,9 @@ public class AgentOperationProcessor extends OperationProcessor {
             case INIT_TEST_SUITE:
                 processInitTestSuite((InitTestSuiteOperation) operation);
                 break;
+            case STOP_TIMEOUT_DETECTION:
+                processStopTimeoutDetection();
+                break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
@@ -121,6 +124,10 @@ public class AgentOperationProcessor extends OperationProcessor {
 
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
+    }
+
+    private void processStopTimeoutDetection() {
+        agent.getWorkerJvmFailureMonitor().stopTimeoutDetection();
     }
 
     private class LaunchWorkerCallable implements Callable<Boolean> {

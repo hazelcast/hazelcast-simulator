@@ -42,7 +42,7 @@ import static java.lang.String.format;
 
 final class CoordinatorUtils {
 
-    public static final int FINISHED_WORKER_TIMEOUT_SECONDS = 60;
+    public static final int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
     public static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUtils.class);

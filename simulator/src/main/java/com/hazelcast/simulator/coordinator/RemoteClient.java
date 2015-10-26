@@ -24,6 +24,7 @@ import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestSuite;
@@ -114,6 +115,8 @@ public class RemoteClient {
 
     public void terminateWorkers(boolean stopPokeThread) {
         if (stopPokeThread) {
+            sendToAllAgents(new StopTimeoutDetectionOperation());
+
             workerPokeThread.running = false;
             workerPokeThread.interrupt();
             joinThread(workerPokeThread);

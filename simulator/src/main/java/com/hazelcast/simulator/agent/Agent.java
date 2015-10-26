@@ -106,6 +106,10 @@ public class Agent {
         return coordinatorLogger;
     }
 
+    public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
+        return workerJvmFailureMonitor;
+    }
+
     public void setTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
     }

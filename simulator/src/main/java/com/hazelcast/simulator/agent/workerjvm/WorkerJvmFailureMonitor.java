@@ -59,12 +59,18 @@ public class WorkerJvmFailureMonitor {
         monitorThread.interrupt();
     }
 
+    public void stopTimeoutDetection() {
+        LOGGER.info("Stopping timeout detection for Workers...");
+        monitorThread.detectTimeouts = false;
+    }
+
     private class MonitorThread extends Thread {
 
         private final Agent agent;
         private final WorkerJvmManager workerJvmManager;
 
         private volatile boolean running = true;
+        private volatile boolean detectTimeouts = true;
 
         public MonitorThread(Agent agent, WorkerJvmManager workerJvmManager) {
             super("WorkerJvmFailureMonitorThread");
@@ -155,6 +161,10 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void detectInactivity(WorkerJvm workerJvm) {
+            if (!detectTimeouts) {
+                return;
+            }
+
             long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerJvm.getLastSeen());
             if (elapsed > LAST_SEEN_TIMEOUT_SECONDS) {
                 sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
