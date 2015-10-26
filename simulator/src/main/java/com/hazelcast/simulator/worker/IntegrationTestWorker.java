@@ -49,9 +49,13 @@ public class IntegrationTestWorker implements Worker {
         writeObject("127.0.0.1:5701", addressFile);
 
         LOGGER.info("Waiting for shutdown...");
-        latch.await(WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        boolean success = latch.await(WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        LOGGER.info("Done!");
+        if (success) {
+            LOGGER.info("Done!");
+        } else {
+            LOGGER.warn("IntegrationTestWorker timed out!");
+        }
     }
 
     @Override
