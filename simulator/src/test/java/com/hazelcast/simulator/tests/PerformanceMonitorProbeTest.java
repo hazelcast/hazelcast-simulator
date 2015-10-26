@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
@@ -30,7 +30,7 @@ public class PerformanceMonitorProbeTest {
 
     private class Worker implements IWorker {
 
-        @SimulatorProbe(useForThroughput = true)
+        @InjectProbe(useForThroughput = true)
         Probe workerProbe;
 
         @Override

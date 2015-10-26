@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -134,13 +134,13 @@ public class AnnotationReflectionUtilsTest {
     @SuppressWarnings("unused")
     private static class AnnotationTestClass {
 
-        @SimulatorProbe(name = "testName")
+        @InjectProbe(name = "testName")
         private Probe namedProbe;
 
-        @SimulatorProbe(useForThroughput = true)
+        @InjectProbe(useForThroughput = true)
         private Probe throughputProbe;
 
-        @SimulatorProbe
+        @InjectProbe
         private Probe defaultValueProbe;
 
         private Probe notAnnotatedProbe;

@@ -31,9 +31,9 @@ import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
@@ -107,13 +107,13 @@ public class SyntheticTest {
         return new Worker();
     }
 
-    // FIXME get rid of this suppression via a proper @InjectProbe annotation
+    // FIXME get rid of this suppression via a proper @InjectTestContext annotation
     @SuppressFBWarnings({"UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"})
     private class Worker implements IWorker, ExecutionCallback<Object> {
 
         // these fields will be injected by the TestContainer
         public TestContext testContext;
-        @SimulatorProbe(useForThroughput = true)
+        @InjectProbe(useForThroughput = true)
         public Probe workerProbe;
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();

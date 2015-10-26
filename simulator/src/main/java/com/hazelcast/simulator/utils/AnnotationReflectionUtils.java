@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -38,8 +38,8 @@ public final class AnnotationReflectionUtils {
             return null;
         }
 
-        SimulatorProbe probeAnnotation = field.getAnnotation(SimulatorProbe.class);
-        if (probeAnnotation != null && !SimulatorProbe.NULL.equals(probeAnnotation.name())) {
+        InjectProbe probeAnnotation = field.getAnnotation(InjectProbe.class);
+        if (probeAnnotation != null && !InjectProbe.NULL.equals(probeAnnotation.name())) {
             return probeAnnotation.name();
         }
         return field.getName();
@@ -50,7 +50,7 @@ public final class AnnotationReflectionUtils {
             return false;
         }
 
-        SimulatorProbe probeAnnotation = field.getAnnotation(SimulatorProbe.class);
+        InjectProbe probeAnnotation = field.getAnnotation(InjectProbe.class);
         if (probeAnnotation != null) {
             return probeAnnotation.useForThroughput();
         }

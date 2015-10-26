@@ -4,10 +4,10 @@ import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -369,7 +369,7 @@ public class TestContainerTest {
 
         private Probe latencyProbe;
 
-        @SimulatorProbe(name = "explicitProbeInjectedToField")
+        @InjectProbe(name = "explicitProbeInjectedToField")
         private Probe namedProbe;
 
         @Setup

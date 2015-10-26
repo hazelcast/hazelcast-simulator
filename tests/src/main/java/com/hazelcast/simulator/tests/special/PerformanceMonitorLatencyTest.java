@@ -17,9 +17,9 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +32,7 @@ public class PerformanceMonitorLatencyTest {
 
     private static final long LATENCY_NANOS = TimeUnit.MICROSECONDS.toNanos(20);
 
-    @SimulatorProbe(useForThroughput = true)
+    @InjectProbe(useForThroughput = true)
     Probe latencyProbe;
 
     private TestContext testContext;

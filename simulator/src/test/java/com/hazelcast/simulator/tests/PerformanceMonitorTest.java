@@ -16,12 +16,12 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.SimulatorProbe;
 
 public class PerformanceMonitorTest {
 
-    @SimulatorProbe(useForThroughput = true)
+    @InjectProbe(useForThroughput = true)
     private Probe performanceProbe;
 
     @Run

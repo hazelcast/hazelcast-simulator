@@ -22,6 +22,7 @@ import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -29,7 +30,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.Map;
 
@@ -37,16 +37,16 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
-// FIXME get rid of this suppression via a proper @InjectProbe annotation
-@SuppressFBWarnings({"UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"})
 public class MapEntryProcessorTest {
 
     // properties
     public String basename = MapEntryProcessorTest.class.getSimpleName();
     public int keyCount = 1000;
-    public int minProcessorDelayMs;
-    public int maxProcessorDelayMs;
+    public int minProcessorDelayMs = 0;
+    public int maxProcessorDelayMs = 0;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
+
+    @InjectProbe(useForThroughput = false)
     public Probe probe;
 
     private HazelcastInstance targetInstance;
@@ -137,6 +137,7 @@ public class MapEntryProcessorTest {
     }
 
     private static final class IncrementEntryProcessor extends AbstractEntryProcessor<Integer, Long> {
+
         private final long increment;
         private final int delayMs;
 
