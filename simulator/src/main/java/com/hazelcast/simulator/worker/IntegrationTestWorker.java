@@ -77,7 +77,7 @@ public class IntegrationTestWorker implements Worker {
         new IntegrationTestWorker();
     }
 
-    private final class ShutdownThread extends Thread {
+    private static final class ShutdownThread extends Thread {
 
         private final CountDownLatch latch;
 
