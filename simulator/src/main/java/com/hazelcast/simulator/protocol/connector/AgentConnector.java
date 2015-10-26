@@ -38,7 +38,7 @@ public class AgentConnector extends AbstractServerConnector {
 
     private final AgentServerConfiguration serverConfiguration;
 
-    private AgentConnector(AgentServerConfiguration configuration) {
+    AgentConnector(AgentServerConfiguration configuration) {
         super(configuration);
         this.serverConfiguration = configuration;
     }

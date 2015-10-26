@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2015, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
@@ -13,6 +28,8 @@ import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 public class IntegrationTestWorker implements Worker {
+
+    private static final int WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS = 5;
 
     private static final Logger LOGGER = Logger.getLogger(IntegrationTestWorker.class);
 
@@ -32,7 +49,7 @@ public class IntegrationTestWorker implements Worker {
         writeObject("127.0.0.1:5701", addressFile);
 
         LOGGER.info("Waiting for shutdown...");
-        latch.await(5, TimeUnit.SECONDS);
+        latch.await(WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         LOGGER.info("Done!");
     }
