@@ -279,8 +279,6 @@ public final class MemberWorker implements Worker {
         public ShutdownThread() {
             super("WorkerShutdownThread");
             setDaemon(true);
-
-            LOGGER.info("Shutting down worker!");
         }
 
         @Override

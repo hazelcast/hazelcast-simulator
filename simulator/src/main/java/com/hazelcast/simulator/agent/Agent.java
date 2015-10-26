@@ -188,8 +188,6 @@ public class Agent {
             setDaemon(true);
 
             this.shutdownLog4j = shutdownLog4j;
-
-            LOGGER.info("Shutting down agent!");
         }
 
         public void awaitShutdown() throws Exception {
