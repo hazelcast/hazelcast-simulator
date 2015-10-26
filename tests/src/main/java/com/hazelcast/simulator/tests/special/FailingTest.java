@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static org.junit.Assert.fail;
 
 /**
  * A test that causes a failure. This is useful for testing the simulator framework and for demonstration purposes.
@@ -38,6 +39,7 @@ public class FailingTest {
     public enum Failure {
         EXCEPTION,
         ERROR,
+        FAIL,
         OOME,
         EXIT
     }
@@ -56,13 +58,24 @@ public class FailingTest {
     }
 
     @Run
-    public void run() throws Throwable {
+    public void run() throws Exception {
         switch (failure) {
             case EXCEPTION:
-                handleError(new TestException("Wanted exception"));
+                Exception exception = new TestException("Wanted exception");
+                if (throwError) {
+                    throw exception;
+                }
+                ExceptionReporter.report(testContext.getTestId(), exception);
                 break;
             case ERROR:
-                handleError(new AssertionError("Wanted error"));
+                Error error = new AssertionError("Wanted error");
+                if (throwError) {
+                    throw error;
+                }
+                ExceptionReporter.report(testContext.getTestId(), error);
+                break;
+            case FAIL:
+                fail("Wanted failure");
                 break;
             case OOME:
                 List<byte[]> list = new LinkedList<byte[]>();
@@ -82,13 +95,6 @@ public class FailingTest {
             default:
                 throw new UnsupportedOperationException("Unknown failure " + failure);
         }
-    }
-
-    private void handleError(Throwable t) throws Throwable {
-        if (throwError) {
-            throw t;
-        }
-        ExceptionReporter.report(testContext.getTestId(), t);
     }
 
     public static void main(String[] args) throws Exception {
