@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.CoordinatorLogger;
@@ -9,25 +10,32 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
+import com.hazelcast.simulator.test.TestSuite;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -41,6 +49,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 public class AgentOperationProcessorTest {
 
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
+    private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
 
     private AgentOperationProcessor processor;
 
@@ -52,8 +61,14 @@ public class AgentOperationProcessorTest {
         Agent agent = mock(Agent.class);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
         when(agent.getCoordinatorLogger()).thenReturn(coordinatorLogger);
+        when(agent.getWorkerJvmFailureMonitor()).thenReturn(failureMonitor);
 
         processor = new AgentOperationProcessor(exceptionLogger, agent, null);
+    }
+
+    @After
+    public void tearDown() {
+        deleteLogs();
     }
 
     @Test
@@ -96,5 +111,27 @@ public class AgentOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
+    }
+
+    @Test
+    public void testInitTestSuiteOperation() throws Exception {
+        TestSuite testSuite = new TestSuite("AgentOperationProcessorTest");
+        File testSuiteDir = new File("workers", testSuite.getId()).getAbsoluteFile();
+
+        SimulatorOperation operation = new InitTestSuiteOperation(testSuite);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        assertEquals(SUCCESS, responseType);
+        assertTrue(testSuiteDir.exists());
+    }
+
+    @Test
+    public void testStopTimeoutDetectionOperation() throws Exception {
+        SimulatorOperation operation = new StopTimeoutDetectionOperation();
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        assertEquals(SUCCESS, responseType);
+
+        verify(failureMonitor).stopTimeoutDetection();
     }
 }
