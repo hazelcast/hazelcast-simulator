@@ -24,7 +24,6 @@ import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.util.ExceptionUtil;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -32,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
@@ -52,8 +50,6 @@ class ProtocolUtil {
     private static final int WORKER_START_PORT = 11100;
 
     private static final Logger LOGGER = Logger.getLogger(ProtocolUtil.class);
-    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
-    private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
 
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
     private static final int MIN_ADDRESS_LEVEL_VALUE = MIN_ADDRESS_LEVEL.toInt();
@@ -65,19 +61,6 @@ class ProtocolUtil {
     private static CoordinatorConnector coordinatorConnector;
     private static List<AgentConnector> agentConnectors = new ArrayList<AgentConnector>();
     private static List<WorkerConnector> workerConnectors = new ArrayList<WorkerConnector>();
-
-    static void setLogLevel(Level level) {
-        if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
-            ROOT_LOGGER.setLevel(level);
-        }
-    }
-
-    static void resetLogLevel() {
-        Level level = LOGGER_LEVEL.get();
-        if (level != null && LOGGER_LEVEL.compareAndSet(level, null)) {
-            ROOT_LOGGER.setLevel(level);
-        }
-    }
 
     static void startSimulatorComponents(int numberOfAgents, int numberOfWorkers, int numberOfTests) {
         try {

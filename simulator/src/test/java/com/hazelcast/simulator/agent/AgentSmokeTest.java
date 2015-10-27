@@ -39,11 +39,12 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -59,8 +60,6 @@ public class AgentSmokeTest {
     private static final int TEST_RUNTIME_SECONDS = 3;
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
-    private static final Logger ROOT_LOGGER = Logger.getRootLogger();
-    private static final AtomicReference<Level> LOGGER_LEVEL = new AtomicReference<Level>();
 
     private static AgentStarter agentStarter;
 
@@ -72,9 +71,7 @@ public class AgentSmokeTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
-            ROOT_LOGGER.setLevel(Level.TRACE);
-        }
+        setLogLevel(Level.TRACE);
 
         setDistributionUserDir();
 
@@ -113,10 +110,7 @@ public class AgentSmokeTest {
             deleteLogs();
             deleteQuiet(new File("failures-agentSmokeTest.txt"));
 
-            Level level = LOGGER_LEVEL.get();
-            if (level != null && LOGGER_LEVEL.compareAndSet(level, null)) {
-                ROOT_LOGGER.setLevel(level);
-            }
+            resetLogLevel();
         }
     }
 

@@ -13,11 +13,11 @@ import org.junit.Test;
 
 import java.util.Map;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertEmptyFutureMaps;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getRandomDestination;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.stopSimulatorComponents;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;

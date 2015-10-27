@@ -10,6 +10,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.AGENT_START_PORT;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_OPERATION;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
@@ -17,9 +19,7 @@ import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getWorkerConnector;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.shutdownCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;

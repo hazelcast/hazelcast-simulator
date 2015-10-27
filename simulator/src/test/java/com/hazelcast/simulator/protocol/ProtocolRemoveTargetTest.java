@@ -8,15 +8,15 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertEmptyFutureMaps;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getWorkerConnector;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.resetLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.stopSimulatorComponents;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
