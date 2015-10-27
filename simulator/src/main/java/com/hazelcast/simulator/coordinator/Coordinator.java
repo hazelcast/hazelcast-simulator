@@ -51,7 +51,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
-import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
 
 public final class Coordinator {
@@ -64,12 +63,12 @@ public final class Coordinator {
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
     private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
 
+    private final TestSuite testSuite;
+    private final ComponentRegistry componentRegistry;
     private final CoordinatorParameters coordinatorParameters;
     private final ClusterLayoutParameters clusterLayoutParameters;
     private final WorkerParameters workerParameters;
-    private final TestSuite testSuite;
 
-    private final ComponentRegistry componentRegistry;
     private final FailureContainer failureContainer;
 
     private final SimulatorProperties props;
@@ -78,25 +77,20 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    public Coordinator(CoordinatorParameters coordinatorParameters, ClusterLayoutParameters clusterLayoutParameters,
-                       WorkerParameters workerParameters, TestSuite testSuite) {
+    public Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
+                       ClusterLayoutParameters clusterLayoutParameters, WorkerParameters workerParameters) {
+        this.testSuite = testSuite;
+        this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
         this.workerParameters = workerParameters;
-        this.testSuite = testSuite;
 
-        this.componentRegistry = loadComponentRegister(coordinatorParameters.getAgentsFile());
         this.failureContainer = new FailureContainer(testSuite, componentRegistry);
 
         this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);
 
-        int agentCount = componentRegistry.agentCount();
-        clusterLayoutParameters.initMemberWorkerCount(agentCount);
-        workerParameters.initMemberHzConfig(componentRegistry, props);
-        workerParameters.initClientHzConfig(componentRegistry);
-
-        logHeader(agentCount);
+        logHeader();
     }
 
     CoordinatorParameters getCoordinatorParameters() {
@@ -141,7 +135,7 @@ public final class Coordinator {
         return testPhaseListenerContainer;
     }
 
-    private void logHeader(int agentCount) {
+    private void logHeader() {
         echoLocal("Hazelcast Simulator Coordinator");
         echoLocal("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime());
         echoLocal("SIMULATOR_HOME: %s", getSimulatorHome());
@@ -150,11 +144,10 @@ public final class Coordinator {
         int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
         echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
 
-        echoLocal("Total number of agents: %s", agentCount);
+        echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount());
         echoLocal("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount());
 
-        echoLocal("Loading agents file: %s", coordinatorParameters.getAgentsFile().getAbsolutePath());
         echoLocal("HAZELCAST_VERSION_SPEC: %s", props.getHazelcastVersionSpec());
     }
 

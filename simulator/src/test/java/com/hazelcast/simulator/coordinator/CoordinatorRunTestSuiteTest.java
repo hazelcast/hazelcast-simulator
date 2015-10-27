@@ -167,14 +167,20 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     private Coordinator createCoordinator() {
+        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
+        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
+
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+        SimulatorAddress agentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
+
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
-                new File(AgentsFile.NAME),
                 "",
                 verifyEnabled,
                 parallel,
-                TestPhase.SETUP,
-                false
+                false,
+                TestPhase.SETUP
         );
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
 
@@ -183,15 +189,9 @@ public class CoordinatorRunTestSuiteTest {
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
 
-        Coordinator coordinator = new Coordinator(coordinatorParameters, clusterLayoutParameters, workerParameters, testSuite);
+        Coordinator coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, clusterLayoutParameters,
+                workerParameters);
         coordinator.setRemoteClient(remoteClient);
-
-        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
-
-        ComponentRegistry componentRegistry = coordinator.getComponentRegistry();
-        SimulatorAddress agentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
-        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
 
         new TestPhaseCompleter(coordinator);
 

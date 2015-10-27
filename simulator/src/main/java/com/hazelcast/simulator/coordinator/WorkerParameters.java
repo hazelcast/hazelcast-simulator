@@ -52,7 +52,7 @@ public class WorkerParameters {
 
     public WorkerParameters(SimulatorProperties properties, boolean autoCreateHzInstance, int workerStartupTimeout,
                             String memberJvmOptions, String clientJvmOptions, String memberHzConfig, String clientHzConfig,
-                            String log4jConfig, boolean monitorPerformance) {
+                            String log4jConfig, boolean monitorPerformance, ComponentRegistry componentRegistry) {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
 
@@ -61,8 +61,8 @@ public class WorkerParameters {
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
 
-        this.memberHzConfig = memberHzConfig;
-        this.clientHzConfig = clientHzConfig;
+        this.memberHzConfig = initMemberHzConfig(memberHzConfig, properties, componentRegistry);
+        this.clientHzConfig = initClientHzConfig(clientHzConfig, memberHzConfig, componentRegistry);
         this.log4jConfig = log4jConfig;
 
         this.monitorPerformance = monitorPerformance;
@@ -71,6 +71,35 @@ public class WorkerParameters {
         this.profiler = initProfiler(properties);
         this.profilerSettings = initProfilerSettings(properties);
         this.numaCtl = properties.get("NUMA_CONTROL", "none");
+    }
+
+    private String initMemberHzConfig(String memberConfig, SimulatorProperties properties, ComponentRegistry componentRegistry) {
+        if (componentRegistry == null) {
+            return memberConfig;
+        }
+
+        String addressConfig = createAddressConfig("member", componentRegistry, getPort(memberConfig));
+        memberConfig = memberConfig.replace("<!--MEMBERS-->", addressConfig);
+
+        String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
+        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
+            String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
+            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
+            memberConfig = memberConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
+                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
+                            updateIntervalAttr, manCenterURL));
+        }
+
+        return memberConfig;
+    }
+
+    private String initClientHzConfig(String clientConfig, String memberConfig, ComponentRegistry componentRegistry) {
+        if (componentRegistry == null) {
+            return clientConfig;
+        }
+
+        String addressConfig = createAddressConfig("address", componentRegistry, getPort(memberConfig));
+        return clientConfig.replace("<!--MEMBERS-->", addressConfig);
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
@@ -160,26 +189,5 @@ public class WorkerParameters {
 
     public String getNumaCtl() {
         return numaCtl;
-    }
-
-    void initMemberHzConfig(ComponentRegistry componentRegistry, SimulatorProperties properties) {
-        String addressConfig = createAddressConfig("member", componentRegistry, getPort(memberHzConfig));
-
-        memberHzConfig = memberHzConfig.replace("<!--MEMBERS-->", addressConfig);
-
-        String manCenterURL = properties.get("MANAGEMENT_CENTER_URL").trim();
-        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
-            String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL").trim();
-            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
-            memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
-                            updateIntervalAttr, manCenterURL));
-        }
-    }
-
-    void initClientHzConfig(ComponentRegistry componentRegistry) {
-        String addressConfig = createAddressConfig("address", componentRegistry, getPort(memberHzConfig));
-
-        clientHzConfig = clientHzConfig.replace("<!--MEMBERS-->", addressConfig);
     }
 }

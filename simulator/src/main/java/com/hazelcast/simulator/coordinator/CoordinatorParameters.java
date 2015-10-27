@@ -18,8 +18,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.TestPhase;
 
-import java.io.File;
-
 import static java.lang.Boolean.parseBoolean;
 
 /**
@@ -28,36 +26,30 @@ import static java.lang.Boolean.parseBoolean;
 class CoordinatorParameters {
 
     private final SimulatorProperties simulatorProperties;
-    private final File agentsFile;
     private final String workerClassPath;
 
     private final boolean verifyEnabled;
     private final boolean parallel;
-    private final TestPhase lastTestPhaseToSync;
-
     private final boolean refreshJvm;
     private final boolean passiveMembers;
 
-    public CoordinatorParameters(SimulatorProperties properties, File agentsFile, String workerClassPath,
-                                 boolean verifyEnabled, boolean parallel,
-                                 TestPhase lastTestPhaseToSync, boolean refreshJvm) {
+    private final TestPhase lastTestPhaseToSync;
+
+    public CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean verifyEnabled, boolean parallel,
+                                 boolean refreshJvm, TestPhase lastTestPhaseToSync) {
         this.simulatorProperties = properties;
-        this.agentsFile = agentsFile;
         this.workerClassPath = workerClassPath;
+
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
-        this.lastTestPhaseToSync = lastTestPhaseToSync;
-
         this.refreshJvm = refreshJvm;
         this.passiveMembers = parseBoolean(properties.get("PASSIVE_MEMBERS", "true"));
+
+        this.lastTestPhaseToSync = lastTestPhaseToSync;
     }
 
     public SimulatorProperties getSimulatorProperties() {
         return simulatorProperties;
-    }
-
-    public File getAgentsFile() {
-        return agentsFile;
     }
 
     public String getWorkerClassPath() {
@@ -72,15 +64,15 @@ class CoordinatorParameters {
         return parallel;
     }
 
-    public TestPhase getLastTestPhaseToSync() {
-        return lastTestPhaseToSync;
-    }
-
     public boolean isRefreshJvm() {
         return refreshJvm;
     }
 
     public boolean isPassiveMembers() {
         return passiveMembers;
+    }
+
+    public TestPhase getLastTestPhaseToSync() {
+        return lastTestPhaseToSync;
     }
 }
