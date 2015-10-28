@@ -339,7 +339,7 @@ public final class FileUtils {
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            throw new FileUtilsException(format("%s [%s] does not exist%n", desc, file));
+            throw new FileUtilsException(format("%s [%s] does not exist", desc, file));
         }
         return file;
     }
@@ -350,7 +350,7 @@ public final class FileUtils {
             file = newFile(baseDir + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            throw new FileUtilsException(format("%s [%s] does not exist%n", desc, file.getAbsolutePath()));
+            throw new FileUtilsException(format("%s [%s] does not exist", desc, file.getAbsolutePath()));
         }
         LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
 
