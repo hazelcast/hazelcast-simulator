@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="clusterConfiguration">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="workerConfiguration" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                        <xs:simpleContent>
+                            <xs:extension base="xs:string">
+                                <xs:attribute type="xs:string" name="name" use="required"/>
+                                <xs:attribute type="xs:string" name="type" use="required"/>
+                                <xs:attribute type="xs:string" name="hzVersion" use="optional"/>
+                                <xs:attribute type="xs:string" name="hzConfig" use="optional"/>
+                                <xs:attribute type="xs:string" name="hzConfigFile" use="optional"/>
+                                <xs:attribute type="xs:string" name="jvmOptions" use="optional"/>
+                            </xs:extension>
+                        </xs:simpleContent>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="nodeConfiguration" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="workerGroup" maxOccurs="unbounded" minOccurs="1">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute type="xs:string" name="configuration" use="required"/>
+                                            <xs:attribute type="xs:byte" name="count" use="required"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

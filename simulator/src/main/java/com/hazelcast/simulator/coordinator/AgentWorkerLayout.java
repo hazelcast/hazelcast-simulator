@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.cluster.WorkerConfiguration;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -27,18 +28,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * The layout of workers for a given Simulator Agent.
  */
-public final class AgentMemberLayout {
+public final class AgentWorkerLayout {
 
     private final List<WorkerJvmSettings> workerJvmSettingsList = new ArrayList<WorkerJvmSettings>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
     private final AgentData agentData;
 
-    private AgentMemberMode agentMemberMode;
+    private AgentWorkerMode agentWorkerMode;
 
-    public AgentMemberLayout(AgentData agentData, AgentMemberMode agentMemberMode) {
+    public AgentWorkerLayout(AgentData agentData, AgentWorkerMode agentWorkerMode) {
         this.agentData = agentData;
-        this.agentMemberMode = agentMemberMode;
+        this.agentWorkerMode = agentWorkerMode;
     }
 
     public String getPublicAddress() {
@@ -49,12 +50,17 @@ public final class AgentMemberLayout {
         return agentData.getAddress();
     }
 
-    public void setAgentMemberMode(AgentMemberMode agentMemberMode) {
-        this.agentMemberMode = agentMemberMode;
+    public void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {
+        this.agentWorkerMode = agentWorkerMode;
     }
 
-    public AgentMemberMode getAgentMemberMode() {
-        return agentMemberMode;
+    public AgentWorkerMode getAgentWorkerMode() {
+        return agentWorkerMode;
+    }
+
+    public void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
+        workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters,
+                workerConfiguration));
     }
 
     public void addWorker(WorkerType type, WorkerParameters parameters) {

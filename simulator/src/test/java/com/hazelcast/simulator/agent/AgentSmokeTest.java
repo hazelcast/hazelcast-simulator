@@ -2,8 +2,8 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.AgentMemberLayout;
-import com.hazelcast.simulator.coordinator.AgentMemberMode;
+import com.hazelcast.simulator.coordinator.AgentWorkerLayout;
+import com.hazelcast.simulator.coordinator.AgentWorkerMode;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
@@ -200,10 +200,10 @@ public class AgentSmokeTest {
         );
 
         AgentData agentData = new AgentData(1, AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
-        AgentMemberLayout agentLayout = new AgentMemberLayout(agentData, AgentMemberMode.MEMBER);
-        agentLayout.addWorker(WorkerType.MEMBER, workerParameters);
+        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, AgentWorkerMode.MEMBER);
+        agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
 
-        remoteClient.createWorkers(Collections.singletonList(agentLayout), false);
+        remoteClient.createWorkers(Collections.singletonList(agentWorkerLayout), false);
     }
 
     private static void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {

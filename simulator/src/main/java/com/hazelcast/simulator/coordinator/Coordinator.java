@@ -234,8 +234,8 @@ public final class Coordinator {
         int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
         int totalWorkerCount = memberWorkerCount + clientWorkerCount;
 
-        List<AgentMemberLayout> agentMemberLayouts = initMemberLayout(componentRegistry, workerParameters,
-                clusterLayoutParameters.getDedicatedMemberMachineCount(), memberWorkerCount, clientWorkerCount);
+        List<AgentWorkerLayout> agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters,
+                clusterLayoutParameters, memberWorkerCount, clientWorkerCount);
 
         long started = System.nanoTime();
         try {
@@ -244,7 +244,7 @@ public final class Coordinator {
             echo("Successfully killed all remaining workers");
 
             echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, memberWorkerCount, clientWorkerCount);
-            remoteClient.createWorkers(agentMemberLayouts, true);
+            remoteClient.createWorkers(agentWorkerLayouts, true);
             echo("Successfully started workers");
         } catch (Exception e) {
             while (failureContainer.getFailureCount() == 0) {

@@ -15,9 +15,10 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-public enum AgentMemberMode {
+public enum AgentWorkerMode {
 
     MEMBER,
     CLIENT,
-    MIXED
+    MIXED,
+    CUSTOM
 }

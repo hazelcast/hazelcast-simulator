@@ -38,6 +38,7 @@ public class RemoteClientTest {
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
+    private final ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
     private final WorkerParameters workerParameters = mock(WorkerParameters.class);
 
     @Before
@@ -51,6 +52,8 @@ public class RemoteClientTest {
 
         SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();
         componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
+
+        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
 
         when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
     }
@@ -77,7 +80,8 @@ public class RemoteClientTest {
     public void testCreateWorkers_withClients() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 3);
+        List<AgentWorkerLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 6,
+                3);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts, false);
@@ -87,7 +91,8 @@ public class RemoteClientTest {
     public void testCreateWorkers_noClients() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
+        List<AgentWorkerLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 6,
+                0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts, false);
@@ -97,7 +102,8 @@ public class RemoteClientTest {
     public void testCreateWorkers_withErrorResponse() {
         initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
+        List<AgentWorkerLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 6,
+                0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts, false);
@@ -107,7 +113,8 @@ public class RemoteClientTest {
     public void testCreateWorkers_withExceptionOnWrite() {
         initMockForCreateWorkerOperation(null);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
+        List<AgentWorkerLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 6,
+                0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts, false);
@@ -117,7 +124,8 @@ public class RemoteClientTest {
     public void testCreateWorkersAndTerminateWorkers_withPokeThread() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
 
-        List<AgentMemberLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, 0, 6, 0);
+        List<AgentWorkerLayout> memberLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 6,
+                0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
         remoteClient.createWorkers(memberLayouts, true);

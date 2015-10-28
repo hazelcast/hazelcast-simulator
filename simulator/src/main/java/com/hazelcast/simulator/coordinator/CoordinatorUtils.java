@@ -17,6 +17,10 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
+import com.hazelcast.simulator.cluster.ClusterConfiguration;
+import com.hazelcast.simulator.cluster.NodeConfiguration;
+import com.hazelcast.simulator.cluster.WorkerConfiguration;
+import com.hazelcast.simulator.cluster.WorkerGroup;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -26,6 +30,7 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +40,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.fromXml;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
@@ -74,10 +80,65 @@ final class CoordinatorUtils {
         }
     }
 
-    public static List<AgentMemberLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
-                                                           int dedicatedMemberMachineCount,
+    public static List<AgentWorkerLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
+                                                           ClusterLayoutParameters clusterLayoutParameters,
                                                            int memberWorkerCount, int clientWorkerCount) {
-        int agentCount = registry.agentCount();
+        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(registry);
+
+        if (clusterLayoutParameters.getClusterConfiguration() != null) {
+            generateFromXml(agentWorkerLayouts, clusterLayoutParameters.getClusterConfiguration(), registry.agentCount(),
+                    parameters);
+        } else {
+            generateFromArguments(agentWorkerLayouts, clusterLayoutParameters.getDedicatedMemberMachineCount(),
+                    registry.agentCount(), memberWorkerCount, clientWorkerCount, parameters);
+        }
+
+        // log the layout
+        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
+            LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s",
+                    agentWorkerLayout.getPublicAddress(),
+                    agentWorkerLayout.getCount(WorkerType.MEMBER),
+                    agentWorkerLayout.getCount(WorkerType.CLIENT),
+                    agentWorkerLayout.getAgentWorkerMode()
+            ));
+        }
+
+        return agentWorkerLayouts;
+    }
+
+    private static List<AgentWorkerLayout> initAgentWorkerLayouts(ComponentRegistry componentRegistry) {
+        List<AgentWorkerLayout> agentWorkerLayouts = new LinkedList<AgentWorkerLayout>();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            AgentWorkerLayout layout = new AgentWorkerLayout(agentData, AgentWorkerMode.MIXED);
+            agentWorkerLayouts.add(layout);
+        }
+        return agentWorkerLayouts;
+    }
+
+    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, String configuration, int agentCount,
+                                        WorkerParameters parameters) {
+        ClusterConfiguration clusterConfiguration = fromXml(configuration, parameters);
+        if (clusterConfiguration.size() != agentCount) {
+            throw new CommandLineExitException(format("Found %d node configurations for %d agents (number must be equal)",
+                    clusterConfiguration.size(), agentCount));
+        }
+
+        Iterator<AgentWorkerLayout> iterator = agentWorkerLayouts.iterator();
+        for (NodeConfiguration nodeConfiguration : clusterConfiguration.getNodeConfigurations()) {
+            AgentWorkerLayout agentWorkerLayout = iterator.next();
+            for (WorkerGroup workerGroup : nodeConfiguration.getWorkerGroups()) {
+                WorkerConfiguration workerConfig = clusterConfiguration.getWorkerConfiguration(workerGroup.getConfiguration());
+                for (int i = 0; i < workerGroup.getCount(); i++) {
+                    agentWorkerLayout.addWorker(workerConfig.getType(), parameters, workerConfig);
+                }
+            }
+            agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);
+        }
+    }
+
+    private static void generateFromArguments(List<AgentWorkerLayout> agentWorkerLayouts, int dedicatedMemberMachineCount,
+                                              int agentCount, int memberWorkerCount, int clientWorkerCount,
+                                              WorkerParameters parameters) {
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));
@@ -86,65 +147,42 @@ final class CoordinatorUtils {
             throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
 
-        List<AgentMemberLayout> agentMemberLayouts = initAgentMemberLayouts(registry);
-
-        assignDedicatedMemberMachines(agentCount, agentMemberLayouts, dedicatedMemberMachineCount);
+        assignDedicatedMemberMachines(agentCount, agentWorkerLayouts, dedicatedMemberMachineCount);
 
         AtomicInteger currentIndex = new AtomicInteger(0);
         for (int i = 0; i < memberWorkerCount; i++) {
-            // assign server nodes
-            AgentMemberLayout agentLayout = findNextAgentLayout(currentIndex, agentMemberLayouts, AgentMemberMode.CLIENT);
-            agentLayout.addWorker(WorkerType.MEMBER, parameters);
+            // assign members
+            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.CLIENT);
+            agentWorkerLayout.addWorker(WorkerType.MEMBER, parameters);
         }
         for (int i = 0; i < clientWorkerCount; i++) {
-            // assign the clients
-            AgentMemberLayout agentLayout = findNextAgentLayout(currentIndex, agentMemberLayouts, AgentMemberMode.MEMBER);
-            agentLayout.addWorker(WorkerType.CLIENT, parameters);
+            // assign clients
+            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
+            agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
         }
-
-        // log the layout
-        for (AgentMemberLayout agentMemberLayout : agentMemberLayouts) {
-            LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s",
-                    agentMemberLayout.getPublicAddress(),
-                    agentMemberLayout.getCount(WorkerType.MEMBER),
-                    agentMemberLayout.getCount(WorkerType.CLIENT),
-                    agentMemberLayout.getAgentMemberMode()
-            ));
-        }
-
-        return agentMemberLayouts;
     }
 
-    private static List<AgentMemberLayout> initAgentMemberLayouts(ComponentRegistry componentRegistry) {
-        List<AgentMemberLayout> agentMemberLayouts = new LinkedList<AgentMemberLayout>();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            AgentMemberLayout layout = new AgentMemberLayout(agentData, AgentMemberMode.MIXED);
-            agentMemberLayouts.add(layout);
-        }
-        return agentMemberLayouts;
-    }
-
-    private static void assignDedicatedMemberMachines(int agentCount, List<AgentMemberLayout> agentMemberLayouts,
+    private static void assignDedicatedMemberMachines(int agentCount, List<AgentWorkerLayout> agentWorkerLayouts,
                                                       int dedicatedMemberMachineCount) {
         if (dedicatedMemberMachineCount > 0) {
-            assignAgentMemberMode(agentMemberLayouts, 0, dedicatedMemberMachineCount, AgentMemberMode.MEMBER);
-            assignAgentMemberMode(agentMemberLayouts, dedicatedMemberMachineCount, agentCount, AgentMemberMode.CLIENT);
+            assignAgentWorkerMode(agentWorkerLayouts, 0, dedicatedMemberMachineCount, AgentWorkerMode.MEMBER);
+            assignAgentWorkerMode(agentWorkerLayouts, dedicatedMemberMachineCount, agentCount, AgentWorkerMode.CLIENT);
         }
     }
 
-    private static void assignAgentMemberMode(List<AgentMemberLayout> agentMemberLayouts, int startIndex, int endIndex,
-                                              AgentMemberMode agentMemberMode) {
+    private static void assignAgentWorkerMode(List<AgentWorkerLayout> agentWorkerLayouts, int startIndex, int endIndex,
+                                              AgentWorkerMode agentWorkerMode) {
         for (int i = startIndex; i < endIndex; i++) {
-            agentMemberLayouts.get(i).setAgentMemberMode(agentMemberMode);
+            agentWorkerLayouts.get(i).setAgentWorkerMode(agentWorkerMode);
         }
     }
 
-    private static AgentMemberLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentMemberLayout> agentMemberLayouts,
-                                                         AgentMemberMode excludedAgentMemberMode) {
-        int size = agentMemberLayouts.size();
+    private static AgentWorkerLayout findNextAgentLayout(AtomicInteger currentIndex, List<AgentWorkerLayout> agentWorkerLayouts,
+                                                         AgentWorkerMode excludedAgentWorkerMode) {
+        int size = agentWorkerLayouts.size();
         while (true) {
-            AgentMemberLayout agentLayout = agentMemberLayouts.get(currentIndex.getAndIncrement() % size);
-            if (agentLayout.getAgentMemberMode() != excludedAgentMemberMode) {
+            AgentWorkerLayout agentLayout = agentWorkerLayouts.get(currentIndex.getAndIncrement() % size);
+            if (agentLayout.getAgentWorkerMode() != excludedAgentWorkerMode) {
                 return agentLayout;
             }
         }

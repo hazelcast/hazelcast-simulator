@@ -67,7 +67,7 @@ public class RemoteClient {
         coordinatorConnector.write(ALL_WORKERS, new LogOperation(message));
     }
 
-    public void createWorkers(List<AgentMemberLayout> agentLayouts, boolean startPokeThread) {
+    public void createWorkers(List<AgentWorkerLayout> agentLayouts, boolean startPokeThread) {
         if (startPokeThread) {
             workerPokeThread.start();
         }
@@ -76,11 +76,11 @@ public class RemoteClient {
         createWorkersByType(agentLayouts, false);
     }
 
-    private void createWorkersByType(List<AgentMemberLayout> agentLayouts, boolean isMemberType) {
+    private void createWorkersByType(List<AgentWorkerLayout> agentLayouts, boolean isMemberType) {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
-        for (AgentMemberLayout agentMemberLayout : agentLayouts) {
+        for (AgentWorkerLayout agentWorkerLayout : agentLayouts) {
             final List<WorkerJvmSettings> settingsList = new ArrayList<WorkerJvmSettings>();
-            for (WorkerJvmSettings workerJvmSettings : agentMemberLayout.getWorkerJvmSettings()) {
+            for (WorkerJvmSettings workerJvmSettings : agentWorkerLayout.getWorkerJvmSettings()) {
                 WorkerType workerType = workerJvmSettings.getWorkerType();
                 if (workerType.isMember() == isMemberType) {
                     settingsList.add(workerJvmSettings);
@@ -91,7 +91,7 @@ public class RemoteClient {
             if (workerCount == 0) {
                 continue;
             }
-            final SimulatorAddress agentAddress = agentMemberLayout.getSimulatorAddress();
+            final SimulatorAddress agentAddress = agentWorkerLayout.getSimulatorAddress();
             final String workerType = (isMemberType) ? "member" : "client";
             spawner.spawn(new Runnable() {
                 @Override
