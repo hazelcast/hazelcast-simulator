@@ -177,6 +177,7 @@ public class CoordinatorRunTestSuiteTest {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
                 "",
+                false,
                 verifyEnabled,
                 parallel,
                 false,
@@ -189,8 +190,8 @@ public class CoordinatorRunTestSuiteTest {
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
 
-        Coordinator coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, clusterLayoutParameters,
-                workerParameters);
+        Coordinator coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters,
+                clusterLayoutParameters);
         coordinator.setRemoteClient(remoteClient);
 
         new TestPhaseCompleter(coordinator);
@@ -202,7 +203,8 @@ public class CoordinatorRunTestSuiteTest {
         boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = testSuite.size();
         int executeOnFirstWorkerTimes = 0;
-        int executeOnAllWorkersTimes = 2; // CreateTestOperation and StopTestOperation
+        // CreateTestOperation and StopTestOperation
+        int executeOnAllWorkersTimes = 2;
         for (TestPhase testPhase : TestPhase.values()) {
             if (testPhase.desc().startsWith("global")) {
                 executeOnFirstWorkerTimes++;

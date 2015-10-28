@@ -63,8 +63,7 @@ public class OperationCodecTest {
                         + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />",
                 "",
                 "",
-                false,
-                null
+                false
         );
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, workerParameters);

@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -32,6 +33,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.getPort;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
@@ -152,6 +156,10 @@ final class CoordinatorCli {
             "The startup timeout in seconds for a worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
+    private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
+            "Sets the license key for Hazelcast Enterprise Edition.")
+            .withRequiredArg().ofType(String.class);
+
     private CoordinatorCli() {
     }
 
@@ -185,14 +193,36 @@ final class CoordinatorCli {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
                 options.valueOf(cli.workerClassPathSpec),
+                false,
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.workerRefreshSpec),
                 options.valueOf(cli.syncToTestPhaseSpec)
         );
 
+        String memberHzConfig = loadMemberHzConfig(options, cli);
+        String clientHzConfig = loadClientHzConfig(options, cli);
+        int defaultHzPort = getPort(memberHzConfig);
+        String licenseKey = options.valueOf(cli.licenseKeySpec);
+
+        WorkerParameters workerParameters = new WorkerParameters(
+                simulatorProperties,
+                options.valueOf(cli.autoCreateHzInstanceSpec),
+                options.valueOf(cli.workerStartupTimeoutSpec),
+                options.valueOf(cli.workerVmOptionsSpec),
+                options.valueOf(cli.clientWorkerVmOptionsSpec),
+                initMemberHzConfig(memberHzConfig, componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
+                initClientHzConfig(clientHzConfig, componentRegistry, defaultHzPort, licenseKey),
+                loadLog4jConfig(),
+                options.has(cli.monitorPerformanceSpec)
+        );
+
+        WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(defaultHzPort, licenseKey,
+                workerParameters, simulatorProperties, componentRegistry);
+
         ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(
                 loadClusterConfig(),
+                workerConfigurationConverter,
                 options.valueOf(cli.memberWorkerCountSpec),
                 options.valueOf(cli.clientWorkerCountSpec),
                 options.valueOf(cli.dedicatedMemberMachinesSpec),
@@ -202,20 +232,7 @@ final class CoordinatorCli {
             throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
         }
 
-        WorkerParameters workerParameters = new WorkerParameters(
-                simulatorProperties,
-                options.valueOf(cli.autoCreateHzInstanceSpec),
-                options.valueOf(cli.workerStartupTimeoutSpec),
-                options.valueOf(cli.workerVmOptionsSpec),
-                options.valueOf(cli.clientWorkerVmOptionsSpec),
-                loadMemberHzConfig(options, cli),
-                loadClientHzConfig(options, cli),
-                loadLog4jConfig(),
-                options.has(cli.monitorPerformanceSpec),
-                componentRegistry
-        );
-
-        return new Coordinator(testSuite, componentRegistry, coordinatorParameters, clusterLayoutParameters, workerParameters);
+        return new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters);
     }
 
     private static File getTestSuiteFile(OptionSet options) {
@@ -246,7 +263,7 @@ final class CoordinatorCli {
     private static String loadClusterConfig() {
         File file = new File("cluster.xml");
         if (file.exists()) {
-            return file.getAbsolutePath();
+            return fileAsText(file.getAbsolutePath());
         } else {
             return null;
         }

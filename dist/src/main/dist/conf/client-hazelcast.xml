@@ -6,8 +6,6 @@
         xmlns="http://www.hazelcast.com/schema/client-config"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <!--license-key-->
-
     <group>
         <name>workers</name>
     </group>
@@ -17,6 +15,8 @@
             <!--MEMBERS-->
         </cluster-members>
     </network>
+
+    <!--LICENSE-KEY-->
 
     <serialization>
         <data-serializable-factories>

@@ -1,7 +1,11 @@
 package com.hazelcast.simulator.cluster;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import org.apache.log4j.Logger;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Iterator;
@@ -9,12 +13,41 @@ import java.util.Iterator;
 import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.fromXml;
 import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.toXml;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static com.hazelcast.simulator.worker.WorkerType.CLIENT;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ClusterConfigurationUtilsTest {
+
+    private static final String MEMBER_HZ_CONFIG_FILE = "dist/src/main/dist/conf/hazelcast.xml";
+    private static final String CLIENT_HZ_CONFIG_FILE = "dist/src/main/dist/conf/client-hazelcast.xml";
+
+    private static final Logger LOGGER = Logger.getLogger(ClusterConfigurationUtilsTest.class);
+
+    private ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
+
+    @Before
+    public void setUp() {
+        WorkerParameters workerParameters = mock(WorkerParameters.class);
+        when(workerParameters.getHazelcastVersionSpec()).thenReturn("defaultHzVersion");
+        when(workerParameters.getMemberHzConfig()).thenReturn("defaultMemberHzConfig");
+        when(workerParameters.getMemberJvmOptions()).thenReturn("defaultMemberJvmOptions");
+
+        SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
+        when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
+
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+
+        WorkerConfigurationConverter converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParameters,
+                simulatorProperties, componentRegistry);
+
+        when(clusterLayoutParameters.getWorkerConfigurationConverter()).thenReturn(converter);
+    }
 
     @Test
     public void testConstructor() throws Exception {
@@ -23,15 +56,10 @@ public class ClusterConfigurationUtilsTest {
 
     @Test
     public void testToXml_fromXml() throws Exception {
-        ClusterConfiguration expectedClusterConfiguration = new ClusterConfiguration();
-
         WorkerConfiguration memberWorkerConfiguration = new WorkerConfiguration("memberWorker", MEMBER, "hzVersion",
-                "memberHzConfigFile", "jvmOptions");
-        WorkerConfiguration clientWorkerConfiguration = new WorkerConfiguration("clientWorker", WorkerType.CLIENT, "hzVersion",
-                "clientHzConfigFile", "jvmOptions");
-
-        expectedClusterConfiguration.addWorkerConfiguration(memberWorkerConfiguration);
-        expectedClusterConfiguration.addWorkerConfiguration(clientWorkerConfiguration);
+                MEMBER_HZ_CONFIG_FILE, "jvmOptions");
+        WorkerConfiguration clientWorkerConfiguration = new WorkerConfiguration("clientWorker", CLIENT, "hzVersion",
+                CLIENT_HZ_CONFIG_FILE, "jvmOptions");
 
         NodeConfiguration node1 = new NodeConfiguration();
         node1.addWorkerConfiguration("memberWorker", 1);
@@ -44,37 +72,41 @@ public class ClusterConfigurationUtilsTest {
         NodeConfiguration node3 = new NodeConfiguration();
         node3.addWorkerConfiguration("clientWorker", 10);
 
+        ClusterConfiguration expectedClusterConfiguration = new ClusterConfiguration();
+
+        expectedClusterConfiguration.addWorkerConfiguration(memberWorkerConfiguration);
+        expectedClusterConfiguration.addWorkerConfiguration(clientWorkerConfiguration);
+
         expectedClusterConfiguration.addNodeConfiguration(node1);
         expectedClusterConfiguration.addNodeConfiguration(node2);
         expectedClusterConfiguration.addNodeConfiguration(node3);
 
-        String xml = toXml(expectedClusterConfiguration);
-        System.out.println(xml);
+        String xml = toXml(clusterLayoutParameters, expectedClusterConfiguration);
+        LOGGER.info(xml);
 
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-        ClusterConfiguration actualClusterConfiguration = fromXml(xml, workerParameters);
+        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
+
+        ClusterConfiguration actualClusterConfiguration = fromXml(clusterLayoutParameters);
 
         assertClusterConfiguration(expectedClusterConfiguration, actualClusterConfiguration);
     }
 
     @Test
     public void testFromXml_withMissingAttributes() {
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getHazelcastVersionSpec()).thenReturn("defaultHzVersion");
-        when(workerParameters.getMemberHzConfig()).thenReturn("defaultMemberHzConfig");
-        when(workerParameters.getMemberJvmOptions()).thenReturn("defaultMemberJvmOptions");
+        String xml = format("<clusterConfiguration>%n"
+                + "  <workerConfiguration name=\"withHzVersion\" type=\"MEMBER\" hzVersion=\"hzVersion\"/>%n"
+                + "  <workerConfiguration name=\"withHzConfigFile\" type=\"MEMBER\" hzConfigFile=\"%s\"/>%n"
+                + "  <workerConfiguration name=\"withHzConfig\" type=\"MEMBER\" hzConfig=\"hzConfig\"/>%n"
+                + "  <workerConfiguration name=\"withJvmOptions\" type=\"MEMBER\" jvmOptions=\"jvmOptions\"/>%n"
+                + "  <nodeConfiguration>%n"
+                + "    <workerGroup configuration=\"withHzVersion\" count=\"1\"/>%n"
+                + "  </nodeConfiguration>%n"
+                + "</clusterConfiguration>",
+                MEMBER_HZ_CONFIG_FILE);
 
-        String xml = "<clusterConfiguration>\n"
-                + "  <workerConfiguration name=\"withHzVersion\" type=\"MEMBER\" hzVersion=\"hzVersion\"/>\n"
-                + "  <workerConfiguration name=\"withHzConfigFile\" type=\"MEMBER\" hzConfigFile=\"hzConfigFile\"/>\n"
-                + "  <workerConfiguration name=\"withHzConfig\" type=\"MEMBER\" hzConfig=\"hzConfig\"/>\n"
-                + "  <workerConfiguration name=\"withJvmOptions\" type=\"MEMBER\" jvmOptions=\"jvmOptions\"/>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"withHzVersion\" count=\"1\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "</clusterConfiguration>";
+        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
-        ClusterConfiguration clusterConfiguration = fromXml(xml, workerParameters);
+        ClusterConfiguration clusterConfiguration = fromXml(clusterLayoutParameters);
 
         WorkerConfiguration withHzVersion = clusterConfiguration.getWorkerConfiguration("withHzVersion");
         assertEquals(MEMBER, withHzVersion.getType());
@@ -85,7 +117,8 @@ public class ClusterConfigurationUtilsTest {
         WorkerConfiguration withHzConfigFile = clusterConfiguration.getWorkerConfiguration("withHzConfigFile");
         assertEquals(MEMBER, withHzConfigFile.getType());
         assertEquals("defaultHzVersion", withHzConfigFile.getHzVersion());
-        assertEquals("content of file hzConfigFile", withHzConfigFile.getHzConfig());
+        assertNotNull(withHzConfigFile.getHzConfig());
+        assertTrue(withHzConfigFile.getHzConfig().contains("defaultLicenseKey"));
         assertEquals("defaultMemberJvmOptions", withHzConfigFile.getJvmOptions());
 
         WorkerConfiguration withHzConfig = clusterConfiguration.getWorkerConfiguration("withHzConfig");

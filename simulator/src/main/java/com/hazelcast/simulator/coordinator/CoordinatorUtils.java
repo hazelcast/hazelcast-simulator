@@ -15,8 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.cluster.ClusterConfiguration;
 import com.hazelcast.simulator.cluster.NodeConfiguration;
 import com.hazelcast.simulator.cluster.WorkerConfiguration;
@@ -29,7 +27,6 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayInputStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.fromXml;
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
@@ -56,44 +52,18 @@ final class CoordinatorUtils {
     private CoordinatorUtils() {
     }
 
-    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
-        StringBuilder members = new StringBuilder();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            String hostAddress = agentData.getPrivateAddress();
-            members.append(format("<%s>%s:%d</%s>%n", tagName, hostAddress, port, tagName));
-        }
-        return members.toString();
-    }
-
-    static int getPort(String memberHzConfig) {
-        ByteArrayInputStream bis = null;
-        try {
-            byte[] configString = memberHzConfig.getBytes("UTF-8");
-            bis = new ByteArrayInputStream(configString);
-            Config config = new XmlConfigBuilder(bis).build();
-
-            return config.getNetworkConfig().getPort();
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not get port from settings", e);
-        } finally {
-            closeQuietly(bis);
-        }
-    }
-
     public static List<AgentWorkerLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
                                                            ClusterLayoutParameters clusterLayoutParameters,
                                                            int memberWorkerCount, int clientWorkerCount) {
         List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(registry);
 
         if (clusterLayoutParameters.getClusterConfiguration() != null) {
-            generateFromXml(agentWorkerLayouts, clusterLayoutParameters.getClusterConfiguration(), registry.agentCount(),
-                    parameters);
+            generateFromXml(agentWorkerLayouts, registry.agentCount(), clusterLayoutParameters, parameters);
         } else {
             generateFromArguments(agentWorkerLayouts, clusterLayoutParameters.getDedicatedMemberMachineCount(),
                     registry.agentCount(), memberWorkerCount, clientWorkerCount, parameters);
         }
 
-        // log the layout
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s",
                     agentWorkerLayout.getPublicAddress(),
@@ -115,9 +85,9 @@ final class CoordinatorUtils {
         return agentWorkerLayouts;
     }
 
-    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, String configuration, int agentCount,
-                                        WorkerParameters parameters) {
-        ClusterConfiguration clusterConfiguration = fromXml(configuration, parameters);
+    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, int agentCount,
+                                        ClusterLayoutParameters clusterLayoutParameters, WorkerParameters parameters) {
+        ClusterConfiguration clusterConfiguration = getClusterConfiguration(clusterLayoutParameters);
         if (clusterConfiguration.size() != agentCount) {
             throw new CommandLineExitException(format("Found %d node configurations for %d agents (number must be equal)",
                     clusterConfiguration.size(), agentCount));
@@ -133,6 +103,14 @@ final class CoordinatorUtils {
                 }
             }
             agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);
+        }
+    }
+
+    private static ClusterConfiguration getClusterConfiguration(ClusterLayoutParameters clusterLayoutParameters) {
+        try {
+            return fromXml(clusterLayoutParameters);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not parse cluster configuration", e);
         }
     }
 

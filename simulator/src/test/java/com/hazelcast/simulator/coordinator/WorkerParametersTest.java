@@ -4,6 +4,7 @@ import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,6 +12,10 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hazelcast.simulator.coordinator.WorkerParameters.createAddressConfig;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.getPort;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -36,8 +41,6 @@ public class WorkerParametersTest {
         when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");
         when(properties.get("PROFILER")).thenReturn(JavaProfiler.NONE.name());
         when(properties.get(eq("NUMA_CONTROL"), anyString())).thenReturn("none");
-        when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("http://localhost:8080");
-        when(properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL")).thenReturn("60");
 
         componentRegistry = getComponentRegistryMock();
 
@@ -47,13 +50,8 @@ public class WorkerParametersTest {
 
     @Test
     public void testConstructor() {
-        assertTrue(memberConfig.contains("<!--MEMBERS-->"));
-        assertTrue(memberConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
-
-        assertTrue(clientConfig.contains("<!--MEMBERS-->"));
-
         WorkerParameters workerParameters = new WorkerParameters(properties, true, 2342, "memberJvmOptions", "clientJvmOptions",
-                memberConfig, clientConfig, "log4jConfig", false, componentRegistry);
+                memberConfig, clientConfig, "log4jConfig", false);
 
         assertTrue(workerParameters.isAutoCreateHzInstance());
         assertEquals(2342, workerParameters.getWorkerStartupTimeout());
@@ -63,13 +61,8 @@ public class WorkerParametersTest {
         assertEquals("memberJvmOptions", workerParameters.getMemberJvmOptions());
         assertEquals("clientJvmOptions", workerParameters.getClientJvmOptions());
 
-        assertNotNull(workerParameters.getMemberHzConfig());
-        assertFalse(workerParameters.getMemberHzConfig().contains("<!--MEMBERS-->"));
-        assertFalse(workerParameters.getMemberHzConfig().contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
-
-        assertNotNull(workerParameters.getClientHzConfig());
-        assertFalse(workerParameters.getClientHzConfig().contains("<!--MEMBERS-->"));
-
+        assertEquals(memberConfig, workerParameters.getMemberHzConfig());
+        assertEquals(clientConfig, workerParameters.getClientHzConfig());
         assertEquals("log4jConfig", workerParameters.getLog4jConfig());
         assertFalse(workerParameters.isMonitorPerformance());
 
@@ -83,7 +76,7 @@ public class WorkerParametersTest {
         properties = mock(SimulatorProperties.class);
         when(properties.get("PROFILER")).thenReturn("");
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         assertEquals(JavaProfiler.NONE, workerParameters.getProfiler());
     }
@@ -94,7 +87,7 @@ public class WorkerParametersTest {
         when(properties.get("PROFILER")).thenReturn(JavaProfiler.YOURKIT.name());
         when(properties.get("YOURKIT_SETTINGS")).thenReturn("yourKitSettings");
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         assertEquals(JavaProfiler.YOURKIT, workerParameters.getProfiler());
         assertEquals("yourKitSettings", workerParameters.getProfilerSettings());
@@ -106,7 +99,7 @@ public class WorkerParametersTest {
         when(properties.get("PROFILER")).thenReturn(JavaProfiler.VTUNE.name());
         when(properties.get("VTUNE_SETTINGS", "")).thenReturn("vtuneSettings");
 
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         assertEquals(JavaProfiler.VTUNE, workerParameters.getProfiler());
         assertEquals("vtuneSettings", workerParameters.getProfilerSettings());
@@ -114,7 +107,7 @@ public class WorkerParametersTest {
 
     @Test
     public void testGetRunPhaseLogIntervalSeconds_noPerformanceMonitor() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(5);
         assertEquals(5, intervalSeconds);
@@ -122,7 +115,7 @@ public class WorkerParametersTest {
 
     @Test
     public void testGetRunPhaseLogIntervalSeconds_withPerformanceMonitor_overPerformanceMonitorInterval() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true);
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(5000);
         assertEquals(1234, intervalSeconds);
@@ -130,10 +123,63 @@ public class WorkerParametersTest {
 
     @Test
     public void testGetRunPhaseLogIntervalSeconds_withPerformanceMonitor_belowPerformanceMonitorInterval() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true, null);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true);
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(30);
         assertEquals(30, intervalSeconds);
+    }
+
+    @Test
+    public void testGetPort() {
+        int port = getPort(memberConfig);
+        assertEquals(5701, port);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testGetPort_withException() {
+        getPort("");
+    }
+
+    @Test
+    public void testCreateAddressConfig() {
+        String addressConfig = createAddressConfig("members", componentRegistry, 6666);
+        for (int i = 1; i <= 5; i++) {
+            assertTrue(addressConfig.contains("192.168.0." + i + ":6666"));
+        }
+    }
+
+    @Test
+    public void testInitMemberHzConfig() {
+        when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("http://localhost:8080");
+        when(properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL")).thenReturn("60");
+
+        assertTrue(memberConfig.contains("<!--MEMBERS-->"));
+        assertTrue(memberConfig.contains("<!--LICENSE-KEY-->"));
+        assertTrue(memberConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
+
+        String memberHzConfig = initMemberHzConfig(memberConfig, componentRegistry, 5701, "licenseKey2342", properties);
+
+        assertNotNull(memberHzConfig);
+        assertTrue(memberHzConfig.contains("licenseKey2342"));
+        assertTrue(memberHzConfig.contains("http://localhost:8080"));
+
+        assertFalse(memberHzConfig.contains("<!--MEMBERS-->"));
+        assertFalse(memberHzConfig.contains("<!--LICENSE-KEY-->"));
+        assertFalse(memberHzConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
+    }
+
+    @Test
+    public void testInitClientHzConfig() {
+        assertTrue(clientConfig.contains("<!--MEMBERS-->"));
+        assertTrue(clientConfig.contains("<!--LICENSE-KEY-->"));
+
+        String clientHzConfig = initClientHzConfig(clientConfig, componentRegistry, 5701, "licenseKey2342");
+
+        assertNotNull(clientHzConfig);
+        assertTrue(clientHzConfig.contains("licenseKey2342"));
+
+        assertFalse(clientHzConfig.contains("<!--MEMBERS-->"));
+        assertFalse(clientHzConfig.contains("<!--LICENSE-KEY-->"));
     }
 
     private ComponentRegistry getComponentRegistryMock() {

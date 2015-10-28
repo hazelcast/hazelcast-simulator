@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.cluster;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.worker.WorkerType;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -23,14 +25,33 @@ import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
+import java.io.File;
+
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
+import static java.lang.String.format;
 
 public class WorkerConfigurationConverter implements Converter {
 
+    private final int defaultHzPort;
+    private final String licenseKey;
+
     private final WorkerParameters workerParameters;
 
-    public WorkerConfigurationConverter(WorkerParameters workerParameters) {
+    private final SimulatorProperties simulatorProperties;
+    private final ComponentRegistry componentRegistry;
+
+    public WorkerConfigurationConverter(int defaultHzPort, String licenseKey, WorkerParameters workerParameters,
+                                        SimulatorProperties simulatorProperties, ComponentRegistry componentRegistry) {
+        this.defaultHzPort = defaultHzPort;
+        this.licenseKey = licenseKey;
         this.workerParameters = workerParameters;
+
+        this.simulatorProperties = simulatorProperties;
+        this.componentRegistry = componentRegistry;
     }
 
     @Override
@@ -62,17 +83,44 @@ public class WorkerConfigurationConverter implements Converter {
         if (hzVersion == null) {
             hzVersion = workerParameters.getHazelcastVersionSpec();
         }
-        if (hzConfig == null && hzConfigFile != null) {
-            // TODO load hz configuration from file
-            hzConfig = "content of file " + hzConfigFile;
-        }
-        if (hzConfig == null) {
-            hzConfig = (workerType == MEMBER) ? workerParameters.getMemberHzConfig() : workerParameters.getMemberHzConfig();
-        }
+        hzConfig = getHzConfig(hzConfig, hzConfigFile, workerType);
         if (jvmOptions == null) {
-            jvmOptions = (workerType == MEMBER) ? workerParameters.getMemberJvmOptions() : workerParameters.getClientJvmOptions();
+            jvmOptions = getDefaultJvmOptions(workerType);
         }
 
         return new WorkerConfiguration(name, workerType, hzVersion, hzConfig, jvmOptions);
+    }
+
+    private String getHzConfig(String hzConfig, String hzConfigFile, WorkerType workerType) {
+        if (hzConfig != null) {
+            return initHzConfig(hzConfig, workerType);
+        }
+        if (hzConfigFile != null) {
+            return getHzConfigFromFile(hzConfigFile, workerType);
+        }
+        return getDefaultHzConfig(workerType);
+    }
+
+    private String initHzConfig(String hzConfig, WorkerType workerType) {
+        if (workerType == MEMBER) {
+            return initMemberHzConfig(hzConfig, componentRegistry, defaultHzPort, licenseKey, simulatorProperties);
+        }
+        return initClientHzConfig(hzConfig, componentRegistry, defaultHzPort, licenseKey);
+    }
+
+    private String getHzConfigFromFile(String hzConfigFile, WorkerType workerType) {
+        File file = newFile(hzConfigFile);
+        if (!file.exists()) {
+            throw new IllegalArgumentException(format("Hazelcast configuration for Worker [%s] does not exist", file));
+        }
+        return initHzConfig(fileAsText(file), workerType);
+    }
+
+    private String getDefaultHzConfig(WorkerType workerType) {
+        return (workerType == MEMBER) ? workerParameters.getMemberHzConfig() : workerParameters.getClientHzConfig();
+    }
+
+    private String getDefaultJvmOptions(WorkerType workerType) {
+        return (workerType == MEMBER) ? workerParameters.getMemberJvmOptions() : workerParameters.getClientJvmOptions();
     }
 }

@@ -66,8 +66,8 @@ public final class Coordinator {
     private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
     private final CoordinatorParameters coordinatorParameters;
-    private final ClusterLayoutParameters clusterLayoutParameters;
     private final WorkerParameters workerParameters;
+    private final ClusterLayoutParameters clusterLayoutParameters;
 
     private final FailureContainer failureContainer;
 
@@ -78,12 +78,12 @@ public final class Coordinator {
     private CoordinatorConnector coordinatorConnector;
 
     public Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
-                       ClusterLayoutParameters clusterLayoutParameters, WorkerParameters workerParameters) {
+                       WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters) {
         this.testSuite = testSuite;
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
-        this.clusterLayoutParameters = clusterLayoutParameters;
         this.workerParameters = workerParameters;
+        this.clusterLayoutParameters = clusterLayoutParameters;
 
         this.failureContainer = new FailureContainer(testSuite, componentRegistry);
 
@@ -97,12 +97,12 @@ public final class Coordinator {
         return coordinatorParameters;
     }
 
-    ClusterLayoutParameters getClusterLayoutParameters() {
-        return clusterLayoutParameters;
-    }
-
     WorkerParameters getWorkerParameters() {
         return workerParameters;
+    }
+
+    ClusterLayoutParameters getClusterLayoutParameters() {
+        return clusterLayoutParameters;
     }
 
     TestSuite getTestSuite() {
@@ -166,8 +166,9 @@ public final class Coordinator {
     }
 
     private void uploadFiles() {
-        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(), null, false,
-                coordinatorParameters.getWorkerClassPath(), workerParameters.getProfiler());
+        CoordinatorUploader uploader = new CoordinatorUploader(componentRegistry, bash, testSuite.getId(), null,
+                coordinatorParameters.isEnterpriseEnabled(), coordinatorParameters.getWorkerClassPath(),
+                workerParameters.getProfiler());
         uploader.run();
     }
 

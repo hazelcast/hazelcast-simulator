@@ -15,12 +15,17 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
+import java.io.ByteArrayInputStream;
+
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -52,7 +57,7 @@ public class WorkerParameters {
 
     public WorkerParameters(SimulatorProperties properties, boolean autoCreateHzInstance, int workerStartupTimeout,
                             String memberJvmOptions, String clientJvmOptions, String memberHzConfig, String clientHzConfig,
-                            String log4jConfig, boolean monitorPerformance, ComponentRegistry componentRegistry) {
+                            String log4jConfig, boolean monitorPerformance) {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
 
@@ -61,8 +66,8 @@ public class WorkerParameters {
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
 
-        this.memberHzConfig = initMemberHzConfig(memberHzConfig, properties, componentRegistry);
-        this.clientHzConfig = initClientHzConfig(clientHzConfig, memberHzConfig, componentRegistry);
+        this.memberHzConfig = memberHzConfig;
+        this.clientHzConfig = clientHzConfig;
         this.log4jConfig = log4jConfig;
 
         this.monitorPerformance = monitorPerformance;
@@ -71,35 +76,6 @@ public class WorkerParameters {
         this.profiler = initProfiler(properties);
         this.profilerSettings = initProfilerSettings(properties);
         this.numaCtl = properties.get("NUMA_CONTROL", "none");
-    }
-
-    private String initMemberHzConfig(String memberConfig, SimulatorProperties properties, ComponentRegistry componentRegistry) {
-        if (componentRegistry == null) {
-            return memberConfig;
-        }
-
-        String addressConfig = createAddressConfig("member", componentRegistry, getPort(memberConfig));
-        memberConfig = memberConfig.replace("<!--MEMBERS-->", addressConfig);
-
-        String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
-        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
-            String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
-            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
-            memberConfig = memberConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
-                            updateIntervalAttr, manCenterURL));
-        }
-
-        return memberConfig;
-    }
-
-    private String initClientHzConfig(String clientConfig, String memberConfig, ComponentRegistry componentRegistry) {
-        if (componentRegistry == null) {
-            return clientConfig;
-        }
-
-        String addressConfig = createAddressConfig("address", componentRegistry, getPort(memberConfig));
-        return clientConfig.replace("<!--MEMBERS-->", addressConfig);
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
@@ -189,5 +165,61 @@ public class WorkerParameters {
 
     public String getNumaCtl() {
         return numaCtl;
+    }
+
+    public static int getPort(String memberHzConfig) {
+        ByteArrayInputStream bis = null;
+        try {
+            byte[] configString = memberHzConfig.getBytes("UTF-8");
+            bis = new ByteArrayInputStream(configString);
+            Config config = new XmlConfigBuilder(bis).build();
+
+            return config.getNetworkConfig().getPort();
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not get port from settings", e);
+        } finally {
+            closeQuietly(bis);
+        }
+    }
+
+    public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,
+                                            String licenseKey, SimulatorProperties properties) {
+        String addressConfig = createAddressConfig("member", componentRegistry, port);
+        memberHzConfig = updateHzConfig(memberHzConfig, addressConfig, licenseKey);
+
+        String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
+        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
+            String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
+            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
+            memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
+                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
+                            updateIntervalAttr, manCenterURL));
+        }
+
+        return memberHzConfig;
+    }
+
+    public static String initClientHzConfig(String clientHzConfig, ComponentRegistry componentRegistry, int port,
+                                            String licenseKey) {
+        String addressConfig = createAddressConfig("address", componentRegistry, port);
+        return updateHzConfig(clientHzConfig, addressConfig, licenseKey);
+    }
+
+    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
+        StringBuilder members = new StringBuilder();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String hostAddress = agentData.getPrivateAddress();
+            members.append(format("<%s>%s:%d</%s>%n", tagName, hostAddress, port, tagName));
+        }
+        return members.toString();
+    }
+
+    private static String updateHzConfig(String hzConfig, String addressConfig, String licenseKey) {
+        hzConfig = hzConfig.replace("<!--MEMBERS-->", addressConfig);
+        if (licenseKey != null) {
+            String licenseConfig = format("<license-key>%s</license-key>", licenseKey);
+            hzConfig = hzConfig.replace("<!--LICENSE-KEY-->", licenseConfig);
+        }
+        return hzConfig;
     }
 }

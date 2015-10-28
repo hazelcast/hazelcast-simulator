@@ -15,19 +15,18 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
 import com.hazelcast.simulator.common.JavaProfiler;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,8 +34,6 @@ import static com.hazelcast.simulator.coordinator.AgentWorkerMode.CLIENT;
 import static com.hazelcast.simulator.coordinator.AgentWorkerMode.CUSTOM;
 import static com.hazelcast.simulator.coordinator.AgentWorkerMode.MEMBER;
 import static com.hazelcast.simulator.coordinator.AgentWorkerMode.MIXED;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.createAddressConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getPort;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
@@ -64,42 +61,19 @@ public class CoordinatorUtilsTest {
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
 
         when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
+
+        SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
+        when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
+
+        WorkerConfigurationConverter converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParameters,
+                simulatorProperties, componentRegistry);
+
+        when(clusterLayoutParameters.getWorkerConfigurationConverter()).thenReturn(converter);
     }
 
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(CoordinatorUtils.class);
-    }
-
-    @Test
-    public void testGetPort() {
-        String memberConfig = FileUtils.fileAsText("dist/src/main/dist/conf/hazelcast.xml");
-
-        int port = getPort(memberConfig);
-        assertEquals(5701, port);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testGetPort_withException() {
-        getPort("");
-    }
-
-    @Test
-    public void testCreateAddressConfig() {
-        List<AgentData> agents = new ArrayList<AgentData>();
-        for (int i = 1; i <= 5; i++) {
-            AgentData agentData = mock(AgentData.class);
-            when(agentData.getPrivateAddress()).thenReturn("192.168.0." + i);
-            agents.add(agentData);
-        }
-
-        ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
-        when(componentRegistry.getAgents()).thenReturn(agents);
-
-        String addressConfig = createAddressConfig("members", componentRegistry, 6666);
-        for (int i = 1; i <= 5; i++) {
-            assertTrue(addressConfig.contains("192.168.0." + i + ":6666"));
-        }
     }
 
     @Test
@@ -137,6 +111,20 @@ public class CoordinatorUtilsTest {
                 + "  </nodeConfiguration>\n"
                 + "  <nodeConfiguration>\n"
                 + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>\n"
+                + "  </nodeConfiguration>\n"
+                + "</clusterConfiguration>";
+
+        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
+
+        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 0);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testInitMemberLayout_fromXml_hzConfigFileNotExists() {
+        String xml = "<clusterConfiguration>\n"
+                + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\" hzConfigFile=\"notExists\"/>\n"
+                + "  <nodeConfiguration>\n"
+                + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>\n"
                 + "  </nodeConfiguration>\n"
                 + "</clusterConfiguration>";
 
