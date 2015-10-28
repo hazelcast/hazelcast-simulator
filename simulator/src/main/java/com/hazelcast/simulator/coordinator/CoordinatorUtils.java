@@ -16,14 +16,10 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -38,22 +34,6 @@ final class CoordinatorUtils {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorUtils.class);
 
     private CoordinatorUtils() {
-    }
-
-    static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(boolean isParallel, int testCount,
-                                                                        TestPhase latestTestPhaseToSync) {
-        if (!isParallel) {
-            return null;
-        }
-        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
-        boolean useTestCount = true;
-        for (TestPhase testPhase : TestPhase.values()) {
-            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
-            if (testPhase == latestTestPhaseToSync) {
-                useTestCount = false;
-            }
-        }
-        return testPhaseSyncMap;
     }
 
     static boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, Set<SimulatorAddress> finishedWorkers,

@@ -15,6 +15,10 @@
  */
 package com.hazelcast.simulator.test;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+
 public enum TestPhase {
     SETUP("setup"),
     LOCAL_WARMUP("local warmup"),
@@ -33,5 +37,21 @@ public enum TestPhase {
 
     public String desc() {
         return description;
+    }
+
+    public static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(boolean isParallel, int testCount,
+                                                                               TestPhase latestTestPhaseToSync) {
+        if (!isParallel) {
+            return null;
+        }
+        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+        boolean useTestCount = true;
+        for (TestPhase testPhase : TestPhase.values()) {
+            testPhaseSyncMap.put(testPhase, new CountDownLatch(useTestCount ? testCount : 0));
+            if (testPhase == latestTestPhaseToSync) {
+                useTestCount = false;
+            }
+        }
+        return testPhaseSyncMap;
     }
 }
