@@ -72,7 +72,7 @@ public final class Coordinator {
 
     private final FailureContainer failureContainer;
 
-    private final SimulatorProperties props;
+    private final SimulatorProperties simulatorProperties;
     private final Bash bash;
 
     private final List<AgentWorkerLayout> agentWorkerLayouts;
@@ -92,8 +92,8 @@ public final class Coordinator {
 
         this.failureContainer = new FailureContainer(testSuite, componentRegistry);
 
-        this.props = coordinatorParameters.getSimulatorProperties();
-        this.bash = new Bash(props);
+        this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
+        this.bash = new Bash(simulatorProperties);
 
         this.agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters,
                 clusterLayoutParameters.getMemberWorkerCount(), clusterLayoutParameters.getClientWorkerCount());
@@ -214,11 +214,11 @@ public final class Coordinator {
         echoLocal("Starting Agent on %s", ip);
         String mandatoryParameters = format("--addressIndex %d --publicAddress %s", addressIndex, ip);
         String optionalParameters = "";
-        if (isEC2(props.get("CLOUD_PROVIDER"))) {
+        if (isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
             optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
-                    props.get("CLOUD_PROVIDER"),
-                    props.get("CLOUD_IDENTITY"),
-                    props.get("CLOUD_CREDENTIAL"));
+                    simulatorProperties.get("CLOUD_PROVIDER"),
+                    simulatorProperties.get("CLOUD_IDENTITY"),
+                    simulatorProperties.get("CLOUD_CREDENTIAL"));
         }
         bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
                 SIMULATOR_VERSION, mandatoryParameters, optionalParameters));
@@ -367,7 +367,7 @@ public final class Coordinator {
     }
 
     private void stopAgents() {
-        final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
+        final String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(simulatorProperties);
 
         echoLocal("Stopping %s Agents", componentRegistry.agentCount());
         ThreadSpawner spawner = new ThreadSpawner("killAgents", true);
