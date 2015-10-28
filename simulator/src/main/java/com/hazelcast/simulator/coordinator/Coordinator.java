@@ -154,15 +154,13 @@ public final class Coordinator {
     }
 
     private void logConfiguration() {
-        boolean performanceEnabled = workerParameters.isMonitorPerformance();
-        int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
-        echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
-
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Total number of Hazelcast member workers: %s", memberWorkerCount);
         echoLocal("Total number of Hazelcast client workers: %s", clientWorkerCount);
 
-        echoLocal("HAZELCAST_VERSION_SPEC: %s", props.getHazelcastVersionSpec());
+        boolean performanceEnabled = workerParameters.isMonitorPerformance();
+        int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
+        echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
     }
 
     private void run() throws Exception {

@@ -42,20 +42,22 @@ public final class ClusterUtils {
                                                            ClusterLayoutParameters clusterLayoutParameters,
                                                            int memberWorkerCount, int clientWorkerCount) {
         List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(registry);
-
         if (clusterLayoutParameters.getClusterConfiguration() != null) {
-            generateFromXml(agentWorkerLayouts, registry.agentCount(), clusterLayoutParameters, parameters);
+            ClusterConfiguration clusterConfiguration = getClusterConfiguration(clusterLayoutParameters);
+            generateFromXml(agentWorkerLayouts, clusterConfiguration, registry.agentCount(), parameters);
         } else {
             generateFromArguments(agentWorkerLayouts, clusterLayoutParameters.getDedicatedMemberMachineCount(),
                     registry.agentCount(), memberWorkerCount, clientWorkerCount, parameters);
         }
 
+        LOGGER.info("Layout of cluster:");
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s",
+            LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s, version specs: %s",
                     agentWorkerLayout.getPublicAddress(),
                     agentWorkerLayout.getCount(WorkerType.MEMBER),
                     agentWorkerLayout.getCount(WorkerType.CLIENT),
-                    agentWorkerLayout.getAgentWorkerMode()
+                    agentWorkerLayout.getAgentWorkerMode(),
+                    agentWorkerLayout.getHazelcastVersionSpecs()
             ));
         }
 
@@ -71,9 +73,16 @@ public final class ClusterUtils {
         return agentWorkerLayouts;
     }
 
-    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, int agentCount,
-                                        ClusterLayoutParameters clusterLayoutParameters, WorkerParameters parameters) {
-        ClusterConfiguration clusterConfiguration = getClusterConfiguration(clusterLayoutParameters);
+    private static ClusterConfiguration getClusterConfiguration(ClusterLayoutParameters clusterLayoutParameters) {
+        try {
+            return fromXml(clusterLayoutParameters);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not parse cluster configuration", e);
+        }
+    }
+
+    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, ClusterConfiguration clusterConfiguration,
+                                        int agentCount, WorkerParameters parameters) {
         if (clusterConfiguration.size() != agentCount) {
             throw new CommandLineExitException(format("Found %d node configurations for %d agents (number must be equal)",
                     clusterConfiguration.size(), agentCount));
@@ -89,14 +98,6 @@ public final class ClusterUtils {
                 }
             }
             agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);
-        }
-    }
-
-    private static ClusterConfiguration getClusterConfiguration(ClusterLayoutParameters clusterLayoutParameters) {
-        try {
-            return fromXml(clusterLayoutParameters);
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not parse cluster configuration", e);
         }
     }
 

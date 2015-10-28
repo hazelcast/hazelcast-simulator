@@ -22,7 +22,9 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -56,6 +58,14 @@ public final class AgentWorkerLayout {
 
     public AgentWorkerMode getAgentWorkerMode() {
         return agentWorkerMode;
+    }
+
+    public Set<String> getHazelcastVersionSpecs() {
+        Set<String> hazelcastVersionSpecs = new HashSet<String>();
+        for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
+            hazelcastVersionSpecs.add(workerJvmSettings.getHazelcastVersionSpec());
+        }
+        return hazelcastVersionSpecs;
     }
 
     public void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
