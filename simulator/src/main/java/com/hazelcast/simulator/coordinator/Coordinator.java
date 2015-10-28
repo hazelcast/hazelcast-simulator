@@ -38,9 +38,8 @@ import java.util.concurrent.CountDownLatch;
 import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
+import static com.hazelcast.simulator.coordinator.FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
@@ -295,8 +294,8 @@ public final class Coordinator {
         }
 
         remoteClient.terminateWorkers(true);
-        Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
-        if (!waitForWorkerShutdown(componentRegistry.workerCount(), finishedWorkers, FINISHED_WORKER_TIMEOUT_SECONDS)) {
+        if (!failureContainer.waitForWorkerShutdown(componentRegistry.workerCount(), FINISHED_WORKER_TIMEOUT_SECONDS)) {
+            Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
             LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
         }
 

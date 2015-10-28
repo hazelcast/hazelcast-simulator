@@ -15,55 +15,17 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.junit.Test;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class CoordinatorUtilsTest {
 
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(CoordinatorUtils.class);
-    }
-
-    @Test(timeout = 10000)
-    public void testWaitForWorkerShutdown() {
-        final ConcurrentHashMap<SimulatorAddress, Boolean> finishedWorkers = new ConcurrentHashMap<SimulatorAddress, Boolean>();
-        finishedWorkers.put(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), true);
-
-        ThreadSpawner spawner = new ThreadSpawner("testWaitForFinishedWorker", true);
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                sleepSeconds(1);
-                finishedWorkers.put(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0), true);
-                sleepSeconds(1);
-                finishedWorkers.put(new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0), true);
-            }
-        });
-
-        boolean success = waitForWorkerShutdown(3, finishedWorkers.keySet(), CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS);
-        assertTrue(success);
-    }
-
-    @Test(timeout = 10000)
-    public void testWaitForWorkerShutdown_withTimeout() {
-        ConcurrentHashMap<SimulatorAddress, Boolean> finishedWorkers = new ConcurrentHashMap<SimulatorAddress, Boolean>();
-        finishedWorkers.put(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), true);
-
-        boolean success = waitForWorkerShutdown(3, finishedWorkers.keySet(), 1);
-        assertFalse(success);
     }
 
     @Test

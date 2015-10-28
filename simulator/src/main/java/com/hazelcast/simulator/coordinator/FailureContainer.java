@@ -30,14 +30,20 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static java.lang.String.format;
 
 /**
  * Responsible for storing and formatting failures from Simulator workers.
  */
 public class FailureContainer {
+
+    public static final int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
+    public static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
 
@@ -84,6 +90,21 @@ public class FailureContainer {
 
     public Set<SimulatorAddress> getFinishedWorkers() {
         return finishedWorkers.keySet();
+    }
+
+    public boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
+        LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", timeoutSeconds, expectedFinishedWorkerCount));
+        long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+        while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
+            sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
+        }
+        int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
+        if (remainingWorkers > 0) {
+            LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
+            return false;
+        }
+        LOGGER.info("Shutdown of all workers completed...");
+        return true;
     }
 
     public void addFailureOperation(FailureOperation operation) {

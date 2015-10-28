@@ -5,6 +5,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +14,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -94,5 +96,38 @@ public class FailureContainerTest {
 
         failureContainer.addFailureOperation(exceptionOperation);
         assertFalse(failureContainer.hasCriticalFailure());
+    }
+
+    @Test(timeout = 10000)
+    public void testWaitForWorkerShutdown() {
+        addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0));
+
+        ThreadSpawner spawner = new ThreadSpawner("testWaitForFinishedWorker", true);
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                sleepSeconds(1);
+                addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0));
+                sleepSeconds(1);
+                addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0));
+            }
+        });
+
+        boolean success = failureContainer.waitForWorkerShutdown(3, FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS);
+        assertTrue(success);
+    }
+
+    @Test(timeout = 10000)
+    public void testWaitForWorkerShutdown_withTimeout() {
+        addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0));
+
+        boolean success = failureContainer.waitForWorkerShutdown(3, 1);
+        assertFalse(success);
+    }
+
+    private void addFinishedWorker(SimulatorAddress workerAddress) {
+        FailureOperation operation = new FailureOperation("finished", FailureType.WORKER_FINISHED, workerAddress,
+                workerAddress.getParent().toString(), "127.0.0.1:5701", "workerId", "testId", null, null);
+        failureContainer.addFailureOperation(operation);
     }
 }
