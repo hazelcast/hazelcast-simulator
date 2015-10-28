@@ -55,6 +55,8 @@ import static org.mockito.Mockito.when;
 
 public class AgentOperationProcessorTest {
 
+    private static final int DEFAULT_STARTUP_TIMEOUT = 10;
+    
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
     private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
@@ -123,14 +125,14 @@ public class AgentOperationProcessorTest {
 
     @Test
     public void testCreateWorkerOperation() throws Exception {
-        ResponseType responseType = testCreateWorkerOperation(false, 5);
+        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT);
         assertEquals(SUCCESS, responseType);
         assertWorkerLifecycle();
     }
 
     @Test
     public void testCreateWorkerOperation_withStartupException() throws Exception {
-        ResponseType responseType = testCreateWorkerOperation(true, 5);
+        ResponseType responseType = testCreateWorkerOperation(true, DEFAULT_STARTUP_TIMEOUT);
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
     }
 
@@ -148,7 +150,7 @@ public class AgentOperationProcessorTest {
         File uploadFile = new File(uploadDir, "testFile");
         ensureExistingFile(uploadFile);
 
-        ResponseType responseType = testCreateWorkerOperation(false, 5);
+        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT);
         assertEquals(SUCCESS, responseType);
 
         for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
