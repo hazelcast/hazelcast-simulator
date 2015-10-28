@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @XStreamAlias("clusterConfiguration")
-public class ClusterConfiguration {
+class ClusterConfiguration {
 
     @XStreamImplicit(itemFieldName = "workerConfiguration", keyFieldName = "name")
     private final Map<String, WorkerConfiguration> workerConfigurations = new HashMap<String, WorkerConfiguration>();

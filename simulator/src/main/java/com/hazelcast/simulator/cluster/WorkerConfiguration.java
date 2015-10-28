@@ -18,7 +18,7 @@ package com.hazelcast.simulator.cluster;
 import com.hazelcast.simulator.worker.WorkerType;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
-public class WorkerConfiguration {
+class WorkerConfiguration {
 
     @XStreamAsAttribute
     private final String name;

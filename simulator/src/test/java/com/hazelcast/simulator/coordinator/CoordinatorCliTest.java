@@ -165,6 +165,17 @@ public class CoordinatorCliTest {
         assertEquals("*.jar", coordinator.getCoordinatorParameters().getWorkerClassPath());
     }
 
+    @Test
+    public void testInit_dedicatedMemberMachines() {
+        args.add("--waitForTestCaseCompletion");
+        args.add("--dedicatedMemberMachines");
+        args.add("1");
+
+        Coordinator coordinator = createCoordinator();
+
+        assertEquals(1, coordinator.getClusterLayoutParameters().getDedicatedMemberMachineCount());
+    }
+
     @Test(expected = CommandLineExitException.class)
     public void testInit_dedicatedMemberMachines_negativeValue() {
         args.add("--waitForTestCaseCompletion");
@@ -172,17 +183,6 @@ public class CoordinatorCliTest {
         args.add("-1");
 
         createCoordinator();
-    }
-
-    @Test
-    public void testInit_dedicatedMemberMachines() {
-        args.add("--waitForTestCaseCompletion");
-        args.add("--dedicatedMemberMachines");
-        args.add("2");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertEquals(2, coordinator.getClusterLayoutParameters().getDedicatedMemberMachineCount());
     }
 
     @Test(expected = CommandLineExitException.class)

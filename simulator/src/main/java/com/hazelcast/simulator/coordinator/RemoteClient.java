@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;

@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.agent.workerjvm;
 
-import com.hazelcast.simulator.cluster.WorkerConfiguration;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -43,20 +42,14 @@ public class WorkerJvmSettings {
     private final String profilerSettings;
     private final String numaCtl;
 
-    public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters,
-                             WorkerConfiguration workerConfiguration) {
-        this(workerIndex, workerType, workerParameters, workerConfiguration.getHzVersion(), workerConfiguration.getJvmOptions(),
-                workerConfiguration.getHzConfig());
-    }
-
     public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this(workerIndex, workerType, workerParameters, workerParameters.getHazelcastVersionSpec(),
                 (workerType == MEMBER) ? workerParameters.getMemberJvmOptions() : workerParameters.getClientJvmOptions(),
                 (workerType == MEMBER) ? workerParameters.getMemberHzConfig() : workerParameters.getClientHzConfig());
     }
 
-    private WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters,
-                              String hazelcastVersionSpec, String jvmOptions, String hazelcastConfig) {
+    public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters,
+                             String hazelcastVersionSpec, String jvmOptions, String hazelcastConfig) {
         this.workerIndex = workerIndex;
         this.workerType = workerType.name();
         this.hazelcastVersionSpec = hazelcastVersionSpec;

@@ -20,7 +20,7 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NodeConfiguration {
+class NodeConfiguration {
 
     @XStreamImplicit(itemFieldName = "workerGroup")
     private final List<WorkerGroup> workerGroups = new ArrayList<WorkerGroup>();

@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -34,11 +35,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
+import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.getTestPhaseSyncMap;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
 import static com.hazelcast.simulator.coordinator.CoordinatorUtils.waitForWorkerShutdown;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;

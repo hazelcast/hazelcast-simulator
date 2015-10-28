@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.initMemberLayout;
+import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;

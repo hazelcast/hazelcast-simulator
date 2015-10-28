@@ -1,9 +1,9 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
+import com.hazelcast.simulator.cluster.AgentWorkerLayout;
+import com.hazelcast.simulator.cluster.AgentWorkerMode;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.AgentWorkerLayout;
-import com.hazelcast.simulator.coordinator.AgentWorkerMode;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;

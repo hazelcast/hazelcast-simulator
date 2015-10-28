@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.coordinator;
+package com.hazelcast.simulator.cluster;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
-import com.hazelcast.simulator.cluster.WorkerConfiguration;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -60,7 +60,8 @@ public final class AgentWorkerLayout {
 
     public void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
         workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters,
-                workerConfiguration));
+                workerConfiguration.getHzVersion(), workerConfiguration.getJvmOptions(),
+                workerConfiguration.getHzConfig()));
     }
 
     public void addWorker(WorkerType type, WorkerParameters parameters) {
