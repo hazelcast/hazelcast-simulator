@@ -176,8 +176,6 @@ final class CoordinatorCli {
         CoordinatorCli cli = new CoordinatorCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
                 options.valueOf(cli.testSuiteIdSpec));
         testSuite.setDurationSeconds(getDurationSeconds(options, cli));
@@ -189,6 +187,8 @@ final class CoordinatorCli {
         }
 
         ComponentRegistry componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
+
+        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
@@ -260,15 +260,6 @@ final class CoordinatorCli {
         return file;
     }
 
-    private static String loadClusterConfig() {
-        File file = new File("cluster.xml");
-        if (file.exists()) {
-            return fileAsText(file.getAbsolutePath());
-        } else {
-            return null;
-        }
-    }
-
     private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
         File file = getFile(cli.memberHzConfigFileSpec, options, "Hazelcast member configuration for Worker");
         LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
@@ -283,6 +274,15 @@ final class CoordinatorCli {
 
     private static String loadLog4jConfig() {
         return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
+    }
+
+    private static String loadClusterConfig() {
+        File file = new File("cluster.xml");
+        if (file.exists()) {
+            return fileAsText(file.getAbsolutePath());
+        } else {
+            return null;
+        }
     }
 
     private static int getDurationSeconds(OptionSet options, CoordinatorCli cli) {

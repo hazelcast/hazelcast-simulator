@@ -26,6 +26,7 @@ import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -74,6 +75,10 @@ public final class Coordinator {
     private final SimulatorProperties props;
     private final Bash bash;
 
+    private final List<AgentWorkerLayout> agentWorkerLayouts;
+    private final int memberWorkerCount;
+    private final int clientWorkerCount;
+
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
@@ -90,7 +95,19 @@ public final class Coordinator {
         this.props = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(props);
 
-        logHeader();
+        this.agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters,
+                clusterLayoutParameters.getMemberWorkerCount(), clusterLayoutParameters.getClientWorkerCount());
+
+        int tmpMemberCount = 0;
+        int tmpClientCount = 0;
+        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
+            tmpMemberCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
+            tmpClientCount += agentWorkerLayout.getCount(WorkerType.CLIENT);
+        }
+        this.memberWorkerCount = tmpMemberCount;
+        this.clientWorkerCount = tmpClientCount;
+
+        logConfiguration();
     }
 
     CoordinatorParameters getCoordinatorParameters() {
@@ -135,18 +152,14 @@ public final class Coordinator {
         return testPhaseListenerContainer;
     }
 
-    private void logHeader() {
-        echoLocal("Hazelcast Simulator Coordinator");
-        echoLocal("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime());
-        echoLocal("SIMULATOR_HOME: %s", getSimulatorHome());
-
+    private void logConfiguration() {
         boolean performanceEnabled = workerParameters.isMonitorPerformance();
         int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
         echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
 
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
-        echoLocal("Total number of Hazelcast member workers: %s", clusterLayoutParameters.getMemberWorkerCount());
-        echoLocal("Total number of Hazelcast client workers: %s", clusterLayoutParameters.getClientWorkerCount());
+        echoLocal("Total number of Hazelcast member workers: %s", memberWorkerCount);
+        echoLocal("Total number of Hazelcast client workers: %s", clientWorkerCount);
 
         echoLocal("HAZELCAST_VERSION_SPEC: %s", props.getHazelcastVersionSpec());
     }
@@ -231,12 +244,7 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
-        int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
         int totalWorkerCount = memberWorkerCount + clientWorkerCount;
-
-        List<AgentWorkerLayout> agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters,
-                clusterLayoutParameters, memberWorkerCount, clientWorkerCount);
 
         long started = System.nanoTime();
         try {
@@ -395,6 +403,10 @@ public final class Coordinator {
     }
 
     public static void main(String[] args) {
+        LOGGER.info("Hazelcast Simulator Coordinator");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
+
         try {
             Coordinator coordinator = CoordinatorCli.init(args);
             coordinator.run();
