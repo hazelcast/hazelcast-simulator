@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -35,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
 
 /**
@@ -92,21 +94,6 @@ public class FailureContainer {
         return finishedWorkers.keySet();
     }
 
-    public boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
-        LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", timeoutSeconds, expectedFinishedWorkerCount));
-        long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
-        while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
-            sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
-        }
-        int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
-        if (remainingWorkers > 0) {
-            LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
-            return false;
-        }
-        LOGGER.info("Shutdown of all workers completed...");
-        return true;
-    }
-
     public void addFailureOperation(FailureOperation operation) {
         FailureType failureType = operation.getType();
         if (failureType.isWorkerFinishedFailure()) {
@@ -130,5 +117,33 @@ public class FailureContainer {
 
         LOGGER.error(operation.getLogMessage(failureOperations.size()));
         appendText(operation.getFileMessage(), file);
+    }
+
+    public boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
+        LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", timeoutSeconds, expectedFinishedWorkerCount));
+        long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+        while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
+            sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
+        }
+        int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
+        if (remainingWorkers > 0) {
+            LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
+            return false;
+        }
+        LOGGER.info("Shutdown of all workers completed...");
+        return true;
+    }
+
+    public void logFailureInfo() {
+        int failureCount = failureOperations.size();
+        if (failureCount > 0) {
+            LOGGER.fatal(HORIZONTAL_RULER);
+            LOGGER.fatal(failureCount + " failures have been detected!!!");
+            LOGGER.fatal(HORIZONTAL_RULER);
+            throw new CommandLineExitException(failureCount + " failures have been detected");
+        }
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("No failures have been detected!");
+        LOGGER.info(HORIZONTAL_RULER);
     }
 }

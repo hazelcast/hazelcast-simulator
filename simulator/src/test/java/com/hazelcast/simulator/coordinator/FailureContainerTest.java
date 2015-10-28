@@ -5,6 +5,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.junit.After;
 import org.junit.Before;
@@ -123,6 +124,17 @@ public class FailureContainerTest {
 
         boolean success = failureContainer.waitForWorkerShutdown(3, 1);
         assertFalse(success);
+    }
+
+    @Test
+    public void testLogFailureInfo_noFailures() {
+        failureContainer.logFailureInfo();
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testLogFailureInfo_withFailures() {
+        failureContainer.addFailureOperation(exceptionOperation);
+        failureContainer.logFailureInfo();
     }
 
     private void addFinishedWorker(SimulatorAddress workerAddress) {

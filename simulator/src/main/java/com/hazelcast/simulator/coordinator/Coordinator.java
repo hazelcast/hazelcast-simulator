@@ -38,7 +38,6 @@ import java.util.concurrent.CountDownLatch;
 import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.coordinator.CoordinatorUtils.logFailureInfo;
 import static com.hazelcast.simulator.coordinator.FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
@@ -170,7 +169,7 @@ public final class Coordinator {
             startWorkers();
 
             runTestSuite();
-            logFailureInfo(failureContainer.getFailureCount());
+            failureContainer.logFailureInfo();
         } finally {
             shutdown();
         }
