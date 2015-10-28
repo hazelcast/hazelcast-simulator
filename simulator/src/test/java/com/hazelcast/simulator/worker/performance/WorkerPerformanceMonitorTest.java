@@ -118,10 +118,10 @@ public class WorkerPerformanceMonitorTest {
 
         assertTrue(performanceMonitor.start());
 
-        verifyServerConnector();
-
         test.stopTest();
         thread.join();
+
+        verifyServerConnector();
     }
 
     @Test
