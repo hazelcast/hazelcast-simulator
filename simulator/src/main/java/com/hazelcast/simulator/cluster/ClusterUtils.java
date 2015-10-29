@@ -39,15 +39,12 @@ public final class ClusterUtils {
     }
 
     public static List<AgentWorkerLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
-                                                           ClusterLayoutParameters clusterLayoutParameters,
-                                                           int memberWorkerCount, int clientWorkerCount) {
+                                                           ClusterLayoutParameters clusterLayoutParameters) {
         List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(registry);
         if (clusterLayoutParameters.getClusterConfiguration() != null) {
-            ClusterConfiguration clusterConfiguration = getClusterConfiguration(clusterLayoutParameters);
-            generateFromXml(agentWorkerLayouts, clusterConfiguration, registry.agentCount(), parameters);
+            generateFromXml(agentWorkerLayouts, registry.agentCount(), parameters, clusterLayoutParameters);
         } else {
-            generateFromArguments(agentWorkerLayouts, clusterLayoutParameters.getDedicatedMemberMachineCount(),
-                    registry.agentCount(), memberWorkerCount, clientWorkerCount, parameters);
+            generateFromArguments(agentWorkerLayouts, registry.agentCount(), parameters, clusterLayoutParameters);
         }
 
         LOGGER.info("Layout of cluster:");
@@ -73,16 +70,9 @@ public final class ClusterUtils {
         return agentWorkerLayouts;
     }
 
-    private static ClusterConfiguration getClusterConfiguration(ClusterLayoutParameters clusterLayoutParameters) {
-        try {
-            return fromXml(clusterLayoutParameters);
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not parse cluster configuration", e);
-        }
-    }
-
-    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, ClusterConfiguration clusterConfiguration,
-                                        int agentCount, WorkerParameters parameters) {
+    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, int agentCount, WorkerParameters parameters,
+                                        ClusterLayoutParameters clusterLayoutParameters) {
+        ClusterConfiguration clusterConfiguration = getClusterConfiguration(clusterLayoutParameters);
         if (clusterConfiguration.size() != agentCount) {
             throw new CommandLineExitException(format("Found %d node configurations for %d agents (number must be equal)",
                     clusterConfiguration.size(), agentCount));
@@ -101,9 +91,20 @@ public final class ClusterUtils {
         }
     }
 
-    private static void generateFromArguments(List<AgentWorkerLayout> agentWorkerLayouts, int dedicatedMemberMachineCount,
-                                              int agentCount, int memberWorkerCount, int clientWorkerCount,
-                                              WorkerParameters parameters) {
+    private static ClusterConfiguration getClusterConfiguration(ClusterLayoutParameters clusterLayoutParameters) {
+        try {
+            return fromXml(clusterLayoutParameters);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not parse cluster configuration", e);
+        }
+    }
+
+    private static void generateFromArguments(List<AgentWorkerLayout> agentWorkerLayouts, int agentCount,
+                                              WorkerParameters parameters, ClusterLayoutParameters clusterLayoutParameters) {
+        int dedicatedMemberMachineCount = clusterLayoutParameters.getDedicatedMemberMachineCount();
+        int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
+        int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
+
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));

@@ -94,8 +94,7 @@ public final class Coordinator {
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
 
-        this.agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters,
-                clusterLayoutParameters.getMemberWorkerCount(), clusterLayoutParameters.getClientWorkerCount());
+        this.agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
         int tmpMemberCount = 0;
         int tmpClientCount = 0;

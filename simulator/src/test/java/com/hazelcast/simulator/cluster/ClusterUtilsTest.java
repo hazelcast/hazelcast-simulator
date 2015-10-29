@@ -72,7 +72,7 @@ public class ClusterUtilsTest {
 
         when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 0);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, CUSTOM, 1, 0);
         assertAgentWorkerLayout(1, CUSTOM, 0, 2);
         assertAgentWorkerLayout(2, CUSTOM, 3, 4);
@@ -93,7 +93,7 @@ public class ClusterUtilsTest {
 
         when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 0);
+        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -107,14 +107,16 @@ public class ClusterUtilsTest {
 
         when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 0);
+        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
     }
 
     @Test
     public void testInitMemberLayout_dedicatedMemberCountEqualsAgentCount() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(3);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 0);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 0, 0);
         assertAgentWorkerLayout(1, MEMBER, 0, 0);
         assertAgentWorkerLayout(2, MEMBER, 0, 0);
@@ -123,15 +125,19 @@ public class ClusterUtilsTest {
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_dedicatedMemberCountHigherThanAgentCount() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(5);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 0);
+        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
     }
 
     @Test
     public void testInitMemberLayout_agentCountSufficientForDedicatedMembersAndClientWorkers() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(2);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 1);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 0, 0);
         assertAgentWorkerLayout(1, MEMBER, 0, 0);
         assertAgentWorkerLayout(2, CLIENT, 0, 1);
@@ -140,16 +146,20 @@ public class ClusterUtilsTest {
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(3);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
 
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 1);
+        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
     }
 
     @Test
     public void testInitMemberLayout_singleMemberWorker() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
         when(workerParameters.isMonitorPerformance()).thenReturn(true);
+        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 1, 0);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 1, 0);
         assertAgentWorkerLayout(1, MIXED, 0, 0);
         assertAgentWorkerLayout(2, MIXED, 0, 0);
@@ -158,8 +168,10 @@ public class ClusterUtilsTest {
     @Test
     public void testInitMemberLayout_memberWorkerOverflow() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(4);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 4, 0);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 2, 0);
         assertAgentWorkerLayout(1, MIXED, 1, 0);
         assertAgentWorkerLayout(2, MIXED, 1, 0);
@@ -168,8 +180,10 @@ public class ClusterUtilsTest {
     @Test
     public void testInitMemberLayout_singleClientWorker() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 1);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 0, 1);
         assertAgentWorkerLayout(1, MIXED, 0, 0);
         assertAgentWorkerLayout(2, MIXED, 0, 0);
@@ -178,8 +192,10 @@ public class ClusterUtilsTest {
     @Test
     public void testClientWorkerOverflow() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(5);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 0, 5);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 0, 2);
         assertAgentWorkerLayout(1, MIXED, 0, 2);
         assertAgentWorkerLayout(2, MIXED, 0, 1);
@@ -188,8 +204,10 @@ public class ClusterUtilsTest {
     @Test
     public void testInitMemberLayout_dedicatedAndMixedWorkers1() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(1);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(2);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(3);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 2, 3);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 2, 0);
         assertAgentWorkerLayout(1, CLIENT, 0, 2);
         assertAgentWorkerLayout(2, CLIENT, 0, 1);
@@ -198,8 +216,10 @@ public class ClusterUtilsTest {
     @Test
     public void testInitMemberLayout_dedicatedAndMixedWorkers2() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(2);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(2);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(3);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters, 2, 3);
+        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 1, 0);
         assertAgentWorkerLayout(1, MEMBER, 1, 0);
         assertAgentWorkerLayout(2, CLIENT, 0, 3);
