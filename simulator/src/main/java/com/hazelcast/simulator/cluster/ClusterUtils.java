@@ -21,7 +21,6 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
-import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,9 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.fromXml;
 import static java.lang.String.format;
 
-public final class ClusterUtils {
-
-    private static final Logger LOGGER = Logger.getLogger(ClusterUtils.class);
+final class ClusterUtils {
 
     private ClusterUtils() {
     }
@@ -46,18 +43,6 @@ public final class ClusterUtils {
         } else {
             generateFromArguments(agentWorkerLayouts, registry.agentCount(), parameters, clusterLayoutParameters);
         }
-
-        LOGGER.info("Layout of cluster:");
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            LOGGER.info(format("    Agent %s members: %d, clients: %d, mode: %s, version specs: %s",
-                    agentWorkerLayout.getPublicAddress(),
-                    agentWorkerLayout.getCount(WorkerType.MEMBER),
-                    agentWorkerLayout.getCount(WorkerType.CLIENT),
-                    agentWorkerLayout.getAgentWorkerMode(),
-                    agentWorkerLayout.getHazelcastVersionSpecs()
-            ));
-        }
-
         return agentWorkerLayouts;
     }
 

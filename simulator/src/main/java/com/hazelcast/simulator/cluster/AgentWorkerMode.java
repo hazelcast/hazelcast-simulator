@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.cluster;
 
-public enum AgentWorkerMode {
+enum AgentWorkerMode {
 
     MEMBER,
     CLIENT,

@@ -1,8 +1,7 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
-import com.hazelcast.simulator.cluster.AgentWorkerLayout;
-import com.hazelcast.simulator.cluster.AgentWorkerMode;
+import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
@@ -17,7 +16,6 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
-import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestException;
@@ -26,7 +24,6 @@ import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
@@ -34,7 +31,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -45,6 +41,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
+import static com.hazelcast.simulator.cluster.ClusterLayout.createSingleInstanceClusterLayout;
 import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -197,12 +194,8 @@ public class AgentSmokeTest {
                 fileAsText("dist/src/main/dist/conf/worker-log4j.xml"),
                 false
         );
-
-        AgentData agentData = new AgentData(1, AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
-        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, AgentWorkerMode.MEMBER);
-        agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
-
-        remoteClient.createWorkers(Collections.singletonList(agentWorkerLayout), false);
+        ClusterLayout clusterLayout = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);
+        remoteClient.createWorkers(clusterLayout, false);
     }
 
     private static void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {

@@ -39,28 +39,32 @@ public final class AgentWorkerLayout {
 
     private AgentWorkerMode agentWorkerMode;
 
-    public AgentWorkerLayout(AgentData agentData, AgentWorkerMode agentWorkerMode) {
+    AgentWorkerLayout(AgentData agentData, AgentWorkerMode agentWorkerMode) {
         this.agentData = agentData;
         this.agentWorkerMode = agentWorkerMode;
     }
 
-    public String getPublicAddress() {
-        return agentData.getPublicAddress();
+    public List<WorkerJvmSettings> getWorkerJvmSettings() {
+        return workerJvmSettingsList;
     }
 
     public SimulatorAddress getSimulatorAddress() {
         return agentData.getAddress();
     }
 
-    public void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {
+    String getPublicAddress() {
+        return agentData.getPublicAddress();
+    }
+
+    void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {
         this.agentWorkerMode = agentWorkerMode;
     }
 
-    public AgentWorkerMode getAgentWorkerMode() {
+    AgentWorkerMode getAgentWorkerMode() {
         return agentWorkerMode;
     }
 
-    public Set<String> getHazelcastVersionSpecs() {
+    Set<String> getHazelcastVersionSpecs() {
         Set<String> hazelcastVersionSpecs = new HashSet<String>();
         for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
             hazelcastVersionSpecs.add(workerJvmSettings.getHazelcastVersionSpec());
@@ -68,21 +72,17 @@ public final class AgentWorkerLayout {
         return hazelcastVersionSpecs;
     }
 
-    public void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
+    void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
         workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters,
                 workerConfiguration.getHzVersion(), workerConfiguration.getJvmOptions(),
                 workerConfiguration.getHzConfig()));
     }
 
-    public void addWorker(WorkerType type, WorkerParameters parameters) {
+    void addWorker(WorkerType type, WorkerParameters parameters) {
         workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters));
     }
 
-    public List<WorkerJvmSettings> getWorkerJvmSettings() {
-        return workerJvmSettingsList;
-    }
-
-    public int getCount(WorkerType type) {
+    int getCount(WorkerType type) {
         int count = 0;
         for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
             if (workerJvmSettings.getWorkerType() == type) {

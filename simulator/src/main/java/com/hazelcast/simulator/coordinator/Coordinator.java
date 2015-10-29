@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.AgentWorkerLayout;
+import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -27,15 +27,12 @@ import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS;
@@ -74,9 +71,7 @@ public final class Coordinator {
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
 
-    private final List<AgentWorkerLayout> agentWorkerLayouts;
-    private final int memberWorkerCount;
-    private final int clientWorkerCount;
+    private final ClusterLayout clusterLayout;
 
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
@@ -94,16 +89,7 @@ public final class Coordinator {
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
 
-        this.agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
-
-        int tmpMemberCount = 0;
-        int tmpClientCount = 0;
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            tmpMemberCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
-            tmpClientCount += agentWorkerLayout.getCount(WorkerType.CLIENT);
-        }
-        this.memberWorkerCount = tmpMemberCount;
-        this.clientWorkerCount = tmpClientCount;
+        this.clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
         logConfiguration();
     }
@@ -152,8 +138,8 @@ public final class Coordinator {
 
     private void logConfiguration() {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
-        echoLocal("Total number of Hazelcast member workers: %s", memberWorkerCount);
-        echoLocal("Total number of Hazelcast client workers: %s", clientWorkerCount);
+        echoLocal("Total number of Hazelcast member workers: %s", clusterLayout.getMemberWorkerCount());
+        echoLocal("Total number of Hazelcast client workers: %s", clusterLayout.getClientWorkerCount());
 
         boolean performanceEnabled = workerParameters.isMonitorPerformance();
         int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
@@ -240,7 +226,7 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        int totalWorkerCount = memberWorkerCount + clientWorkerCount;
+        int totalWorkerCount = clusterLayout.getTotalMemberCount();
 
         long started = System.nanoTime();
         try {
@@ -248,8 +234,9 @@ public final class Coordinator {
             remoteClient.terminateWorkers(false);
             echo("Successfully killed all remaining workers");
 
-            echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, memberWorkerCount, clientWorkerCount);
-            remoteClient.createWorkers(agentWorkerLayouts, true);
+            echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
+                    clusterLayout.getClientWorkerCount());
+            remoteClient.createWorkers(clusterLayout, true);
             echo("Successfully started workers");
         } catch (Exception e) {
             while (failureContainer.getFailureCount() == 0) {
