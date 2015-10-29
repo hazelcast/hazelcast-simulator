@@ -355,22 +355,22 @@ public final class Provisioner {
         bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", getSimulatorVersion()));
 
         // upload Simulator JARs
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/simulator-*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/probes-*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/tests-*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/utils-*", "lib");
+        uploadLibraryJar(ip, "simulator-*");
+        uploadLibraryJar(ip, "probes-*");
+        uploadLibraryJar(ip, "tests-*");
+        uploadLibraryJar(ip, "utils-*");
 
         // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/cache-api*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-codec*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/commons-lang3*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/gson-*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/guava-*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/jopt*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/junit*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/HdrHistogram-*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/log4j*", "lib");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/netty-*", "lib");
+        uploadLibraryJar(ip, "cache-api*");
+        uploadLibraryJar(ip, "commons-codec*");
+        uploadLibraryJar(ip, "commons-lang3*");
+        uploadLibraryJar(ip, "gson-*");
+        uploadLibraryJar(ip, "guava-*");
+        uploadLibraryJar(ip, "jopt*");
+        uploadLibraryJar(ip, "junit*");
+        uploadLibraryJar(ip, "HdrHistogram-*");
+        uploadLibraryJar(ip, "log4j*");
+        uploadLibraryJar(ip, "netty-*");
 
         // upload remaining files
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");
@@ -385,6 +385,10 @@ public final class Provisioner {
 
         String initScript = loadInitScript();
         bash.ssh(ip, initScript);
+    }
+
+    private void uploadLibraryJar(String ip, String jarName) {
+        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/" + jarName, "lib");
     }
 
     private String loadInitScript() {
