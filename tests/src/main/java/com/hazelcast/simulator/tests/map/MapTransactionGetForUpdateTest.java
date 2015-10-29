@@ -22,7 +22,6 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -34,6 +33,7 @@ import com.hazelcast.transaction.TransactionOptions;
 
 import java.util.Random;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -118,7 +118,7 @@ public class MapTransactionGetForUpdateTest {
                         try {
                             LOGGER.warning(basename + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
                             if (rethrowAllException) {
-                                throw new TestException(commitFailedException);
+                                throw rethrow(commitFailedException);
                             }
 
                             context.rollbackTransaction();
@@ -129,7 +129,7 @@ public class MapTransactionGetForUpdateTest {
                             count.failedRollbacks++;
 
                             if (rethrowRollBackException) {
-                                throw new TestException(rollBackFailedException);
+                                throw rethrow(rollBackFailedException);
                             }
                         }
                     }

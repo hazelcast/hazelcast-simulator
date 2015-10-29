@@ -22,7 +22,6 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -34,6 +33,7 @@ import com.hazelcast.transaction.TransactionOptions.TransactionType;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -132,7 +132,7 @@ public class MapTransactionTest {
                 increments[key] += increment;
             } catch (TransactionException e) {
                 if (reThrowTransactionException) {
-                    throw new TestException(e);
+                    throw rethrow(e);
                 }
                 LOGGER.warning(basename + ": caught TransactionException ", e);
             }

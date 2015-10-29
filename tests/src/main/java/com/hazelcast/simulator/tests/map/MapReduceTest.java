@@ -32,7 +32,6 @@ import com.hazelcast.mapreduce.Mapper;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -130,7 +129,7 @@ public class MapReduceTest {
             }
         }
 
-        private void mapReduce() {
+        private void mapReduce() throws Exception {
             JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + baseName);
             Job<Integer, Employee> job = tracker.newJob(KeyValueSource.fromMap(map));
 
@@ -140,21 +139,17 @@ public class MapReduceTest {
                     .reducer(new IdReducerFactory(10, 20, 30))
                     .submit();
 
-            try {
-                Map<Integer, Set<Employee>> result = future.get();
+            Map<Integer, Set<Employee>> result = future.get();
 
-                for (Set<Employee> set : result.values()) {
-                    for (Employee employee : set) {
+            for (Set<Employee> set : result.values()) {
+                for (Employee employee : set) {
 
-                        assertTrue(employee.getId() % 2 == 0);
-                        assertTrue(employee.getId() >= 10 && employee.getId() <= 30);
-                        assertTrue(employee.getId() != 10);
-                        assertTrue(employee.getId() != 20);
-                        assertTrue(employee.getId() != 30);
-                    }
+                    assertTrue(employee.getId() % 2 == 0);
+                    assertTrue(employee.getId() >= 10 && employee.getId() <= 30);
+                    assertTrue(employee.getId() != 10);
+                    assertTrue(employee.getId() != 20);
+                    assertTrue(employee.getId() != 30);
                 }
-            } catch (Exception e) {
-                throw new TestException(e);
             }
 
             operationCounter.mapReduce++;

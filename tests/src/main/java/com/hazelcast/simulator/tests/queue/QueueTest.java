@@ -20,7 +20,6 @@ import com.hazelcast.core.IQueue;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -32,6 +31,7 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
@@ -143,7 +143,7 @@ public class QueueTest {
                 toQueue.put(0L);
                 totalCounter.addAndGet(iteration);
             } catch (InterruptedException e) {
-                throw new TestException(e);
+                throw rethrow(e);
             }
         }
     }

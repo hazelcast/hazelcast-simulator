@@ -20,7 +20,6 @@ import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -125,16 +124,12 @@ public class CacheLoaderTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        public void timeStep() {
+        public void timeStep() throws Exception {
             CompletionListenerFuture loaded = new CompletionListenerFuture();
             cache.loadAll(keySet, true, loaded);
 
             if (waitForLoadAllFutureCompletion) {
-                try {
-                    loaded.get();
-                } catch (Exception e) {
-                    throw new TestException(e);
-                }
+                loaded.get();
             }
         }
 

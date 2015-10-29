@@ -23,7 +23,6 @@ import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -37,12 +36,12 @@ import com.hazelcast.simulator.worker.tasks.AbstractAsyncWorker;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
@@ -176,10 +175,8 @@ public class AsyncAtomicLongTest {
                     for (ICompletableFuture batchFuture : batch) {
                         try {
                             batchFuture.get();
-                        } catch (InterruptedException e) {
-                            throw new TestException(e);
-                        } catch (ExecutionException e) {
-                            throw new TestException(e);
+                        } catch (Exception e) {
+                            throw rethrow(e);
                         }
                     }
                     batch.clear();

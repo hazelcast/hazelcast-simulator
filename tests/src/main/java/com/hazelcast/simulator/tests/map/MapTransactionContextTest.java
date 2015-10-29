@@ -20,13 +20,14 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
+
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 
 public class MapTransactionContextTest {
 
@@ -80,7 +81,7 @@ public class MapTransactionContextTest {
                 LOGGER.severe("----------------------tx exception -------------------------", e);
 
                 if (failOnException) {
-                    throw new TestException(e);
+                    throw rethrow(e);
                 }
 
                 transactionContext.rollbackTransaction();

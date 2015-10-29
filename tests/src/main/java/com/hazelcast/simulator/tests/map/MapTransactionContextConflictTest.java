@@ -22,7 +22,6 @@ import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -37,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -124,7 +124,7 @@ public class MapTransactionContextConflictTest {
                 } catch (TransactionException commitException) {
                     LOGGER.warning(basename + ": commit failed. tried key increments=" + putIncrements, commitException);
                     if (throwCommitException) {
-                        throw new TestException(commitException);
+                        throw rethrow(commitException);
                     }
 
                     try {
@@ -135,7 +135,7 @@ public class MapTransactionContextConflictTest {
                         count.failedRollbacks++;
 
                         if (throwRollBackException) {
-                            throw new TestException(rollBackException);
+                            throw rethrow(rollBackException);
                         }
                     }
                 }

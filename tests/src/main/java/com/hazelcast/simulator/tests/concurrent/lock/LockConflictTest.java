@@ -21,7 +21,6 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -34,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
@@ -135,13 +135,13 @@ public class LockConflictTest {
                     } catch (Exception e) {
                         LOGGER.severe(basename + ": trying lock=" + keyIncrementPair.key, e);
                         if (throwException) {
-                            throw new TestException(e);
+                            throw rethrow(e);
                         }
                     }
                 } catch (Exception e) {
                     LOGGER.severe(basename + ": getting lock for locking=" + keyIncrementPair.key, e);
                     if (throwException) {
-                        throw new TestException(e);
+                        throw rethrow(e);
                     }
                 }
             }
@@ -159,7 +159,7 @@ public class LockConflictTest {
                 } catch (Exception e) {
                     LOGGER.severe(basename + ": updating account=" + keyIncrementPair, e);
                     if (throwException) {
-                        throw new TestException(e);
+                        throw rethrow(e);
                     }
                 }
             }
@@ -180,13 +180,13 @@ public class LockConflictTest {
                         } catch (Exception e) {
                             LOGGER.severe(basename + ": unlocking lock =" + keyIncrementPair.key, e);
                             if (throwException) {
-                                throw new TestException(e);
+                                throw rethrow(e);
                             }
                         }
                     } catch (Exception e) {
                         LOGGER.severe(basename + ": getting lock for unlocking=" + keyIncrementPair.key, e);
                         if (throwException) {
-                            throw new TestException(e);
+                            throw rethrow(e);
                         }
                     }
                 }

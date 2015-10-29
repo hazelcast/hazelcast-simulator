@@ -22,7 +22,6 @@ import com.hazelcast.core.IExecutorService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -34,10 +33,10 @@ import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static org.junit.Assert.assertEquals;
 
@@ -123,10 +122,8 @@ public class ExecutorTest {
                 for (Future future : futureList) {
                     try {
                         future.get();
-                    } catch (InterruptedException e) {
-                        throw new TestException(e);
-                    } catch (ExecutionException e) {
-                        throw new TestException(e);
+                    } catch (Exception e) {
+                        throw rethrow(e);
                     }
                 }
 
