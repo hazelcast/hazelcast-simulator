@@ -171,9 +171,10 @@ public class SyntheticTest {
                 while (!testContext.isStopped()) {
                     timeStep();
                 }
-            } catch (RuntimeException e) {
-                throw e;
             } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                }
                 throw new TestException(e);
             }
         }

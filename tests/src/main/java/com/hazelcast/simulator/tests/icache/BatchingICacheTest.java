@@ -22,7 +22,6 @@ import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -117,7 +116,7 @@ public class BatchingICacheTest {
         }
 
         @Override
-        public void timeStep(Operation operation) {
+        public void timeStep(Operation operation) throws Exception {
             Integer key = randomInt(keyCount);
             ICompletableFuture<?> future;
             switch (operation) {
@@ -136,16 +135,10 @@ public class BatchingICacheTest {
             syncIfNecessary(iteration++);
         }
 
-        private void syncIfNecessary(long iteration) {
+        private void syncIfNecessary(long iteration) throws Exception {
             if (iteration % batchSize == 0) {
                 for (ICompletableFuture<?> future : futureList) {
-                    try {
-                        future.get();
-                    } catch (RuntimeException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        throw new TestException(e);
-                    }
+                    future.get();
                 }
                 futureList.clear();
             }
