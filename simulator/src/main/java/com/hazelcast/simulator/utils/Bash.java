@@ -73,8 +73,8 @@ public class Bash {
     }
 
     public void uploadToRemoteSimulatorDir(String ip, String src, String target) {
-        String command = format("rsync -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s", sshOptions, src, user, ip,
-                getSimulatorVersion(), target);
+        String command = format("rsync --checksum -avv -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s",
+                sshOptions, src, user, ip, getSimulatorVersion(), target);
         execute(command);
     }
 
