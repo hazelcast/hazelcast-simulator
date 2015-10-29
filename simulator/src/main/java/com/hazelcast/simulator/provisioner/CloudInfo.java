@@ -36,15 +36,16 @@ public final class CloudInfo {
 
     private static final Logger LOGGER = Logger.getLogger(CloudInfo.class);
 
-    final SimulatorProperties props = new SimulatorProperties();
+    private final String locationId;
+    private final boolean verbose;
 
-    String locationId;
-    boolean verbose;
+    private final ComputeService computeService;
 
-    private ComputeService computeService;
+    public CloudInfo(String locationId, boolean verbose, SimulatorProperties simulatorProperties) {
+        this.locationId = locationId;
+        this.verbose = verbose;
 
-    void init() {
-        computeService = new ComputeServiceBuilder(props).build();
+        this.computeService = new ComputeServiceBuilder(simulatorProperties).build();
     }
 
     void shutdown() {
@@ -120,10 +121,7 @@ public final class CloudInfo {
         LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
 
         try {
-            CloudInfo cloudInfoCli = new CloudInfo();
-            CloudInfoCli cli = new CloudInfoCli(cloudInfoCli, args);
-
-            cli.run();
+            CloudInfoCli.run(args);
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not retrieve cloud information!", e);
         }

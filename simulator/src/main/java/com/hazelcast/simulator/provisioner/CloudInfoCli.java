@@ -15,12 +15,15 @@
  */
 package com.hazelcast.simulator.provisioner;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.File;
+
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 
 final class CloudInfoCli {
 
@@ -48,42 +51,40 @@ final class CloudInfoCli {
                     + "'$SIMULATOR_HOME/conf/simulator.properties'.")
             .withRequiredArg().ofType(String.class);
 
-    private final CloudInfo cloudInfo;
-    private final OptionSet options;
-
-    CloudInfoCli(CloudInfo cloudInfo, String[] args) {
-        this.cloudInfo = cloudInfo;
-        this.options = CliUtils.initOptionsWithHelp(parser, args);
+    private CloudInfoCli() {
     }
 
-    void run() {
+    static void run(String[] args) {
+        CloudInfoCli cli = new CloudInfoCli();
+        OptionSet options = initOptionsWithHelp(cli.parser, args);
+
+        CloudInfo cloudInfo = null;
         try {
-            cloudInfo.props.init(getPropertiesFile());
+            SimulatorProperties simulatorProperties = new SimulatorProperties();
+            simulatorProperties.init(getPropertiesFile(cli, options));
 
-            cloudInfo.locationId = options.valueOf(locationSpec);
-            cloudInfo.verbose = options.has(verboseSpec);
+            cloudInfo = new CloudInfo(options.valueOf(cli.locationSpec), options.has(cli.verboseSpec), simulatorProperties);
 
-            if (options.has(showLocationsSpec)) {
-                cloudInfo.init();
+            if (options.has(cli.showLocationsSpec)) {
                 cloudInfo.showLocations();
-            } else if (options.has(showHardwareSpec)) {
-                cloudInfo.init();
+            } else if (options.has(cli.showHardwareSpec)) {
                 cloudInfo.showHardware();
-            } else if (options.has(showImagesSpec)) {
-                cloudInfo.init();
+            } else if (options.has(cli.showImagesSpec)) {
                 cloudInfo.showImages();
             } else {
-                CliUtils.printHelpAndExit(parser);
+                CliUtils.printHelpAndExit(cli.parser);
             }
         } finally {
-            cloudInfo.shutdown();
+            if (cloudInfo != null) {
+                cloudInfo.shutdown();
+            }
         }
     }
 
-    private File getPropertiesFile() {
-        if (options.has(propertiesFileSpec)) {
+    private static File getPropertiesFile(CloudInfoCli cli, OptionSet options) {
+        if (options.has(cli.propertiesFileSpec)) {
             // a file was explicitly configured
-            return new File(options.valueOf(propertiesFileSpec));
+            return new File(options.valueOf(cli.propertiesFileSpec));
         } else {
             return null;
         }
