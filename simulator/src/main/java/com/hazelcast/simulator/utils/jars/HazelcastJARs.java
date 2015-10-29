@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,15 +54,17 @@ public class HazelcastJARs {
     private final Bash bash;
     private final GitSupport gitSupport;
 
-    HazelcastJARs(Bash bash, GitSupport gitSupport, String versionSpec) {
+    HazelcastJARs(Bash bash, GitSupport gitSupport) {
         this.bash = bash;
         this.gitSupport = gitSupport;
-
-        addVersionSpec(versionSpec);
     }
 
-    public static HazelcastJARs newInstance(Bash bash, SimulatorProperties properties) {
-        return new HazelcastJARs(bash, GitSupport.newInstance(bash, properties), properties.getHazelcastVersionSpec());
+    public static HazelcastJARs newInstance(Bash bash, SimulatorProperties properties, Set<String> versionSpecs) {
+        HazelcastJARs hazelcastJARs = new HazelcastJARs(bash, GitSupport.newInstance(bash, properties));
+        for (String versionSpec : versionSpecs) {
+            hazelcastJARs.addVersionSpec(versionSpec);
+        }
+        return hazelcastJARs;
     }
 
     public static String directoryForVersionSpec(String versionSpec) {
@@ -78,10 +81,6 @@ public class HazelcastJARs {
         for (Map.Entry<String, File> versionSpecEntry : versionSpecDirs.entrySet()) {
             prepare(versionSpecEntry.getKey(), versionSpecEntry.getValue(), prepareEnterpriseJARs);
         }
-    }
-
-    public void purge(String ip) {
-        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", getSimulatorVersion()));
     }
 
     public void upload(String ip, String simulatorHome) {
@@ -104,14 +103,19 @@ public class HazelcastJARs {
         }
     }
 
+    void addVersionSpec(String versionSpec) {
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        versionSpecDirs.put(versionSpec, new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString()).getAbsoluteFile());
+    }
+
+    // just for testing
+    Set<String> getVersionSpecs() {
+        return versionSpecDirs.keySet();
+    }
+
     // just for testing
     String getAbsolutePath(String versionSpec) {
         return versionSpecDirs.get(versionSpec).getAbsolutePath();
-    }
-
-    private void addVersionSpec(String versionSpec) {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
-        versionSpecDirs.put(versionSpec, new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString()).getAbsoluteFile());
     }
 
     private void prepare(String versionSpec, File targetDir, boolean prepareEnterpriseJARs) {

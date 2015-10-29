@@ -57,6 +57,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
+import static java.util.Collections.singleton;
 
 public final class Provisioner {
 
@@ -88,7 +89,7 @@ public final class Provisioner {
         this.bash = new Bash(props);
 
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
-        this.hazelcastJARs = HazelcastJARs.newInstance(bash, props);
+        this.hazelcastJARs = HazelcastJARs.newInstance(bash, props, singleton(props.getHazelcastVersionSpec()));
     }
 
     void scale(int size, boolean enterpriseEnabled) {
@@ -379,7 +380,7 @@ public final class Provisioner {
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
 
         // upload Hazelcast JARs
-        hazelcastJARs.purge(ip);
+        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", getSimulatorVersion()));
         hazelcastJARs.upload(ip, SIMULATOR_HOME);
 
         String initScript = loadInitScript();
