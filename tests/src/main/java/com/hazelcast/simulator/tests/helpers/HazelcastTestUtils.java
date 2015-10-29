@@ -59,6 +59,14 @@ public final class HazelcastTestUtils {
     private HazelcastTestUtils() {
     }
 
+    public static RuntimeException rethrow(Throwable throwable) {
+        if (throwable instanceof RuntimeException) {
+            throw (RuntimeException) throwable;
+        } else {
+            throw new TestException(throwable);
+        }
+    }
+
     public static String getPartitionDistributionInformation(HazelcastInstance hz) {
         Map<Member, Integer> partitionCountMap = new HashMap<Member, Integer>();
         int totalPartitions = 0;
