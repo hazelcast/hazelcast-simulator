@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +45,8 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -207,14 +208,19 @@ public class AgentOperationProcessorTest {
             File workerDir = new File(testSuiteDir, workerJvm.getId());
             assertTrue(workerDir.exists());
 
-            assertTrue(workerJvm.getProcess().isAlive());
+            try {
+                workerJvm.getProcess().exitValue();
+                fail("Expected IllegalThreadStateException since process should still be alive!");
+            } catch (IllegalThreadStateException e) {
+                EmptyStatement.ignore(e);
+            }
 
             File pidFile = new File(workerDir, "worker.pid");
             String pid = fileAsText(pidFile);
             execute("kill " + pid);
 
             workerJvm.getProcess().waitFor(5, TimeUnit.SECONDS);
-            assertFalse(workerJvm.getProcess().isAlive());
+            workerJvm.getProcess().exitValue();
 
             deleteQuiet(pidFile);
         }
