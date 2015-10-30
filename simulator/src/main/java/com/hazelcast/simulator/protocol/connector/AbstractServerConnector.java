@@ -23,7 +23,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.util.EmptyStatement;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -35,7 +34,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -48,6 +46,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureK
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
@@ -193,39 +192,31 @@ abstract class AbstractServerConnector implements ServerConnector {
                     }
 
                     Response response = writeAsync(message).get();
-                    for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
-                        if (!entry.getValue().equals(ResponseType.SUCCESS)) {
-                            LOGGER.error("Got " + entry.getValue() + " on " + entry.getKey() + " for " + message);
-                        }
+                    ResponseType responseType = response.getFirstErrorResponseType();
+                    if (!responseType.equals(ResponseType.SUCCESS)) {
+                        LOGGER.error("Got response type " + responseType + " for " + message);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error while sending message from messageQueue", e);
                     throw new SimulatorProtocolException("Error while sending message from messageQueue", e);
                 }
             }
-            if (!messageQueue.isEmpty()) {
-                LOGGER.error("messageQueue not empty after poison pill was processed: " + messageQueue.peek());
-            }
         }
 
         public void shutdown() {
-            try {
-                messageQueue.add(POISON_PILL);
+            messageQueue.add(POISON_PILL);
 
-                int queueSize = messageQueue.size();
-                while (queueSize > 0) {
-                    SimulatorMessage message = messageQueue.peek();
-                    if (!POISON_PILL.equals(message)) {
-                        LOGGER.info(format("%d messages pending on messageQueue, first message: %s", queueSize, message));
-                    }
-                    sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
-                    queueSize = messageQueue.size();
+            SimulatorMessage message = messageQueue.peek();
+            while (message != null) {
+                if (!POISON_PILL.equals(message)) {
+                    int queueSize = messageQueue.size();
+                    LOGGER.info(format("%d messages pending on messageQueue, first message: %s", queueSize, message));
                 }
-
-                messageQueueThread.join();
-            } catch (InterruptedException e) {
-                EmptyStatement.ignore(e);
+                sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
+                message = messageQueue.peek();
             }
+
+            joinThread(messageQueueThread);
         }
     }
 }
