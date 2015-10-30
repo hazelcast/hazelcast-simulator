@@ -2,6 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -18,7 +19,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Collections;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
@@ -27,6 +27,7 @@ import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.atLeast;
@@ -171,8 +172,8 @@ public class CoordinatorRunTestSuiteTest {
         when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
 
         ComponentRegistry componentRegistry = new ComponentRegistry();
-        SimulatorAddress agentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
-        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
+        componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
+        componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerJvmSettings));
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
@@ -181,11 +182,15 @@ public class CoordinatorRunTestSuiteTest {
         when(coordinatorParameters.isRefreshJvm()).thenReturn(false);
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
+        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
+        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
 
         Coordinator coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters,
                 clusterLayoutParameters);

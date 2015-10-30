@@ -97,6 +97,9 @@ final class ClusterUtils {
         if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
             throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
+        if (memberWorkerCount == 0 && clientWorkerCount == 0) {
+            throw new CommandLineExitException("No workers have been defined!");
+        }
 
         assignDedicatedMemberMachines(agentCount, agentWorkerLayouts, dedicatedMemberMachineCount);
 

@@ -17,6 +17,7 @@ import static com.hazelcast.simulator.cluster.AgentWorkerMode.CUSTOM;
 import static com.hazelcast.simulator.cluster.AgentWorkerMode.MEMBER;
 import static com.hazelcast.simulator.cluster.AgentWorkerMode.MIXED;
 import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -98,12 +99,12 @@ public class ClusterUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_fromXml_hzConfigFileNotExists() {
-        String xml = "<clusterConfiguration>\n"
-                + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\" hzConfigFile=\"notExists\"/>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "</clusterConfiguration>";
+        String xml = "<clusterConfiguration>"
+                + NEW_LINE + "\t<workerConfiguration name=\"memberWorker\" type=\"MEMBER\" hzConfigFile=\"notExists\"/>"
+                + NEW_LINE + "\t<nodeConfiguration>"
+                + NEW_LINE + "\t<workerGroup configuration=\"memberWorker\" count=\"1\"/>"
+                + NEW_LINE + "\t</nodeConfiguration>"
+                + NEW_LINE + "</clusterConfiguration>";
 
         when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
@@ -113,11 +114,11 @@ public class ClusterUtilsTest {
     @Test
     public void testInitMemberLayout_dedicatedMemberCountEqualsAgentCount() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(3);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
         agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
-        assertAgentWorkerLayout(0, MEMBER, 0, 0);
+        assertAgentWorkerLayout(0, MEMBER, 1, 0);
         assertAgentWorkerLayout(1, MEMBER, 0, 0);
         assertAgentWorkerLayout(2, MEMBER, 0, 0);
     }
@@ -125,7 +126,7 @@ public class ClusterUtilsTest {
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_dedicatedMemberCountHigherThanAgentCount() {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(5);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
         initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
@@ -148,6 +149,15 @@ public class ClusterUtilsTest {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(3);
         when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
+
+        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testInitMemberLayout_noWorkersDefined() {
+        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
         initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
     }

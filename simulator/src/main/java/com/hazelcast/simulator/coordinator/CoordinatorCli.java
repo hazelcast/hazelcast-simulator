@@ -181,7 +181,7 @@ final class CoordinatorCli {
     }
 
     private static String getDefaultConfigurationFile(String filename) {
-        File file = new File(filename);
+        File file = new File(filename).getAbsoluteFile();
         if (file.exists()) {
             return file.getAbsolutePath();
         } else {
@@ -207,8 +207,7 @@ final class CoordinatorCli {
 
         SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
         if (options.has(cli.gitSpec)) {
-            String git = options.valueOf(cli.gitSpec);
-            simulatorProperties.forceGit(git);
+            simulatorProperties.forceGit(options.valueOf(cli.gitSpec));
         }
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
@@ -299,8 +298,9 @@ final class CoordinatorCli {
     }
 
     private static String loadClusterConfig() {
-        File file = new File("cluster.xml");
+        File file = new File("cluster.xml").getAbsoluteFile();
         if (file.exists()) {
+            LOGGER.info("Loading cluster configuration: " + file.getAbsolutePath());
             return fileAsText(file.getAbsolutePath());
         } else {
             return null;
