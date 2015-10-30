@@ -47,8 +47,8 @@ public class CoordinatorUploaderTest {
         ensureExistingDirectory(uploadDirectory);
         ensureExistingDirectory(workerClassPathFile);
 
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false, workerClassPath,
-                YOURKIT);
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, true, false,
+                workerClassPath, YOURKIT);
     }
 
     @After
@@ -75,7 +75,7 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadHazelcastJARs_isNull() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, null, false, workerClassPath,
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, null, true, false, workerClassPath,
                 YOURKIT);
 
         coordinatorUploader.uploadHazelcastJARs();
@@ -116,7 +116,8 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadWorkerClassPath_workerClassPathIsNull() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false, null, YOURKIT);
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, true, false, null,
+                YOURKIT);
 
         coordinatorUploader.uploadWorkerClassPath();
 
@@ -125,7 +126,7 @@ public class CoordinatorUploaderTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testUploadWorkerClassPath_workerClassPathNotExists() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false,
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, true, false,
                 notExists.getAbsolutePath(), YOURKIT);
 
         coordinatorUploader.uploadWorkerClassPath();
@@ -142,8 +143,8 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadYourKit_noYourKitProfiler() {
-        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, false, workerClassPath,
-                NONE);
+        coordinatorUploader = new CoordinatorUploader(componentRegistry, bash, testSuiteId, hazelcastJARs, true, false,
+                workerClassPath, NONE);
 
         coordinatorUploader.uploadYourKit();
 

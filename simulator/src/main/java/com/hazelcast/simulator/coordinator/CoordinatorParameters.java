@@ -28,6 +28,7 @@ class CoordinatorParameters {
     private final SimulatorProperties simulatorProperties;
     private final String workerClassPath;
 
+    private final boolean uploadHazelcastJARs;
     private final boolean enterpriseEnabled;
     private final boolean verifyEnabled;
     private final boolean parallel;
@@ -36,11 +37,13 @@ class CoordinatorParameters {
 
     private final TestPhase lastTestPhaseToSync;
 
-    public CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean enterpriseEnabled,
-                                 boolean verifyEnabled, boolean parallel, boolean refreshJvm, TestPhase lastTestPhaseToSync) {
+    public CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean uploadHazelcastJARs,
+                                 boolean enterpriseEnabled, boolean verifyEnabled, boolean parallel, boolean refreshJvm,
+                                 TestPhase lastTestPhaseToSync) {
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
 
+        this.uploadHazelcastJARs = uploadHazelcastJARs;
         this.enterpriseEnabled = enterpriseEnabled;
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
@@ -56,6 +59,10 @@ class CoordinatorParameters {
 
     public String getWorkerClassPath() {
         return workerClassPath;
+    }
+
+    public boolean isUploadHazelcastJARs() {
+        return uploadHazelcastJARs;
     }
 
     public boolean isEnterpriseEnabled() {

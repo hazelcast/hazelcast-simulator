@@ -178,6 +178,7 @@ public class CoordinatorRunTestSuiteTest {
                 simulatorProperties,
                 "",
                 false,
+                false,
                 verifyEnabled,
                 parallel,
                 false,

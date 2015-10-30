@@ -165,6 +165,10 @@ final class CoordinatorCli {
                     + "You can specify custom repositories in 'simulator.properties'.")
             .withRequiredArg().ofType(String.class);
 
+    private final OptionSpec<Boolean> uploadHazelcastJARsSpec = parser.accepts("uploadHazelcastJARs",
+            "Defines if the Hazelcast JARs should be uploaded.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
     private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
             "Use JARs of Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
@@ -210,6 +214,7 @@ final class CoordinatorCli {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
                 options.valueOf(cli.workerClassPathSpec),
+                options.valueOf(cli.uploadHazelcastJARsSpec),
                 options.valueOf(cli.enterpriseEnabledSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),

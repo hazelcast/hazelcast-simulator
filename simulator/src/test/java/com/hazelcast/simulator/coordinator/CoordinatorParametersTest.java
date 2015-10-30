@@ -17,11 +17,12 @@ public class CoordinatorParametersTest {
         SimulatorProperties properties = mock(SimulatorProperties.class);
         when(properties.get("PASSIVE_MEMBERS", "true")).thenReturn("true");
 
-        CoordinatorParameters coordinatorParameters = new CoordinatorParameters(properties, "workerClassPath", true, false, true,
-                false, LOCAL_TEARDOWN);
+        CoordinatorParameters coordinatorParameters = new CoordinatorParameters(properties, "workerClassPath", false, true, false,
+                true, false, LOCAL_TEARDOWN);
 
         assertEquals(properties, coordinatorParameters.getSimulatorProperties());
         assertEquals("workerClassPath", coordinatorParameters.getWorkerClassPath());
+        assertFalse(coordinatorParameters.isUploadHazelcastJARs());
         assertTrue(coordinatorParameters.isEnterpriseEnabled());
         assertFalse(coordinatorParameters.isVerifyEnabled());
         assertTrue(coordinatorParameters.isParallel());

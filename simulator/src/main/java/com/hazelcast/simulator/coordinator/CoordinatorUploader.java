@@ -47,6 +47,7 @@ class CoordinatorUploader {
     private final Bash bash;
 
     private final HazelcastJARs hazelcastJARs;
+    private final boolean uploadHazelcastJARs;
     private final boolean isEnterpriseEnabled;
 
     private final String testSuiteId;
@@ -55,11 +56,13 @@ class CoordinatorUploader {
     private final JavaProfiler javaProfiler;
 
     public CoordinatorUploader(ComponentRegistry componentRegistry, Bash bash, String testSuiteId, HazelcastJARs hazelcastJARs,
-                               boolean isEnterpriseEnabled, String workerClassPath, JavaProfiler javaProfiler) {
+                               boolean uploadHazelcastJARs, boolean isEnterpriseEnabled, String workerClassPath,
+                               JavaProfiler javaProfiler) {
         this.componentRegistry = componentRegistry;
         this.bash = bash;
 
         this.hazelcastJARs = hazelcastJARs;
+        this.uploadHazelcastJARs = uploadHazelcastJARs;
         this.isEnterpriseEnabled = isEnterpriseEnabled;
 
         this.testSuiteId = testSuiteId;
@@ -74,7 +77,9 @@ class CoordinatorUploader {
         LOGGER.info(HORIZONTAL_RULER);
 
         long started = System.nanoTime();
-        uploadHazelcastJARs();
+        if (uploadHazelcastJARs) {
+            uploadHazelcastJARs();
+        }
         uploadUploadDirectory();
         uploadWorkerClassPath();
         uploadYourKit();
