@@ -174,16 +174,12 @@ public class CoordinatorRunTestSuiteTest {
         SimulatorAddress agentAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
         componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
 
-        CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
-                simulatorProperties,
-                "",
-                false,
-                false,
-                verifyEnabled,
-                parallel,
-                false,
-                TestPhase.SETUP
-        );
+        CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
+        when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
+        when(coordinatorParameters.isVerifyEnabled()).thenReturn(verifyEnabled);
+        when(coordinatorParameters.isParallel()).thenReturn(parallel);
+        when(coordinatorParameters.isRefreshJvm()).thenReturn(false);
+
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
