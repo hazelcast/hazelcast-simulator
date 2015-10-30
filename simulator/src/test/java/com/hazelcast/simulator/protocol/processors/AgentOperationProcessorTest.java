@@ -124,7 +124,7 @@ public class AgentOperationProcessorTest {
         verifyNoMoreInteractions(executorService);
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testCreateWorkerOperation() throws Exception {
         ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT);
         assertEquals(SUCCESS, responseType);
@@ -143,7 +143,7 @@ public class AgentOperationProcessorTest {
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testCreateWorkerOperation_withUploadDirectory() throws Exception {
         File uploadDir = new File(testSuiteDir, "upload");
         ensureExistingDirectory(uploadDir);
@@ -219,7 +219,7 @@ public class AgentOperationProcessorTest {
             String pid = fileAsText(pidFile);
             execute("kill " + pid);
 
-            workerJvm.getProcess().waitFor(5, TimeUnit.SECONDS);
+            workerJvm.getProcess().waitFor();
             workerJvm.getProcess().exitValue();
 
             deleteQuiet(pidFile);
