@@ -32,7 +32,7 @@ public class CoordinatorCliTest {
             = "<clusterConfiguration>"
             + NEW_LINE + "\t<workerConfiguration name=\"test\" type=\"MEMBER\"/>"
             + NEW_LINE + "\t<nodeConfiguration>"
-            + NEW_LINE + "\t\t<workerGroup name=\"test\"/>"
+            + NEW_LINE + "\t\t<workerGroup configuration=\"test\" count=\"1\"/>"
             + NEW_LINE + "\t</nodeConfiguration>"
             + NEW_LINE + "</clusterConfiguration>";
 

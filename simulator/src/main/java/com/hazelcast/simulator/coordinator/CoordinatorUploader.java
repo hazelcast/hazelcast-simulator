@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.cluster.AgentWorkerLayout;
+import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -26,6 +28,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_VERSION;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
@@ -43,32 +46,32 @@ class CoordinatorUploader {
 
     private final String simulatorHome = getSimulatorHome().getAbsolutePath();
 
-    private final ComponentRegistry componentRegistry;
     private final Bash bash;
+    private final ComponentRegistry componentRegistry;
+    private final ClusterLayout clusterLayout;
 
     private final HazelcastJARs hazelcastJARs;
     private final boolean uploadHazelcastJARs;
     private final boolean isEnterpriseEnabled;
 
-    private final String testSuiteId;
     private final String workerClassPath;
-
     private final JavaProfiler javaProfiler;
+    private final String testSuiteId;
 
-    public CoordinatorUploader(ComponentRegistry componentRegistry, Bash bash, String testSuiteId, HazelcastJARs hazelcastJARs,
-                               boolean uploadHazelcastJARs, boolean isEnterpriseEnabled, String workerClassPath,
-                               JavaProfiler javaProfiler) {
-        this.componentRegistry = componentRegistry;
+    public CoordinatorUploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
+                               HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
+                               String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
         this.bash = bash;
+        this.componentRegistry = componentRegistry;
+        this.clusterLayout = clusterLayout;
 
         this.hazelcastJARs = hazelcastJARs;
         this.uploadHazelcastJARs = uploadHazelcastJARs;
         this.isEnterpriseEnabled = isEnterpriseEnabled;
 
-        this.testSuiteId = testSuiteId;
         this.workerClassPath = workerClassPath;
-
         this.javaProfiler = javaProfiler;
+        this.testSuiteId = testSuiteId;
     }
 
     public void run() {
@@ -101,13 +104,14 @@ class CoordinatorUploader {
         LOGGER.info("Uploading Hazelcast JARs...");
         ThreadSpawner spawner = new ThreadSpawner("uploadHazelcastJARs", true);
         long started = System.nanoTime();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            final String ip = agentData.getPublicAddress();
+        for (AgentWorkerLayout agentWorkerLayout : clusterLayout.getAgentWorkerLayouts()) {
+            final String ip = agentWorkerLayout.getPublicAddress();
+            final Set<String> hazelcastVersionSpecs = agentWorkerLayout.getHazelcastVersionSpecs();
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    hazelcastJARs.upload(ip, simulatorHome);
-                    logAgentDone(ip);
+                    hazelcastJARs.upload(ip, simulatorHome, hazelcastVersionSpecs);
+                    LOGGER.info("    Agent " + ip + " done " + hazelcastVersionSpecs);
                 }
             });
         }

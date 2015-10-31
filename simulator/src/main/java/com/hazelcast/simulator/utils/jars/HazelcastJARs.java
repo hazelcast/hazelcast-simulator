@@ -83,10 +83,8 @@ public class HazelcastJARs {
         }
     }
 
-    public void upload(String ip, String simulatorHome) {
-        for (Map.Entry<String, File> stringFileEntry : versionSpecDirs.entrySet()) {
-            String versionSpec = stringFileEntry.getKey();
-
+    public void upload(String ip, String simulatorHome, Set<String> versionSpecs) {
+        for (String versionSpec : versionSpecs) {
             // create target directory
             String versionDir = directoryForVersionSpec(versionSpec);
             if (versionDir != null) {
@@ -98,7 +96,8 @@ public class HazelcastJARs {
                 bash.uploadToRemoteSimulatorDir(ip, simulatorHome + "/lib/hazelcast*", "hz-lib/outofthebox");
             } else if (!BRING_MY_OWN.equals(versionSpec)) {
                 // upload the actual Hazelcast JARs that are going to be used by the worker
-                bash.uploadToRemoteSimulatorDir(ip, stringFileEntry.getValue() + "/*.jar", "hz-lib/" + versionDir);
+                File versionSpecDir = versionSpecDirs.get(versionSpec);
+                bash.uploadToRemoteSimulatorDir(ip, versionSpecDir + "/*.jar", "hz-lib/" + versionDir);
             }
         }
     }

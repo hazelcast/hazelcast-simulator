@@ -52,8 +52,16 @@ public final class AgentWorkerLayout {
         return agentData.getAddress();
     }
 
-    String getPublicAddress() {
+    public String getPublicAddress() {
         return agentData.getPublicAddress();
+    }
+
+    public Set<String> getHazelcastVersionSpecs() {
+        Set<String> hazelcastVersionSpecs = new HashSet<String>();
+        for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
+            hazelcastVersionSpecs.add(workerJvmSettings.getHazelcastVersionSpec());
+        }
+        return hazelcastVersionSpecs;
     }
 
     void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {
@@ -62,14 +70,6 @@ public final class AgentWorkerLayout {
 
     AgentWorkerMode getAgentWorkerMode() {
         return agentWorkerMode;
-    }
-
-    Set<String> getHazelcastVersionSpecs() {
-        Set<String> hazelcastVersionSpecs = new HashSet<String>();
-        for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
-            hazelcastVersionSpecs.add(workerJvmSettings.getHazelcastVersionSpec());
-        }
-        return hazelcastVersionSpecs;
     }
 
     void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
