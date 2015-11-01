@@ -24,50 +24,62 @@ import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
 import org.jclouds.ec2.domain.SecurityGroup;
 import org.jclouds.ec2.features.SecurityGroupApi;
-import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+import static org.apache.commons.lang3.ArrayUtils.toPrimitive;
+import static org.jclouds.net.domain.IpProtocol.TCP;
 
-class TemplateBuilder {
+final class TemplateBuilder {
 
-    private static final int SSH_PORT = 22;
-    private static final int HAZELCAST_PORT_RANGE_START = 5701;
-    private static final int HAZELCAST_PORT_RANGE_END = 5751;
-    private static final String CIDR_RANGE = "0.0.0.0/0";
+    static final int SSH_PORT = 22;
+    static final int HAZELCAST_PORT_RANGE_START = 5701;
+    static final int HAZELCAST_PORT_RANGE_END = 5751;
+    static final String CIDR_RANGE = "0.0.0.0/0";
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
+    private final Map<Integer, Integer> portRangeMap = new HashMap<Integer, Integer>();
+
     private final ComputeService compute;
     private final SimulatorProperties simulatorProperties;
-    private final int agentPort;
-
-    private String securityGroup;
-    private TemplateBuilderSpec spec;
 
     TemplateBuilder(ComputeService compute, SimulatorProperties simulatorProperties) {
         this.compute = compute;
         this.simulatorProperties = simulatorProperties;
-        this.agentPort = simulatorProperties.getAgentPort();
+
+        populatePortRangeMap();
+    }
+
+    private void populatePortRangeMap() {
+        int agentPort = simulatorProperties.getAgentPort();
+
+        portRangeMap.put(SSH_PORT, SSH_PORT);
+        portRangeMap.put(HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END);
+        portRangeMap.put(agentPort, agentPort);
     }
 
     Template build() {
-        securityGroup = simulatorProperties.get("SECURITY_GROUP", "simulator");
+        LOGGER.info("Creating jclouds template...");
+
+        String securityGroup = simulatorProperties.get("SECURITY_GROUP", "simulator");
+        LOGGER.info("Security group: " + securityGroup);
 
         String machineSpec = simulatorProperties.get("MACHINE_SPEC", "");
-        spec = TemplateBuilderSpec.parse(machineSpec);
+        TemplateBuilderSpec spec = TemplateBuilderSpec.parse(machineSpec);
         LOGGER.info("Machine spec: " + machineSpec);
 
-        Template template = buildTemplate();
-        LOGGER.info("Created template");
+        Template template = buildTemplate(spec);
 
         String user = simulatorProperties.get("USER", "simulator");
         AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
-        LOGGER.info("Login name to the remote machines: " + user);
+        LOGGER.info("Login name to remote machines: " + user);
 
         template.getOptions()
                 .inboundPorts(inboundPorts())
@@ -75,40 +87,44 @@ class TemplateBuilder {
 
         String subnetId = simulatorProperties.get("SUBNET_ID", "default");
         if (subnetId.equals("default") || subnetId.isEmpty()) {
-            initSecurityGroup();
-            template.getOptions().securityGroups(securityGroup);
+            initSecurityGroup(spec, securityGroup);
+            template.getOptions()
+                    .securityGroups(securityGroup);
         } else {
             if (!isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
-            LOGGER.info("Using VPC, Subnet ID = " + subnetId);
+            LOGGER.info("Using VPC with Subnet ID = " + subnetId);
             template.getOptions()
                     .as(AWSEC2TemplateOptions.class)
                     .subnetId(subnetId);
         }
+
+        LOGGER.info("Successfully created jclouds template");
         return template;
     }
 
-    private Template buildTemplate() {
+    private Template buildTemplate(TemplateBuilderSpec spec) {
         return compute.templateBuilder().from(spec).build();
     }
 
     private int[] inboundPorts() {
         List<Integer> ports = new ArrayList<Integer>();
-        ports.add(SSH_PORT);
-        ports.add(agentPort);
-        for (int port = HAZELCAST_PORT_RANGE_START; port < HAZELCAST_PORT_RANGE_END; port++) {
-            ports.add(port);
+        for (Map.Entry<Integer, Integer> portRangeEntry : portRangeMap.entrySet()) {
+            int startPort = portRangeEntry.getKey();
+            int endPort = portRangeEntry.getValue();
+            if (startPort == endPort) {
+                ports.add(startPort);
+                continue;
+            }
+            for (int port = startPort; port < endPort; port++) {
+                ports.add(port);
+            }
         }
-
-        int[] result = new int[ports.size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = ports.get(i);
-        }
-        return result;
+        return toPrimitive(ports.toArray(new Integer[ports.size()]));
     }
 
-    private void initSecurityGroup() {
+    private void initSecurityGroup(TemplateBuilderSpec spec, String securityGroup) {
         if (!isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
             return;
         }
@@ -128,15 +144,11 @@ class TemplateBuilder {
         }
 
         LOGGER.info("Security group: '" + securityGroup + "' is not found in region '" + region + "', creating it on the fly");
-
         securityGroupApi.createSecurityGroupInRegion(region, securityGroup, securityGroup);
-
-        // this duplication of ports is ugly since we already do it in 'inboundPorts method'
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                SSH_PORT, SSH_PORT, CIDR_RANGE);
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                agentPort, agentPort, CIDR_RANGE);
-        securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, CIDR_RANGE);
+        for (Map.Entry<Integer, Integer> portRangeEntry : portRangeMap.entrySet()) {
+            int startPort = portRangeEntry.getKey();
+            int endPort = portRangeEntry.getValue();
+            securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, TCP, startPort, endPort, CIDR_RANGE);
+        }
     }
 }
