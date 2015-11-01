@@ -17,7 +17,6 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
-import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -217,7 +216,7 @@ public class WorkerJvmLauncher {
         List<String> args = new LinkedList<String>();
 
         int workerIndex = workerJvmSettings.getWorkerIndex();
-        int workerPort = Ports.WORKER_START_PORT + workerIndex;
+        int workerPort = agent.getPort() + workerIndex;
 
         addNumaCtlSettings(args);
         addProfilerSettings(workerJvm, args);

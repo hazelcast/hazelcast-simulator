@@ -42,7 +42,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.cluster.ClusterLayout.createSingleInstanceClusterLayout;
-import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -54,6 +53,7 @@ import static org.junit.Assert.assertTrue;
 public class AgentSmokeTest {
 
     private static final String AGENT_IP_ADDRESS = "127.0.0.1";
+    private static final int AGENT_PORT = 9000;
     private static final int TEST_RUNTIME_SECONDS = 3;
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
@@ -260,7 +260,8 @@ public class AgentSmokeTest {
             public void run() {
                 agent = Agent.createAgent(new String[]{
                         "--addressIndex", "1",
-                        "--publicAddress", "127.0.0.1"
+                        "--publicAddress", AGENT_IP_ADDRESS,
+                        "--port", String.valueOf(AGENT_PORT)
                 });
                 latch.countDown();
             }

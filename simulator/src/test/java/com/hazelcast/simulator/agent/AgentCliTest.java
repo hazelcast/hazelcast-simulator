@@ -33,6 +33,8 @@ public class AgentCliTest {
         args.add("5");
         args.add("--publicAddress");
         args.add("127.0.0.1");
+        args.add("--port");
+        args.add("9000");
 
         agent = createAgent();
 
@@ -49,6 +51,8 @@ public class AgentCliTest {
     public void testInit_missingAddressIndex() {
         args.add("--publicAddress");
         args.add("127.0.0.1");
+        args.add("--port");
+        args.add("9000");
 
         createAgent();
     }
@@ -57,6 +61,18 @@ public class AgentCliTest {
     public void testInit_missingPublicAddress() {
         args.add("--addressIndex");
         args.add("1");
+        args.add("--port");
+        args.add("9000");
+
+        createAgent();
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testInit_missingPort() {
+        args.add("--addressIndex");
+        args.add("1");
+        args.add("--publicAddress");
+        args.add("127.0.0.1");
 
         createAgent();
     }

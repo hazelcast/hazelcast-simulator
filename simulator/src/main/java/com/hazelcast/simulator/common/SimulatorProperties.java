@@ -30,6 +30,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.GIT_VERSION_PREFIX;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
+import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
 /**
@@ -113,6 +114,10 @@ public class SimulatorProperties {
         } else {
             return forcedHazelcastVersionSpec;
         }
+    }
+
+    public int getAgentPort() {
+        return parseInt(get("AGENT_PORT"));
     }
 
     public String get(String name) {

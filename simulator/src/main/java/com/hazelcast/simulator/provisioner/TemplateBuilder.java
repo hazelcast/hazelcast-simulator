@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.configuration.Ports;
 import org.apache.log4j.Logger;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
@@ -44,26 +43,29 @@ class TemplateBuilder {
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     private final ComputeService compute;
-    private final SimulatorProperties props;
+    private final SimulatorProperties simulatorProperties;
+    private final int agentPort;
+
     private String securityGroup;
     private TemplateBuilderSpec spec;
 
-    TemplateBuilder(ComputeService compute, SimulatorProperties properties) {
+    TemplateBuilder(ComputeService compute, SimulatorProperties simulatorProperties) {
         this.compute = compute;
-        this.props = properties;
+        this.simulatorProperties = simulatorProperties;
+        this.agentPort = simulatorProperties.getAgentPort();
     }
 
     Template build() {
-        securityGroup = props.get("SECURITY_GROUP", "simulator");
+        securityGroup = simulatorProperties.get("SECURITY_GROUP", "simulator");
 
-        String machineSpec = props.get("MACHINE_SPEC", "");
+        String machineSpec = simulatorProperties.get("MACHINE_SPEC", "");
         spec = TemplateBuilderSpec.parse(machineSpec);
         LOGGER.info("Machine spec: " + machineSpec);
 
         Template template = buildTemplate();
         LOGGER.info("Created template");
 
-        String user = props.get("USER", "simulator");
+        String user = simulatorProperties.get("USER", "simulator");
         AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
         LOGGER.info("Login name to the remote machines: " + user);
 
@@ -71,12 +73,12 @@ class TemplateBuilder {
                 .inboundPorts(inboundPorts())
                 .runScript(adminAccess);
 
-        String subnetId = props.get("SUBNET_ID", "default");
+        String subnetId = simulatorProperties.get("SUBNET_ID", "default");
         if (subnetId.equals("default") || subnetId.isEmpty()) {
             initSecurityGroup();
             template.getOptions().securityGroups(securityGroup);
         } else {
-            if (!isEC2(props.get("CLOUD_PROVIDER"))) {
+            if (!isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
             LOGGER.info("Using VPC, Subnet ID = " + subnetId);
@@ -94,7 +96,7 @@ class TemplateBuilder {
     private int[] inboundPorts() {
         List<Integer> ports = new ArrayList<Integer>();
         ports.add(SSH_PORT);
-        ports.add(Ports.AGENT_PORT);
+        ports.add(agentPort);
         for (int port = HAZELCAST_PORT_RANGE_START; port < HAZELCAST_PORT_RANGE_END; port++) {
             ports.add(port);
         }
@@ -107,7 +109,7 @@ class TemplateBuilder {
     }
 
     private void initSecurityGroup() {
-        if (!isEC2(props.get("CLOUD_PROVIDER"))) {
+        if (!isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
             return;
         }
 
@@ -133,7 +135,7 @@ class TemplateBuilder {
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
                 SSH_PORT, SSH_PORT, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
-                Ports.AGENT_PORT, Ports.AGENT_PORT, CIDR_RANGE);
+                agentPort, agentPort, CIDR_RANGE);
         securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, IpProtocol.TCP,
                 HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END, CIDR_RANGE);
     }

@@ -33,6 +33,10 @@ final class AgentCli {
             "Public address of this Agent.")
             .withRequiredArg().ofType(String.class);
 
+    private final OptionSpec<Integer> portSpec = parser.accepts("port",
+            "Port of this Agent.")
+            .withRequiredArg().ofType(Integer.class);
+
     private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
             "The cloud provider for this Agent.")
             .withRequiredArg().ofType(String.class);
@@ -62,10 +66,15 @@ final class AgentCli {
         }
         String publicAddress = options.valueOf(agentCli.publicAddressSpec);
 
+        if (!options.has(agentCli.portSpec)) {
+            throw new CommandLineExitException("Missing parameter: --port");
+        }
+        int port = options.valueOf(agentCli.portSpec);
+
         String cloudProvider = options.valueOf(agentCli.cloudProviderSpec);
         String cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
         String cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
 
-        return new Agent(addressIndex, publicAddress, cloudProvider, cloudIdentity, cloudCredential);
+        return new Agent(addressIndex, publicAddress, port, cloudProvider, cloudIdentity, cloudCredential);
     }
 }
