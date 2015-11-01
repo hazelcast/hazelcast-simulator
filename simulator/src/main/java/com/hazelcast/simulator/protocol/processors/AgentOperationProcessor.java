@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.protocol.configuration.Ports.WORKER_START_PORT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -148,7 +147,7 @@ public class AgentOperationProcessor extends OperationProcessor {
                 launcher.launch();
 
                 int workerIndex = workerJvmSettings.getWorkerIndex();
-                int workerPort = WORKER_START_PORT + workerIndex;
+                int workerPort = agent.getPort() + workerIndex;
                 SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
 
                 WorkerType workerType = workerJvmSettings.getWorkerType();

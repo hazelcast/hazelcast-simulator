@@ -37,7 +37,6 @@ import java.util.concurrent.CountDownLatch;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS;
-import static com.hazelcast.simulator.protocol.configuration.Ports.AGENT_PORT;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -173,11 +172,12 @@ public final class Coordinator {
     private void startAgents() {
         echoLocal("Starting %s Agents", componentRegistry.agentCount());
         ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
+        final int agentPort = simulatorProperties.getAgentPort();
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    startAgent(agentData.getAddressIndex(), agentData.getPublicAddress());
+                    startAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
                 }
             });
         }
@@ -194,12 +194,12 @@ public final class Coordinator {
         remoteClient.initTestSuite(testSuite);
     }
 
-    private void startAgent(int addressIndex, String ip) {
+    private void startAgent(int addressIndex, String ip, int port) {
         echoLocal("Killing Java processes on %s", ip);
         bash.killAllJavaProcesses(ip);
 
         echoLocal("Starting Agent on %s", ip);
-        String mandatoryParameters = format("--addressIndex %d --publicAddress %s", addressIndex, ip);
+        String mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s", addressIndex, ip, port);
         String optionalParameters = "";
         if (isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
             optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
@@ -218,10 +218,11 @@ public final class Coordinator {
                 testHistogramContainer, failureContainer);
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
+            final int agentPort = simulatorProperties.getAgentPort();
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), AGENT_PORT);
+                    coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
                 }
             });
         }

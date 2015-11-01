@@ -18,7 +18,6 @@ package com.hazelcast.simulator.agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.CoordinatorLogger;
-import com.hazelcast.simulator.protocol.configuration.Ports;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.LogManager;
@@ -51,6 +50,7 @@ public class Agent {
 
     private final int addressIndex;
     private final String publicAddress;
+    private final int port;
 
     private final String cloudProvider;
     private final String cloudIdentity;
@@ -61,16 +61,19 @@ public class Agent {
 
     private volatile TestSuite testSuite;
 
-    public Agent(int addressIndex, String publicAddress, String cloudProvider, String cloudIdentity, String cloudCredential) {
+    public Agent(int addressIndex, String publicAddress, int port, String cloudProvider, String cloudIdentity,
+                 String cloudCredential) {
         SHUTDOWN_STARTED.set(false);
 
         this.addressIndex = addressIndex;
         this.publicAddress = publicAddress;
+        this.port = port;
+
         this.cloudProvider = cloudProvider;
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, Ports.AGENT_PORT);
+        this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, port);
         this.agentConnector.start();
 
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
@@ -93,6 +96,10 @@ public class Agent {
 
     public String getPublicAddress() {
         return publicAddress;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public AgentConnector getAgentConnector() {
@@ -146,7 +153,7 @@ public class Agent {
                 getCommitIdAbbrev(),
                 getBuildTime()));
         LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
-        logInterestingSystemProperties();
+        logImportantSystemProperties();
 
         Agent agent = AgentCli.init(args);
 
@@ -157,7 +164,7 @@ public class Agent {
         return agent;
     }
 
-    private static void logInterestingSystemProperties() {
+    private static void logImportantSystemProperties() {
         logSystemProperty("java.class.path");
         logSystemProperty("java.home");
         logSystemProperty("java.vendor");
