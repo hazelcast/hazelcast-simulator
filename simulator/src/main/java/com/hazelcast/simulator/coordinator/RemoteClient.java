@@ -27,7 +27,7 @@ import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
-import com.hazelcast.simulator.protocol.operation.TerminateWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -124,7 +124,7 @@ public class RemoteClient {
             joinThread(workerPokeThread);
         }
 
-        sendToAllWorkers(new TerminateWorkersOperation());
+        sendToAllWorkers(new TerminateWorkerOperation());
     }
 
     public void initTestSuite(TestSuite testSuite) {
@@ -143,6 +143,18 @@ public class RemoteClient {
 
     public void sendToFirstWorker(SimulatorOperation operation) {
         Response response = coordinatorConnector.write(componentRegistry.getFirstWorker().getAddress(), operation);
+        validateResponse(operation, response);
+    }
+
+    public void sendToTestOnAllWorkers(String testId, SimulatorOperation operation) {
+        Response response = coordinatorConnector.write(componentRegistry.getTest(testId).getAddress(), operation);
+        validateResponse(operation, response);
+    }
+
+    public void sendToTestOnFirstWorker(String testId, SimulatorOperation operation) {
+        SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
+        SimulatorAddress testAddress = componentRegistry.getTest(testId).getAddress();
+        Response response = coordinatorConnector.write(firstWorkerAddress.getChild(testAddress.getTestIndex()), operation);
         validateResponse(operation, response);
     }
 

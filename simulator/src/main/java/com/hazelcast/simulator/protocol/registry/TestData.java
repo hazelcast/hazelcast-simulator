@@ -13,40 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.protocol.registry;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestCase;
 
-import java.util.Map;
-
-/**
- * Creates a new Simulator test with the defined properties.
- */
-public class CreateTestOperation implements SimulatorOperation {
+public class TestData {
 
     private final int testIndex;
-    private final String testId;
-    private final Map<String, String> properties;
+    private final SimulatorAddress address;
+    private final TestCase testCase;
 
-    public CreateTestOperation(int testIndex, TestCase testCase) {
+    public TestData(int testIndex, SimulatorAddress address, TestCase testCase) {
         this.testIndex = testIndex;
-        this.testId = testCase.getId();
-        this.properties = testCase.getProperties();
+        this.address = address;
+        this.testCase = testCase;
     }
 
     public int getTestIndex() {
         return testIndex;
     }
 
-    public TestCase getTestCase() {
-        return new TestCase(testId, properties);
+    public SimulatorAddress getAddress() {
+        return address;
     }
 
-    @Override
-    public String toString() {
-        return "CreateTestOperation{"
-                + "testIndex='" + testIndex + '\''
-                + "testId='" + testId + '\''
-                + '}';
+    public TestCase getTestCase() {
+        return testCase;
     }
 }

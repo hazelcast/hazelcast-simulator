@@ -16,13 +16,19 @@
 package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Collections.synchronizedList;
@@ -34,8 +40,11 @@ import static java.util.Collections.unmodifiableList;
 public class ComponentRegistry {
 
     private final AtomicInteger agentIndex = new AtomicInteger();
+    private final AtomicInteger testIndex = new AtomicInteger();
+
     private final List<AgentData> agents = synchronizedList(new ArrayList<AgentData>());
     private final List<WorkerData> workers = synchronizedList(new ArrayList<WorkerData>());
+    private final ConcurrentMap<String, TestData> tests = new ConcurrentHashMap<String, TestData>();
 
     public void addAgent(String publicAddress, String privateAddress) {
         AgentData agentData = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress);
@@ -110,5 +119,26 @@ public class ComponentRegistry {
             }
         }
         return missingWorkers;
+    }
+
+    public synchronized void addTests(TestSuite testSuite) {
+        for (TestCase testCase : testSuite.getTestCaseList()) {
+            int addressIndex = testIndex.incrementAndGet();
+            SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, addressIndex);
+            TestData testData = new TestData(addressIndex, testAddress, testCase);
+            tests.put(testCase.getId(), testData);
+        }
+    }
+
+    public void removeTests() {
+        tests.clear();
+    }
+
+    public Collection<TestData> getTests() {
+        return tests.values();
+    }
+
+    public TestData getTest(String testId) {
+        return tests.get(testId);
     }
 }

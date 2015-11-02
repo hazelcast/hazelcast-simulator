@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 
 public interface Worker {
 
@@ -25,5 +25,5 @@ public interface Worker {
 
     void shutdownPerformanceMonitor();
 
-    ServerConnector getServerConnector();
+    WorkerConnector getWorkerConnector();
 }

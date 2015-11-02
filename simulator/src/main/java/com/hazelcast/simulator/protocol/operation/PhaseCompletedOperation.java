@@ -22,16 +22,10 @@ import com.hazelcast.simulator.test.TestPhase;
  */
 public class PhaseCompletedOperation implements SimulatorOperation {
 
-    private final String testId;
     private final String testPhase;
 
-    public PhaseCompletedOperation(String testId, TestPhase testPhase) {
-        this.testId = testId;
+    public PhaseCompletedOperation(TestPhase testPhase) {
         this.testPhase = testPhase.name();
-    }
-
-    public String getTestId() {
-        return testId;
     }
 
     public TestPhase getTestPhase() {

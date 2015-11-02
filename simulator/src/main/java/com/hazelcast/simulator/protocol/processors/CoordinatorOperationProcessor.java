@@ -29,14 +29,20 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
+import org.apache.log4j.Logger;
 
+import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
+import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static java.lang.String.format;
 
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Coordinator.
  */
 public class CoordinatorOperationProcessor extends OperationProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
     private final LocalExceptionLogger exceptionLogger;
     private final TestPhaseListenerContainer testPhaseListenerContainer;
@@ -64,8 +70,7 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
                 processException((ExceptionOperation) operation);
                 break;
             case PHASE_COMPLETED:
-                processPhaseCompletion((PhaseCompletedOperation) operation);
-                break;
+                return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
             case PERFORMANCE_STATE:
                 processPerformanceState((PerformanceStateOperation) operation, sourceAddress);
                 break;
@@ -85,8 +90,14 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
         exceptionLogger.logOperation(operation);
     }
 
-    private void processPhaseCompletion(PhaseCompletedOperation operation) {
-        testPhaseListenerContainer.updatePhaseCompletion(operation.getTestId(), operation.getTestPhase());
+    private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
+        if (!TEST.equals(sourceAddress.getAddressLevel())) {
+            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", operation.getTestPhase(), sourceAddress));
+            return EXCEPTION_DURING_OPERATION_EXECUTION;
+        }
+        int testIndex = sourceAddress.getTestIndex();
+        testPhaseListenerContainer.updatePhaseCompletion(testIndex, operation.getTestPhase());
+        return SUCCESS;
     }
 
     private void processPerformanceState(PerformanceStateOperation operation, SimulatorAddress sourceAddress) {

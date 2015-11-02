@@ -20,6 +20,7 @@ import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestSuite;
 
+import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public class FailureOperation implements SimulatorOperation {
@@ -35,6 +36,11 @@ public class FailureOperation implements SimulatorOperation {
     private final String testId;
     private final TestSuite testSuite;
     private final String cause;
+
+    public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
+                            Throwable cause) {
+        this(message, type, workerAddress, agentAddress, null, null, null, null, throwableToString(cause));
+    }
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             String hzAddress, String workerId, String testId, TestSuite testSuite, String cause) {

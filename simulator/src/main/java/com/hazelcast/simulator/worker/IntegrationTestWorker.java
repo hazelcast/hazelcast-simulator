@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.utils.NativeUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -73,7 +73,7 @@ public class IntegrationTestWorker implements Worker {
     }
 
     @Override
-    public ServerConnector getServerConnector() {
+    public WorkerConnector getWorkerConnector() {
         return null;
     }
 

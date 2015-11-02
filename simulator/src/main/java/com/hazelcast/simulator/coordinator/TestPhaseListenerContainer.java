@@ -16,25 +16,35 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.test.TestPhase;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static java.lang.String.format;
+
 public class TestPhaseListenerContainer {
 
-    private final ConcurrentMap<String, TestPhaseListener> testCaseRunnerMap = new ConcurrentHashMap<String, TestPhaseListener>();
+    private static final Logger LOGGER = Logger.getLogger(TestPhaseListenerContainer.class);
+
+    private final ConcurrentMap<Integer, TestPhaseListener> listenerMap = new ConcurrentHashMap<Integer, TestPhaseListener>();
 
     public Collection<TestPhaseListener> getListeners() {
-        return testCaseRunnerMap.values();
+        return listenerMap.values();
     }
 
-    public void addListener(String testId, TestPhaseListener testCaseRunner) {
-        testCaseRunnerMap.put(testId, testCaseRunner);
+    public void addListener(int testIndex, TestPhaseListener listener) {
+        listenerMap.put(testIndex, listener);
     }
 
-    public void updatePhaseCompletion(String testId, TestPhase testPhase) {
-        TestPhaseListener testCaseRunner = testCaseRunnerMap.get(testId);
-        testCaseRunner.completed(testPhase);
+    public void updatePhaseCompletion(int testIndex, TestPhase testPhase) {
+        TestPhaseListener listener = listenerMap.get(testIndex);
+        if (listener == null) {
+            LOGGER.error(format("Could not find listener for testIndex %d (%d listeners in total)", testIndex,
+                    listenerMap.size()));
+            return;
+        }
+        listener.completed(testPhase);
     }
 }

@@ -204,6 +204,7 @@ final class CoordinatorCli {
         }
 
         ComponentRegistry componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
+        componentRegistry.addTests(testSuite);
 
         SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
         if (options.has(cli.gitSpec)) {

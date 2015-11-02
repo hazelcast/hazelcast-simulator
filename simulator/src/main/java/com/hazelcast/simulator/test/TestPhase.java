@@ -20,23 +20,29 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 public enum TestPhase {
-    SETUP("setup"),
-    LOCAL_WARMUP("local warmup"),
-    GLOBAL_WARMUP("global warmup"),
-    RUN("run"),
-    GLOBAL_VERIFY("global verify"),
-    LOCAL_VERIFY("local verify"),
-    GLOBAL_TEARDOWN("global tear down"),
-    LOCAL_TEARDOWN("local tear down");
+    SETUP("setup", false),
+    LOCAL_WARMUP("local warmup", false),
+    GLOBAL_WARMUP("global warmup", true),
+    RUN("run", false),
+    GLOBAL_VERIFY("global verify", true),
+    LOCAL_VERIFY("local verify", false),
+    GLOBAL_TEARDOWN("global tear down", true),
+    LOCAL_TEARDOWN("local tear down", false);
 
     private final String description;
+    private final boolean isGlobal;
 
-    TestPhase(String description) {
+    TestPhase(String description, boolean isGlobal) {
         this.description = description;
+        this.isGlobal = isGlobal;
     }
 
     public String desc() {
         return description;
+    }
+
+    public boolean isGlobal() {
+        return isGlobal;
     }
 
     public static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(boolean isParallel, int testCount,

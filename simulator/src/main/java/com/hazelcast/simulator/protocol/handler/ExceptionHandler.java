@@ -25,7 +25,6 @@ import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
-import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 
 /**
  * Handles uncaught exceptions in the channel pipeline.
@@ -64,7 +63,7 @@ public class ExceptionHandler extends ChannelHandlerAdapter {
         LOGGER.error("Caught unhandled exception in Netty pipeline", cause);
 
         FailureOperation operation = new FailureOperation("Uncaught Netty exception", NETTY_EXCEPTION, workerAddress,
-                agentAddress, null, null, null, null, throwableToString(cause));
+                agentAddress, cause);
         serverConnector.submit(COORDINATOR, operation);
     }
 }

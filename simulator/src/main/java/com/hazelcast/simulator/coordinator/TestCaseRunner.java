@@ -31,6 +31,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.RUN;
+import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -55,6 +63,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private final ConcurrentMap<TestPhase, AtomicInteger> phaseCompletedMap = new ConcurrentHashMap<TestPhase, AtomicInteger>();
     private final CountDownLatch waitForStopThread = new CountDownLatch(1);
 
+    private final int testIndex;
     private final TestCase testCase;
     private final String testCaseId;
     private final TestSuite testSuite;
@@ -74,8 +83,9 @@ final class TestCaseRunner implements TestPhaseListener {
     private final int logPerformanceIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
 
-    TestCaseRunner(TestCase testCase, Coordinator coordinator, int paddingLength,
+    TestCaseRunner(int testIndex, TestCase testCase, Coordinator coordinator, int paddingLength,
                    ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
+        this.testIndex = testIndex;
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
         this.testSuite = coordinator.getTestSuite();
@@ -112,23 +122,23 @@ final class TestCaseRunner implements TestPhaseListener {
     void run() {
         try {
             createTest();
-            runOnAllWorkers(TestPhase.SETUP);
+            runPhase(SETUP);
 
-            runOnAllWorkers(TestPhase.LOCAL_WARMUP);
-            runOnFirstWorker(TestPhase.GLOBAL_WARMUP);
+            runPhase(LOCAL_WARMUP);
+            runPhase(GLOBAL_WARMUP);
 
             startTest();
             waitForTestCompletion();
 
             if (isVerifyEnabled) {
-                runOnFirstWorker(TestPhase.GLOBAL_VERIFY);
-                runOnAllWorkers(TestPhase.LOCAL_VERIFY);
+                runPhase(GLOBAL_VERIFY);
+                runPhase(LOCAL_VERIFY);
             } else {
                 echo("Skipping Test verification");
             }
 
-            runOnFirstWorker(TestPhase.GLOBAL_TEARDOWN);
-            runOnAllWorkers(TestPhase.LOCAL_TEARDOWN);
+            runPhase(GLOBAL_TEARDOWN);
+            runPhase(LOCAL_TEARDOWN);
         } catch (Exception e) {
             throw rethrow(e);
         }
@@ -136,33 +146,29 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private void createTest() throws TimeoutException {
         echo("Starting Test initialization");
-        remoteClient.sendToAllWorkers(new CreateTestOperation(testCase));
+        remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
         echo("Completed Test initialization");
     }
 
-    private void runOnAllWorkers(TestPhase testPhase) throws TimeoutException {
+    private void runPhase(TestPhase testPhase) throws TimeoutException {
         echo("Starting Test " + testPhase.desc());
-        remoteClient.sendToAllWorkers(new StartTestPhaseOperation(testCaseId, testPhase));
-        waitForPhaseCompletion(testPhase, false);
-        echo("Completed Test " + testPhase.desc());
-        waitForGlobalTestPhaseCompletion(testPhase);
-    }
-
-    private void runOnFirstWorker(TestPhase testPhase) throws TimeoutException {
-        echo("Starting Test " + testPhase.desc());
-        remoteClient.sendToFirstWorker(new StartTestPhaseOperation(testCaseId, testPhase));
-        waitForPhaseCompletion(testPhase, true);
+        if (testPhase.isGlobal()) {
+            remoteClient.sendToTestOnFirstWorker(testCaseId, new StartTestPhaseOperation(testPhase));
+        } else {
+            remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestPhaseOperation(testPhase));
+        }
+        waitForPhaseCompletion(testPhase);
         echo("Completed Test " + testPhase.desc());
         waitForGlobalTestPhaseCompletion(testPhase);
     }
 
     private void startTest() throws TimeoutException {
         echo(format("Starting Test start (%s members)", (isPassiveMembers) ? "passive" : "active"));
-        remoteClient.sendToAllWorkers(new StartTestOperation(testCaseId, isPassiveMembers));
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(isPassiveMembers));
         echo("Completed Test start");
     }
 
-    private void waitForTestCompletion() throws TimeoutException, InterruptedException {
+    private void waitForTestCompletion() throws Exception {
         StopThread stopThread = null;
         if (testSuite.getDurationSeconds() > 0) {
             stopThread = new StopThread();
@@ -171,7 +177,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
         if (testSuite.isWaitForTestCase()) {
             echo("Test will run until it stops");
-            waitForPhaseCompletion(TestPhase.RUN, false);
+            waitForPhaseCompletion(RUN);
             echo("Test finished running");
 
             if (stopThread != null) {
@@ -182,12 +188,12 @@ final class TestCaseRunner implements TestPhaseListener {
             waitForStopThread.await();
         }
 
-        waitForGlobalTestPhaseCompletion(TestPhase.RUN);
+        waitForGlobalTestPhaseCompletion(RUN);
     }
 
-    private void waitForPhaseCompletion(TestPhase testPhase, boolean isGlobal) {
+    private void waitForPhaseCompletion(TestPhase testPhase) {
         int completedWorkers = phaseCompletedMap.get(testPhase).get();
-        int expectedWorkers = getExpectedWorkerCount(isGlobal);
+        int expectedWorkers = getExpectedWorkerCount(testPhase);
 
         long started = System.nanoTime();
         while (completedWorkers < expectedWorkers) {
@@ -199,7 +205,7 @@ final class TestCaseRunner implements TestPhaseListener {
             }
 
             completedWorkers = phaseCompletedMap.get(testPhase).get();
-            expectedWorkers = getExpectedWorkerCount(isGlobal);
+            expectedWorkers = getExpectedWorkerCount(testPhase);
 
             long elapsed = getElapsedSeconds(started);
             if (elapsed % WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS == 0) {
@@ -225,12 +231,12 @@ final class TestCaseRunner implements TestPhaseListener {
         }
     }
 
-    private int getExpectedWorkerCount(boolean isGlobal) {
+    private int getExpectedWorkerCount(TestPhase testPhase) {
         int workerCount = componentRegistry.workerCount();
         if (workerCount == 0) {
             return 0;
         }
-        return (isGlobal) ? 1 : workerCount;
+        return (testPhase.isGlobal()) ? 1 : workerCount;
     }
 
     private void echo(String msg) {
@@ -254,8 +260,8 @@ final class TestCaseRunner implements TestPhaseListener {
                 echo("Test finished running");
 
                 echo("Starting Test stop");
-                remoteClient.sendToAllWorkers(new StopTestOperation(testCaseId));
-                waitForPhaseCompletion(TestPhase.RUN, false);
+                remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
+                waitForPhaseCompletion(RUN);
                 echo("Completed Test stop");
             } finally {
                 waitForStopThread.countDown();

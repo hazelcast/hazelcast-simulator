@@ -58,6 +58,10 @@ public class TestHistogramContainer {
         testHistogramMap.put(testId, histograms);
     }
 
+    public ConcurrentMap<String, Map<String, String>> getTestHistograms(SimulatorAddress workerAddress) {
+        return workerTestProbeHistogramMap.get(workerAddress);
+    }
+
     void createProbeResults(String testSuiteId, String testCaseId) {
         PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase(testCaseId);
         Result result = aggregateHistogramsForTestCase(testCaseId, performanceState);

@@ -21,6 +21,7 @@ import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -268,10 +269,12 @@ public final class Coordinator {
         echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
         echo(HORIZONTAL_RULER);
 
-        for (TestCase testCase : testSuite.getTestCaseList()) {
+        for (TestData testData : componentRegistry.getTests()) {
+            int testIndex = testData.getTestIndex();
+            TestCase testCase = testData.getTestCase();
             echo(format("Configuration for test: %s%n%s", testCase.getId(), testCase));
-            TestCaseRunner runner = new TestCaseRunner(testCase, this, maxTestCaseIdLength, testPhaseSyncs);
-            testPhaseListenerContainer.addListener(testCase.getId(), runner);
+            TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncs);
+            testPhaseListenerContainer.addListener(testIndex, runner);
         }
         echo(HORIZONTAL_RULER);
 

@@ -52,7 +52,7 @@ public class PerformanceStateContainer {
         workerPerformanceStateMap.put(workerAddress, performanceStates);
     }
 
-    String getPerformanceNumbers(String testCaseId) {
+    public String getPerformanceNumbers(String testCaseId) {
         PerformanceState performanceState = getPerformanceStateForTestCase(testCaseId);
         if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
             return " (performance not available)";

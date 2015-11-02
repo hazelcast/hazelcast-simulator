@@ -31,6 +31,7 @@ import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
+import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -79,11 +80,15 @@ public class WorkerServerConfiguration extends AbstractServerConfiguration {
         pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
     }
 
-    public void addTest(int testIndex, OperationProcessor processor) {
+    public void addTest(int testIndex, TestOperationProcessor processor) {
         testProcessorManager.addTest(testIndex, processor);
     }
 
     public void removeTest(int testIndex) {
         testProcessorManager.removeTest(testIndex);
+    }
+
+    public TestOperationProcessor getTest(int testIndex) {
+        return testProcessorManager.getTest(testIndex);
     }
 }

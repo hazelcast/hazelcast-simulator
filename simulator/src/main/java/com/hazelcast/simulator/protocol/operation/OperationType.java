@@ -27,7 +27,7 @@ public enum OperationType {
 
     INTEGRATION_TEST(IntegrationTestOperation.class, 0),
 
-    TERMINATE_WORKERS(TerminateWorkersOperation.class, 1),
+    TERMINATE_WORKER(TerminateWorkerOperation.class, 1),
 
     CREATE_WORKER(CreateWorkerOperation.class, 2),
     CREATE_TEST(CreateTestOperation.class, 3),

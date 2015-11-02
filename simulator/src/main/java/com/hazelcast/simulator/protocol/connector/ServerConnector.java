@@ -55,9 +55,11 @@ public interface ServerConnector {
      *
      * The {@link SimulatorOperation} is put on a queue. The {@link Response} is not returned.
      *
-     * @param operation the {@link SimulatorOperation} to send.
+     * @param destination the {@link SimulatorAddress} of the destination
+     * @param operation   the {@link SimulatorOperation} to send
+     * @return a {@link ResponseFuture} to wait for the result of the operation
      */
-    void submit(SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.

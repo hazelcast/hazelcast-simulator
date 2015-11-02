@@ -3,32 +3,79 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
+import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
+import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.test.FailureType;
+import com.hazelcast.simulator.test.TestException;
+import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.worker.performance.PerformanceState;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class CoordinatorOperationProcessorTest {
+
+    private SimulatorAddress workerAddress;
+
+    private LocalExceptionLogger exceptionLogger;
+    private TestPhaseListenerContainer testPhaseListenerContainer;
+    private PerformanceStateContainer performanceStateContainer;
+    private TestHistogramContainer testHistogramContainer;
+    private FailureContainer failureContainer;
 
     private CoordinatorOperationProcessor processor;
 
     @Before
     public void setUp() {
-        LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
-        TestPhaseListenerContainer testPhaseListenerContainer = new TestPhaseListenerContainer();
-        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
-        FailureContainer failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", null);
+        workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
+
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+
+        exceptionLogger = new LocalExceptionLogger();
+        testPhaseListenerContainer = new TestPhaseListenerContainer();
+        performanceStateContainer = new PerformanceStateContainer();
+        testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
+        failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", componentRegistry);
+
         processor = new CoordinatorOperationProcessor(exceptionLogger, testPhaseListenerContainer, performanceStateContainer,
                 testHistogramContainer, failureContainer);
+    }
+
+    @After
+    public void tearDown() {
+        deleteQuiet(new File("failures-CoordinatorOperationProcessorTest.txt"));
     }
 
     @Test
@@ -37,5 +84,94 @@ public class CoordinatorOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
+    }
+
+    @Test
+    public void processException() {
+        TestException exception = new TestException("expeced exception");
+        ExceptionOperation operation = new ExceptionOperation(WORKER_EXCEPTION.name(), "C_A1_W1", "FailingTest", exception);
+
+        ResponseType responseType = processor.process(operation, workerAddress);
+
+        assertEquals(SUCCESS, responseType);
+        assertEquals(1, exceptionLogger.getExceptionCount());
+    }
+
+    @Test
+    public void processPhaseCompletion() {
+        final AtomicInteger phaseCompleted = new AtomicInteger();
+
+        PhaseCompletedOperation operation = new PhaseCompletedOperation(TestPhase.LOCAL_TEARDOWN);
+
+        testPhaseListenerContainer.addListener(1, new TestPhaseListener() {
+            @Override
+            public void completed(TestPhase testPhase) {
+                if (testPhase.equals(TestPhase.LOCAL_TEARDOWN)) {
+                    phaseCompleted.incrementAndGet();
+                }
+            }
+        });
+
+        ResponseType responseType = processor.process(operation, new SimulatorAddress(TEST, 1, 1, 1));
+        assertEquals(SUCCESS, responseType);
+        assertEquals(1, phaseCompleted.get());
+
+        responseType = processor.process(operation, new SimulatorAddress(TEST, 1, 2, 1));
+        assertEquals(SUCCESS, responseType);
+        assertEquals(2, phaseCompleted.get());
+    }
+
+    @Test
+    public void processPhaseCompletion_withOperationFromWorker() {
+        PhaseCompletedOperation operation = new PhaseCompletedOperation(TestPhase.LOCAL_TEARDOWN);
+        ResponseType responseType = processor.process(operation, workerAddress);
+
+        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
+    }
+
+    @Test
+    public void processPerformanceState() {
+        PerformanceStateOperation operation = new PerformanceStateOperation();
+        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 23, 42));
+
+        ResponseType responseType = processor.process(operation, workerAddress);
+        assertEquals(SUCCESS, responseType);
+
+        String performanceNumbers = performanceStateContainer.getPerformanceNumbers("testId");
+        assertTrue(performanceNumbers.contains(formatLong(1000, 4)));
+        assertTrue(performanceNumbers.contains(formatDouble(50, 7)));
+        assertTrue(performanceNumbers.contains(formatLong(23, 4)));
+        assertTrue(performanceNumbers.contains(formatLong(42, 4)));
+    }
+
+    @Test
+    public void processTestHistogram() {
+        Map<String, String> probeHistograms = new HashMap<String, String>();
+        probeHistograms.put("probe1", "histogram1");
+        probeHistograms.put("probe2", "histogram2");
+        TestHistogramOperation operation = new TestHistogramOperation("testId", probeHistograms);
+
+        ResponseType responseType = processor.process(operation, workerAddress);
+        assertEquals(SUCCESS, responseType);
+
+        ConcurrentMap<String, Map<String, String>> testHistograms = testHistogramContainer.getTestHistograms(workerAddress);
+        assertNotNull(testHistograms);
+        assertEquals(1, testHistograms.size());
+
+        Map<String, String> actualProbeHistograms = testHistograms.get("testId");
+        assertNotNull(actualProbeHistograms);
+        assertEquals("histogram1", actualProbeHistograms.get("probe1"));
+        assertEquals("histogram2", actualProbeHistograms.get("probe2"));
+    }
+
+    @Test
+    public void processFailureOperation() {
+        TestException exception = new TestException("expected exception");
+        FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOM,
+                workerAddress, workerAddress.getParent().toString(), exception);
+        ResponseType responseType = processor.process(operation, workerAddress);
+
+        assertEquals(SUCCESS, responseType);
+        assertEquals(1, failureContainer.getFailureCount());
     }
 }

@@ -24,7 +24,8 @@ import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.exception.ExceptionType;
 import com.hazelcast.simulator.protocol.exception.FileExceptionLogger;
 import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -37,11 +38,11 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 /**
  * Connector which listens for incoming Simulator Agent connections and manages Simulator Test instances.
  */
-public final class WorkerConnector extends AbstractServerConnector {
+public class WorkerConnector extends AbstractServerConnector {
 
     private final WorkerServerConfiguration workerServerConfiguration;
 
-    private WorkerConnector(WorkerServerConfiguration configuration) {
+    WorkerConnector(WorkerServerConfiguration configuration) {
         super(configuration);
         this.workerServerConfiguration = configuration;
     }
@@ -82,7 +83,8 @@ public final class WorkerConnector extends AbstractServerConnector {
         } else {
             exceptionLogger = new FileExceptionLogger(localAddress, ExceptionType.WORKER_EXCEPTION);
         }
-        WorkerOperationProcessor processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker);
+        WorkerOperationProcessor processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker,
+                localAddress);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         ConnectionManager connectionManager = new ConnectionManager();
 
@@ -98,13 +100,24 @@ public final class WorkerConnector extends AbstractServerConnector {
     }
 
     /**
+     * Gets a Simulator Test.
+     *
+     * @param testIndex the index of the Simulator Test
+     * @return the {@link TestOperationProcessor} which processes incoming
+     * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
+     */
+    public TestOperationProcessor getTest(int testIndex) {
+        return workerServerConfiguration.getTest(testIndex);
+    }
+
+    /**
      * Adds a Simulator Test.
      *
      * @param testIndex the index of the Simulator Test
-     * @param processor the {@link OperationProcessor} which processes incoming
+     * @param processor the {@link TestOperationProcessor} which processes incoming
      *                  {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
      */
-    public void addTest(int testIndex, OperationProcessor processor) {
+    public void addTest(int testIndex, TestOperationProcessor processor) {
         workerServerConfiguration.addTest(testIndex, processor);
     }
 
@@ -115,5 +128,21 @@ public final class WorkerConnector extends AbstractServerConnector {
      */
     public void removeTest(int testIndex) {
         workerServerConfiguration.removeTest(testIndex);
+    }
+
+    /**
+     * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
+     *
+     * The {@link SimulatorOperation} is put on a queue. The {@link com.hazelcast.simulator.protocol.core.Response} is not
+     * returned.
+     *
+     * @param testAddress the {@link SimulatorAddress} of the sending test
+     * @param destination the {@link SimulatorAddress} of the destination
+     * @param operation   the {@link SimulatorOperation} to send
+     * @return a {@link ResponseFuture} to wait for the result of the operation
+     */
+    public ResponseFuture submitFromTest(SimulatorAddress testAddress, SimulatorAddress destination,
+                                         SimulatorOperation operation) {
+        return submit(testAddress, destination, operation);
     }
 }

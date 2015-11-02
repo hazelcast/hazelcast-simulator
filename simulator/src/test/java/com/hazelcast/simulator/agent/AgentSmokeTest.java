@@ -58,6 +58,7 @@ public class AgentSmokeTest {
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
 
+    private static ComponentRegistry componentRegistry;
     private static AgentStarter agentStarter;
 
     private static FailureContainer failureContainer;
@@ -75,7 +76,7 @@ public class AgentSmokeTest {
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
 
-        ComponentRegistry componentRegistry = new ComponentRegistry();
+        componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent(AGENT_IP_ADDRESS, AGENT_IP_ADDRESS);
 
         agentStarter = new AgentStarter();
@@ -142,44 +143,54 @@ public class AgentSmokeTest {
     }
 
     private void executeTestCase(TestCase testCase) throws Exception {
-        TestSuite testSuite = new TestSuite();
-        remoteClient.initTestSuite(testSuite);
+        try {
+            String testId = testCase.getId();
+            TestSuite testSuite = new TestSuite();
+            remoteClient.initTestSuite(testSuite);
+            testSuite.addTest(testCase);
 
-        TestPhaseListenerImpl testPhaseListener = new TestPhaseListenerImpl();
-        testPhaseListenerContainer.addListener(testCase.getId(), testPhaseListener);
+            componentRegistry.addTests(testSuite);
+            int testIndex = componentRegistry.getTest(testId).getTestIndex();
+            LOGGER.info(format("Created TestSuite for %s with index %d", testId, testIndex));
 
-        LOGGER.info("Creating workers...");
-        createWorkers();
+            TestPhaseListenerImpl testPhaseListener = new TestPhaseListenerImpl();
+            testPhaseListenerContainer.addListener(testIndex, testPhaseListener);
 
-        LOGGER.info("InitTest phase...");
-        remoteClient.sendToAllWorkers(new CreateTestOperation(testCase));
+            LOGGER.info("Creating workers...");
+            createWorkers();
 
-        runPhase(testPhaseListener, testCase, TestPhase.SETUP);
+            LOGGER.info("InitTest phase...");
+            remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
 
-        runPhase(testPhaseListener, testCase, TestPhase.LOCAL_WARMUP);
-        runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_WARMUP);
+            runPhase(testPhaseListener, testCase, TestPhase.SETUP);
 
-        LOGGER.info("Starting run phase...");
-        remoteClient.sendToAllWorkers(new StartTestOperation(testCase.getId(), false));
+            runPhase(testPhaseListener, testCase, TestPhase.LOCAL_WARMUP);
+            runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_WARMUP);
 
-        LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
-        sleepSeconds(TEST_RUNTIME_SECONDS);
-        LOGGER.info("Finished running");
+            LOGGER.info("Starting run phase...");
+            remoteClient.sendToTestOnAllWorkers(testId, new StartTestOperation(false));
 
-        LOGGER.info("Stopping test...");
-        remoteClient.sendToAllWorkers(new StopTestOperation(testCase.getId()));
-        testPhaseListener.await(TestPhase.RUN);
+            LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
+            sleepSeconds(TEST_RUNTIME_SECONDS);
+            LOGGER.info("Finished running");
 
-        runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_VERIFY);
-        runPhase(testPhaseListener, testCase, TestPhase.LOCAL_VERIFY);
+            LOGGER.info("Stopping test...");
+            remoteClient.sendToTestOnAllWorkers(testId, new StopTestOperation());
+            testPhaseListener.await(TestPhase.RUN);
 
-        runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_TEARDOWN);
-        runPhase(testPhaseListener, testCase, TestPhase.LOCAL_TEARDOWN);
+            runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_VERIFY);
+            runPhase(testPhaseListener, testCase, TestPhase.LOCAL_VERIFY);
 
-        LOGGER.info("Terminating workers...");
-        remoteClient.terminateWorkers(false);
+            runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_TEARDOWN);
+            runPhase(testPhaseListener, testCase, TestPhase.LOCAL_TEARDOWN);
+        } finally {
+            componentRegistry.removeTests();
 
-        LOGGER.info("Testcase done!");
+            LOGGER.info("Terminating workers...");
+            remoteClient.terminateWorkers(false);
+
+            LOGGER.info("Testcase done!");
+        }
     }
 
     private static void createWorkers() {
@@ -200,7 +211,11 @@ public class AgentSmokeTest {
 
     private static void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
-        remoteClient.sendToAllWorkers(new StartTestPhaseOperation(testCase.getId(), testPhase));
+        if (testPhase.isGlobal()) {
+            remoteClient.sendToTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
+        } else {
+            remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
+        }
         listener.await(testPhase);
     }
 

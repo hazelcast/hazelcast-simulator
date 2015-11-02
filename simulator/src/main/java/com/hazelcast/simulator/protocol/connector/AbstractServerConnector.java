@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +64,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
     private final AtomicLong messageIds = new AtomicLong();
+    private final ConcurrentMap<String, ResponseFuture> messageQueueFutures = new ConcurrentHashMap<String, ResponseFuture>();
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
@@ -128,9 +130,16 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public void submit(SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(localAddress, destination, operation);
+    public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation) {
+        return submit(localAddress, destination, operation);
+    }
+
+    protected ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+        String futureKey = createFutureKey(source, message.getMessageId(), 0);
+        ResponseFuture responseFuture = createInstance(messageQueueFutures, futureKey);
         messageQueue.add(message);
+        return responseFuture;
     }
 
     @Override
@@ -192,6 +201,13 @@ abstract class AbstractServerConnector implements ServerConnector {
                     }
 
                     Response response = writeAsync(message).get();
+
+                    String futureKey = createFutureKey(message.getSource(), message.getMessageId(), 0);
+                    ResponseFuture responseFuture = messageQueueFutures.get(futureKey);
+                    if (responseFuture != null) {
+                        responseFuture.set(response);
+                    }
+
                     ResponseType responseType = response.getFirstErrorResponseType();
                     if (!responseType.equals(ResponseType.SUCCESS)) {
                         LOGGER.error("Got response type " + responseType + " for " + message);

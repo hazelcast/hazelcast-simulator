@@ -17,6 +17,7 @@ package com.hazelcast.simulator.protocol.core;
 
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
+import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +32,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NO
 public class TestProcessorManager {
 
     private final ConcurrentMap<Integer, SimulatorAddress> testAddresses = new ConcurrentHashMap<Integer, SimulatorAddress>();
-    private final ConcurrentMap<Integer, OperationProcessor> testProcessors
-            = new ConcurrentHashMap<Integer, OperationProcessor>();
+    private final ConcurrentMap<Integer, TestOperationProcessor> testProcessors
+            = new ConcurrentHashMap<Integer, TestOperationProcessor>();
 
     private final SimulatorAddress localAddress;
     private final int agentIndex;
@@ -44,7 +45,11 @@ public class TestProcessorManager {
         this.workerIndex = localAddress.getWorkerIndex();
     }
 
-    public void addTest(int testIndex, OperationProcessor processor) {
+    public TestOperationProcessor getTest(int testIndex) {
+        return testProcessors.get(testIndex);
+    }
+
+    public void addTest(int testIndex, TestOperationProcessor processor) {
         SimulatorAddress testAddress = new SimulatorAddress(TEST, agentIndex, workerIndex, testIndex);
         testAddresses.put(testIndex, testAddress);
         testProcessors.put(testIndex, processor);
@@ -56,7 +61,7 @@ public class TestProcessorManager {
     }
 
     public void processOnAllTests(Response response, SimulatorOperation operation, SimulatorAddress source) {
-        for (Map.Entry<Integer, OperationProcessor> entry : testProcessors.entrySet()) {
+        for (Map.Entry<Integer, TestOperationProcessor> entry : testProcessors.entrySet()) {
             ResponseType responseType = entry.getValue().process(operation, source);
             response.addResponse(testAddresses.get(entry.getKey()), responseType);
         }

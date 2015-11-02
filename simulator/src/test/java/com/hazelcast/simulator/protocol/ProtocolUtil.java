@@ -19,7 +19,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -123,8 +122,9 @@ class ProtocolUtil {
         WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port,
                 WorkerType.MEMBER, null, null, true);
 
-        OperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER);
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
+            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, null, WorkerType.MEMBER, testIndex,
+                    "ProtocolUtilTest", null, workerConnector.getAddress().getChild(testIndex));
             workerConnector.addTest(testIndex, processor);
         }
 
