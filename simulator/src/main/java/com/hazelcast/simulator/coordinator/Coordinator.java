@@ -231,27 +231,32 @@ public final class Coordinator {
     }
 
     private void startWorkers() {
-        int totalWorkerCount = clusterLayout.getTotalMemberCount();
-
-        long started = System.nanoTime();
         try {
-            echo("Killing all remaining workers");
-            remoteClient.terminateWorkers(false);
-            echo("Successfully killed all remaining workers");
+            long started = System.nanoTime();
 
-            echo("Starting %d workers (%d members, %d clients)", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
+            echo(HORIZONTAL_RULER);
+            echo("Starting Workers...");
+            echo(HORIZONTAL_RULER);
+
+            echo("Killing all remaining Workers...");
+            remoteClient.terminateWorkers(false);
+            echo("Successfully killed all remaining Workers");
+
+            int totalWorkerCount = clusterLayout.getTotalMemberCount();
+            echo("Starting %d Workers (%d members, %d clients)...", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
                     clusterLayout.getClientWorkerCount());
             remoteClient.createWorkers(clusterLayout, true);
-            echo("Successfully started workers");
+
+            long elapsed = getElapsedSeconds(started);
+            echo(HORIZONTAL_RULER);
+            LOGGER.info((format("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed)));
+            echo(HORIZONTAL_RULER);
         } catch (Exception e) {
             while (failureContainer.getFailureCount() == 0) {
                 sleepSeconds(1);
             }
-            throw new CommandLineExitException("Failed to start workers", e);
+            throw new CommandLineExitException("Failed to start Workers", e);
         }
-
-        long elapsed = getElapsedSeconds(started);
-        LOGGER.info((format("Successfully started a grand total of %s worker JVMs (%s seconds)", totalWorkerCount, elapsed)));
     }
 
     void runTestSuite() {
@@ -265,25 +270,26 @@ public final class Coordinator {
         echo("Starting testsuite: %s", testSuite.getId());
         logTestSuiteDuration();
 
-        echo(HORIZONTAL_RULER);
-        echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
-        echo(HORIZONTAL_RULER);
-
         for (TestData testData : componentRegistry.getTests()) {
             int testIndex = testData.getTestIndex();
             TestCase testCase = testData.getTestCase();
-            echo(format("Configuration for test: %s%n%s", testCase.getId(), testCase));
+            echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
             TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncs);
             testPhaseListenerContainer.addListener(testIndex, runner);
         }
-        echo(HORIZONTAL_RULER);
 
+        echo(HORIZONTAL_RULER);
+        echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
+        echo(HORIZONTAL_RULER);
         long started = System.nanoTime();
         if (isParallel) {
             runParallel();
         } else {
             runSequential();
         }
+        echo(HORIZONTAL_RULER);
+        echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
+        echo(HORIZONTAL_RULER);
 
         remoteClient.terminateWorkers(true);
         if (!failureContainer.waitForWorkerShutdown(componentRegistry.workerCount(), FINISHED_WORKER_TIMEOUT_SECONDS)) {
@@ -295,8 +301,6 @@ public final class Coordinator {
         for (TestCase testCase : testSuite.getTestCaseList()) {
             testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
         }
-
-        echo(format("Total running time: %s seconds", getElapsedSeconds(started)));
     }
 
     private void logTestSuiteDuration() {

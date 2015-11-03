@@ -21,7 +21,7 @@ package com.hazelcast.simulator.common.messaging;
  * Termination is done by calling {@link Process#destroy()} from an agent, resulting in sending a SIGTERM signal when running on
  * Linux.
  */
-@MessageSpec(value = "terminateWorker", description = "Indicates to an agent to terminate a random worker.")
+@MessageSpec(value = "terminateWorker", description = "Indicates to an Agent to terminate a random Worker.")
 public class TerminateRandomWorkerMessage extends Message {
 
     public TerminateRandomWorkerMessage(MessageAddress messageAddress) {

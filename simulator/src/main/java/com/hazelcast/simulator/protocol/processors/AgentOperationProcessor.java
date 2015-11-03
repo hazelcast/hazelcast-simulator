@@ -151,7 +151,7 @@ public class AgentOperationProcessor extends OperationProcessor {
                 SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
 
                 WorkerType workerType = workerJvmSettings.getWorkerType();
-                agent.getCoordinatorLogger().debug(format("Created %s worker %s", workerType, workerAddress));
+                agent.getCoordinatorLogger().debug(format("Created %s Worker %s", workerType, workerAddress));
 
                 return true;
             } catch (Exception e) {

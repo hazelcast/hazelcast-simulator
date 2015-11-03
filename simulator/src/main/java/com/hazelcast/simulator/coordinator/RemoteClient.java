@@ -103,11 +103,11 @@ public class RemoteClient {
 
                     ResponseType responseType = response.getFirstErrorResponseType();
                     if (responseType != ResponseType.SUCCESS) {
-                        throw new CommandLineExitException(format("Could not create %d %s worker on %s (%s)",
+                        throw new CommandLineExitException(format("Could not create %d %s Worker on %s (%s)",
                                 workerCount, workerType, agentAddress, responseType));
                     }
 
-                    LOGGER.info(format("Created %d %s worker on %s", workerCount, workerType, agentAddress));
+                    LOGGER.info(format("Created %d %s Worker on %s", workerCount, workerType, agentAddress));
                     componentRegistry.addWorkers(agentAddress, settingsList);
                 }
             });

@@ -28,9 +28,15 @@ import java.util.List;
 import java.util.Set;
 
 import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
+import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
+import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
 import static java.lang.String.format;
 
 public class ClusterLayout {
+
+    private static final int WORKER_MODE_LENGTH = 6;
 
     private static final Logger LOGGER = Logger.getLogger(ClusterLayout.class);
 
@@ -45,7 +51,12 @@ public class ClusterLayout {
                          ClusterLayoutParameters clusterLayoutParameters) {
         agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
-        LOGGER.info("Cluster layout:");
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("Cluster layout");
+        LOGGER.info(HORIZONTAL_RULER);
+
+        String layoutType = (clusterLayoutParameters.getClusterConfiguration() == null) ? "arguments" : "cluster.xml";
+        LOGGER.info(format("Created via %s:", layoutType));
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentHazelcastVersionSpecs = agentWorkerLayout.getHazelcastVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
@@ -56,12 +67,12 @@ public class ClusterLayout {
             memberWorkerCount += agentMemberWorkerCount;
             clientWorkerCount += agentClientWorkerCount;
 
-            LOGGER.info(format("    Agent %s (%s) members: %d, clients: %d, mode: %s, version specs: %s",
-                    agentWorkerLayout.getPublicAddress(),
+            LOGGER.info(format("    Agent %s (%s) members: %s, clients: %s, mode: %s, version specs: %s",
+                    formatIpAddress(agentWorkerLayout.getPublicAddress()),
                     agentWorkerLayout.getSimulatorAddress(),
-                    agentMemberWorkerCount,
-                    agentClientWorkerCount,
-                    agentWorkerLayout.getAgentWorkerMode(),
+                    formatLong(agentMemberWorkerCount, 2),
+                    formatLong(agentClientWorkerCount, 2),
+                    padLeft(agentWorkerLayout.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
                     agentHazelcastVersionSpecs
             ));
         }

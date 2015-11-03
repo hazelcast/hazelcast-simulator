@@ -136,8 +136,6 @@ public class MapPredicateTest {
 
         public Worker() {
             super(operationSelectorBuilder);
-
-            LOGGER.info("Starting worker: " + this + " for " + MapPredicateTest.class.getSimpleName());
         }
 
         @Override

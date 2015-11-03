@@ -276,7 +276,7 @@ public class CoordinatorRunTestSuiteTest {
 
             sleepMillis(100);
             SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-            FailureOperation operation = new FailureOperation("worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
+            FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
                     "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
             failureContainer.addFailureOperation(operation);
         }

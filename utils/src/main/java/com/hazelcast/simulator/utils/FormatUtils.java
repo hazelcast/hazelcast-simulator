@@ -27,7 +27,8 @@ public final class FormatUtils {
     public static final String HORIZONTAL_RULER = "==============================================================";
 
     private static final double ONE_HUNDRED = 100;
-    private static final int PERCENTAGE_FORMAT_LENGTH = 7;
+    private static final int IP_ADDRESS_LENGTH = 15;
+    private static final int PERCENTAGE_FORMAT_LENGTH = 6;
     private static final String DEFAULT_DELIMITER = ", ";
 
     private static final int SECONDS_PER_MINUTE = 60;
@@ -38,6 +39,16 @@ public final class FormatUtils {
     private static final int IEC_BYTES_FACTOR = 1024;
 
     private FormatUtils() {
+    }
+
+    /**
+     * Formats an IP address by adding padding to the left.
+     *
+     * @param ipAddress the IP address
+     * @return the formatted IP address
+     */
+    public static String formatIpAddress(String ipAddress) {
+        return padLeft(ipAddress, IP_ADDRESS_LENGTH);
     }
 
     /**

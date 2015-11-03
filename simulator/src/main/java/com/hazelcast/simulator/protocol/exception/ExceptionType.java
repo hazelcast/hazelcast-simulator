@@ -21,7 +21,7 @@ public enum ExceptionType {
     AGENT_EXCEPTION("Agent ran into an unhandled exception"),
     WORKER_EXCEPTION("Worked ran into an unhandled exception"),
 
-    WORKER_TIMEOUT("Worker has not contacted agent for a too long period"),
+    WORKER_TIMEOUT("Worker has not contacted Agent for a too long period"),
     WORKER_OOM("Worker ran into an OOME"),
     WORKER_EXIT("Worker terminated with a non-zero exit code");
 

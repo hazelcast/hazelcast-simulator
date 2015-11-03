@@ -56,7 +56,7 @@ public final class ExceptionReporter {
 
         if (exceptionCount > MAX_EXCEPTION_COUNT) {
             LOGGER.warn("Exception #" + exceptionCount + " detected. The maximum number of exceptions has been exceeded, so it"
-                    + " won't be reported to the agent.", cause);
+                    + " won't be reported to the Agent.", cause);
             return;
         }
 

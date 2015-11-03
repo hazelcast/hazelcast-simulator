@@ -7,6 +7,7 @@ import java.util.Collections;
 
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
+import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
@@ -28,12 +29,20 @@ public class FormatUtilsTest {
     }
 
     @Test
+    public void testFormatIpAddress() {
+        assertTrue(formatIpAddress("127.0.0.1").contains("127.0.0.1"));
+        assertTrue(formatIpAddress("10.0.0.7").contains("10.0.0.7"));
+        assertTrue(formatIpAddress("192.168.0.1").contains("192.168.0.1"));
+        assertTrue(formatIpAddress("172.16.16.137").contains("172.16.16.137"));
+    }
+
+    @Test
     public void testFormatPercentage() {
-        assertEquals("   0.00", formatPercentage(0, 10));
-        assertEquals("  30.00", formatPercentage(3, 10));
-        assertEquals("  50.00", formatPercentage(5, 10));
-        assertEquals(" 100.00", formatPercentage(10, 10));
-        assertEquals("  49.18", formatPercentage(30, 61));
+        assertEquals("  0.00", formatPercentage(0, 10));
+        assertEquals(" 30.00", formatPercentage(3, 10));
+        assertEquals(" 50.00", formatPercentage(5, 10));
+        assertEquals("100.00", formatPercentage(10, 10));
+        assertEquals(" 49.18", formatPercentage(30, 61));
     }
 
     @Test

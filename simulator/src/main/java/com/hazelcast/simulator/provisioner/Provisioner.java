@@ -178,7 +178,7 @@ public final class Provisioner {
     }
 
     void clean() {
-        echoImportant("Cleaning worker homes of %s machines", componentRegistry.agentCount());
+        echoImportant("Cleaning Worker homes of %s machines", componentRegistry.agentCount());
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
         ThreadSpawner spawner = new ThreadSpawner("clean", true);
@@ -193,7 +193,7 @@ public final class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Finished cleaning worker homes of %s machines", componentRegistry.agentCount());
+        echoImportant("Finished cleaning Worker homes of %s machines", componentRegistry.agentCount());
     }
 
     void killJavaProcesses() {

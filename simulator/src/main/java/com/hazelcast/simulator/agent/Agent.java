@@ -142,7 +142,7 @@ public class Agent {
         try {
             createAgent(args);
         } catch (Exception e) {
-            exitWithError(LOGGER, "Could not start agent!", e);
+            exitWithError(LOGGER, "Could not start Agent!", e);
         }
     }
 

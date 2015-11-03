@@ -34,6 +34,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
@@ -120,17 +121,18 @@ public class FailureContainer {
     }
 
     public boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
-        LOGGER.info(format("Waiting %d seconds for shutdown of %d workers...", timeoutSeconds, expectedFinishedWorkerCount));
+        long started = System.nanoTime();
+        LOGGER.info(format("Waiting %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedFinishedWorkerCount));
         long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
         while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
             sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
         }
         int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
         if (remainingWorkers > 0) {
-            LOGGER.warn(format("Aborted waiting for shutdown of all workers (%d still running)...", remainingWorkers));
+            LOGGER.warn(format("Aborted waiting for shutdown of all Workers (%d still running)...", remainingWorkers));
             return false;
         }
-        LOGGER.info("Shutdown of all workers completed...");
+        LOGGER.info(format("Finished shutdown of all Workers (%d seconds)", getElapsedSeconds(started)));
         return true;
     }
 

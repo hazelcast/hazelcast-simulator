@@ -67,12 +67,12 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
-            "Number of cluster member worker JVMs. If no value is specified and no mixed members are specified,"
+            "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
                     + " then the number of cluster members will be equal to the number of machines in the agents file.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
     private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
-            "Number of Cluster Client Worker JVMs.")
+            "Number of cluster client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<Boolean> autoCreateHzInstanceSpec = parser.accepts("autoCreateHzInstances",
@@ -102,7 +102,7 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
-            "If the worker JVMs should be replaced after every testsuite.")
+            "Defines if the Worker JVMs should be restarted after every test (in serial execution).")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
@@ -122,16 +122,15 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.SETUP);
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
-            "Worker JVM options (quotes can be used). These options will be applied to regular members and mixed members"
-                    + " (so with client + member in the same JVM).")
+            "Member Worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> clientWorkerVmOptionsSpec = parser.accepts("clientWorkerVmOptions",
-            "Client worker JVM options (quotes can be used).")
+            "Client Worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
-            "The file containing the list of agent machines.")
+            "The file containing the list of Agent machines.")
             .withRequiredArg().ofType(String.class).defaultsTo(AgentsFile.NAME);
 
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
@@ -142,19 +141,19 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> memberHzConfigFileSpec = parser.accepts("hzFile",
-            "The Hazelcast XML configuration file for the worker. If no file is explicitly configured,"
+            "The Hazelcast XML configuration file for the Worker. If no file is explicitly configured,"
                     + " first the 'hazelcast.xml' in the working directory is loaded."
                     + " If that doesn't exist then SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultConfigurationFile("hazelcast.xml"));
 
     private final OptionSpec<String> clientHzConfigFileSpec = parser.accepts("clientHzFile",
-            "The client Hazelcast XML configuration file for the worker. If no file is explicitly configured,"
+            "The client Hazelcast XML configuration file for the Worker. If no file is explicitly configured,"
                     + " first the 'client-hazelcast.xml' in the working directory is loaded."
                     + " If that doesn't exist then SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
             .withRequiredArg().ofType(String.class).defaultsTo(getDefaultConfigurationFile("client-hazelcast.xml"));
 
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
-            "The startup timeout in seconds for a worker.")
+            "The startup timeout in seconds for a Worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
     private final OptionSpec<String> gitSpec = parser.accepts("git",

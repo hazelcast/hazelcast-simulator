@@ -95,13 +95,13 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
         } else {
             ClientConnector clientConnector = clientConnectorManager.get(workerAddressIndex);
             if (clientConnector == null) {
-                LOGGER.error(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
+                LOGGER.error(format("[%d] %s Worker %d not found!", messageId, addressLevel, workerAddressIndex));
                 response.addResponse(localAddress, FAILURE_WORKER_NOT_FOUND);
                 ctx.writeAndFlush(response);
                 return;
             }
             if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(format("[%d] %s forwarding message to worker %d", messageId, addressLevel, workerAddressIndex));
+                LOGGER.trace(format("[%d] %s forwarding message to Worker %d", messageId, addressLevel, workerAddressIndex));
             }
             buffer.retain();
             response.addResponse(clientConnector.write(buffer));
@@ -114,13 +114,13 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
 
         ClientConnector clientConnector = clientConnectorManager.get(workerAddressIndex);
         if (clientConnector == null) {
-            LOGGER.error(format("[%d] %s worker %d not found!", messageId, addressLevel, workerAddressIndex));
+            LOGGER.error(format("[%d] %s Worker %d not found!", messageId, addressLevel, workerAddressIndex));
             ctx.writeAndFlush(new Response(messageId, localAddress, localAddress, FAILURE_WORKER_NOT_FOUND));
             return;
         }
 
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] %s forwarding response to worker %d", messageId, addressLevel, workerAddressIndex));
+            LOGGER.trace(format("[%d] %s forwarding response to Worker %d", messageId, addressLevel, workerAddressIndex));
         }
         buffer.retain();
         clientConnector.forwardToChannel(buffer);

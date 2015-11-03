@@ -73,7 +73,7 @@ public class WorkerJvmLauncher {
 
             WorkerType type = workerJvmSettings.getWorkerType();
             int workerIndex = workerJvmSettings.getWorkerIndex();
-            LOGGER.info(format("Starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
+            LOGGER.info(format("Starting a Java Virtual Machine for %s Worker #%d", type, workerIndex));
 
             String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
             hzConfigFile = createTmpXmlFile(hzConfigFileName, workerJvmSettings.getHazelcastConfig());
@@ -81,12 +81,12 @@ public class WorkerJvmLauncher {
             LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
 
             WorkerJvm worker = startWorkerJvm();
-            LOGGER.info(format("Finished starting a Java Virtual Machine for %s worker #%d", type, workerIndex));
+            LOGGER.info(format("Finished starting a JVM for %s Worker #%d", type, workerIndex));
 
             waitForWorkersStartup(worker, workerJvmSettings.getWorkerStartupTimeout());
         } catch (Exception e) {
-            LOGGER.error("Failed to start worker", e);
-            throw new SpawnWorkerFailedException("Failed to start worker", e);
+            LOGGER.error("Failed to start Worker", e);
+            throw new SpawnWorkerFailedException("Failed to start Worker", e);
         }
     }
 
@@ -188,7 +188,7 @@ public class WorkerJvmLauncher {
                 testSuiteId,
                 workerId);
         execute(copyCommand);
-        LOGGER.info(format("Finished copying '+%s+' to worker", workersDir));
+        LOGGER.info(format("Finished copying '%s' to Worker", workersDir));
     }
 
     private boolean hasExited(WorkerJvm workerJvm) {

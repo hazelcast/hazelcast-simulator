@@ -134,10 +134,10 @@ public class MessageAddress implements Serializable {
 
         private void validate() {
             if (agentAddress == null && workerAddress != null) {
-                throw new IllegalStateException("Agent address cannot be empty when worker address is specified");
+                throw new IllegalStateException("Agent address cannot be empty when Worker address is specified");
             }
             if (workerAddress == null && testAddress != null) {
-                throw new IllegalStateException("Worker address cannot be empty when test address is specified");
+                throw new IllegalStateException("Worker address cannot be empty when Test address is specified");
             }
         }
     }

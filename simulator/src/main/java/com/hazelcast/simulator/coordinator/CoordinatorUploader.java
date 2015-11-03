@@ -35,6 +35,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
+import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static java.lang.String.format;
 
 class CoordinatorUploader {
@@ -111,7 +112,7 @@ class CoordinatorUploader {
                 @Override
                 public void run() {
                     hazelcastJARs.upload(ip, simulatorHome, hazelcastVersionSpecs);
-                    LOGGER.info("    Agent " + ip + " done " + hazelcastVersionSpecs);
+                    LOGGER.info(format("    Agent %s  done %s", formatIpAddress(ip), hazelcastVersionSpecs));
                 }
             });
         }
@@ -179,7 +180,7 @@ class CoordinatorUploader {
             long elapsed = getElapsedSeconds(started);
             LOGGER.info(format("Finished copying workerClasspath '%s' to agents (%d seconds)", workerClassPath, elapsed));
         } catch (Exception e) {
-            throw new CommandLineExitException("Could not upload worker classpath to agents", e);
+            throw new CommandLineExitException("Could not upload Worker classpath to Agents", e);
         }
     }
 
@@ -204,10 +205,10 @@ class CoordinatorUploader {
             });
         }
         spawner.awaitCompletion();
-        LOGGER.info(format("Finished upload of YourKit to agents (%d seconds)", getElapsedSeconds(started)));
+        LOGGER.info(format("Finished upload of YourKit to Agents (%d seconds)", getElapsedSeconds(started)));
     }
 
     private void logAgentDone(String ip) {
-        LOGGER.info("    Agent " + ip + " done");
+        LOGGER.info(format("    Agent %s  done", formatIpAddress(ip)));
     }
 }

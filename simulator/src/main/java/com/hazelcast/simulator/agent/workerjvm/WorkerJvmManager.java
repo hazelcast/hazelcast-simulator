@@ -88,7 +88,7 @@ public class WorkerJvmManager {
             workerJvm.getProcess().destroy();
             workerJvm.getProcess().waitFor();
         } catch (Exception e) {
-            LOGGER.error("Failed to destroy worker process: " + workerJvm, e);
+            LOGGER.error("Failed to destroy Worker process: " + workerJvm, e);
         }
     }
 }
