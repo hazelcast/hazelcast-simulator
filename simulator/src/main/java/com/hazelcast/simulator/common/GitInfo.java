@@ -66,18 +66,18 @@ public final class GitInfo {
     }
 
     static Properties loadGitProperties(String fileName) {
-        InputStream gitPropsStream = null;
+        InputStream inputStream = null;
         try {
-            gitPropsStream = GitInfo.class.getClassLoader().getResourceAsStream(fileName);
-            if (gitPropsStream != null) {
+            inputStream = GitInfo.class.getClassLoader().getResourceAsStream(fileName);
+            if (inputStream != null) {
                 Properties properties = new Properties();
-                properties.load(gitPropsStream);
+                properties.load(inputStream);
                 return properties;
             }
         } catch (IOException e) {
             LOGGER.warn("Error while loading Git properties from " + fileName, e);
         } finally {
-            closeQuietly(gitPropsStream);
+            closeQuietly(inputStream);
         }
         return new DummyProperties();
     }

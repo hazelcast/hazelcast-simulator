@@ -40,21 +40,21 @@ class ComputeServiceBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(ComputeServiceBuilder.class);
 
-    private final SimulatorProperties props;
+    private final SimulatorProperties properties;
 
-    ComputeServiceBuilder(SimulatorProperties props) {
-        if (props == null) {
-            throw new NullPointerException("props can't be null");
+    ComputeServiceBuilder(SimulatorProperties properties) {
+        if (properties == null) {
+            throw new NullPointerException("properties can't be null");
         }
-        this.props = props;
+        this.properties = properties;
     }
 
     ComputeService build() {
         ensurePublicPrivateKeyExist();
 
-        String cloudProvider = props.get("CLOUD_PROVIDER");
-        String identity = props.get("CLOUD_IDENTITY");
-        String credential = props.get("CLOUD_CREDENTIAL");
+        String cloudProvider = properties.get("CLOUD_PROVIDER");
+        String identity = properties.get("CLOUD_IDENTITY");
+        String credential = properties.get("CLOUD_CREDENTIAL");
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Using CLOUD_PROVIDER: " + cloudProvider);
@@ -99,8 +99,8 @@ class ComputeServiceBuilder {
     private Properties newOverrideProperties() {
         //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties properties = new Properties();
-        properties.setProperty(POLL_INITIAL_PERIOD, props.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
-        properties.setProperty(POLL_MAX_PERIOD, props.get("CLOUD_POLL_MAX_PERIOD", "1000"));
+        properties.setProperty(POLL_INITIAL_PERIOD, this.properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
+        properties.setProperty(POLL_MAX_PERIOD, this.properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));
         return properties;
     }
 }

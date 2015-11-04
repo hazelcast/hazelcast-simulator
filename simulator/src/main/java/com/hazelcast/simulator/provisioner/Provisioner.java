@@ -75,17 +75,17 @@ public class Provisioner {
 
     private final ComponentRegistry componentRegistry;
 
-    private final SimulatorProperties props;
+    private final SimulatorProperties properties;
     private final Bash bash;
 
     private final File initScriptFile;
 
     private ComputeService compute;
 
-    public Provisioner(SimulatorProperties props) {
+    public Provisioner(SimulatorProperties properties) {
         this.componentRegistry = loadComponentRegister(agentsFile, false);
-        this.props = props;
-        this.bash = new Bash(props);
+        this.properties = properties;
+        this.bash = new Bash(properties);
 
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
     }
@@ -96,7 +96,7 @@ public class Provisioner {
     }
 
     void scale(int size) {
-        ensureNotStaticCloudProvider(props, "scale");
+        ensureNotStaticCloudProvider(properties, "scale");
 
         int agentSize = componentRegistry.agentCount();
         int delta = size - agentSize;
@@ -142,8 +142,8 @@ public class Provisioner {
         ThreadSpawner spawner = new ThreadSpawner("download", true);
 
         final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
-        final String sshOptions = props.get("SSH_OPTIONS", "");
-        final String sshUser = props.getUser();
+        final String sshOptions = properties.get("SSH_OPTIONS", "");
+        final String sshUser = properties.getUser();
 
         // download Worker logs
         final String rsyncCommand = format(baseCommand, "", sshOptions, sshUser, target);
@@ -222,7 +222,7 @@ public class Provisioner {
     }
 
     void terminate() {
-        ensureNotStaticCloudProvider(props, "terminate");
+        ensureNotStaticCloudProvider(properties, "terminate");
 
         scaleDown(Integer.MAX_VALUE);
     }
@@ -247,36 +247,36 @@ public class Provisioner {
     }
 
     private void scaleUp(int delta) {
-        echoImportant("Provisioning %s %s machines", delta, props.get("CLOUD_PROVIDER"));
+        echoImportant("Provisioning %s %s machines", delta, properties.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
-        String groupName = props.get("GROUP_NAME", "simulator-agent");
+        String groupName = properties.get("GROUP_NAME", "simulator-agent");
         echo("GroupName: " + groupName);
-        echo("Username: " + props.getUser());
+        echo("Username: " + properties.getUser());
 
         LOGGER.info("Using init script: " + initScriptFile.getAbsolutePath());
 
         long started = System.nanoTime();
 
-        String jdkFlavor = props.get("JDK_FLAVOR", "outofthebox");
+        String jdkFlavor = properties.get("JDK_FLAVOR", "outofthebox");
         if ("outofthebox".equals(jdkFlavor)) {
             LOGGER.info("JDK spec: outofthebox");
         } else {
-            String jdkVersion = props.get("JDK_VERSION", "7");
+            String jdkVersion = properties.get("JDK_VERSION", "7");
             LOGGER.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
 
-        compute = new ComputeServiceBuilder(props).build();
+        compute = new ComputeServiceBuilder(properties).build();
         echo("Created compute");
 
-        Template template = new TemplateBuilder(compute, props).build();
+        Template template = new TemplateBuilder(compute, properties).build();
 
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(props);
+        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
 
         try {
             echo("Creating machines (can take a few minutes)...");
             Set<Future> futures = new HashSet<Future>();
-            for (int batch : calcBatches(props, delta)) {
+            for (int batch : calcBatches(properties, delta)) {
                 Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
                 for (NodeMetadata node : nodes) {
                     String privateIpAddress = node.getPrivateAddresses().iterator().next();
@@ -306,7 +306,7 @@ public class Provisioner {
         sleepSeconds(MACHINE_WARMUP_WAIT_SECONDS);
 
         echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
-        echoImportant(format("Successfully provisioned %s %s machines", delta, props.get("CLOUD_PROVIDER")));
+        echoImportant(format("Successfully provisioned %s %s machines", delta, properties.get("CLOUD_PROVIDER")));
     }
 
     private void scaleDown(int count) {
@@ -314,16 +314,16 @@ public class Provisioner {
             count = componentRegistry.agentCount();
         }
 
-        echoImportant(format("Terminating %s %s machines (can take some time)", count, props.get("CLOUD_PROVIDER")));
+        echoImportant(format("Terminating %s %s machines (can take some time)", count, properties.get("CLOUD_PROVIDER")));
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() - count));
 
         long started = System.nanoTime();
 
-        compute = new ComputeServiceBuilder(props).build();
+        compute = new ComputeServiceBuilder(properties).build();
 
         int destroyedCount = 0;
-        for (int batchSize : calcBatches(props, count)) {
+        for (int batchSize : calcBatches(properties, count)) {
             Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
             for (AgentData agentData : componentRegistry.getAgents(batchSize)) {
                 terminateMap.put(agentData.getPublicAddress(), agentData);
@@ -393,7 +393,7 @@ public class Provisioner {
     private String loadInitScript() {
         String initScript = fileAsText(initScriptFile);
 
-        initScript = initScript.replaceAll(Pattern.quote("${user}"), props.getUser());
+        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
         initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
 
         return initScript;
@@ -440,7 +440,7 @@ public class Provisioner {
         @Override
         public void run() {
             // install Java if needed
-            if (!"outofthebox".equals(props.get("JDK_FLAVOR"))) {
+            if (!"outofthebox".equals(properties.get("JDK_FLAVOR"))) {
                 echo(INDENTATION + ip + " JAVA INSTALLATION STARTED...");
                 bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
                 bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
@@ -459,8 +459,8 @@ public class Provisioner {
         }
 
         private File getJavaInstallScript() {
-            String flavor = props.get("JDK_FLAVOR");
-            String version = props.get("JDK_VERSION");
+            String flavor = properties.get("JDK_FLAVOR");
+            String version = properties.get("JDK_VERSION");
 
             String script = "jdk-" + flavor + '-' + version + "-64.sh";
             File scriptDir = new File(SIMULATOR_HOME, "jdk-install");

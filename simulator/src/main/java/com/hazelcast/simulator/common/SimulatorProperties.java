@@ -51,10 +51,10 @@ public class SimulatorProperties {
     private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
-        File defaultPropsFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
-        LOGGER.debug(format("Loading default %s from: %s", PROPERTIES_FILE_NAME, defaultPropsFile.getAbsolutePath()));
-        check(defaultPropsFile);
-        load(defaultPropsFile);
+        File defaultPropertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
+        LOGGER.debug(format("Loading default %s from: %s", PROPERTIES_FILE_NAME, defaultPropertiesFile.getAbsolutePath()));
+        check(defaultPropertiesFile);
+        load(defaultPropertiesFile);
     }
 
     /**

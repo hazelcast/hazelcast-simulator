@@ -43,8 +43,8 @@ public class ExternalClientStarterTest {
     public String logFileName = "external-client";
     public int processCount = 1;
 
-    private final SimulatorProperties props = new SimulatorProperties();
-    private final Bash bash = new Bash(props);
+    private final SimulatorProperties properties = new SimulatorProperties();
+    private final Bash bash = new Bash(properties);
     private final String ipAddress = pickHostAddress();
 
     private HazelcastInstance hazelcastInstance;

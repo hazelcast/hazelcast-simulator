@@ -29,27 +29,27 @@ public final class HarakiriMonitorUtils {
     private HarakiriMonitorUtils() {
     }
 
-    public static boolean isHarakiriMonitorEnabled(SimulatorProperties props) {
-        return (isEC2(props.get("CLOUD_PROVIDER")) && "true".equalsIgnoreCase(props.get("HARAKIRI_MONITOR_ENABLED")));
+    public static boolean isHarakiriMonitorEnabled(SimulatorProperties properties) {
+        return (isEC2(properties.get("CLOUD_PROVIDER")) && "true".equalsIgnoreCase(properties.get("HARAKIRI_MONITOR_ENABLED")));
     }
 
-    public static String getStartHarakiriMonitorCommandOrNull(SimulatorProperties props) {
-        if (!isHarakiriMonitorEnabled(props)) {
-            if (isEC2(props.get("CLOUD_PROVIDER"))) {
+    public static String getStartHarakiriMonitorCommandOrNull(SimulatorProperties properties) {
+        if (!isHarakiriMonitorEnabled(properties)) {
+            if (isEC2(properties.get("CLOUD_PROVIDER"))) {
                 LOGGER.info("HarakiriMonitor is not enabled");
             }
             return null;
         }
 
-        String waitSeconds = props.get("HARAKIRI_MONITOR_WAIT_SECONDS");
+        String waitSeconds = properties.get("HARAKIRI_MONITOR_WAIT_SECONDS");
         LOGGER.info(format("HarakiriMonitor is enabled and will kill inactive EC2 instances after %s seconds", waitSeconds));
         return format(
                 "nohup hazelcast-simulator-%s/bin/harakiri-monitor --cloudProvider %s --cloudIdentity %s --cloudCredential %s"
                         + " --waitSeconds %s > harakiri.out 2> harakiri.err < /dev/null &",
                 getSimulatorVersion(),
-                props.get("CLOUD_PROVIDER"),
-                props.get("CLOUD_IDENTITY"),
-                props.get("CLOUD_CREDENTIAL"),
+                properties.get("CLOUD_PROVIDER"),
+                properties.get("CLOUD_IDENTITY"),
+                properties.get("CLOUD_CREDENTIAL"),
                 waitSeconds);
     }
 }
