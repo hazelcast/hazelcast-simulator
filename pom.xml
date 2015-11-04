@@ -95,11 +95,6 @@
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <maven.git-commit-id.plugin.version>2.1.10</maven.git-commit-id.plugin.version>
         <maven.versions.plugin.version>2.2</maven.versions.plugin.version>
-
-        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
-        <sonar.language>java</sonar.language>
     </properties>
 
     <modules>
@@ -246,12 +241,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${maven.jacoco.plugin.version}</version>
-                <!--
-                <configuration>
-                    <destFile>${sonar.jacoco.reportPath}</destFile>
-                    <append>true</append>
-                </configuration>
-                -->
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
