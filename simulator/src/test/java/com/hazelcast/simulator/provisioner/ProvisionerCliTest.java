@@ -69,7 +69,7 @@ public class ProvisionerCliTest {
 
     @Test
     public void testInit() {
-        Provisioner provisioner = init(getArgs());
+        provisioner = init(getArgs());
         ComponentRegistry componentRegistry = provisioner.getComponentRegistry();
 
         assertEquals(1, componentRegistry.agentCount());

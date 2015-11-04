@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.simulator.common.SimulatorProperties;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Hardware;
@@ -32,7 +31,7 @@ import static java.lang.String.format;
 /**
  * Commandline tool to retrieve various cloud info.
  */
-public final class CloudInfo {
+public class CloudInfo {
 
     private static final Logger LOGGER = Logger.getLogger(CloudInfo.class);
 
@@ -41,17 +40,14 @@ public final class CloudInfo {
 
     private final ComputeService computeService;
 
-    public CloudInfo(String locationId, boolean verbose, SimulatorProperties simulatorProperties) {
+    public CloudInfo(String locationId, boolean verbose, ComputeService computeService) {
         this.locationId = locationId;
         this.verbose = verbose;
-
-        this.computeService = new ComputeServiceBuilder(simulatorProperties).build();
+        this.computeService = computeService;
     }
 
     void shutdown() {
-        if (computeService != null) {
-            computeService.getContext().close();
-        }
+        computeService.getContext().close();
     }
 
     // show all support clouds
@@ -70,7 +66,7 @@ public final class CloudInfo {
                 continue;
             }
             StringBuilder sb = new StringBuilder(hardware.getId());
-            sb.append(" Ram: ").append(hardware.getRam());
+            sb.append(" RAM: ").append(hardware.getRam());
             sb.append(" Processors: ").append(hardware.getProcessors());
             if (locationId == null) {
                 Location location = hardware.getLocation();
@@ -121,7 +117,8 @@ public final class CloudInfo {
         LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
 
         try {
-            CloudInfoCli.run(args);
+            CloudInfo cloudInfo = CloudInfoCli.init(args);
+            CloudInfoCli.run(args, cloudInfo);
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not retrieve cloud information!", e);
         }

@@ -20,6 +20,7 @@ import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.jclouds.compute.ComputeService;
 
 import java.io.File;
 
@@ -54,17 +55,23 @@ final class CloudInfoCli {
     private CloudInfoCli() {
     }
 
-    static void run(String[] args) {
+    static CloudInfo init(String[] args) {
         CloudInfoCli cli = new CloudInfoCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        CloudInfo cloudInfo = null;
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.init(getPropertiesFile(cli, options));
+
+        ComputeService computeService = new ComputeServiceBuilder(simulatorProperties).build();
+
+        return new CloudInfo(options.valueOf(cli.locationSpec), options.has(cli.verboseSpec), computeService);
+    }
+
+    static void run(String[] args, CloudInfo cloudInfo) {
+        CloudInfoCli cli = new CloudInfoCli();
+        OptionSet options = initOptionsWithHelp(cli.parser, args);
+
         try {
-            SimulatorProperties simulatorProperties = new SimulatorProperties();
-            simulatorProperties.init(getPropertiesFile(cli, options));
-
-            cloudInfo = new CloudInfo(options.valueOf(cli.locationSpec), options.has(cli.verboseSpec), simulatorProperties);
-
             if (options.has(cli.showLocationsSpec)) {
                 cloudInfo.showLocations();
             } else if (options.has(cli.showHardwareSpec)) {
@@ -75,9 +82,7 @@ final class CloudInfoCli {
                 CliUtils.printHelpAndExit(cli.parser);
             }
         } finally {
-            if (cloudInfo != null) {
-                cloudInfo.shutdown();
-            }
+            cloudInfo.shutdown();
         }
     }
 
