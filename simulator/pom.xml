@@ -94,6 +94,11 @@
             <artifactId>aws-java-sdk</artifactId>
             <version>${amazonaws.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>log4j</groupId>

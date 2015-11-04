@@ -32,7 +32,7 @@ public class CloudInfoCliTest {
     private CloudInfo cloudInfo = mock(CloudInfo.class);
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         setExitExceptionSecurityManagerWithStatusZero();
         setDistributionUserDir();
         createAgentsFileWithLocalhost();

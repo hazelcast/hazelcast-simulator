@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.utils.CliUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -25,6 +24,7 @@ import org.jclouds.compute.ComputeService;
 import java.io.File;
 
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
+import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 
 final class CloudInfoCli {
 
@@ -79,7 +79,7 @@ final class CloudInfoCli {
             } else if (options.has(cli.showImagesSpec)) {
                 cloudInfo.showImages();
             } else {
-                CliUtils.printHelpAndExit(cli.parser);
+                printHelpAndExit(cli.parser);
             }
         } finally {
             cloudInfo.shutdown();

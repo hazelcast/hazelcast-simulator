@@ -34,7 +34,7 @@ public class ProvisionerCliTest {
     private Provisioner provisioner = mock(Provisioner.class);
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         setExitExceptionSecurityManagerWithStatusZero();
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
