@@ -41,17 +41,23 @@ public class ProvisionerUtilsTest {
 
     @Test
     public void testGetInitScriptFile_loadFromSimulatorHome() {
-        File directory = new File("conf/");
-        File initScriptFile = new File("conf/" + INIT_SH_SCRIPT_NAME);
+        boolean deleteFiles = false;
+        File directory = new File(getSimulatorHome(), "conf/");
+        File initScriptFile = new File(getSimulatorHome(), "conf/" + INIT_SH_SCRIPT_NAME);
         try {
-            ensureExistingDirectory(directory);
-            ensureExistingFile(initScriptFile);
+            if (!initScriptFile.exists()) {
+                deleteFiles = true;
+                ensureExistingDirectory(directory);
+                ensureExistingFile(initScriptFile);
+            }
 
             File actualInitScriptFile = getInitScriptFile(getSimulatorHome().getAbsolutePath());
             assertEquals(initScriptFile.getAbsolutePath(), actualInitScriptFile.getAbsolutePath());
         } finally {
-            deleteQuiet(initScriptFile);
-            deleteQuiet(directory);
+            if (deleteFiles) {
+                deleteQuiet(initScriptFile);
+                deleteQuiet(directory);
+            }
         }
     }
 
