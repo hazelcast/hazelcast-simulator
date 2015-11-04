@@ -38,6 +38,9 @@
     </repositories>
 
     <properties>
+        <main.basedir>${project.basedir}</main.basedir>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
         <!-- we want to remain java 1.6 compatible -->
         <java.version>1.6</java.version>
         <maven.version>3.0.1</maven.version>
@@ -93,8 +96,10 @@
         <maven.git-commit-id.plugin.version>2.1.10</maven.git-commit-id.plugin.version>
         <maven.versions.plugin.version>2.2</maven.versions.plugin.version>
 
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <main.basedir>${project.basedir}</main.basedir>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <sonar.language>java</sonar.language>
     </properties>
 
     <modules>
@@ -241,6 +246,10 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${maven.jacoco.plugin.version}</version>
+                <configuration>
+                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                    <append>true</append>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
