@@ -25,18 +25,21 @@ import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 
+import java.io.File;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import static com.hazelcast.simulator.utils.FileUtils.PRIVATE_KEY;
-import static com.hazelcast.simulator.utils.FileUtils.PUBLIC_KEY;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.Arrays.asList;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
 class ComputeServiceBuilder {
+
+    private static final File PUBLIC_KEY = newFile("~", ".ssh", "id_rsa.pub");
+    private static final File PRIVATE_KEY = newFile("~", ".ssh", "id_rsa");
 
     private static final Logger LOGGER = Logger.getLogger(ComputeServiceBuilder.class);
 

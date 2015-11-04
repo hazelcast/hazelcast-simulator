@@ -8,13 +8,12 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.hazelcast.simulator.utils.FileUtils.PRIVATE_KEY;
-import static com.hazelcast.simulator.utils.FileUtils.PUBLIC_KEY;
 import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class TestEnvironmentUtils {
 
@@ -30,6 +29,9 @@ public class TestEnvironmentUtils {
 
     private static File cloudIdentity;
     private static File cloudCredential;
+
+    private static File publicKeyFile;
+    private static File privateKeyFile;
 
     private static boolean deleteCloudIdentity;
     private static boolean deleteCloudCredential;
@@ -117,22 +119,25 @@ public class TestEnvironmentUtils {
     }
 
     public static void createPublicPrivateKeyFiles() {
-        if (!PUBLIC_KEY.exists()) {
+        publicKeyFile = newFile("~", ".ssh", "id_rsa.pub");
+        privateKeyFile = newFile("~", ".ssh", "id_rsa");
+
+        if (!publicKeyFile.exists()) {
             deletePublicKey = true;
-            ensureExistingFile(PUBLIC_KEY);
+            ensureExistingFile(publicKeyFile);
         }
-        if (!PRIVATE_KEY.exists()) {
+        if (!privateKeyFile.exists()) {
             deletePrivateKey = true;
-            ensureExistingFile(PRIVATE_KEY);
+            ensureExistingFile(privateKeyFile);
         }
     }
 
     public static void deletePublicPrivateKeyFiles() {
         if (deletePublicKey) {
-            deleteQuiet(PUBLIC_KEY);
+            deleteQuiet(publicKeyFile);
         }
         if (deletePrivateKey) {
-            deleteQuiet(PRIVATE_KEY);
+            deleteQuiet(privateKeyFile);
         }
     }
 }
