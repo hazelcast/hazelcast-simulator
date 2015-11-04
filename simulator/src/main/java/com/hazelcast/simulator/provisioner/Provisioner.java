@@ -40,6 +40,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
+import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureNotStaticCloudProvider;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
@@ -57,7 +59,7 @@ import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakir
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
 
-public final class Provisioner {
+public class Provisioner {
 
     private static final int MACHINE_WARMUP_WAIT_SECONDS = 10;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
@@ -88,8 +90,13 @@ public final class Provisioner {
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
     }
 
+    // just for testing
+    ComponentRegistry getComponentRegistry() {
+        return componentRegistry;
+    }
+
     void scale(int size) {
-        ProvisionerUtils.ensureNotStaticCloudProvider(props, "scale");
+        ensureNotStaticCloudProvider(props, "scale");
 
         int agentSize = componentRegistry.agentCount();
         int delta = size - agentSize;
@@ -215,7 +222,7 @@ public final class Provisioner {
     }
 
     void terminate() {
-        ProvisionerUtils.ensureNotStaticCloudProvider(props, "terminate");
+        ensureNotStaticCloudProvider(props, "terminate");
 
         scaleDown(Integer.MAX_VALUE);
     }
@@ -269,7 +276,7 @@ public final class Provisioner {
         try {
             echo("Creating machines (can take a few minutes)...");
             Set<Future> futures = new HashSet<Future>();
-            for (int batch : ProvisionerUtils.calcBatches(props, delta)) {
+            for (int batch : calcBatches(props, delta)) {
                 Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
                 for (NodeMetadata node : nodes) {
                     String privateIpAddress = node.getPrivateAddresses().iterator().next();
@@ -316,7 +323,7 @@ public final class Provisioner {
         compute = new ComputeServiceBuilder(props).build();
 
         int destroyedCount = 0;
-        for (int batchSize : ProvisionerUtils.calcBatches(props, count)) {
+        for (int batchSize : calcBatches(props, count)) {
             Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
             for (AgentData agentData : componentRegistry.getAgents(batchSize)) {
                 terminateMap.put(agentData.getPublicAddress(), agentData);
@@ -464,7 +471,6 @@ public final class Provisioner {
             File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
             return new File(scriptDir, "jdk-support.sh");
         }
-
     }
 
     public static void main(String[] args) {
