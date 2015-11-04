@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -36,7 +38,6 @@ public class CoordinatorCliTest {
             + NEW_LINE + "\t</nodeConfiguration>"
             + NEW_LINE + "</clusterConfiguration>";
 
-    private static File agentsFile;
     private static File testSuiteFile;
 
     private final List<String> args = new ArrayList<String>();
@@ -44,9 +45,7 @@ public class CoordinatorCliTest {
     @BeforeClass
     public static void setUp() throws Exception {
         setDistributionUserDir();
-
-        agentsFile = new File("agents.txt");
-        appendText("127.0.0.1", agentsFile);
+        createAgentsFileWithLocalhost();
 
         testSuiteFile = new File("test.properties");
         appendText("# CoordinatorCliTest", testSuiteFile);
@@ -55,8 +54,8 @@ public class CoordinatorCliTest {
     @AfterClass
     public static void tearDown() {
         resetUserDir();
+        deleteAgentsFile();
 
-        deleteQuiet(agentsFile);
         deleteQuiet(testSuiteFile);
     }
 

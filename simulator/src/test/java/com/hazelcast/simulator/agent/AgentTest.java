@@ -1,24 +1,23 @@
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AgentTest {
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManager;
 
-    private static SecurityManager oldSecurityManager;
+public class AgentTest {
 
     @BeforeClass
     public static void setUp() {
-        oldSecurityManager = System.getSecurityManager();
-        System.setSecurityManager(new ExitExceptionSecurityManager());
+        setExitExceptionSecurityManager();
     }
 
     @AfterClass
     public static void tearDown() {
-        System.setSecurityManager(oldSecurityManager);
+        resetSecurityManager();
     }
 
     @Test(expected = ExitStatusOneException.class)

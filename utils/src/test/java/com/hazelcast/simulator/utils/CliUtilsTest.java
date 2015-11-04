@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.utils.helper.ExitException;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
+import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.junit.After;
@@ -14,7 +14,6 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstru
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class CliUtilsTest {
 
@@ -38,14 +37,9 @@ public class CliUtilsTest {
         invokePrivateConstructor(CliUtils.class);
     }
 
-    @Test
+    @Test(expected = ExitStatusZeroException.class)
     public void testInitOptionsWithHelp_help() {
-        try {
-            initOptionsWithHelp(parser, new String[]{"--help"});
-            fail("Expected ExitException for --help argument");
-        } catch (ExitException e) {
-            assertEquals(0, e.getStatus());
-        }
+        initOptionsWithHelp(parser, new String[]{"--help"});
     }
 
     @Test
@@ -72,14 +66,9 @@ public class CliUtilsTest {
         initOptionsWithHelp(parser, new String[]{"--argName"});
     }
 
-    @Test
+    @Test(expected = ExitStatusZeroException.class)
     public void testPrintHelpAndExit() {
-        try {
-            printHelpAndExit(parser);
-            fail("Expected ExitException");
-        } catch (ExitException e) {
-            assertEquals(0, e.getStatus());
-        }
+        printHelpAndExit(parser);
     }
 
     @Test(expected = CommandLineExitException.class)

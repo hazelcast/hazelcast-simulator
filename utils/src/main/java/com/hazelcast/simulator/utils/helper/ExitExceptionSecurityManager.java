@@ -44,7 +44,7 @@ public final class ExitExceptionSecurityManager extends SecurityManager {
         super.checkExit(status);
         if (status == 0) {
             if (throwExceptionOnStatusZero) {
-                throw new ExitException(0);
+                throw new ExitStatusZeroException();
             }
             return;
         }

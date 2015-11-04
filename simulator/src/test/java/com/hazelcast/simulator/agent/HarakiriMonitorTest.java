@@ -2,7 +2,6 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -13,6 +12,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManager;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -24,21 +25,18 @@ public class HarakiriMonitorTest {
     private static final String CLOUD_CREDENTIALS = "someCredentials";
     private static final int WAIT_SECONDS = 1;
 
-    private static SecurityManager oldSecurityManager;
-
     private final List<String> args = new ArrayList<String>();
 
     private HarakiriMonitor harakiriMonitor;
 
     @BeforeClass
     public static void setUp() {
-        oldSecurityManager = System.getSecurityManager();
-        System.setSecurityManager(new ExitExceptionSecurityManager());
+        setExitExceptionSecurityManager();
     }
 
     @AfterClass
     public static void tearDown() {
-        System.setSecurityManager(oldSecurityManager);
+        resetSecurityManager();
     }
 
     @Test

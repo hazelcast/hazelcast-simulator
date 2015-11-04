@@ -15,16 +15,9 @@
  */
 package com.hazelcast.simulator.utils.helper;
 
-public final class ExitException extends SecurityException {
+public final class ExitStatusZeroException extends SecurityException {
 
-    private final int status;
-
-    public ExitException(int status) {
+    public ExitStatusZeroException() {
         super();
-        this.status = status;
-    }
-
-    public int getStatus() {
-        return status;
     }
 }
