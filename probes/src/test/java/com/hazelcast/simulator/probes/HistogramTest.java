@@ -39,10 +39,7 @@ public class HistogramTest {
         assertEquals(original, read);
         assertTrue(original.equals(read));
         assertNotEquals(original.hashCode(), read.hashCode());
-        assertEquals(original.getNeededByteBufferCapacity(), read.copy().getNeededByteBufferCapacity());
-
-        // FIXME: this assert should not fail, see https://github.com/HdrHistogram/HdrHistogram/issues/60
-        assertNotEquals(original.getNeededByteBufferCapacity(), read.getNeededByteBufferCapacity());
+        assertEquals(original.getNeededByteBufferCapacity(), read.getNeededByteBufferCapacity());
     }
 
     private void populateHistogram(Histogram original) {
