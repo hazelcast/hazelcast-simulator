@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.provisioner;
 
-import com.google.common.base.Predicate;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
@@ -73,20 +72,27 @@ public class Provisioner {
     private final File agentsFile = new File(AgentsFile.NAME);
     private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
 
-    private final ComponentRegistry componentRegistry;
-
     private final SimulatorProperties properties;
+    private final ComputeService computeService;
     private final Bash bash;
 
+    private final int machineWarmupSeconds;
+
+    private final ComponentRegistry componentRegistry;
     private final File initScriptFile;
 
-    private ComputeService compute;
+    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash) {
+        this(properties, computeService, bash, MACHINE_WARMUP_WAIT_SECONDS);
+    }
 
-    public Provisioner(SimulatorProperties properties) {
-        this.componentRegistry = loadComponentRegister(agentsFile, false);
+    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, int machineWarmupSeconds) {
         this.properties = properties;
-        this.bash = new Bash(properties);
+        this.computeService = computeService;
+        this.bash = bash;
 
+        this.machineWarmupSeconds = machineWarmupSeconds;
+
+        this.componentRegistry = loadComponentRegister(agentsFile, false);
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
     }
 
@@ -239,9 +245,7 @@ public class Provisioner {
         }
 
         // shutdown compute service (which holds another thread pool)
-        if (compute != null) {
-            compute.getContext().close();
-        }
+        computeService.getContext().close();
 
         echo("Done!");
     }
@@ -266,10 +270,7 @@ public class Provisioner {
             LOGGER.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
         }
 
-        compute = new ComputeServiceBuilder(properties).build();
-        echo("Created compute");
-
-        Template template = new TemplateBuilder(compute, properties).build();
+        Template template = new TemplateBuilder(computeService, properties).build();
 
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
 
@@ -277,7 +278,7 @@ public class Provisioner {
             echo("Creating machines (can take a few minutes)...");
             Set<Future> futures = new HashSet<Future>();
             for (int batch : calcBatches(properties, delta)) {
-                Set<? extends NodeMetadata> nodes = compute.createNodesInGroup(groupName, batch, template);
+                Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupName, batch, template);
                 for (NodeMetadata node : nodes) {
                     String privateIpAddress = node.getPrivateAddresses().iterator().next();
                     String publicIpAddress = node.getPublicAddresses().iterator().next();
@@ -302,8 +303,8 @@ public class Provisioner {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
-        echo(format("Pausing for machine warmup... (%d sec)", MACHINE_WARMUP_WAIT_SECONDS));
-        sleepSeconds(MACHINE_WARMUP_WAIT_SECONDS);
+        echo(format("Pausing for machine warmup... (%d sec)", machineWarmupSeconds));
+        sleepSeconds(machineWarmupSeconds);
 
         echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
         echoImportant(format("Successfully provisioned %s %s machines", delta, properties.get("CLOUD_PROVIDER")));
@@ -320,15 +321,14 @@ public class Provisioner {
 
         long started = System.nanoTime();
 
-        compute = new ComputeServiceBuilder(properties).build();
-
         int destroyedCount = 0;
         for (int batchSize : calcBatches(properties, count)) {
             Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
             for (AgentData agentData : componentRegistry.getAgents(batchSize)) {
                 terminateMap.put(agentData.getPublicAddress(), agentData);
             }
-            destroyedCount += destroyNodes(compute, terminateMap);
+            Set destroyedSet = computeService.destroyNodesMatching(new NodeMetadataPredicate(componentRegistry, terminateMap));
+            destroyedCount += destroyedSet.size();
         }
 
         LOGGER.info("Updating " + agentsFile.getAbsolutePath());
@@ -397,24 +397,6 @@ public class Provisioner {
         initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
 
         return initScript;
-    }
-
-    private int destroyNodes(ComputeService compute, final Map<String, AgentData> terminateMap) {
-        Set destroyedSet = compute.destroyNodesMatching(new Predicate<NodeMetadata>() {
-            @Override
-            public boolean apply(NodeMetadata nodeMetadata) {
-                for (String publicAddress : nodeMetadata.getPublicAddresses()) {
-                    AgentData agentData = terminateMap.remove(publicAddress);
-                    if (agentData != null) {
-                        echo(format("    Terminating instance %s", publicAddress));
-                        componentRegistry.removeAgent(agentData);
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-        return destroyedSet.size();
     }
 
     private void echo(String s, Object... args) {

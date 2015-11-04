@@ -301,6 +301,9 @@ public final class FileUtils {
     }
 
     public static void rename(File source, File target) {
+        if (!source.exists()) {
+            return;
+        }
         if (!source.renameTo(target)) {
             throw new FileUtilsException(format("Could not rename [%s] to [%s]",
                     source.getAbsolutePath(), target.getAbsolutePath()));

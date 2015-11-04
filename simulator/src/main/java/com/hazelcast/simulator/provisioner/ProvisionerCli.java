@@ -17,9 +17,11 @@ package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.Bash;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.jclouds.compute.ComputeService;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
@@ -68,7 +70,9 @@ final class ProvisionerCli {
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
         SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-        return new Provisioner(properties);
+        ComputeService computeService = new ComputeServiceBuilder(properties).build();
+        Bash bash = new Bash(properties);
+        return new Provisioner(properties, computeService, bash);
     }
 
     static void run(String[] args, Provisioner provisioner) {

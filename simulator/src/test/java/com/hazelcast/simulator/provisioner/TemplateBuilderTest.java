@@ -1,28 +1,15 @@
 package com.hazelcast.simulator.provisioner;
 
-import com.google.common.base.Optional;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
-import org.jclouds.aws.ec2.features.AWSSecurityGroupApi;
-import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.ComputeServiceContext;
-import org.jclouds.compute.domain.Hardware;
-import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.Template;
-import org.jclouds.compute.domain.TemplateBuilderSpec;
-import org.jclouds.compute.domain.internal.TemplateImpl;
 import org.jclouds.compute.options.TemplateOptions;
-import org.jclouds.domain.Location;
 import org.jclouds.ec2.domain.SecurityGroup;
-import org.jclouds.ec2.features.SecurityGroupApi;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
@@ -34,27 +21,18 @@ import static org.apache.commons.lang3.ArrayUtils.toObject;
 import static org.jclouds.net.domain.IpProtocol.TCP;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-public class TemplateBuilderTest {
-
-    private static final String SECURITY_GROUP = "simulator";
-
-    private Set<SecurityGroup> securityGroups = new HashSet<SecurityGroup>();
+public class TemplateBuilderTest extends AbstractTemplateBuilderTest {
 
     private SimulatorProperties simulatorProperties;
     private int agentPort;
     private int hazelcastStartPort;
     private int hazelcastEndPort;
-
-    private SecurityGroupApi securityGroupApi;
-    private ComputeService computeService;
 
     @Before
     public void setUp() {
@@ -68,32 +46,7 @@ public class TemplateBuilderTest {
         hazelcastStartPort = simulatorProperties.getHazelcastPort();
         hazelcastEndPort = hazelcastStartPort + simulatorProperties.getHazelcastPortRangeSize();
 
-        Image image = mock(Image.class);
-        Hardware hardware = mock(Hardware.class);
-        Location location = mock(Location.class);
-        AWSEC2TemplateOptions templateOptions = new AWSEC2TemplateOptions();
-
-        Template template = new TemplateImpl(image, hardware, location, templateOptions);
-
-        org.jclouds.compute.domain.TemplateBuilder templateBuilder = mock(org.jclouds.compute.domain.TemplateBuilder.class);
-        doReturn(templateBuilder).when(templateBuilder).from(any(TemplateBuilderSpec.class));
-        doReturn(template).when(templateBuilder).build();
-
-        securityGroupApi = mock(AWSSecurityGroupApi.class);
-        doReturn(securityGroups).when(securityGroupApi).describeSecurityGroupsInRegion(anyString(), eq(SECURITY_GROUP));
-
-        Optional optional = mock(Optional.class);
-        doReturn(securityGroupApi).when(optional).get();
-
-        AWSEC2Api ec2Api = mock(AWSEC2Api.class);
-        doReturn(optional).when(ec2Api).getSecurityGroupApi();
-
-        ComputeServiceContext computeServiceContext = mock(ComputeServiceContext.class);
-        doReturn(ec2Api).when(computeServiceContext).unwrapApi(AWSEC2Api.class);
-
-        computeService = mock(ComputeService.class);
-        doReturn(templateBuilder).when(computeService).templateBuilder();
-        doReturn(computeServiceContext).when(computeService).getContext();
+        initComputeServiceMock();
     }
 
     @After

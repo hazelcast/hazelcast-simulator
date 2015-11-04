@@ -39,7 +39,8 @@ public final class CommonUtils {
     }
 
     public static String getSimulatorVersion() {
-        return CommonUtils.class.getPackage().getImplementationVersion();
+        String implementationVersion = CommonUtils.class.getPackage().getImplementationVersion();
+        return (implementationVersion != null) ? implementationVersion : "SNAPSHOT";
     }
 
     public static void fixRemoteStackTrace(Throwable remoteCause, StackTraceElement[] localSideStackTrace) {

@@ -9,7 +9,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class CommonUtils_MiscTest {
@@ -21,7 +20,7 @@ public class CommonUtils_MiscTest {
 
     @Test
     public void testGetSimulatorVersion() {
-        assertNull(getSimulatorVersion());
+        assertEquals("SNAPSHOT", getSimulatorVersion());
     }
 
     @Test
