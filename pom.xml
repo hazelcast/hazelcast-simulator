@@ -246,10 +246,12 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${maven.jacoco.plugin.version}</version>
+                <!--
                 <configuration>
                     <destFile>${sonar.jacoco.reportPath}</destFile>
                     <append>true</append>
                 </configuration>
+                -->
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
