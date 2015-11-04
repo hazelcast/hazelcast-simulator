@@ -8,6 +8,9 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.hazelcast.simulator.utils.FileUtils.PRIVATE_KEY;
+import static com.hazelcast.simulator.utils.FileUtils.PUBLIC_KEY;
+import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -25,11 +28,14 @@ public class TestEnvironmentUtils {
 
     private static File agentsFile;
 
+    private static File cloudIdentity;
+    private static File cloudCredential;
+
     private static boolean deleteCloudIdentity;
     private static boolean deleteCloudCredential;
 
-    private static File cloudIdentity;
-    private static File cloudCredential;
+    private static boolean deletePublicKey;
+    private static boolean deletePrivateKey;
 
     public static void setLogLevel(Level level) {
         if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
@@ -87,7 +93,7 @@ public class TestEnvironmentUtils {
     }
 
     public static void createCloudCredentialFiles() {
-        String userHome = System.getProperty("user.home");
+        String userHome = USER_HOME;
         cloudIdentity = new File(userHome, "ec2.identity").getAbsoluteFile();
         cloudCredential = new File(userHome, "ec2.credential").getAbsoluteFile();
 
@@ -107,6 +113,26 @@ public class TestEnvironmentUtils {
         }
         if (deleteCloudCredential) {
             deleteQuiet(cloudCredential);
+        }
+    }
+
+    public static void createPublicPrivateKeyFiles() {
+        if (!PUBLIC_KEY.exists()) {
+            deletePublicKey = true;
+            ensureExistingFile(PUBLIC_KEY);
+        }
+        if (!PRIVATE_KEY.exists()) {
+            deletePrivateKey = true;
+            ensureExistingFile(PRIVATE_KEY);
+        }
+    }
+
+    public static void deletePublicPrivateKeyFiles() {
+        if (deletePublicKey) {
+            deleteQuiet(PUBLIC_KEY);
+        }
+        if (deletePrivateKey) {
+            deleteQuiet(PRIVATE_KEY);
         }
     }
 }
