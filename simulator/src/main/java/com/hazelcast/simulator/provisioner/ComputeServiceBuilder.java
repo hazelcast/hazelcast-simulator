@@ -98,9 +98,9 @@ class ComputeServiceBuilder {
 
     private Properties newOverrideProperties() {
         //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
-        Properties properties = new Properties();
-        properties.setProperty(POLL_INITIAL_PERIOD, this.properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
-        properties.setProperty(POLL_MAX_PERIOD, this.properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));
-        return properties;
+        Properties newProperties = new Properties();
+        newProperties.setProperty(POLL_INITIAL_PERIOD, this.properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
+        newProperties.setProperty(POLL_MAX_PERIOD, this.properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));
+        return newProperties;
     }
 }
