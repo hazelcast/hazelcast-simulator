@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -95,8 +96,7 @@ class GitSupport {
     }
 
     private File getDefaultBaseDir() {
-        File homeDir = new File(System.getProperty("user.home"));
-        return newFile(homeDir, ".hazelcast-build");
+        return newFile(USER_HOME, ".hazelcast-build");
     }
 
     private void syncRemoteRepositories(Git git) throws IOException {

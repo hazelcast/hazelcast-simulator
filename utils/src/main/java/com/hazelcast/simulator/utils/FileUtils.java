@@ -47,7 +47,10 @@ import static java.lang.String.format;
 @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
 public final class FileUtils {
 
-    static final String USER_HOME = System.getProperty("user.home");
+    public static final File PUBLIC_KEY = newFile("~", ".ssh", "id_rsa.pub");
+    public static final File PRIVATE_KEY = newFile("~", ".ssh", "id_rsa");
+
+    public static final String USER_HOME = System.getProperty("user.home");
 
     private static final int READ_BUFFER_SIZE = 8192;
     private static final int COPY_BUFFER_SIZE = 1024;

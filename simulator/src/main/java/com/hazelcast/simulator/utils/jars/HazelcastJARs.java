@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
@@ -172,8 +173,7 @@ public class HazelcastJARs {
     }
 
     File getArtifactFile(String artifact, String version) {
-        File userHome = new File(System.getProperty("user.home"));
-        File repositoryDir = newFile(userHome, ".m2", "repository");
+        File repositoryDir = newFile(USER_HOME, ".m2", "repository");
         return newFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
     }
 

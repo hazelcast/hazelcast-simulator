@@ -21,6 +21,8 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.Tomcat;
 
+import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
+
 public class TomcatContainer implements ServletContainer {
 
     Tomcat tomcat;
@@ -60,7 +62,7 @@ public class TomcatContainer implements ServletContainer {
         tomcat = new Tomcat();
         tomcat.setPort(port);
 
-        String base = System.getProperty("user.home");
+        String base = USER_HOME;
         tomcat.setBaseDir(base);
 
         Context context = tomcat.addContext("/", sourceDir);
