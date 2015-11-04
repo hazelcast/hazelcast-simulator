@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
+import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
@@ -41,6 +43,7 @@ public class ProvisionerCliTest {
         setExitExceptionSecurityManagerWithStatusZero();
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
+        createCloudCredentialFiles();
 
         if (!PUBLIC_KEY.exists()) {
             deletePublicKey = true;
@@ -58,6 +61,7 @@ public class ProvisionerCliTest {
         resetUserDir();
         deleteLogs();
         deleteAgentsFile();
+        deleteCloudCredentialFiles();
 
         if (deletePublicKey) {
             deleteQuiet(PUBLIC_KEY);

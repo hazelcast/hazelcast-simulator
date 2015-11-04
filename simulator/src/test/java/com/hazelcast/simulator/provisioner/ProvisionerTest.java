@@ -9,15 +9,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Set;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
+import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static java.util.Collections.singleton;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -31,9 +30,6 @@ import static org.mockito.Mockito.when;
 
 public class ProvisionerTest extends AbstractTemplateBuilderTest {
 
-    private File cloudIdentity;
-    private File cloudCredential;
-
     private Bash bash;
     private Provisioner provisioner;
 
@@ -41,17 +37,9 @@ public class ProvisionerTest extends AbstractTemplateBuilderTest {
     public void setUp() {
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
-
-        cloudIdentity = new File("cloud-identity").getAbsoluteFile();
-        cloudCredential = new File("cloud-credential").getAbsoluteFile();
-
-        ensureExistingFile(cloudIdentity);
-        ensureExistingFile(cloudCredential);
+        createCloudCredentialFiles();
 
         SimulatorProperties properties = new SimulatorProperties();
-        properties.set("CLOUD_IDENTITY", cloudIdentity.getAbsolutePath());
-        properties.set("CLOUD_CREDENTIAL", cloudCredential.getAbsolutePath());
-
         initComputeServiceMock();
         bash = mock(Bash.class);
         provisioner = new Provisioner(properties, computeService, bash, 0);
@@ -63,9 +51,7 @@ public class ProvisionerTest extends AbstractTemplateBuilderTest {
 
         resetUserDir();
         deleteAgentsFile();
-
-        deleteQuiet(cloudIdentity);
-        deleteQuiet(cloudCredential);
+        deleteCloudCredentialFiles();
     }
 
     @Test

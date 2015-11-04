@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 
 public class TestEnvironmentUtils {
@@ -23,6 +24,12 @@ public class TestEnvironmentUtils {
     private static String originalUserDir;
 
     private static File agentsFile;
+
+    private static boolean deleteCloudIdentity;
+    private static boolean deleteCloudCredential;
+
+    private static File cloudIdentity;
+    private static File cloudCredential;
 
     public static void setLogLevel(Level level) {
         if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
@@ -77,5 +84,29 @@ public class TestEnvironmentUtils {
 
     public static void deleteAgentsFile() {
         deleteQuiet(agentsFile);
+    }
+
+    public static void createCloudCredentialFiles() {
+        String userHome = System.getProperty("user.home");
+        cloudIdentity = new File(userHome, "ec2.identity").getAbsoluteFile();
+        cloudCredential = new File(userHome, "ec2.credential").getAbsoluteFile();
+
+        if (!cloudIdentity.exists()) {
+            deleteCloudIdentity = true;
+            ensureExistingFile(cloudIdentity);
+        }
+        if (!cloudCredential.exists()) {
+            deleteCloudCredential = true;
+            ensureExistingFile(cloudCredential);
+        }
+    }
+
+    public static void deleteCloudCredentialFiles() {
+        if (deleteCloudIdentity) {
+            deleteQuiet(cloudIdentity);
+        }
+        if (deleteCloudCredential) {
+            deleteQuiet(cloudCredential);
+        }
     }
 }
