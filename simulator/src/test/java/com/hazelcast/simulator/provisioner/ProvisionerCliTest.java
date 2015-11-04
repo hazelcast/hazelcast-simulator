@@ -11,18 +11,26 @@ import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.provisioner.ComputeServiceBuilder.PRIVATE_KEY;
+import static com.hazelcast.simulator.provisioner.ComputeServiceBuilder.PUBLIC_KEY;
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class ProvisionerCliTest {
+
+    private static boolean deletePublicKey;
+    private static boolean deletePrivateKey;
 
     private final List<String> args = new ArrayList<String>();
 
@@ -33,13 +41,30 @@ public class ProvisionerCliTest {
         setExitExceptionSecurityManagerWithStatusZero();
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
+
+        if (!PUBLIC_KEY.exists()) {
+            deletePublicKey = true;
+            ensureExistingFile(PUBLIC_KEY);
+        }
+        if (!PRIVATE_KEY.exists()) {
+            deletePrivateKey = true;
+            ensureExistingFile(PRIVATE_KEY);
+        }
     }
 
     @AfterClass
     public static void tearDown() {
         resetSecurityManager();
         resetUserDir();
+        deleteLogs();
         deleteAgentsFile();
+
+        if (deletePublicKey) {
+            deleteQuiet(PUBLIC_KEY);
+        }
+        if (deletePrivateKey) {
+            deleteQuiet(PRIVATE_KEY);
+        }
     }
 
     @Test

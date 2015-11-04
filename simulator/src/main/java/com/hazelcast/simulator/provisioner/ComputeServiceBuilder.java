@@ -38,6 +38,9 @@ import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIO
 
 class ComputeServiceBuilder {
 
+    public static final File PUBLIC_KEY = newFile("~", ".ssh", "id_rsa.pub");
+    public static final File PRIVATE_KEY = newFile("~", ".ssh", "id_rsa");
+
     private static final Logger LOGGER = Logger.getLogger(ComputeServiceBuilder.class);
 
     private final SimulatorProperties properties;
@@ -82,16 +85,13 @@ class ComputeServiceBuilder {
     }
 
     private void ensurePublicPrivateKeyExist() {
-        File publicKey = newFile("~", ".ssh", "id_rsa.pub");
-        if (!publicKey.exists()) {
-            throw new CommandLineExitException("Could not found public key: " + publicKey.getAbsolutePath() + NEW_LINE
+        if (!PUBLIC_KEY.exists()) {
+            throw new CommandLineExitException("Public key " + PUBLIC_KEY.getAbsolutePath() + " not found." + NEW_LINE
                     + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
-
-        File privateKey = newFile("~", ".ssh", "id_rsa");
-        if (!privateKey.exists()) {
-            throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " was found, "
-                    + "but private key: " + privateKey.getAbsolutePath() + " is missing" + NEW_LINE
+        if (!PRIVATE_KEY.exists()) {
+            throw new CommandLineExitException("Public key " + PUBLIC_KEY.getAbsolutePath() + " was found, "
+                    + "but private key " + PRIVATE_KEY.getAbsolutePath() + " is missing" + NEW_LINE
                     + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
     }
