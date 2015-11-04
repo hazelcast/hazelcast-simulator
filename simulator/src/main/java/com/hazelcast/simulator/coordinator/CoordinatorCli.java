@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
-import static com.hazelcast.simulator.coordinator.WorkerParameters.getPort;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
@@ -223,7 +222,7 @@ final class CoordinatorCli {
 
         String memberHzConfig = loadMemberHzConfig(options, cli);
         String clientHzConfig = loadClientHzConfig(options, cli);
-        int defaultHzPort = getPort(memberHzConfig);
+        int defaultHzPort = simulatorProperties.getHazelcastPort();
         String licenseKey = options.valueOf(cli.licenseKeySpec);
 
         WorkerParameters workerParameters = new WorkerParameters(

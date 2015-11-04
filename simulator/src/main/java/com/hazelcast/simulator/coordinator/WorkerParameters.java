@@ -15,17 +15,11 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 
-import java.io.ByteArrayInputStream;
-
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -165,21 +159,6 @@ public class WorkerParameters {
 
     public String getNumaCtl() {
         return numaCtl;
-    }
-
-    public static int getPort(String memberHzConfig) {
-        ByteArrayInputStream bis = null;
-        try {
-            byte[] configString = memberHzConfig.getBytes("UTF-8");
-            bis = new ByteArrayInputStream(configString);
-            Config config = new XmlConfigBuilder(bis).build();
-
-            return config.getNetworkConfig().getPort();
-        } catch (Exception e) {
-            throw new CommandLineExitException("Could not get port from settings", e);
-        } finally {
-            closeQuietly(bis);
-        }
     }
 
     public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,

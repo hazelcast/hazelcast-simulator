@@ -39,8 +39,6 @@ import static org.jclouds.net.domain.IpProtocol.TCP;
 final class TemplateBuilder {
 
     static final int SSH_PORT = 22;
-    static final int HAZELCAST_PORT_RANGE_START = 5701;
-    static final int HAZELCAST_PORT_RANGE_END = 5751;
     static final String CIDR_RANGE = "0.0.0.0/0";
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
@@ -59,10 +57,12 @@ final class TemplateBuilder {
 
     private void populatePortRangeMap() {
         int agentPort = simulatorProperties.getAgentPort();
+        int hazelcastStartPort = simulatorProperties.getHazelcastPort();
+        int hazelcastEndPort = hazelcastStartPort + simulatorProperties.getHazelcastPortRangeSize();
 
         portRangeMap.put(SSH_PORT, SSH_PORT);
-        portRangeMap.put(HAZELCAST_PORT_RANGE_START, HAZELCAST_PORT_RANGE_END);
         portRangeMap.put(agentPort, agentPort);
+        portRangeMap.put(hazelcastStartPort, hazelcastEndPort);
     }
 
     Template build() {

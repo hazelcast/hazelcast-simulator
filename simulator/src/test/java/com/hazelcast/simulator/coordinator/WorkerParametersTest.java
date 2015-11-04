@@ -4,7 +4,6 @@ import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hazelcast.simulator.coordinator.WorkerParameters.createAddressConfig;
-import static com.hazelcast.simulator.coordinator.WorkerParameters.getPort;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -127,17 +125,6 @@ public class WorkerParametersTest {
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(30);
         assertEquals(30, intervalSeconds);
-    }
-
-    @Test
-    public void testGetPort() {
-        int port = getPort(memberConfig);
-        assertEquals(5701, port);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testGetPort_withException() {
-        getPort("");
     }
 
     @Test

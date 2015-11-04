@@ -117,7 +117,15 @@ public class SimulatorProperties {
     }
 
     public int getAgentPort() {
-        return parseInt(get("AGENT_PORT"));
+        return parseInt(get("AGENT_PORT", "9000"));
+    }
+
+    public int getHazelcastPort() {
+        return parseInt(get("HAZELCAST_PORT", "5701"));
+    }
+
+    public int getHazelcastPortRangeSize() {
+        return parseInt(get("HAZELCAST_PORT_RANGE_SIZE", "50"));
     }
 
     public String get(String name) {

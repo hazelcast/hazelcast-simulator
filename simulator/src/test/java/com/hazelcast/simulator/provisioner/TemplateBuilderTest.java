@@ -28,8 +28,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.provisioner.TemplateBuilder.CIDR_RANGE;
-import static com.hazelcast.simulator.provisioner.TemplateBuilder.HAZELCAST_PORT_RANGE_END;
-import static com.hazelcast.simulator.provisioner.TemplateBuilder.HAZELCAST_PORT_RANGE_START;
 import static com.hazelcast.simulator.provisioner.TemplateBuilder.SSH_PORT;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.ArrayUtils.toObject;
@@ -52,6 +50,8 @@ public class TemplateBuilderTest {
 
     private SimulatorProperties simulatorProperties;
     private int agentPort;
+    private int hazelcastStartPort;
+    private int hazelcastEndPort;
 
     private SecurityGroupApi securityGroupApi;
     private ComputeService computeService;
@@ -65,6 +65,8 @@ public class TemplateBuilderTest {
         simulatorProperties.set("AGENT_PORT", "1234");
 
         agentPort = simulatorProperties.getAgentPort();
+        hazelcastStartPort = simulatorProperties.getHazelcastPort();
+        hazelcastEndPort = hazelcastStartPort + simulatorProperties.getHazelcastPortRangeSize();
 
         Image image = mock(Image.class);
         Hardware hardware = mock(Hardware.class);
@@ -158,7 +160,7 @@ public class TemplateBuilderTest {
         List<Integer> ports = asList(toObject(inboundPorts));
         assertTrue(ports.contains(SSH_PORT));
         assertTrue(ports.contains(agentPort));
-        for (int port = HAZELCAST_PORT_RANGE_START; port < HAZELCAST_PORT_RANGE_END; port++) {
+        for (int port = hazelcastStartPort; port < hazelcastEndPort; port++) {
             assertTrue(ports.contains(port));
         }
     }
@@ -171,7 +173,7 @@ public class TemplateBuilderTest {
         verify(securityGroupApi).authorizeSecurityGroupIngressInRegion(anyString(), eq(SECURITY_GROUP), eq(TCP),
                 eq(agentPort), eq(agentPort), eq(CIDR_RANGE));
         verify(securityGroupApi).authorizeSecurityGroupIngressInRegion(anyString(), eq(SECURITY_GROUP), eq(TCP),
-                eq(HAZELCAST_PORT_RANGE_START), eq(HAZELCAST_PORT_RANGE_END), eq(CIDR_RANGE));
+                eq(hazelcastStartPort), eq(hazelcastEndPort), eq(CIDR_RANGE));
         verifyNoMoreInteractions(securityGroupApi);
     }
 }
