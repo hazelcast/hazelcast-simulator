@@ -81,8 +81,7 @@ public class CloudInfo {
     void showImages() {
         Set<? extends Image> images = computeService.listImages();
         for (Image image : images) {
-            boolean match = show(image);
-            if (!match) {
+            if (!show(image)) {
                 continue;
             }
             if (verbose) {

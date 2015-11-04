@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-public class TemplateBuilderTest extends AbstractTemplateBuilderTest {
+public class TemplateBuilderTest extends AbstractComputeServiceTest {
 
     private SimulatorProperties simulatorProperties;
     private int agentPort;

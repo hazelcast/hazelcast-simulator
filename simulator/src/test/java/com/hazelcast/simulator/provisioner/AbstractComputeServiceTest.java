@@ -23,7 +23,7 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public abstract class AbstractTemplateBuilderTest {
+public abstract class AbstractComputeServiceTest {
 
     static final String SECURITY_GROUP = "simulator";
 

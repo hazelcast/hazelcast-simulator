@@ -24,11 +24,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ProvisionerTest extends AbstractTemplateBuilderTest {
+public class ProvisionerTest extends AbstractComputeServiceTest {
 
     private Bash bash;
     private Provisioner provisioner;
@@ -130,19 +131,17 @@ public class ProvisionerTest extends AbstractTemplateBuilderTest {
         provisioner.terminate();
     }
 
-    @SuppressWarnings("unchecked")
     private void mockComputeServiceForScaleDown() {
         Set destroyedSet = singleton(mock(NodeMetadata.class));
-        when(computeService.destroyNodesMatching(any(NodeMetadataPredicate.class))).thenReturn(destroyedSet);
+        doReturn(destroyedSet).when(computeService).destroyNodesMatching(any(NodeMetadataPredicate.class));
     }
 
-    @SuppressWarnings("unchecked")
     private void mockComputeServiceForScaleUp() throws Exception {
         NodeMetadata nodeMetadata = mock(NodeMetadata.class, RETURNS_DEEP_STUBS);
         when(nodeMetadata.getPrivateAddresses().iterator().next()).thenReturn("127.0.0.1");
         when(nodeMetadata.getPublicAddresses().iterator().next()).thenReturn("172.16.16.1");
 
         Set createdSet = singleton(nodeMetadata);
-        when(computeService.createNodesInGroup(anyString(), anyInt(), any(Template.class))).thenReturn(createdSet);
+        doReturn(createdSet).when(computeService).createNodesInGroup(anyString(), anyInt(), any(Template.class));
     }
 }
