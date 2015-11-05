@@ -144,6 +144,7 @@ public class CoordinatorUploaderTest {
     public void testUploadUploadDirectory() {
         coordinatorUploader.uploadUploadDirectory();
 
+        verify(bash, times(2)).ssh(contains("192.168.0."), anyString());
         verify(bash, times(2)).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
         verifyNoMoreInteractions(bash);
     }
@@ -167,6 +168,7 @@ public class CoordinatorUploaderTest {
     public void testUploadWorkerClassPath() {
         coordinatorUploader.uploadWorkerClassPath();
 
+        verify(bash, times(2)).ssh(contains("192.168.0."), anyString());
         verify(bash, times(2)).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
         verifyNoMoreInteractions(bash);
     }
