@@ -39,8 +39,8 @@ public class PerformanceStateContainer {
 
     public static final String PERFORMANCE_FILE_NAME = "performance.txt";
 
-    private static final int THROUGHPUT_FORMAT_LENGTH = 15;
-    private static final int LATENCY_FORMAT_LENGTH = 10;
+    public static final int THROUGHPUT_FORMAT_LENGTH = 12;
+    public static final int LATENCY_FORMAT_LENGTH = 10;
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
@@ -57,11 +57,12 @@ public class PerformanceStateContainer {
         if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
             return " (performance not available)";
         }
-        return String.format("%s ops %s ops/s %s µs (%sth) %s µs (max)",
+        return String.format("%s ops %s ops/s %s µs (%sth) %s µs (avg) %s µs (max)",
                 formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
                 formatLong(performanceState.getIntervalPercentileLatency(), LATENCY_FORMAT_LENGTH),
                 INTERVAL_LATENCY_PERCENTILE,
+                formatDouble(performanceState.getIntervalAvgLatency(), LATENCY_FORMAT_LENGTH),
                 formatLong(performanceState.getIntervalMaxLatency(), LATENCY_FORMAT_LENGTH)
         );
     }

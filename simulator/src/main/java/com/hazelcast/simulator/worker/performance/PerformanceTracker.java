@@ -47,6 +47,7 @@ final class PerformanceTracker {
     private Map<String, Histogram> intervalHistogramMap;
 
     private long intervalPercentileLatency;
+    private double intervalAvgLatency;
     private long intervalMaxLatency;
 
     private long intervalOperationCount;
@@ -79,11 +80,12 @@ final class PerformanceTracker {
         return intervalThroughput;
     }
 
-    void update(Map<String, Histogram> intervalHistograms, long intervalPercentileLatency, long intervalMaxLatency,
-                long intervalOperationCount, long currentTimestamp) {
+    void update(Map<String, Histogram> intervalHistograms, long intervalPercentileLatency, double intervalAvgLatency,
+                long intervalMaxLatency, long intervalOperationCount, long currentTimestamp) {
         this.intervalHistogramMap = intervalHistograms;
 
         this.intervalPercentileLatency = intervalPercentileLatency;
+        this.intervalAvgLatency = intervalAvgLatency;
         this.intervalMaxLatency = intervalMaxLatency;
 
         this.intervalOperationCount = intervalOperationCount;
@@ -112,7 +114,7 @@ final class PerformanceTracker {
 
     PerformanceState createPerformanceState() {
         return new PerformanceState(totalOperationCount, intervalThroughput, totalThroughput,
-                intervalPercentileLatency, intervalMaxLatency);
+                intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency);
     }
 
     Map<String, String> aggregateIntervalHistograms(String testId) {

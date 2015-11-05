@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.LATENCY_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.THROUGHPUT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
@@ -132,16 +134,17 @@ public class CoordinatorOperationProcessorTest {
     @Test
     public void processPerformanceState() {
         PerformanceStateOperation operation = new PerformanceStateOperation();
-        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 23, 42));
+        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 23, 33.0d, 42));
 
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);
 
         String performanceNumbers = performanceStateContainer.getPerformanceNumbers("testId");
-        assertTrue(performanceNumbers.contains(formatLong(1000, 4)));
-        assertTrue(performanceNumbers.contains(formatDouble(50, 7)));
-        assertTrue(performanceNumbers.contains(formatLong(23, 4)));
-        assertTrue(performanceNumbers.contains(formatLong(42, 4)));
+        assertTrue(performanceNumbers.contains(formatLong(1000, THROUGHPUT_FORMAT_LENGTH)));
+        assertTrue(performanceNumbers.contains(formatDouble(50, THROUGHPUT_FORMAT_LENGTH)));
+        assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
+        assertTrue(performanceNumbers.contains(formatDouble(33.0d, LATENCY_FORMAT_LENGTH)));
+        assertTrue(performanceNumbers.contains(formatLong(42, LATENCY_FORMAT_LENGTH)));
     }
 
     @Test

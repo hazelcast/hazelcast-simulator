@@ -140,6 +140,7 @@ public class WorkerPerformanceMonitor {
                 Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
                 long intervalPercentileLatency = Long.MIN_VALUE;
+                double intervalAvgLatency = Long.MIN_VALUE;
                 long intervalMaxLatency = Long.MIN_VALUE;
                 long intervalOperationalCount = 0;
 
@@ -151,6 +152,10 @@ public class WorkerPerformanceMonitor {
                     long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
                     if (percentileValue > intervalPercentileLatency) {
                         intervalPercentileLatency = percentileValue;
+                    }
+                    double avgValue = intervalHistogram.getMean();
+                    if (avgValue > intervalAvgLatency) {
+                        intervalAvgLatency = avgValue;
                     }
                     long maxValue = intervalHistogram.getMaxValue();
                     if (maxValue > intervalMaxLatency) {
@@ -164,7 +169,7 @@ public class WorkerPerformanceMonitor {
                 String testId = testContainer.getTestContext().getTestId();
                 PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
 
-                tracker.update(intervalHistograms, intervalPercentileLatency, intervalMaxLatency,
+                tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
                         intervalOperationalCount, currentTimestamp);
             }
         }
