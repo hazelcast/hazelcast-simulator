@@ -56,7 +56,9 @@ public class CloudInfo {
     }
 
     void shutdown() {
-        computeService.getContext().close();
+        if (computeService != null) {
+            computeService.getContext().close();
+        }
     }
 
     // show all support clouds

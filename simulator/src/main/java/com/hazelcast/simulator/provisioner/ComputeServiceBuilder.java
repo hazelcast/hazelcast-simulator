@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.Arrays.asList;
@@ -80,6 +81,10 @@ class ComputeServiceBuilder {
         String cloudProvider = properties.get("CLOUD_PROVIDER");
         String identity = properties.get("CLOUD_IDENTITY");
         String credential = properties.get("CLOUD_CREDENTIAL");
+
+        if (isStatic(cloudProvider)) {
+            return null;
+        }
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Using CLOUD_PROVIDER: " + cloudProvider);

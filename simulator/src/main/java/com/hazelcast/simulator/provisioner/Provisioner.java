@@ -252,7 +252,9 @@ public class Provisioner {
         }
 
         // shutdown compute service (which holds another thread pool)
-        computeService.getContext().close();
+        if (computeService != null) {
+            computeService.getContext().close();
+        }
 
         echo("Done!");
     }
@@ -467,7 +469,7 @@ public class Provisioner {
         try {
             run(args, init(args));
         } catch (Exception e) {
-            exitWithError(LOGGER, "Could not provision machines", e);
+            exitWithError(LOGGER, "Could not execute command", e);
         }
     }
 }
