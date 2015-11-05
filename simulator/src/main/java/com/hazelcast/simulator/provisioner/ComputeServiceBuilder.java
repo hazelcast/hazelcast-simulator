@@ -53,8 +53,28 @@ class ComputeServiceBuilder {
         this.properties = properties;
     }
 
+    static void ensurePublicPrivateKeyExist(File publicKey, File privateKey) {
+        if (!publicKey.exists()) {
+            throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " not found." + NEW_LINE
+                    + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
+        }
+        if (!privateKey.exists()) {
+            throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " was found, "
+                    + "but private key " + privateKey.getAbsolutePath() + " is missing" + NEW_LINE
+                    + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
+        }
+    }
+
+    static ContextBuilder newContextBuilder(String cloudProvider) {
+        try {
+            return newBuilder(cloudProvider);
+        } catch (NoSuchElementException e) {
+            throw new CommandLineExitException("Unrecognized cloud-provider [" + cloudProvider + ']');
+        }
+    }
+
     ComputeService build() {
-        ensurePublicPrivateKeyExist();
+        ensurePublicPrivateKeyExist(PUBLIC_KEY, PRIVATE_KEY);
 
         String cloudProvider = properties.get("CLOUD_PROVIDER");
         String identity = properties.get("CLOUD_IDENTITY");
@@ -72,35 +92,15 @@ class ComputeServiceBuilder {
                 .getComputeService();
     }
 
-    private ContextBuilder newContextBuilder(String cloudProvider) {
-        try {
-            return newBuilder(cloudProvider);
-        } catch (NoSuchElementException e) {
-            throw new CommandLineExitException("Unrecognized cloud-provider [" + cloudProvider + ']');
-        }
-    }
-
-    private List<AbstractModule> getModules() {
-        return asList(new SLF4JLoggingModule(), new SshjSshClientModule());
-    }
-
-    private void ensurePublicPrivateKeyExist() {
-        if (!PUBLIC_KEY.exists()) {
-            throw new CommandLineExitException("Public key " + PUBLIC_KEY.getAbsolutePath() + " not found." + NEW_LINE
-                    + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
-        }
-        if (!PRIVATE_KEY.exists()) {
-            throw new CommandLineExitException("Public key " + PUBLIC_KEY.getAbsolutePath() + " was found, "
-                    + "but private key " + PRIVATE_KEY.getAbsolutePath() + " is missing" + NEW_LINE
-                    + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
-        }
-    }
-
     private Properties newOverrideProperties() {
         // http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties newProperties = new Properties();
         newProperties.setProperty(POLL_INITIAL_PERIOD, this.properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
         newProperties.setProperty(POLL_MAX_PERIOD, this.properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));
         return newProperties;
+    }
+
+    private List<AbstractModule> getModules() {
+        return asList(new SLF4JLoggingModule(), new SshjSshClientModule());
     }
 }

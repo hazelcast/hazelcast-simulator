@@ -140,4 +140,12 @@ public class TestEnvironmentUtils {
             deleteQuiet(privateKeyFile);
         }
     }
+
+    public static File getPublicKeyFile() {
+        return publicKeyFile;
+    }
+
+    public static File getPrivateKeyFile() {
+        return privateKeyFile;
+    }
 }
