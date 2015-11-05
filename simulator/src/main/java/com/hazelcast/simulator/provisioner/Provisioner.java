@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.AgentsFile;
-import com.hazelcast.simulator.common.GitInfo;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -39,6 +38,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
+import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureNotStaticCloudProvider;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
@@ -86,6 +89,10 @@ public class Provisioner {
     }
 
     public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, int machineWarmupSeconds) {
+        echo("Hazelcast Simulator Provisioner");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s", SIMULATOR_HOME);
+
         this.properties = properties;
         this.computeService = computeService;
         this.bash = bash;
@@ -399,13 +406,13 @@ public class Provisioner {
         return initScript;
     }
 
-    private void echo(String s, Object... args) {
-        LOGGER.info(s == null ? "null" : String.format(s, args));
+    private void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 
-    private void echoImportant(String s, Object... args) {
+    private void echoImportant(String message, Object... args) {
         echo(HORIZONTAL_RULER);
-        echo(s, args);
+        echo(message, args);
         echo(HORIZONTAL_RULER);
     }
 
@@ -457,13 +464,7 @@ public class Provisioner {
 
     public static void main(String[] args) {
         try {
-            LOGGER.info("Hazelcast Simulator Provisioner");
-            LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(),
-                    GitInfo.getCommitIdAbbrev(), GitInfo.getBuildTime()));
-            LOGGER.info(format("SIMULATOR_HOME: %s", SIMULATOR_HOME));
-
-            Provisioner provisioner = ProvisionerCli.init(args);
-            ProvisionerCli.run(args, provisioner);
+            run(args, init(args));
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not provision machines", e);
         }

@@ -33,6 +33,7 @@ import java.util.Properties;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.Arrays.asList;
+import static org.jclouds.ContextBuilder.newBuilder;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
@@ -64,7 +65,6 @@ class ComputeServiceBuilder {
         }
 
         ContextBuilder contextBuilder = newContextBuilder(cloudProvider);
-
         return contextBuilder.overrides(newOverrideProperties())
                 .credentials(identity, credential)
                 .modules(getModules())
@@ -74,7 +74,7 @@ class ComputeServiceBuilder {
 
     private ContextBuilder newContextBuilder(String cloudProvider) {
         try {
-            return ContextBuilder.newBuilder(cloudProvider);
+            return newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
             throw new CommandLineExitException("Unrecognized cloud-provider [" + cloudProvider + ']');
         }
@@ -97,7 +97,7 @@ class ComputeServiceBuilder {
     }
 
     private Properties newOverrideProperties() {
-        //http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
+        // http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties newProperties = new Properties();
         newProperties.setProperty(POLL_INITIAL_PERIOD, this.properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
         newProperties.setProperty(POLL_MAX_PERIOD, this.properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));

@@ -35,8 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
-import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
 import static com.hazelcast.simulator.coordinator.FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
@@ -45,7 +44,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
@@ -397,13 +395,8 @@ public final class Coordinator {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("Hazelcast Simulator Coordinator");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
-
         try {
-            Coordinator coordinator = CoordinatorCli.init(args);
-            coordinator.run();
+            init(args).run();
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run testsuite", e);
         }

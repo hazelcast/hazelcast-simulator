@@ -23,6 +23,10 @@ import org.jclouds.domain.Location;
 
 import java.util.Set;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.provisioner.CloudInfoCli.init;
+import static com.hazelcast.simulator.provisioner.CloudInfoCli.run;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -41,6 +45,11 @@ public class CloudInfo {
     private final ComputeService computeService;
 
     public CloudInfo(String locationId, boolean verbose, ComputeService computeService) {
+        LOGGER.info("Hazelcast Simulator CloudInfo");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(),
+                getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
+
         this.locationId = locationId;
         this.verbose = verbose;
         this.computeService = computeService;
@@ -111,13 +120,8 @@ public class CloudInfo {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("Hazelcast Simulator CloudInfo");
-        LOGGER.info(format("Version: %s", getSimulatorVersion()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
-
         try {
-            CloudInfo cloudInfo = CloudInfoCli.init(args);
-            CloudInfoCli.run(args, cloudInfo);
+            run(args, init(args));
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not retrieve cloud information!", e);
         }
