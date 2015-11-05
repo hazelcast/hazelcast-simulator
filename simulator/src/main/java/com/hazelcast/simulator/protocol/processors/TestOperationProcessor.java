@@ -176,6 +176,7 @@ public class TestOperationProcessor extends OperationProcessor {
         }
 
         @Override
+        @SuppressWarnings("PMD.AvoidCatchingThrowable")
         public final void run() {
             try {
                 doRun();

@@ -45,6 +45,7 @@ public abstract class OperationProcessor {
     public void shutdown() {
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     public final ResponseType process(SimulatorOperation operation, SimulatorAddress sourceAddress) {
         OperationType operationType = getOperationType(operation);
         if (LOGGER.isTraceEnabled()) {
