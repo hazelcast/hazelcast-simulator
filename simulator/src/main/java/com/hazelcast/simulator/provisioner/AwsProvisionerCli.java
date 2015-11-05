@@ -15,14 +15,25 @@
  */
 package com.hazelcast.simulator.provisioner;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.PropertiesCredentials;
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import java.io.File;
+
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
 
@@ -56,7 +67,20 @@ final class AwsProvisionerCli {
         AwsProvisionerCli cli = new AwsProvisionerCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        return new AwsProvisioner(loadSimulatorProperties(options, cli.propertiesFileSpec));
+        SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+        ComponentRegistry componentRegistry = loadComponentRegister(new File(AgentsFile.NAME), false);
+
+        try {
+            String awsCredentialsPath = properties.get("AWS_CREDENTIALS", "awscredentials.properties");
+            File credentialsFile = new File(awsCredentialsPath);
+            AWSCredentials credentials = new PropertiesCredentials(credentialsFile);
+            AmazonEC2 ec2 = new AmazonEC2Client(credentials);
+            AmazonElasticLoadBalancingClient elb = new AmazonElasticLoadBalancingClient(credentials);
+
+            return new AwsProvisioner(ec2, elb, componentRegistry, properties);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Credentials file could not be loaded", e);
+        }
     }
 
     static void run(String[] args, AwsProvisioner provisioner) {

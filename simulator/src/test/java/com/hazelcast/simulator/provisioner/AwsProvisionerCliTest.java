@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -39,11 +40,6 @@ public class AwsProvisionerCliTest {
         setExitExceptionSecurityManagerWithStatusZero();
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
-
-        awsCredentials = new File("awscredentials.properties");
-        ensureExistingFile(awsCredentials);
-        appendText("accessKey=foo" + NEW_LINE, awsCredentials);
-        appendText("secretKey=bar" + NEW_LINE, awsCredentials);
     }
 
     @AfterClass
@@ -51,12 +47,20 @@ public class AwsProvisionerCliTest {
         resetSecurityManager();
         resetUserDir();
         deleteAgentsFile();
-
-        deleteQuiet(awsCredentials);
     }
 
     @Test
     public void testInit() {
+        createAwsCredentialsFile();
+        try {
+            provisioner = init(getArgs());
+        } finally {
+            deleteQuiet(awsCredentials);
+        }
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testInit_withException() {
         provisioner = init(getArgs());
     }
 
@@ -105,6 +109,13 @@ public class AwsProvisionerCliTest {
         verify(provisioner).addAgentsToLoadBalancer(eq("172.16.16.1"));
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
+    }
+
+    private static void createAwsCredentialsFile() {
+        awsCredentials = new File("awscredentials.properties");
+        ensureExistingFile(awsCredentials);
+        appendText("accessKey=foo" + NEW_LINE, awsCredentials);
+        appendText("secretKey=bar" + NEW_LINE, awsCredentials);
     }
 
     private String[] getArgs() {
