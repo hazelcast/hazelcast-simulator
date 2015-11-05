@@ -65,6 +65,7 @@ class ComputeServiceBuilder {
         }
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     static ContextBuilder newContextBuilder(String cloudProvider) {
         try {
             return newBuilder(cloudProvider);

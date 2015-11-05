@@ -88,6 +88,7 @@ public class MapTransactionGetForUpdateTest {
         private TxnCounter count = new TxnCounter();
 
         @Override
+        @SuppressWarnings("PMD.PreserveStackTrace")
         public void run() {
             TransactionOptions options = new TransactionOptions()
                     .setTransactionType(transactionType)

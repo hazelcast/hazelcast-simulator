@@ -92,6 +92,7 @@ public class MapTransactionContextConflictTest {
         private final TxnCounter count = new TxnCounter();
 
         @Override
+        @SuppressWarnings("PMD.PreserveStackTrace")
         public void run() {
             while (!testContext.isStopped()) {
 

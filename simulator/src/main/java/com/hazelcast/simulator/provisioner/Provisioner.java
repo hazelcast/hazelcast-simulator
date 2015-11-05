@@ -257,6 +257,7 @@ public class Provisioner {
         echo("Done!");
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     private void scaleUp(int delta) {
         echoImportant("Provisioning %s %s machines", delta, properties.get("CLOUD_PROVIDER"));
         echo("Current number of machines: " + componentRegistry.agentCount());

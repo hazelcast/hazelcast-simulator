@@ -31,6 +31,7 @@ public final class CliUtils {
     private CliUtils() {
     }
 
+    @SuppressWarnings("PMD.PreserveStackTrace")
     public static OptionSet initOptionsWithHelp(OptionParser parser, String[] args) {
         try {
             OptionSpec helpSpec = parser.accepts("help", "Shows the help.").forHelp();
