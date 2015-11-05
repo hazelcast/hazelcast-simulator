@@ -138,6 +138,7 @@ class CoordinatorUploader {
                 spawner.spawn(new Runnable() {
                     @Override
                     public void run() {
+                        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/%s", SIMULATOR_VERSION, targetPath));
                         for (File sourceFile : sourceFiles) {
                             bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
                         }
@@ -169,6 +170,7 @@ class CoordinatorUploader {
                 spawner.spawn(new Runnable() {
                     @Override
                     public void run() {
+                        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/%s", SIMULATOR_VERSION, targetPath));
                         for (File sourceFile : sourceFiles) {
                             bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
                         }
