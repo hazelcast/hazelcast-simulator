@@ -199,15 +199,7 @@ final class CoordinatorCli {
         CoordinatorCli cli = new CoordinatorCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
-        TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
-                options.valueOf(cli.testSuiteIdSpec));
-        testSuite.setDurationSeconds(getDurationSeconds(options, cli));
-        testSuite.setWaitForTestCase(options.has(cli.waitForTestCaseSpec));
-        testSuite.setFailFast(options.valueOf(cli.failFastSpec));
-        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
-        if (testSuite.getDurationSeconds() == 0 && !testSuite.isWaitForTestCase()) {
-            throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
-        }
+        TestSuite testSuite = getTestSuite(cli, options);
 
         ComponentRegistry componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
         componentRegistry.addTests(testSuite);
@@ -261,6 +253,19 @@ final class CoordinatorCli {
         }
 
         return new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters);
+    }
+
+    private static TestSuite getTestSuite(CoordinatorCli cli, OptionSet options) {
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
+                options.valueOf(cli.testSuiteIdSpec));
+        testSuite.setDurationSeconds(getDurationSeconds(options, cli));
+        testSuite.setWaitForTestCase(options.has(cli.waitForTestCaseSpec));
+        testSuite.setFailFast(options.valueOf(cli.failFastSpec));
+        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
+        if (testSuite.getDurationSeconds() == 0 && !testSuite.isWaitForTestCase()) {
+            throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
+        }
+        return testSuite;
     }
 
     private static File getTestSuiteFile(OptionSet options) {
