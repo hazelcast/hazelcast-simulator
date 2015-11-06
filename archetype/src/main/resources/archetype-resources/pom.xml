@@ -60,7 +60,7 @@
                         <phase>process-classes</phase>
                         <configuration>
                             <target>
-                                <chmod file="\${basedir}/workdir/*.sh" perm="755"/>
+                                <chmod file="workdir/run.sh" perm="755"/>
                             </target>
                         </configuration>
                         <goals>
