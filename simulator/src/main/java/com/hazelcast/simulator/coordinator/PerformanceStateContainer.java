@@ -57,12 +57,12 @@ public class PerformanceStateContainer {
         if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
             return " (performance not available)";
         }
-        return String.format("%s ops %s ops/s %s µs (%sth) %s µs (avg) %s µs (max)",
+        return String.format("%s ops %s ops/s %s µs (avg) %s µs (%sth) %s µs (max)",
                 formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
+                formatDouble(performanceState.getIntervalAvgLatency(), LATENCY_FORMAT_LENGTH),
                 formatLong(performanceState.getIntervalPercentileLatency(), LATENCY_FORMAT_LENGTH),
                 INTERVAL_LATENCY_PERCENTILE,
-                formatDouble(performanceState.getIntervalAvgLatency(), LATENCY_FORMAT_LENGTH),
                 formatLong(performanceState.getIntervalMaxLatency(), LATENCY_FORMAT_LENGTH)
         );
     }

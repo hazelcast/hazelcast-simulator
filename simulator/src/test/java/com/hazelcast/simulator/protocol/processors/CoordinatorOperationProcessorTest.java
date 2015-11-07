@@ -134,7 +134,7 @@ public class CoordinatorOperationProcessorTest {
     @Test
     public void processPerformanceState() {
         PerformanceStateOperation operation = new PerformanceStateOperation();
-        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 23, 33.0d, 42));
+        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 33.0d, 23, 42));
 
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);

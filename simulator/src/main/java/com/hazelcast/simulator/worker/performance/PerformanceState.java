@@ -31,8 +31,8 @@ public class PerformanceState {
     private double intervalThroughput;
     private double totalThroughput;
 
-    private long intervalMaxLatency;
     private double intervalAvgLatency;
+    private long intervalMaxLatency;
     private long intervalPercentileLatency;
 
     public PerformanceState() {
@@ -41,13 +41,13 @@ public class PerformanceState {
     }
 
     public PerformanceState(long operationCount, double intervalThroughput, double totalThroughput,
-                            long intervalPercentileLatency, double intervalAvgLatency, long intervalMaxLatency) {
+                            double intervalAvgLatency, long intervalPercentileLatency, long intervalMaxLatency) {
         this.operationCount = operationCount;
         this.intervalThroughput = intervalThroughput;
         this.totalThroughput = totalThroughput;
 
-        this.intervalPercentileLatency = intervalPercentileLatency;
         this.intervalAvgLatency = intervalAvgLatency;
+        this.intervalPercentileLatency = intervalPercentileLatency;
         this.intervalMaxLatency = intervalMaxLatency;
     }
 
@@ -61,16 +61,16 @@ public class PerformanceState {
             intervalThroughput = other.intervalThroughput;
             totalThroughput = other.totalThroughput;
 
-            intervalPercentileLatency = other.intervalPercentileLatency;
             intervalAvgLatency = other.intervalAvgLatency;
+            intervalPercentileLatency = other.intervalPercentileLatency;
             intervalMaxLatency = other.intervalMaxLatency;
         } else {
             operationCount += other.operationCount;
             intervalThroughput += other.intervalThroughput;
             totalThroughput += other.totalThroughput;
 
-            intervalPercentileLatency = max(intervalPercentileLatency, other.intervalPercentileLatency);
             intervalAvgLatency = max(intervalAvgLatency, other.intervalAvgLatency);
+            intervalPercentileLatency = max(intervalPercentileLatency, other.intervalPercentileLatency);
             intervalMaxLatency = max(intervalMaxLatency, other.intervalMaxLatency);
         }
     }
@@ -91,12 +91,12 @@ public class PerformanceState {
         return intervalThroughput;
     }
 
-    public long getIntervalPercentileLatency() {
-        return intervalPercentileLatency;
-    }
-
     public double getIntervalAvgLatency() {
         return intervalAvgLatency;
+    }
+
+    public long getIntervalPercentileLatency() {
+        return intervalPercentileLatency;
     }
 
     public long getIntervalMaxLatency() {
@@ -109,8 +109,8 @@ public class PerformanceState {
                 + "operationCount=" + operationCount
                 + ", intervalThroughput=" + intervalThroughput
                 + ", totalThroughput=" + totalThroughput
-                + ", intervalPercentileLatency=" + intervalPercentileLatency
                 + ", intervalAvgLatency=" + intervalAvgLatency
+                + ", intervalPercentileLatency=" + intervalPercentileLatency
                 + ", intervalMaxLatency=" + intervalMaxLatency
                 + '}';
     }

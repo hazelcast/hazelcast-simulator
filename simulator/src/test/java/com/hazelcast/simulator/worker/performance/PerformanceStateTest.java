@@ -15,9 +15,9 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd() {
-        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 150, 175.0d, 200);
+        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 175.0d, 150, 200);
 
-        addState.add(new PerformanceState(150, 6.0, 12.0, 80, 90.0d, 100));
+        addState.add(new PerformanceState(150, 6.0, 12.0, 90.0d, 80, 100));
 
         assertEquals(250, addState.getOperationCount());
         assertEquals(11.0, addState.getIntervalThroughput(), 0.00001);
@@ -29,7 +29,7 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd_emptyState() {
-        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 300, 550.0d, 800);
+        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 550.0d, 300, 800);
 
         addState.add(new PerformanceState());
 
@@ -45,7 +45,7 @@ public class PerformanceStateTest {
     public void testAdd_toEmptyState() {
         PerformanceState addState = new PerformanceState();
 
-        addState.add(new PerformanceState(100, 5.0, 10.0, 400, 450.0d, 500));
+        addState.add(new PerformanceState(100, 5.0, 10.0, 450.0d, 400, 500));
 
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
