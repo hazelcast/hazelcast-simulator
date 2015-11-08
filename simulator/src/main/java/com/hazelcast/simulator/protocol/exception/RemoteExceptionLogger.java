@@ -20,7 +20,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
 
 /**
- * Sends exceptions to a {@link ServerConnector}, which will send it to the connected parent Simulator component.
+ * Sends exceptions to the parent Simulator component (via a {@link ServerConnector}).
  */
 public class RemoteExceptionLogger extends AbstractExceptionLogger {
 
