@@ -16,19 +16,32 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.configuration.WorkerServerConfiguration;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.TestProcessorManager;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.exception.ExceptionType;
 import com.hazelcast.simulator.protocol.exception.FileExceptionLogger;
 import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
+import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
+import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
+import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
+import com.hazelcast.simulator.protocol.handler.MessageEncoder;
+import com.hazelcast.simulator.protocol.handler.MessageTestConsumeHandler;
+import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseHandler;
+import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -40,11 +53,52 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
  */
 public class WorkerConnector extends AbstractServerConnector {
 
-    private final WorkerServerConfiguration workerServerConfiguration;
+    private final OperationProcessor processor;
 
-    WorkerConnector(WorkerServerConfiguration configuration) {
-        super(configuration);
-        this.workerServerConfiguration = configuration;
+    private final SimulatorAddress localAddress;
+    private final int addressIndex;
+
+    private final ConnectionManager connectionManager;
+    private final TestProcessorManager testProcessorManager;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
+
+    WorkerConnector(OperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+                    SimulatorAddress localAddress, int port, ConnectionManager connectionManager) {
+        super(futureMap, localAddress, port);
+        this.processor = processor;
+
+        this.localAddress = localAddress;
+        this.addressIndex = localAddress.getAddressIndex();
+
+        this.connectionManager = connectionManager;
+        this.testProcessorManager = new TestProcessorManager(localAddress);
+        this.futureMap = futureMap;
+    }
+
+    @Override
+    void configurePipeline(ChannelPipeline pipeline, AbstractServerConnector serverConnector) {
+        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
+        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
+        pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
+        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
+        pipeline.addLast("testMessageConsumeHandler", new MessageTestConsumeHandler(testProcessorManager, localAddress));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), futureMap, addressIndex));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
+    }
+
+    @Override
+    void connectorShutdown() {
+        processor.shutdown();
+    }
+
+    @Override
+    ChannelGroup getChannelGroup() {
+        connectionManager.waitForAtLeastOneChannel();
+        return connectionManager.getChannels();
     }
 
     /**
@@ -88,10 +142,7 @@ public class WorkerConnector extends AbstractServerConnector {
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         ConnectionManager connectionManager = new ConnectionManager();
 
-        WorkerServerConfiguration configuration = new WorkerServerConfiguration(processor, futureMap, connectionManager,
-                localAddress, port);
-
-        WorkerConnector connector = new WorkerConnector(configuration);
+        WorkerConnector connector = new WorkerConnector(processor, futureMap, localAddress, port, connectionManager);
 
         if (useRemoteLogger) {
             ((RemoteExceptionLogger) exceptionLogger).setServerConnector(connector);
@@ -107,7 +158,7 @@ public class WorkerConnector extends AbstractServerConnector {
      * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
      */
     public TestOperationProcessor getTest(int testIndex) {
-        return workerServerConfiguration.getTest(testIndex);
+        return testProcessorManager.getTest(testIndex);
     }
 
     /**
@@ -118,7 +169,7 @@ public class WorkerConnector extends AbstractServerConnector {
      *                  {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
      */
     public void addTest(int testIndex, TestOperationProcessor processor) {
-        workerServerConfiguration.addTest(testIndex, processor);
+        testProcessorManager.addTest(testIndex, processor);
     }
 
     /**
@@ -127,7 +178,7 @@ public class WorkerConnector extends AbstractServerConnector {
      * @param testIndex the index of the remote Simulator Test
      */
     public void removeTest(int testIndex) {
-        workerServerConfiguration.removeTest(testIndex);
+        testProcessorManager.removeTest(testIndex);
     }
 
     /**
@@ -144,5 +195,9 @@ public class WorkerConnector extends AbstractServerConnector {
     public ResponseFuture submitFromTest(SimulatorAddress testAddress, SimulatorAddress destination,
                                          SimulatorOperation operation) {
         return submit(testAddress, destination, operation);
+    }
+
+    public OperationProcessor getProcessor() {
+        return processor;
     }
 }

@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
@@ -35,14 +34,12 @@ public class WorkerConnectorTest {
     }
 
     private void assertWorkerConnector(WorkerConnector connector) {
-        ServerConfiguration configuration = connector.getConfiguration();
-
-        SimulatorAddress address = configuration.getLocalAddress();
+        SimulatorAddress address = connector.getAddress();
         assertEquals(AddressLevel.WORKER, address.getAddressLevel());
         assertEquals(WORKER_INDEX, address.getWorkerIndex());
         assertEquals(AGENT_INDEX, address.getAgentIndex());
 
-        assertEquals(PORT, configuration.getLocalPort());
-        assertEquals(WorkerOperationProcessor.class, configuration.getProcessor().getClass());
+        assertEquals(PORT, connector.getPort());
+        assertEquals(WorkerOperationProcessor.class, connector.getProcessor().getClass());
     }
 }

@@ -17,30 +17,88 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.protocol.configuration.AgentServerConfiguration;
+import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
 import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
+import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionType;
 import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
+import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
+import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
+import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
+import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
+import com.hazelcast.simulator.protocol.handler.MessageEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseHandler;
+import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
 public class AgentConnector extends AbstractServerConnector {
 
-    private final AgentServerConfiguration serverConfiguration;
+    private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
-    AgentConnector(AgentServerConfiguration configuration) {
-        super(configuration);
-        this.serverConfiguration = configuration;
+    private final AgentOperationProcessor processor;
+    private final ConcurrentMap<String, ResponseFuture> futureMap;
+
+    private final SimulatorAddress localAddress;
+    private final int addressIndex;
+
+    private final ConnectionManager connectionManager;
+    private final WorkerJvmManager workerJvmManager;
+
+    AgentConnector(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
+                   SimulatorAddress localAddress, int port, ConnectionManager connectionManager,
+                   WorkerJvmManager workerJvmManager) {
+        super(futureMap, localAddress, port);
+
+        this.processor = processor;
+        this.futureMap = futureMap;
+
+        this.localAddress = localAddress;
+        this.addressIndex = localAddress.getAddressIndex();
+
+        this.connectionManager = connectionManager;
+        this.workerJvmManager = workerJvmManager;
+    }
+
+    @Override
+    void configurePipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector) {
+        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
+        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
+        pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
+        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
+        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, clientConnectorManager));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
+    }
+
+    @Override
+    void connectorShutdown() {
+        processor.shutdown();
+    }
+
+    @Override
+    ChannelGroup getChannelGroup() {
+        connectionManager.waitForAtLeastOneChannel();
+        return connectionManager.getChannels();
     }
 
     /**
@@ -58,10 +116,8 @@ public class AgentConnector extends AbstractServerConnector {
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         ConnectionManager connectionManager = new ConnectionManager();
 
-        AgentServerConfiguration configuration = new AgentServerConfiguration(processor, futureMap, connectionManager,
-                workerJvmManager, localAddress, port);
-
-        AgentConnector connector = new AgentConnector(configuration);
+        AgentConnector connector = new AgentConnector(processor, futureMap, localAddress, port, connectionManager,
+                workerJvmManager);
 
         exceptionLogger.setServerConnector(connector);
         return connector;
@@ -76,12 +132,12 @@ public class AgentConnector extends AbstractServerConnector {
      * @return the {@link SimulatorAddress} of the Simulator Worker
      */
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
-        ClientConfiguration clientConfiguration = serverConfiguration.getClientConfiguration(workerIndex, workerHost, workerPort,
-                this);
-        ClientConnector client = new ClientConnector(clientConfiguration);
-        client.start();
+        ClientConfiguration clientConfiguration = new AgentClientConfiguration(this, connectionManager, workerJvmManager,
+                processor, futureMap, localAddress, workerIndex, workerHost, workerPort);
+        ClientConnector clientConnector = new ClientConnector(clientConfiguration);
+        clientConnector.start();
 
-        serverConfiguration.addWorker(workerIndex, client);
+        clientConnectorManager.addClient(workerIndex, clientConnector);
 
         return clientConfiguration.getRemoteAddress();
     }
@@ -92,6 +148,6 @@ public class AgentConnector extends AbstractServerConnector {
      * @param workerIndex the index of the remote Simulator Worker
      */
     public void removeWorker(int workerIndex) {
-        serverConfiguration.removeWorker(workerIndex);
+        clientConnectorManager.removeClient(workerIndex);
     }
 }

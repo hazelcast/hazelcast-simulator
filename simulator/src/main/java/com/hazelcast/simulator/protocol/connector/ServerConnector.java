@@ -15,16 +15,20 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
+import java.util.concurrent.ConcurrentMap;
+
 /**
  * Connector which listens for incoming Simulator component connections.
  */
 public interface ServerConnector {
+
+    int DEFAULT_SHUTDOWN_QUIET_PERIOD = 0;
+    int DEFAULT_SHUTDOWN_TIMEOUT = 15;
 
     /**
      * Starts to listen on the incoming port.
@@ -44,11 +48,18 @@ public interface ServerConnector {
     SimulatorAddress getAddress();
 
     /**
-     * Returns the {@link ServerConfiguration} of this connector.
+     * Returns the port on which the local Simulator component listens.
      *
-     * @return the {@link ServerConfiguration}
+     * @return the local port
      */
-    ServerConfiguration getConfiguration();
+    int getPort();
+
+    /**
+     * Returns the map for {@link ResponseFuture} instances.
+     *
+     * @return the {@link ResponseFuture} map
+     */
+    ConcurrentMap<String, ResponseFuture> getFutureMap();
 
     /**
      * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.

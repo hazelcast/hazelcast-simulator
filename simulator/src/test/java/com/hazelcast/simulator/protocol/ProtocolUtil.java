@@ -245,7 +245,7 @@ class ProtocolUtil {
 
     private static <C extends ServerConnector> void assertEmptyFutureMaps(List<C> connectorList, String connectorName) {
         for (C connector : connectorList) {
-            ConcurrentMap<String, ResponseFuture> futureMap = connector.getConfiguration().getFutureMap();
+            ConcurrentMap<String, ResponseFuture> futureMap = connector.getFutureMap();
             int futureMapSize = futureMap.size();
             if (futureMapSize > 0) {
                 LOGGER.error("Future entries: " + futureMap.toString());

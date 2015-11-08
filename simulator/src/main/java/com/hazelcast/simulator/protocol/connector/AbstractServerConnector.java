@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.configuration.ServerConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -27,7 +26,9 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -41,8 +42,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
-import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
@@ -68,17 +67,25 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
-    private final ServerConfiguration configuration;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
     private final SimulatorAddress localAddress;
+    private final int addressIndex;
+    private final int port;
 
     private Channel channel;
 
-    AbstractServerConnector(ServerConfiguration configuration) {
-        this.configuration = configuration;
-        this.futureMap = configuration.getFutureMap();
-        this.localAddress = configuration.getLocalAddress();
+    AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port) {
+        this.futureMap = futureMap;
+        this.localAddress = localAddress;
+        this.addressIndex = localAddress.getAddressIndex();
+        this.port = port;
     }
+
+    abstract void configurePipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector);
+
+    abstract void connectorShutdown();
+
+    abstract ChannelGroup getChannelGroup();
 
     @Override
     public void start() {
@@ -88,18 +95,18 @@ abstract class AbstractServerConnector implements ServerConnector {
         ChannelFuture future = bootstrap.bind().syncUninterruptibly();
         channel = future.channel();
 
-        LOGGER.info(format("ServerConnector %s listens on %s", configuration.getLocalAddress(), channel.localAddress()));
+        LOGGER.info(format("ServerConnector %s listens on %s", localAddress, channel.localAddress()));
     }
 
     private ServerBootstrap getServerBootstrap() {
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .localAddress(new InetSocketAddress(configuration.getLocalPort()))
+                .localAddress(new InetSocketAddress(port))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configuration.configurePipeline(channel.pipeline(), AbstractServerConnector.this);
+                        configurePipeline(channel.pipeline(), AbstractServerConnector.this);
                     }
                 });
         return bootstrap;
@@ -108,7 +115,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     @Override
     public void shutdown() {
         messageQueueThread.shutdown();
-        configuration.shutdown();
+        connectorShutdown();
         channel.close().syncUninterruptibly();
 
         workerGroup.
@@ -121,25 +128,22 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public SimulatorAddress getAddress() {
-        return configuration.getLocalAddress();
+        return localAddress;
     }
 
     @Override
-    public ServerConfiguration getConfiguration() {
-        return configuration;
+    public int getPort() {
+        return port;
+    }
+
+    @Override
+    public ConcurrentMap<String, ResponseFuture> getFutureMap() {
+        return futureMap;
     }
 
     @Override
     public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation) {
         return submit(localAddress, destination, operation);
-    }
-
-    protected ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
-        String futureKey = createFutureKey(source, message.getMessageId(), 0);
-        ResponseFuture responseFuture = createInstance(messageQueueFutures, futureKey);
-        messageQueue.add(message);
-        return responseFuture;
     }
 
     @Override
@@ -167,18 +171,26 @@ abstract class AbstractServerConnector implements ServerConnector {
         return writeAsync(message);
     }
 
+    ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+        String futureKey = createFutureKey(source, message.getMessageId(), 0);
+        ResponseFuture responseFuture = createInstance(messageQueueFutures, futureKey);
+        messageQueue.add(message);
+        return responseFuture;
+    }
+
     private SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
         return new SimulatorMessage(dst, src, messageIds.incrementAndGet(), getOperationType(op), toJson(op));
     }
 
     private ResponseFuture writeAsync(SimulatorMessage message) {
         long messageId = message.getMessageId();
-        String futureKey = createFutureKey(message.getSource(), messageId, configuration.getLocalAddressIndex());
+        String futureKey = createFutureKey(message.getSource(), messageId, addressIndex);
         ResponseFuture future = createInstance(futureMap, futureKey);
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
+            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, localAddress, futureKey));
         }
-        configuration.getChannelGroup().writeAndFlush(message);
+        getChannelGroup().writeAndFlush(message);
 
         return future;
     }

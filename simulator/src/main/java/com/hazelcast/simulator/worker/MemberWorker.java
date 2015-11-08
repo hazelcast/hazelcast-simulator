@@ -96,7 +96,7 @@ public final class MemberWorker implements Worker {
         if (workerPerformanceMonitorIntervalSeconds < 1) {
             return null;
         }
-        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getConfiguration().getProcessor();
+        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
         return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), workerPerformanceMonitorIntervalSeconds);
     }
 
