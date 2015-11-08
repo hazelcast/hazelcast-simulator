@@ -27,7 +27,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 
-@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class MainUI extends JFrame {
 
     private final Model model = new Model();

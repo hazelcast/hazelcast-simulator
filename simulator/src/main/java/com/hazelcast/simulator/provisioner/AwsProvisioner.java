@@ -61,7 +61,6 @@ import static java.lang.String.format;
 /**
  * An AWS specific provisioning class which is using the AWS SDK to create AWS instances and AWS elastic load balancer.
  */
-@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class AwsProvisioner {
 
     // the file which will hold the public domain name of the created load balancer
