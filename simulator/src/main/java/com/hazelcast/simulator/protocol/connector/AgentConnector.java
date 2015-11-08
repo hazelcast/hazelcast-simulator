@@ -21,7 +21,6 @@ import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ExceptionType;
 import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
@@ -43,6 +42,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.exception.ExceptionType.AGENT_EXCEPTION;
 
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
@@ -60,12 +60,13 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     private final ConnectionManager connectionManager;
     private final WorkerJvmManager workerJvmManager;
 
-    AgentConnector(AgentOperationProcessor processor, ConcurrentMap<String, ResponseFuture> futureMap,
-                   SimulatorAddress localAddress, int port, ConnectionManager connectionManager,
-                   WorkerJvmManager workerJvmManager) {
+    AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
+                   WorkerJvmManager workerJvmManager, ConnectionManager connectionManager) {
         super(futureMap, localAddress, port);
 
-        this.processor = processor;
+        RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
+        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager);
+
         this.futureMap = futureMap;
 
         this.localAddress = localAddress;
@@ -76,7 +77,8 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     }
 
     @Override
-    public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress, ConcurrentMap<String, ResponseFuture> futureMap) {
+    public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress,
+                                        ConcurrentMap<String, ResponseFuture> futureMap) {
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
@@ -89,7 +91,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     }
 
     @Override
-    void configureServerPipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector) {
+    void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
         pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
         pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
@@ -121,18 +123,11 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      * @param port             the port for incoming connections
      */
     public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port) {
-        SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
-
-        RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, ExceptionType.AGENT_EXCEPTION);
-        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+        SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
         ConnectionManager connectionManager = new ConnectionManager();
 
-        AgentConnector connector = new AgentConnector(processor, futureMap, localAddress, port, connectionManager,
-                workerJvmManager);
-
-        exceptionLogger.setServerConnector(connector);
-        return connector;
+        return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager);
     }
 
     /**

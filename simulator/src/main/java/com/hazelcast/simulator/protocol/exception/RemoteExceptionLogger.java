@@ -24,13 +24,10 @@ import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
  */
 public class RemoteExceptionLogger extends AbstractExceptionLogger {
 
-    private ServerConnector serverConnector;
+    private final ServerConnector serverConnector;
 
-    public RemoteExceptionLogger(SimulatorAddress localAddress, ExceptionType exceptionType) {
+    public RemoteExceptionLogger(SimulatorAddress localAddress, ExceptionType exceptionType, ServerConnector serverConnector) {
         super(localAddress, exceptionType);
-    }
-
-    public void setServerConnector(ServerConnector serverConnector) {
         this.serverConnector = serverConnector;
     }
 

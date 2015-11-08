@@ -81,7 +81,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         this.port = port;
     }
 
-    abstract void configureServerPipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector);
+    abstract void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector);
 
     abstract void connectorShutdown();
 

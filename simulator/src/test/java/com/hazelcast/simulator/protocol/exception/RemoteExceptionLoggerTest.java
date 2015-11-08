@@ -23,15 +23,12 @@ public class RemoteExceptionLoggerTest {
     private static final long ASSERT_EVENTUALLY_TIMEOUT_SECONDS = 3;
 
     private ServerConnector serverConnector;
-
     private RemoteExceptionLogger exceptionLogger;
 
     @Before
     public void setUp() {
         serverConnector = mock(ServerConnector.class);
-
-        exceptionLogger = new RemoteExceptionLogger(COORDINATOR, WORKER_EXCEPTION);
-        exceptionLogger.setServerConnector(serverConnector);
+        exceptionLogger = new RemoteExceptionLogger(COORDINATOR, WORKER_EXCEPTION, serverConnector);
     }
 
     @Test(expected = IllegalArgumentException.class)
