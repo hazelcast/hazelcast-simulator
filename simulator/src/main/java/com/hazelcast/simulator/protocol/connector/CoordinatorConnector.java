@@ -19,17 +19,23 @@ import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
-import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
-import com.hazelcast.simulator.protocol.configuration.CoordinatorClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
+import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
+import com.hazelcast.simulator.protocol.handler.MessageEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
+import com.hazelcast.simulator.protocol.handler.ResponseHandler;
+import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
+import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import io.netty.channel.ChannelPipeline;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +47,15 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_N
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static java.lang.String.format;
+import static org.junit.Assert.fail;
 
 /**
  * Connector which connects to remote Simulator Agent instances.
  */
-public class CoordinatorConnector {
+public class CoordinatorConnector implements ClientPipelineConfigurator {
+
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorConnector.class);
 
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
@@ -58,6 +68,17 @@ public class CoordinatorConnector {
                                 TestHistogramContainer testHistogramContainer, FailureContainer failureContainer) {
         this.processor = new CoordinatorOperationProcessor(exceptionLogger, testPhaseListenerContainer, performanceStateContainer,
                 testHistogramContainer, failureContainer);
+    }
+
+    @Override
+    public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress,
+                                        ConcurrentMap<String, ResponseFuture> futureMap) {
+        pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, remoteAddress));
+        pipeline.addLast("responseEncoder", new ResponseEncoder(COORDINATOR));
+        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
+        pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, remoteAddress, futureMap));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor));
     }
 
     /**
@@ -86,8 +107,9 @@ public class CoordinatorConnector {
      * @param agentPort  the port of the Simulator Agent
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
-        ClientConfiguration clientConfiguration = new CoordinatorClientConfiguration(processor, agentIndex, agentHost, agentPort);
-        ClientConnector client = new ClientConnector(clientConfiguration);
+        ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+        ClientConnector client = new ClientConnector(this, futureMap, COORDINATOR, COORDINATOR.getChild(agentIndex), agentIndex,
+                agentHost, agentPort);
         client.start();
 
         agents.put(agentIndex, client);
@@ -151,15 +173,17 @@ public class CoordinatorConnector {
     }
 
     /**
-     * Returns a list of {@link ClientConfiguration} from all connected {@link ClientConnector} instances.
-     *
-     * @return a list of {@link ClientConfiguration}
+     * Asserts that the {@link ResponseFuture} maps from all connected {@link ClientConnector} instances are empty.
      */
-    public List<ClientConfiguration> getConfigurationList() {
-        List<ClientConfiguration> configurations = new ArrayList<ClientConfiguration>(agents.size());
+    public void assertEmptyFutureMaps() {
         for (ClientConnector clientConnector : agents.values()) {
-            configurations.add(clientConnector.getConfiguration());
+            ConcurrentMap<String, ResponseFuture> futureMap = clientConnector.getFutureMap();
+            SimulatorAddress remoteAddress = clientConnector.getRemoteAddress();
+            int futureMapSize = futureMap.size();
+            if (futureMapSize > 0) {
+                LOGGER.error("Future entries: " + futureMap.toString());
+                fail(format("FutureMap of ClientConnector %s is not empty", remoteAddress));
+            }
         }
-        return configurations;
     }
 }

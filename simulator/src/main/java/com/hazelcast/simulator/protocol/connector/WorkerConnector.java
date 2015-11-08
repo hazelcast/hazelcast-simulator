@@ -76,7 +76,7 @@ public class WorkerConnector extends AbstractServerConnector {
     }
 
     @Override
-    void configurePipeline(ChannelPipeline pipeline, AbstractServerConnector serverConnector) {
+    void configureServerPipeline(ChannelPipeline pipeline, AbstractServerConnector serverConnector) {
         pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
         pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));

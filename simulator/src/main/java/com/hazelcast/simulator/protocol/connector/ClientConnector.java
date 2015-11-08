@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -39,8 +38,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_QUIET_PERIOD;
-import static com.hazelcast.simulator.protocol.configuration.ServerConfiguration.DEFAULT_SHUTDOWN_TIMEOUT;
+import static com.hazelcast.simulator.protocol.connector.ServerConnector.DEFAULT_SHUTDOWN_QUIET_PERIOD;
+import static com.hazelcast.simulator.protocol.connector.ServerConnector.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.getMessageIdFromFutureKey;
@@ -60,14 +59,30 @@ public class ClientConnector {
 
     private final EventLoopGroup group = new NioEventLoopGroup();
 
-    private final ClientConfiguration configuration;
+    private final ClientPipelineConfigurator pipelineConfigurator;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
+
+    private final SimulatorAddress localAddress;
+    private final SimulatorAddress remoteAddress;
+
+    private final int remoteIndex;
+    private final String remoteHost;
+    private final int remotePort;
 
     private Channel channel;
 
-    public ClientConnector(ClientConfiguration configuration) {
-        this.configuration = configuration;
-        this.futureMap = configuration.getFutureMap();
+    public ClientConnector(ClientPipelineConfigurator pipelineConfigurator, ConcurrentMap<String, ResponseFuture> futureMap,
+                           SimulatorAddress localAddress, SimulatorAddress remoteAddress, int remoteIndex, String remoteHost,
+                           int remotePort) {
+        this.pipelineConfigurator = pipelineConfigurator;
+        this.futureMap = futureMap;
+
+        this.localAddress = localAddress;
+        this.remoteAddress = remoteAddress;
+
+        this.remoteIndex = remoteIndex;
+        this.remoteHost = remoteHost;
+        this.remotePort = remotePort;
     }
 
     public void start() {
@@ -75,8 +90,7 @@ public class ClientConnector {
         ChannelFuture future = bootstrap.connect().syncUninterruptibly();
         channel = future.channel();
 
-        LOGGER.info(format("ClientConnector %s -> %s sends to %s", configuration.getLocalAddress(),
-                configuration.getRemoteAddress(), channel.remoteAddress()));
+        LOGGER.info(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress, channel.remoteAddress()));
     }
 
     private Bootstrap getBootstrap() {
@@ -84,13 +98,13 @@ public class ClientConnector {
         bootstrap
                 .group(group)
                 .channel(NioSocketChannel.class)
-                .remoteAddress(new InetSocketAddress(configuration.getRemoteHost(), configuration.getRemotePort()))
+                .remoteAddress(new InetSocketAddress(remoteHost, remotePort))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configuration.configurePipeline(channel.pipeline());
+                        pipelineConfigurator.configureClientPipeline(channel.pipeline(), remoteAddress, futureMap);
                     }
                 });
         return bootstrap;
@@ -103,17 +117,15 @@ public class ClientConnector {
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
 
         // take care about eventually pending ResponseFuture instances
-        for (Map.Entry<String, ResponseFuture> futureEntry : futureMap.entrySet()) {
-            String futureKey = futureEntry.getKey();
-            LOGGER.warn(format("ResponseFuture %s still running after shutdown!", futureKey));
-            Response response = new Response(getMessageIdFromFutureKey(futureKey), getSourceFromFutureKey(futureKey));
-            response.addResponse(configuration.getLocalAddress(), ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-            futureEntry.getValue().set(response);
-        }
+        handlePendingResponseFutures();
     }
 
-    public ClientConfiguration getConfiguration() {
-        return configuration;
+    public ConcurrentMap<String, ResponseFuture> getFutureMap() {
+        return futureMap;
+    }
+
+    public SimulatorAddress getRemoteAddress() {
+        return remoteAddress;
     }
 
     public void forwardToChannel(ByteBuf buffer) {
@@ -139,10 +151,10 @@ public class ClientConnector {
     }
 
     private ResponseFuture writeAsync(SimulatorAddress source, long messageId, Object msg) {
-        String futureKey = createFutureKey(source, messageId, configuration.getRemoteIndex());
+        String futureKey = createFutureKey(source, messageId, remoteIndex);
         ResponseFuture future = createInstance(futureMap, futureKey);
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, configuration.getLocalAddress(), futureKey));
+            LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, localAddress, futureKey));
         }
         channel.writeAndFlush(msg);
 
@@ -154,6 +166,16 @@ public class ClientConnector {
             return future.get();
         } catch (InterruptedException e) {
             throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
+        }
+    }
+
+    private void handlePendingResponseFutures() {
+        for (Map.Entry<String, ResponseFuture> futureEntry : futureMap.entrySet()) {
+            String futureKey = futureEntry.getKey();
+            LOGGER.warn(format("ResponseFuture %s still pending after shutdown!", futureKey));
+            Response response = new Response(getMessageIdFromFutureKey(futureKey), getSourceFromFutureKey(futureKey));
+            response.addResponse(localAddress, ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+            futureEntry.getValue().set(response);
         }
     }
 }

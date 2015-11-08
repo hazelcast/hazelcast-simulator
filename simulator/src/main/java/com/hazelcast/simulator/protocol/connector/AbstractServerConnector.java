@@ -81,7 +81,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         this.port = port;
     }
 
-    abstract void configurePipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector);
+    abstract void configureServerPipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector);
 
     abstract void connectorShutdown();
 
@@ -106,7 +106,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
-                        configurePipeline(channel.pipeline(), AbstractServerConnector.this);
+                        configureServerPipeline(channel.pipeline(), AbstractServerConnector.this);
                     }
                 });
         return bootstrap;

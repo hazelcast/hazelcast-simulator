@@ -17,8 +17,6 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.protocol.configuration.AgentClientConfiguration;
-import com.hazelcast.simulator.protocol.configuration.ClientConfiguration;
 import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -28,6 +26,7 @@ import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
+import com.hazelcast.simulator.protocol.handler.ForwardToCoordinatorHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
@@ -48,7 +47,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
-public class AgentConnector extends AbstractServerConnector {
+public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
@@ -77,7 +76,20 @@ public class AgentConnector extends AbstractServerConnector {
     }
 
     @Override
-    void configurePipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector) {
+    public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress, ConcurrentMap<String, ResponseFuture> futureMap) {
+        pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
+        pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
+        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, workerJvmManager));
+        pipeline.addLast("forwardToCoordinatorHandler", new ForwardToCoordinatorHandler(localAddress, connectionManager,
+                workerJvmManager));
+        pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, getFutureMap()));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
+    }
+
+    @Override
+    void configureServerPipeline(ChannelPipeline pipeline, AbstractServerConnector abstractServerConnector) {
         pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
         pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
@@ -132,14 +144,14 @@ public class AgentConnector extends AbstractServerConnector {
      * @return the {@link SimulatorAddress} of the Simulator Worker
      */
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
-        ClientConfiguration clientConfiguration = new AgentClientConfiguration(this, connectionManager, workerJvmManager,
-                processor, futureMap, localAddress, workerIndex, workerHost, workerPort);
-        ClientConnector clientConnector = new ClientConnector(clientConfiguration);
+        SimulatorAddress remoteAddress = localAddress.getChild(workerIndex);
+        ClientConnector clientConnector = new ClientConnector(this, futureMap, localAddress, remoteAddress, workerIndex,
+                workerHost, workerPort);
         clientConnector.start();
 
         clientConnectorManager.addClient(workerIndex, clientConnector);
 
-        return clientConfiguration.getRemoteAddress();
+        return remoteAddress;
     }
 
     /**
