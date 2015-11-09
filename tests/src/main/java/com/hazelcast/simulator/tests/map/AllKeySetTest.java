@@ -74,7 +74,7 @@ public class AllKeySetTest {
     @Warmup(global = true)
     public void warmup() throws InterruptedException {
         Streamer<String, String> streamer = StreamerFactory.getInstance(map);
-        for (int k = 0; k < entryCount; k++) {
+        for (int i = 0; i < entryCount; i++) {
             String key = generateString(keyLength);
             String value = generateString(valueLength);
             streamer.pushEntry(key, value);

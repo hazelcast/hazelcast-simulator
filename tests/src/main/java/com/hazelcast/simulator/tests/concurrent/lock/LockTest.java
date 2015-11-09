@@ -64,7 +64,7 @@ public class LockTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < lockCount; k++) {
+        for (int i = 0; i < lockCount; i++) {
             long key = lockCounter.getAndIncrement();
             targetInstance.getLock(getLockId(key));
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(key));
@@ -76,7 +76,7 @@ public class LockTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();

@@ -87,7 +87,7 @@ public class ExecutorTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -113,7 +113,7 @@ public class ExecutorTest {
                 IExecutorService executorService = executors[index];
                 futureList.clear();
 
-                for (int k = 0; k < submitCount; k++) {
+                for (int i = 0; i < submitCount; i++) {
                     Future future = executorService.submit(new Task(testContext.getTestId()));
                     futureList.add(future);
                     iteration++;

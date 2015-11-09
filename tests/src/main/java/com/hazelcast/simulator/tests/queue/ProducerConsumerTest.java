@@ -69,11 +69,11 @@ public class ProducerConsumerTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < producerCount; k++) {
-            spawner.spawn("ProducerThread", new Producer(k));
+        for (int i = 0; i < producerCount; i++) {
+            spawner.spawn("ProducerThread", new Producer(i));
         }
-        for (int k = 0; k < consumerCount; k++) {
-            spawner.spawn("ConsumerThread", new Consumer(k));
+        for (int i = 0; i < consumerCount; i++) {
+            spawner.spawn("ConsumerThread", new Consumer(i));
         }
         spawner.awaitCompletion();
     }

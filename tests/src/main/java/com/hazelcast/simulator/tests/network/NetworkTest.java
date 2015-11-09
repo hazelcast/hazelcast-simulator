@@ -235,8 +235,8 @@ public class NetworkTest {
 
         public RequestPacketHandler(int threadCount) {
             futures = new RequestFuture[threadCount];
-            for (int k = 0; k < futures.length; k++) {
-                futures[k] = new RequestFuture();
+            for (int i = 0; i < futures.length; i++) {
+                futures[i] = new RequestFuture();
             }
         }
 

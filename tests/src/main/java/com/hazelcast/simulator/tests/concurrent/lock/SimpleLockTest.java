@@ -56,8 +56,8 @@ public class SimpleLockTest {
 
     @Warmup(global = true)
     public void warmup() throws Exception {
-        for (int k = 0; k < maxAccounts; k++) {
-            IAtomicLong account = targetInstance.getAtomicLong(basename + k);
+        for (int i = 0; i < maxAccounts; i++) {
+            IAtomicLong account = targetInstance.getAtomicLong(basename + i);
             account.set(INITIAL_VALUE);
         }
         totalValue = INITIAL_VALUE * maxAccounts;
@@ -122,7 +122,7 @@ public class SimpleLockTest {
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();

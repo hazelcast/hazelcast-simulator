@@ -37,8 +37,8 @@ public final class PayloadUtils {
 
         byte prev = bytes[0];
         int count = 1;
-        for (int k = 1; k < bytes.length; k++) {
-            byte current = bytes[k];
+        for (int i = 1; i < bytes.length; i++) {
+            byte current = bytes[i];
             if (COMPRESS_HEX_OUTPUT && prev == current) {
                 count++;
             } else {

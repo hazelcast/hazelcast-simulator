@@ -67,15 +67,15 @@ public class MapTransactionGetForUpdateTest {
     @Warmup(global = true)
     public void warmup() throws Exception {
         IMap<Integer, Long> map = targetInstance.getMap(basename);
-        for (int k = 0; k < keyCount; k++) {
-            map.put(k, 0L);
+        for (int i = 0; i < keyCount; i++) {
+            map.put(i, 0L);
         }
     }
 
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int k = 0; k < threadCount; k++) {
+        for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
@@ -161,10 +161,10 @@ public class MapTransactionGetForUpdateTest {
         IMap<Integer, Long> map = targetInstance.getMap(basename);
 
         int failures = 0;
-        for (int k = 0; k < keyCount; k++) {
-            if (expected[k] != map.get(k)) {
+        for (int i = 0; i < keyCount; i++) {
+            if (expected[i] != map.get(i)) {
                 failures++;
-                LOGGER.info(basename + ": key=" + k + " expected " + expected[k] + " != " + "actual " + map.get(k));
+                LOGGER.info(basename + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
             }
         }
 
