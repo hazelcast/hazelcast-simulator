@@ -59,7 +59,6 @@ public class HttpLoadTest {
     public String serverIp = "";
     public int serverPort = 0;
 
-    public String id;
     public int threadCount = 3;
     public int maxKeys = 1000;
     public double getRequestProb = 0.5;
@@ -73,7 +72,6 @@ public class HttpLoadTest {
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
-        id = testContext.getTestId();
 
         baseRul = "http://" + serverIp + ':' + serverPort + '/';
 
@@ -102,7 +100,7 @@ public class HttpLoadTest {
         private final HttpClient client;
 
         public Worker() {
-            LOGGER.info(id + ": baseRul=" + baseRul + " cookie=" + cookieStore);
+            LOGGER.info(basename + ": baseRul=" + baseRul + " cookie=" + cookieStore);
 
             client = HttpClientBuilder.create().disableRedirectHandling().setDefaultCookieStore(cookieStore).build();
 
@@ -131,7 +129,7 @@ public class HttpLoadTest {
 
                         case GET_REQUEST:
                             res = getRequest("key/" + key);
-                            assertEquals(id + ": not what i put", res, putKeyValues.get(key));
+                            assertEquals(basename + ": not what I put", res, putKeyValues.get(key));
                             break;
 
                         default:

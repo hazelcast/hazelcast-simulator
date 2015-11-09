@@ -52,13 +52,11 @@ public class TryLockTimeOutTest {
     private long totalInitialValue;
     private TestContext testContext;
     private HazelcastInstance hazelcastInstance;
-    private String id;
 
     @Setup
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         hazelcastInstance = testContext.getTargetInstance();
-        id = testContext.getTestId();
     }
 
     @Warmup(global = true)
@@ -76,7 +74,7 @@ public class TryLockTimeOutTest {
 
         for (int i = 0; i < maxAccounts; i++) {
             ILock lock = hazelcastInstance.getLock(basename + i);
-            assertFalse(id + " Lock should be unlocked", lock.isLocked());
+            assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
         }
 
         long totalValue = 0;
@@ -85,7 +83,7 @@ public class TryLockTimeOutTest {
             totalValue += value;
         }
         LOGGER.info(": totalValue=" + totalValue);
-        assertEquals(id + " totalInitialValue != totalValue ", totalInitialValue, totalValue);
+        assertEquals(basename + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
 
         Counter total = new Counter();
         IList<Counter> totals = hazelcastInstance.getList(basename + "count");

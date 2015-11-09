@@ -67,7 +67,6 @@ public class EvictionICacheTest {
     public double putAsyncProb = 0.1;
     public double putAllProb = 0.1;
 
-    private String id;
     private TestContext testContext;
     private HazelcastInstance hazelcastInstance;
     private byte[] value;
@@ -86,7 +85,6 @@ public class EvictionICacheTest {
         hazelcastInstance = this.testContext.getTargetInstance();
         partitionCount = hazelcastInstance.getPartitionService().getPartitions().size();
 
-        id = testContext.getTestId();
         value = new byte[valueSize];
         Random random = new Random();
         random.nextBytes(value);
@@ -96,7 +94,7 @@ public class EvictionICacheTest {
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
-        LOGGER.info(id + ": " + cache.getName() + " config=" + config);
+        LOGGER.info(basename + ": " + cache.getName() + " config=" + config);
 
         configuredMaxSize = config.getEvictionConfig().getSize();
 
@@ -164,8 +162,8 @@ public class EvictionICacheTest {
                 }
 
                 if (size > estimatedMaxSize) {
-                    fail(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
-                            + " estimatedMaxSize=" + estimatedMaxSize);
+                    fail(basename + ": cache " + cache.getName() + " size=" + cache.size()
+                            + " configuredMaxSize=" + configuredMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
                 }
             }
             hazelcastInstance.getList(basename + "max").add(max);
@@ -183,7 +181,7 @@ public class EvictionICacheTest {
                 observedMaxSize = m;
             }
         }
-        LOGGER.info(id + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
+        LOGGER.info(basename + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
                 + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
 
         IList<Counter> counters = hazelcastInstance.getList(basename + "counter");
@@ -191,8 +189,8 @@ public class EvictionICacheTest {
         for (Counter c : counters) {
             total.add(c);
         }
-        LOGGER.info(id + ": " + total);
-        LOGGER.info(id + ": putAllMap size=" + putAllMap.size());
+        LOGGER.info(basename + ": " + total);
+        LOGGER.info(basename + ": putAllMap size=" + putAllMap.size());
     }
 
     public static class Counter implements Serializable {

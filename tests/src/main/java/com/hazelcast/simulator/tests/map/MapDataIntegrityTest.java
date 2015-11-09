@@ -53,7 +53,6 @@ public class MapDataIntegrityTest {
 
     private TestContext testContext;
     private HazelcastInstance targetInstance;
-    private String testId;
 
     private IMap<Integer, byte[]> integrityMap;
     private IMap<Integer, byte[]> stressMap;
@@ -65,7 +64,6 @@ public class MapDataIntegrityTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
-        testId = testContext.getTestId();
 
         integrityMap = targetInstance.getMap(basename + "Integrity");
         stressMap = targetInstance.getMap(basename + "Stress");
@@ -84,7 +82,7 @@ public class MapDataIntegrityTest {
                     Thread.sleep(1000);
                 }
             }
-            LOGGER.info(testId + ": " + partitionSet.size() + " partitions");
+            LOGGER.info(basename + ": " + partitionSet.size() + " partitions");
 
             Member localMember = targetInstance.getCluster().getLocalMember();
             for (int i = 0; i < totalIntegrityKeys; i++) {
@@ -93,34 +91,34 @@ public class MapDataIntegrityTest {
                     integrityMap.put(i, value);
                 }
             }
-            LOGGER.info(testId + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
+            LOGGER.info(basename + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
 
             Config config = targetInstance.getConfig();
             MapConfig mapConfig = config.getMapConfig(integrityMap.getName());
-            LOGGER.info(testId + ": " + mapConfig);
+            LOGGER.info(basename + ": " + mapConfig);
         }
     }
 
     @Verify(global = false)
     public void verify() throws Exception {
         if (isMemberNode(targetInstance)) {
-            LOGGER.info(testId + ": cluster size =" + targetInstance.getCluster().getMembers().size());
+            LOGGER.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
         }
 
-        LOGGER.info(testId + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
+        LOGGER.info(basename + ": integrityMap=" + integrityMap.getName() + " size=" + integrityMap.size());
         int totalErrorCount = 0;
         int totalNullValueCount = 0;
         for (MapIntegrityThread integrityThread : integrityThreads) {
             totalErrorCount += integrityThread.sizeErrorCount;
             totalNullValueCount += integrityThread.nullValueCount;
         }
-        LOGGER.info(testId + ": total integrityMapSizeErrorCount=" + totalErrorCount);
-        LOGGER.info(testId + ": total integrityMapNullValueCount=" + totalNullValueCount);
+        LOGGER.info(basename + ": total integrityMapSizeErrorCount=" + totalErrorCount);
+        LOGGER.info(basename + ": total integrityMapNullValueCount=" + totalNullValueCount);
 
-        assertEquals(testId + ": (verify) integrityMap=" + integrityMap.getName() + " map size ", totalIntegrityKeys,
+        assertEquals(basename + ": (verify) integrityMap=" + integrityMap.getName() + " map size ", totalIntegrityKeys,
                 integrityMap.size());
-        assertEquals(testId + ": (verify) integrityMapSizeErrorCount=", 0, totalErrorCount);
-        assertEquals(testId + ": (verify) integrityMapNullValueCount=", 0, totalNullValueCount);
+        assertEquals(basename + ": (verify) integrityMapSizeErrorCount=", 0, totalErrorCount);
+        assertEquals(basename + ": (verify) integrityMapNullValueCount=", 0, totalNullValueCount);
     }
 
     @Run
@@ -149,8 +147,8 @@ public class MapDataIntegrityTest {
                 byte[] val = integrityMap.get(key);
                 int actualSize = integrityMap.size();
                 if (doRunAsserts) {
-                    assertNotNull(testId + ": integrityMap=" + integrityMap.getName() + " key " + key + " == null", val);
-                    assertEquals(testId + ": integrityMap=" + integrityMap.getName() + " map size ",
+                    assertNotNull(basename + ": integrityMap=" + integrityMap.getName() + " key " + key + " == null", val);
+                    assertEquals(basename + ": integrityMap=" + integrityMap.getName() + " map size ",
                             totalIntegrityKeys, actualSize);
                 } else {
                     if (val == null) {
