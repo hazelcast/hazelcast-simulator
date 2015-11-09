@@ -63,7 +63,7 @@ public class GrowingMapTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        ThreadSpawner spawner = new ThreadSpawner(basename);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }

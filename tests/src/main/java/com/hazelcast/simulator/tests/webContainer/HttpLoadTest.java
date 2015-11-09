@@ -55,6 +55,7 @@ public class HttpLoadTest {
         PUT_REQUEST
     }
 
+    public String basename = HttpLoadTest.class.getSimpleName();
     public String serverIp = "";
     public int serverPort = 0;
 
@@ -83,7 +84,7 @@ public class HttpLoadTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        ThreadSpawner spawner = new ThreadSpawner(basename);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }

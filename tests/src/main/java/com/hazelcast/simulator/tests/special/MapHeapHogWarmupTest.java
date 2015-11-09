@@ -60,7 +60,7 @@ public class MapHeapHogWarmupTest {
     @Setup
     public void setUp(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
-        threadSpawner = new ThreadSpawner(testContext.getTestId());
+        threadSpawner = new ThreadSpawner(basename);
         map = targetInstance.getMap(basename);
 
         // calculate how many entries we have to insert per member and thread

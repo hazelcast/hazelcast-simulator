@@ -65,7 +65,7 @@ public class SplitClusterDataTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        ThreadSpawner spawner = new ThreadSpawner(basename);
         spawner.spawn(new Worker());
         spawner.awaitCompletion();
     }

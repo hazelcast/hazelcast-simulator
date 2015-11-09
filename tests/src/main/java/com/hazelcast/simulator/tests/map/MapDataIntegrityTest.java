@@ -125,7 +125,7 @@ public class MapDataIntegrityTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+        ThreadSpawner spawner = new ThreadSpawner(basename);
         for (int i = 0; i < mapIntegrityThreadCount; i++) {
             integrityThreads[i] = new MapIntegrityThread();
             spawner.spawn(integrityThreads[i]);
