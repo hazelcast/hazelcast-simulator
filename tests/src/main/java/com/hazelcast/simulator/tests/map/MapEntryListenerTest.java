@@ -119,7 +119,7 @@ public class MapEntryListenerTest {
     }
 
     @Teardown(global = true)
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
     }
 

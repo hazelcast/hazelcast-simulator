@@ -73,7 +73,7 @@ public class QueueTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         for (IQueue queue : queues) {
             queue.destroy();
         }

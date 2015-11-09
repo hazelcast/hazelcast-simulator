@@ -76,7 +76,7 @@ public class AtomicLongTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         for (IAtomicLong counter : counters) {
             counter.destroy();
         }

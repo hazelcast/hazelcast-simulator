@@ -56,7 +56,7 @@ public class MapRaceTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         resultMap.destroy();
     }

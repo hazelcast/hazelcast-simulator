@@ -78,7 +78,7 @@ public class EntryProcessorICacheTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         cache.close();
         resultsPerWorker.destroy();
     }

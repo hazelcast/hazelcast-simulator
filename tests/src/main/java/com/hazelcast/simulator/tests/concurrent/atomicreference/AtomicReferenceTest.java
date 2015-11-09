@@ -91,7 +91,7 @@ public class AtomicReferenceTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         for (IAtomicReference counter : counters) {
             counter.destroy();
         }

@@ -80,7 +80,7 @@ public class StringStringSyntheticMapTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         LOGGER.info(getOperationCountInformation(hazelcastInstance));
     }

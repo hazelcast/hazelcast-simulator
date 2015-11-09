@@ -92,7 +92,7 @@ public class AsyncAtomicLongTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         if (isMemberNode(targetInstance)) {
             for (IAtomicLong counter : counters) {
                 counter.destroy();

@@ -60,7 +60,7 @@ public class ProducerConsumerTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         produced.destroy();
         workQueue.destroy();
         consumed.destroy();

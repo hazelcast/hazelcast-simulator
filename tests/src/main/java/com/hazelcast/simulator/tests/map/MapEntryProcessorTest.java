@@ -67,7 +67,7 @@ public class MapEntryProcessorTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         resultsPerWorker.destroy();
     }

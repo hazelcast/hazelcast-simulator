@@ -58,7 +58,7 @@ public class MapCasTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         resultsPerWorker.destroy();
     }

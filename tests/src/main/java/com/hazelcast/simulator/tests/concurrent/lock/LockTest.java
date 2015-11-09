@@ -107,7 +107,7 @@ public class LockTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         lockCounter.destroy();
         totalMoney.destroy();
 

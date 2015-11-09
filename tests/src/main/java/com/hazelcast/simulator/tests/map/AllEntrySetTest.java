@@ -67,7 +67,7 @@ public class AllEntrySetTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         map.destroy();
         LOGGER.info(getOperationCountInformation(targetInstance));
     }

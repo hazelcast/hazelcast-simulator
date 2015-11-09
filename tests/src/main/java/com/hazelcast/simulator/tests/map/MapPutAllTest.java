@@ -67,7 +67,7 @@ public class MapPutAllTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         LOGGER.info(getOperationCountInformation(targetInstance));
     }

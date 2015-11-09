@@ -82,7 +82,7 @@ public class ITopicTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         for (ITopic topic : topics) {
             topic.destroy();
         }

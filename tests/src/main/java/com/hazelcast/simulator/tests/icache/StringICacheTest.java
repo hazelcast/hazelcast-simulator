@@ -94,7 +94,7 @@ public class StringICacheTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         cache.close();
     }
 

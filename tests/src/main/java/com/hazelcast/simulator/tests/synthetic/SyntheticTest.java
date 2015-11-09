@@ -97,7 +97,7 @@ public class SyntheticTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         LOGGER.info(getOperationCountInformation(targetInstance));
         LOGGER.info(getPartitionDistributionInformation(targetInstance));
     }

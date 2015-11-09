@@ -87,7 +87,7 @@ public class BatchingICacheTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         cache.close();
     }
 

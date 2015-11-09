@@ -142,7 +142,7 @@ public class NetworkTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         connectionManager.shutdown();
     }
 

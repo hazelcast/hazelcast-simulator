@@ -78,7 +78,7 @@ public class PerformanceICacheTest {
     }
 
     @Teardown
-    public void teardown() throws Exception {
+    public void teardown() {
         cache.close();
     }
 

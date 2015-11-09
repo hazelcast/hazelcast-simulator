@@ -83,7 +83,7 @@ public class StringStringMapTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
     }
