@@ -42,7 +42,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.simulator.worker.metronome.SimpleMetronome.withFixedIntervalMs;
@@ -80,9 +80,10 @@ public class AsyncAtomicLongTest {
         totalCounter = targetInstance.getAtomicLong("TotalCounter:" + context.getTestId());
         if (isMemberNode(targetInstance)) {
             counters = new AsyncAtomicLong[countersLength];
-            for (int i = 0; i < counters.length; i++) {
-                String key = basename + generateStringKey(8, keyLocality, targetInstance);
-                counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(key);
+
+            String[] names = generateStringKeys(basename, countersLength, keyLocality, context.getTargetInstance());
+            for (int i = 0; i < countersLength; i++) {
+                counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(names[i]);
             }
         }
 
