@@ -133,9 +133,12 @@ public class WorkerPerformanceMonitor {
 
         private void updatePerformanceStates(long currentTimestamp) {
             for (TestContainer testContainer : testContainers) {
+                String testId = testContainer.getTestContext().getTestId();
                 if (!testContainer.isRunning()) {
+                    trackerMap.remove(testId);
                     continue;
                 }
+
                 Map<String, Probe> probeMap = testContainer.getProbeMap();
                 Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
@@ -166,9 +169,7 @@ public class WorkerPerformanceMonitor {
                     }
                 }
 
-                String testId = testContainer.getTestContext().getTestId();
                 PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
-
                 tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
                         intervalOperationalCount, currentTimestamp);
             }
