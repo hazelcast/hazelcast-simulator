@@ -90,8 +90,8 @@ public class NetworkTest {
     }
 
     @Setup
-    public void setup(TestContext context) throws Exception {
-        hz = context.getTargetInstance();
+    public void setup(TestContext testContext) throws Exception {
+        hz = testContext.getTargetInstance();
 
         Node node = HazelcastTestUtils.getNode(hz);
         if (node == null) {

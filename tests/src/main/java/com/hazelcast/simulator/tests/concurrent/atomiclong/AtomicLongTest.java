@@ -60,13 +60,13 @@ public class AtomicLongTest {
     private IAtomicLong[] counters;
 
     @Setup
-    public void setup(TestContext context) throws Exception {
-        targetInstance = context.getTargetInstance();
+    public void setup(TestContext testContext) throws Exception {
+        targetInstance = testContext.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + context.getTestId());
+        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + testContext.getTestId());
         counters = new IAtomicLong[countersLength];
 
-        String[] names = generateStringKeys(basename, countersLength, keyLocality, context.getTargetInstance());
+        String[] names = generateStringKeys(basename, countersLength, keyLocality, testContext.getTargetInstance());
         for (int i = 0; i < countersLength; i++) {
             counters[i] = targetInstance.getAtomicLong(names[i]);
         }
