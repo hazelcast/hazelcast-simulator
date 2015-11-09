@@ -56,6 +56,8 @@ final class PerformanceTracker {
     private double intervalThroughput;
     private double totalThroughput;
 
+    private boolean isUpdated;
+
     PerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
         throughputFile = new File("throughput-" + testId + ".txt");
         writeThroughputHeader(throughputFile, false);
@@ -80,6 +82,16 @@ final class PerformanceTracker {
         return intervalThroughput;
     }
 
+    public boolean isUpdated() {
+        return isUpdated;
+    }
+
+    public boolean getAndResetIsUpdated() {
+        boolean oldIsUpdated = isUpdated;
+        isUpdated = false;
+        return oldIsUpdated;
+    }
+
     void update(Map<String, Histogram> intervalHistograms, long intervalPercentileLatency, double intervalAvgLatency,
                 long intervalMaxLatency, long intervalOperationCount, long currentTimestamp) {
         this.intervalHistogramMap = intervalHistograms;
@@ -98,6 +110,7 @@ final class PerformanceTracker {
         this.totalThroughput = (totalOperationCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
 
         this.lastTimestamp = currentTimestamp;
+        this.isUpdated = true;
     }
 
     void writeStatsToFile(String timestamp) {

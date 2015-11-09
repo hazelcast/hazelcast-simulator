@@ -135,7 +135,6 @@ public class WorkerPerformanceMonitor {
             for (TestContainer testContainer : testContainers) {
                 String testId = testContainer.getTestContext().getTestId();
                 if (!testContainer.isRunning()) {
-                    trackerMap.remove(testId);
                     continue;
                 }
 
@@ -188,9 +187,11 @@ public class WorkerPerformanceMonitor {
         private void sendPerformanceStates() {
             PerformanceStateOperation operation = new PerformanceStateOperation();
             for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
-                String testId = trackerEntry.getKey();
                 PerformanceTracker stats = trackerEntry.getValue();
-                operation.addPerformanceState(testId, stats.createPerformanceState());
+                if (stats.isUpdated()) {
+                    String testId = trackerEntry.getKey();
+                    operation.addPerformanceState(testId, stats.createPerformanceState());
+                }
             }
             serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
         }
@@ -207,11 +208,13 @@ public class WorkerPerformanceMonitor {
 
             // test performance stats
             for (PerformanceTracker stats : trackerMap.values()) {
-                stats.writeStatsToFile(dateString);
+                if (stats.getAndResetIsUpdated()) {
+                    stats.writeStatsToFile(dateString);
 
-                globalIntervalOperationCount += stats.getIntervalOperationCount();
-                globalOperationsCount += stats.getTotalOperationCount();
-                globalIntervalThroughput += stats.getIntervalThroughput();
+                    globalIntervalOperationCount += stats.getIntervalOperationCount();
+                    globalOperationsCount += stats.getTotalOperationCount();
+                    globalIntervalThroughput += stats.getIntervalThroughput();
+                }
             }
 
             // global performance stats
