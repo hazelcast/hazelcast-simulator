@@ -82,7 +82,7 @@ public class IntByteMapTest {
     }
 
     @Warmup(global = false)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         Random random = new Random();
         values = new byte[valueCount][];
         for (int i = 0; i < values.length; i++) {

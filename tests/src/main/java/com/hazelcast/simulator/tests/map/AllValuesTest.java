@@ -72,7 +72,7 @@ public class AllValuesTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         Streamer<String, String> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < entryCount; i++) {
             String key = generateString(keyLength);

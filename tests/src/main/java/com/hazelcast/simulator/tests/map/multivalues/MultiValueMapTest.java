@@ -73,7 +73,7 @@ public class MultiValueMapTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         if (useIndex) {
             map.addIndex("payloadField[*]", true);
         }

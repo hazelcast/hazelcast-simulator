@@ -85,7 +85,7 @@ public class MapReduceTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         for (int id = 0; id < keyCount; id++) {
             map.put(id, new Employee(id));
         }

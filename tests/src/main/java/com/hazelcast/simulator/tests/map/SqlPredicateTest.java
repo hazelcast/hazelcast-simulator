@@ -70,7 +70,7 @@ public class SqlPredicateTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         Random random = new Random();
         Streamer<String, DataSerializableEmployee> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
