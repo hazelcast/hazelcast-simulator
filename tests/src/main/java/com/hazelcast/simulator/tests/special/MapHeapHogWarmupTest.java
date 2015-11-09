@@ -52,7 +52,6 @@ public class MapHeapHogWarmupTest {
     public double approxHeapUsageFactor = 0.9;
 
     private HazelcastInstance targetInstance;
-    private ThreadSpawner threadSpawner;
     private IMap<Long, Long> map;
 
     private long maxEntriesPerThread;
@@ -60,7 +59,6 @@ public class MapHeapHogWarmupTest {
     @Setup
     public void setUp(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
-        threadSpawner = new ThreadSpawner(basename);
         map = targetInstance.getMap(basename);
 
         // calculate how many entries we have to insert per member and thread
@@ -84,6 +82,7 @@ public class MapHeapHogWarmupTest {
         // fill the cluster as fast as possible with data
         long startKey = 0;
         boolean isLogger = true;
+        ThreadSpawner threadSpawner = new ThreadSpawner(basename);
         for (int i = 0; i < threadCount; i++) {
             threadSpawner.spawn(new FillMapWorker(isLogger, startKey));
             isLogger = false;
