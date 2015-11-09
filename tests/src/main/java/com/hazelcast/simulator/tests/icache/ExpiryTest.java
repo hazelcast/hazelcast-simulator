@@ -96,7 +96,7 @@ public class ExpiryTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         Counter totalCounter = new Counter();
         for (Counter counter : results) {
             totalCounter.add(counter);

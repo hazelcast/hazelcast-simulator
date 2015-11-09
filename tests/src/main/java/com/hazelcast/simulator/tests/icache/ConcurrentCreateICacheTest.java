@@ -68,7 +68,7 @@ public class ConcurrentCreateICacheTest {
     }
 
     @Verify(global = true)
-    public void verify() throws Exception {
+    public void verify() {
         Counter total = new Counter();
         for (Counter counter : counterList) {
             total.add(counter);

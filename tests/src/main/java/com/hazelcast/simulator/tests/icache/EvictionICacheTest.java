@@ -173,7 +173,7 @@ public class EvictionICacheTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         IList<Integer> results = hazelcastInstance.getList(basename + "max");
         int observedMaxSize = 0;
         for (int m : results) {

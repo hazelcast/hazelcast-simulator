@@ -111,7 +111,7 @@ public class MapMaxSizeTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
         for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);

@@ -75,7 +75,7 @@ public class MapAsyncOpsTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         MapOperationCounter totalMapOperationsCount = new MapOperationCounter();
         for (MapOperationCounter mapOperationsCount : results) {
             totalMapOperationsCount.add(mapOperationsCount);

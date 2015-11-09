@@ -65,7 +65,7 @@ public class MapLockTest {
     }
 
     @Verify(global = true)
-    public void verify() throws Exception {
+    public void verify() {
         long[] expected = new long[keyCount];
 
         for (long[] increments : incrementsList) {

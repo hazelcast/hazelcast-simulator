@@ -69,7 +69,7 @@ public class MapRaceTest {
     }
 
     @Verify
-    public void verify() throws Exception {
+    public void verify() {
         long[] expected = new long[keyCount];
         for (Map<Integer, Long> result : resultMap.values()) {
             for (Map.Entry<Integer, Long> increments : result.entrySet()) {

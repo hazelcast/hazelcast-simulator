@@ -88,7 +88,7 @@ public class MangleICacheTest {
     }
 
     @Verify(global = true)
-    public void verify() throws Exception {
+    public void verify() {
         ICacheOperationCounter total = new ICacheOperationCounter();
         for (ICacheOperationCounter counter : results) {
             total.add(counter);

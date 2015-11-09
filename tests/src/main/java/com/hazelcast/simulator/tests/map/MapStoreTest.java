@@ -129,7 +129,7 @@ public class MapStoreTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
@@ -138,7 +138,7 @@ public class MapStoreTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         if (isClient(targetInstance)) {
             return;
         }

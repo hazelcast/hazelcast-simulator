@@ -147,7 +147,7 @@ public class MapTransactionContextConflictTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         IList<TxnCounter> counts = targetInstance.getList(basename + "count");
         TxnCounter total = new TxnCounter();
         for (TxnCounter c : counts) {

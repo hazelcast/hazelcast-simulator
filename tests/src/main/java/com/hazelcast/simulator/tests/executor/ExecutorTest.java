@@ -94,7 +94,7 @@ public class ExecutorTest {
     }
 
     @Verify
-    public void verify() throws Exception {
+    public void verify() {
         long actual = executedCounter.get();
         long expected = expectedExecutedCounter.get();
         assertEquals(expected, actual);

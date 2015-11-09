@@ -103,7 +103,7 @@ public class AddRemoveListenerICacheTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         ICacheListenerOperationCounter total = new ICacheListenerOperationCounter();
         for (ICacheListenerOperationCounter i : results) {
             total.add(i);

@@ -121,7 +121,7 @@ public class MapTTLSaturationTest {
     }
 
     @Verify(global = false)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
         long used = total - free;

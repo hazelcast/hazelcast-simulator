@@ -90,13 +90,13 @@ public class CacheLoaderTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
         LOGGER.info(basename + ": " + loader);
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         for (int i = 0; i < keyCount; i++) {
             assertTrue(basename + ": cache should contain key " + i, cache.containsKey(i));
         }

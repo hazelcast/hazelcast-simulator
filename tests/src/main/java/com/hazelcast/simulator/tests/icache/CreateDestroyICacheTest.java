@@ -74,7 +74,7 @@ public class CreateDestroyICacheTest {
     }
 
     @Verify(global = true)
-    public void verify() throws Exception {
+    public void verify() {
         ICacheCreateDestroyCounter total = new ICacheCreateDestroyCounter();
         for (ICacheCreateDestroyCounter counter : counters) {
             total.add(counter);

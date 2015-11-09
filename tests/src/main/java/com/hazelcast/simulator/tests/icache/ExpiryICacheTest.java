@@ -68,7 +68,7 @@ public class ExpiryICacheTest {
     }
 
     @Verify(global = false)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         LOGGER.info(basename + " cache size = " + cache.size());
         logMemoryStatistics();
     }

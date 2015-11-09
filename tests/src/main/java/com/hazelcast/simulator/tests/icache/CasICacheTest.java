@@ -90,7 +90,7 @@ public class CasICacheTest {
     }
 
     @Verify
-    public void verify() throws Exception {
+    public void verify() {
         long[] amount = new long[keyCount];
         for (long[] increments : resultsPerWorker) {
             for (int i = 0; i < keyCount; i++) {

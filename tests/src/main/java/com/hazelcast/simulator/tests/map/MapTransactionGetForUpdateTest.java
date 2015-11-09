@@ -142,7 +142,7 @@ public class MapTransactionGetForUpdateTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         IList<TxnCounter> counts = targetInstance.getList(basename + "report");
         TxnCounter total = new TxnCounter();
         for (TxnCounter c : counts) {

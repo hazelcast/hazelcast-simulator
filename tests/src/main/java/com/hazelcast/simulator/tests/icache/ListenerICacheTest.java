@@ -133,13 +133,13 @@ public class ListenerICacheTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         LOGGER.info(basename + ": listener " + listener);
         LOGGER.info(basename + ": filter " + filter);
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         Counter total = new Counter();
         for (Counter i : results) {
             total.add(i);

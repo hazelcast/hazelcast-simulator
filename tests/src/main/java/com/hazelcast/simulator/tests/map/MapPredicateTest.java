@@ -111,7 +111,7 @@ public class MapPredicateTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         PredicateOperationCounter total = new PredicateOperationCounter();
         for (PredicateOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);

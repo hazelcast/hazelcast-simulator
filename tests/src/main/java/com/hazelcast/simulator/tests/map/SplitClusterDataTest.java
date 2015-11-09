@@ -27,6 +27,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
@@ -80,7 +81,7 @@ public class SplitClusterDataTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         LOGGER.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
         LOGGER.info(basename + ": map size =" + map.size());
 
@@ -91,9 +92,7 @@ public class SplitClusterDataTest {
 
             int max = 0;
             while (map.size() != maxItems) {
-
-                Thread.sleep(1000);
-
+                sleepMillis(1000);
                 if (max++ == 60) {
                     break;
                 }

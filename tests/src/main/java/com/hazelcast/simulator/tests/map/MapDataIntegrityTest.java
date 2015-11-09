@@ -100,7 +100,7 @@ public class MapDataIntegrityTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         if (isMemberNode(targetInstance)) {
             LOGGER.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
         }

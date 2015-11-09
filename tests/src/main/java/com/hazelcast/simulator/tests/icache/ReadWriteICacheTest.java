@@ -98,7 +98,7 @@ public class ReadWriteICacheTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
         RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
 
@@ -107,7 +107,7 @@ public class ReadWriteICacheTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         ICacheReadWriteCounter total = new ICacheReadWriteCounter();
         for (ICacheReadWriteCounter counter : counters) {
             total.add(counter);

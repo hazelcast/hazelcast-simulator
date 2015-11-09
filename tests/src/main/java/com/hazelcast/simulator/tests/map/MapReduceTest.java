@@ -92,7 +92,7 @@ public class MapReduceTest {
     }
 
     @Verify(global = true)
-    public void globalVerify() throws Exception {
+    public void globalVerify() {
         MapReduceOperationCounter total = new MapReduceOperationCounter();
         for (MapReduceOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);

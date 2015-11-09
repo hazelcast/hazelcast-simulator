@@ -71,7 +71,7 @@ public class MapCasTest {
     }
 
     @Verify
-    public void verify() throws Exception {
+    public void verify() {
         long[] amount = new long[keyCount];
 
         for (Map<Integer, Long> workerResult : resultsPerWorker.values()) {

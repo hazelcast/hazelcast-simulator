@@ -72,7 +72,7 @@ public class LockConflictTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
+    public void verify() {
         LockCounter total = new LockCounter();
         for (LockCounter counter : globalCounter) {
             total.add(counter);

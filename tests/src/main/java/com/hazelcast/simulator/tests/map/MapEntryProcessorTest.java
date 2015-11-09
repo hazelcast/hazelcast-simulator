@@ -80,7 +80,7 @@ public class MapEntryProcessorTest {
     }
 
     @Verify
-    public void verify() throws Exception {
+    public void verify() {
         long[] expectedValueForKey = new long[keyCount];
 
         for (long[] incrementsAtKey : resultsPerWorker) {
