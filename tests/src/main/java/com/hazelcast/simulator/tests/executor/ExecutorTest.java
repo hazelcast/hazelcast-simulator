@@ -64,11 +64,11 @@ public class ExecutorTest {
 
         executors = new IExecutorService[executorCount];
         for (int i = 0; i < executors.length; i++) {
-            executors[i] = targetInstance.getExecutorService(basename + '-' + testContext.getTestId() + '-' + i);
+            executors[i] = targetInstance.getExecutorService(basename + '-' + i);
         }
 
-        executedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":ExpectedExecutedCounter");
+        executedCounter = targetInstance.getAtomicLong(basename + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(basename + ":ExpectedExecutedCounter");
     }
 
     @Teardown(global = true)

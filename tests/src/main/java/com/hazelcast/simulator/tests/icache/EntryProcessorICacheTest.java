@@ -74,7 +74,7 @@ public class EntryProcessorICacheTest {
         }
 
         cache = cacheManager.getCache(basename);
-        resultsPerWorker = hazelcastInstance.getList(basename + "ResultMap" + testContext.getTestId());
+        resultsPerWorker = hazelcastInstance.getList(basename + ":ResultMap");
     }
 
     @Teardown

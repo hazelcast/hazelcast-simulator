@@ -63,7 +63,7 @@ public class MapPutAllTest {
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getMap(basename + '-' + testContext.getTestId());
+        map = targetInstance.getMap(basename);
     }
 
     @Teardown

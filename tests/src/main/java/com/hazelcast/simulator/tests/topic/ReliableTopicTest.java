@@ -71,11 +71,11 @@ public class ReliableTopicTest {
     public void setup(TestContext testContext) throws Exception {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
-        totalMessagesSend = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
+        totalMessagesSend = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();
 
-        String[] names = generateStringKeys(basename + '-' + testContext.getTestId(), topicCount, keyLocality, targetInstance);
+        String[] names = generateStringKeys(basename, topicCount, keyLocality, targetInstance);
 
         int listenerIdCounter = 0;
         for (int i = 0; i < topics.length; i++) {

@@ -72,7 +72,7 @@ public class StringStringSyntheticMapTest {
     public void setUp(TestContext testContext) throws Exception {
         hazelcastInstance = testContext.getTargetInstance();
         HazelcastInstance targetInstance = testContext.getTargetInstance();
-        map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + testContext.getTestId());
+        map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)

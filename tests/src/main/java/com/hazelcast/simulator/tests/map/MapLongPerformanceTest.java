@@ -52,7 +52,7 @@ public class MapLongPerformanceTest {
     @Setup
     public void setUp(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        map = hazelcastInstance.getMap(basename + '-' + testContext.getTestId());
+        map = hazelcastInstance.getMap(basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, writeProb)

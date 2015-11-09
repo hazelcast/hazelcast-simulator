@@ -65,7 +65,7 @@ public class MultiValueMapTest {
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        map = testContext.getTargetInstance().getMap(basename + '-' + testContext.getTestId());
+        map = testContext.getTargetInstance().getMap(basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProbability)

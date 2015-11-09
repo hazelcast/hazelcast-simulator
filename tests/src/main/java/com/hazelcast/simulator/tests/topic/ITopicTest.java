@@ -64,13 +64,13 @@ public class ITopicTest {
     public void setup(TestContext testContext) throws Exception {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
-        totalExpectedCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalExpectedCounter");
-        totalFoundCounter = targetInstance.getAtomicLong(testContext.getTestId() + ":TotalFoundCounter");
+        totalExpectedCounter = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");
+        totalFoundCounter = targetInstance.getAtomicLong(basename + ":TotalFoundCounter");
 
         topics = new ITopic[topicCount];
         listeners = new LinkedList<TopicListener>();
         for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
-            ITopic<Long> topic = targetInstance.getTopic(basename + '-' + testContext.getTestId() + '-' + topicIndex);
+            ITopic<Long> topic = targetInstance.getTopic(basename + topicIndex);
             topics[topicIndex] = topic;
 
             for (int listenerIndex = 0; listenerIndex < listenersPerTopic; listenerIndex++) {
