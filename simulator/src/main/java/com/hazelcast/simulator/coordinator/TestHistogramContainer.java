@@ -76,6 +76,9 @@ public class TestHistogramContainer {
         Result result = new ResultImpl(testCaseId, state.getOperationCount(), state.getTotalThroughput());
         for (ConcurrentMap<String, Map<String, String>> testHistogramMap : workerTestProbeHistogramMap.values()) {
             Map<String, String> probeHistogramMap = testHistogramMap.get(testCaseId);
+            if (probeHistogramMap == null) {
+                continue;
+            }
             for (Map.Entry<String, String> mapEntry : probeHistogramMap.entrySet()) {
                 String probeName = mapEntry.getKey();
                 String encodedHistogram = mapEntry.getValue();
