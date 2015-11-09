@@ -63,7 +63,7 @@ public class AtomicLongTest {
     public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + testContext.getTestId());
+        totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
 
         String[] names = generateStringKeys(basename, countersLength, keyLocality, testContext.getTargetInstance());

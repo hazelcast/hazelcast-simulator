@@ -77,7 +77,7 @@ public class AsyncAtomicLongTest {
     public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong("TotalCounter:" + testContext.getTestId());
+        totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
         if (isMemberNode(targetInstance)) {
             counters = new AsyncAtomicLong[countersLength];
 
