@@ -31,6 +31,8 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+
 public class MapAsyncOpsTest {
 
     private enum Operation {
@@ -84,8 +86,8 @@ public class MapAsyncOpsTest {
     }
 
     @Verify(global = false)
-    public void verify() throws Exception {
-        Thread.sleep(maxTTLExpirySeconds * 2);
+    public void verify() {
+        sleepSeconds(maxTTLExpirySeconds * 2);
 
         LOGGER.info(basename + ": map size  =" + map.size());
     }
