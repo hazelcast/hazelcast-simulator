@@ -65,7 +65,7 @@ public class LockConflictTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         for (int i = 0; i < keyCount; i++) {
             list.add(0L);
         }

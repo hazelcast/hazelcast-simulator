@@ -81,7 +81,7 @@ public class CasICacheTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
         for (int i = 0; i < keyCount; i++) {
             streamer.pushEntry(i, 0L);

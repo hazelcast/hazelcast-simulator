@@ -64,7 +64,7 @@ public class MapCasTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
         }

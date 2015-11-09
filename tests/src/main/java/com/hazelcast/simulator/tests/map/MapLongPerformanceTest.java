@@ -65,7 +65,7 @@ public class MapLongPerformanceTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             streamer.pushEntry(i, 0L);

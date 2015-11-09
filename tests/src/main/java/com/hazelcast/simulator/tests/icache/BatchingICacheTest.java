@@ -92,7 +92,7 @@ public class BatchingICacheTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         Streamer<Object, Object> streamer = StreamerFactory.getInstance(cache);
         for (int i = 0; i < keyCount; i++) {
             streamer.pushEntry(i, 0);

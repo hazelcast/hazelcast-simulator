@@ -55,7 +55,7 @@ public class SimpleLockTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         for (int i = 0; i < maxAccounts; i++) {
             IAtomicLong account = targetInstance.getAtomicLong(basename + i);
             account.set(INITIAL_VALUE);

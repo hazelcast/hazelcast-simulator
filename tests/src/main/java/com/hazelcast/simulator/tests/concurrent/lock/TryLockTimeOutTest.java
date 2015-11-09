@@ -60,7 +60,7 @@ public class TryLockTimeOutTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         IList<Long> accounts = hazelcastInstance.getList(basename);
         for (int i = 0; i < maxAccounts; i++) {
             accounts.add(initialAccountValue);

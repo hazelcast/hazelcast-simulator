@@ -63,7 +63,7 @@ public class LockTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         for (int i = 0; i < lockCount; i++) {
             long key = lockCounter.getAndIncrement();
             targetInstance.getLock(getLockId(key));
