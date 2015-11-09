@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -30,7 +31,9 @@ import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
+import static java.lang.Math.round;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * Responsible for storing and formatting performance metrics from Simulator workers.
@@ -41,6 +44,8 @@ public class PerformanceStateContainer {
 
     public static final int THROUGHPUT_FORMAT_LENGTH = 12;
     public static final int LATENCY_FORMAT_LENGTH = 10;
+
+    private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = TimeUnit.SECONDS.toMicros(1);
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
@@ -55,15 +60,28 @@ public class PerformanceStateContainer {
     public String getPerformanceNumbers(String testCaseId) {
         PerformanceState performanceState = getPerformanceStateForTestCase(testCaseId);
         if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
-            return " (performance not available)";
+            return "";
         }
-        return String.format("%s ops %s ops/s %s µs (avg) %s µs (%sth) %s µs (max)",
+        String latencyUnit = "µs";
+        double avgLatencyValue = performanceState.getIntervalAvgLatency();
+        long percentileLatencyValue = performanceState.getIntervalPercentileLatency();
+        long maxLatencyValue = performanceState.getIntervalMaxLatency();
+        if (avgLatencyValue > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
+            latencyUnit = "ms";
+            avgLatencyValue = MICROSECONDS.toMillis(round(avgLatencyValue));
+            percentileLatencyValue = MICROSECONDS.toMillis(percentileLatencyValue);
+            maxLatencyValue = MICROSECONDS.toMillis(maxLatencyValue);
+        }
+        return String.format("%s ops %s ops/s  %s %s (avg) %s %s (%sth) %s %s (max)",
                 formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
-                formatDouble(performanceState.getIntervalAvgLatency(), LATENCY_FORMAT_LENGTH),
-                formatLong(performanceState.getIntervalPercentileLatency(), LATENCY_FORMAT_LENGTH),
+                formatDouble(avgLatencyValue, LATENCY_FORMAT_LENGTH),
+                latencyUnit,
+                formatLong(percentileLatencyValue, LATENCY_FORMAT_LENGTH),
+                latencyUnit,
                 INTERVAL_LATENCY_PERCENTILE,
-                formatLong(performanceState.getIntervalMaxLatency(), LATENCY_FORMAT_LENGTH)
+                formatLong(maxLatencyValue, LATENCY_FORMAT_LENGTH),
+                latencyUnit
         );
     }
 
