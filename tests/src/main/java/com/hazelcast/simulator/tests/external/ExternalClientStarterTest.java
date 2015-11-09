@@ -50,7 +50,7 @@ public class ExternalClientStarterTest {
     private HazelcastInstance hazelcastInstance;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         hazelcastInstance = testContext.getTargetInstance();
         if (isClient(hazelcastInstance)) {
             hazelcastInstance.getAtomicLong("externalClientsStarted").addAndGet(processCount);

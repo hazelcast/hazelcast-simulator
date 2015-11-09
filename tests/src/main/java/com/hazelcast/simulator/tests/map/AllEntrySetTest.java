@@ -61,7 +61,7 @@ public class AllEntrySetTest {
     private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.targetInstance = testContext.getTargetInstance();
         this.map = targetInstance.getMap(basename);
     }

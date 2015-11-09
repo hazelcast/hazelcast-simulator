@@ -102,7 +102,7 @@ public class MapStoreTest {
     private IList<MapOperationCounter> operationCounterList;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;

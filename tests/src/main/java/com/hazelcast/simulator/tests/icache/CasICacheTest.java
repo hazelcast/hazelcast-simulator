@@ -57,7 +57,7 @@ public class CasICacheTest {
     private IList<long[]> resultsPerWorker;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         resultsPerWorker = hazelcastInstance.getList(basename);
 

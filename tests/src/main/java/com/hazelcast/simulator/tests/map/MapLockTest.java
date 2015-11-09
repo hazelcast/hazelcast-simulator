@@ -50,7 +50,7 @@ public class MapLockTest {
     private IList<long[]> incrementsList;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(basename);

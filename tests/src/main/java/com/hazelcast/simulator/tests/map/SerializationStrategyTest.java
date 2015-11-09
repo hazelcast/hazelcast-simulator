@@ -78,7 +78,7 @@ public class SerializationStrategyTest {
     private Set<String> uniqueStrings;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         map = testContext.getTargetInstance().getMap(basename);
         uniqueStrings = testContext.getTargetInstance().getSet(basename);
 

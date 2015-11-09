@@ -68,7 +68,7 @@ public class ReliableTopicTest {
 
     @Setup
     @SuppressWarnings("unchecked")
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         totalMessagesSend = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");

@@ -62,7 +62,7 @@ public class IntByteMapTest {
     private byte[][] values;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance instance = testContext.getTargetInstance();
         map = instance.getMap(basename);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, instance);

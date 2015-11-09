@@ -73,7 +73,7 @@ public class MapTransactionReadWriteTest {
     private int[] keys;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
 

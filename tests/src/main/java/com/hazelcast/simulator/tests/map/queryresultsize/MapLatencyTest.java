@@ -47,7 +47,7 @@ public class MapLatencyTest extends AbstractMapTest {
     public int keyCount = -1;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         baseSetup(testContext, basename);
     }
 

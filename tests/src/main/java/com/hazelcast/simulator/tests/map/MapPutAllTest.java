@@ -61,7 +61,7 @@ public class MapPutAllTest {
     private Map<String, String>[] inputMaps;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
     }

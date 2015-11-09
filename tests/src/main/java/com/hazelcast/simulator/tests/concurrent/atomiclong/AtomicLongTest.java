@@ -60,7 +60,7 @@ public class AtomicLongTest {
     private IAtomicLong[] counters;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
 
         totalCounter = targetInstance.getAtomicLong("TotalCounter:" + testContext.getTestId());

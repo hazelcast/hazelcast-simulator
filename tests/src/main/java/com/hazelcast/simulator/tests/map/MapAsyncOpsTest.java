@@ -64,7 +64,7 @@ public class MapAsyncOpsTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         results = targetInstance.getList(basename + "report");

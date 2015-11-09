@@ -51,7 +51,7 @@ public class MapCasTest {
     private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         resultsPerWorker = targetInstance.getMap(basename + ":ResultMap");

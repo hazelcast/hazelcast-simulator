@@ -74,7 +74,7 @@ public class MapTimeToLiveTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         results = targetInstance.getList(basename + "report");

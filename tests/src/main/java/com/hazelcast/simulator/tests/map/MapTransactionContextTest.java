@@ -42,7 +42,7 @@ public class MapTransactionContextTest {
     private HazelcastInstance hz;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         hz = testContext.getTargetInstance();
     }
 

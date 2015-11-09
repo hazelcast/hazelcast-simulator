@@ -73,7 +73,7 @@ public class StringStringMapTest {
     private String[] values;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename);
 

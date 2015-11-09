@@ -56,7 +56,7 @@ public class LockConflictTest {
     private IList<LockCounter> globalCounter;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         hazelcastInstance = testContext.getTargetInstance();
         list = hazelcastInstance.getList(basename);
 

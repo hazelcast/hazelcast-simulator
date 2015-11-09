@@ -51,7 +51,7 @@ public class ExpiryICacheTest {
     private ICache<Long, Long> cache;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
 

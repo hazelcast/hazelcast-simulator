@@ -70,7 +70,7 @@ public class IntIntMapTest {
     private int[] keys;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename);
 

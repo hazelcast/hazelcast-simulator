@@ -61,7 +61,7 @@ public class ITopicTest {
     private List<TopicListener> listeners;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         totalExpectedCounter = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");

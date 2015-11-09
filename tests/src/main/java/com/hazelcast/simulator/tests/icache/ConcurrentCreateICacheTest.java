@@ -47,7 +47,7 @@ public class ConcurrentCreateICacheTest {
     private IList<Counter> counterList;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         counterList = hazelcastInstance.getList(baseName);
 

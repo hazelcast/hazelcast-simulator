@@ -74,7 +74,7 @@ public class MangleICacheTest {
     private IList<ICacheOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         hazelcastInstance = testContext.getTargetInstance();
         results = hazelcastInstance.getList(basename);
 

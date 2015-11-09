@@ -73,7 +73,7 @@ public class MapReduceTest {
     private IList<MapReduceOperationCounter> operationCounterList;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(baseName);

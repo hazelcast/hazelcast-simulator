@@ -53,7 +53,7 @@ public class GrowingMapTest {
     private IMap<Long, Long> map;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
 
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();

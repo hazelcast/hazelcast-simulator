@@ -302,7 +302,7 @@ public class MapComplexPredicateTest {
     private IMap<String, ComplexDomainObject> map;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         map = testContext.getTargetInstance().getMap(basename);
     }
 

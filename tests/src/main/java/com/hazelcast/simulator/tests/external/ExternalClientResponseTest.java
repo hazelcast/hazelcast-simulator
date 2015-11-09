@@ -38,7 +38,7 @@ public class ExternalClientResponseTest {
     private ICountDownLatch clientsFinished;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         hazelcastInstance = testContext.getTargetInstance();
         clientsFinished = hazelcastInstance.getCountDownLatch(basename);
     }

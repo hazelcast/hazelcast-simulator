@@ -94,7 +94,7 @@ public class MapEntryListenerTest {
     private IMap<Integer, String> map;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         values = generateStrings(valueCount, valueLength);

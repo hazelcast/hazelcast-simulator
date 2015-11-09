@@ -26,7 +26,6 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapMaxSizeOperationCounter;
-import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -80,7 +79,7 @@ public class MapMaxSizeTest {
     private int maxSizePerNode;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
@@ -96,17 +95,12 @@ public class MapMaxSizeTest {
 
 
         if (isMemberNode(targetInstance)) {
-            try {
-                MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
-                maxSizePerNode = maxSizeConfig.getSize();
-                assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
-                assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
+            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+            maxSizePerNode = maxSizeConfig.getSize();
+            assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
+            assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
-                LOGGER.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
-            } catch (Exception e) {
-                ExceptionReporter.report(testContext.getTestId(), e);
-                throw e;
-            }
+            LOGGER.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
         }
     }
 

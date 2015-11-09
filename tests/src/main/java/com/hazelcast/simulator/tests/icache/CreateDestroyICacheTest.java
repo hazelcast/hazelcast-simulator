@@ -61,7 +61,7 @@ public class CreateDestroyICacheTest {
     private CacheManager cacheManager;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         counters = hazelcastInstance.getList(basename);
 

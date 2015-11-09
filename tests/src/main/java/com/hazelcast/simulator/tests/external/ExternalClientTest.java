@@ -51,7 +51,7 @@ public class ExternalClientTest {
     private ICountDownLatch clientsRunning;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         hazelcastInstance = testContext.getTargetInstance();
 
         if (isMemberNode(hazelcastInstance)) {

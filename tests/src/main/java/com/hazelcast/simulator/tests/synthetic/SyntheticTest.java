@@ -92,7 +92,7 @@ public class SyntheticTest {
     private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
     }
 

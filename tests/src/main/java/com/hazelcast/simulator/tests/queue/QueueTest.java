@@ -54,7 +54,7 @@ public class QueueTest {
 
     @Setup
     @SuppressWarnings("unchecked")
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 

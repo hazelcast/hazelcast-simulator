@@ -45,7 +45,7 @@ public class SplitClusterDataTest {
     private IMap<Object, Object> map;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);

@@ -60,7 +60,7 @@ public class PagingPredicateTest {
     private SqlPredicate innerPredicate;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         innerPredicate = new SqlPredicate(innerPredicateQuery);

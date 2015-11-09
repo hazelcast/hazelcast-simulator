@@ -47,7 +47,7 @@ public class TxnQueueWithLockTest {
     private TestContext testContext = null;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         this.instance = testContext.getTargetInstance();
     }

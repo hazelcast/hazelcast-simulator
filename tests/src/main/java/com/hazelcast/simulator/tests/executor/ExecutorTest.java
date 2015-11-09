@@ -58,7 +58,7 @@ public class ExecutorTest {
     private TestContext testContext;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 

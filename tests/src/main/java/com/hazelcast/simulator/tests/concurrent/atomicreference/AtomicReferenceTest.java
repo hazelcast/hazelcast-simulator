@@ -60,7 +60,7 @@ public class AtomicReferenceTest {
     private Object[] values;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         targetInstance = testContext.getTargetInstance();
 
         values = new Object[valueCount];

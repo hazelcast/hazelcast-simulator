@@ -80,7 +80,7 @@ public class EvictionICacheTest {
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         hazelcastInstance = this.testContext.getTargetInstance();
         partitionCount = hazelcastInstance.getPartitionService().getPartitions().size();

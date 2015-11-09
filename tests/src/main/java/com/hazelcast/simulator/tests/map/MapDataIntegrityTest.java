@@ -34,6 +34,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -61,7 +62,7 @@ public class MapDataIntegrityTest {
     private byte[] value;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
@@ -79,7 +80,7 @@ public class MapDataIntegrityTest {
             final Set<Partition> partitionSet = partitionService.getPartitions();
             for (Partition partition : partitionSet) {
                 while (partition.getOwner() == null) {
-                    Thread.sleep(1000);
+                    sleepSeconds(1);
                 }
             }
             LOGGER.info(basename + ": " + partitionSet.size() + " partitions");

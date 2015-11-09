@@ -70,7 +70,7 @@ public class HttpLoadTest {
     private String baseRul;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
 
         baseRul = "http://" + serverIp + ':' + serverPort + '/';

@@ -48,7 +48,7 @@ public class MapTTLSaturationTest {
     private IMap<Long, Long> map;
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
+    public void setup(TestContext testContext) {
         this.testContext = testContext;
         map = testContext.getTargetInstance().getMap(basename);
     }

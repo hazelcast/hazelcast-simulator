@@ -48,7 +48,7 @@ public class MapRaceTest {
     private IMap<String, Map<Integer, Long>> resultMap;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         HazelcastInstance targetInstance = testContext.getTargetInstance();
 
         map = targetInstance.getMap(basename);

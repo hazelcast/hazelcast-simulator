@@ -49,7 +49,7 @@ public class ExampleTest {
     private IMap<Integer, String> map;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         LOGGER.info("======== SETUP =========");
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap("exampleMap");

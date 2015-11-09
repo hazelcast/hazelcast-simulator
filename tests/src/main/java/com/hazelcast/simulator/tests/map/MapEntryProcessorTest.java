@@ -54,7 +54,7 @@ public class MapEntryProcessorTest {
     private IList<long[]> resultsPerWorker;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         if (minProcessorDelayMs > maxProcessorDelayMs) {
             throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. "
                     + "Current settings: minProcessorDelayMs = " + minProcessorDelayMs

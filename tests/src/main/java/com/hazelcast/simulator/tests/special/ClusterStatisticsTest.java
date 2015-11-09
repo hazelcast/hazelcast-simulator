@@ -44,7 +44,7 @@ public class ClusterStatisticsTest {
     private IMap<Object, Integer> map;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         this.hazelcastInstance = testContext.getTargetInstance();
         this.partitionService = hazelcastInstance.getPartitionService();
         this.map = hazelcastInstance.getMap(basename);
