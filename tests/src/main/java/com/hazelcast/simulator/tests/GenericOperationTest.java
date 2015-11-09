@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
-import com.hazelcast.instance.Node;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
@@ -30,23 +29,20 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ReflectionUtils;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.UrgentSystemOperation;
-import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationService;
 
 public class GenericOperationTest {
 
@@ -74,12 +70,9 @@ public class GenericOperationTest {
     private HazelcastInstance instance;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
+    public void setUp(TestContext testContext) {
         instance = testContext.getTargetInstance();
-
-        Node node = getNode(instance);
-        Method method = ReflectionUtils.getMethodByName(NodeEngineImpl.class, "getOperationService");
-        operationService = (OperationService) method.invoke(node.nodeEngine);
+        operationService = getOperationService(instance);
 
         operationSelectorBuilder
                 .addOperation(PrioritySelector.PRIORITY, priorityProb)
