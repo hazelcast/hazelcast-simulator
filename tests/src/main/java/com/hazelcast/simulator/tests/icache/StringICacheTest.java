@@ -99,7 +99,7 @@ public class StringICacheTest {
     }
 
     @Warmup(global = false)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
 
         keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);

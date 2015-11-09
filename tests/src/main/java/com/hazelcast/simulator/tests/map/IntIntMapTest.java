@@ -84,7 +84,7 @@ public class IntIntMapTest {
     }
 
     @Warmup(global = false)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
         Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);

@@ -87,7 +87,7 @@ public class MapTransactionReadWriteTest {
     }
 
     @Warmup(global = false)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
         keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
 

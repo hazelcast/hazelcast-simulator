@@ -89,7 +89,7 @@ public class StringStringMapTest {
     }
 
     @Warmup(global = false)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
@@ -97,7 +97,7 @@ public class StringStringMapTest {
         loadInitialData();
     }
 
-    private void loadInitialData() throws InterruptedException {
+    private void loadInitialData() {
         Random random = new Random();
         Streamer<String, String> streamer = StreamerFactory.getInstance(map);
         for (String key : keys) {

@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
@@ -184,14 +185,14 @@ public final class HazelcastTestUtils {
         }
     }
 
-    public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) throws InterruptedException {
+    public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) {
         for (; ; ) {
             if (hz.getCluster().getMembers().size() >= clusterSize) {
                 return;
             }
 
             logger.info("waiting cluster == " + clusterSize);
-            Thread.sleep(1000);
+            sleepSeconds(1);
         }
     }
 

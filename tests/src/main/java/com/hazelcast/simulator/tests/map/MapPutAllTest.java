@@ -74,7 +74,7 @@ public class MapPutAllTest {
 
     @Warmup(global = false)
     @SuppressWarnings("unchecked")
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
 
         String[] keys = new String[itemCount];

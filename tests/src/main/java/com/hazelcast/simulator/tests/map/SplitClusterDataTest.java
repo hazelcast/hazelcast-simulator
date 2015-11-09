@@ -55,7 +55,7 @@ public class SplitClusterDataTest {
     }
 
     @Warmup(global = true)
-    public void warmup() throws Exception {
+    public void warmup() {
         waitClusterSize(LOGGER, targetInstance, clusterSize);
 
         for (int i = 0; i < maxItems; i++) {

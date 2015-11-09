@@ -86,7 +86,7 @@ public class StringStringSyntheticMapTest {
     }
 
     @Warmup(global = false)
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
         values = generateStrings(valueCount, valueLength);
