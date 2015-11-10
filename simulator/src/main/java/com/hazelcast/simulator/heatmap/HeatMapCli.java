@@ -56,7 +56,8 @@ final class HeatMapCli {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
         simulatorProperties.init(getPropertiesFile(cli, options));
 
-        return new HeatMap(options.valueOf(cli.directorySpec), options.valueOf(cli.testNameSpec), options.valueOf(cli.probeNameSpec));
+        return new HeatMap(options.valueOf(cli.directorySpec), options.valueOf(cli.testNameSpec),
+                options.valueOf(cli.probeNameSpec));
     }
 
     static void run(HeatMap heatMap) {
