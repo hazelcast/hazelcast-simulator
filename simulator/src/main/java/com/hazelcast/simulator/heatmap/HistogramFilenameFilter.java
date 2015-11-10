@@ -34,8 +34,6 @@ class HistogramFilenameFilter implements FilenameFilter {
     @Override
     public boolean accept(File dir, String name) {
         File file = new File(dir, name);
-        System.out.println(file.getAbsolutePath());
-
         if (file.isDirectory()) {
             return true;
         }
