@@ -324,10 +324,6 @@ public final class Coordinator {
                 public void run() {
                     try {
                         ((TestCaseRunner) testCaseRunner).run();
-                        if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
-                            LOGGER.info("Aborting testsuite due to failure (not implemented yet)");
-                            // FIXME: we should abort here as logged
-                        }
                     } catch (Exception e) {
                         throw rethrow(e);
                     }
