@@ -61,13 +61,20 @@ public class ClusterLayout {
             Set<String> agentHazelcastVersionSpecs = agentWorkerLayout.getHazelcastVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
             int agentClientWorkerCount = agentWorkerLayout.getCount(WorkerType.CLIENT);
+            int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
 
             versionSpecs.addAll(agentHazelcastVersionSpecs);
 
             memberWorkerCount += agentMemberWorkerCount;
             clientWorkerCount += agentClientWorkerCount;
 
-            LOGGER.info(format("    Agent %s (%s) members: %s, clients: %s, mode: %s, version specs: %s",
+            String message = "    Agent %s (%s) members: %s, clients: %s";
+            if (totalWorkerCount > 0) {
+                message += ", mode: %s, version specs: %s";
+            } else {
+                message += " (no workers)";
+            }
+            LOGGER.info(format(message,
                     formatIpAddress(agentWorkerLayout.getPublicAddress()),
                     agentWorkerLayout.getSimulatorAddress(),
                     formatLong(agentMemberWorkerCount, 2),
