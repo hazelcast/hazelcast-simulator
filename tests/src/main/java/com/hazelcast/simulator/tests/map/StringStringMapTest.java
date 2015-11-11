@@ -89,12 +89,22 @@ public class StringStringMapTest {
     }
 
     @Warmup(global = false)
-    public void warmup() {
+    public void localWarmup() {
         waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
+        if (keyLocality != KeyLocality.RANDOM) {
+            //when random key locality is used then just a single worker can load initial data
+            //in other cases every member does
+            loadInitialData();
+        }
+    }
 
-        loadInitialData();
+    @Warmup(global = true)
+    public void globalWarmup() {
+        if (keyLocality == KeyLocality.RANDOM) {
+            loadInitialData();
+        }
     }
 
     private void loadInitialData() {
