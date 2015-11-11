@@ -63,7 +63,7 @@ public class PerformanceStateContainer {
             return "";
         }
         String latencyUnit = "µs";
-        double avgLatencyValue = performanceState.getIntervalAvgLatency();
+        long avgLatencyValue = round(performanceState.getIntervalAvgLatency());
         long percentileLatencyValue = performanceState.getIntervalPercentileLatency();
         long maxLatencyValue = performanceState.getIntervalMaxLatency();
         if (avgLatencyValue > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
@@ -72,10 +72,10 @@ public class PerformanceStateContainer {
             percentileLatencyValue = MICROSECONDS.toMillis(percentileLatencyValue);
             maxLatencyValue = MICROSECONDS.toMillis(maxLatencyValue);
         }
-        return String.format("%s ops %s ops/s  %s %s (avg) %s %s (%sth) %s %s (max)",
+        return String.format("%s ops %s ops/s %s %s (avg) %s %s (%sth) %s %s (max)",
                 formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
-                formatDouble(avgLatencyValue, LATENCY_FORMAT_LENGTH),
+                formatLong(avgLatencyValue, LATENCY_FORMAT_LENGTH),
                 latencyUnit,
                 formatLong(percentileLatencyValue, LATENCY_FORMAT_LENGTH),
                 latencyUnit,
