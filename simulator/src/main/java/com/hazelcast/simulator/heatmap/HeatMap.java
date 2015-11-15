@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -69,25 +70,7 @@ public class HeatMap {
         FileWalker fileWalker = new FileWalker(filenameFilter);
         fileWalker.walk(directory);
 
-        ArrayList<Histogram> histograms = new ArrayList<Histogram>();
-        for (File latencyFile : fileWalker.getGetFiles()) {
-            LOGGER.info(format("Processing latency file %s...", latencyFile.getAbsolutePath()));
-            HistogramLogReader histogramLogReader = createHistogramLogReader(latencyFile, testName);
-
-            int index = 0;
-            Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
-            while (histogram != null) {
-                if (histograms.size() > index) {
-                    Histogram combined = histograms.get(index);
-                    combined.add(histogram);
-                } else {
-                    histograms.add(histogram);
-                }
-                index++;
-                histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
-            }
-        }
-
+        List<Histogram> histograms = getHistograms(testName, fileWalker);
         histogramCount = histograms.size();
         LOGGER.info(format("Found %d histograms in total", histogramCount));
 
@@ -109,25 +92,7 @@ public class HeatMap {
         long latencyWindowSize = (long) ceil(totalMaxLatency / (double) DIMENSION_Y);
         LOGGER.info(format("Latency window per pixel: %d µs", latencyWindowSize));
 
-        ArrayList<ArrayList<Long>> heatmap = new ArrayList<ArrayList<Long>>(histogramCount);
-        for (int i = 0; i < histogramCount; i++) {
-            heatmap.add(new ArrayList<Long>(DIMENSION_Y));
-        }
-
-        for (int yPos = 0; yPos < DIMENSION_Y; yPos++) {
-            long lowValue = yPos * latencyWindowSize;
-            long highValue = (yPos + 1) * latencyWindowSize;
-            long maxValue = Long.MIN_VALUE;
-            for (int histogramIndex = 0; histogramIndex < histogramCount; histogramIndex++) {
-                Histogram histogram = histograms.get(histogramIndex);
-                long latencyCount = histogram.getCountBetweenValues(lowValue, highValue);
-                if (latencyCount > maxValue) {
-                    maxValue = latencyCount;
-                }
-                heatmap.get(histogramIndex).add(latencyCount);
-            }
-            LOGGER.info(format("lowValue: %d, highValue: %d, maxValue: %d", lowValue, highValue, maxValue));
-        }
+        calculateLinearHeatMap(histograms, latencyWindowSize);
     }
 
     // just for testing
@@ -149,5 +114,52 @@ public class HeatMap {
         } catch (IOException e) {
             throw new CommandLineExitException("Could not initialize HistogramLogReader for test " + testName, e);
         }
+    }
+
+    private static List<Histogram> getHistograms(String testName, FileWalker fileWalker) {
+        ArrayList<Histogram> histograms = new ArrayList<Histogram>();
+        for (File latencyFile : fileWalker.getGetFiles()) {
+            LOGGER.info(format("Processing latency file %s...", latencyFile.getAbsolutePath()));
+            HistogramLogReader histogramLogReader = createHistogramLogReader(latencyFile, testName);
+
+            int index = 0;
+            Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            while (histogram != null) {
+                if (histograms.size() > index) {
+                    Histogram combined = histograms.get(index);
+                    combined.add(histogram);
+                } else {
+                    histograms.add(histogram);
+                }
+                index++;
+                histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            }
+        }
+        return histograms;
+    }
+
+    private static List<ArrayList<Long>> calculateLinearHeatMap(List<Histogram> histograms, long latencyWindowSize) {
+        int histogramCount = histograms.size();
+
+        ArrayList<ArrayList<Long>> heatmap = new ArrayList<ArrayList<Long>>(histogramCount);
+        for (int i = 0; i < histogramCount; i++) {
+            heatmap.add(new ArrayList<Long>(DIMENSION_Y));
+        }
+
+        for (int yPos = 0; yPos < DIMENSION_Y; yPos++) {
+            long lowValue = yPos * latencyWindowSize;
+            long highValue = (yPos + 1) * latencyWindowSize;
+            long maxValue = Long.MIN_VALUE;
+            for (int histogramIndex = 0; histogramIndex < histogramCount; histogramIndex++) {
+                Histogram histogram = histograms.get(histogramIndex);
+                long latencyCount = histogram.getCountBetweenValues(lowValue, highValue);
+                if (latencyCount > maxValue) {
+                    maxValue = latencyCount;
+                }
+                heatmap.get(histogramIndex).add(latencyCount);
+            }
+            LOGGER.info(format("lowValue: %d, highValue: %d, maxValue: %d", lowValue, highValue, maxValue));
+        }
+        return heatmap;
     }
 }
