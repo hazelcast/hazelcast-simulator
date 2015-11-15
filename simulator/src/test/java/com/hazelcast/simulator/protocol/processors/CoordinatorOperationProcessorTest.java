@@ -143,7 +143,7 @@ public class CoordinatorOperationProcessorTest {
         assertTrue(performanceNumbers.contains(formatLong(1000, THROUGHPUT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatDouble(50, THROUGHPUT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
-        assertTrue(performanceNumbers.contains(formatDouble(33.0d, LATENCY_FORMAT_LENGTH)));
+        assertTrue(performanceNumbers.contains(formatLong(33, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(42, LATENCY_FORMAT_LENGTH)));
     }
 
