@@ -57,6 +57,7 @@ public class MemberWorkerTest {
         try {
             if (worker != null) {
                 worker.shutdown();
+                worker.awaitShutdown();
             }
 
             Hazelcast.shutdownAll();

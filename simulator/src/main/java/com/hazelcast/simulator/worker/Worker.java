@@ -19,7 +19,7 @@ import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 
 public interface Worker {
 
-    void shutdown() throws Exception;
+    void shutdown();
 
     boolean startPerformanceMonitor();
 

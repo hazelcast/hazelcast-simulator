@@ -70,6 +70,8 @@ public final class MemberWorker implements Worker {
 
     private final WorkerPerformanceMonitor workerPerformanceMonitor;
 
+    private ShutdownThread shutdownThread;
+
     MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
                  boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds, String hConfigFile) throws Exception {
         SHUTDOWN_STARTED.set(false);
@@ -101,10 +103,16 @@ public final class MemberWorker implements Worker {
     }
 
     @Override
-    public void shutdown() throws Exception {
-        ShutdownThread thread = new ShutdownThread(false);
-        thread.start();
-        thread.awaitShutdown();
+    public void shutdown() {
+        shutdownThread = new ShutdownThread(false);
+        shutdownThread.start();
+    }
+
+    // just for testing
+    void awaitShutdown() throws Exception {
+        if (shutdownThread != null) {
+            shutdownThread.awaitShutdown();
+        }
     }
 
     @Override
