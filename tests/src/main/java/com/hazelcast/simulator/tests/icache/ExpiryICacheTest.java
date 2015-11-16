@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -26,9 +25,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.util.EmptyStatement;
 
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
@@ -55,14 +52,6 @@ public class ExpiryICacheTest {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
-        CacheConfig<Long, Long> config = new CacheConfig<Long, Long>();
-        config.setName(basename);
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException e) {
-            // ignore exception when multiple nodes created the same cache
-            EmptyStatement.ignore(e);
-        }
 
         cache = (ICache<Long, Long>) cacheManager.<Long, Long>getCache(basename);
     }

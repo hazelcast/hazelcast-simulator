@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -91,13 +90,8 @@ public class CreateDestroyICacheTest {
 
         private final ICacheCreateDestroyCounter counter = new ICacheCreateDestroyCounter();
 
-        private final CacheConfig config;
-
         private Worker() {
             super(builder);
-
-            config = new CacheConfig();
-            config.setName(basename);
         }
 
         @Override
@@ -105,7 +99,7 @@ public class CreateDestroyICacheTest {
             switch (operation) {
                 case CREATE_CACHE:
                     try {
-                        cacheManager.createCache(basename, config);
+                        cacheManager.getCache(basename);
                         counter.create++;
                     } catch (CacheException e) {
                         counter.createException++;

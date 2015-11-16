@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -67,7 +66,6 @@ public class AddRemoveListenerICacheTest {
     public double getProb = 0.25;
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
-    private final CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
     private final ICacheEntryListener<Integer, Long> listener = new ICacheEntryListener<Integer, Long>();
     private final ICacheEntryEventFilter<Integer, Long> filter = new ICacheEntryEventFilter<Integer, Long>();
 
@@ -83,8 +81,7 @@ public class AddRemoveListenerICacheTest {
 
         cacheManager = createCacheManager(hazelcastInstance);
 
-        config.setName(basename);
-        cacheManager.createCache(basename, config);
+        cacheManager.getCache(basename);
 
         builder.addOperation(Operation.REGISTER, registerProb)
                 .addOperation(Operation.DE_REGISTER, deRegisterProb)

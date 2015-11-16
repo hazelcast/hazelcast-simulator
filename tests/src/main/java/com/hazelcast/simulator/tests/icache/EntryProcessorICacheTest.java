@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -32,7 +31,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.MutableEntry;
@@ -62,16 +60,6 @@ public class EntryProcessorICacheTest {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
-        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
-        config.setName(basename);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            // temp hack to deal with multiple nodes wanting to make the same cache
-            LOGGER.severe(hack);
-        }
 
         cache = cacheManager.getCache(basename);
         resultsPerWorker = hazelcastInstance.getList(basename + ":ResultMap");

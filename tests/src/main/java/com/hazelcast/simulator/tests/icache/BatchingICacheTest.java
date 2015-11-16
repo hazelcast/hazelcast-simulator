@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
@@ -72,15 +71,7 @@ public class BatchingICacheTest {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
-        config.setName(basename);
 
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            // temp hack to deal with multiple nodes wanting to make the same cache
-            LOGGER.severe(hack);
-        }
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);

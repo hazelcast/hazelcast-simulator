@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -63,14 +62,7 @@ public class CasICacheTest {
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
-        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
-        config.setName(basename);
 
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException e) {
-            LOGGER.severe(basename + ": createCache " + e);
-        }
         cache = cacheManager.getCache(basename);
     }
 

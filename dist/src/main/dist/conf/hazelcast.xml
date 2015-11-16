@@ -98,6 +98,9 @@
         </service>
     </services>
 
+    <cache name="*">
+    </cache>
+
     <cache name="maxCachSmall*">
         <eviction max-size-policy="ENTRY_COUNT" size="271" eviction-policy="LFU"/>
     </cache>

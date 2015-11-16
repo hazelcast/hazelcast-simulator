@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -74,7 +73,6 @@ public class ExpiryTest {
     private CacheManager cacheManager;
 
     private ExpiryPolicy expiryPolicy;
-    private CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
 
     @Setup
     public void setup(TestContext testContext) {
@@ -84,7 +82,6 @@ public class ExpiryTest {
         cacheManager = createCacheManager(hazelcastInstance);
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 
-        config.setName(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb).addOperation(Operation.PUT_ASYNC, putAsyncProb)
                 .addOperation(Operation.GET, getProb).addOperation(Operation.GET_ASYNC, getAsyncProb);
@@ -92,7 +89,7 @@ public class ExpiryTest {
 
     @Warmup(global = true)
     public void warmup() {
-        cacheManager.createCache(basename, config);
+        cacheManager.getCache(basename);
     }
 
     @Verify(global = true)

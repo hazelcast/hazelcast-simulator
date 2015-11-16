@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
+import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -67,7 +68,7 @@ public class ReadWriteICacheTest {
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IList<ICacheReadWriteCounter> counters;
-    private MutableConfiguration<Integer, Integer> config;
+    private CacheConfig<Integer, Integer> config;
     private Cache<Integer, Integer> cache;
 
     @Setup
@@ -82,7 +83,7 @@ public class ReadWriteICacheTest {
         writer.writeDelayMs = putDelayMs;
         writer.deleteDelayMs = removeDelayMs;
 
-        config = new MutableConfiguration<Integer, Integer>();
+        config = new CacheConfig<Integer, Integer>();
         config.setReadThrough(true);
         config.setWriteThrough(true);
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(loader));
