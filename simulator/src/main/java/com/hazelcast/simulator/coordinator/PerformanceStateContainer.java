@@ -68,7 +68,7 @@ public class PerformanceStateContainer {
         long maxLatencyValue = performanceState.getIntervalMaxLatency();
         if (avgLatencyValue > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
             latencyUnit = "ms";
-            avgLatencyValue = MICROSECONDS.toMillis(round(avgLatencyValue));
+            avgLatencyValue = MICROSECONDS.toMillis(avgLatencyValue);
             percentileLatencyValue = MICROSECONDS.toMillis(percentileLatencyValue);
             maxLatencyValue = MICROSECONDS.toMillis(maxLatencyValue);
         }
