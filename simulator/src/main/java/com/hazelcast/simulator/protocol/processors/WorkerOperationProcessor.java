@@ -89,7 +89,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processTerminateWorker() {
+    private void processTerminateWorker() throws Exception {
         worker.shutdown();
     }
 

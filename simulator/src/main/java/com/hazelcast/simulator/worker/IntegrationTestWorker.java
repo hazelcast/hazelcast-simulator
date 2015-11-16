@@ -59,7 +59,7 @@ public class IntegrationTestWorker implements Worker {
     }
 
     @Override
-    public void shutdown() {
+    public void shutdown() throws Exception {
         new ShutdownThread(latch).start();
     }
 
