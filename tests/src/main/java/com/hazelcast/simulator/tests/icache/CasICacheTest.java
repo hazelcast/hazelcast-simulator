@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -31,7 +29,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
@@ -47,13 +44,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class CasICacheTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(CasICacheTest.class);
-
     public String basename = CasICacheTest.class.getSimpleName();
     public int keyCount = 1000;
 
-    private Cache<Integer, Long> cache;
     private IList<long[]> resultsPerWorker;
+    private Cache<Integer, Long> cache;
 
     @Setup
     public void setup(TestContext testContext) {
@@ -61,8 +56,6 @@ public class CasICacheTest {
         resultsPerWorker = hazelcastInstance.getList(basename);
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
-
         cache = cacheManager.getCache(basename);
     }
 

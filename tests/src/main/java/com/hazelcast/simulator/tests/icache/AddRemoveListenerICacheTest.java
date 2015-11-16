@@ -69,10 +69,10 @@ public class AddRemoveListenerICacheTest {
     private final ICacheEntryListener<Integer, Long> listener = new ICacheEntryListener<Integer, Long>();
     private final ICacheEntryEventFilter<Integer, Long> filter = new ICacheEntryEventFilter<Integer, Long>();
 
+    private IList<ICacheListenerOperationCounter> results;
     private CacheManager cacheManager;
     private Cache<Integer, Long> cache;
     private MutableCacheEntryListenerConfiguration<Integer, Long> listenerConfiguration;
-    private IList<ICacheListenerOperationCounter> results;
 
     @Setup
     public void setup(TestContext testContext) {
@@ -80,7 +80,6 @@ public class AddRemoveListenerICacheTest {
         results = hazelcastInstance.getList(basename);
 
         cacheManager = createCacheManager(hazelcastInstance);
-
         cacheManager.getCache(basename);
 
         builder.addOperation(Operation.REGISTER, registerProb)

@@ -71,7 +71,6 @@ public class ExpiryTest {
 
     private IList<Counter> results;
     private CacheManager cacheManager;
-
     private ExpiryPolicy expiryPolicy;
 
     @Setup
@@ -81,7 +80,6 @@ public class ExpiryTest {
 
         cacheManager = createCacheManager(hazelcastInstance);
         expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
-
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb).addOperation(Operation.PUT_ASYNC, putAsyncProb)
                 .addOperation(Operation.GET, getProb).addOperation(Operation.GET_ASYNC, getAsyncProb);

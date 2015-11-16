@@ -55,8 +55,8 @@ public class PerformanceICacheTest {
     @Setup
     public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
         cache = cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)

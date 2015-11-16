@@ -69,8 +69,6 @@ public class CacheLoaderTest {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         loaderList = hazelcastInstance.getList(basename + "loaders");
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
         config = new MutableConfiguration<Integer, Integer>();
         config.setReadThrough(true);
 
@@ -78,6 +76,7 @@ public class CacheLoaderTest {
         recordingCacheLoader.loadAllDelayMs = loadAllDelayMs;
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(recordingCacheLoader));
 
+        CacheManager cacheManager = createCacheManager(hazelcastInstance);
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
     }

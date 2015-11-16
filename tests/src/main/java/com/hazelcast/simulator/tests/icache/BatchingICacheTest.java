@@ -18,8 +18,6 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -31,7 +29,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,8 +51,6 @@ public class BatchingICacheTest {
         GET,
     }
 
-    private static final ILogger LOGGER = Logger.getLogger(PerformanceICacheTest.class);
-
     // properties
     public int keyCount = 1000000;
     public String basename = BatchingICacheTest.class.getSimpleName();
@@ -69,9 +64,8 @@ public class BatchingICacheTest {
     @Setup
     public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
-
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);

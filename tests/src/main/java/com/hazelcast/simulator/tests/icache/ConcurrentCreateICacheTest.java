@@ -51,13 +51,12 @@ public class ConcurrentCreateICacheTest {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         counterList = hazelcastInstance.getList(baseName);
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
         CacheConfig config = new CacheConfig();
         config.setName(baseName);
 
         Counter counter = new Counter();
         try {
+            CacheManager cacheManager = createCacheManager(hazelcastInstance);
             cacheManager.createCache(baseName, config);
             counter.create++;
         } catch (CacheException e) {

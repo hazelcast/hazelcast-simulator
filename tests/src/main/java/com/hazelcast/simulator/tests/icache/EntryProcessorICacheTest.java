@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -44,25 +42,22 @@ import static org.junit.Assert.assertEquals;
 
 public class EntryProcessorICacheTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(EntryProcessorICacheTest.class);
-
     // properties
     public String basename = EntryProcessorICacheTest.class.getSimpleName();
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
 
-    private Cache<Integer, Long> cache;
     private IList<Map<Integer, Long>> resultsPerWorker;
+    private Cache<Integer, Long> cache;
 
     @Setup
     public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        resultsPerWorker = hazelcastInstance.getList(basename + ":ResultMap");
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
         cache = cacheManager.getCache(basename);
-        resultsPerWorker = hazelcastInstance.getList(basename + ":ResultMap");
     }
 
     @Teardown

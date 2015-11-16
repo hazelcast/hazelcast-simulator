@@ -90,7 +90,6 @@ public class EvictionICacheTest {
         random.nextBytes(value);
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
