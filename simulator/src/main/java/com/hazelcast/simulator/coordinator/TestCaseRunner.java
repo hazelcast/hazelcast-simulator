@@ -151,7 +151,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void runPhase(TestPhase testPhase) throws TimeoutException {
-        if (failureContainer.hasCriticalFailure(testCaseId)) {
+        if (testSuite.isFailFast() && failureContainer.hasCriticalFailure(testCaseId)) {
             echo("Skipping Test " + testPhase.desc() + " (critical failure)");
             return;
         }

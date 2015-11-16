@@ -139,6 +139,7 @@ public class CoordinatorRunTestSuiteTest {
     @Test
     public void runTestSuiteParallel_hasCriticalFailures() throws Exception {
         testSuite.setDurationSeconds(4);
+        testSuite.setFailFast(false);
         parallel = true;
 
         Coordinator coordinator = createCoordinator();
