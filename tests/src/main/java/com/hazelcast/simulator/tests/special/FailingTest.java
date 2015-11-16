@@ -146,7 +146,7 @@ public class FailingTest {
         }
     }
 
-    private void handleThrowable(Error error) throws Error {
+    private void handleThrowable(Error error) {
         if (throwError) {
             throw error;
         } else {
