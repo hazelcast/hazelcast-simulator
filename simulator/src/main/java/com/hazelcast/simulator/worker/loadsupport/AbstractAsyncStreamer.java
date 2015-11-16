@@ -32,7 +32,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private final Semaphore semaphore;
     private final ExecutionCallback callback;
 
-    private Throwable storedException;
+    private volatile Throwable storedException;
 
     AbstractAsyncStreamer() {
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
@@ -46,7 +46,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     @SuppressWarnings("unchecked")
     public void pushEntry(K key, V value) {
         acquirePermit(1);
-        ICompletableFuture future = storeAsync(key, value);
+        ICompletableFuture<V> future = storeAsync(key, value);
         future.andThen(callback);
     }
 
@@ -81,10 +81,10 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         }
     }
 
-    private final class StreamerExecutionCallback implements ExecutionCallback {
+    private final class StreamerExecutionCallback implements ExecutionCallback<V> {
 
         @Override
-        public void onResponse(Object response) {
+        public void onResponse(V response) {
             releasePermit(1);
         }
 
