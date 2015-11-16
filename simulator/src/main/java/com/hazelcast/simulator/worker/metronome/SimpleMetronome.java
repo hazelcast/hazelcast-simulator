@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker.metronome;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Math.round;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
@@ -64,11 +65,7 @@ public final class SimpleMetronome implements Metronome {
             return EMPTY_METRONOME;
         }
 
-        long intervalNanos = Math.round((double) TimeUnit.SECONDS.toNanos(1) / frequency);
-        if (intervalNanos == 0) {
-            return EMPTY_METRONOME;
-        }
-
+        long intervalNanos = round((double) TimeUnit.SECONDS.toNanos(1) / frequency);
         return new SimpleMetronome(intervalNanos);
     }
 
