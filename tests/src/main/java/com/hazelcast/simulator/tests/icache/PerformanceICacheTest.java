@@ -15,10 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -31,7 +28,6 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
@@ -41,7 +37,6 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  */
 public class PerformanceICacheTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(PerformanceICacheTest.class);
 
     private enum Operation {
         PUT,
@@ -62,15 +57,6 @@ public class PerformanceICacheTest {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
 
-        CacheConfig<Integer, Integer> config = new CacheConfig<Integer, Integer>();
-        config.setName(basename);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            // temp hack to deal with multiple nodes wanting to make the same cache
-            LOGGER.severe(hack);
-        }
         cache = cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)

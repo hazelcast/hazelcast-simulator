@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -33,7 +32,6 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import java.util.Random;
 
@@ -77,20 +75,10 @@ public class StringICacheTest {
         hazelcastInstance = testContext.getTargetInstance();
 
         CacheManager cacheManager = createCacheManager(hazelcastInstance);
-
-        CacheConfig<String, String> config = new CacheConfig<String, String>();
-        config.setName(basename);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException hack) {
-            // temp hack to deal with multiple nodes wanting to make the same cache.
-            LOGGER.severe(hack);
-        }
         cache = cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
+                                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown

@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -103,7 +102,6 @@ public class MangleICacheTest {
 
     private class Worker extends AbstractWorker<Operation> {
 
-        private final CacheConfig config = new CacheConfig();
         private final ICacheOperationCounter counter = new ICacheOperationCounter();
 
         private CacheManager cacheManager;
@@ -111,7 +109,6 @@ public class MangleICacheTest {
         public Worker() {
             super(operationSelectorBuilder);
 
-            config.setName(basename);
             createNewCacheManager();
         }
 
@@ -128,7 +125,7 @@ public class MangleICacheTest {
                     closeCacheManager();
                     break;
                 case CREATE_CACHE:
-                    createCache();
+                    getCache();
                     break;
                 case CLOSE_CACHE:
                     closeCache();
@@ -174,10 +171,10 @@ public class MangleICacheTest {
             }
         }
 
-        private void createCache() {
+        private void getCache() {
             try {
                 int cacheNumber = randomInt(maxCaches);
-                cacheManager.createCache(basename + cacheNumber, config);
+                cacheManager.getCache(basename + cacheNumber);
                 counter.create++;
             } catch (CacheException e) {
                 counter.createException++;

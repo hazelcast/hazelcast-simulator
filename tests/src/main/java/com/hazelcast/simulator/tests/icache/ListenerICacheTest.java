@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.logging.ILogger;
@@ -30,9 +29,7 @@ import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
-import com.hazelcast.util.EmptyStatement;
 
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.FactoryBuilder;
@@ -98,15 +95,6 @@ public class ListenerICacheTest {
         listeners = hazelcastInstance.getList(basename + "listeners");
 
         cacheManager = createCacheManager(hazelcastInstance);
-
-        CacheConfig<Integer, Long> config = new CacheConfig<Integer, Long>();
-        config.setName(basename);
-
-        try {
-            cacheManager.createCache(basename, config);
-        } catch (CacheException ignored) {
-            EmptyStatement.ignore(ignored);
-        }
 
         builder.addOperation(Operation.PUT, put)
                 .addOperation(Operation.PUT_EXPIRY, putExpiry)
