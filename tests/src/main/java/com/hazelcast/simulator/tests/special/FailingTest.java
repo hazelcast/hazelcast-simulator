@@ -19,9 +19,13 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 
@@ -39,6 +43,7 @@ public class FailingTest {
     public enum Failure {
         EXCEPTION,
         ERROR,
+        NPE,
         FAIL,
         OOME,
         EXIT
@@ -47,32 +52,68 @@ public class FailingTest {
     private static final ILogger LOGGER = Logger.getLogger(FailingTest.class);
 
     // properties
+    public TestPhase testPhase = TestPhase.RUN;
     public Failure failure = Failure.EXCEPTION;
     public boolean throwError = false;
 
     private TestContext testContext;
 
     @Setup
-    public void setUp(TestContext testContext) {
+    public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
+
+        createFailure(TestPhase.SETUP);
+    }
+
+    @Teardown(global = false)
+    public void localTearDown() throws Exception {
+        createFailure(TestPhase.LOCAL_TEARDOWN);
+    }
+
+    @Teardown(global = true)
+    public void globalTearDown() throws Exception {
+        createFailure(TestPhase.GLOBAL_TEARDOWN);
+    }
+
+    @Warmup(global = false)
+    public void localWarmup() throws Exception {
+        createFailure(TestPhase.LOCAL_WARMUP);
+    }
+
+    @Warmup(global = true)
+    public void globalWarmup() throws Exception {
+        createFailure(TestPhase.GLOBAL_WARMUP);
+    }
+
+    @Verify(global = false)
+    public void localVerify() throws Exception {
+        createFailure(TestPhase.LOCAL_VERIFY);
+    }
+
+    @Verify(global = true)
+    public void globalVerify() throws Exception {
+        createFailure(TestPhase.GLOBAL_VERIFY);
     }
 
     @Run
     public void run() throws Exception {
+        createFailure(TestPhase.RUN);
+    }
+
+    private void createFailure(TestPhase currentTestPhase) throws Exception {
+        if (testPhase != currentTestPhase) {
+            return;
+        }
+
         switch (failure) {
             case EXCEPTION:
-                Exception exception = new TestException("Wanted exception");
-                if (throwError) {
-                    throw exception;
-                }
-                ExceptionReporter.report(testContext.getTestId(), exception);
+                handleThrowable(new TestException("Expected exception"));
                 break;
             case ERROR:
-                Error error = new AssertionError("Wanted error");
-                if (throwError) {
-                    throw error;
-                }
-                ExceptionReporter.report(testContext.getTestId(), error);
+                handleThrowable(new AssertionError("Expected error"));
+                break;
+            case NPE:
+                handleThrowable(new NullPointerException("Expected NPE"));
                 break;
             case FAIL:
                 fail("Wanted failure");
@@ -93,7 +134,23 @@ public class FailingTest {
                 exitWithError();
                 break;
             default:
-                throw new UnsupportedOperationException("Unknown failure " + failure);
+                throw new UnsupportedOperationException("Unknown failure: " + failure);
+        }
+    }
+
+    private void handleThrowable(Exception exception) throws Exception {
+        if (throwError) {
+            throw exception;
+        } else {
+            ExceptionReporter.report(testContext.getTestId(), exception);
+        }
+    }
+
+    private void handleThrowable(Error error) throws Error {
+        if (throwError) {
+            throw error;
+        } else {
+            ExceptionReporter.report(testContext.getTestId(), error);
         }
     }
 

@@ -151,6 +151,11 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void runPhase(TestPhase testPhase) throws TimeoutException {
+        if (failureContainer.hasCriticalFailure(testCaseId)) {
+            echo("Skipping Test " + testPhase.desc() + " (critical failure)");
+            return;
+        }
+
         echo("Starting Test " + testPhase.desc());
         if (testPhase.isGlobal()) {
             remoteClient.sendToTestOnFirstWorker(testCaseId, new StartTestPhaseOperation(testPhase));
