@@ -32,7 +32,7 @@ import static com.hazelcast.simulator.heatmap.HeatMapCli.run;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
-import static java.lang.Math.ceil;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 /**
@@ -89,10 +89,10 @@ public class HeatMap {
         }
         LOGGER.info(format("Total minimum latency: %d µs, total maximum latency: %d µs", totalMinLatency, totalMaxLatency));
 
-        long latencyWindowSize = (long) ceil(totalMaxLatency / (double) DIMENSION_Y);
-        LOGGER.info(format("Latency window per pixel: %d µs", latencyWindowSize));
+        double latencyWindowSize = totalMaxLatency / (double) DIMENSION_Y;
+        LOGGER.info(format("Latency window per pixel: %.2f µs", latencyWindowSize));
 
-        calculateLinearHeatMap(histograms, latencyWindowSize);
+        calculateLinearHeatMap(histograms, latencyWindowSize, totalMaxLatency);
     }
 
     // just for testing
@@ -138,7 +138,8 @@ public class HeatMap {
         return histograms;
     }
 
-    private static List<ArrayList<Long>> calculateLinearHeatMap(List<Histogram> histograms, long latencyWindowSize) {
+    private static List<ArrayList<Long>> calculateLinearHeatMap(List<Histogram> histograms, double latencyWindowSize,
+                                                                long totalMaxLatency) {
         int histogramCount = histograms.size();
 
         ArrayList<ArrayList<Long>> heatmap = new ArrayList<ArrayList<Long>>(histogramCount);
@@ -146,9 +147,9 @@ public class HeatMap {
             heatmap.add(new ArrayList<Long>(DIMENSION_Y));
         }
 
-        for (int yPos = 0; yPos < DIMENSION_Y; yPos++) {
-            long lowValue = yPos * latencyWindowSize;
-            long highValue = (yPos + 1) * latencyWindowSize;
+        for (int yPos = 1; yPos <= DIMENSION_Y; yPos++) {
+            long lowValue = (yPos == 1) ? 0 : round((yPos - 1) * latencyWindowSize);
+            long highValue = (yPos == DIMENSION_Y) ? totalMaxLatency : round(yPos * latencyWindowSize);
             long maxValue = Long.MIN_VALUE;
             for (int histogramIndex = 0; histogramIndex < histogramCount; histogramIndex++) {
                 Histogram histogram = histograms.get(histogramIndex);
@@ -158,7 +159,7 @@ public class HeatMap {
                 }
                 heatmap.get(histogramIndex).add(latencyCount);
             }
-            LOGGER.info(format("lowValue: %d, highValue: %d, maxValue: %d", lowValue, highValue, maxValue));
+            LOGGER.info(format("%4d: lowValue: %d, highValue: %d, maxValue: %d", yPos, lowValue, highValue, maxValue));
         }
         return heatmap;
     }
