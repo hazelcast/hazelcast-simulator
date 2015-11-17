@@ -101,7 +101,7 @@ public class CreateDestroyICacheTest {
                     try {
                         cacheManager.getCache(basename);
                         counter.create++;
-                    } catch (CacheException e) {
+                    } catch (IllegalStateException e) {
                         counter.createException++;
                     }
                     break;
