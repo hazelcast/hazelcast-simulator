@@ -92,7 +92,6 @@ public class ReplicatedMapTimeToLiveTest {
     }
 
     private class Worker extends AbstractWorker<Operation> {
-
         private final MapOperationCounter count = new MapOperationCounter();
 
         public Worker() {
