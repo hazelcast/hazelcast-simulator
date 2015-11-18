@@ -28,7 +28,6 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
