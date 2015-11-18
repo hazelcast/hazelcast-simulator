@@ -48,14 +48,13 @@ public class StringStringReplicatedMapTest {
     // properties
     public String basename = StringStringReplicatedMapTest.class.getSimpleName();
     public int keyCount = 10000;
-    public int valueCount = 10000;
+    public int valueCount = 10;
     public int keyLength = 10;
     public int valueLength = 10;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
-    public int minNumberOfMembers = 0;
 
-    public double putProb = 0.1;
-    public double removeProb = 0;
+    public double putProb = 0.45;
+    public double getProb = 0.45;
 
     // probes
     public Probe putProbe;
@@ -76,8 +75,8 @@ public class StringStringReplicatedMapTest {
         map = testContext.getTargetInstance().getReplicatedMap(basename + "-" + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                .addOperation(Operation.REMOVE, removeProb)
-                .addDefaultOperation(Operation.GET);
+                .addOperation(Operation.GET, getProb)
+                .addDefaultOperation(Operation.REMOVE);
     }
 
     @Teardown
@@ -88,19 +87,8 @@ public class StringStringReplicatedMapTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
-
-        loadInitialData();
-    }
-
-    private void loadInitialData() throws InterruptedException {
-        Random random = new Random();
-        for (String key : keys) {
-            String value = values[random.nextInt(valueCount)];
-            map.put(key, value);
-        }
     }
 
     @RunWithWorker

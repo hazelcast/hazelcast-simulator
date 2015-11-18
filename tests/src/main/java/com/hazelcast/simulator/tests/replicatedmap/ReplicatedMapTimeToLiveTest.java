@@ -47,12 +47,12 @@ public class ReplicatedMapTimeToLiveTest {
 
     // properties
     public String basename = ReplicatedMapTimeToLiveTest.class.getSimpleName();
-    public int keyCount = 10;
+    public int keyCount = 100000;
 
     public double putTTLProb = 0.7;
     public double getProb = 0.3;
 
-    public int maxTTLExpiryMs = 3000;
+    public int maxTTLExpiryMs = 1000;
     public int minTTLExpiryMs = 1;
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
@@ -103,13 +103,11 @@ public class ReplicatedMapTimeToLiveTest {
         protected void timeStep(Operation operation) throws Exception {
             try {
                 int key = randomInt(keyCount);
-                int value;
-                int delayMs;
 
                 switch (operation) {
                     case PUT_TTL:
-                        value = randomInt();
-                        delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
+                        int value = randomInt();
+                        int delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
                         map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
                         count.putTTLCount.incrementAndGet();
                         break;
