@@ -280,6 +280,10 @@ final class TestCaseRunner implements TestPhaseListener {
                     echo("Critical failure detected, aborting execution of test");
                     return;
                 }
+                if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
+                    echo("Aborting testsuite due to failure");
+                    return;
+                }
 
                 sleepSeconds(logRunPhaseIntervalSeconds);
                 logProgress(logRunPhaseIntervalSeconds * i, sleepSeconds);
