@@ -81,6 +81,8 @@ public class ReplicatedMapTimeToLiveTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
+
+                LOGGER.info(basename + ": " + "assert map Size = " + map.size());
                 assertEquals(basename + ": Replicated Map should be empty, some TTL events are not processed", 0, map.size());
             }
         });
