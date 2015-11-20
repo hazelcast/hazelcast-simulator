@@ -28,10 +28,8 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
-import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
