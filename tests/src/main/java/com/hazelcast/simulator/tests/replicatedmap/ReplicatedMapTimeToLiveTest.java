@@ -70,7 +70,7 @@ public class ReplicatedMapTimeToLiveTest {
                 .addOperation(Operation.GET, getProb);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter counter : results) {
