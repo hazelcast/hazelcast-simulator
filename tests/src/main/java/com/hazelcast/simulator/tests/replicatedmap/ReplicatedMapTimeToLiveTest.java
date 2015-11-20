@@ -31,6 +31,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.util.EmptyStatement;
+
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
@@ -70,8 +71,8 @@ public class ReplicatedMapTimeToLiveTest {
                 .addOperation(Operation.GET, getProb);
     }
 
-    @Verify
-    public void globalVerify() {
+    @Verify(global = false)
+    public void localVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter counter : results) {
             total.add(counter);
