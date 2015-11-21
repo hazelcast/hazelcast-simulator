@@ -197,13 +197,17 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
+            boolean isFailure = (type != WORKER_FINISHED);
             SimulatorAddress workerAddress = jvm.getAddress();
             FailureOperation operation = new FailureOperation(message, type, workerAddress, agent.getPublicAddress(),
                     jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
-            LOGGER.error(format("Detected failure on Worker %s: %s", jvm.getId(), operation.getLogMessage(++failureCount)));
+            if (isFailure) {
+                LOGGER.error(format("Detected failure on Worker %s: %s", jvm.getId(), operation.getLogMessage(++failureCount)));
+            }
 
             if (type.isWorkerFinishedFailure()) {
-                LOGGER.info(format("Removing failed Worker %s from configuration...", workerAddress));
+                String finishedType = (isFailure) ? "failed" : "finished";
+                LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
                 agent.getAgentConnector().removeWorker(workerAddress.getWorkerIndex());
             }
 
