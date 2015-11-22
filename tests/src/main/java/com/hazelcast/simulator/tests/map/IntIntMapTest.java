@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -64,15 +65,15 @@ public class IntIntMapTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
+    private HazelcastInstance targetInstance;
     private IMap<Integer, Integer> map;
 
     private int[] keys;
 
     @Setup
     public void setUp(TestContext testContext) {
-        this.testContext = testContext;
-        map = testContext.getTargetInstance().getMap(basename);
+        targetInstance = testContext.getTargetInstance();
+        map = targetInstance.getMap(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
@@ -80,13 +81,13 @@ public class IntIntMapTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     public void warmup() {
-        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, testContext.getTargetInstance());
+        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
+        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
         Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);
         Random random = new Random();
         for (int key : keys) {
