@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -66,7 +67,7 @@ public class StringStringMapTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
+    private HazelcastInstance targetInstance;
     private IMap<String, String> map;
 
     private String[] keys;
@@ -74,8 +75,8 @@ public class StringStringMapTest {
 
     @Setup
     public void setUp(TestContext testContext) {
-        this.testContext = testContext;
-        map = testContext.getTargetInstance().getMap(basename);
+        targetInstance = testContext.getTargetInstance();
+        map = targetInstance.getMap(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
                 .addOperation(Operation.SET, setProb)
@@ -85,13 +86,13 @@ public class StringStringMapTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     public void warmup() {
-        waitClusterSize(LOGGER, testContext.getTargetInstance(), minNumberOfMembers);
-        keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
+        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
+        keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
         values = generateStrings(valueCount, valueLength);
 
         loadInitialData();
