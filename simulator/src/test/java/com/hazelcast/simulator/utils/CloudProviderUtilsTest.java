@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
@@ -8,6 +9,8 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class CloudProviderUtilsTest {
 
@@ -24,6 +27,22 @@ public class CloudProviderUtilsTest {
     @Test
     public void testIsStatic_false() throws Exception {
         assertFalse(CloudProviderUtils.isStatic(PROVIDER_GCE));
+    }
+
+    @Test
+    public void testIsStatic_fromProperties_true() throws Exception {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(PROVIDER_STATIC);
+
+        assertTrue(CloudProviderUtils.isStatic(properties));
+    }
+
+    @Test
+    public void testIsStatic_fromProperties_false() throws Exception {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(PROVIDER_GCE);
+
+        assertFalse(CloudProviderUtils.isStatic(properties));
     }
 
     @Test

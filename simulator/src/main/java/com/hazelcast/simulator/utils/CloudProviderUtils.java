@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+
 public final class CloudProviderUtils {
 
     public static final String PROVIDER_STATIC = "static";
@@ -22,6 +24,10 @@ public final class CloudProviderUtils {
     public static final String PROVIDER_GCE = "google-compute-engine";
 
     private CloudProviderUtils() {
+    }
+
+    public static boolean isStatic(SimulatorProperties properties) {
+        return PROVIDER_STATIC.equals(properties.getCloudProvider());
     }
 
     public static boolean isStatic(String cloudProvider) {

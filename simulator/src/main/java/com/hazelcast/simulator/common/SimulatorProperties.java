@@ -128,6 +128,10 @@ public class SimulatorProperties {
         return parseInt(get("HAZELCAST_PORT_RANGE_SIZE", "50"));
     }
 
+    public String getCloudProvider() {
+        return get("CLOUD_PROVIDER");
+    }
+
     public String get(String name) {
         String value = (String) properties.get(name);
 
