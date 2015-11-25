@@ -62,6 +62,12 @@
         </indexes>
     </map>
 
+    <map name="ExtractorMapTest*">
+        <attributes>
+            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">payloadFromExtractor</attribute>
+        </attributes>
+    </map>
+
 
     <serialization>
         <portable-version>1</portable-version>
