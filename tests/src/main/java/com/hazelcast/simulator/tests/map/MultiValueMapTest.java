@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 public class MultiValueMapTest {
@@ -124,7 +125,7 @@ public class MultiValueMapTest {
                     } finally {
                         queryProbe.done();
                     }
-                    THROTTLING_LOGGER.info(String.format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
+                    THROTTLING_LOGGER.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
                     for (SillySequence resultSillySequence : result) {
                         assertValidSequence(resultSillySequence);
                     }

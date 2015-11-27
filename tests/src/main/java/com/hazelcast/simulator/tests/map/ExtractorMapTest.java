@@ -42,8 +42,8 @@ import java.util.Collection;
 import java.util.List;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class ExtractorMapTest {
 
@@ -81,7 +81,7 @@ public class ExtractorMapTest {
     public void warmup() {
         if (useIndex) {
             for (int i = 0; i < indexValuesCount; i++) {
-                map.addIndex(String.format("payloadFromExtractor[%d]", i), true);
+                map.addIndex(format("payloadFromExtractor[%d]", i), true);
             }
         }
 
@@ -123,7 +123,7 @@ public class ExtractorMapTest {
                     break;
                 case QUERY:
                     int index = key % nestedValuesCount;
-                    String query = String.format("payloadFromExtractor[%d]", index);
+                    String query = format("payloadFromExtractor[%d]", index);
                     Predicate predicate = Predicates.equal(query, key);
                     queryProbe.started();
                     Collection<SillySequence> result = null;
@@ -132,7 +132,8 @@ public class ExtractorMapTest {
                     } finally {
                         queryProbe.done();
                     }
-                    THROTTLING_LOGGER.info(String.format("Query 'payloadFromExtractor[%d]= %d' returned %d results.", index, key, result.size()));
+                    THROTTLING_LOGGER.info(format("Query 'payloadFromExtractor[%d]= %d' returned %d results.", index, key,
+                            result.size()));
                     for (SillySequence resultSillySequence : result) {
                         assertValidSequence(key, resultSillySequence);
                     }
@@ -186,5 +187,4 @@ public class ExtractorMapTest {
             valueCollector.addObject(sillySequence.payloadField.get(Integer.parseInt(indexString)));
         }
     }
-
 }
