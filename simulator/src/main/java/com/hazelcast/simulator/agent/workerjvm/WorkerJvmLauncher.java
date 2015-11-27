@@ -86,6 +86,8 @@ public class WorkerJvmLauncher {
             waitForWorkersStartup(worker, workerJvmSettings.getWorkerStartupTimeout());
         } catch (Exception e) {
             LOGGER.error("Failed to start Worker", e);
+
+            agent.getCoordinatorLogger().fatal("Failed to start Worker: " + e.getMessage());
             throw new SpawnWorkerFailedException("Failed to start Worker", e);
         }
     }
