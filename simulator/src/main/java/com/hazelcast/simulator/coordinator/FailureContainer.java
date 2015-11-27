@@ -142,7 +142,10 @@ public class FailureContainer {
             LOGGER.fatal(HORIZONTAL_RULER);
             LOGGER.fatal(failureCount + " failures have been detected!!!");
             LOGGER.fatal(HORIZONTAL_RULER);
-            throw new CommandLineExitException(failureCount + " failures have been detected");
+            if (hasCriticalFailure.get()) {
+                throw new CommandLineExitException(failureCount + " failures have been detected");
+            }
+            return;
         }
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("No failures have been detected!");
