@@ -54,6 +54,26 @@ class ComputeServiceBuilder {
         this.properties = properties;
     }
 
+    ComputeService build() {
+        ensurePublicPrivateKeyExist(PUBLIC_KEY, PRIVATE_KEY);
+
+        if (isStatic(properties)) {
+            return null;
+        }
+
+        String cloudProvider = properties.getCloudProvider();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Using CLOUD_PROVIDER: " + cloudProvider);
+        }
+
+        ContextBuilder contextBuilder = newContextBuilder(cloudProvider);
+        return contextBuilder.overrides(newOverrideProperties(properties))
+                .credentials(properties.getCloudIdentity(), properties.getCloudCredential())
+                .modules(getModules())
+                .buildView(ComputeServiceContext.class)
+                .getComputeService();
+    }
+
     static void ensurePublicPrivateKeyExist(File publicKey, File privateKey) {
         if (!publicKey.exists()) {
             throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " not found." + NEW_LINE
@@ -67,7 +87,7 @@ class ComputeServiceBuilder {
     }
 
     @SuppressWarnings("PMD.PreserveStackTrace")
-    static ContextBuilder newContextBuilder(String cloudProvider) {
+    private static ContextBuilder newContextBuilder(String cloudProvider) {
         try {
             return newBuilder(cloudProvider);
         } catch (NoSuchElementException e) {
@@ -75,38 +95,15 @@ class ComputeServiceBuilder {
         }
     }
 
-    ComputeService build() {
-        ensurePublicPrivateKeyExist(PUBLIC_KEY, PRIVATE_KEY);
-
-        String cloudProvider = properties.get("CLOUD_PROVIDER");
-        String identity = properties.get("CLOUD_IDENTITY");
-        String credential = properties.get("CLOUD_CREDENTIAL");
-
-        if (isStatic(cloudProvider)) {
-            return null;
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Using CLOUD_PROVIDER: " + cloudProvider);
-        }
-
-        ContextBuilder contextBuilder = newContextBuilder(cloudProvider);
-        return contextBuilder.overrides(newOverrideProperties())
-                .credentials(identity, credential)
-                .modules(getModules())
-                .buildView(ComputeServiceContext.class)
-                .getComputeService();
-    }
-
-    private Properties newOverrideProperties() {
+    private static Properties newOverrideProperties(SimulatorProperties properties) {
         // http://javadocs.jclouds.cloudbees.net/org/jclouds/compute/config/ComputeServiceProperties.html
         Properties newProperties = new Properties();
-        newProperties.setProperty(POLL_INITIAL_PERIOD, this.properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
-        newProperties.setProperty(POLL_MAX_PERIOD, this.properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));
+        newProperties.setProperty(POLL_INITIAL_PERIOD, properties.get("CLOUD_POLL_INITIAL_PERIOD", "50"));
+        newProperties.setProperty(POLL_MAX_PERIOD, properties.get("CLOUD_POLL_MAX_PERIOD", "1000"));
         return newProperties;
     }
 
-    private List<AbstractModule> getModules() {
+    private static List<AbstractModule> getModules() {
         return asList(new SLF4JLoggingModule(), new SshjSshClientModule());
     }
 }

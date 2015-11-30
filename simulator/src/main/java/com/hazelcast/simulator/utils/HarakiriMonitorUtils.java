@@ -30,12 +30,12 @@ public final class HarakiriMonitorUtils {
     }
 
     public static boolean isHarakiriMonitorEnabled(SimulatorProperties properties) {
-        return (isEC2(properties.get("CLOUD_PROVIDER")) && "true".equalsIgnoreCase(properties.get("HARAKIRI_MONITOR_ENABLED")));
+        return (isEC2(properties) && "true".equalsIgnoreCase(properties.get("HARAKIRI_MONITOR_ENABLED")));
     }
 
     public static String getStartHarakiriMonitorCommandOrNull(SimulatorProperties properties) {
         if (!isHarakiriMonitorEnabled(properties)) {
-            if (isEC2(properties.get("CLOUD_PROVIDER"))) {
+            if (isEC2(properties)) {
                 LOGGER.info("HarakiriMonitor is not enabled");
             }
             return null;
@@ -47,9 +47,9 @@ public final class HarakiriMonitorUtils {
                 "nohup hazelcast-simulator-%s/bin/harakiri-monitor --cloudProvider %s --cloudIdentity %s --cloudCredential %s"
                         + " --waitSeconds %s > harakiri.out 2> harakiri.err < /dev/null &",
                 getSimulatorVersion(),
-                properties.get("CLOUD_PROVIDER"),
-                properties.get("CLOUD_IDENTITY"),
-                properties.get("CLOUD_CREDENTIAL"),
+                properties.getCloudProvider(),
+                properties.getCloudIdentity(),
+                properties.getCloudCredential(),
                 waitSeconds);
     }
 }

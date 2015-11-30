@@ -44,7 +44,7 @@ final class ProvisionerUtils {
     }
 
     static void ensureNotStaticCloudProvider(SimulatorProperties properties, String action) {
-        if (isStatic(properties.get("CLOUD_PROVIDER"))) {
+        if (isStatic(properties)) {
             throw new CommandLineExitException(format("Cannot execute '%s' in static setup", action));
         }
     }

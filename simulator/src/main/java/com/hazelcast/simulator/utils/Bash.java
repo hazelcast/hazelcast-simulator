@@ -29,8 +29,8 @@ public class Bash {
     private final String user;
 
     public Bash(SimulatorProperties simulatorProperties) {
-        this.sshOptions = simulatorProperties.get("SSH_OPTIONS");
-        this.user = simulatorProperties.get("USER");
+        this.sshOptions = simulatorProperties.getSshOptions();
+        this.user = simulatorProperties.getUser();
     }
 
     public void execute(String command) {

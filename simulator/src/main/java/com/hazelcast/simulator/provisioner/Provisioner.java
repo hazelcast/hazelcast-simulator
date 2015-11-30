@@ -155,7 +155,7 @@ public class Provisioner {
         ThreadSpawner spawner = new ThreadSpawner("download", true);
 
         final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
-        final String sshOptions = properties.get("SSH_OPTIONS", "");
+        final String sshOptions = properties.getSshOptions();
         final String sshUser = properties.getUser();
 
         // download Worker logs
@@ -261,7 +261,7 @@ public class Provisioner {
 
     @SuppressWarnings("PMD.PreserveStackTrace")
     private void scaleUp(int delta) {
-        echoImportant("Provisioning %s %s machines", delta, properties.get("CLOUD_PROVIDER"));
+        echoImportant("Provisioning %s %s machines", delta, properties.getCloudProvider());
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
         String groupName = properties.get("GROUP_NAME", "simulator-agent");
@@ -317,7 +317,7 @@ public class Provisioner {
         sleepSeconds(machineWarmupSeconds);
 
         echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
-        echoImportant(format("Successfully provisioned %s %s machines", delta, properties.get("CLOUD_PROVIDER")));
+        echoImportant(format("Successfully provisioned %s %s machines", delta, properties.getCloudProvider()));
     }
 
     private void scaleDown(int count) {
@@ -325,7 +325,7 @@ public class Provisioner {
             count = componentRegistry.agentCount();
         }
 
-        echoImportant(format("Terminating %s %s machines (can take some time)", count, properties.get("CLOUD_PROVIDER")));
+        echoImportant(format("Terminating %s %s machines (can take some time)", count, properties.getCloudProvider()));
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() - count));
 

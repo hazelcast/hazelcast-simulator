@@ -27,7 +27,15 @@ public final class CloudProviderUtils {
     }
 
     public static boolean isStatic(SimulatorProperties properties) {
-        return PROVIDER_STATIC.equals(properties.getCloudProvider());
+        return isStatic(properties.getCloudProvider());
+    }
+
+    public static boolean isEC2(SimulatorProperties properties) {
+        return isEC2(properties.getCloudProvider());
+    }
+
+    public static boolean isGCE(SimulatorProperties properties) {
+        return isGCE(properties.getCloudProvider());
     }
 
     public static boolean isStatic(String cloudProvider) {

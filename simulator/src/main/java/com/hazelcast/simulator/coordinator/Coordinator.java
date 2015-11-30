@@ -202,11 +202,11 @@ public final class Coordinator {
         echoLocal("Starting Agent on %s", ip);
         String mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s", addressIndex, ip, port);
         String optionalParameters = "";
-        if (isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
+        if (isEC2(simulatorProperties)) {
             optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
-                    simulatorProperties.get("CLOUD_PROVIDER"),
-                    simulatorProperties.get("CLOUD_IDENTITY"),
-                    simulatorProperties.get("CLOUD_CREDENTIAL"));
+                    simulatorProperties.getCloudProvider(),
+                    simulatorProperties.getCloudIdentity(),
+                    simulatorProperties.getCloudCredential());
         }
         bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
                 SIMULATOR_VERSION, mandatoryParameters, optionalParameters));

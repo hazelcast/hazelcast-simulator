@@ -56,6 +56,22 @@ public class CloudProviderUtilsTest {
     }
 
     @Test
+    public void testIsEC2_fromProperties_true() throws Exception {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(PROVIDER_EC2);
+
+        assertTrue(CloudProviderUtils.isEC2(properties));
+    }
+
+    @Test
+    public void testIsEC2_fromProperties_false() throws Exception {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(PROVIDER_GCE);
+
+        assertFalse(CloudProviderUtils.isEC2(properties));
+    }
+
+    @Test
     public void testIsGCE_true() throws Exception {
         assertTrue(CloudProviderUtils.isGCE(PROVIDER_GCE));
     }
@@ -63,5 +79,21 @@ public class CloudProviderUtilsTest {
     @Test
     public void testisCGE_false() throws Exception {
         assertFalse(CloudProviderUtils.isGCE(PROVIDER_EC2));
+    }
+
+    @Test
+    public void testIsGCE_fromProperties_true() throws Exception {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(PROVIDER_GCE);
+
+        assertTrue(CloudProviderUtils.isGCE(properties));
+    }
+
+    @Test
+    public void testIsGCE_fromProperties_false() throws Exception {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(PROVIDER_STATIC);
+
+        assertFalse(CloudProviderUtils.isGCE(properties));
     }
 }

@@ -1,8 +1,9 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.jclouds.ContextBuilder;
+import org.apache.log4j.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,35 +14,60 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.createPublicPrivateKe
 import static com.hazelcast.simulator.TestEnvironmentUtils.deletePublicPrivateKeyFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.getPrivateKeyFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.getPublicKeyFile;
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.provisioner.ComputeServiceBuilder.ensurePublicPrivateKeyExist;
-import static com.hazelcast.simulator.provisioner.ComputeServiceBuilder.newContextBuilder;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ComputeServiceBuilderTest {
 
     @BeforeClass
     public static void setUp() {
+        setLogLevel(Level.DEBUG);
         setDistributionUserDir();
         createPublicPrivateKeyFiles();
     }
 
     @AfterClass
     public static void tearDown() {
+        resetLogLevel();
         resetUserDir();
         deletePublicPrivateKeyFiles();
-    }
-
-    @Test
-    public void testConstructor() {
-        SimulatorProperties simulatorProperties = new SimulatorProperties();
-        new ComputeServiceBuilder(simulatorProperties);
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_withNullProperties() {
         new ComputeServiceBuilder(null);
+    }
+
+    @Test
+    public void testBuild() {
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_EC2);
+
+        ComputeServiceBuilder builder = new ComputeServiceBuilder(simulatorProperties);
+        assertNotNull(builder.build());
+    }
+
+    @Test
+    public void testBuild_withStaticProvider() {
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_STATIC);
+
+        ComputeServiceBuilder builder = new ComputeServiceBuilder(simulatorProperties);
+        assertNull(builder.build());
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testBuild_invalidCloudProvider() {
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.set("CLOUD_PROVIDER", "invalidCloudProvider");
+
+        ComputeServiceBuilder builder = new ComputeServiceBuilder(simulatorProperties);
+        assertNull(builder.build());
     }
 
     @Test
@@ -57,16 +83,5 @@ public class ComputeServiceBuilderTest {
     @Test(expected = CommandLineExitException.class)
     public void testEnsurePublicPrivateKeyExist_noPrivateKeyFile() {
         ensurePublicPrivateKeyExist(getPublicKeyFile(), new File("notFound"));
-    }
-
-    @Test
-    public void testNewContextBuilder() {
-        ContextBuilder contextBuilder = newContextBuilder("aws-ec2");
-        assertNotNull(contextBuilder);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testNewContextBuilder_invalidCloudProvider() {
-        newContextBuilder("invalidCloudProvider");
     }
 }

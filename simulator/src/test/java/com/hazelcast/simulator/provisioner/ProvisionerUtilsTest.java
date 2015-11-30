@@ -69,7 +69,7 @@ public class ProvisionerUtilsTest {
     @Test
     public void testEnsureNotStaticCloudProvider_isEC2() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.get("CLOUD_PROVIDER")).thenReturn("aws-ec2");
+        when(properties.getCloudProvider()).thenReturn("aws-ec2");
 
         ensureNotStaticCloudProvider(properties, "terminate");
     }
@@ -77,7 +77,7 @@ public class ProvisionerUtilsTest {
     @Test(expected = CommandLineExitException.class)
     public void testEnsureNotStaticCloudProvider_isStatic() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.get("CLOUD_PROVIDER")).thenReturn("static");
+        when(properties.getCloudProvider()).thenReturn("static");
 
         ensureNotStaticCloudProvider(properties, "terminate");
     }

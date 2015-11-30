@@ -77,7 +77,7 @@ final class TemplateBuilder {
 
         Template template = buildTemplate(spec);
 
-        String user = simulatorProperties.get("USER", "simulator");
+        String user = simulatorProperties.getUser();
         AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
         LOGGER.info("Login name to remote machines: " + user);
 
@@ -91,7 +91,7 @@ final class TemplateBuilder {
             template.getOptions()
                     .securityGroups(securityGroup);
         } else {
-            if (!isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
+            if (!isEC2(simulatorProperties)) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
             LOGGER.info("Using VPC with Subnet ID = " + subnetId);
@@ -125,7 +125,7 @@ final class TemplateBuilder {
     }
 
     private void initSecurityGroup(TemplateBuilderSpec spec, String securityGroup) {
-        if (!isEC2(simulatorProperties.get("CLOUD_PROVIDER"))) {
+        if (!isEC2(simulatorProperties)) {
             return;
         }
 
