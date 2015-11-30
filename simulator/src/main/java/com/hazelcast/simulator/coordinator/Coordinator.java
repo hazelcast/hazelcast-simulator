@@ -53,6 +53,8 @@ public final class Coordinator {
 
     static final String SIMULATOR_VERSION = getSimulatorVersion();
 
+    private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
+
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     private final TestPhaseListenerContainer testPhaseListenerContainer = new TestPhaseListenerContainer();
@@ -250,7 +252,7 @@ public final class Coordinator {
             LOGGER.info((format("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed)));
             echo(HORIZONTAL_RULER);
         } catch (Exception e) {
-            while (failureContainer.getFailureCount() == 0) {
+            for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
                 sleepSeconds(1);
             }
             throw new CommandLineExitException("Failed to start Workers", e);
