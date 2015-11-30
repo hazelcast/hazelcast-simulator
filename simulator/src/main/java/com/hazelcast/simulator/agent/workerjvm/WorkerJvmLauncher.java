@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -132,7 +133,8 @@ public class WorkerJvmLauncher {
     }
 
     private void waitForWorkersStartup(WorkerJvm worker, int workerTimeoutSec) {
-        for (int i = 0; i < workerTimeoutSec; i++) {
+        int loopCount = (int) TimeUnit.SECONDS.toMillis(workerTimeoutSec) / WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS;
+        for (int i = 0; i < loopCount; i++) {
             if (hasExited(worker)) {
                 throw new SpawnWorkerFailedException(format(
                         "Startup of Worker on host %s failed, check log files in %s for more information!",
@@ -142,6 +144,7 @@ public class WorkerJvmLauncher {
             String address = readAddress(worker);
             if (address != null) {
                 worker.setHzAddress(address);
+                worker.setDetectTimeout();
                 LOGGER.info(format("Worker %s started", worker.getId()));
                 return;
             }
