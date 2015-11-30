@@ -227,8 +227,8 @@ public class MapPredicateTest {
         }
 
         private void pagingPredicate() {
-            double maxSal = getRandom().nextDouble() * Employee.MAX_SALARY;
-            Predicate predicate = Predicates.lessThan("salary", maxSal);
+            double maxSalary = getRandom().nextDouble() * Employee.MAX_SALARY;
+            Predicate predicate = Predicates.lessThan("salary", maxSalary);
             SalaryComparator salaryComparator = new SalaryComparator();
             PagingPredicate pagingPredicate = new PagingPredicate(predicate, salaryComparator, pageSize);
 
@@ -242,8 +242,9 @@ public class MapPredicateTest {
                 for (int i = 0; i < employeeList.size() - 1; i++) {
                     currentEmployee = employeeList.get(i);
                     nextEmployee = employeeList.get(i + 1);
-                    //check the order & max salary
-                    assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSal);
+                    // check the order & max salary
+                    assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),
+                            currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSalary);
                 }
                 pagingPredicate.nextPage();
             } while (!employees.isEmpty());
@@ -251,12 +252,11 @@ public class MapPredicateTest {
             operationCounter.pagePredicateCount++;
         }
 
-        private  List<Employee> fillListWithQueryResultSet(Iterable iterable){
-            List list = new ArrayList();
-            for (Object object : iterable) {
-                list.add(object);
+        private List<Employee> fillListWithQueryResultSet(Iterable<Employee> iterable) {
+            List<Employee> list = new ArrayList<Employee>();
+            for (Employee employee : iterable) {
+                list.add(employee);
             }
-
             return list;
         }
 
@@ -277,16 +277,20 @@ public class MapPredicateTest {
         }
     }
 
-    private static class SalaryComparator implements Comparator<Map.Entry>,Serializable {
+    private static class SalaryComparator implements Comparator<Map.Entry>, Serializable {
 
         @Override
         public int compare(Map.Entry o1, Map.Entry o2) {
             double employee1Salary = ((Employee) (o1.getValue())).getSalary();
             double employee2Salary = ((Employee) (o2.getValue())).getSalary();
 
-            //ascending order
-            if(employee1Salary < employee2Salary) return -1;
-            if(employee1Salary > employee2Salary) return 1;
+            // ascending order
+            if (employee1Salary < employee2Salary) {
+                return -1;
+            }
+            if (employee1Salary > employee2Salary) {
+                return 1;
+            }
             return 0;
         }
     }

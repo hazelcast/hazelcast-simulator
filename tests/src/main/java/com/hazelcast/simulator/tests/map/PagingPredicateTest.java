@@ -29,8 +29,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import static java.lang.Math.abs;
-
 /**
  * Test to exercising PagingPredicate.
  * It's intended to be used for benchmarking purposes, it doesn't validate correctness of results.
@@ -113,7 +111,6 @@ public class PagingPredicateTest {
             int pageNumber = randomInt(maxPage);
             predicate.setPage(pageNumber);
         }
-
     }
 
     private abstract class BaseWorker extends AbstractMonotonicWorker {
