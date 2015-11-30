@@ -16,12 +16,21 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.RUN;
+import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 /**
@@ -31,35 +40,51 @@ public class LongTestPhasesTest {
 
     // properties
     public boolean allPhases = false;
+    public TestPhase testPhase = RUN;
     public int sleepSeconds = 120;
 
     @Setup
     public void setUp(TestContext testContext) {
-        sleepConditional();
-    }
-
-    @Teardown
-    public void tearDown() {
-        sleepConditional();
+        sleep(SETUP);
     }
 
     @Warmup(global = false)
-    public void warmup() {
-        sleepConditional();
+    public void localWarmup() {
+        sleep(LOCAL_WARMUP);
     }
 
-    @Verify(global = false)
-    public void verify() {
-        sleepConditional();
+    @Warmup(global = true)
+    public void globalWarmup() {
+        sleep(GLOBAL_WARMUP);
     }
 
     @Run
     public void run() {
-        sleepSeconds(sleepSeconds);
+        sleep(RUN);
     }
 
-    private void sleepConditional() {
-        if (allPhases) {
+    @Verify(global = true)
+    public void globalVerify() {
+        sleep(GLOBAL_VERIFY);
+    }
+
+    @Verify(global = false)
+    public void localVerify() {
+        sleep(LOCAL_VERIFY);
+    }
+
+    @Teardown(global = true)
+    public void globalTearDown() {
+        sleep(GLOBAL_TEARDOWN);
+    }
+
+    @Teardown(global = false)
+    public void localTearDown() {
+        sleep(LOCAL_TEARDOWN);
+    }
+
+    private void sleep(TestPhase currentTestPhase) {
+        if (allPhases || currentTestPhase.equals(testPhase)) {
             sleepSeconds(sleepSeconds);
         }
     }
