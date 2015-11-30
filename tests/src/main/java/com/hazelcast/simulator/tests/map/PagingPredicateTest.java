@@ -81,7 +81,7 @@ public class PagingPredicateTest {
 
     @RunWithWorker
     public IWorker createWorker() {
-        return sequentialWorker ? new SequentialWorker() : new RandomWorker();
+        return sequentialWorker ? new SequentialWorker() : new ArbitraryWorker();
     }
 
     private class SequentialWorker extends BaseWorker {
@@ -94,7 +94,13 @@ public class PagingPredicateTest {
         }
     }
 
-    private class RandomWorker extends BaseWorker {
+    private class ArbitraryWorker extends BaseWorker {
+
+        protected PagingPredicate predicate = createNewPredicate();
+
+        private PagingPredicate createNewPredicate() {
+            return new PagingPredicate(pageSize);
+        }
 
         @Override
         protected void timeStep() throws Exception {
@@ -104,15 +110,10 @@ public class PagingPredicateTest {
         }
 
         private void goToRandomPage() {
-            int newPage = abs(randomInt(maxPage));
-            while (predicate.getPage() != newPage) {
-                if (predicate.getPage() > newPage) {
-                    predicate.previousPage();
-                } else {
-                    predicate.nextPage();
-                }
-            }
+            int pageNumber = randomInt(maxPage);
+            predicate.setPage(pageNumber);
         }
+
     }
 
     private abstract class BaseWorker extends AbstractMonotonicWorker {
