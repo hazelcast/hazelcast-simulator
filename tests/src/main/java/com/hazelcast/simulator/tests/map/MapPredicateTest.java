@@ -38,7 +38,12 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -223,20 +228,36 @@ public class MapPredicateTest {
 
         private void pagingPredicate() {
             double maxSal = getRandom().nextDouble() * Employee.MAX_SALARY;
-
             Predicate predicate = Predicates.lessThan("salary", maxSal);
-            PagingPredicate pagingPredicate = new PagingPredicate(predicate, pageSize);
+            SalaryComparator salaryComparator = new SalaryComparator();
+            PagingPredicate pagingPredicate = new PagingPredicate(predicate, salaryComparator, pageSize);
 
             Collection<Employee> employees;
+            List<Employee> employeeList;
             do {
                 employees = map.values(pagingPredicate);
-                for (Employee emp : employees) {
-                    assertTrue(format(baseAssertMessage, emp, predicate), emp.getSalary() < maxSal);
+                employeeList = fillListWithQueryResultSet(employees);
+                Employee nextEmployee;
+                Employee currentEmployee;
+                for (int i = 0; i < employeeList.size() - 1; i++) {
+                    currentEmployee = employeeList.get(i);
+                    nextEmployee = employeeList.get(i + 1);
+                    //check the order & max salary
+                    assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSal);
                 }
                 pagingPredicate.nextPage();
             } while (!employees.isEmpty());
 
             operationCounter.pagePredicateCount++;
+        }
+
+        private  List<Employee> fillListWithQueryResultSet(Iterable iterable){
+            List list = new ArrayList();
+            for (Object object : iterable) {
+                list.add(object);
+            }
+
+            return list;
         }
 
         private void updateEmployee() {
@@ -253,6 +274,20 @@ public class MapPredicateTest {
             map.destroy();
             initMap();
             operationCounter.destroyCount++;
+        }
+    }
+
+    private static class SalaryComparator implements Comparator<Map.Entry>,Serializable {
+
+        @Override
+        public int compare(Map.Entry o1, Map.Entry o2) {
+            double employee1Salary = ((Employee) (o1.getValue())).getSalary();
+            double employee2Salary = ((Employee) (o2.getValue())).getSalary();
+
+            //ascending order
+            if(employee1Salary < employee2Salary) return -1;
+            if(employee1Salary > employee2Salary) return 1;
+            return 0;
         }
     }
 }
