@@ -60,7 +60,6 @@ public class MapMaxSizeTest {
 
     // properties
     public String basename = MapMaxSizeTest.class.getSimpleName();
-    public int keyCount = Integer.MAX_VALUE;
 
     public double putProb = 0.5;
     public double getProb = 0.4;
@@ -77,6 +76,8 @@ public class MapMaxSizeTest {
     private IMap<Object, Object> map;
     private IList<MapMaxSizeOperationCounter> operationCounterList;
     private int maxSizePerNode;
+    private int keyCount = Integer.MAX_VALUE;
+
 
     @Setup
     public void setUp(TestContext testContext) {
