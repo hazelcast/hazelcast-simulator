@@ -95,10 +95,9 @@ public class MapMaxSizeTest {
 
 
         if (isMemberNode(targetInstance)) {
+
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
             maxSizePerNode = maxSizeConfig.getSize();
-            assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
-            assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
             LOGGER.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
         }
