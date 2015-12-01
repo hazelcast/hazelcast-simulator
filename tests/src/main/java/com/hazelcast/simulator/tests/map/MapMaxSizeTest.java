@@ -66,6 +66,7 @@ public class MapMaxSizeTest {
     public double checkProb = 0.1;
 
     public double putUsingAsyncProb = 0.2;
+    public boolean assertMaxSize = true;
 
     private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder
             = new OperationSelectorBuilder<MapOperation>();
@@ -111,18 +112,8 @@ public class MapMaxSizeTest {
             total.add(operationCounter);
         }
         LOGGER.info(format("Operation counters from %s: %s", basename, total));
-
-        assertMapMaxSize();
     }
 
-    private void assertMapMaxSize() {
-        if (isMemberNode(targetInstance)) {
-            int mapSize = map.size();
-            int clusterSize = targetInstance.getCluster().getMembers().size();
-            assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
-                    mapSize <= clusterSize * maxSizePerNode);
-        }
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -163,9 +154,7 @@ public class MapMaxSizeTest {
                     operationCounter.get++;
                     break;
                 case CHECK_SIZE:
-                    assertMapMaxSize();
-                    operationCounter.verified++;
-                    break;
+
                 default:
                     throw new UnsupportedOperationException();
             }
