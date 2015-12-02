@@ -10,7 +10,9 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createPublicPrivateKeyFiles;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deletePublicPrivateKeyFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.getPrivateKeyFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.getPublicKeyFile;
@@ -28,6 +30,7 @@ public class ComputeServiceBuilderTest {
     public static void setUp() {
         setLogLevel(Level.DEBUG);
         setDistributionUserDir();
+        createCloudCredentialFiles();
         createPublicPrivateKeyFiles();
     }
 
@@ -35,6 +38,7 @@ public class ComputeServiceBuilderTest {
     public static void tearDown() {
         resetLogLevel();
         resetUserDir();
+        deleteCloudCredentialFiles();
         deletePublicPrivateKeyFiles();
     }
 
