@@ -94,10 +94,8 @@ public class PagingPredicateTest {
 
     private class ArbitraryWorker extends BaseWorker {
 
-        protected PagingPredicate predicate = createNewPredicate();
-
-        private PagingPredicate createNewPredicate() {
-            return new PagingPredicate(pageSize);
+        ArbitraryWorker() {
+            predicate = createNewPredicate();
         }
 
         @Override
@@ -105,6 +103,10 @@ public class PagingPredicateTest {
             createNewPredicateIfNeeded();
             goToRandomPage();
             evaluatePredicate();
+        }
+
+        private PagingPredicate createNewPredicate() {
+            return new PagingPredicate(pageSize);
         }
 
         private void goToRandomPage() {
