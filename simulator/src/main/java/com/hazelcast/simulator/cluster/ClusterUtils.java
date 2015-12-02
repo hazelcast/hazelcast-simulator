@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.fromXml;
+import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static java.lang.String.format;
 
 final class ClusterUtils {
@@ -35,8 +36,17 @@ final class ClusterUtils {
     private ClusterUtils() {
     }
 
-    public static List<AgentWorkerLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
-                                                           ClusterLayoutParameters clusterLayoutParameters) {
+    static String formatIpAddresses(AgentWorkerLayout agentWorkerLayout) {
+        String publicIp = formatIpAddress(agentWorkerLayout.getPublicAddress());
+        String privateIp = formatIpAddress(agentWorkerLayout.getPrivateAddress());
+        if (publicIp.equals(privateIp)) {
+            return publicIp;
+        }
+        return publicIp + " " + privateIp;
+    }
+
+    static List<AgentWorkerLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
+                                                    ClusterLayoutParameters clusterLayoutParameters) {
         List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(registry);
         if (clusterLayoutParameters.getClusterConfiguration() != null) {
             generateFromXml(agentWorkerLayouts, registry.agentCount(), parameters, clusterLayoutParameters);

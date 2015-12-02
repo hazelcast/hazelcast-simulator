@@ -56,6 +56,10 @@ public final class AgentWorkerLayout {
         return agentData.getPublicAddress();
     }
 
+    public String getPrivateAddress() {
+        return agentData.getPrivateAddress();
+    }
+
     public Set<String> getHazelcastVersionSpecs() {
         Set<String> hazelcastVersionSpecs = new HashSet<String>();
         for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {

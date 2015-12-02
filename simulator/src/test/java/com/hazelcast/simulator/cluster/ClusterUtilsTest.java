@@ -4,6 +4,7 @@ import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -21,6 +22,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,23 @@ public class ClusterUtilsTest {
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(ClusterUtils.class);
+    }
+
+    @Test
+    public void testFormatIpAddresses_sameAddresses() {
+        AgentData agentData = new AgentData(1, "192.168.0.1", "192.168.0.1");
+        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, MIXED);
+        String ipAddresses = ClusterUtils.formatIpAddresses(agentWorkerLayout);
+        assertTrue(ipAddresses.contains("192.168.0.1"));
+    }
+
+    @Test
+    public void testFormatIpAddresses_differentAddresses() {
+        AgentData agentData = new AgentData(1, "192.168.0.1", "172.16.16.1");
+        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, MIXED);
+        String ipAddresses = ClusterUtils.formatIpAddresses(agentWorkerLayout);
+        assertTrue(ipAddresses.contains("192.168.0.1"));
+        assertTrue(ipAddresses.contains("172.16.16.1"));
     }
 
     @Test

@@ -27,9 +27,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.hazelcast.simulator.cluster.ClusterUtils.formatIpAddresses;
 import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
-import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
 import static java.lang.String.format;
@@ -75,7 +75,7 @@ public class ClusterLayout {
                 message += " (no workers)";
             }
             LOGGER.info(format(message,
-                    formatIpAddress(agentWorkerLayout.getPublicAddress()),
+                    formatIpAddresses(agentWorkerLayout),
                     agentWorkerLayout.getSimulatorAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
