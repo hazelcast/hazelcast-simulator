@@ -46,7 +46,7 @@ public class CreateTestOperation implements SimulatorOperation {
     public String toString() {
         return "CreateTestOperation{"
                 + "testIndex='" + testIndex + '\''
-                + "testId='" + testId + '\''
+                + ", testId='" + testId + '\''
                 + '}';
     }
 }
