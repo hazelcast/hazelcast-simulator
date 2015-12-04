@@ -110,7 +110,7 @@ public class ReplicatedMapTimeToLiveTest {
                     case PUT_TTL:
                         int value = randomInt();
                         int delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
-                        map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
+                        map.put(key, value, 1, TimeUnit.MILLISECONDS);
                         count.putTTLCount.incrementAndGet();
                         break;
                     case GET:
