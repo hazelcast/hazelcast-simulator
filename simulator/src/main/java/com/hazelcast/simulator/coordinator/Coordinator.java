@@ -260,46 +260,53 @@ public final class Coordinator {
     }
 
     void runTestSuite() {
-        boolean isParallel = coordinatorParameters.isParallel();
-        int testCount = testSuite.size();
-        int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
+        try {
+            boolean isParallel = coordinatorParameters.isParallel();
+            int testCount = testSuite.size();
+            int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
 
-        TestPhase lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
-        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncs = getTestPhaseSyncMap(isParallel, testCount, lastTestPhaseToSync);
+            TestPhase lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
+            ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncs = getTestPhaseSyncMap(isParallel, testCount, lastTestPhaseToSync);
 
-        echo("Starting testsuite: %s", testSuite.getId());
-        logTestSuiteDuration();
+            echo("Starting testsuite: %s", testSuite.getId());
+            logTestSuiteDuration();
 
-        for (TestData testData : componentRegistry.getTests()) {
-            int testIndex = testData.getTestIndex();
-            TestCase testCase = testData.getTestCase();
-            echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
-            TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncs);
-            testPhaseListenerContainer.addListener(testIndex, runner);
-        }
+            for (TestData testData : componentRegistry.getTests()) {
+                int testIndex = testData.getTestIndex();
+                TestCase testCase = testData.getTestCase();
+                echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
+                TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncs);
+                testPhaseListenerContainer.addListener(testIndex, runner);
+            }
 
-        echo(HORIZONTAL_RULER);
-        echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
-        echo(HORIZONTAL_RULER);
-        long started = System.nanoTime();
-        if (isParallel) {
-            runParallel();
-        } else {
-            runSequential();
-        }
-        echo(HORIZONTAL_RULER);
-        echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
-        echo(HORIZONTAL_RULER);
+            echo(HORIZONTAL_RULER);
+            echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
+            echo(HORIZONTAL_RULER);
+            long started = System.nanoTime();
+            if (isParallel) {
+                runParallel();
+            } else {
+                runSequential();
+            }
+            echo(HORIZONTAL_RULER);
+            echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
+            echo(HORIZONTAL_RULER);
 
-        remoteClient.terminateWorkers(true);
-        if (!failureContainer.waitForWorkerShutdown(componentRegistry.workerCount(), FINISHED_WORKER_TIMEOUT_SECONDS)) {
-            Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
-            LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
-        }
+            remoteClient.terminateWorkers(true);
+            if (!failureContainer.waitForWorkerShutdown(componentRegistry.workerCount(), FINISHED_WORKER_TIMEOUT_SECONDS)) {
+                Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
+                LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
+            }
 
-        performanceStateContainer.logDetailedPerformanceInfo();
-        for (TestCase testCase : testSuite.getTestCaseList()) {
-            testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
+            performanceStateContainer.logDetailedPerformanceInfo();
+            for (TestCase testCase : testSuite.getTestCaseList()) {
+                testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
+            }
+        } catch (Exception e) {
+            for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
+                sleepSeconds(1);
+            }
+            failureContainer.logFailureInfo();
         }
     }
 
