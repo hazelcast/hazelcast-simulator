@@ -53,8 +53,8 @@ public class ReplicatedMapTimeToLiveTest {
     public double putTTLProb = 0.7;
     public double getProb = 0.3;
 
-    public int maxTTLExpiryMs = 1000;
     public int minTTLExpiryMs = 1;
+    public int maxTTLExpiryMs = 1000;
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
@@ -109,8 +109,11 @@ public class ReplicatedMapTimeToLiveTest {
                 switch (operation) {
                     case PUT_TTL:
                         int value = randomInt();
-                        int delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
-                        map.put(key, value, 1, TimeUnit.MILLISECONDS);
+                        int delayMs = minTTLExpiryMs;
+                        if (maxTTLExpiryMs > 0) {
+                            delayMs += randomInt(maxTTLExpiryMs);
+                        }
+                        map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
                         count.putTTLCount.incrementAndGet();
                         break;
                     case GET:
