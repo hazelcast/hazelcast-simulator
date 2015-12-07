@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
@@ -180,8 +181,15 @@ public class RemoteClient {
         @Override
         public void run() {
             while (running) {
-                logOnAllWorkers("Poked by Coordinator...");
-                sleepSeconds(WORKER_POKE_INTERVAL_SECONDS);
+                try {
+                    logOnAllWorkers("Poked by Coordinator...");
+                    sleepSeconds(WORKER_POKE_INTERVAL_SECONDS);
+                } catch (SimulatorProtocolException e) {
+                    if (e.getCause() instanceof InterruptedException) {
+                        break;
+                    }
+                    throw e;
+                }
             }
         }
     }
