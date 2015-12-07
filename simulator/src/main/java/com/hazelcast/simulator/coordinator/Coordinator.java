@@ -266,7 +266,8 @@ public final class Coordinator {
             int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
 
             TestPhase lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
-            ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncs = getTestPhaseSyncMap(isParallel, testCount, lastTestPhaseToSync);
+            ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncs = getTestPhaseSyncMap(isParallel, testCount,
+                    lastTestPhaseToSync);
 
             echo("Starting testsuite: %s", testSuite.getId());
             logTestSuiteDuration();
