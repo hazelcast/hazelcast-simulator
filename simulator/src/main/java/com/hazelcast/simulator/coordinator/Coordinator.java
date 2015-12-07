@@ -157,6 +157,11 @@ public final class Coordinator {
             startWorkers();
 
             runTestSuite();
+        } catch (CommandLineExitException e) {
+            for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
+                sleepSeconds(1);
+            }
+            throw e;
         } finally {
             try {
                 failureContainer.logFailureInfo();
@@ -255,9 +260,6 @@ public final class Coordinator {
             LOGGER.info((format("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed)));
             echo(HORIZONTAL_RULER);
         } catch (Exception e) {
-            for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
-                sleepSeconds(1);
-            }
             throw new CommandLineExitException("Failed to start Workers", e);
         }
     }
@@ -295,7 +297,7 @@ public final class Coordinator {
             echo(HORIZONTAL_RULER);
             echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
             echo(HORIZONTAL_RULER);
-
+        } finally {
             remoteClient.terminateWorkers(true);
             if (!failureContainer.waitForWorkerShutdown(componentRegistry.workerCount(), FINISHED_WORKER_TIMEOUT_SECONDS)) {
                 Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
@@ -306,11 +308,6 @@ public final class Coordinator {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
             }
-        } catch (CommandLineExitException e) {
-            for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
-                sleepSeconds(1);
-            }
-            throw e;
         }
     }
 
