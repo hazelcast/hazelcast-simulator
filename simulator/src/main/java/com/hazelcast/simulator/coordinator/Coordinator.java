@@ -157,9 +157,12 @@ public final class Coordinator {
             startWorkers();
 
             runTestSuite();
-            failureContainer.logFailureInfo();
         } finally {
-            shutdown();
+            try {
+                failureContainer.logFailureInfo();
+            } finally {
+                shutdown();
+            }
         }
     }
 
@@ -303,11 +306,11 @@ public final class Coordinator {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
             }
-        } catch (Exception e) {
+        } catch (CommandLineExitException e) {
             for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
                 sleepSeconds(1);
             }
-            failureContainer.logFailureInfo();
+            throw e;
         }
     }
 
