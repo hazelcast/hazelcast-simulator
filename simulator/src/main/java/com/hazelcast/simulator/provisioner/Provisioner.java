@@ -181,14 +181,15 @@ public class Provisioner {
                 File agentErr = new File(target, "agent.err");
 
                 for (AgentData agentData : componentRegistry.getAgents()) {
-                    String agentAddress = agentData.getPublicAddress();
-                    echo("Downloading Agent logs from %s", agentAddress);
+                    String agentAddress = agentData.getAddress().toString();
+                    String ip = agentData.getPublicAddress();
+                    echo("Downloading Agent logs from %s", ip);
 
-                    bash.executeQuiet(format(rsyncCommandSuffix, agentAddress, agentAddress, "agent.out"));
-                    bash.executeQuiet(format(rsyncCommandSuffix, agentAddress, agentAddress, "agent.err"));
+                    bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.out"));
+                    bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.err"));
 
-                    rename(agentOut, new File(target, agentAddress + "-agent.out"));
-                    rename(agentErr, new File(target, agentAddress + "-agent.err"));
+                    rename(agentOut, new File(target, agentAddress + '-' + ip + "-agent.out"));
+                    rename(agentErr, new File(target, agentAddress + '-' + ip + "-agent.err"));
                 }
             }
         });
