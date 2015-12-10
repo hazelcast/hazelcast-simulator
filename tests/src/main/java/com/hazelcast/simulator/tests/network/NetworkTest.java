@@ -286,8 +286,11 @@ public class NetworkTest {
 
             AtomicLong sequenceCounter = sequenceCounterMap.get(packet.getConn());
             if (sequenceCounter == null) {
-                sequenceCounter = new AtomicLong(0);
-                sequenceCounterMap.put(packet.getConn(), sequenceCounter);
+                AtomicLong newSequenceCounter = new AtomicLong(0);
+                sequenceCounter = sequenceCounterMap.putIfAbsent(packet.getConn(), newSequenceCounter);
+                if (sequenceCounter == null) {
+                    sequenceCounter = newSequenceCounter;
+                }
             }
 
             long foundSequence = readLong(payload, 3);
