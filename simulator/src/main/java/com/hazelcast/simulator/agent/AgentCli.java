@@ -37,6 +37,10 @@ final class AgentCli {
             "Port of this Agent.")
             .withRequiredArg().ofType(Integer.class);
 
+    private final OptionSpec<Integer> threadPoolSizeSpec = parser.accepts("threadPoolSize",
+            "Size of the thread pool to connect to Worker instances.")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
     private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
             "The cloud provider for this Agent.")
             .withRequiredArg().ofType(String.class);
@@ -74,7 +78,8 @@ final class AgentCli {
         String cloudProvider = options.valueOf(agentCli.cloudProviderSpec);
         String cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
         String cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
+        Integer threadPoolSize = options.valueOf(agentCli.threadPoolSizeSpec);
 
-        return new Agent(addressIndex, publicAddress, port, cloudProvider, cloudIdentity, cloudCredential);
+        return new Agent(addressIndex, publicAddress, port, cloudProvider, cloudIdentity, cloudCredential, threadPoolSize);
     }
 }

@@ -35,7 +35,9 @@ import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -51,6 +53,8 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
+    private final EventLoopGroup group;
+
     private final AgentOperationProcessor processor;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
 
@@ -61,8 +65,10 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     private final WorkerJvmManager workerJvmManager;
 
     AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
-                   WorkerJvmManager workerJvmManager, ConnectionManager connectionManager) {
+                   WorkerJvmManager workerJvmManager, ConnectionManager connectionManager, int threadPoolSize) {
         super(futureMap, localAddress, port);
+
+        this.group = new NioEventLoopGroup(threadPoolSize);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
         this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager);
@@ -121,13 +127,14 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      * @param agent            instance of this Simulator Agent
      * @param workerJvmManager manager for WorkerJVM instances
      * @param port             the port for incoming connections
+     * @param threadPoolSize   size of the Netty thread pool to connect to Worker instances
      */
-    public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port) {
+    public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port, int threadPoolSize) {
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
         ConnectionManager connectionManager = new ConnectionManager();
 
-        return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager);
+        return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager, threadPoolSize);
     }
 
     /**
@@ -140,7 +147,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      */
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
         SimulatorAddress remoteAddress = localAddress.getChild(workerIndex);
-        ClientConnector clientConnector = new ClientConnector(this, futureMap, localAddress, remoteAddress, workerIndex,
+        ClientConnector clientConnector = new ClientConnector(this, group, futureMap, localAddress, remoteAddress, workerIndex,
                 workerHost, workerPort);
         clientConnector.start();
 

@@ -62,7 +62,7 @@ public class Agent {
     private volatile TestSuite testSuite;
 
     public Agent(int addressIndex, String publicAddress, int port, String cloudProvider, String cloudIdentity,
-                 String cloudCredential) {
+                 String cloudCredential, int threadPoolSize) {
         SHUTDOWN_STARTED.set(false);
 
         this.addressIndex = addressIndex;
@@ -73,7 +73,7 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, port);
+        this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, port, threadPoolSize);
         this.agentConnector.start();
 
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);

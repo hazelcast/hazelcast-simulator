@@ -28,7 +28,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.log4j.Logger;
@@ -57,9 +56,8 @@ public class ClientConnector {
 
     private static final Logger LOGGER = Logger.getLogger(ClientConnector.class);
 
-    private final EventLoopGroup group = new NioEventLoopGroup();
-
     private final ClientPipelineConfigurator pipelineConfigurator;
+    private final EventLoopGroup group;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
 
     private final SimulatorAddress localAddress;
@@ -71,10 +69,11 @@ public class ClientConnector {
 
     private Channel channel;
 
-    public ClientConnector(ClientPipelineConfigurator pipelineConfigurator, ConcurrentMap<String, ResponseFuture> futureMap,
-                           SimulatorAddress localAddress, SimulatorAddress remoteAddress, int remoteIndex, String remoteHost,
-                           int remotePort) {
+    public ClientConnector(ClientPipelineConfigurator pipelineConfigurator, EventLoopGroup group,
+                           ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress,
+                           SimulatorAddress remoteAddress, int remoteIndex, String remoteHost, int remotePort) {
         this.pipelineConfigurator = pipelineConfigurator;
+        this.group = group;
         this.futureMap = futureMap;
 
         this.localAddress = localAddress;

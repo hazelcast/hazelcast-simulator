@@ -137,7 +137,7 @@ class ProtocolUtil {
 
         WorkerJvmManager workerJvmManager = new WorkerJvmManager();
 
-        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJvmManager, port);
+        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJvmManager, port, 0);
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
             agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }

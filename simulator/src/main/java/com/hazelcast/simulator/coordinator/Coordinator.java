@@ -211,10 +211,11 @@ public final class Coordinator {
         String mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s", addressIndex, ip, port);
         String optionalParameters = "";
         if (isEC2(simulatorProperties)) {
-            optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
+            optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s --threadPoolSize %d",
                     simulatorProperties.getCloudProvider(),
                     simulatorProperties.getCloudIdentity(),
-                    simulatorProperties.getCloudCredential());
+                    simulatorProperties.getCloudCredential(),
+                    simulatorProperties.getAgentThreadPoolSize());
         }
         bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
                 SIMULATOR_VERSION, mandatoryParameters, optionalParameters));

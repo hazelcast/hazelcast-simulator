@@ -124,6 +124,10 @@ public class SimulatorProperties {
         return parseInt(get("AGENT_PORT", "9000"));
     }
 
+    public int getAgentThreadPoolSize() {
+        return parseInt(get("AGENT_THREAD_POOL_SIZE", "0"));
+    }
+
     public int getHazelcastPort() {
         return parseInt(get("HAZELCAST_PORT", "5701"));
     }

@@ -35,6 +35,8 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -57,6 +59,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorConnector.class);
 
+    private final EventLoopGroup group = new NioEventLoopGroup();
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
@@ -108,8 +111,8 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
         ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-        ClientConnector client = new ClientConnector(this, futureMap, COORDINATOR, COORDINATOR.getChild(agentIndex), agentIndex,
-                agentHost, agentPort);
+        ClientConnector client = new ClientConnector(this, group, futureMap, COORDINATOR, COORDINATOR.getChild(agentIndex),
+                agentIndex, agentHost, agentPort);
         client.start();
 
         agents.put(agentIndex, client);
