@@ -41,6 +41,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
@@ -113,6 +114,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     @Override
     void connectorShutdown() {
         processor.shutdown();
+        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
 
     @Override
