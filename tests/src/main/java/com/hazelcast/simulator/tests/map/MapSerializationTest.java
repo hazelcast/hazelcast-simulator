@@ -48,7 +48,8 @@ public class MapSerializationTest {
     public enum Serializer {
         Serializable,
         Externalizable,
-        DataSerializable
+        DataSerializable,
+        Long
     }
 
     // properties
@@ -91,6 +92,9 @@ public class MapSerializationTest {
                     break;
                 case DataSerializable:
                     map.put(key, new DataSerializableValue(key));
+                    break;
+                case Long:
+                    map.put(key, new Long(key));
                     break;
                 default:
                     throw new IllegalStateException("Unrecognized serializer:" + serializer);
