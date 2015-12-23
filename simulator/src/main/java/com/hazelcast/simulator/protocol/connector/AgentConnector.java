@@ -19,6 +19,7 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
+import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
@@ -33,6 +34,7 @@ import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
@@ -121,6 +123,11 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     ChannelGroup getChannelGroup() {
         connectionManager.waitForAtLeastOneChannel();
         return connectionManager.getChannels();
+    }
+
+    @Override
+    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
+        return super.write(destination, operation);
     }
 
     /**
