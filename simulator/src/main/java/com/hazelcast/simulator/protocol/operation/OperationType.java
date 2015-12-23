@@ -46,7 +46,8 @@ public enum OperationType {
     TEST_HISTOGRAMS(TestHistogramOperation.class, 12),
     FAILURE(FailureOperation.class, 13),
 
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 14);
+    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 14),
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 15);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

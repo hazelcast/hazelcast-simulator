@@ -16,6 +16,7 @@ import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
@@ -57,7 +58,7 @@ import static org.mockito.Mockito.when;
 public class AgentOperationProcessorTest {
 
     private static final int DEFAULT_STARTUP_TIMEOUT = 10;
-    
+
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
     private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
@@ -175,6 +176,16 @@ public class AgentOperationProcessorTest {
 
         assertEquals(SUCCESS, responseType);
         assertTrue(testSuiteDir.exists());
+    }
+
+    @Test
+    public void testStartTimeoutDetectionOperation() throws Exception {
+        SimulatorOperation operation = new StartTimeoutDetectionOperation();
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        assertEquals(SUCCESS, responseType);
+
+        verify(failureMonitor).startTimeoutDetection();
     }
 
     @Test

@@ -59,6 +59,12 @@ public class WorkerJvmFailureMonitor {
         monitorThread.interrupt();
     }
 
+    public void startTimeoutDetection() {
+        LOGGER.info("Starting timeout detection for Workers...");
+        monitorThread.updateLastSeen();
+        monitorThread.detectTimeouts = true;
+    }
+
     public void stopTimeoutDetection() {
         LOGGER.info("Stopping timeout detection for Workers...");
         monitorThread.detectTimeouts = false;
@@ -70,7 +76,7 @@ public class WorkerJvmFailureMonitor {
         private final WorkerJvmManager workerJvmManager;
 
         private volatile boolean running = true;
-        private volatile boolean detectTimeouts = true;
+        private volatile boolean detectTimeouts;
 
         public MonitorThread(Agent agent, WorkerJvmManager workerJvmManager) {
             super("WorkerJvmFailureMonitorThread");
@@ -90,6 +96,12 @@ public class WorkerJvmFailureMonitor {
                     LOGGER.fatal("Failed to scan for failures", e);
                 }
                 sleepSeconds(1);
+            }
+        }
+
+        private void updateLastSeen() {
+            for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
+                workerJvm.updateLastSeen();
             }
         }
 
@@ -161,7 +173,7 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void detectInactivity(WorkerJvm workerJvm) {
-            if (!detectTimeouts || !workerJvm.detectTimeout()) {
+            if (!detectTimeouts) {
                 return;
             }
 

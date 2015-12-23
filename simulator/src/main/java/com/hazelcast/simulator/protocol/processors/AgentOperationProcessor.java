@@ -92,6 +92,9 @@ public class AgentOperationProcessor extends OperationProcessor {
             case INIT_TEST_SUITE:
                 processInitTestSuite((InitTestSuiteOperation) operation);
                 break;
+            case START_TIMEOUT_DETECTION:
+                processStartTimeoutDetection();
+                break;
             case STOP_TIMEOUT_DETECTION:
                 processStopTimeoutDetection();
                 break;
@@ -125,6 +128,10 @@ public class AgentOperationProcessor extends OperationProcessor {
 
         File libDir = new File(testSuiteDir, "lib");
         ensureExistingDirectory(libDir);
+    }
+
+    private void processStartTimeoutDetection() {
+        agent.getWorkerJvmFailureMonitor().startTimeoutDetection();
     }
 
     private void processStopTimeoutDetection() {

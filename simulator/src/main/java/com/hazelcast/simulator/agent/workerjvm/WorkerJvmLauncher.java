@@ -144,7 +144,6 @@ public class WorkerJvmLauncher {
             String address = readAddress(worker);
             if (address != null) {
                 worker.setHzAddress(address);
-                worker.setDetectTimeout();
                 LOGGER.info(format("Worker %s started", worker.getId()));
                 return;
             }

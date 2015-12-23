@@ -26,7 +26,6 @@ public class WorkerJvm {
     private final File workerHome;
 
     private volatile long lastSeen = System.currentTimeMillis();
-    private volatile boolean detectTimeout;
     private volatile boolean oomeDetected;
     private volatile boolean isFinished;
     private volatile Process process;
@@ -56,15 +55,6 @@ public class WorkerJvm {
 
     public void updateLastSeen() {
         this.lastSeen = System.currentTimeMillis();
-    }
-
-    public boolean detectTimeout() {
-        return detectTimeout;
-    }
-
-    public void setDetectTimeout() {
-        updateLastSeen();
-        detectTimeout = true;
     }
 
     public boolean isOomeDetected() {

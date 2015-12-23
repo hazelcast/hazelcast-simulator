@@ -27,6 +27,7 @@ import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -71,12 +72,13 @@ public class RemoteClient {
     }
 
     public void createWorkers(ClusterLayout clusterLayout, boolean startPokeThread) {
+        createWorkersByType(clusterLayout, true);
+        createWorkersByType(clusterLayout, false);
+
+        sendToAllAgents(new StartTimeoutDetectionOperation());
         if (startPokeThread) {
             workerPokeThread.start();
         }
-
-        createWorkersByType(clusterLayout, true);
-        createWorkersByType(clusterLayout, false);
     }
 
     private void createWorkersByType(ClusterLayout clusterLayout, boolean isMemberType) {
