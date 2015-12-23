@@ -36,7 +36,7 @@ import java.io.Serializable;
 
 /**
  * A test that checks how fast externalizable values can be put in a map. The key is an integer.
- *
+ * <p>
  * todo:
  * add the following serializer
  * - identified data-serializable
@@ -46,17 +46,17 @@ import java.io.Serializable;
 public class MapSerializationTest {
 
     public enum Serializer {
-        Serializable,
-        Externalizable,
-        DataSerializable,
-        Long
+        SERIALIZABLE,
+        EXTERNALIZABLE,
+        DATA_SERIALIZABLE,
+        LONG
     }
 
     // properties
     public String basename = MapSerializationTest.class.getSimpleName();
     public int threadCount = 10;
     public int keyCount = 1000000;
-    public Serializer serializer = Serializer.Serializable;
+    public Serializer serializer = Serializer.SERIALIZABLE;
 
     // probes
     public Probe probe;
@@ -84,17 +84,17 @@ public class MapSerializationTest {
         protected void timeStep() throws Exception {
             int key = randomInt(keyCount);
             switch (serializer) {
-                case Serializable:
+                case SERIALIZABLE:
                     map.put(key, new SerializableValue(key));
                     break;
-                case Externalizable:
+                case EXTERNALIZABLE:
                     map.put(key, new ExternalizableValue(key));
                     break;
-                case DataSerializable:
+                case DATA_SERIALIZABLE:
                     map.put(key, new DataSerializableValue(key));
                     break;
-                case Long:
-                    map.put(key, new Long(key));
+                case LONG:
+                    map.put(key, (long) key);
                     break;
                 default:
                     throw new IllegalStateException("Unrecognized serializer: " + serializer);
@@ -108,66 +108,68 @@ public class MapSerializationTest {
     }
 
     public static class ExternalizableValue implements Externalizable {
-        private int v;
+
+        private int value;
 
         public ExternalizableValue() {
         }
 
-        public ExternalizableValue(int v) {
-            this.v = v;
+        public ExternalizableValue(int value) {
+            this.value = value;
         }
 
         public int id() {
-            return v;
+            return value;
         }
 
         @Override
         public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-            v = in.readInt();
+            value = in.readInt();
         }
 
         @Override
         public void writeExternal(ObjectOutput out) throws IOException {
-            out.writeInt(v);
+            out.writeInt(value);
         }
     }
 
     public static class SerializableValue implements Serializable {
-        private int v;
 
-        public SerializableValue(int v) {
-            this.v = v;
+        private int value;
+
+        public SerializableValue(int value) {
+            this.value = value;
         }
 
         public int id() {
-            return v;
+            return value;
         }
     }
 
-
+    @SuppressWarnings("unused")
     public static class DataSerializableValue implements DataSerializable {
-        private int v;
+
+        private int value;
 
         public DataSerializableValue() {
         }
 
-
-        public DataSerializableValue(int v) {
-            this.v = v;
+        public DataSerializableValue(int value) {
+            this.value = value;
         }
 
         public int id() {
-            return v;
+            return value;
         }
 
         @Override
         public void writeData(ObjectDataOutput out) throws IOException {
-            out.writeInt(v);
+            out.writeInt(value);
         }
 
         @Override
         public void readData(ObjectDataInput in) throws IOException {
-            v = in.readInt();
+            value = in.readInt();
         }
     }
 }
