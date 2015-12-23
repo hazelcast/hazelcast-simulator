@@ -67,7 +67,7 @@ public final class ExceptionReporter {
         File tmpFile = new File(targetFileName + ".tmp");
         try {
             if (!tmpFile.createNewFile()) {
-                throw new IOException("Could not create tmp file:" + tmpFile.getAbsolutePath());
+                throw new IOException("Could not create tmp file: " + tmpFile.getAbsolutePath());
             }
         } catch (IOException e) {
             LOGGER.fatal("Could not report exception; this means that this exception is not visible to the coordinator", e);

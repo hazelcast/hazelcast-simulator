@@ -97,7 +97,7 @@ public class MapSerializationTest {
                     map.put(key, new Long(key));
                     break;
                 default:
-                    throw new IllegalStateException("Unrecognized serializer:" + serializer);
+                    throw new IllegalStateException("Unrecognized serializer: " + serializer);
             }
         }
     }

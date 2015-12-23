@@ -56,7 +56,7 @@ public class ClusterLayout {
         LOGGER.info(HORIZONTAL_RULER);
 
         String layoutType = (clusterLayoutParameters.getClusterConfiguration() == null) ? "arguments" : "cluster.xml";
-        LOGGER.info(format("Created via %s:", layoutType));
+        LOGGER.info(format("Created via %s: ", layoutType));
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentHazelcastVersionSpecs = agentWorkerLayout.getHazelcastVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);

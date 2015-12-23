@@ -132,7 +132,7 @@ public class NetworkTest {
                 threadingModel = new SpinningIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
                 break;
             default:
-                throw new IllegalStateException("Unrecognized threading model:" + ioThreadingModel);
+                throw new IllegalStateException("Unrecognized threading model: " + ioThreadingModel);
         }
 
         connectionManager = new TcpIpConnectionManager(

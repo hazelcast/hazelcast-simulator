@@ -79,7 +79,7 @@ public class SqlPredicateTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-        LOGGER.info("Map size is:" + map.size());
+        LOGGER.info("Map size is: " + map.size());
         LOGGER.info("Map localKeySet size is: " + map.localKeySet().size());
     }
 

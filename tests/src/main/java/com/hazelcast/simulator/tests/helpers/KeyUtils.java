@@ -199,7 +199,7 @@ public final class KeyUtils {
             case SINGLE_PARTITION:
                 return generator.newConstantKey();
             default:
-                throw new IllegalArgumentException("Unrecognized keyLocality:" + keyLocality);
+                throw new IllegalArgumentException("Unrecognized keyLocality: " + keyLocality);
         }
     }
 
@@ -255,7 +255,7 @@ public final class KeyUtils {
                 targetPartitions.add(0);
                 break;
             default:
-                throw new IllegalArgumentException("Unrecognized keyLocality:" + keyLocality);
+                throw new IllegalArgumentException("Unrecognized keyLocality: " + keyLocality);
         }
         return targetPartitions;
     }

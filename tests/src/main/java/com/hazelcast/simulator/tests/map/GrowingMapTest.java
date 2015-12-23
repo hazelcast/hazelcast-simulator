@@ -78,8 +78,8 @@ public class GrowingMapTest {
     @Verify
     public void verify() {
         if (removeOnStop) {
-            assertEquals("Map should be empty, but has size:", 0, map.size());
-            assertTrue("Map should be empty, but has size:", map.isEmpty());
+            assertEquals("Map should be empty, but has size: ", 0, map.size());
+            assertTrue("Map should be empty, but has size: ", map.isEmpty());
         }
     }
 

@@ -60,7 +60,7 @@ public final class NativeUtils {
                 exitWithError();
             } else {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Bash output:" + NEW_LINE + sb);
+                    LOGGER.debug("Bash output: " + NEW_LINE + sb);
                 }
             }
         } catch (Exception e) {
