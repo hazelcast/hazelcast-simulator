@@ -125,7 +125,6 @@ public class WorkerJvmFailureMonitorTest {
 
         assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
         assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
-        verifyNoMoreInteractions(agentConnector);
     }
 
     @Test
@@ -141,7 +140,6 @@ public class WorkerJvmFailureMonitorTest {
 
         assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
         assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
-        verifyNoMoreInteractions(agentConnector);
     }
 
     @Test
@@ -211,7 +209,6 @@ public class WorkerJvmFailureMonitorTest {
 
         assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
         assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
-        verifyNoMoreInteractions(agentConnector);
     }
 
     @Test
