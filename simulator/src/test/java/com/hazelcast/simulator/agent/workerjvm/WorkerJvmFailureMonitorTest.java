@@ -4,6 +4,7 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.junit.After;
@@ -15,6 +16,8 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_COORDINATOR_NOT_FOUND;
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
@@ -31,7 +34,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,7 +48,10 @@ public class WorkerJvmFailureMonitorTest {
 
     private static int addressIndex;
 
+    private Response response;
+
     private AgentConnector agentConnector;
+    private Agent agent;
     private WorkerJvmManager workerJvmManager;
 
     private WorkerJvm workerJvm;
@@ -55,12 +61,12 @@ public class WorkerJvmFailureMonitorTest {
 
     @Before
     public void setUp() {
-        Response response = mock(Response.class);
+        response = mock(Response.class);
 
         agentConnector = mock(AgentConnector.class);
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
 
-        Agent agent = mock(Agent.class);
+        agent = mock(Agent.class);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
 
         workerJvmManager = new WorkerJvmManager();
@@ -77,7 +83,14 @@ public class WorkerJvmFailureMonitorTest {
     public void tearDown() {
         workerJvmFailureMonitor.shutdown();
 
-        deleteQuiet(workerHome);
+        for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
+            deleteQuiet(workerJvm.getWorkerHome());
+        }
+    }
+
+    @Test
+    public void testConstructor() {
+        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager);
     }
 
     @Test
@@ -88,9 +101,51 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     @Test
-    public void testRun_shouldDetectException_withTestId() {
+    public void testRun_shouldContinueAfterExceptionDuringDetection() {
+        Process process = mock(Process.class);
+        when(process.exitValue()).thenThrow(new IllegalArgumentException("expected exception")).thenReturn(0);
+        WorkerJvm exceptionWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
+
         sleepMillis(DEFAULT_SLEEP_TIME);
 
+        assertThatFailureOperationHasBeenSent(agentConnector, 1);
+        assertThatWorkerHasBeenRemoved(agentConnector, 1);
+        verifyNoMoreInteractions(agentConnector);
+        assertTrue(exceptionWorker.isFinished());
+    }
+
+    @Test
+    public void testRun_shouldContinueAfterErrorResponse() {
+        when(response.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
+
+        workerJvmFailureMonitor.startTimeoutDetection();
+        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(DEFAULT_SLEEP_TIME);
+
+        assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
+        assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldContinueAfterProtocolError() {
+        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class)))
+                .thenThrow(new SimulatorProtocolException("expected exception"))
+                .thenReturn(response);
+
+        workerJvmFailureMonitor.startTimeoutDetection();
+        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(DEFAULT_SLEEP_TIME);
+
+        assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
+        assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldDetectException_withTestId() {
         String cause = throwableToString(new RuntimeException());
         File exceptionFile = createExceptionFile(workerHome, "WorkerJvmFailureMonitorTest", cause);
 
@@ -98,14 +153,11 @@ public class WorkerJvmFailureMonitorTest {
 
         assertThatFailureOperationHasBeenSent(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
-
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
     @Test
     public void testRun_shouldDetectException_withEmptyTestId() {
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
         String cause = throwableToString(new RuntimeException());
         File exceptionFile = createExceptionFile(workerHome, "", cause);
 
@@ -113,14 +165,11 @@ public class WorkerJvmFailureMonitorTest {
 
         assertThatFailureOperationHasBeenSent(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
-
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
     @Test
     public void testRun_shouldDetectException_withNullTestId() {
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
         String cause = throwableToString(new RuntimeException());
         File exceptionFile = createExceptionFile(workerHome, "null", cause);
 
@@ -128,14 +177,11 @@ public class WorkerJvmFailureMonitorTest {
 
         assertThatFailureOperationHasBeenSent(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
-
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
     @Test
     public void testRun_shouldDetectOomeFailure_withOomeFile() {
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
         createFile(workerHome, "worker.oome");
 
         sleepMillis(DEFAULT_SLEEP_TIME);
@@ -147,8 +193,6 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure_withHprofFile() {
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
         createFile(workerHome, "java_pid3140.hprof");
 
         sleepMillis(DEFAULT_SLEEP_TIME);
@@ -159,9 +203,19 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     @Test
-    public void testRun_shouldNotDetectInactivityIfDetectionNotStarted() {
+    public void testRun_shouldDetectInactivity() {
+        workerJvmFailureMonitor.startTimeoutDetection();
+        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
         sleepMillis(DEFAULT_SLEEP_TIME);
 
+        assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
+        assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldNotDetectInactivityIfDetectionNotStarted() {
         workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
@@ -176,28 +230,10 @@ public class WorkerJvmFailureMonitorTest {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         workerJvmFailureMonitor.stopTimeoutDetection();
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
         workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyNoMoreInteractions(agentConnector);
-    }
-
-    @Test
-    public void testRun_shouldDetectInactivity() {
-        workerJvmFailureMonitor.startTimeoutDetection();
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
-        assertThatFailureOperationHasBeenSentAtLeast(agentConnector, 1);
-        assertThatWorkerHasBeenRemovedAtLeast(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
     }
 
@@ -205,7 +241,6 @@ public class WorkerJvmFailureMonitorTest {
     public void testRun_shouldDetectUnexpectedExit_whenExitValueIsZero() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenReturn(0);
-
         WorkerJvm exitWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
@@ -220,7 +255,6 @@ public class WorkerJvmFailureMonitorTest {
     public void testRun_shouldDetectUnexpectedExit_whenExitValueIsNonZero() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenReturn(134);
-
         WorkerJvm exitWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
@@ -295,8 +329,8 @@ public class WorkerJvmFailureMonitorTest {
         assertThatFailureOperationHasBeenSent(agentConnector, times(times));
     }
 
-    private static void assertThatFailureOperationHasBeenSentAtLeast(AgentConnector agentConnector, int atLeast) {
-        assertThatFailureOperationHasBeenSent(agentConnector, atLeast(atLeast));
+    private static void assertThatFailureOperationHasBeenSentAtLeastOnce(AgentConnector agentConnector) {
+        assertThatFailureOperationHasBeenSent(agentConnector, atLeastOnce());
     }
 
     private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, VerificationMode mode) {
@@ -307,8 +341,8 @@ public class WorkerJvmFailureMonitorTest {
         assertThatWorkerHasBeenRemoved(agentConnector, times(times));
     }
 
-    private static void assertThatWorkerHasBeenRemovedAtLeast(AgentConnector agentConnector, int atLeast) {
-        assertThatWorkerHasBeenRemoved(agentConnector, atLeast(atLeast));
+    private static void assertThatWorkerHasBeenRemovedAtLeastOnce(AgentConnector agentConnector) {
+        assertThatWorkerHasBeenRemoved(agentConnector, atLeastOnce());
     }
 
     private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, VerificationMode mode) {

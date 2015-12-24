@@ -228,13 +228,13 @@ public class WorkerJvmFailureMonitor {
             try {
                 Response response = agentConnector.write(SimulatorAddress.COORDINATOR, operation);
                 if (response.getFirstErrorResponseType() != ResponseType.SUCCESS) {
-                    LOGGER.fatal(format("Could not send failure to coordinator! %s", operation));
+                    LOGGER.error(format("Could not send failure to coordinator! %s", operation));
                 } else {
                     LOGGER.info("Failure successfully sent to Coordinator!");
                 }
             } catch (SimulatorProtocolException e) {
                 if (!isInterrupted()) {
-                    LOGGER.fatal(format("Could not send failure to coordinator! %s", operation), e);
+                    LOGGER.error(format("Could not send failure to coordinator! %s", operation), e);
                 }
             }
         }
