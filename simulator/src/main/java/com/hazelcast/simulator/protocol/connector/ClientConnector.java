@@ -67,7 +67,7 @@ public class ClientConnector {
 
     private Channel channel;
 
-    public ClientConnector(ClientPipelineConfigurator pipelineConfigurator, EventLoopGroup group,
+    ClientConnector(ClientPipelineConfigurator pipelineConfigurator, EventLoopGroup group,
                            ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress,
                            SimulatorAddress remoteAddress, int remoteIndex, String remoteHost, int remotePort) {
         this.pipelineConfigurator = pipelineConfigurator;

@@ -33,7 +33,7 @@ public class WorkerParametersTest {
     private String clientConfig;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         properties = mock(SimulatorProperties.class);
         when(properties.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.OUT_OF_THE_BOX);
         when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");

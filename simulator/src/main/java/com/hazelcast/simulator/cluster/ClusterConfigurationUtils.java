@@ -24,14 +24,14 @@ final class ClusterConfigurationUtils {
     private ClusterConfigurationUtils() {
     }
 
-    public static String toXml(ClusterLayoutParameters clusterLayoutParameters, ClusterConfiguration clusterConfiguration) {
+    static String toXml(ClusterLayoutParameters clusterLayoutParameters, ClusterConfiguration clusterConfiguration) {
         XStream xStream = getXStream();
         xStream.registerConverter(clusterLayoutParameters.getWorkerConfigurationConverter());
 
         return xStream.toXML(clusterConfiguration);
     }
 
-    public static ClusterConfiguration fromXml(ClusterLayoutParameters clusterLayoutParameters) {
+    static ClusterConfiguration fromXml(ClusterLayoutParameters clusterLayoutParameters) {
         XStream xStream = getXStream();
         xStream.registerConverter(clusterLayoutParameters.getWorkerConfigurationConverter());
 

@@ -10,7 +10,7 @@ import java.util.List;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class TestExceptionLogger implements ExceptionLogger {
+class TestExceptionLogger implements ExceptionLogger {
 
     private static final Logger LOGGER = Logger.getLogger(TestExceptionLogger.class);
 
@@ -39,11 +39,11 @@ public class TestExceptionLogger implements ExceptionLogger {
         exceptionEntries.add(exceptionEntry);
     }
 
-    public void assertNoException() {
+    void assertNoException() {
         assertEquals(0, exceptionEntries.size());
     }
 
-    public void assertException(Class<?>... exceptionTypes) {
+    void assertException(Class<?>... exceptionTypes) {
         assertEquals(format("Expected %d exceptions, but found %d", exceptionTypes.length, exceptionEntries.size()),
                 exceptionTypes.length, exceptionEntries.size());
 
@@ -64,7 +64,7 @@ public class TestExceptionLogger implements ExceptionLogger {
         private final Throwable cause;
         private final String testId;
 
-        public ExceptionEntry(Throwable cause, String testId) {
+        private ExceptionEntry(Throwable cause, String testId) {
             this.cause = cause;
             this.testId = testId;
         }

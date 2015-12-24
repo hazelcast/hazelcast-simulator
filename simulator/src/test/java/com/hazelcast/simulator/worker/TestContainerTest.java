@@ -117,7 +117,8 @@ public class TestContainerTest {
     }
 
     private static class ChildWithOwnSetupMethodTest extends DummySetupTest {
-        boolean childSetupCalled;
+
+        private boolean childSetupCalled;
 
         @Setup
         public void setUp(TestContext context) {
@@ -144,7 +145,8 @@ public class TestContainerTest {
     }
 
     private static class ChildWithOwnRunMethodTest extends DummySetupTest {
-        boolean childRunCalled;
+
+        private boolean childRunCalled;
 
         @Run
         void run() {
@@ -364,8 +366,8 @@ public class TestContainerTest {
     @SuppressWarnings("unused")
     private static class ProbeTest extends DummyTest {
 
-        TestContext context;
-        Probe simpleProbe;
+        private TestContext context;
+        private Probe simpleProbe;
 
         private Probe latencyProbe;
 
@@ -410,10 +412,10 @@ public class TestContainerTest {
 
     private static class WarmupTest extends DummyTest {
 
-        boolean localWarmupCalled;
-        boolean globalWarmupCalled;
+        private boolean localWarmupCalled;
+        private boolean globalWarmupCalled;
 
-        @Warmup(global = false)
+        @Warmup
         void localTeardown() {
             localWarmupCalled = true;
         }
@@ -450,15 +452,15 @@ public class TestContainerTest {
 
     private static class VerifyTest extends DummyTest {
 
-        boolean localVerifyCalled;
-        boolean globalVerifyCalled;
+        private boolean localVerifyCalled;
+        private boolean globalVerifyCalled;
 
         @Verify(global = false)
         void localVerify() {
             localVerifyCalled = true;
         }
 
-        @Verify(global = true)
+        @Verify
         void globalVerify() {
             globalVerifyCalled = true;
         }
@@ -490,10 +492,10 @@ public class TestContainerTest {
 
     private static class TeardownTest extends DummyTest {
 
-        boolean localTeardownCalled;
-        boolean globalTeardownCalled;
+        private boolean localTeardownCalled;
+        private boolean globalTeardownCalled;
 
-        @Teardown(global = false)
+        @Teardown
         void localTeardown() {
             localTeardownCalled = true;
         }

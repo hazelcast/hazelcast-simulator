@@ -25,11 +25,11 @@ class FileWalker {
     private final List<File> getFiles = new ArrayList<File>();
     private final FilenameFilter filenameFilter;
 
-    public FileWalker(FilenameFilter filenameFilter) {
+    FileWalker(FilenameFilter filenameFilter) {
         this.filenameFilter = filenameFilter;
     }
 
-    public void walk(File path) {
+    void walk(File path) {
         File[] list = path.listFiles(filenameFilter);
         if (list == null) {
             return;
@@ -43,7 +43,7 @@ class FileWalker {
         }
     }
 
-    public List<File> getGetFiles() {
+    List<File> getGetFiles() {
         return getFiles;
     }
 }

@@ -52,7 +52,7 @@ public class CoordinatorUploaderTest {
     private CoordinatorUploader coordinatorUploader;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
 
@@ -71,7 +71,7 @@ public class CoordinatorUploaderTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         deleteQuiet(uploadDirectory);
         deleteQuiet(workerClassPathFile);
     }

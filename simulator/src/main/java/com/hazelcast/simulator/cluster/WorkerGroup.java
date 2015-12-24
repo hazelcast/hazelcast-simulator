@@ -25,7 +25,7 @@ class WorkerGroup {
     @XStreamAsAttribute
     private final int count;
 
-    public WorkerGroup(String configuration, int count) {
+    WorkerGroup(String configuration, int count) {
         this.configuration = configuration;
         this.count = count;
     }

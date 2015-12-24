@@ -21,11 +21,11 @@ package com.hazelcast.simulator.worker;
  */
 class IllegalTestException extends RuntimeException {
 
-    public IllegalTestException(String message) {
+    IllegalTestException(String message) {
         super(message);
     }
 
-    public IllegalTestException(Throwable cause) {
+    IllegalTestException(Throwable cause) {
         super(cause);
     }
 }

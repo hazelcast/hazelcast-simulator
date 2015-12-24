@@ -28,7 +28,7 @@ public class WorkerData {
     private final SimulatorAddress address;
     private final WorkerJvmSettings settings;
 
-    public WorkerData(SimulatorAddress parentAddress, WorkerJvmSettings settings) {
+    WorkerData(SimulatorAddress parentAddress, WorkerJvmSettings settings) {
         this.address = parentAddress.getChild(settings.getWorkerIndex());
         this.settings = settings;
     }

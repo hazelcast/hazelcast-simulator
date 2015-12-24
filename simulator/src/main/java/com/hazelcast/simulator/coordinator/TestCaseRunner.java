@@ -28,7 +28,6 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
@@ -144,13 +143,13 @@ final class TestCaseRunner implements TestPhaseListener {
         }
     }
 
-    private void createTest() throws TimeoutException {
+    private void createTest() {
         echo("Starting Test initialization");
         remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
         echo("Completed Test initialization");
     }
 
-    private void runPhase(TestPhase testPhase) throws TimeoutException {
+    private void runPhase(TestPhase testPhase) {
         if (testSuite.isFailFast() && failureContainer.hasCriticalFailure(testCaseId)) {
             echo("Skipping Test " + testPhase.desc() + " (critical failure)");
             return;
@@ -167,7 +166,7 @@ final class TestCaseRunner implements TestPhaseListener {
         waitForGlobalTestPhaseCompletion(testPhase);
     }
 
-    private void startTest() throws TimeoutException {
+    private void startTest() {
         echo(format("Starting Test start (%s members)", (isPassiveMembers) ? "passive" : "active"));
         remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(isPassiveMembers));
         echo("Completed Test start");

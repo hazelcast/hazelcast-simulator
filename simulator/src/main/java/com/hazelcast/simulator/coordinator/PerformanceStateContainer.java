@@ -40,10 +40,10 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public class PerformanceStateContainer {
 
-    public static final String PERFORMANCE_FILE_NAME = "performance.txt";
-
     public static final int THROUGHPUT_FORMAT_LENGTH = 12;
     public static final int LATENCY_FORMAT_LENGTH = 10;
+
+    static final String PERFORMANCE_FILE_NAME = "performance.txt";
 
     private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = TimeUnit.SECONDS.toMicros(1);
 

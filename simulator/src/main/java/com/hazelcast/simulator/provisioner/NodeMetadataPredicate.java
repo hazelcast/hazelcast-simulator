@@ -32,7 +32,7 @@ class NodeMetadataPredicate implements Predicate<NodeMetadata> {
     private final ComponentRegistry componentRegistry;
     private final Map<String, AgentData> terminateMap;
 
-    public NodeMetadataPredicate(ComponentRegistry componentRegistry, Map<String, AgentData> terminateMap) {
+    NodeMetadataPredicate(ComponentRegistry componentRegistry, Map<String, AgentData> terminateMap) {
         this.componentRegistry = componentRegistry;
         this.terminateMap = terminateMap;
     }

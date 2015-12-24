@@ -20,7 +20,7 @@ public class HazelcastJARFinderTest {
     private File existingFile = new File(path, "hazelcast/target/hazelcast-3.6.jar");
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         ensureExistingDirectory(new File(path, "hazelcast/target"));
         ensureExistingFile(existingFile);
 
@@ -35,7 +35,7 @@ public class HazelcastJARFinderTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         deleteQuiet(path);
     }
 

@@ -55,7 +55,7 @@ public class WorkerJvmFailureMonitor {
         this(agent, workerJvmManager, DEFAULT_CHECK_INTERVAL_MILLIS);
     }
 
-    public WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int checkIntervalMillis) {
+    WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int checkIntervalMillis) {
         monitorThread = new MonitorThread(agent, workerJvmManager, checkIntervalMillis);
         monitorThread.start();
     }
@@ -76,7 +76,7 @@ public class WorkerJvmFailureMonitor {
         monitorThread.detectTimeouts = false;
     }
 
-    private class MonitorThread extends Thread {
+    private final class MonitorThread extends Thread {
 
         private final Agent agent;
         private final WorkerJvmManager workerJvmManager;
@@ -85,7 +85,7 @@ public class WorkerJvmFailureMonitor {
         private volatile boolean running = true;
         private volatile boolean detectTimeouts;
 
-        public MonitorThread(Agent agent, WorkerJvmManager workerJvmManager, int checkIntervalMillis) {
+        private MonitorThread(Agent agent, WorkerJvmManager workerJvmManager, int checkIntervalMillis) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
 

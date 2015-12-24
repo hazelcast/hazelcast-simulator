@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static java.lang.String.format;
@@ -171,7 +172,7 @@ public class TestRunner<E> {
             }
 
             stopThread.interrupt();
-            stopThread.join();
+            joinThread(stopThread);
             LOGGER.info("Finished");
         }
     }

@@ -33,11 +33,11 @@ class BuildSupport {
     private final HazelcastJARFinder jarFinder;
     private final String mavenExecutable;
 
-    public BuildSupport(Bash bash, HazelcastJARFinder jarFinder) {
+    BuildSupport(Bash bash, HazelcastJARFinder jarFinder) {
         this(bash, jarFinder, null);
     }
 
-    public BuildSupport(Bash bash, HazelcastJARFinder jarFinder, String pathToMaven) {
+    BuildSupport(Bash bash, HazelcastJARFinder jarFinder, String pathToMaven) {
         this.bash = bash;
         this.jarFinder = jarFinder;
         this.mavenExecutable = getMavenExecutable(pathToMaven);

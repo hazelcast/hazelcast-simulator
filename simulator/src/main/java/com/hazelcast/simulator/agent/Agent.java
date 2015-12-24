@@ -190,14 +190,14 @@ public class Agent {
 
         private final boolean shutdownLog4j;
 
-        public ShutdownThread(boolean shutdownLog4j) {
+        private ShutdownThread(boolean shutdownLog4j) {
             super("AgentShutdownThread");
             setDaemon(true);
 
             this.shutdownLog4j = shutdownLog4j;
         }
 
-        public void awaitShutdown() throws Exception {
+        private void awaitShutdown() throws Exception {
             shutdownComplete.await();
         }
 

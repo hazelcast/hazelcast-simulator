@@ -37,7 +37,7 @@ class CoordinatorParameters {
 
     private final TestPhase lastTestPhaseToSync;
 
-    public CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean uploadHazelcastJARs,
+    CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean uploadHazelcastJARs,
                                  boolean enterpriseEnabled, boolean verifyEnabled, boolean parallel, boolean refreshJvm,
                                  TestPhase lastTestPhaseToSync) {
         this.simulatorProperties = properties;
@@ -53,39 +53,39 @@ class CoordinatorParameters {
         this.lastTestPhaseToSync = lastTestPhaseToSync;
     }
 
-    public SimulatorProperties getSimulatorProperties() {
+    SimulatorProperties getSimulatorProperties() {
         return simulatorProperties;
     }
 
-    public String getWorkerClassPath() {
+    String getWorkerClassPath() {
         return workerClassPath;
     }
 
-    public boolean isUploadHazelcastJARs() {
+    boolean isUploadHazelcastJARs() {
         return uploadHazelcastJARs;
     }
 
-    public boolean isEnterpriseEnabled() {
+    boolean isEnterpriseEnabled() {
         return enterpriseEnabled;
     }
 
-    public boolean isVerifyEnabled() {
+    boolean isVerifyEnabled() {
         return verifyEnabled;
     }
 
-    public boolean isParallel() {
+    boolean isParallel() {
         return parallel;
     }
 
-    public boolean isRefreshJvm() {
+    boolean isRefreshJvm() {
         return refreshJvm;
     }
 
-    public boolean isPassiveMembers() {
+    boolean isPassiveMembers() {
         return passiveMembers;
     }
 
-    public TestPhase getLastTestPhaseToSync() {
+    TestPhase getLastTestPhaseToSync() {
         return lastTestPhaseToSync;
     }
 }

@@ -23,7 +23,7 @@ class HistogramFilenameFilter implements FilenameFilter {
     private final String aggregatedFileRegex;
     private final String latencyFileRegex;
 
-    public HistogramFilenameFilter(String testName, String probeName) {
+    HistogramFilenameFilter(String testName, String probeName) {
         testName = (!testName.isEmpty()) ? testName : ".*";
         probeName = (!probeName.isEmpty()) ? probeName : testName + "WorkerProbe";
 

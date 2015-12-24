@@ -171,11 +171,11 @@ public class RemoteClient {
         }
     }
 
-    private class WorkerPokeThread extends Thread {
+    private final class WorkerPokeThread extends Thread {
 
         private volatile boolean running = true;
 
-        public WorkerPokeThread() {
+        private WorkerPokeThread() {
             super("WorkerPokeThread");
             setDaemon(true);
         }

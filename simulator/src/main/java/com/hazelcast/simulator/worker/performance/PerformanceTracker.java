@@ -74,7 +74,7 @@ final class PerformanceTracker {
         return intervalOperationCount;
     }
 
-    public long getTotalOperationCount() {
+    long getTotalOperationCount() {
         return totalOperationCount;
     }
 
@@ -82,11 +82,11 @@ final class PerformanceTracker {
         return intervalThroughput;
     }
 
-    public boolean isUpdated() {
+    boolean isUpdated() {
         return isUpdated;
     }
 
-    public boolean getAndResetIsUpdated() {
+    boolean getAndResetIsUpdated() {
         boolean oldIsUpdated = isUpdated;
         isUpdated = false;
         return oldIsUpdated;

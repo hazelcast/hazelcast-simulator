@@ -22,20 +22,20 @@ class GitRepository {
     private final String name;
     private final String url;
 
-    public GitRepository(String name, String url) {
+    GitRepository(String name, String url) {
         this.name = name;
         this.url = url;
     }
 
-    public String getName() {
+    String getName() {
         return name;
     }
 
-    public String getUrl() {
+    String getUrl() {
         return url;
     }
 
-    public static GitRepository fromString(String repositoryString) {
+    static GitRepository fromString(String repositoryString) {
         if (repositoryString == null || repositoryString.isEmpty()) {
             throw new IllegalArgumentException("Repository String cannot be empty.");
         }

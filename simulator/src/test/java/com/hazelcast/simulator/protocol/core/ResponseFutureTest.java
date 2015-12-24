@@ -143,7 +143,7 @@ public class ResponseFutureTest {
         private final Response result;
         private final int delayMs;
 
-        public FutureSetter(Response result, int delayMs) {
+        private FutureSetter(Response result, int delayMs) {
             this.result = result;
             this.delayMs = delayMs;
         }

@@ -25,11 +25,11 @@ class NodeConfiguration {
     @XStreamImplicit(itemFieldName = "workerGroup")
     private final List<WorkerGroup> workerGroups = new ArrayList<WorkerGroup>();
 
-    public void addWorkerConfiguration(String workerConfiguration, int workerCount) {
+    void addWorkerConfiguration(String workerConfiguration, int workerCount) {
         workerGroups.add(new WorkerGroup(workerConfiguration, workerCount));
     }
 
-    public List<WorkerGroup> getWorkerGroups() {
+    List<WorkerGroup> getWorkerGroups() {
         return workerGroups;
     }
 }

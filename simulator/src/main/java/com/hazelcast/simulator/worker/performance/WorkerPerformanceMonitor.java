@@ -118,7 +118,7 @@ public class WorkerPerformanceMonitor {
             }
         }
 
-        public void sendTestHistograms() {
+        private void sendTestHistograms() {
             for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
                 String testId = trackerEntry.getKey();
                 PerformanceTracker tracker = trackerEntry.getValue();

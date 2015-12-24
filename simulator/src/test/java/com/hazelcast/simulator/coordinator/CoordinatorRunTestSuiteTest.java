@@ -153,7 +153,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void runTestSuiteSequential_withException() throws Exception {
+    public void runTestSuiteSequential_withException() {
         doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
         parallel = false;
@@ -163,7 +163,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void runTestSuiteParallel_withException() throws Exception {
+    public void runTestSuiteParallel_withException() {
         doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
         parallel = true;
@@ -207,7 +207,7 @@ public class CoordinatorRunTestSuiteTest {
         return coordinator;
     }
 
-    private void verifyRemoteClient(Coordinator coordinator) throws Exception {
+    private void verifyRemoteClient(Coordinator coordinator) {
         boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = testSuite.size();
         int sendToTestOnFirstWorkerTimes = 0;
@@ -255,7 +255,7 @@ public class CoordinatorRunTestSuiteTest {
         private final TestPhaseListenerContainer testPhaseListenerContainer;
         private final FailureContainer failureContainer;
 
-        public TestPhaseCompleter(Coordinator coordinator) {
+        private TestPhaseCompleter(Coordinator coordinator) {
             super("TestPhaseCompleter");
 
             this.componentRegistry = coordinator.getComponentRegistry();

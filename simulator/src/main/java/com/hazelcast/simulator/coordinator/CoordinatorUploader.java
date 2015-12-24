@@ -59,7 +59,7 @@ class CoordinatorUploader {
     private final JavaProfiler javaProfiler;
     private final String testSuiteId;
 
-    public CoordinatorUploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
+    CoordinatorUploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
                                HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
                                String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
         this.bash = bash;
@@ -75,7 +75,7 @@ class CoordinatorUploader {
         this.testSuiteId = testSuiteId;
     }
 
-    public void run() {
+    void run() {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("Uploading files to agents...");
         LOGGER.info(HORIZONTAL_RULER);

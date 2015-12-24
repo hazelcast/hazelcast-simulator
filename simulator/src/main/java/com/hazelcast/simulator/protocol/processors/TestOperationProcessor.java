@@ -168,7 +168,7 @@ public class TestOperationProcessor extends OperationProcessor {
 
     private abstract class OperationThread extends Thread {
 
-        public OperationThread(TestPhase testPhase) {
+        OperationThread(TestPhase testPhase) {
             if (!testPhaseReference.compareAndSet(null, testPhase)) {
                 throw new IllegalStateException(format("Tried to start %s for test %s, but %s is still running!", testPhase,
                         testId, testPhaseReference.get()));

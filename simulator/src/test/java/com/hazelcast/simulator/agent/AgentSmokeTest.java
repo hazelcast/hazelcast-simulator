@@ -236,7 +236,7 @@ public class AgentSmokeTest {
 
         private final ConcurrentMap<TestPhase, CountDownLatch> latches = new ConcurrentHashMap<TestPhase, CountDownLatch>();
 
-        public TestPhaseListenerImpl() {
+        private TestPhaseListenerImpl() {
             for (TestPhase testPhase : TestPhase.values()) {
                 latches.put(testPhase, new CountDownLatch(1));
             }
@@ -247,7 +247,7 @@ public class AgentSmokeTest {
             latches.get(testPhase).countDown();
         }
 
-        public void await(TestPhase testPhase) throws Exception {
+        private void await(TestPhase testPhase) throws Exception {
             latches.get(testPhase).await();
         }
     }
@@ -257,7 +257,7 @@ public class AgentSmokeTest {
         private final CountDownLatch latch = new CountDownLatch(1);
         private final AgentThread agentThread = new AgentThread();
 
-        public AgentStarter() throws Exception {
+        private AgentStarter() throws Exception {
             agentThread.start();
             latch.await();
         }

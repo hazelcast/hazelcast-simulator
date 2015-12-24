@@ -42,7 +42,7 @@ class ProtocolUtil {
 
     static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
 
-    public static final long DEFAULT_TEST_TIMEOUT_MILLIS = 5000;
+    static final long DEFAULT_TEST_TIMEOUT_MILLIS = 5000;
 
     static final int AGENT_START_PORT = 11000;
     private static final int WORKER_START_PORT = 11100;
@@ -117,7 +117,7 @@ class ProtocolUtil {
         connectors.clear();
     }
 
-    static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
+    private static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
         WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port,
                 WorkerType.MEMBER, null, null, true);
 
@@ -131,7 +131,7 @@ class ProtocolUtil {
         return workerConnector;
     }
 
-    static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
+    private static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
         Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(addressIndex);
 

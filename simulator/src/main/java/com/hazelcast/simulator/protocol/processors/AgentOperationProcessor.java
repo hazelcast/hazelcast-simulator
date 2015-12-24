@@ -62,8 +62,8 @@ public class AgentOperationProcessor extends OperationProcessor {
         this(exceptionLogger, agent, workerJvmManager, Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE));
     }
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
-                                   ExecutorService executorService) {
+    AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
+                            ExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
         this.workerJvmManager = workerJvmManager;
@@ -138,12 +138,12 @@ public class AgentOperationProcessor extends OperationProcessor {
         agent.getWorkerJvmFailureMonitor().stopTimeoutDetection();
     }
 
-    private class LaunchWorkerCallable implements Callable<Boolean> {
+    private final class LaunchWorkerCallable implements Callable<Boolean> {
 
         private final WorkerJvmLauncher launcher;
         private final WorkerJvmSettings workerJvmSettings;
 
-        public LaunchWorkerCallable(WorkerJvmLauncher launcher, WorkerJvmSettings workerJvmSettings) {
+        private LaunchWorkerCallable(WorkerJvmLauncher launcher, WorkerJvmSettings workerJvmSettings) {
             this.launcher = launcher;
             this.workerJvmSettings = workerJvmSettings;
         }

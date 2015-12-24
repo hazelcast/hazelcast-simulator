@@ -154,7 +154,7 @@ public class HazelcastUtilsTest {
 
         private boolean instanceSet;
 
-        public HazelcastAwareMessage(MessageAddress messageAddress) {
+        private HazelcastAwareMessage(MessageAddress messageAddress) {
             super(messageAddress);
         }
 
@@ -163,7 +163,7 @@ public class HazelcastUtilsTest {
             instanceSet = true;
         }
 
-        public boolean isInstanceSet() {
+        private boolean isInstanceSet() {
             return instanceSet;
         }
     }

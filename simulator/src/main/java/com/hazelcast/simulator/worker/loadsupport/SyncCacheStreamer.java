@@ -23,7 +23,7 @@ import javax.cache.Cache;
  * @param <K> key type
  * @param <V> value type
  */
-public class SyncCacheStreamer<K, V> implements Streamer<K, V> {
+class SyncCacheStreamer<K, V> implements Streamer<K, V> {
 
     private final Cache<K, V> cache;
 

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
-public class IntegrationTestWorker implements Worker {
+public final class IntegrationTestWorker implements Worker {
 
     private static final int WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS = 5;
 
@@ -35,7 +35,7 @@ public class IntegrationTestWorker implements Worker {
 
     private final CountDownLatch latch = new CountDownLatch(1);
 
-    public IntegrationTestWorker() throws Exception {
+    private IntegrationTestWorker() throws Exception {
         LOGGER.info("Starting IntegrationTestWorker...");
 
         Runtime.getRuntime().addShutdownHook(new ShutdownThread(latch));
@@ -85,7 +85,7 @@ public class IntegrationTestWorker implements Worker {
 
         private final CountDownLatch latch;
 
-        public ShutdownThread(CountDownLatch latch) {
+        private ShutdownThread(CountDownLatch latch) {
             super("WorkerShutdownThread");
             setDaemon(true);
 

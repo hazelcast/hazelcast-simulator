@@ -149,7 +149,7 @@ public final class Coordinator {
         echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
     }
 
-    private void run() throws Exception {
+    private void run() {
         try {
             uploadFiles();
 
@@ -358,7 +358,7 @@ public final class Coordinator {
         }
     }
 
-    private void shutdown() throws Exception {
+    private void shutdown() {
         if (coordinatorConnector != null) {
             LOGGER.info("Shutdown of ClientConnector...");
             coordinatorConnector.shutdown();

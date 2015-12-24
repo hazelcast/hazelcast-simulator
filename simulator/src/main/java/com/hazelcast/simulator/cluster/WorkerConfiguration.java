@@ -35,7 +35,7 @@ class WorkerConfiguration {
     @XStreamAsAttribute
     private final String jvmOptions;
 
-    public WorkerConfiguration(String name, WorkerType type, String hzVersion, String hzConfig, String jvmOptions) {
+    WorkerConfiguration(String name, WorkerType type, String hzVersion, String hzConfig, String jvmOptions) {
         this.name = name;
         this.type = type.name();
         this.hzVersion = hzVersion;
@@ -43,23 +43,23 @@ class WorkerConfiguration {
         this.jvmOptions = jvmOptions;
     }
 
-    public String getName() {
+    String getName() {
         return name;
     }
 
-    public WorkerType getType() {
+    WorkerType getType() {
         return WorkerType.valueOf(type);
     }
 
-    public String getHzVersion() {
+    String getHzVersion() {
         return hzVersion;
     }
 
-    public String getHzConfig() {
+    String getHzConfig() {
         return hzConfig;
     }
 
-    public String getJvmOptions() {
+    String getJvmOptions() {
         return jvmOptions;
     }
 }

@@ -57,7 +57,7 @@ class GitSupport {
         this.customRepositories = getCustomRepositories(customRepositories);
     }
 
-    public static GitSupport newInstance(Bash bash, SimulatorProperties properties) {
+    static GitSupport newInstance(Bash bash, SimulatorProperties properties) {
         String mvnExec = properties.get("MVN_EXECUTABLE");
         String customGitRepositories = properties.get("GIT_CUSTOM_REPOSITORIES");
         String gitBuildDirectory = properties.get("GIT_BUILD_DIR");
@@ -66,7 +66,7 @@ class GitSupport {
         return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
     }
 
-    public File[] checkout(String revision) {
+    File[] checkout(String revision) {
         File srcDirectory = getOrCreateSourceDirectory();
         String fullSha1 = fetchSources(srcDirectory, revision);
 

@@ -15,33 +15,33 @@
  */
 package com.hazelcast.simulator.agent;
 
-public class JavaInstallation {
+class JavaInstallation {
 
     private String vendor;
     private String version;
     private String javaHome;
 
-    public String getJavaHome() {
+    String getJavaHome() {
         return javaHome;
     }
 
-    public void setJavaHome(String javaHome) {
+    void setJavaHome(String javaHome) {
         this.javaHome = javaHome;
     }
 
-    public String getVendor() {
+    String getVendor() {
         return vendor;
     }
 
-    public void setVendor(String vendor) {
+    void setVendor(String vendor) {
         this.vendor = vendor;
     }
 
-    public String getVersion() {
+    String getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
+    void setVersion(String version) {
         this.version = version;
     }
 

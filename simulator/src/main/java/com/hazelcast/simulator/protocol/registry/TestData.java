@@ -24,7 +24,7 @@ public class TestData {
     private final SimulatorAddress address;
     private final TestCase testCase;
 
-    public TestData(int testIndex, SimulatorAddress address, TestCase testCase) {
+    TestData(int testIndex, SimulatorAddress address, TestCase testCase) {
         this.testIndex = testIndex;
         this.address = address;
         this.testCase = testCase;

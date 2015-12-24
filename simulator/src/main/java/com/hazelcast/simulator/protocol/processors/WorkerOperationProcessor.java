@@ -49,10 +49,9 @@ public class WorkerOperationProcessor extends OperationProcessor {
     private static final String DASHES = "---------------------------";
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
 
-    private ExceptionLogger exceptionLogger;
-
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
+    private final ExceptionLogger exceptionLogger;
     private final WorkerType type;
     private final HazelcastInstance hazelcastInstance;
     private final Worker worker;
@@ -62,7 +61,6 @@ public class WorkerOperationProcessor extends OperationProcessor {
                                     Worker worker, SimulatorAddress workerAddress) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
-
         this.type = type;
         this.hazelcastInstance = hazelcastInstance;
         this.worker = worker;
@@ -89,7 +87,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processTerminateWorker() throws Exception {
+    private void processTerminateWorker() {
         worker.shutdown();
     }
 

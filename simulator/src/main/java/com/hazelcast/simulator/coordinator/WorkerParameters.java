@@ -38,8 +38,8 @@ public class WorkerParameters {
     private final String memberJvmOptions;
     private final String clientJvmOptions;
 
-    private String memberHzConfig;
-    private String clientHzConfig;
+    private final String memberHzConfig;
+    private final String clientHzConfig;
     private final String log4jConfig;
 
     private final boolean monitorPerformance;

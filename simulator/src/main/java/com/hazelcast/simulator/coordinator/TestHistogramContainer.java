@@ -72,7 +72,7 @@ public class TestHistogramContainer {
         }
     }
 
-    synchronized Result aggregateHistogramsForTestCase(String testCaseId, PerformanceState state) {
+    private synchronized Result aggregateHistogramsForTestCase(String testCaseId, PerformanceState state) {
         Result result = new ResultImpl(testCaseId, state.getOperationCount(), state.getTotalThroughput());
         for (ConcurrentMap<String, Map<String, String>> testHistogramMap : workerTestProbeHistogramMap.values()) {
             Map<String, String> probeHistogramMap = testHistogramMap.get(testCaseId);
