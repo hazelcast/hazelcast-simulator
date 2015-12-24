@@ -23,7 +23,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.test.FailureType;
-import com.hazelcast.simulator.utils.FileUtilsException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -153,7 +152,7 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void detectOomeFailure(WorkerJvm workerJvm) {
-            if (!isOomeFound(workerJvm)) {
+            if (!isOomeFound(workerJvm.getWorkerHome())) {
                 return;
             }
             workerJvm.setOomeDetected();
@@ -161,8 +160,8 @@ public class WorkerJvmFailureMonitor {
             sendFailureOperation("Worker ran into an OOME", WORKER_OOM, workerJvm);
         }
 
-        private boolean isOomeFound(WorkerJvm workerJvm) {
-            File oomeFile = new File(workerJvm.getWorkerHome(), "worker.oome");
+        private boolean isOomeFound(File workerHome) {
+            File oomeFile = new File(workerHome, "worker.oome");
             if (oomeFile.exists()) {
                 return true;
             }
@@ -170,10 +169,7 @@ public class WorkerJvmFailureMonitor {
             // if we find the hprof file, we also know there is an OOME. The problem with the worker.oome file is that it is
             // created after the heap dump is done, and creating the heap dump can take a lot of time. And then the system could
             // think there is another problem (e.g. lack of inactivity; or timeouts). This hides the OOME.
-            String[] hprofFiles = workerJvm.getWorkerHome().list(new HProfExtensionFilter());
-            if (hprofFiles == null) {
-                return false;
-            }
+            File[] hprofFiles = HProfExtensionFilter.listFiles(workerHome);
             return (hprofFiles.length > 0);
         }
 
@@ -244,14 +240,15 @@ public class WorkerJvmFailureMonitor {
         }
     }
 
-    private static class ExceptionExtensionFilter implements FilenameFilter {
+    static class ExceptionExtensionFilter implements FilenameFilter {
 
         private static final ExceptionExtensionFilter INSTANCE = new ExceptionExtensionFilter();
+        private static final File[] EMPTY_FILES = new File[0];
 
-        private static File[] listFiles(File workerHome) {
+        static File[] listFiles(File workerHome) {
             File[] exceptionFiles = workerHome.listFiles(ExceptionExtensionFilter.INSTANCE);
             if (exceptionFiles == null) {
-                throw new FileUtilsException("Invalid directory");
+                return EMPTY_FILES;
             }
             return exceptionFiles;
         }
@@ -260,10 +257,20 @@ public class WorkerJvmFailureMonitor {
         public boolean accept(File dir, String name) {
             return name.endsWith(".exception");
         }
-
     }
 
-    private static class HProfExtensionFilter implements FilenameFilter {
+    static class HProfExtensionFilter implements FilenameFilter {
+
+        private static final HProfExtensionFilter INSTANCE = new HProfExtensionFilter();
+        private static final File[] EMPTY_FILES = new File[0];
+
+        static File[] listFiles(File workerHome) {
+            File[] hprofFiles = workerHome.listFiles(HProfExtensionFilter.INSTANCE);
+            if (hprofFiles == null) {
+                return EMPTY_FILES;
+            }
+            return hprofFiles;
+        }
 
         @Override
         public boolean accept(File dir, String name) {

@@ -22,8 +22,10 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -58,7 +60,7 @@ public class WorkerJvmFailureMonitorTest {
         thirdWorkerHome = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0), true);
         addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 4, 0), false);
 
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, 100);
+        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, 50);
     }
 
     @After
@@ -72,24 +74,25 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldSendNoFailures() {
-        sleepMillis(300);
+        sleepMillis(200);
 
         verifyNoMoreInteractions(agentConnector);
     }
 
     @Test
     public void testRun_shouldDetectException() {
-        sleepMillis(300);
+        sleepMillis(150);
 
         String cause = throwableToString(new RuntimeException());
         File firstExceptionFile = createExceptionFile(firstWorkerHome, "WorkerJvmFailureMonitorTest", cause);
         File secondExceptionFile = createExceptionFile(secondWorkerHome, "", cause);
         File thirdExceptionFile = createExceptionFile(thirdWorkerHome, "null", cause);
 
-        sleepMillis(200);
+        sleepMillis(150);
 
-        verify(agentConnector, times(3)).write(eq(COORDINATOR), any(FailureOperation.class));
+        assertThatFailureOperationHasBeenSent(agentConnector, 3);
         verifyNoMoreInteractions(agentConnector);
+
         assertThatExceptionFileDoesNotExist(firstExceptionFile);
         assertThatExceptionFileDoesNotExist(secondExceptionFile);
         assertThatExceptionFileDoesNotExist(thirdExceptionFile);
@@ -97,7 +100,30 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure() {
+        sleepMillis(150);
 
+        createFile(firstWorkerHome, "worker.oome");
+        createFile(secondWorkerHome, "java_pid3140.hprof");
+
+        sleepMillis(150);
+
+        assertThatFailureOperationHasBeenSent(agentConnector, 2);
+        assertThatWorkerHasBeenRemoved(agentConnector, 2);
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testExceptionExtensionFilter_shouldReturnEmptyFileListIfDirectoryDoesNotExist() {
+        File[] files = WorkerJvmFailureMonitor.ExceptionExtensionFilter.listFiles(new File("notFound"));
+
+        assertEquals(0, files.length);
+    }
+
+    @Test
+    public void testHProfExtensionFilter_shouldReturnEmptyFileListIfDirectoryDoesNotExist() {
+        File[] files = WorkerJvmFailureMonitor.HProfExtensionFilter.listFiles(new File("notFound"));
+
+        assertEquals(0, files.length);
     }
 
     private static File addWorkerJvm(WorkerJvmManager workerJvmManager, SimulatorAddress address, boolean createWorkerHome) {
@@ -121,14 +147,28 @@ public class WorkerJvmFailureMonitorTest {
     private static File createExceptionFile(File workerHome, String testId, String cause) {
         String targetFileName = "1.exception";
 
-        File tmpFile = new File(workerHome, targetFileName + "tmp");
+        File tmpFile = createFile(workerHome, targetFileName + "tmp");
         File exceptionFile = new File(workerHome, targetFileName);
 
-        ensureExistingFile(tmpFile);
         appendText(testId + NEW_LINE + cause, tmpFile);
         rename(tmpFile, exceptionFile);
 
         return exceptionFile;
+    }
+
+    private static File createFile(File workerHome, String fileName) {
+        File file = new File(workerHome, fileName);
+        ensureExistingFile(file);
+
+        return file;
+    }
+
+    private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, int times) {
+        verify(agentConnector, times(times)).write(eq(COORDINATOR), any(FailureOperation.class));
+    }
+
+    private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, int times) {
+        verify(agentConnector, times(times)).removeWorker(anyInt());
     }
 
     private static void assertThatExceptionFileDoesNotExist(File firstExceptionFile) {
