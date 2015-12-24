@@ -2,7 +2,6 @@ package com.hazelcast.simulator.agent.workerjvm;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
@@ -15,6 +14,7 @@ import org.mockito.verification.VerificationMode;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
@@ -25,6 +25,8 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -38,7 +40,10 @@ import static org.mockito.Mockito.when;
 
 public class WorkerJvmFailureMonitorTest {
 
+    private int addressIndex;
+
     private AgentConnector agentConnector;
+    private WorkerJvmManager workerJvmManager;
 
     private WorkerJvm firstWorkerJvm;
     private WorkerJvm secondWorkerJvm;
@@ -60,12 +65,12 @@ public class WorkerJvmFailureMonitorTest {
         Agent agent = mock(Agent.class);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
 
-        WorkerJvmManager workerJvmManager = new WorkerJvmManager();
+        workerJvmManager = new WorkerJvmManager();
 
-        firstWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), true);
-        secondWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0), true);
-        thirdWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0), true);
-        addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 4, 0), false);
+        firstWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(WORKER, 1, ++addressIndex, 0), true);
+        secondWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(WORKER, 1, ++addressIndex, 0), true);
+        thirdWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(WORKER, 1, ++addressIndex, 0), true);
+        addWorkerJvm(workerJvmManager, new SimulatorAddress(WORKER, 1, ++addressIndex, 0), false);
 
         firstWorkerHome = firstWorkerJvm.getWorkerHome();
         secondWorkerHome = secondWorkerJvm.getWorkerHome();
@@ -167,6 +172,36 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     @Test
+    public void testRun_shouldDetectUnexpectedExit_whenExitValueIsZero() {
+        Process process = mock(Process.class);
+        when(process.exitValue()).thenReturn(0);
+
+        WorkerJvm workerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(WORKER, 1, ++addressIndex, 0), true, process);
+
+        sleepMillis(100);
+
+        assertThatFailureOperationHasBeenSent(agentConnector, 1);
+        assertThatWorkerHasBeenRemoved(agentConnector, 1);
+        verifyNoMoreInteractions(agentConnector);
+        assertTrue(workerJvm.isFinished());
+    }
+
+    @Test
+    public void testRun_shouldDetectUnexpectedExit_whenExitValueIsNonZero() {
+        Process process = mock(Process.class);
+        when(process.exitValue()).thenReturn(134);
+
+        WorkerJvm workerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(WORKER, 1, ++addressIndex, 0), true, process);
+
+        sleepMillis(100);
+
+        assertThatFailureOperationHasBeenSent(agentConnector, 1);
+        assertThatWorkerHasBeenRemoved(agentConnector, 1);
+        verifyNoMoreInteractions(agentConnector);
+        assertFalse(workerJvm.isFinished());
+    }
+
+    @Test
     public void testExceptionExtensionFilter_shouldReturnEmptyFileListIfDirectoryDoesNotExist() {
         File[] files = WorkerJvmFailureMonitor.ExceptionExtensionFilter.listFiles(new File("notFound"));
 
@@ -184,6 +219,11 @@ public class WorkerJvmFailureMonitorTest {
         Process process = mock(Process.class);
         when(process.exitValue()).thenThrow(new IllegalThreadStateException("process is still running"));
 
+        return addWorkerJvm(workerJvmManager, address, createWorkerHome, process);
+    }
+
+    private static WorkerJvm addWorkerJvm(WorkerJvmManager workerJvmManager, SimulatorAddress address, boolean createWorkerHome,
+                                          Process process) {
         int addressIndex = address.getAddressIndex();
         File workerHome = new File("worker" + address.getAddressIndex());
         WorkerJvm workerJvm = new WorkerJvm(address, "WorkerJvmFailureMonitorTest" + addressIndex, workerHome);
