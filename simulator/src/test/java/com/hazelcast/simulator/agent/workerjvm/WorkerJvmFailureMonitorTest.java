@@ -10,8 +10,10 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.verification.VerificationMode;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -27,6 +29,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,6 +39,10 @@ import static org.mockito.Mockito.when;
 public class WorkerJvmFailureMonitorTest {
 
     private AgentConnector agentConnector;
+
+    private WorkerJvm firstWorkerJvm;
+    private WorkerJvm secondWorkerJvm;
+    private WorkerJvm thirdWorkerJvm;
 
     private File firstWorkerHome;
     private File secondWorkerHome;
@@ -55,12 +62,16 @@ public class WorkerJvmFailureMonitorTest {
 
         WorkerJvmManager workerJvmManager = new WorkerJvmManager();
 
-        firstWorkerHome = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), true);
-        secondWorkerHome = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0), true);
-        thirdWorkerHome = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0), true);
+        firstWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), true);
+        secondWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0), true);
+        thirdWorkerJvm = addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0), true);
         addWorkerJvm(workerJvmManager, new SimulatorAddress(AddressLevel.WORKER, 1, 4, 0), false);
 
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, 50);
+        firstWorkerHome = firstWorkerJvm.getWorkerHome();
+        secondWorkerHome = secondWorkerJvm.getWorkerHome();
+        thirdWorkerHome = thirdWorkerJvm.getWorkerHome();
+
+        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, 30);
     }
 
     @After
@@ -74,21 +85,21 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldSendNoFailures() {
-        sleepMillis(200);
+        sleepMillis(100);
 
         verifyNoMoreInteractions(agentConnector);
     }
 
     @Test
     public void testRun_shouldDetectException() {
-        sleepMillis(150);
+        sleepMillis(100);
 
         String cause = throwableToString(new RuntimeException());
         File firstExceptionFile = createExceptionFile(firstWorkerHome, "WorkerJvmFailureMonitorTest", cause);
         File secondExceptionFile = createExceptionFile(secondWorkerHome, "", cause);
         File thirdExceptionFile = createExceptionFile(thirdWorkerHome, "null", cause);
 
-        sleepMillis(150);
+        sleepMillis(100);
 
         assertThatFailureOperationHasBeenSent(agentConnector, 3);
         verifyNoMoreInteractions(agentConnector);
@@ -100,15 +111,58 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure() {
-        sleepMillis(150);
+        sleepMillis(100);
 
         createFile(firstWorkerHome, "worker.oome");
         createFile(secondWorkerHome, "java_pid3140.hprof");
 
-        sleepMillis(150);
+        sleepMillis(100);
 
         assertThatFailureOperationHasBeenSent(agentConnector, 2);
         assertThatWorkerHasBeenRemoved(agentConnector, 2);
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldNotDetectInactivityIfDetectionNotStarted() {
+        sleepMillis(100);
+
+        firstWorkerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(100);
+
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldNotDetectInactivityAfterDetectionIsStopped() {
+        workerJvmFailureMonitor.startTimeoutDetection();
+
+        sleepMillis(100);
+
+        workerJvmFailureMonitor.stopTimeoutDetection();
+
+        sleepMillis(100);
+
+        firstWorkerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(100);
+
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldDetectInactivity() {
+        workerJvmFailureMonitor.startTimeoutDetection();
+
+        sleepMillis(100);
+
+        firstWorkerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(100);
+
+        assertThatFailureOperationHasBeenSentAtLeast(agentConnector, 1);
+        assertThatWorkerHasBeenRemovedAtLeast(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
     }
 
@@ -126,7 +180,7 @@ public class WorkerJvmFailureMonitorTest {
         assertEquals(0, files.length);
     }
 
-    private static File addWorkerJvm(WorkerJvmManager workerJvmManager, SimulatorAddress address, boolean createWorkerHome) {
+    private static WorkerJvm addWorkerJvm(WorkerJvmManager workerJvmManager, SimulatorAddress address, boolean createWorkerHome) {
         Process process = mock(Process.class);
         when(process.exitValue()).thenThrow(new IllegalThreadStateException("process is still running"));
 
@@ -141,7 +195,7 @@ public class WorkerJvmFailureMonitorTest {
             ensureExistingDirectory(workerHome);
         }
 
-        return workerHome;
+        return workerJvm;
     }
 
     private static File createExceptionFile(File workerHome, String testId, String cause) {
@@ -164,11 +218,27 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, int times) {
-        verify(agentConnector, times(times)).write(eq(COORDINATOR), any(FailureOperation.class));
+        assertThatFailureOperationHasBeenSent(agentConnector, times(times));
+    }
+
+    private static void assertThatFailureOperationHasBeenSentAtLeast(AgentConnector agentConnector, int atLeast) {
+        assertThatFailureOperationHasBeenSent(agentConnector, atLeast(atLeast));
+    }
+
+    private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, VerificationMode mode) {
+        verify(agentConnector, mode).write(eq(COORDINATOR), any(FailureOperation.class));
     }
 
     private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, int times) {
-        verify(agentConnector, times(times)).removeWorker(anyInt());
+        assertThatWorkerHasBeenRemoved(agentConnector, times(times));
+    }
+
+    private static void assertThatWorkerHasBeenRemovedAtLeast(AgentConnector agentConnector, int atLeast) {
+        assertThatWorkerHasBeenRemoved(agentConnector, atLeast(atLeast));
+    }
+
+    private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, VerificationMode mode) {
+        verify(agentConnector, mode).removeWorker(anyInt());
     }
 
     private static void assertThatExceptionFileDoesNotExist(File firstExceptionFile) {

@@ -57,6 +57,10 @@ public class WorkerJvm {
         this.lastSeen = System.currentTimeMillis();
     }
 
+    public void setLastSeen(long timeStamp) {
+        this.lastSeen = timeStamp;
+    }
+
     public boolean isOomeDetected() {
         return oomeDetected;
     }
