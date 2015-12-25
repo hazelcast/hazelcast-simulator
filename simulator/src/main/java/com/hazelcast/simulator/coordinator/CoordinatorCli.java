@@ -114,7 +114,7 @@ final class CoordinatorCli {
     private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
             String.format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
                     FailureType.getIdsAsString()))
-            .withRequiredArg().ofType(String.class);
+            .withRequiredArg().ofType(String.class).defaultsTo("workerTimeout");
 
     private final OptionSpec parallelSpec = parser.accepts("parallel",
             "If defined tests are run in parallel.");
