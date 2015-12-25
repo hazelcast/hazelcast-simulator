@@ -124,7 +124,6 @@ public class WorkerJvmFailureMonitorTest {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
-        assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
     }
 
     @Test
@@ -139,7 +138,6 @@ public class WorkerJvmFailureMonitorTest {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
-        assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
     }
 
     @Test
@@ -208,7 +206,6 @@ public class WorkerJvmFailureMonitorTest {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
-        assertThatWorkerHasBeenRemovedAtLeastOnce(agentConnector);
     }
 
     @Test
@@ -336,10 +333,6 @@ public class WorkerJvmFailureMonitorTest {
 
     private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, int times) {
         assertThatWorkerHasBeenRemoved(agentConnector, times(times));
-    }
-
-    private static void assertThatWorkerHasBeenRemovedAtLeastOnce(AgentConnector agentConnector) {
-        assertThatWorkerHasBeenRemoved(agentConnector, atLeastOnce());
     }
 
     private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, VerificationMode mode) {
