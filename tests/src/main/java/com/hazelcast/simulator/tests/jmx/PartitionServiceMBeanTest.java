@@ -65,8 +65,8 @@ public class PartitionServiceMBeanTest {
         this.name = new ObjectName("com.hazelcast:instance=" + targetInstance.getName()
                 + ",name=" + targetInstance.getName() + ",type=HazelcastInstance.PartitionServiceMBean");
 
-        operationSelectorBuilder.addOperation(Operation.IsClusterSafe, isLocalMemberSafeProb)
-                .addDefaultOperation(Operation.IsLocalMemberSafe);
+        operationSelectorBuilder.addOperation(Operation.IsLocalMemberSafe, isLocalMemberSafeProb)
+                .addDefaultOperation(Operation.IsClusterSafe);
     }
 
     @Teardown
