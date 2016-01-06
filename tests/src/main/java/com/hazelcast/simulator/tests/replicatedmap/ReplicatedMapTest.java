@@ -33,9 +33,9 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
-public class StringStringReplicatedMapTest {
+public class ReplicatedMapTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(StringStringReplicatedMapTest.class);
+    private static final ILogger LOGGER = Logger.getLogger(ReplicatedMapTest.class);
 
     private enum Operation {
         PUT,
@@ -44,27 +44,24 @@ public class StringStringReplicatedMapTest {
     }
 
     // properties
-    public String basename = StringStringReplicatedMapTest.class.getSimpleName();
+    public String basename = ReplicatedMapTest.class.getSimpleName();
     public int keyCount = 10000;
-    public int valueCount = 10;
-    public int keyLength = 10;
+    public int valueCount = 1;
     public int valueLength = 10;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
 
     public double putProb = 0.45;
     public double getProb = 0.45;
 
     // probes
     public Probe putProbe;
-    public Probe removeProbe;
     public Probe getProbe;
+    public Probe removeProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private TestContext testContext;
-    private ReplicatedMap<String, String> map;
+    private ReplicatedMap<Integer, String> map;
 
-    private String[] keys;
     private String[] values;
 
     @Setup
@@ -85,7 +82,6 @@ public class StringStringReplicatedMapTest {
 
     @Warmup(global = false)
     public void warmup() throws InterruptedException {
-        keys = generateStringKeys(keyCount, keyLength, keyLocality, testContext.getTargetInstance());
         values = generateStrings(valueCount, valueLength);
     }
 
@@ -102,7 +98,7 @@ public class StringStringReplicatedMapTest {
 
         @Override
         protected void timeStep(Operation operation) {
-            String key = randomKey();
+            int key = randomInt(keyCount);
 
             switch (operation) {
                 case PUT:
@@ -111,23 +107,19 @@ public class StringStringReplicatedMapTest {
                     map.put(key, value);
                     putProbe.done();
                     break;
-                case REMOVE:
-                    removeProbe.started();
-                    map.remove(key);
-                    removeProbe.done();
-                    break;
                 case GET:
                     getProbe.started();
                     map.get(key);
                     getProbe.done();
                     break;
+                case REMOVE:
+                    removeProbe.started();
+                    map.remove(key);
+                    removeProbe.done();
+                    break;
                 default:
                     throw new UnsupportedOperationException();
             }
-        }
-
-        private String randomKey() {
-            return keys[randomInt(keys.length)];
         }
 
         private String randomValue() {
@@ -136,7 +128,7 @@ public class StringStringReplicatedMapTest {
     }
 
     public static void main(String[] args) throws Exception {
-        StringStringReplicatedMapTest test = new StringStringReplicatedMapTest();
-        new TestRunner<StringStringReplicatedMapTest>(test).run();
+        ReplicatedMapTest test = new ReplicatedMapTest();
+        new TestRunner<ReplicatedMapTest>(test).run();
     }
 }
