@@ -18,48 +18,47 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
-import java.util.Random;
-
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class LockTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(LockTest.class);
-
     // properties
     public String basename = LockTest.class.getSimpleName();
     public int lockCount = 500;
-    public int threadCount = 10;
     public int initialAmount = 1000;
     public int amount = 50;
-    public int logFrequency = 1000;
 
     private IAtomicLong lockCounter;
-    private IAtomicLong totalMoney;
     private HazelcastInstance targetInstance;
-    private TestContext testContext;
 
     @Setup
     public void setup(TestContext testContext) {
-        this.testContext = testContext;
         targetInstance = testContext.getTargetInstance();
 
         lockCounter = targetInstance.getAtomicLong(basename + ":LockCounter");
-        totalMoney = targetInstance.getAtomicLong(basename + ":TotalMoney");
+    }
+
+    @Teardown
+    public void teardown() {
+        lockCounter.destroy();
+
+        for (long i = 0; i < lockCounter.get(); i++) {
+            targetInstance.getLock(getLockId(i)).destroy();
+            targetInstance.getAtomicLong(getAccountId(i)).destroy();
+        }
     }
 
     @Warmup(global = true)
@@ -69,17 +68,71 @@ public class LockTest {
             targetInstance.getLock(getLockId(key));
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(key));
             account.set(initialAmount);
-            totalMoney.addAndGet(initialAmount);
         }
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
+    @Verify
+    public void verify() {
+        long actual = 0;
+        for (long i = 0; i < lockCounter.get(); i++) {
+            ILock lock = targetInstance.getLock(getLockId(i));
+            assertFalse("Lock should be unlocked", lock.isLocked());
+
+            long accountAmount = targetInstance.getAtomicLong(getAccountId(i)).get();
+            assertTrue("Amount on account can't be smaller than 0", accountAmount >= 0);
+            actual += accountAmount;
         }
-        spawner.awaitCompletion();
+
+        long expected = initialAmount * lockCounter.get();
+        assertEquals(format("%s: Money was lost or created (%d)", basename, expected - actual), expected, actual);
+    }
+
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractMonotonicWorker {
+
+        @Override
+        public void timeStep() {
+            long key1 = getRandomAccountKey();
+            long key2 = getRandomAccountKey();
+            int randomAmount = randomInt(amount);
+
+            ILock lock1 = targetInstance.getLock(getLockId(key1));
+            ILock lock2 = targetInstance.getLock(getLockId(key2));
+            IAtomicLong account1 = targetInstance.getAtomicLong(getAccountId(key1));
+            IAtomicLong account2 = targetInstance.getAtomicLong(getAccountId(key2));
+
+            if (!lock1.tryLock()) {
+                return;
+            }
+            try {
+                if (!lock2.tryLock()) {
+                    return;
+                }
+                try {
+                    if (account1.get() < 0 || account2.get() < 0) {
+                        throw new TestException("Amount on account can't be smaller than 0");
+                    }
+                    if (account1.get() < randomAmount) {
+                        return;
+                    }
+                    account1.set(account1.get() - randomAmount);
+                    account2.set(account2.get() + randomAmount);
+                } finally {
+                    lock2.unlock();
+                }
+            } finally {
+                lock1.unlock();
+            }
+        }
+
+        private long getRandomAccountKey() {
+            long key = getRandom().nextLong() % lockCounter.get();
+            return (key < 0) ? -key : key;
+        }
     }
 
     private String getLockId(long key) {
@@ -88,94 +141,6 @@ public class LockTest {
 
     private String getAccountId(long key) {
         return basename + '-' + key;
-    }
-
-    @Verify
-    public void verify() {
-        long actual = 0;
-        for (long k = 0; k < lockCounter.get(); k++) {
-            ILock lock = targetInstance.getLock(getLockId(k));
-            assertFalse("Lock should be unlocked", lock.isLocked());
-
-            IAtomicLong account = targetInstance.getAtomicLong(getAccountId(k));
-            assertTrue("Amount can't be smaller than zero on account", account.get() >= 0);
-            actual += account.get();
-        }
-
-        long expected = totalMoney.get();
-        assertEquals(basename + ": Money was lost/created", expected, actual);
-    }
-
-    @Teardown
-    public void teardown() {
-        lockCounter.destroy();
-        totalMoney.destroy();
-
-        for (long k = 0; k < lockCounter.get(); k++) {
-            targetInstance.getLock(getLockId(k)).destroy();
-            targetInstance.getAtomicLong(getAccountId(k)).destroy();
-        }
-    }
-
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-
-        @Override
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                long key1 = getRandomAccountKey();
-                long key2 = getRandomAccountKey();
-                int a = random.nextInt(amount);
-
-                IAtomicLong account1 = targetInstance.getAtomicLong(getAccountId(key1));
-                ILock lock1 = targetInstance.getLock(getLockId(key1));
-                IAtomicLong account2 = targetInstance.getAtomicLong(getAccountId(key2));
-                ILock lock2 = targetInstance.getLock(getLockId(key2));
-
-                if (!lock1.tryLock()) {
-                    continue;
-                }
-
-                try {
-                    if (!lock2.tryLock()) {
-                        continue;
-                    }
-
-                    try {
-                        if (account1.get() < 0 || account2.get() < 0) {
-                            throw new TestException("Amount on account can't be smaller than 0");
-                        }
-
-                        if (account1.get() < a) {
-                            continue;
-                        }
-
-                        account1.set(account1.get() - a);
-                        account2.set(account2.get() + a);
-                    } finally {
-                        lock2.unlock();
-                    }
-
-                } finally {
-                    lock1.unlock();
-                }
-
-                iteration++;
-                if (iteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-            }
-        }
-
-        private long getRandomAccountKey() {
-            long key = random.nextLong() % lockCounter.get();
-
-            if (key < 0) {
-                key = -key;
-            }
-            return key;
-        }
     }
 
     public static void main(String[] args) throws Exception {
