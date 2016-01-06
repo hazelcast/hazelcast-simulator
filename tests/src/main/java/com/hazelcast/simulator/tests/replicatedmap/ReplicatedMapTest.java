@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.replicatedmap;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -25,12 +26,10 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class ReplicatedMapTest {
@@ -59,14 +58,14 @@ public class ReplicatedMapTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private TestContext testContext;
+    private HazelcastInstance targetInstance;
     private ReplicatedMap<Integer, String> map;
 
     private String[] values;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
-        this.testContext = testContext;
+        targetInstance = testContext.getTargetInstance();
         map = testContext.getTargetInstance().getReplicatedMap(basename + "-" + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
@@ -77,10 +76,10 @@ public class ReplicatedMapTest {
     @Teardown
     public void tearDown() throws Exception {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(testContext.getTargetInstance()));
+        LOGGER.info(getOperationCountInformation(targetInstance));
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() throws InterruptedException {
         values = generateStrings(valueCount, valueLength);
     }
