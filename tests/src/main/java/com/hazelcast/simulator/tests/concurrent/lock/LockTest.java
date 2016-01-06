@@ -166,7 +166,6 @@ public class LockTest {
                     LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
             }
-            totalMoney.addAndGet(iteration);
         }
 
         private long getRandomAccountKey() {
