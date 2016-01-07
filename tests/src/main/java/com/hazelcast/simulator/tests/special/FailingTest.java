@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.tests.special;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
@@ -28,10 +30,13 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.HostAddressPicker;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static org.junit.Assert.fail;
 
@@ -49,23 +54,55 @@ public class FailingTest {
         EXIT
     }
 
+    public enum Selection {
+        ALL,
+        ONE_PER_NODE,
+        ONE_PER_CLUSTER
+    }
+
+    public enum Type {
+        ALL,
+        MEMBER,
+        CLIENT
+    }
+
     private static final ILogger LOGGER = Logger.getLogger(FailingTest.class);
 
     // properties
     public TestPhase testPhase = TestPhase.RUN;
     public Failure failure = Failure.EXCEPTION;
+    public Selection selection = Selection.ALL;
+    public Type type = Type.ALL;
     public boolean throwError = false;
 
     private TestContext testContext;
+    private boolean isSelected;
 
     @Setup
     public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
 
+        if (matchingType(testContext.getTargetInstance())) {
+            switch (selection) {
+                case ALL:
+                    isSelected = true;
+                    break;
+                case ONE_PER_NODE:
+                    String ipAddress = HostAddressPicker.pickHostAddress();
+                    isSelected = (getMap(testContext).putIfAbsent(ipAddress, true) == null);
+                    break;
+                case ONE_PER_CLUSTER:
+                    isSelected = (getMap(testContext).putIfAbsent(testContext.getTestId(), true) == null);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown selection type");
+            }
+        }
+
         createFailure(TestPhase.SETUP);
     }
 
-    @Teardown(global = false)
+    @Teardown
     public void localTearDown() throws Exception {
         createFailure(TestPhase.LOCAL_TEARDOWN);
     }
@@ -75,7 +112,7 @@ public class FailingTest {
         createFailure(TestPhase.GLOBAL_TEARDOWN);
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void localWarmup() throws Exception {
         createFailure(TestPhase.LOCAL_WARMUP);
     }
@@ -90,7 +127,7 @@ public class FailingTest {
         createFailure(TestPhase.LOCAL_VERIFY);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() throws Exception {
         createFailure(TestPhase.GLOBAL_VERIFY);
     }
@@ -100,8 +137,28 @@ public class FailingTest {
         createFailure(TestPhase.RUN);
     }
 
+    private boolean matchingType(HazelcastInstance instance) {
+        if (type == Type.ALL) {
+            return true;
+        }
+        if (type == Type.MEMBER && isMemberNode(instance)) {
+            return true;
+        }
+        if (type == Type.CLIENT && isClient(instance)) {
+            return true;
+        }
+        return false;
+    }
+
+    private IMap<String, Boolean> getMap(TestContext testContext) {
+        return testContext.getTargetInstance().getMap("failureSelection" + testContext.getTestId());
+    }
+
     private void createFailure(TestPhase currentTestPhase) throws Exception {
         if (testPhase != currentTestPhase) {
+            return;
+        }
+        if (!isSelected) {
             return;
         }
 
