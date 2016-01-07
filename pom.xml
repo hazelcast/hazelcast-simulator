@@ -59,7 +59,7 @@
         <gson.version>2.5</gson.version>
         <hdr-histogram.version>2.1.8</hdr-histogram.version>
         <jfreechart.version>1.0.19</jfreechart.version>
-        <jgit.version>3.7.1.201504261725-r</jgit.version>
+        <jgit.version>4.1.1.201511131810-r</jgit.version>
         <jopt.version>4.9</jopt.version>
         <reflections.version>0.9.10</reflections.version>
         <xstream.version>1.4.8</xstream.version>

@@ -51,7 +51,7 @@ class GitSupport {
     private final File baseDir;
     private final Set<GitRepository> customRepositories;
 
-    GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
+    private GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
         this.buildSupport = buildSupport;
         this.baseDir = getBaseDir(basePath);
         this.customRepositories = getCustomRepositories(customRepositories);
@@ -213,7 +213,6 @@ class GitSupport {
         Set<String> remotes = repository.getRemoteNames();
         for (String remoteRepository : remotes) {
             git.fetch().setRemote(remoteRepository).call();
-
         }
     }
 
