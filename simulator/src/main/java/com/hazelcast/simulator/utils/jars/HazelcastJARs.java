@@ -165,7 +165,7 @@ public class HazelcastJARs {
     private void mavenRetrieve(File targetDir, String artifact, String version, boolean prepareEnterpriseJARs) {
         File artifactFile = getArtifactFile(artifact, version);
         if (artifactFile.exists()) {
-            LOGGER.info("Using artifact " + artifactFile + " from local Maven repository");
+            LOGGER.info(format("Using artifact %s from local Maven repository", artifactFile.getName()));
             bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), targetDir));
             return;
         }
@@ -208,7 +208,7 @@ public class HazelcastJARs {
 
     String getMavenMetadata(String artifact, String version, String baseUrl) {
         String mavenMetadataUrl = format("%s/com/hazelcast/%s/%s/maven-metadata.xml", baseUrl, artifact, version);
-        LOGGER.debug("Loading: " + mavenMetadataUrl);
+        LOGGER.debug("Loading " + mavenMetadataUrl);
         try {
             return getText(mavenMetadataUrl);
         } catch (FileUtilsException e) {
