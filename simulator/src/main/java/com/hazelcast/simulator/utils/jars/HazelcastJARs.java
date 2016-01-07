@@ -170,8 +170,8 @@ public class HazelcastJARs {
             return;
         }
 
-        LOGGER.info(format("Artifact %s is not found in local Maven repository, trying to fetch from remote repository...",
-                artifactFile));
+        LOGGER.info(format("Artifact %s is not found in local Maven repository %s, trying to fetch from remote repository...",
+                artifactFile.getName(), getRepositoryDir()));
         String url;
         if (version.endsWith("-SNAPSHOT")) {
             url = getSnapshotUrl(artifact, version, prepareEnterpriseJARs);
@@ -181,9 +181,12 @@ public class HazelcastJARs {
         bash.download(url, targetDir.getAbsolutePath());
     }
 
+    private File getRepositoryDir() {
+        return newFile(USER_HOME, ".m2", "repository");
+    }
+
     File getArtifactFile(String artifact, String version) {
-        File repositoryDir = newFile(USER_HOME, ".m2", "repository");
-        return newFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
+        return newFile(getRepositoryDir(), "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
     }
 
     String getSnapshotUrl(String artifact, String version, boolean prepareEnterpriseJARs) {
