@@ -121,7 +121,9 @@ public class HazelcastJARs {
     private void prepare(String versionSpec, File targetDir, boolean prepareEnterpriseJARs) {
         LOGGER.info("Hazelcast version-spec: " + versionSpec);
         if (OUT_OF_THE_BOX.equals(versionSpec) || BRING_MY_OWN.equals(versionSpec)) {
-            // we don't need to do anything
+            if (prepareEnterpriseJARs) {
+                LOGGER.warn("You have to deploy your Hazelcast Enterprise JARs on your own!");
+            }
             return;
         }
 
