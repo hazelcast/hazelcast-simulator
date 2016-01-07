@@ -137,8 +137,8 @@ public class WorkerJvmLauncher {
         for (int i = 0; i < loopCount; i++) {
             if (hasExited(worker)) {
                 throw new SpawnWorkerFailedException(format(
-                        "Startup of Worker on host %s failed, check log files in %s for more information!",
-                        agent.getPublicAddress(), worker.getWorkerHome()));
+                        "Startup of Worker %s on Agent %s failed, check log files in %s for more information!",
+                        worker.getAddress(), agent.getPublicAddress(), worker.getWorkerHome()));
             }
 
             String address = readAddress(worker);
@@ -151,8 +151,9 @@ public class WorkerJvmLauncher {
             sleepMillis(WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS);
         }
 
-        throw new SpawnWorkerFailedException(format("Worker %s of Testsuite %s on Agent %s didn't start within %s seconds",
-                worker.getId(), agent.getTestSuite().getId(), agent.getPublicAddress(), workerTimeoutSec));
+        throw new SpawnWorkerFailedException(format(
+                "Worker %s on Agent %s didn't start within %s seconds, check log files in %s for more information!",
+                worker.getAddress(), agent.getPublicAddress(), workerTimeoutSec, worker.getWorkerHome()));
     }
 
     private String getJavaHome() {
