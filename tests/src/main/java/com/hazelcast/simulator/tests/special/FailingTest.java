@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.special;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
@@ -82,21 +81,8 @@ public class FailingTest {
     public void setUp(TestContext testContext) throws Exception {
         this.testContext = testContext;
 
-        if (matchingType(testContext.getTargetInstance())) {
-            switch (selection) {
-                case ALL:
-                    isSelected = true;
-                    break;
-                case ONE_PER_NODE:
-                    String ipAddress = HostAddressPicker.pickHostAddress();
-                    isSelected = (getMap(testContext).putIfAbsent(ipAddress, true) == null);
-                    break;
-                case ONE_PER_CLUSTER:
-                    isSelected = (getMap(testContext).putIfAbsent(testContext.getTestId(), true) == null);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown selection type");
-            }
+        if (matchingType(type, testContext)) {
+            isSelected = isSelected(selection, testContext);
         }
 
         createFailure(TestPhase.SETUP);
@@ -135,23 +121,6 @@ public class FailingTest {
     @Run
     public void run() throws Exception {
         createFailure(TestPhase.RUN);
-    }
-
-    private boolean matchingType(HazelcastInstance instance) {
-        if (type == Type.ALL) {
-            return true;
-        }
-        if (type == Type.MEMBER && isMemberNode(instance)) {
-            return true;
-        }
-        if (type == Type.CLIENT && isClient(instance)) {
-            return true;
-        }
-        return false;
-    }
-
-    private IMap<String, Boolean> getMap(TestContext testContext) {
-        return testContext.getTargetInstance().getMap("failureSelection" + testContext.getTestId());
     }
 
     private void createFailure(TestPhase currentTestPhase) throws Exception {
@@ -209,6 +178,37 @@ public class FailingTest {
         } else {
             ExceptionReporter.report(testContext.getTestId(), error);
         }
+    }
+
+    private static boolean matchingType(Type type, TestContext testContext) {
+        if (type == Type.ALL) {
+            return true;
+        }
+        if (type == Type.MEMBER && isMemberNode(testContext.getTargetInstance())) {
+            return true;
+        }
+        if (type == Type.CLIENT && isClient(testContext.getTargetInstance())) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isSelected(Selection selection, TestContext testContext) {
+        switch (selection) {
+            case ALL:
+                return true;
+            case ONE_PER_NODE:
+                String ipAddress = HostAddressPicker.pickHostAddress();
+                return (getMap(testContext).putIfAbsent(ipAddress, true) == null);
+            case ONE_PER_CLUSTER:
+                return (getMap(testContext).putIfAbsent(testContext.getTestId(), true) == null);
+            default:
+                throw new UnsupportedOperationException("Unknown selection type");
+        }
+    }
+
+    private static IMap<String, Boolean> getMap(TestContext testContext) {
+        return testContext.getTargetInstance().getMap("failureSelection" + testContext.getTestId());
     }
 
     public static void main(String[] args) throws Exception {
