@@ -80,9 +80,21 @@ public class HazelcastJARsTest {
     }
 
     @Test
+    public void testPrepare_outOfTheBox_enterpriseEnabled() {
+        HazelcastJARs hazelcastJARs = getHazelcastJARs(OUT_OF_THE_BOX);
+        hazelcastJARs.prepare(true);
+    }
+
+    @Test
     public void testPrepare_bringMyOwn() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs(BRING_MY_OWN);
         hazelcastJARs.prepare(false);
+    }
+
+    @Test
+    public void testPrepare_bringMyOwn_enterpriseEnabled() {
+        HazelcastJARs hazelcastJARs = getHazelcastJARs(BRING_MY_OWN);
+        hazelcastJARs.prepare(true);
     }
 
     @Test
@@ -176,7 +188,7 @@ public class HazelcastJARsTest {
     public void testGetSnapshotUrl() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs();
 
-        String url = hazelcastJARs.getSnapshotUrl("hazelcast", "3.6-SNAPSHOT");
+        String url = hazelcastJARs.getSnapshotUrl("hazelcast", "3.6-SNAPSHOT", false);
         assertTrue(url.contains("hazelcast"));
         assertTrue(url.contains("3.6-SNAPSHOT"));
     }
@@ -185,14 +197,14 @@ public class HazelcastJARsTest {
     public void testGetSnapshotUrl_invalidVersion() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs();
 
-        hazelcastJARs.getSnapshotUrl("hazelcast", "8.7-SNAPSHOT");
+        hazelcastJARs.getSnapshotUrl("hazelcast", "8.7-SNAPSHOT", false);
     }
 
     @Test
     public void testGetReleaseUrl() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs();
 
-        String url = hazelcastJARs.getReleaseUrl("hazelcast", "3.5.3");
+        String url = hazelcastJARs.getReleaseUrl("hazelcast", "3.5.3", false);
         assertTrue(url.contains("hazelcast"));
         assertTrue(url.contains("3.5.3"));
     }

@@ -48,6 +48,12 @@ public class HazelcastJARs {
     public static final String OUT_OF_THE_BOX = "outofthebox";
     public static final String BRING_MY_OWN = "bringmyown";
 
+    private static final String SONATYPE_SNAPSHOT_REPOSITORY = "https://oss.sonatype.org/content/repositories/snapshots";
+    private static final String MAVEN_RELEASE_REPOSITORY = "https://repo1.maven.org/maven2";
+
+    private static final String CLOUDBEES_SNAPSHOT_REPOSITORY = "https://repository-hazelcast-l337.forge.cloudbees.com/snapshot";
+    private static final String CLOUDBEES_RELEASE_REPOSITORY = "https://repository-hazelcast-l337.forge.cloudbees.com/release";
+
     private static final Logger LOGGER = Logger.getLogger(HazelcastJARs.class);
 
     private final Map<String, File> versionSpecDirs = new HashMap<String, File>();
@@ -122,7 +128,7 @@ public class HazelcastJARs {
         LOGGER.info("Hazelcast version-spec: " + versionSpec);
         if (OUT_OF_THE_BOX.equals(versionSpec) || BRING_MY_OWN.equals(versionSpec)) {
             if (prepareEnterpriseJARs) {
-                LOGGER.warn("You have to deploy your Hazelcast Enterprise JARs on your own!");
+                LOGGER.warn("You have to deploy the Hazelcast Enterprise JARs on your own!");
             }
             return;
         }
@@ -139,12 +145,12 @@ public class HazelcastJARs {
         } else if (versionSpec.startsWith(MAVEN_VERSION_PREFIX)) {
             String version = versionSpec.substring(MAVEN_VERSION_PREFIX.length());
             if (prepareEnterpriseJARs) {
-                mavenRetrieve(targetDir, "hazelcast-enterprise", version);
-                mavenRetrieve(targetDir, "hazelcast-enterprise-client", version);
+                mavenRetrieve(targetDir, "hazelcast-enterprise", version, true);
+                mavenRetrieve(targetDir, "hazelcast-enterprise-client", version, true);
             } else {
-                mavenRetrieve(targetDir, "hazelcast", version);
-                mavenRetrieve(targetDir, "hazelcast-client", version);
-                mavenRetrieve(targetDir, "hazelcast-wm", version);
+                mavenRetrieve(targetDir, "hazelcast", version, false);
+                mavenRetrieve(targetDir, "hazelcast-client", version, false);
+                mavenRetrieve(targetDir, "hazelcast-wm", version, false);
             }
         } else {
             throw new CommandLineExitException("Unrecognized version spec: " + versionSpecDirs);
@@ -156,20 +162,21 @@ public class HazelcastJARs {
         copyFilesToDirectory(files, targetDir);
     }
 
-    private void mavenRetrieve(File targetDir, String artifact, String version) {
+    private void mavenRetrieve(File targetDir, String artifact, String version, boolean prepareEnterpriseJARs) {
         File artifactFile = getArtifactFile(artifact, version);
         if (artifactFile.exists()) {
-            LOGGER.info("Using artifact: " + artifactFile + " from local maven repository");
+            LOGGER.info("Using artifact " + artifactFile + " from local Maven repository");
             bash.execute(format("cp %s %s", artifactFile.getAbsolutePath(), targetDir));
             return;
         }
 
-        LOGGER.info("Artifact: " + artifactFile + " is not found in local maven repository, trying online one");
+        LOGGER.info(format("Artifact %s is not found in local Maven repository, trying to fetch from remote repository...",
+                artifactFile));
         String url;
         if (version.endsWith("-SNAPSHOT")) {
-            url = getSnapshotUrl(artifact, version);
+            url = getSnapshotUrl(artifact, version, prepareEnterpriseJARs);
         } else {
-            url = getReleaseUrl(artifact, version);
+            url = getReleaseUrl(artifact, version, prepareEnterpriseJARs);
         }
         bash.download(url, targetDir.getAbsolutePath());
     }
@@ -179,8 +186,8 @@ public class HazelcastJARs {
         return newFile(repositoryDir, "com", "hazelcast", artifact, version, format("%s-%s.jar", artifact, version));
     }
 
-    String getSnapshotUrl(String artifact, String version) {
-        String baseUrl = "https://oss.sonatype.org/content/repositories/snapshots";
+    String getSnapshotUrl(String artifact, String version, boolean prepareEnterpriseJARs) {
+        String baseUrl = (prepareEnterpriseJARs ? CLOUDBEES_SNAPSHOT_REPOSITORY : SONATYPE_SNAPSHOT_REPOSITORY);
         String mavenMetadata = getMavenMetadata(artifact, version, baseUrl);
         LOGGER.debug(mavenMetadata);
 
@@ -191,8 +198,8 @@ public class HazelcastJARs {
                 buildNumber);
     }
 
-    String getReleaseUrl(String artifact, String version) {
-        String baseUrl = "http://repo1.maven.org/maven2";
+    String getReleaseUrl(String artifact, String version, boolean prepareEnterpriseJARs) {
+        String baseUrl = (prepareEnterpriseJARs ? CLOUDBEES_RELEASE_REPOSITORY : MAVEN_RELEASE_REPOSITORY);
         return format("%s/com/hazelcast/%s/%s/%s-%s.jar", baseUrl, artifact, version, artifact, version);
     }
 
