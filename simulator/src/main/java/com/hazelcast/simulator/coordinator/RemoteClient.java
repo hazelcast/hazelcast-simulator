@@ -119,7 +119,7 @@ public class RemoteClient {
         spawner.awaitCompletion();
     }
 
-    public void terminateWorkers(boolean stopPokeThread) {
+    public int terminateWorkers(boolean stopPokeThread) {
         if (stopPokeThread) {
             sendToAllAgents(new StopTimeoutDetectionOperation());
 
@@ -146,6 +146,8 @@ public class RemoteClient {
                 validateResponse(operation, response);
             }
         }
+
+        return workers.size();
     }
 
     public void initTestSuite(TestSuite testSuite) {
