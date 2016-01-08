@@ -32,6 +32,7 @@ import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -127,7 +128,21 @@ public class RemoteClient {
             joinThread(workerPingThread);
         }
 
-        sendToAllWorkers(new TerminateWorkerOperation());
+        TerminateWorkerOperation operation = new TerminateWorkerOperation();
+        // shutdown non member workers first
+        for (WorkerData workerData : componentRegistry.getWorkers()) {
+            if (workerData.getSettings().getWorkerType() != WorkerType.MEMBER) {
+                Response response = coordinatorConnector.write(workerData.getAddress(), operation);
+                validateResponse(operation, response);
+            }
+        }
+        // after that shutdown member workers
+        for (WorkerData workerData : componentRegistry.getWorkers()) {
+            if (workerData.getSettings().getWorkerType() == WorkerType.MEMBER) {
+                Response response = coordinatorConnector.write(workerData.getAddress(), operation);
+                validateResponse(operation, response);
+            }
+        }
     }
 
     public void initTestSuite(TestSuite testSuite) {
