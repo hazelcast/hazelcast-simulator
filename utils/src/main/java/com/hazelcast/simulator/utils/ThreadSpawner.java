@@ -90,7 +90,7 @@ public class ThreadSpawner {
      * @return the created thread
      */
     public Thread spawn(Runnable runnable) {
-        return spawn("Thread", runnable);
+        return spawn(identifier + "-Thread", runnable);
     }
 
     /**
@@ -161,7 +161,7 @@ public class ThreadSpawner {
 
     private static class ThrowExceptionThread extends Thread {
 
-        public ThrowExceptionThread(String name, Runnable task) {
+        ThrowExceptionThread(String name, Runnable task) {
             super(task, name);
             setDaemon(true);
         }
@@ -171,7 +171,7 @@ public class ThreadSpawner {
 
         private final String testId;
 
-        public ReportExceptionThread(String testId, String name, Runnable task) {
+        ReportExceptionThread(String testId, String name, Runnable task) {
             super(task, name);
             this.testId = testId;
             setDaemon(true);
