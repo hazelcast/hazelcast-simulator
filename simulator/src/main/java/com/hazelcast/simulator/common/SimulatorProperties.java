@@ -44,6 +44,8 @@ public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
+    private static final int WORKER_TIMEOUT_FACTOR = 3;
+
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
     private final Properties properties = new Properties();
@@ -125,7 +127,7 @@ public class SimulatorProperties {
     }
 
     public int getWorkerLastSeenTimeoutSeconds() {
-        return getWorkerPingIntervalSeconds() * 3;
+        return getWorkerPingIntervalSeconds() * WORKER_TIMEOUT_FACTOR;
     }
 
     public int getAgentThreadPoolSize() {

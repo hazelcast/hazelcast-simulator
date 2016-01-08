@@ -166,9 +166,6 @@ public class ClientConnector {
         for (Map.Entry<String, ResponseFuture> futureEntry : futureMap.entrySet()) {
             String futureKey = futureEntry.getKey();
             LOGGER.warn(format("ResponseFuture %s still pending after shutdown!", futureKey));
-            //Response response = new Response(getMessageIdFromFutureKey(futureKey), getSourceFromFutureKey(futureKey));
-            //response.addResponse(localAddress, ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-            //futureEntry.getValue().set(response);
         }
     }
 }

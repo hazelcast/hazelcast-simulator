@@ -171,7 +171,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         return writeAsync(message);
     }
 
-    int getMessageQueueSize() {
+    int getMessageQueueSizeInternal() {
         return messageQueue.size();
     }
 

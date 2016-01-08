@@ -193,7 +193,7 @@ public class WorkerConnector extends AbstractServerConnector {
      * @return the message queue size
      */
     public int getMessageQueueSize() {
-        return super.getMessageQueueSize();
+        return getMessageQueueSizeInternal();
     }
 
     public OperationProcessor getProcessor() {
