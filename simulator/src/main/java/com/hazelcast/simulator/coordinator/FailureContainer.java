@@ -25,14 +25,12 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -50,9 +48,10 @@ public class FailureContainer {
 
     private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
 
-    private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
+    private final AtomicInteger failureCount = new AtomicInteger();
     private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkers
             = new ConcurrentHashMap<SimulatorAddress, FailureType>();
+    private final ConcurrentHashMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
 
     private final AtomicBoolean hasCriticalFailure = new AtomicBoolean();
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
@@ -75,24 +74,8 @@ public class FailureContainer {
         this.nonCriticalFailures = nonCriticalFailures;
     }
 
-    public int getFailureCount() {
-        return failureOperations.size();
-    }
-
-    public boolean hasCriticalFailure() {
-        return hasCriticalFailure.get();
-    }
-
-    public boolean hasCriticalFailure(String testId) {
-        return hasCriticalFailuresMap.containsKey(testId);
-    }
-
-    public Queue<FailureOperation> getFailureOperations() {
-        return failureOperations;
-    }
-
-    public Set<SimulatorAddress> getFinishedWorkers() {
-        return finishedWorkers.keySet();
+    public void addListener(FailureListener listener) {
+        listenerMap.put(listener, true);
     }
 
     public void addFailureOperation(FailureOperation operation) {
@@ -106,7 +89,7 @@ public class FailureContainer {
             return;
         }
 
-        failureOperations.add(operation);
+        int failureNumber = failureCount.incrementAndGet();
 
         if (!nonCriticalFailures.contains(failureType)) {
             hasCriticalFailure.set(true);
@@ -116,11 +99,31 @@ public class FailureContainer {
             }
         }
 
-        LOGGER.error(operation.getLogMessage(failureOperations.size()));
+        LOGGER.error(operation.getLogMessage(failureNumber));
         appendText(operation.getFileMessage(), file);
+
+        for (FailureListener failureListener : listenerMap.keySet()) {
+            failureListener.onFailure(operation);
+        }
     }
 
-    public boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
+    int getFailureCount() {
+        return failureCount.get();
+    }
+
+    boolean hasCriticalFailure() {
+        return hasCriticalFailure.get();
+    }
+
+    boolean hasCriticalFailure(String testId) {
+        return hasCriticalFailuresMap.containsKey(testId);
+    }
+
+    Set<SimulatorAddress> getFinishedWorkers() {
+        return finishedWorkers.keySet();
+    }
+
+    boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
         long started = System.nanoTime();
         LOGGER.info(format("Waiting %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedFinishedWorkerCount));
         long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
@@ -136,17 +139,17 @@ public class FailureContainer {
         return true;
     }
 
-    public void logFailureInfo() {
-        int failureCount = failureOperations.size();
-        if (failureCount > 0) {
+    void logFailureInfo() {
+        int tmpFailureCount = failureCount.get();
+        if (tmpFailureCount > 0) {
             if (hasCriticalFailure.get()) {
                 LOGGER.fatal(HORIZONTAL_RULER);
-                LOGGER.fatal(failureCount + " failures have been detected!!!");
+                LOGGER.fatal(tmpFailureCount + " failures have been detected!!!");
                 LOGGER.fatal(HORIZONTAL_RULER);
-                throw new CommandLineExitException(failureCount + " failures have been detected");
+                throw new CommandLineExitException(tmpFailureCount + " failures have been detected");
             } else {
                 LOGGER.fatal(HORIZONTAL_RULER);
-                LOGGER.fatal(failureCount + " non-critical failures have been detected!");
+                LOGGER.fatal(tmpFailureCount + " non-critical failures have been detected!");
                 LOGGER.fatal(HORIZONTAL_RULER);
             }
             return;

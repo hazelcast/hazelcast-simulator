@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
@@ -31,7 +32,9 @@ import org.junit.Test;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
@@ -49,11 +52,15 @@ import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class CoordinatorOperationProcessorTest {
+public class CoordinatorOperationProcessorTest implements FailureListener {
+
+    private BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
 
     private SimulatorAddress workerAddress;
 
@@ -94,6 +101,11 @@ public class CoordinatorOperationProcessorTest {
     @After
     public void tearDown() {
         deleteQuiet(new File("failures-CoordinatorOperationProcessorTest.txt"));
+    }
+
+    @Override
+    public void onFailure(FailureOperation operation) {
+        failureOperations.add(operation);
     }
 
     @Test
@@ -185,13 +197,19 @@ public class CoordinatorOperationProcessorTest {
 
     @Test
     public void processFailureOperation() {
+        failureContainer.addListener(this);
+
         TestException exception = new TestException("expected exception");
         FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOM,
                 workerAddress, workerAddress.getParent().toString(), exception);
         ResponseType responseType = processor.process(operation, workerAddress);
 
         assertEquals(SUCCESS, responseType);
-        assertEquals(1, failureContainer.getFailureCount());
+        assertEquals(1, failureOperations.size());
+
+        FailureOperation failure = failureOperations.poll();
+        assertNull(failure.getTestId());
+        assertExceptionClassInFailure(failure, TestException.class);
     }
 
     @Test
@@ -201,5 +219,10 @@ public class CoordinatorOperationProcessorTest {
         ResponseType responseType = processor.process(operation, workerAddress);
 
         assertEquals(SUCCESS, responseType);
+    }
+
+    private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {
+        assertTrue(format("Expected cause to start with %s, but was %s", failureClass.getCanonicalName(), failure.getCause()),
+                failure.getCause().startsWith(failureClass.getCanonicalName()));
     }
 }

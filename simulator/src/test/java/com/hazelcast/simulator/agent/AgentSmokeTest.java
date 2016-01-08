@@ -4,6 +4,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
@@ -31,10 +32,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
@@ -50,7 +52,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class AgentSmokeTest {
+public class AgentSmokeTest implements FailureListener {
 
     private static final String AGENT_IP_ADDRESS = "127.0.0.1";
     private static final int AGENT_PORT = 9000;
@@ -67,10 +69,11 @@ public class AgentSmokeTest {
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
 
+    private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
+
     @BeforeClass
     public static void setUp() throws Exception {
         setLogLevel(Level.TRACE);
-
         setDistributionUserDir();
 
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
@@ -112,6 +115,11 @@ public class AgentSmokeTest {
         }
     }
 
+    @Override
+    public void onFailure(FailureOperation operation) {
+        failureOperations.add(operation);
+    }
+
     @Test
     public void testSuccess() throws Exception {
         TestCase testCase = new TestCase("testSuccess");
@@ -121,12 +129,20 @@ public class AgentSmokeTest {
 
     @Test
     public void testThrowingFailures() throws Exception {
+        failureContainer.addListener(this);
+
         TestCase testCase = new TestCase("testThrowingFailures");
         testCase.setProperty("class", FailingTest.class.getName());
 
         executeTestCase(testCase);
 
-        Queue<FailureOperation> failureOperations = getFailureOperations(2);
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertEquals("Expected 2 failures!", 2,
+                        failureOperations.size());
+            }
+        });
 
         FailureOperation failure = failureOperations.poll();
         assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());
@@ -135,11 +151,6 @@ public class AgentSmokeTest {
         failure = failureOperations.poll();
         assertEquals("Expected test to fail", testCase.getId(), failure.getTestId());
         assertExceptionClassInFailure(failure, AssertionError.class);
-    }
-
-    private void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {
-        assertTrue(format("Expected cause to start with %s, but was %s", failureClass.getCanonicalName(), failure.getCause()),
-                failure.getCause().startsWith(failureClass.getCanonicalName()));
     }
 
     private void executeTestCase(TestCase testCase) throws Exception {
@@ -219,17 +230,9 @@ public class AgentSmokeTest {
         listener.await(testPhase);
     }
 
-    private static Queue<FailureOperation> getFailureOperations(final int expectedFailures) {
-        if (expectedFailures > 0) {
-            assertTrueEventually(new AssertTask() {
-                @Override
-                public void run() throws Exception {
-                    assertEquals("Expected " + expectedFailures + " failures!", expectedFailures,
-                            failureContainer.getFailureCount());
-                }
-            });
-        }
-        return failureContainer.getFailureOperations();
+    private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {
+        assertTrue(format("Expected cause to start with %s, but was %s", failureClass.getCanonicalName(), failure.getCause()),
+                failure.getCause().startsWith(failureClass.getCanonicalName()));
     }
 
     private static final class TestPhaseListenerImpl implements TestPhaseListener {
