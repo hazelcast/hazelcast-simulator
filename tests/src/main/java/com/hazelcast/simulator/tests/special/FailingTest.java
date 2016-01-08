@@ -124,10 +124,7 @@ public class FailingTest {
     }
 
     private void createFailure(TestPhase currentTestPhase) throws Exception {
-        if (testPhase != currentTestPhase) {
-            return;
-        }
-        if (!isSelected) {
+        if (!isSelected || testPhase != currentTestPhase) {
             return;
         }
 
@@ -145,16 +142,7 @@ public class FailingTest {
                 fail("Wanted failure");
                 break;
             case OOME:
-                List<byte[]> list = new LinkedList<byte[]>();
-                for (; ; ) {
-                    try {
-                        list.add(new byte[100 * 1000 * 1000]);
-                    } catch (OutOfMemoryError ignored) {
-                        EmptyStatement.ignore(ignored);
-                        break;
-                    }
-                }
-                LOGGER.severe("We should never reach this code! List size: " + list.size());
+                createOOME();
                 break;
             case EXIT:
                 exitWithError();
@@ -178,6 +166,19 @@ public class FailingTest {
         } else {
             ExceptionReporter.report(testContext.getTestId(), error);
         }
+    }
+
+    private void createOOME() {
+        List<byte[]> list = new LinkedList<byte[]>();
+        for (; ; ) {
+            try {
+                list.add(new byte[100 * 1000 * 1000]);
+            } catch (OutOfMemoryError ignored) {
+                EmptyStatement.ignore(ignored);
+                break;
+            }
+        }
+        LOGGER.severe("We should never reach this code! List size: " + list.size());
     }
 
     private static boolean matchingType(Type type, TestContext testContext) {
