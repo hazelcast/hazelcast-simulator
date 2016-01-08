@@ -42,7 +42,7 @@ import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
 
-    private static final int LAST_SEEN_TIMEOUT_SECONDS = 30;
+    private static final int LAST_SEEN_TIMEOUT_SECONDS = 180;
     private static final int DEFAULT_CHECK_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);

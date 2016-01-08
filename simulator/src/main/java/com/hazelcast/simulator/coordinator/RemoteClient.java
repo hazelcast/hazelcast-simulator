@@ -49,7 +49,7 @@ import static java.lang.String.format;
 
 public class RemoteClient {
 
-    private static final int WORKER_POKE_INTERVAL_SECONDS = 10;
+    private static final int WORKER_POKE_INTERVAL_SECONDS = 60;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
 
