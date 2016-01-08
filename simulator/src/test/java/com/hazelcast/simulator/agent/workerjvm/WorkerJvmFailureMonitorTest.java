@@ -88,6 +88,7 @@ public class WorkerJvmFailureMonitorTest {
         for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
             deleteQuiet(workerJvm.getWorkerHome());
         }
+        deleteQuiet(new File("worker3"));
     }
 
     @Test
