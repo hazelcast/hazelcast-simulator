@@ -199,7 +199,8 @@ public final class Coordinator {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry,
+                simulatorProperties.getWorkerPingIntervalSeconds());
         remoteClient.initTestSuite(testSuite);
     }
 
@@ -208,14 +209,16 @@ public final class Coordinator {
         bash.killAllJavaProcesses(ip);
 
         echoLocal("Starting Agent on %s", ip);
-        String mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s", addressIndex, ip, port);
-        String optionalParameters = "";
+        String mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s",
+                addressIndex, ip, port);
+        String optionalParameters = format(" --threadPoolSize %d --workerLastSeenTimeoutSeconds %d",
+                simulatorProperties.getAgentThreadPoolSize(),
+                simulatorProperties.getWorkerLastSeenTimeoutSeconds());
         if (isEC2(simulatorProperties)) {
-            optionalParameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s --threadPoolSize %d",
+            optionalParameters += format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
                     simulatorProperties.getCloudProvider(),
                     simulatorProperties.getCloudIdentity(),
-                    simulatorProperties.getCloudCredential(),
-                    simulatorProperties.getAgentThreadPoolSize());
+                    simulatorProperties.getCloudCredential());
         }
         bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
                 SIMULATOR_VERSION, mandatoryParameters, optionalParameters));

@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 
 public class WorkerJvmFailureMonitorTest {
 
+    private static final int DEFAULT_LAST_SEEN_TIMEOUT_SECONDS = 30;
     private static final int DEFAULT_CHECK_INTERVAL = 30;
     private static final int DEFAULT_SLEEP_TIME = 100;
 
@@ -76,7 +77,8 @@ public class WorkerJvmFailureMonitorTest {
 
         workerHome = workerJvm.getWorkerHome();
 
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_CHECK_INTERVAL);
+        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
+                DEFAULT_CHECK_INTERVAL);
     }
 
     @After
@@ -90,7 +92,7 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testConstructor() {
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager);
+        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
     }
 
     @Test

@@ -184,6 +184,21 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
+    public void testGetWorkerPingIntervalSeconds() {
+        assertEquals(60, simulatorProperties.getWorkerPingIntervalSeconds());
+    }
+
+    @Test
+    public void testGetWorkerLastSeenTimeoutSeconds() {
+        assertEquals(180, simulatorProperties.getWorkerLastSeenTimeoutSeconds());
+    }
+
+    @Test
+    public void testGetAgentThreadPoolSize() {
+        assertEquals(0, simulatorProperties.getAgentThreadPoolSize());
+    }
+
+    @Test
     public void testGet_CLOUD_IDENTITY() {
         appendText("testCloudIdentityString", customFile);
         initProperty("CLOUD_IDENTITY", customFile.getName());

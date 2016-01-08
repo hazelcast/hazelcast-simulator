@@ -34,6 +34,8 @@ import static org.mockito.Mockito.when;
 
 public class RemoteClientTest {
 
+    private static final int WORKER_PING_INTERVAL_SECONDS = 10;
+
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
@@ -57,7 +59,7 @@ public class RemoteClientTest {
 
     @Test
     public void testLogOnAllAgents() {
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.logOnAllAgents("test");
 
         verify(coordinatorConnector).write(eq(ALL_AGENTS), any(LogOperation.class));
@@ -66,7 +68,7 @@ public class RemoteClientTest {
 
     @Test
     public void testLogOnAllWorkers() {
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.logOnAllWorkers("test");
 
         verify(coordinatorConnector).write(eq(ALL_WORKERS), any(LogOperation.class));
@@ -78,7 +80,7 @@ public class RemoteClientTest {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
         ClusterLayout clusterLayout = getClusterLayout(0, 6, 3);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.createWorkers(clusterLayout, false);
     }
 
@@ -87,7 +89,7 @@ public class RemoteClientTest {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
         ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.createWorkers(clusterLayout, false);
     }
 
@@ -96,7 +98,7 @@ public class RemoteClientTest {
         initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.createWorkers(clusterLayout, false);
     }
 
@@ -105,7 +107,7 @@ public class RemoteClientTest {
         initMockForCreateWorkerOperation(null);
         ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.createWorkers(clusterLayout, false);
     }
 
@@ -114,7 +116,7 @@ public class RemoteClientTest {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
         ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         remoteClient.createWorkers(clusterLayout, true);
 
         sleepSeconds(1);
@@ -125,7 +127,7 @@ public class RemoteClientTest {
     @Test
     public void testSendToAllAgents() {
         initMock(ResponseType.SUCCESS);
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
         remoteClient.sendToAllAgents(operation);
@@ -137,7 +139,7 @@ public class RemoteClientTest {
     @Test(expected = CommandLineExitException.class)
     public void testSendToAllAgents_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
         try {
@@ -151,7 +153,7 @@ public class RemoteClientTest {
     @Test
     public void testSendToAllWorkers() {
         initMock(ResponseType.SUCCESS);
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
         remoteClient.sendToAllWorkers(operation);
@@ -163,7 +165,7 @@ public class RemoteClientTest {
     @Test(expected = CommandLineExitException.class)
     public void testSendToAllWorkers_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
         try {
@@ -178,7 +180,7 @@ public class RemoteClientTest {
     public void testSendToFirstWorker() {
         initMock(ResponseType.SUCCESS);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
         SimulatorOperation operation = new IntegrationTestOperation("test");
@@ -192,7 +194,7 @@ public class RemoteClientTest {
     public void testSendToFirstWorker_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_SECONDS);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
         SimulatorOperation operation = new IntegrationTestOperation("test");

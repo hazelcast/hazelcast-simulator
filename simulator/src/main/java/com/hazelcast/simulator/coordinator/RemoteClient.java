@@ -50,18 +50,17 @@ import static java.lang.String.format;
 
 public class RemoteClient {
 
-    private static final int WORKER_PING_INTERVAL_SECONDS = 60;
-
     private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
-
-    private final WorkerPingThread workerPingThread = new WorkerPingThread();
 
     private final CoordinatorConnector coordinatorConnector;
     private final ComponentRegistry componentRegistry;
+    private final WorkerPingThread workerPingThread;
 
-    public RemoteClient(CoordinatorConnector coordinatorConnector, ComponentRegistry componentRegistry) {
+    public RemoteClient(CoordinatorConnector coordinatorConnector, ComponentRegistry componentRegistry,
+                        int workerPingIntervalSeconds) {
         this.coordinatorConnector = coordinatorConnector;
         this.componentRegistry = componentRegistry;
+        this.workerPingThread = new WorkerPingThread(workerPingIntervalSeconds);
     }
 
     public void logOnAllAgents(String message) {
@@ -174,10 +173,14 @@ public class RemoteClient {
 
     private final class WorkerPingThread extends Thread {
 
+        private final int pingIntervalSeconds;
+
         private volatile boolean running = true;
 
-        private WorkerPingThread() {
+        private WorkerPingThread(int pingIntervalSeconds) {
             super("WorkerPingThread");
+            this.pingIntervalSeconds = pingIntervalSeconds;
+
             setDaemon(true);
         }
 
@@ -187,7 +190,7 @@ public class RemoteClient {
             while (running) {
                 try {
                     sendToAllWorkers(operation);
-                    sleepSeconds(WORKER_PING_INTERVAL_SECONDS);
+                    sleepSeconds(pingIntervalSeconds);
                 } catch (SimulatorProtocolException e) {
                     if (e.getCause() instanceof InterruptedException) {
                         break;

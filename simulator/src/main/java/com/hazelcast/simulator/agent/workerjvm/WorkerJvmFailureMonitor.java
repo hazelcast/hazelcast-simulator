@@ -42,7 +42,6 @@ import static java.lang.String.format;
 
 public class WorkerJvmFailureMonitor {
 
-    private static final int LAST_SEEN_TIMEOUT_SECONDS = 180;
     private static final int DEFAULT_CHECK_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
@@ -51,12 +50,12 @@ public class WorkerJvmFailureMonitor {
 
     private int failureCount;
 
-    public WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager) {
-        this(agent, workerJvmManager, DEFAULT_CHECK_INTERVAL_MILLIS);
+    public WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds) {
+        this(agent, workerJvmManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
     }
 
-    WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int checkIntervalMillis) {
-        monitorThread = new MonitorThread(agent, workerJvmManager, checkIntervalMillis);
+    WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds, int checkIntervalMillis) {
+        monitorThread = new MonitorThread(agent, workerJvmManager, lastSeenTimeoutSeconds, checkIntervalMillis);
         monitorThread.start();
     }
 
@@ -80,17 +79,20 @@ public class WorkerJvmFailureMonitor {
 
         private final Agent agent;
         private final WorkerJvmManager workerJvmManager;
+        private final int lastSeenTimeoutSeconds;
         private final int checkIntervalMillis;
 
         private volatile boolean running = true;
         private volatile boolean detectTimeouts;
 
-        private MonitorThread(Agent agent, WorkerJvmManager workerJvmManager, int checkIntervalMillis) {
+        private MonitorThread(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds,
+                              int checkIntervalMillis) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
 
             this.agent = agent;
             this.workerJvmManager = workerJvmManager;
+            this.lastSeenTimeoutSeconds = lastSeenTimeoutSeconds;
             this.checkIntervalMillis = checkIntervalMillis;
         }
 
@@ -179,7 +181,7 @@ public class WorkerJvmFailureMonitor {
             }
 
             long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerJvm.getLastSeen());
-            if (elapsed > LAST_SEEN_TIMEOUT_SECONDS) {
+            if (elapsed > lastSeenTimeoutSeconds) {
                 sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
             }
         }

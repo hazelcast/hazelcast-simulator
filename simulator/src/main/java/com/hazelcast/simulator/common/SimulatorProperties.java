@@ -120,12 +120,20 @@ public class SimulatorProperties {
         }
     }
 
-    public int getAgentPort() {
-        return parseInt(get("AGENT_PORT", "9000"));
+    public int getWorkerPingIntervalSeconds() {
+        return parseInt(get("WORKER_PING_INTERVAL_SECONDS", "60"));
+    }
+
+    public int getWorkerLastSeenTimeoutSeconds() {
+        return getWorkerPingIntervalSeconds() * 3;
     }
 
     public int getAgentThreadPoolSize() {
         return parseInt(get("AGENT_THREAD_POOL_SIZE", "0"));
+    }
+
+    public int getAgentPort() {
+        return parseInt(get("AGENT_PORT", "9000"));
     }
 
     public int getHazelcastPort() {

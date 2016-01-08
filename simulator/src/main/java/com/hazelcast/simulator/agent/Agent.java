@@ -46,7 +46,6 @@ public class Agent {
     private final File pidFile = new File("agent.pid");
 
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
-    private final WorkerJvmFailureMonitor workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJvmManager);
 
     private final int addressIndex;
     private final String publicAddress;
@@ -56,13 +55,14 @@ public class Agent {
     private final String cloudIdentity;
     private final String cloudCredential;
 
+    private final WorkerJvmFailureMonitor workerJvmFailureMonitor;
     private final AgentConnector agentConnector;
     private final CoordinatorLogger coordinatorLogger;
 
     private volatile TestSuite testSuite;
 
     public Agent(int addressIndex, String publicAddress, int port, String cloudProvider, String cloudIdentity,
-                 String cloudCredential, int threadPoolSize) {
+                 String cloudCredential, int threadPoolSize, int workerLastSeenTimeoutSeconds) {
         SHUTDOWN_STARTED.set(false);
 
         this.addressIndex = addressIndex;
@@ -72,6 +72,8 @@ public class Agent {
         this.cloudProvider = cloudProvider;
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
+
+        this.workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJvmManager, workerLastSeenTimeoutSeconds);
 
         this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, port, threadPoolSize);
         this.agentConnector.start();

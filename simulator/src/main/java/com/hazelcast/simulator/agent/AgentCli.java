@@ -23,6 +23,8 @@ import joptsimple.OptionSpec;
 
 final class AgentCli {
 
+    private static final int DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS = 180;
+
     private final OptionParser parser = new OptionParser();
 
     private final OptionSpec<Integer> addressIndexSpec = parser.accepts("addressIndex",
@@ -40,6 +42,10 @@ final class AgentCli {
     private final OptionSpec<Integer> threadPoolSizeSpec = parser.accepts("threadPoolSize",
             "Size of the thread pool to connect to Worker instances.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
+    private final OptionSpec<Integer> workerLastSeenTimeoutSecondsSpec = parser.accepts("workerLastSeenTimeoutSeconds",
+            "Timeout value for worker timeout detection.")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS);
 
     private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
             "The cloud provider for this Agent.")
@@ -79,7 +85,9 @@ final class AgentCli {
         String cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
         String cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
         Integer threadPoolSize = options.valueOf(agentCli.threadPoolSizeSpec);
+        Integer workerLastSeenTimeoutSeconds = options.valueOf(agentCli.workerLastSeenTimeoutSecondsSpec);
 
-        return new Agent(addressIndex, publicAddress, port, cloudProvider, cloudIdentity, cloudCredential, threadPoolSize);
+        return new Agent(addressIndex, publicAddress, port, cloudProvider, cloudIdentity, cloudCredential, threadPoolSize,
+                workerLastSeenTimeoutSeconds);
     }
 }
