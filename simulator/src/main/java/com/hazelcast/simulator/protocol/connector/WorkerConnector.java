@@ -62,7 +62,7 @@ public class WorkerConnector extends AbstractServerConnector {
     private final TestProcessorManager testProcessorManager;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
 
-    private WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+    WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                     boolean useRemoteLogger, WorkerType type, HazelcastInstance hazelcastInstance, Worker worker,
                     ConnectionManager connectionManager) {
         super(futureMap, localAddress, port);

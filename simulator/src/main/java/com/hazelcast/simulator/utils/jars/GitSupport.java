@@ -51,7 +51,7 @@ class GitSupport {
     private final File baseDir;
     private final Set<GitRepository> customRepositories;
 
-    private GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
+    GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
         this.buildSupport = buildSupport;
         this.baseDir = getBaseDir(basePath);
         this.customRepositories = getCustomRepositories(customRepositories);
