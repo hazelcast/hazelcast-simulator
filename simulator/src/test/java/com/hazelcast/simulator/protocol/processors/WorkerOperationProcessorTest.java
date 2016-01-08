@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.test.TestCase;
@@ -136,6 +137,16 @@ public class WorkerOperationProcessorTest {
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         exceptionLogger.assertException(ClassNotFoundException.class);
+    }
+
+    @Test
+    public void process_Ping() {
+        PingOperation operation = new PingOperation();
+        ResponseType responseType = processor.process(operation, COORDINATOR);
+
+        assertEquals(SUCCESS, responseType);
+        verify(worker).getWorkerConnector();
+        verifyNoMoreInteractions(worker);
     }
 
     private void setTestCaseClass(String className) {

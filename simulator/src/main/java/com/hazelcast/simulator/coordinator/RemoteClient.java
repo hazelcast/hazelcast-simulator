@@ -26,6 +26,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
+import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
@@ -49,11 +50,11 @@ import static java.lang.String.format;
 
 public class RemoteClient {
 
-    private static final int WORKER_POKE_INTERVAL_SECONDS = 60;
+    private static final int WORKER_PING_INTERVAL_SECONDS = 60;
 
     private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
 
-    private final WorkerPokeThread workerPokeThread = new WorkerPokeThread();
+    private final WorkerPingThread workerPingThread = new WorkerPingThread();
 
     private final CoordinatorConnector coordinatorConnector;
     private final ComponentRegistry componentRegistry;
@@ -77,7 +78,7 @@ public class RemoteClient {
 
         sendToAllAgents(new StartTimeoutDetectionOperation());
         if (startPokeThread) {
-            workerPokeThread.start();
+            workerPingThread.start();
         }
     }
 
@@ -122,9 +123,9 @@ public class RemoteClient {
         if (stopPokeThread) {
             sendToAllAgents(new StopTimeoutDetectionOperation());
 
-            workerPokeThread.running = false;
-            workerPokeThread.interrupt();
-            joinThread(workerPokeThread);
+            workerPingThread.running = false;
+            workerPingThread.interrupt();
+            joinThread(workerPingThread);
         }
 
         sendToAllWorkers(new TerminateWorkerOperation());
@@ -171,21 +172,22 @@ public class RemoteClient {
         }
     }
 
-    private final class WorkerPokeThread extends Thread {
+    private final class WorkerPingThread extends Thread {
 
         private volatile boolean running = true;
 
-        private WorkerPokeThread() {
-            super("WorkerPokeThread");
+        private WorkerPingThread() {
+            super("WorkerPingThread");
             setDaemon(true);
         }
 
         @Override
         public void run() {
+            PingOperation operation = new PingOperation();
             while (running) {
                 try {
-                    logOnAllWorkers("Poked by Coordinator...");
-                    sleepSeconds(WORKER_POKE_INTERVAL_SECONDS);
+                    sendToAllWorkers(operation);
+                    sleepSeconds(WORKER_PING_INTERVAL_SECONDS);
                 } catch (SimulatorProtocolException e) {
                     if (e.getCause() instanceof InterruptedException) {
                         break;

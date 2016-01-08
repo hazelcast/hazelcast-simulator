@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
+import com.hazelcast.simulator.protocol.operation.PongOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.worker.TestContainer;
@@ -47,6 +48,7 @@ import static java.lang.String.format;
 public class WorkerOperationProcessor extends OperationProcessor {
 
     private static final String DASHES = "---------------------------";
+    private static final PongOperation PONG_OPERATION = new PongOperation();
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
@@ -80,6 +82,9 @@ public class WorkerOperationProcessor extends OperationProcessor {
                 break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
+                break;
+            case PING:
+                processPing(sourceAddress);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -124,5 +129,12 @@ public class WorkerOperationProcessor extends OperationProcessor {
         if (type == WorkerType.MEMBER) {
             hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
         }
+    }
+
+    private void processPing(SimulatorAddress sourceAddress) {
+        WorkerConnector workerConnector = worker.getWorkerConnector();
+        LOGGER.info(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
+
+        workerConnector.submit(sourceAddress, PONG_OPERATION);
     }
 }

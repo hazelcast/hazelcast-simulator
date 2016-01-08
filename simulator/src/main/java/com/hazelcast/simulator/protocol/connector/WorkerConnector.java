@@ -62,7 +62,7 @@ public class WorkerConnector extends AbstractServerConnector {
     private final TestProcessorManager testProcessorManager;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
 
-    WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+    private WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                     boolean useRemoteLogger, WorkerType type, HazelcastInstance hazelcastInstance, Worker worker,
                     ConnectionManager connectionManager) {
         super(futureMap, localAddress, port);
@@ -185,6 +185,15 @@ public class WorkerConnector extends AbstractServerConnector {
     public ResponseFuture submitFromTest(SimulatorAddress testAddress, SimulatorAddress destination,
                                          SimulatorOperation operation) {
         return submit(testAddress, destination, operation);
+    }
+
+    /**
+     * Returns the size of the internal message queue used by {@link #submit(SimulatorAddress, SimulatorOperation)}.
+     *
+     * @return the message queue size
+     */
+    public int getMessageQueueSize() {
+        return super.getMessageQueueSize();
     }
 
     public OperationProcessor getProcessor() {

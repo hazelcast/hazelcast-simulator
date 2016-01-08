@@ -47,7 +47,10 @@ public enum OperationType {
     FAILURE(FailureOperation.class, 13),
 
     START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 14),
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 15);
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 15),
+
+    PING(PingOperation.class, 16),
+    PONG(PongOperation.class, 17);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

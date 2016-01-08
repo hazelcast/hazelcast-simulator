@@ -13,6 +13,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
+import com.hazelcast.simulator.protocol.operation.PongOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -20,8 +21,11 @@ import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
+import org.apache.log4j.Level;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -30,6 +34,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.LATENCY_FORMAT_LENGTH;
 import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.THROUGHPUT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -58,6 +64,16 @@ public class CoordinatorOperationProcessorTest {
     private FailureContainer failureContainer;
 
     private CoordinatorOperationProcessor processor;
+
+    @BeforeClass
+    public static void setUpEnvironment() {
+        setLogLevel(Level.TRACE);
+    }
+
+    @AfterClass
+    public static void resetEnvironment() {
+        resetLogLevel();
+    }
 
     @Before
     public void setUp() {
@@ -176,5 +192,14 @@ public class CoordinatorOperationProcessorTest {
 
         assertEquals(SUCCESS, responseType);
         assertEquals(1, failureContainer.getFailureCount());
+    }
+
+    @Test
+    public void processPong() {
+        PongOperation operation = new PongOperation();
+
+        ResponseType responseType = processor.process(operation, workerAddress);
+
+        assertEquals(SUCCESS, responseType);
     }
 }

@@ -171,6 +171,10 @@ abstract class AbstractServerConnector implements ServerConnector {
         return writeAsync(message);
     }
 
+    int getMessageQueueSize() {
+        return messageQueue.size();
+    }
+
     ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
         String futureKey = createFutureKey(source, message.getMessageId(), 0);
@@ -209,6 +213,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                 try {
                     SimulatorMessage message = messageQueue.take();
                     if (POISON_PILL.equals(message)) {
+                        LOGGER.info("ServerConnectorMessageQueueThread received POISON_PILL and will stop...");
                         break;
                     }
 

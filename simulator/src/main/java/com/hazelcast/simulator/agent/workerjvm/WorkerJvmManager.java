@@ -47,12 +47,7 @@ public class WorkerJvmManager {
 
     public void updateLastSeenTimestamp(ByteBuf buffer) {
         SimulatorAddress sourceAddress = getSourceAddress(buffer);
-        AddressLevel sourceAddressLevel = sourceAddress.getAddressLevel();
-        if (sourceAddressLevel == AddressLevel.WORKER) {
-            updateLastSeenTimestamp(sourceAddress);
-        } else if (sourceAddressLevel == AddressLevel.TEST) {
-            updateLastSeenTimestamp(sourceAddress.getParent());
-        }
+        updateLastSeenTimestamp(sourceAddress);
     }
 
     public void updateLastSeenTimestamp(Response response) {
@@ -62,8 +57,19 @@ public class WorkerJvmManager {
     }
 
     private void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
+        AddressLevel sourceAddressLevel = sourceAddress.getAddressLevel();
+        if (sourceAddressLevel == AddressLevel.TEST) {
+            sourceAddress = sourceAddress.getParent();
+        } else if (sourceAddressLevel != AddressLevel.WORKER) {
+            LOGGER.warn("Should update LastSeenTimestamp for unsupported AddressLevel: " + sourceAddress);
+            return;
+        }
+
         WorkerJvm workerJvm = workerJVMs.get(sourceAddress);
-        if (workerJvm != null) {
+        if (workerJvm == null) {
+            LOGGER.warn("Should update LastSeenTimestamp for unknown WorkerJVM: " + sourceAddress);
+        } else {
+            LOGGER.info("Updated LastSeenTimestamp for: " + sourceAddress);
             workerJvm.updateLastSeen();
         }
     }
