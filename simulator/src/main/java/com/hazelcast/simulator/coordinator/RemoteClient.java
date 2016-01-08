@@ -129,15 +129,18 @@ public class RemoteClient {
         }
 
         TerminateWorkerOperation operation = new TerminateWorkerOperation();
+        List<WorkerData> workers = new ArrayList<WorkerData>(componentRegistry.getWorkers());
+
         // shutdown non member workers first
-        for (WorkerData workerData : componentRegistry.getWorkers()) {
+        for (WorkerData workerData : workers) {
             if (workerData.getSettings().getWorkerType() != WorkerType.MEMBER) {
                 Response response = coordinatorConnector.write(workerData.getAddress(), operation);
                 validateResponse(operation, response);
             }
         }
+
         // after that shutdown member workers
-        for (WorkerData workerData : componentRegistry.getWorkers()) {
+        for (WorkerData workerData : workers) {
             if (workerData.getSettings().getWorkerType() == WorkerType.MEMBER) {
                 Response response = coordinatorConnector.write(workerData.getAddress(), operation);
                 validateResponse(operation, response);
