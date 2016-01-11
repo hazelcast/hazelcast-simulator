@@ -97,11 +97,12 @@ public class AtomicLongTest {
     @Verify
     public void verify() {
         String serviceName = totalCounter.getServiceName();
+        String totalName = totalCounter.getName();
 
         long actual = 0;
         for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
             String key = distributedObject.getName();
-            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename)) {
+            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename) && !key.equals(totalName)) {
                 actual += targetInstance.getAtomicLong(key).get();
             }
         }
