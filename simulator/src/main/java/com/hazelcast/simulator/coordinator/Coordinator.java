@@ -260,9 +260,11 @@ public final class Coordinator {
                     clusterLayout.getClientWorkerCount());
             remoteClient.createWorkers(clusterLayout, true);
 
-            WorkerData firstWorker = componentRegistry.getFirstWorker();
-            LOGGER.info(format("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
-                    firstWorker.getSettings().getWorkerType()));
+            if (componentRegistry.workerCount() > 0) {
+                WorkerData firstWorker = componentRegistry.getFirstWorker();
+                LOGGER.info(format("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
+                        firstWorker.getSettings().getWorkerType()));
+            }
 
             long elapsed = getElapsedSeconds(started);
             echo(HORIZONTAL_RULER);
