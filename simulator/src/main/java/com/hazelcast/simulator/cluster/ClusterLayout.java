@@ -119,7 +119,7 @@ public class ClusterLayout {
         return clientWorkerCount;
     }
 
-    public int getTotalMemberCount() {
+    public int getTotalWorkerCount() {
         return memberWorkerCount + clientWorkerCount;
     }
 }

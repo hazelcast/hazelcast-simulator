@@ -255,7 +255,7 @@ public final class Coordinator {
             remoteClient.terminateWorkers(false);
             echo("Successfully killed all remaining Workers");
 
-            int totalWorkerCount = clusterLayout.getTotalMemberCount();
+            int totalWorkerCount = clusterLayout.getTotalWorkerCount();
             echo("Starting %d Workers (%d members, %d clients)...", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
                     clusterLayout.getClientWorkerCount());
             remoteClient.createWorkers(clusterLayout, true);
