@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -258,6 +259,10 @@ public final class Coordinator {
             echo("Starting %d Workers (%d members, %d clients)...", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
                     clusterLayout.getClientWorkerCount());
             remoteClient.createWorkers(clusterLayout, true);
+
+            WorkerData firstWorker = componentRegistry.getFirstWorker();
+            LOGGER.info(format("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
+                    firstWorker.getSettings().getWorkerType()));
 
             long elapsed = getElapsedSeconds(started);
             echo(HORIZONTAL_RULER);
