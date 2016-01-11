@@ -38,8 +38,9 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeT
 
 final class PerformanceTracker {
 
-    private final File throughputFile;
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
+
+    private final File throughputFile;
     private final long testStartedTimestamp;
 
     private long lastTimestamp;
@@ -59,15 +60,15 @@ final class PerformanceTracker {
     private boolean isUpdated;
 
     PerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
-        throughputFile = new File("throughput-" + testId + ".txt");
+        this.throughputFile = new File("throughput-" + testId + ".txt");
+        this.testStartedTimestamp = testStartedTimestamp;
+        this.lastTimestamp = testStartedTimestamp;
+
         writeThroughputHeader(throughputFile, false);
 
         for (String probeName : probeNames) {
             histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
         }
-
-        this.testStartedTimestamp = testStartedTimestamp;
-        this.lastTimestamp = testStartedTimestamp;
     }
 
     long getIntervalOperationCount() {

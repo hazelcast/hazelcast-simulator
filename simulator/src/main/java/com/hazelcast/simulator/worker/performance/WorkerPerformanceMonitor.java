@@ -75,6 +75,8 @@ public class WorkerPerformanceMonitor {
 
     private static final class MonitorThread extends Thread {
 
+        private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
+
         private static final Logger LOGGER = Logger.getLogger(MonitorThread.class);
 
         private final File globalThroughputFile = new File("throughput.txt");
@@ -105,13 +107,17 @@ public class WorkerPerformanceMonitor {
                 long startedNanos = System.nanoTime();
                 long currentTimestamp = System.currentTimeMillis();
 
-                updatePerformanceStates(currentTimestamp);
+                boolean runningTestContainerFound = updatePerformanceStates(currentTimestamp);
                 sendPerformanceStates();
                 writeStatsToFiles(currentTimestamp);
 
                 long elapsedNanos = System.nanoTime() - startedNanos;
                 if (intervalNanos > elapsedNanos) {
-                    sleepNanos(intervalNanos - elapsedNanos);
+                    if (runningTestContainerFound) {
+                        sleepNanos(intervalNanos - elapsedNanos);
+                    } else {
+                        sleepNanos(WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS - elapsedNanos);
+                    }
                 } else {
                     LOGGER.warn("WorkerPerformanceMonitorThread.run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
                 }
@@ -131,12 +137,13 @@ public class WorkerPerformanceMonitor {
             }
         }
 
-        private void updatePerformanceStates(long currentTimestamp) {
+        private boolean updatePerformanceStates(long currentTimestamp) {
+            boolean runningTestContainerFound = false;
             for (TestContainer testContainer : testContainers) {
-                String testId = testContainer.getTestContext().getTestId();
                 if (!testContainer.isRunning()) {
                     continue;
                 }
+                runningTestContainerFound = true;
 
                 Map<String, Probe> probeMap = testContainer.getProbeMap();
                 Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
@@ -168,10 +175,12 @@ public class WorkerPerformanceMonitor {
                     }
                 }
 
+                String testId = testContainer.getTestContext().getTestId();
                 PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
                 tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
                         intervalOperationalCount, currentTimestamp);
             }
+            return runningTestContainerFound;
         }
 
         private PerformanceTracker getOrCreatePerformanceTracker(String testId, TestContainer testContainer) {

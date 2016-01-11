@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
 
 public class WorkerPerformanceMonitorTest {
 
+    private static final String TEST_NAME = "test";
     private static final VerificationWithTimeout VERIFY_TIMEOUT = timeout(TimeUnit.SECONDS.toMillis(1));
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
@@ -97,6 +99,8 @@ public class WorkerPerformanceMonitorTest {
 
     @Test
     public void test_testWithProbe() throws Exception {
+        assertTrue(performanceMonitor.start());
+
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test);
 
@@ -104,7 +108,7 @@ public class WorkerPerformanceMonitorTest {
             @Override
             public void run() {
                 try {
-                    tests.get("test").invoke(TestPhase.RUN);
+                    tests.get(TEST_NAME).invoke(TestPhase.RUN);
                 } catch (Exception e) {
                     EmptyStatement.ignore(e);
                 }
@@ -113,10 +117,11 @@ public class WorkerPerformanceMonitorTest {
         thread.start();
 
         test.recordValue(TimeUnit.MICROSECONDS.toNanos(500));
+        sleepSeconds(1);
+
         test.recordValue(TimeUnit.MICROSECONDS.toNanos(200));
         test.recordValue(TimeUnit.MICROSECONDS.toNanos(300));
-
-        assertTrue(performanceMonitor.start());
+        sleepSeconds(1);
 
         test.stopTest();
         thread.join();
@@ -127,7 +132,7 @@ public class WorkerPerformanceMonitorTest {
     @Test
     public void test_testAfterRun() throws Exception {
         addTest(new PerformanceMonitorTest());
-        tests.get("test").invoke(TestPhase.RUN);
+        tests.get(TEST_NAME).invoke(TestPhase.RUN);
 
         assertTrue(performanceMonitor.start());
 
@@ -136,7 +141,7 @@ public class WorkerPerformanceMonitorTest {
 
     private void addTest(Object test) {
         TestContainer testContainer = new TestContainer(test, testContext, null);
-        tests.put("test", testContainer);
+        tests.put(TEST_NAME, testContainer);
     }
 
     private void verifyServerConnector() {

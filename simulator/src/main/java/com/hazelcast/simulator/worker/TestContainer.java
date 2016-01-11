@@ -184,10 +184,10 @@ public class TestContainer {
 
     private void run() throws Exception {
         testStartedTimestamp = System.currentTimeMillis();
-        isRunning = true;
         if (runWithWorkerMethod != null) {
             invokeRunWithWorkerMethod();
         } else {
+            isRunning = true;
             invokeMethod(testClassInstance, runMethod);
         }
         isRunning = false;
@@ -301,6 +301,9 @@ public class TestContainer {
             // create one probe per test and inject it in all worker instances of the test
             probe = getOrCreateProbe(testContext.getTestId() + "WorkerProbe", workerProbeField);
         }
+
+        // everything is prepared, we can notify the outside world now
+        isRunning = true;
 
         // spawn worker and wait for completion
         IWorker worker = spawnWorkerThreads(testContextField, workerProbeField, probe);

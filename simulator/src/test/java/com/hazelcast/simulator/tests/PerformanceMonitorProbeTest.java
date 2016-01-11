@@ -14,11 +14,6 @@ public class PerformanceMonitorProbeTest {
     private CountDownLatch stopTestLatch = new CountDownLatch(1);
     private Worker worker = new Worker();
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return worker;
-    }
-
     public void recordValue(long latencyNanos) throws Exception {
         testStartedLatch.await();
         worker.workerProbe.recordValue(latencyNanos);
@@ -26,6 +21,11 @@ public class PerformanceMonitorProbeTest {
 
     public void stopTest() {
         stopTestLatch.countDown();
+    }
+
+    @RunWithWorker
+    public Worker createWorker() {
+        return worker;
     }
 
     private class Worker implements IWorker {
