@@ -17,4 +17,7 @@
         </join>
     </network>
 
+    <properties>
+        <property name="hazelcast.phone.home.enabled">false</property>
+    </properties>
 </hazelcast>

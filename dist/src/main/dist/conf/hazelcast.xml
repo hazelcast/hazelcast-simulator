@@ -17,6 +17,10 @@
         </join>
     </network>
 
+    <properties>
+        <property name="hazelcast.phone.home.enabled">false</property>
+    </properties>
+
     <!--LICENSE-KEY-->
 
     <!--MANAGEMENT_CENTER_CONFIG-->
@@ -64,7 +68,8 @@
 
     <map name="ExtractorMapTest*">
         <attributes>
-            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">payloadFromExtractor</attribute>
+            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">payloadFromExtractor
+            </attribute>
         </attributes>
     </map>
 
@@ -118,5 +123,4 @@
     <cache name="maxCachLarge*">
         <eviction max-size-policy="ENTRY_COUNT" size="10000" eviction-policy="LFU"/>
     </cache>
-
 </hazelcast>
