@@ -33,8 +33,6 @@ import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
@@ -43,7 +41,7 @@ public class ExpiryICacheTest {
     private static final ILogger LOGGER = Logger.getLogger(ExpiryICacheTest.class);
 
     //default keyCount entries of int,  is upper bound to approx 8MB possible max, if all put in side expiryPolicy time
-    public int keyCount=1000000;
+    public int keyCount = 1000000;
     public String basename = ExpiryICacheTest.class.getSimpleName();
 
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
@@ -66,18 +64,20 @@ public class ExpiryICacheTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void beforeRun() { }
+        protected void beforeRun() {
+        }
 
         @Override
         public void timeStep() {
             long key = getRandom().nextInt(keyCount);
-            if ( ! cache.containsKey(key) ) {
+            if (!cache.containsKey(key)) {
                 cache.put(key, 0, expiryPolicy);
             }
         }
 
         @Override
-        protected void afterRun() { }
+        protected void afterRun() {
+        }
     }
 
     @Verify(global = false)
