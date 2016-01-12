@@ -32,7 +32,6 @@ import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -119,7 +118,7 @@ public class RemoteClient {
         spawner.awaitCompletion();
     }
 
-    public int terminateWorkers(boolean stopPokeThread) {
+    public void terminateWorkers(boolean stopPokeThread) {
         if (stopPokeThread) {
             sendToAllAgents(new StopTimeoutDetectionOperation());
 
@@ -128,26 +127,11 @@ public class RemoteClient {
             joinThread(workerPingThread);
         }
 
-        TerminateWorkerOperation operation = new TerminateWorkerOperation();
-        List<WorkerData> workers = new ArrayList<WorkerData>(componentRegistry.getWorkers());
+        // shutdown non-member Workers first
+        sendToAllWorkers(new TerminateWorkerOperation(false));
 
-        // shutdown non member workers first
-        for (WorkerData workerData : workers) {
-            if (workerData.getSettings().getWorkerType() != WorkerType.MEMBER) {
-                Response response = coordinatorConnector.write(workerData.getAddress(), operation);
-                validateResponse(operation, response);
-            }
-        }
-
-        // after that shutdown member workers
-        for (WorkerData workerData : workers) {
-            if (workerData.getSettings().getWorkerType() == WorkerType.MEMBER) {
-                Response response = coordinatorConnector.write(workerData.getAddress(), operation);
-                validateResponse(operation, response);
-            }
-        }
-
-        return workers.size();
+        // after that shutdown member Workers
+        sendToAllWorkers(new TerminateWorkerOperation(true));
     }
 
     public void initTestSuite(TestSuite testSuite) {

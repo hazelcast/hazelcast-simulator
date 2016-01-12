@@ -46,6 +46,7 @@ public class WorkerOperationProcessorTest {
     private final TestExceptionLogger exceptionLogger = new TestExceptionLogger();
     private final HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
     private final Worker worker = mock(Worker.class);
+    private final SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
 
     private Map<String, String> properties;
     private WorkerOperationProcessor processor;
@@ -69,8 +70,6 @@ public class WorkerOperationProcessorTest {
         when(worker.startPerformanceMonitor()).thenReturn(true);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
-        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-
         processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress);
     }
 
@@ -84,11 +83,40 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_TerminateWorkers() throws Exception {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation();
+    public void process_TerminateWorkers_shutdownNonMemberWorker_onMemberWorker() {
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(false);
+        processor.process(operation, COORDINATOR);
+
+        verifyNoMoreInteractions(worker);
+    }
+
+    @Test
+    public void process_TerminateWorkers_shutdownMemberWorker_onMemberWorker() {
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(true);
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown();
+        verifyNoMoreInteractions(worker);
+    }
+
+    @Test
+    public void process_TerminateWorkers_shutdownNonMemberWorker_onClientWorker() {
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
+
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(false);
+        processor.process(operation, COORDINATOR);
+
+        verify(worker).shutdown();
+        verifyNoMoreInteractions(worker);
+    }
+
+    @Test
+    public void process_TerminateWorkers_shutdownMemberWorker_onClientWorker() {
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
+
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(true);
+        processor.process(operation, COORDINATOR);
+
         verifyNoMoreInteractions(worker);
     }
 

@@ -309,8 +309,9 @@ public final class Coordinator {
             echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
             echo(HORIZONTAL_RULER);
         } finally {
-            int workerCount = remoteClient.terminateWorkers(true);
-            if (!failureContainer.waitForWorkerShutdown(workerCount, FINISHED_WORKER_TIMEOUT_SECONDS)) {
+            int runningWorkerCount = componentRegistry.workerCount();
+            remoteClient.terminateWorkers(true);
+            if (!failureContainer.waitForWorkerShutdown(runningWorkerCount, FINISHED_WORKER_TIMEOUT_SECONDS)) {
                 Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
                 LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
             }

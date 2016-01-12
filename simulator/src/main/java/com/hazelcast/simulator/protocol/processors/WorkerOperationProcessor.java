@@ -24,6 +24,7 @@ import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PongOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.worker.TestContainer;
 import com.hazelcast.simulator.worker.TestContextImpl;
@@ -78,7 +79,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
                                             SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             case TERMINATE_WORKER:
-                processTerminateWorker();
+                processTerminateWorker((TerminateWorkerOperation) operation);
                 break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
@@ -92,8 +93,11 @@ public class WorkerOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processTerminateWorker() {
-        worker.shutdown();
+    private void processTerminateWorker(TerminateWorkerOperation operation) {
+        boolean shutdownMemberType = operation.isShutdownMemberType();
+        if ((shutdownMemberType && type == WorkerType.MEMBER) || (!shutdownMemberType && type != WorkerType.MEMBER)) {
+            worker.shutdown();
+        }
     }
 
     private void processCreateTest(CreateTestOperation operation) throws Exception {

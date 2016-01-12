@@ -16,4 +16,14 @@
 package com.hazelcast.simulator.protocol.operation;
 
 public class TerminateWorkerOperation implements SimulatorOperation {
+
+    private final boolean shutdownMemberType;
+
+    public TerminateWorkerOperation(boolean shutdownMemberType) {
+        this.shutdownMemberType = shutdownMemberType;
+    }
+
+    public boolean isShutdownMemberType() {
+        return shutdownMemberType;
+    }
 }
