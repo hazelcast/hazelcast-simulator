@@ -54,9 +54,7 @@ public class PerformanceStateContainer {
 
     public synchronized void updatePerformanceState(SimulatorAddress workerAddress,
                                                     Map<String, PerformanceState> performanceStates) {
-        if (performanceStates != null) {
-            workerPerformanceStateMap.put(workerAddress, performanceStates);
-        }
+        workerPerformanceStateMap.put(workerAddress, performanceStates);
     }
 
     public String getPerformanceNumbers(String testCaseId) {
@@ -107,12 +105,6 @@ public class PerformanceStateContainer {
         long totalOperationCount = totalPerformanceState.getOperationCount();
         if (totalOperationCount < 1) {
             LOGGER.info("Performance information is not available!");
-            LOGGER.info(format("Got PerformanceStates from the following Workers: %s", workerPerformanceStateMap.keySet()));
-            for (Map.Entry<SimulatorAddress, Map<String, PerformanceState>> entry : workerPerformanceStateMap.entrySet()) {
-                Map<String, PerformanceState> performanceStateMap = entry.getValue();
-                LOGGER.info(format("%s has PerformanceStates from the following probes: %s",
-                        entry.getKey(), (performanceStateMap == null) ? "null" : performanceStateMap.keySet()));
-            }
             return;
         }
 

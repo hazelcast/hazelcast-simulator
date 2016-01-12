@@ -202,7 +202,9 @@ public class WorkerPerformanceMonitor {
                     operation.addPerformanceState(testId, stats.createPerformanceState());
                 }
             }
-            serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
+            if (operation.getPerformanceStates().size() > 0) {
+                serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
+            }
         }
 
         private void writeStatsToFiles(long currentTimestamp) {
