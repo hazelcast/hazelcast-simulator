@@ -27,6 +27,8 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
@@ -52,6 +54,7 @@ public class ReplicatedMapTimeToLiveTest {
 
     public double putTTLProb = 0.7;
     public double getProb = 0.3;
+    public int intervalMs = 20;
 
     public int minTTLExpiryMs = 1;
     public int maxTTLExpiryMs = 1000;
@@ -96,6 +99,8 @@ public class ReplicatedMapTimeToLiveTest {
 
     private class Worker extends AbstractWorker<Operation> {
         private final MapOperationCounter count = new MapOperationCounter();
+        private final Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
+
 
         public Worker() {
             super(builder);
@@ -103,6 +108,7 @@ public class ReplicatedMapTimeToLiveTest {
 
         @Override
         protected void timeStep(Operation operation) throws Exception {
+            metronome.waitForNext();
             try {
                 int key = randomInt(keyCount);
 
