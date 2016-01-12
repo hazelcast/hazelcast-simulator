@@ -54,7 +54,9 @@ public class PerformanceStateContainer {
 
     public synchronized void updatePerformanceState(SimulatorAddress workerAddress,
                                                     Map<String, PerformanceState> performanceStates) {
-        workerPerformanceStateMap.put(workerAddress, performanceStates);
+        if (performanceStates != null) {
+            workerPerformanceStateMap.put(workerAddress, performanceStates);
+        }
     }
 
     public String getPerformanceNumbers(String testCaseId) {
