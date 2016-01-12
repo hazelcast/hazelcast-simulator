@@ -15,9 +15,6 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.Math.round;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
@@ -27,46 +24,14 @@ import static org.apache.commons.lang3.RandomUtils.nextLong;
  *
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
-public final class SimpleMetronome implements Metronome {
-
-    private static final Metronome EMPTY_METRONOME = new EmptyMetronome();
+final class BusySpinningMetronome implements Metronome {
 
     private final long intervalNanos;
 
     private long waitUntil;
 
-    private SimpleMetronome(long intervalNanos) {
+    BusySpinningMetronome(long intervalNanos) {
         this.intervalNanos = intervalNanos;
-    }
-
-    /**
-     * Creates a {@link Metronome} instance with a fixed millisecond interval.
-     *
-     * @param intervalMs wait interval in milliseconds
-     * @return a {@link Metronome} instance
-     */
-    public static Metronome withFixedIntervalMs(int intervalMs) {
-        if (intervalMs == 0) {
-            return EMPTY_METRONOME;
-        }
-        return new SimpleMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
-    }
-
-    /**
-     * Creates a {@link Metronome} instance with a fixed frequency in Hz.
-     *
-     * If the frequency is 0 Hz the method {@link #waitForNext()} will have no delay.
-     *
-     * @param frequency frequency
-     * @return a {@link Metronome} instance
-     */
-    public static Metronome withFixedFrequency(float frequency) {
-        if (frequency == 0) {
-            return EMPTY_METRONOME;
-        }
-
-        long intervalNanos = round((double) TimeUnit.SECONDS.toNanos(1) / frequency);
-        return new SimpleMetronome(intervalNanos);
     }
 
     @Override
@@ -84,12 +49,5 @@ public final class SimpleMetronome implements Metronome {
 
         // set regular interval for next call
         waitUntil = now + intervalNanos;
-    }
-
-    private static class EmptyMetronome implements Metronome {
-
-        @Override
-        public void waitForNext() {
-        }
     }
 }

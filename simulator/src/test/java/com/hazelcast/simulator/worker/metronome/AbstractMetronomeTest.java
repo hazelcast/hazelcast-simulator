@@ -2,33 +2,26 @@ package com.hazelcast.simulator.worker.metronome;
 
 import org.junit.Test;
 
-import static com.hazelcast.simulator.worker.metronome.SimpleMetronome.withFixedFrequency;
-import static com.hazelcast.simulator.worker.metronome.SimpleMetronome.withFixedIntervalMs;
-import static org.junit.Assert.assertFalse;
+import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedFrequency;
+import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static org.junit.Assert.assertTrue;
 
-public class SimpleMetronomeTest {
+public abstract class AbstractMetronomeTest {
 
-    @Test
-    public void testEmptyMetronome_withFixedIntervalMs() {
-        Metronome metronome = withFixedIntervalMs(0);
-        metronome.waitForNext();
+    abstract MetronomeType getMetronomeType();
 
-        assertFalse(metronome instanceof SimpleMetronome);
+    private Metronome getFixedIntervalMsMetronome(int intervalMs) {
+        return withFixedIntervalMs(intervalMs, getMetronomeType());
+    }
+
+    private Metronome getFixedFrequencyMetronome(float frequency) {
+        return withFixedFrequency(frequency, getMetronomeType());
     }
 
     @Test
-    public void testEmptyMetronome_withFixedFrequency() {
-        Metronome metronome = withFixedFrequency(0);
-        metronome.waitForNext();
-
-        assertFalse(metronome instanceof SimpleMetronome);
-    }
-
-    @Test
-    public void testSimpleMetronome_withFixedIntervalMs() {
+    public void testWithFixedIntervalMs() {
         int intervalMs = 50;
-        Metronome metronome = withFixedIntervalMs(intervalMs);
+        Metronome metronome = getFixedIntervalMsMetronome(intervalMs);
         long lastTimestamp = 0;
         for (int i = 0; i < 10; i++) {
             long startTimestamp = System.currentTimeMillis();
@@ -43,11 +36,11 @@ public class SimpleMetronomeTest {
     }
 
     @Test
-    public void testSimpleMetronome_withFixedFrequency_25() {
+    public void testWithFixedFrequency_25() {
         float frequency = 25;
         int intervalMs = 40;
 
-        Metronome metronome = withFixedFrequency(frequency);
+        Metronome metronome = getFixedFrequencyMetronome(frequency);
         long lastTimestamp = 0;
         for (int i = 0; i < 10; i++) {
             long startTimestamp = System.currentTimeMillis();
@@ -62,11 +55,11 @@ public class SimpleMetronomeTest {
     }
 
     @Test
-    public void testSimpleMetronome_withFixedFrequency_100() {
+    public void testWithFixedFrequency_100() {
         float frequency = 100;
         int intervalMs = 10;
 
-        Metronome metronome = withFixedFrequency(frequency);
+        Metronome metronome = getFixedFrequencyMetronome(frequency);
         long lastTimestamp = 0;
         for (int i = 0; i < 10; i++) {
             long startTimestamp = System.currentTimeMillis();
@@ -81,11 +74,11 @@ public class SimpleMetronomeTest {
     }
 
     @Test
-    public void testSimpleMetronome_withFixedFrequency_1000() {
+    public void testWithFixedFrequency_1000() {
         float frequency = 1000;
         int intervalMs = 1;
 
-        Metronome metronome = withFixedFrequency(frequency);
+        Metronome metronome = getFixedFrequencyMetronome(frequency);
         long lastTimestamp = 0;
         for (int i = 0; i < 10; i++) {
             long startTimestamp = System.currentTimeMillis();

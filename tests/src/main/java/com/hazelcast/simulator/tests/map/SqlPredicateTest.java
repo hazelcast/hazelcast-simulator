@@ -31,7 +31,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
+import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.io.IOException;
@@ -39,6 +39,7 @@ import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 
 public class SqlPredicateTest {
 
@@ -50,6 +51,7 @@ public class SqlPredicateTest {
     public int keyCount = 10000;
     public int keyLength = 10;
     public String sql = "age = 30 AND active = true";
+    public MetronomeType metronomeType = MetronomeType.SLEEPING;
     public int intervalMs = 0;
     public int maxAge = 75;
     public double maxSalary = 1000.0;
@@ -90,7 +92,7 @@ public class SqlPredicateTest {
 
     private class Worker extends AbstractMonotonicWorker {
         private SqlPredicate sqlPredicate = new SqlPredicate(sql);
-        private Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
+        private Metronome metronome = withFixedIntervalMs(intervalMs, metronomeType);
 
         @Override
         protected void timeStep() throws Exception {

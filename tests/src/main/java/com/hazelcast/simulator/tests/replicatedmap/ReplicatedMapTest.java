@@ -27,12 +27,13 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.SimpleMetronome;
+import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 
 public class ReplicatedMapTest {
 
@@ -49,6 +50,7 @@ public class ReplicatedMapTest {
     public int keyCount = 10000;
     public int valueCount = 1;
     public int valueLength = 10;
+    public MetronomeType metronomeType = MetronomeType.SLEEPING;
     public int intervalMs = 20;
 
     public double putProb = 0.45;
@@ -94,7 +96,7 @@ public class ReplicatedMapTest {
 
     private class Worker extends AbstractWorker<Operation> {
 
-        private final Metronome metronome = SimpleMetronome.withFixedIntervalMs(intervalMs);
+        private final Metronome metronome = withFixedIntervalMs(intervalMs, metronomeType);
 
         public Worker() {
             super(operationSelectorBuilder);
