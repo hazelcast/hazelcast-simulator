@@ -3,7 +3,7 @@ package com.hazelcast.simulator.worker.performance;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.LogOperation;
+import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorTest;
@@ -85,7 +85,7 @@ public class WorkerPerformanceMonitorTest {
 
         assertTrue(performanceMonitor.start());
 
-        verifyServerConnector();
+        verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class WorkerPerformanceMonitorTest {
 
         assertTrue(performanceMonitor.start());
 
-        verifyServerConnector();
+        verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
@@ -136,7 +136,7 @@ public class WorkerPerformanceMonitorTest {
 
         assertTrue(performanceMonitor.start());
 
-        verifyServerConnector();
+        verifyNoMoreInteractions(serverConnector);
     }
 
     private void addTest(Object test) {
@@ -145,7 +145,8 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void verifyServerConnector() {
-        verify(serverConnector, VERIFY_TIMEOUT.atLeastOnce()).submit(eq(SimulatorAddress.COORDINATOR), any(LogOperation.class));
+        verify(serverConnector, VERIFY_TIMEOUT.atLeastOnce()).submit(eq(SimulatorAddress.COORDINATOR),
+                any(PerformanceStateOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 }
