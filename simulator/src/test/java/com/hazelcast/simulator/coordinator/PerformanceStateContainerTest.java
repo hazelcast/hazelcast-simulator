@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -77,6 +78,20 @@ public class PerformanceStateContainerTest {
     public void testGetPerformanceNumbers_onEmptyContainer() {
         String performance = emptyPerformanceStateContainer.getPerformanceNumbers(TEST_CASE_ID_1);
         assertFalse(performance.contains("ops"));
+    }
+
+    @Test
+    public void testGetPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
+        SimulatorAddress worker = new SimulatorAddress(AddressLevel.WORKER, 3, 1, 0);
+
+        Map<String, PerformanceState> performanceStates = new HashMap<String, PerformanceState>();
+        performanceStates.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300, TimeUnit.SECONDS.toMicros(3), 2400, 2500));
+
+        performanceStateContainer.updatePerformanceState(worker, performanceStates);
+
+        String performance = performanceStateContainer.getPerformanceNumbers(TEST_CASE_ID_1);
+        assertTrue(performance.contains("ms"));
+        assertFalse(performance.contains("µs"));
     }
 
     @Test
