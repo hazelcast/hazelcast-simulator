@@ -59,7 +59,7 @@ public class MangleICacheTest {
     public String basename = MangleICacheTest.class.getSimpleName();
     public int maxCaches = 100;
 
-    public int keyCount=100000;
+    public int keyCount = 100000;
     public double createCacheManagerProb = 0.1;
     public double cacheManagerCloseProb = 0.1;
     public double cachingProviderCloseProb = 0.1;

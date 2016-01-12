@@ -48,7 +48,7 @@ public class CreateDestroyICacheTest {
     }
 
     public String basename = CreateDestroyICacheTest.class.getSimpleName();
-    public int keyCount=100000;
+    public int keyCount = 100000;
     public double createCacheProb = 0.4;
     public double putCacheProb = 0.2;
     public double closeCacheProb = 0.2;
