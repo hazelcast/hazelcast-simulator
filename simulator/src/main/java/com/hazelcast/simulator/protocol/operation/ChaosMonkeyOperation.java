@@ -13,11 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.common.messaging;
+package com.hazelcast.simulator.protocol.operation;
 
-public abstract class RunnableMessage extends Message implements Runnable {
+public class ChaosMonkeyOperation implements SimulatorOperation {
 
-    public RunnableMessage(MessageAddress messageAddress) {
-        super(messageAddress);
+    public enum ChaosMonkeyType {
+        INTEGRATION_TEST,
+        BLOCK_TRAFFIC,
+        UNBLOCK_TRAFFIC,
+        SPIN_CORE_INDEFINITELY,
+        USE_ALL_MEMORY,
+        SOFT_KILL,
+        HARD_KILL
+    }
+
+    private final ChaosMonkeyType type;
+
+    public ChaosMonkeyOperation(ChaosMonkeyType type) {
+        this.type = type;
+    }
+
+    public ChaosMonkeyType getType() {
+        return type;
     }
 }

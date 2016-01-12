@@ -16,10 +16,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.Member;
-import com.hazelcast.simulator.common.messaging.Message;
-import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.concurrent.Callable;
@@ -29,13 +26,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static java.lang.String.format;
-
 public final class HazelcastUtils {
 
     private static final int TIMEOUT_SECONDS = 60;
-
-    private static final Logger LOGGER = Logger.getLogger(HazelcastUtils.class);
 
     private HazelcastUtils() {
     }
@@ -66,16 +59,5 @@ public final class HazelcastUtils {
     public static boolean isOldestMember(HazelcastInstance hazelcastInstance) {
         Iterator<Member> memberIterator = hazelcastInstance.getCluster().getMembers().iterator();
         return memberIterator.hasNext() && memberIterator.next().equals(hazelcastInstance.getLocalEndpoint());
-    }
-
-    public static void injectHazelcastInstance(HazelcastInstance hazelcastInstance, Message message) {
-        if (message instanceof HazelcastInstanceAware) {
-            if (hazelcastInstance != null) {
-                ((HazelcastInstanceAware) message).setHazelcastInstance(hazelcastInstance);
-            } else {
-                LOGGER.warn(format("Message %s implements %s interface, but no instance is currently running in this worker.",
-                        message.getClass().getName(), HazelcastInstanceAware.class));
-            }
-        }
     }
 }

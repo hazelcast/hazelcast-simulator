@@ -2,10 +2,7 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.core.Cluster;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.Member;
-import com.hazelcast.simulator.common.messaging.Message;
-import com.hazelcast.simulator.common.messaging.MessageAddress;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -17,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
-import static com.hazelcast.simulator.utils.HazelcastUtils.injectHazelcastInstance;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isMaster;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isOldestMember;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -35,8 +31,6 @@ public class HazelcastUtilsTest {
     private static final int DELAY_SECONDS = 1;
 
     private final ScheduledExecutorService executor = createScheduledThreadPool(1, HazelcastUtilsTest.class);
-    private final MessageAddress messageAddress = MessageAddress.builder().toAllAgents().toAllWorkers().toAllAgents().build();
-    private final HazelcastAwareMessage injectMessage = new HazelcastAwareMessage(messageAddress);
 
     private HazelcastInstance hazelcastInstance;
 
@@ -96,24 +90,6 @@ public class HazelcastUtilsTest {
         assertFalse(isOldestMember(hazelcastInstance));
     }
 
-    @Test
-    public void testInjectHazelcastInstance_noInstanceFound() {
-        injectHazelcastInstance(null, injectMessage);
-        assertFalse(injectMessage.isInstanceSet());
-    }
-
-    @Test
-    public void testInjectHazelcastInstance_hazelcastServerInstance() {
-        injectHazelcastInstance(createMockHazelcastInstance(false), injectMessage);
-        assertTrue(injectMessage.isInstanceSet());
-    }
-
-    @Test
-    public void testInjectHazelcastInstance_hazelcastClientInstance() {
-        injectHazelcastInstance(createMockHazelcastInstance(false), injectMessage);
-        assertTrue(injectMessage.isInstanceSet());
-    }
-
     private HazelcastInstance createMockHazelcastInstance(boolean returnMember) {
         return createMockHazelcastInstance(returnMember, null);
     }
@@ -148,23 +124,5 @@ public class HazelcastUtilsTest {
         when(executor.schedule(isA(Callable.class), anyLong(), eq(TimeUnit.SECONDS))).thenReturn(future);
 
         return executor;
-    }
-
-    private class HazelcastAwareMessage extends Message implements HazelcastInstanceAware {
-
-        private boolean instanceSet;
-
-        private HazelcastAwareMessage(MessageAddress messageAddress) {
-            super(messageAddress);
-        }
-
-        @Override
-        public void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
-            instanceSet = true;
-        }
-
-        private boolean isInstanceSet() {
-            return instanceSet;
-        }
     }
 }

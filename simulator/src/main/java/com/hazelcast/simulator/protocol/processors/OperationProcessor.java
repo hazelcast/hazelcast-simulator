@@ -18,10 +18,12 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
+import com.hazelcast.simulator.protocol.operation.ChaosMonkeyOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.utils.ChaosMonkeyUtils;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
@@ -59,6 +61,9 @@ public abstract class OperationProcessor {
                 case LOG:
                     processLog((LogOperation) operation, sourceAddress);
                     break;
+                case CHAOS_MONKEY:
+                    processChaosMonkey((ChaosMonkeyOperation) operation);
+                    break;
                 default:
                     return processOperation(operationType, operation, sourceAddress);
             }
@@ -77,6 +82,10 @@ public abstract class OperationProcessor {
 
     private void processLog(LogOperation operation, SimulatorAddress sourceAddress) {
         LOGGER.log(operation.getLevel(), format("[%s] %s", sourceAddress, operation.getMessage()));
+    }
+
+    private void processChaosMonkey(ChaosMonkeyOperation operation) {
+        ChaosMonkeyUtils.execute(operation.getType());
     }
 
     protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,

@@ -50,7 +50,9 @@ public enum OperationType {
     STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 15),
 
     PING(PingOperation.class, 16),
-    PONG(PongOperation.class, 17);
+    PONG(PongOperation.class, 17),
+
+    CHAOS_MONKEY(ChaosMonkeyOperation.class, 18);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;
