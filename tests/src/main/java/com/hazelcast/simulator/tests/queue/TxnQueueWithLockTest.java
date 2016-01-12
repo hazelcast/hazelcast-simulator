@@ -83,17 +83,16 @@ public class TxnQueueWithLockTest {
                         secondLock.unlock();
 
                         ctx.commitTransaction();
+                        queue.take();
                         counter.committed++;
 
                     } catch (Exception txnException) {
-                        // TODO: Bad exception handling
                         try {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
                             LOGGER.severe(basename + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
-                            // TODO: Bad exception handling
                             counter.failedRollbacks++;
                             LOGGER.severe(basename + ": Exception in roll " + counter, rollException);
                         }
@@ -101,8 +100,7 @@ public class TxnQueueWithLockTest {
                         firstLock.unlock();
                     }
                 } catch (Exception e) {
-                    // TODO: Bad exception handling
-                    LOGGER.warning(e.getMessage(), e);
+                    LOGGER.severe(basename + ": outer Exception" + counter, e);
                 }
             }
             IList<TxnCounter> results = instance.getList(basename + "results");
