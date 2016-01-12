@@ -48,6 +48,7 @@ public class CreateDestroyICacheTest {
     }
 
     public String basename = CreateDestroyICacheTest.class.getSimpleName();
+    public int keyCount=100000;
     public double createCacheProb = 0.4;
     public double putCacheProb = 0.2;
     public double closeCacheProb = 0.2;
@@ -109,7 +110,7 @@ public class CreateDestroyICacheTest {
                     try {
                         Cache<Integer, Integer> cache = cacheManager.getCache(basename);
                         if (cache != null) {
-                            cache.put(randomInt(), randomInt());
+                            cache.put(randomInt(keyCount), randomInt());
                             counter.put++;
                         }
                     } catch (IllegalStateException e) {
