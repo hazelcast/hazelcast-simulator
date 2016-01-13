@@ -32,6 +32,8 @@ import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCache;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.sleepDurationTwice;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
@@ -45,24 +47,12 @@ public class ExpiryICacheTest {
 
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
 
-    private ICache<Long, Integer> cache;
+    private ICache cache;
 
     @Setup
     public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         cache = getCache(hazelcastInstance, basename);
-    }
-
-    @Verify(global = false)
-    public void globalVerify() {
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                int cacheSize = cache.size();
-                LOGGER.info(basename + " ICache size: " + cacheSize);
-                assertEquals(basename + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
-            }
-        });
     }
 
     @RunWithWorker
@@ -71,14 +61,33 @@ public class ExpiryICacheTest {
     }
 
     private class Worker extends AbstractMonotonicWorker {
-
         @Override
         public void timeStep() {
-            long key = randomInt(keyCount);
+            int key = randomInt(keyCount);
             if (!cache.containsKey(key)) {
                 cache.put(key, 0, expiryPolicy);
             }
         }
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+
+        sleepSeconds(61);
+
+        //provoke expire after ttl
+        for (int i=0; i<keyCount; i++){
+            cache.containsKey(i);
+        }
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                int cacheSize = cache.size();
+                LOGGER.info(basename + " ICache size: " + cacheSize);
+                assertEquals(basename + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
+            }
+        });
     }
 
     public static void main(String[] args) throws Exception {
