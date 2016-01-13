@@ -24,11 +24,9 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
@@ -36,8 +34,8 @@ import java.io.Serializable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCache;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.sleepDurationTwice;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -68,44 +66,37 @@ public class ExpiryTest {
     public double getAsyncProb = 0.1;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+    private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
 
+    private ICache<Integer, Long> cache;
     private IList<Counter> results;
-    private CacheManager cacheManager;
-    private ExpiryPolicy expiryPolicy;
 
     @Setup
     public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        cache = getCache(hazelcastInstance, basename);
         results = hazelcastInstance.getList(basename);
 
-        cacheManager = createCacheManager(hazelcastInstance);
-        expiryPolicy = new CreatedExpiryPolicy(new Duration(TimeUnit.MILLISECONDS, expiryDuration));
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addOperation(Operation.PUT_ASYNC, putAsyncProb)
-                .addOperation(Operation.GET, getProb).addOperation(Operation.GET_ASYNC, getAsyncProb);
+        operationSelectorBuilder
+                .addOperation(Operation.PUT, putProb)
+                .addOperation(Operation.PUT_ASYNC, putAsyncProb)
+                .addOperation(Operation.GET, getProb)
+                .addOperation(Operation.GET_ASYNC, getAsyncProb);
     }
 
-    @Warmup(global = true)
-    public void warmup() {
-        cacheManager.getCache(basename);
-    }
-
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         Counter totalCounter = new Counter();
         for (Counter counter : results) {
             totalCounter.add(counter);
         }
-        LOGGER.info(basename + ": " + totalCounter + " from " + results.size() + " worker Threads");
-
-        @SuppressWarnings("unchecked") final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
+        LOGGER.info(basename + " " + totalCounter + " from " + results.size() + " worker Threads");
 
         for (int i = 0; i < keyCount; i++) {
-            assertFalse(basename + ": cache should not contain any keys ", cache.containsKey(i));
+            assertFalse(basename + " ICache should not contain key " + i, cache.containsKey(i));
         }
-
-        assertFalse(basename + ": iterator should not have elements ", cache.iterator().hasNext());
-        assertEquals(basename + ": cache size not 0", 0, cache.size());
+        assertFalse(basename + " ICache iterator should not have elements", cache.iterator().hasNext());
+        assertEquals(basename + " ICache size should be 0", 0, cache.size());
     }
 
     @RunWithWorker
@@ -115,8 +106,6 @@ public class ExpiryTest {
 
     private class Worker extends AbstractWorker<Operation> {
 
-        @SuppressWarnings("unchecked")
-        private final ICache<Integer, Long> cache = (ICache) cacheManager.getCache(basename);
         private final Counter counter = new Counter();
 
         public Worker() {
@@ -155,7 +144,7 @@ public class ExpiryTest {
             results.add(counter);
 
             // sleep to give time for expiration
-            sleepMillis(expiryDuration * 2);
+            sleepDurationTwice(LOGGER, expiryPolicy.getExpiryForCreation());
         }
     }
 
@@ -166,11 +155,11 @@ public class ExpiryTest {
         private long getExpiry;
         private long getAsyncExpiry;
 
-        public void add(Counter c) {
-            putExpiry += c.putExpiry;
-            putAsyncExpiry += c.putAsyncExpiry;
-            getExpiry += c.getExpiry;
-            getAsyncExpiry += c.getAsyncExpiry;
+        public void add(Counter counter) {
+            putExpiry += counter.putExpiry;
+            putAsyncExpiry += counter.putAsyncExpiry;
+            getExpiry += counter.getExpiry;
+            getAsyncExpiry += counter.getAsyncExpiry;
         }
 
         public String toString() {

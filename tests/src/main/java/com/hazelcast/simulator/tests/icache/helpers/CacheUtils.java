@@ -22,14 +22,34 @@ import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
 import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.util.EmptyStatement;
 
+import javax.cache.expiry.Duration;
 import javax.cache.spi.CachingProvider;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static java.lang.String.format;
 
 public final class CacheUtils {
 
     private CacheUtils() {
+    }
+
+    public static void sleepDurationTwice(ILogger logger, Duration duration) {
+        if (duration.isEternal() || duration.isZero()) {
+            return;
+        }
+
+        TimeUnit timeUnit = duration.getTimeUnit();
+        long timeout = duration.getDurationAmount() * 2;
+        logger.info(format("Sleeping for %d %s...", timeout, timeUnit));
+        try {
+            timeUnit.sleep(timeout);
+        } catch (InterruptedException e) {
+            EmptyStatement.ignore(e);
+        }
     }
 
     public static <K, V> ICache<K, V> getCache(HazelcastInstance hazelcastInstance, String cacheName) {
