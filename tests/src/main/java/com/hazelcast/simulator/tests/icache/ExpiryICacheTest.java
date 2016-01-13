@@ -32,7 +32,6 @@ import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCache;
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.sleepDurationTwice;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
@@ -47,7 +46,7 @@ public class ExpiryICacheTest {
 
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
 
-    private ICache cache;
+    private ICache<Integer, Integer> cache;
 
     @Setup
     public void setup(TestContext testContext) {
@@ -72,11 +71,10 @@ public class ExpiryICacheTest {
 
     @Verify(global = true)
     public void globalVerify() {
-
         sleepSeconds(61);
 
-        //provoke expire after ttl
-        for (int i=0; i<keyCount; i++){
+        // provoke expire after TTL
+        for (int i = 0; i < keyCount; i++) {
             cache.containsKey(i);
         }
 
