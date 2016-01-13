@@ -15,13 +15,14 @@
  */
 package com.hazelcast.simulator.tests.icache.helpers;
 
+import com.hazelcast.cache.HazelcastCacheManager;
+import com.hazelcast.cache.ICache;
 import com.hazelcast.cache.impl.HazelcastServerCacheManager;
 import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
 import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
 import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
 
-import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
@@ -31,7 +32,16 @@ public final class CacheUtils {
     private CacheUtils() {
     }
 
-    public static CacheManager createCacheManager(HazelcastInstance hazelcastInstance) {
+    public static <K, V> ICache<K, V> getCache(HazelcastInstance hazelcastInstance, String cacheName) {
+        return getCache(createCacheManager(hazelcastInstance), cacheName);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K, V> ICache<K, V> getCache(HazelcastCacheManager cacheManager, String cacheName) {
+        return cacheManager.getCache(cacheName).unwrap(ICache.class);
+    }
+
+    public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance) {
         if (isMemberNode(hazelcastInstance)) {
             return createCacheManager(hazelcastInstance, new HazelcastServerCachingProvider());
         } else {
@@ -39,7 +49,7 @@ public final class CacheUtils {
         }
     }
 
-    public static CacheManager createCacheManager(HazelcastInstance hazelcastInstance, CachingProvider cachingProvider) {
+    public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, CachingProvider cachingProvider) {
         if (isMemberNode(hazelcastInstance)) {
             return createCacheManager(hazelcastInstance, (HazelcastServerCachingProvider) cachingProvider);
         } else {

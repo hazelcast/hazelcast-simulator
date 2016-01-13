@@ -27,12 +27,11 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
-import javax.cache.CacheManager;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
+import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.getCache;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
@@ -40,20 +39,30 @@ public class ExpiryICacheTest {
 
     private static final ILogger LOGGER = Logger.getLogger(ExpiryICacheTest.class);
 
-    //default keyCount entries of int,  is upper bound to approx 8MB possible max, if all put in side expiryPolicy time
+    // default keyCount entries of int, is upper bound to approx 8MB possible max, if all put inside expiryPolicy time
     public int keyCount = 1000000;
     public String basename = ExpiryICacheTest.class.getSimpleName();
 
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
 
-    private ICache cache;
+    private ICache<Long, Integer> cache;
 
     @Setup
     public void setup(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
+        cache = getCache(hazelcastInstance, basename);
+    }
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
-        cache = (ICache) cacheManager.getCache(basename);
+    @Verify(global = false)
+    public void globalVerify() {
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                int cacheSize = cache.size();
+                LOGGER.info(basename + " ICache size: " + cacheSize);
+                assertEquals(basename + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
+            }
+        });
     }
 
     @RunWithWorker
@@ -64,32 +73,12 @@ public class ExpiryICacheTest {
     private class Worker extends AbstractMonotonicWorker {
 
         @Override
-        protected void beforeRun() {
-        }
-
-        @Override
         public void timeStep() {
-            long key = getRandom().nextInt(keyCount);
+            long key = randomInt(keyCount);
             if (!cache.containsKey(key)) {
                 cache.put(key, 0, expiryPolicy);
             }
         }
-
-        @Override
-        protected void afterRun() {
-        }
-    }
-
-    @Verify(global = false)
-    public void globalVerify() {
-
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                LOGGER.info(basename + " cache size = " + cache.size());
-                assertEquals(basename + ": ICache should be empty, TTL events not processed", 0, cache.size());
-            }
-        });
     }
 
     public static void main(String[] args) throws Exception {
