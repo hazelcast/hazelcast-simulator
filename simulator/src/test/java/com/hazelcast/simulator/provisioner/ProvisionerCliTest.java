@@ -23,6 +23,8 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecur
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -55,10 +57,37 @@ public class ProvisionerCliTest {
     @Test
     public void testInit() {
         provisioner = init(getArgs());
-        ComponentRegistry componentRegistry = provisioner.getComponentRegistry();
 
+        ComponentRegistry componentRegistry = provisioner.getComponentRegistry();
         assertEquals(1, componentRegistry.agentCount());
         assertEquals("127.0.0.1", componentRegistry.getFirstAgent().getPublicAddress());
+        assertNull(provisioner.getHazelcastJARs());
+    }
+
+    @Test
+    public void testInit_withHazelcastUpload() {
+        args.add("--uploadHazelcast");
+
+        provisioner = init(getArgs());
+
+        ComponentRegistry componentRegistry = provisioner.getComponentRegistry();
+        assertEquals(1, componentRegistry.agentCount());
+        assertEquals("127.0.0.1", componentRegistry.getFirstAgent().getPublicAddress());
+        assertNotNull(provisioner.getHazelcastJARs());
+    }
+
+    @Test
+    public void testInit_withHazelcastUpload_withEnterpriseEnabled_withOutOfTheBox() {
+        args.add("--uploadHazelcast");
+        args.add("--enterpriseEnabled");
+        args.add("true");
+
+        provisioner = init(getArgs());
+
+        ComponentRegistry componentRegistry = provisioner.getComponentRegistry();
+        assertEquals(1, componentRegistry.agentCount());
+        assertEquals("127.0.0.1", componentRegistry.getFirstAgent().getPublicAddress());
+        assertNull(provisioner.getHazelcastJARs());
     }
 
     @Test(expected = ExitStatusZeroException.class)

@@ -22,6 +22,7 @@ import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersi
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.newInstance;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
@@ -71,6 +72,21 @@ public class HazelcastJARsTest {
         assertEquals("outofthebox", directoryForVersionSpec(OUT_OF_THE_BOX));
         assertEquals("git-tag-3.6", directoryForVersionSpec("git=tag=3.6"));
         assertEquals("maven-3.6", directoryForVersionSpec("maven=3.6"));
+    }
+
+    @Test
+    public void testIsPrepareRequired() {
+        assertTrue(HazelcastJARs.isPrepareRequired("maven=3.6"));
+    }
+
+    @Test
+    public void testIsPrepareRequired_outOfTheBox() {
+        assertFalse(HazelcastJARs.isPrepareRequired(OUT_OF_THE_BOX));
+    }
+
+    @Test
+    public void testIsPrepareRequired_bringMyOwn() {
+        assertFalse(HazelcastJARs.isPrepareRequired(BRING_MY_OWN));
     }
 
     @Test
@@ -150,6 +166,19 @@ public class HazelcastJARsTest {
     public void testPrepare_invalidVersionSpec() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs("invalidSpec");
         hazelcastJARs.prepare(false);
+    }
+
+    @Test
+    public void testUpload_allVersions() {
+        HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=3.6");
+        String sourceDir = hazelcastJARs.getAbsolutePath("maven=3.6");
+        String targetDir = directoryForVersionSpec("maven=3.6");
+
+        hazelcastJARs.upload("127.0.0.1", "simulatorHome");
+
+        verify(bash, times(1)).ssh(eq("127.0.0.1"), contains(targetDir));
+        verify(bash, times(1)).uploadToRemoteSimulatorDir(eq("127.0.0.1"), contains(sourceDir), anyString());
+        verifyNoMoreInteractions(bash);
     }
 
     @Test

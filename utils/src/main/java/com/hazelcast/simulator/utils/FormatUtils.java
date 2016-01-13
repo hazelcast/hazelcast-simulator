@@ -24,7 +24,7 @@ import static java.util.Arrays.fill;
 public final class FormatUtils {
 
     public static final String NEW_LINE = System.getProperty("line.separator");
-    public static final String HORIZONTAL_RULER = "==============================================================";
+    public static final String HORIZONTAL_RULER = "=========================================================================";
 
     private static final double ONE_HUNDRED = 100;
     private static final int IP_ADDRESS_LENGTH = 15;

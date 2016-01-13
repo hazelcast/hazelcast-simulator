@@ -84,10 +84,18 @@ public class HazelcastJARs {
         return versionSpec.replace('=', '-');
     }
 
+    public static boolean isPrepareRequired(String versionSpec) {
+        return (!OUT_OF_THE_BOX.equals(versionSpec) && !BRING_MY_OWN.equals(versionSpec));
+    }
+
     public void prepare(boolean prepareEnterpriseJARs) {
         for (Map.Entry<String, File> versionSpecEntry : versionSpecDirs.entrySet()) {
             prepare(versionSpecEntry.getKey(), versionSpecEntry.getValue(), prepareEnterpriseJARs);
         }
+    }
+
+    public void upload(String ip, String simulatorHome) {
+        upload(ip, simulatorHome, versionSpecDirs.keySet());
     }
 
     public void upload(String ip, String simulatorHome, Set<String> versionSpecs) {
@@ -126,7 +134,7 @@ public class HazelcastJARs {
 
     private void prepare(String versionSpec, File targetDir, boolean prepareEnterpriseJARs) {
         LOGGER.info("Hazelcast version-spec: " + versionSpec);
-        if (OUT_OF_THE_BOX.equals(versionSpec) || BRING_MY_OWN.equals(versionSpec)) {
+        if (!isPrepareRequired(versionSpec)) {
             if (prepareEnterpriseJARs) {
                 LOGGER.warn("You have to deploy the Hazelcast Enterprise JARs on your own!");
             }

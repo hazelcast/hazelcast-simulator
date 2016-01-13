@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
@@ -78,17 +79,20 @@ public class Provisioner {
     private final SimulatorProperties properties;
     private final ComputeService computeService;
     private final Bash bash;
+    private final HazelcastJARs hazelcastJARs;
 
     private final int machineWarmupSeconds;
 
     private final ComponentRegistry componentRegistry;
     private final File initScriptFile;
 
-    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash) {
-        this(properties, computeService, bash, MACHINE_WARMUP_WAIT_SECONDS);
+    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, HazelcastJARs hazelcastJARs,
+                       boolean enterpriseEnabled) {
+        this(properties, computeService, bash, hazelcastJARs, enterpriseEnabled, MACHINE_WARMUP_WAIT_SECONDS);
     }
 
-    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, int machineWarmupSeconds) {
+    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, HazelcastJARs hazelcastJARs,
+                       boolean enterpriseEnabled, int machineWarmupSeconds) {
         echo("Hazelcast Simulator Provisioner");
         echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
         echo("SIMULATOR_HOME: %s", SIMULATOR_HOME);
@@ -96,11 +100,25 @@ public class Provisioner {
         this.properties = properties;
         this.computeService = computeService;
         this.bash = bash;
+        this.hazelcastJARs = hazelcastJARs;
 
         this.machineWarmupSeconds = machineWarmupSeconds;
 
         this.componentRegistry = loadComponentRegister(agentsFile, false);
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
+
+        if (hazelcastJARs != null) {
+            echo("Preparing Hazelcast JARs...");
+            hazelcastJARs.prepare(enterpriseEnabled);
+        } else if (enterpriseEnabled) {
+            String hazelcastVersionSpec = properties.getHazelcastVersionSpec();
+            echoImportant("WARNING: Hazelcast Enterprise JARs will not be uploaded for %s!", hazelcastVersionSpec);
+        }
+    }
+
+    // just for testing
+    HazelcastJARs getHazelcastJARs() {
+        return hazelcastJARs;
     }
 
     // just for testing
@@ -125,21 +143,21 @@ public class Provisioner {
     }
 
     void installSimulator() {
-        echoImportant("Installing Simulator on %s machines", componentRegistry.agentCount());
+        echoImportant("Installing Simulator on %d machines", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Installing Simulator on " + agentData.getPublicAddress());
-                    installSimulator(agentData.getPublicAddress());
+                    echo("Installing Simulator on %s", agentData.getPublicAddress());
+                    uploadJARs(agentData.getPublicAddress());
                 }
             });
         }
         spawner.awaitCompletion();
 
-        echoImportant("Installing Simulator on %s machines", componentRegistry.agentCount());
+        echoImportant("Installing Simulator on %d machines", componentRegistry.agentCount());
     }
 
     void listMachines() {
@@ -359,29 +377,29 @@ public class Provisioner {
         }
     }
 
-    private void installSimulator(String ip) {
+    private void uploadJARs(String ip) {
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", getSimulatorVersion()));
 
         // first we delete the old lib files to prevent different versions of the same JAR to bite us
         bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", getSimulatorVersion()));
 
         // upload Simulator JARs
-        uploadLibraryJar(ip, "simulator-*");
-        uploadLibraryJar(ip, "probes-*");
-        uploadLibraryJar(ip, "tests-*");
-        uploadLibraryJar(ip, "utils-*");
+        uploadToLibraryJar(ip, "simulator-*");
+        uploadToLibraryJar(ip, "probes-*");
+        uploadToLibraryJar(ip, "tests-*");
+        uploadToLibraryJar(ip, "utils-*");
 
         // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
-        uploadLibraryJar(ip, "cache-api*");
-        uploadLibraryJar(ip, "commons-codec*");
-        uploadLibraryJar(ip, "commons-lang3*");
-        uploadLibraryJar(ip, "gson-*");
-        uploadLibraryJar(ip, "guava-*");
-        uploadLibraryJar(ip, "jopt*");
-        uploadLibraryJar(ip, "junit*");
-        uploadLibraryJar(ip, "HdrHistogram-*");
-        uploadLibraryJar(ip, "log4j*");
-        uploadLibraryJar(ip, "netty-*");
+        uploadToLibraryJar(ip, "cache-api*");
+        uploadToLibraryJar(ip, "commons-codec*");
+        uploadToLibraryJar(ip, "commons-lang3*");
+        uploadToLibraryJar(ip, "gson-*");
+        uploadToLibraryJar(ip, "guava-*");
+        uploadToLibraryJar(ip, "jopt*");
+        uploadToLibraryJar(ip, "junit*");
+        uploadToLibraryJar(ip, "HdrHistogram-*");
+        uploadToLibraryJar(ip, "log4j*");
+        uploadToLibraryJar(ip, "netty-*");
 
         // upload remaining files
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");
@@ -393,11 +411,17 @@ public class Provisioner {
         // purge Hazelcast JARs
         bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", getSimulatorVersion()));
 
+        // upload Hazelcast JARs if configured
+        if (hazelcastJARs != null) {
+            echo("Uploading Hazelcast JARs on %s", ip);
+            hazelcastJARs.upload(ip, SIMULATOR_HOME);
+        }
+
         String initScript = loadInitScript();
         bash.ssh(ip, initScript);
     }
 
-    private void uploadLibraryJar(String ip, String jarName) {
+    private void uploadToLibraryJar(String ip, String jarName) {
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/" + jarName, "lib");
     }
 
@@ -442,7 +466,7 @@ public class Provisioner {
             }
 
             echo(INDENTATION + ip + " SIMULATOR INSTALLATION STARTED...");
-            installSimulator(ip);
+            uploadJARs(ip);
             echo(INDENTATION + ip + " SIMULATOR INSTALLED");
 
             if (startHarakiriMonitorCommand != null) {
