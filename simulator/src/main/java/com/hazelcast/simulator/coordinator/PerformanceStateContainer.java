@@ -19,11 +19,11 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,18 +52,18 @@ public class PerformanceStateContainer {
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
-    // this map holds a map per Worker SimulatorAddress which contains the last PerformanceState per testCaseId
+    // holds a map per Worker SimulatorAddress which contains the last PerformanceState per testCaseId
     private final ConcurrentMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>> workerLastPerformanceStateMap
             = new ConcurrentHashMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>>();
 
-    // this map holds an AtomicReference per testCaseId with a List of WorkerPerformanceState instances over time
-    private final ConcurrentMap<String, AtomicReference<List<WorkerPerformanceState>>> testPerformanceStateList
-            = new ConcurrentHashMap<String, AtomicReference<List<WorkerPerformanceState>>>();
+    // holds an AtomicReference per testCaseId with a queue of WorkerPerformanceState instances over time
+    private final ConcurrentMap<String, AtomicReference<Queue<WorkerPerformanceState>>> testPerformanceStateQueue
+            = new ConcurrentHashMap<String, AtomicReference<Queue<WorkerPerformanceState>>>();
 
     public void init(String testCaseId) {
-        List<WorkerPerformanceState> list = new ArrayList<WorkerPerformanceState>();
-        AtomicReference<List<WorkerPerformanceState>> atomicReference = new AtomicReference<List<WorkerPerformanceState>>(list);
-        testPerformanceStateList.put(testCaseId, atomicReference);
+        Queue<WorkerPerformanceState> queue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
+        AtomicReference<Queue<WorkerPerformanceState>> reference = new AtomicReference<Queue<WorkerPerformanceState>>(queue);
+        testPerformanceStateQueue.put(testCaseId, reference);
     }
 
     public void updatePerformanceState(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
@@ -71,10 +71,11 @@ public class PerformanceStateContainer {
             String testCaseId = entry.getKey();
             PerformanceState performanceState = entry.getValue();
 
-            ConcurrentMap<String, PerformanceState> map = getOrCreateLastPerformanceStateMap(workerAddress);
-            map.put(testCaseId, performanceState);
+            ConcurrentMap<String, PerformanceState> lastPerformanceStateMap = getOrCreateLastPerformanceStateMap(workerAddress);
+            lastPerformanceStateMap.put(testCaseId, performanceState);
 
-            testPerformanceStateList.get(testCaseId).get().add(new WorkerPerformanceState(workerAddress, performanceState));
+            Queue<WorkerPerformanceState> performanceStateQueue = testPerformanceStateQueue.get(testCaseId).get();
+            performanceStateQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
         }
     }
 
@@ -107,14 +108,15 @@ public class PerformanceStateContainer {
     }
 
     PerformanceState getPerformanceStateForTestCase(String testCaseId) {
-        // return if no list of WorkerPerformanceState can be found (unknown testCaseId)
-        AtomicReference<List<WorkerPerformanceState>> atomicReference = testPerformanceStateList.get(testCaseId);
+        // return if no queue of WorkerPerformanceState can be found (unknown testCaseId)
+        AtomicReference<Queue<WorkerPerformanceState>> atomicReference = testPerformanceStateQueue.get(testCaseId);
         if (atomicReference == null) {
             return new PerformanceState();
         }
 
-        // swap list of WorkerPerformanceState for this testCaseId
-        List<WorkerPerformanceState> performanceStates = atomicReference.getAndSet(new ArrayList<WorkerPerformanceState>());
+        // swap queue of WorkerPerformanceState for this testCaseId
+        ConcurrentLinkedQueue<WorkerPerformanceState> newQueue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
+        Queue<WorkerPerformanceState> performanceStates = atomicReference.getAndSet(newQueue);
 
         // aggregate the PerformanceState instances per Worker by maximum values (since from same Worker)
         Map<SimulatorAddress, PerformanceState> workerPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
