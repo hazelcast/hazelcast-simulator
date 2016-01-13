@@ -123,14 +123,14 @@ public class FailureContainer {
         return finishedWorkers.keySet();
     }
 
-    boolean waitForWorkerShutdown(int expectedFinishedWorkerCount, int timeoutSeconds) {
+    boolean waitForWorkerShutdown(int expectedWorkerCount, int timeoutSeconds) {
         long started = System.nanoTime();
-        LOGGER.info(format("Waiting %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedFinishedWorkerCount));
+        LOGGER.info(format("Waiting up to %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedWorkerCount));
         long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
-        while (finishedWorkers.size() < expectedFinishedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
+        while (finishedWorkers.size() < expectedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
             sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
         }
-        int remainingWorkers = expectedFinishedWorkerCount - finishedWorkers.size();
+        int remainingWorkers = expectedWorkerCount - finishedWorkers.size();
         if (remainingWorkers > 0) {
             LOGGER.warn(format("Aborted waiting for shutdown of all Workers (%d still running)...", remainingWorkers));
             return false;
