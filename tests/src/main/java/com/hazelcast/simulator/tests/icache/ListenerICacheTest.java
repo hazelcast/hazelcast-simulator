@@ -24,13 +24,12 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.icache.helpers.CacheUtils;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-import javax.cache.CacheManager;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
@@ -41,7 +40,6 @@ import java.io.Serializable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
@@ -71,7 +69,7 @@ public class ListenerICacheTest {
     public int maxExpiryDurationMs = 500;
     public boolean syncEvents = true;
 
-    public double put = 0.5;
+    public double put = 0.8;
     public double putExpiry = 0.0;
     public double putAsyncExpiry = 0.0;
     public double getExpiry = 0.0;
@@ -83,7 +81,7 @@ public class ListenerICacheTest {
 
     private IList<Counter> results;
     private IList<ICacheEntryListener> listeners;
-    private CacheManager cacheManager;
+
     private ICache<Integer, Long> cache;
     private ICacheEntryListener<Integer, Long> listener;
     private ICacheEntryEventFilter<Integer, Long> filter;
@@ -94,7 +92,15 @@ public class ListenerICacheTest {
         results = hazelcastInstance.getList(basename);
         listeners = hazelcastInstance.getList(basename + "listeners");
 
-        cacheManager = createCacheManager(hazelcastInstance);
+        cache = CacheUtils.getCache(hazelcastInstance, basename);
+        listener = new ICacheEntryListener<Integer, Long>();
+        filter = new ICacheEntryEventFilter<Integer, Long>();
+
+        CacheEntryListenerConfiguration<Integer, Long> config = new MutableCacheEntryListenerConfiguration<Integer, Long>(
+                FactoryBuilder.factoryOf(listener),
+                FactoryBuilder.factoryOf(filter),
+                false, syncEvents);
+        cache.registerCacheEntryListener(config);
 
         builder.addOperation(Operation.PUT, put)
                 .addOperation(Operation.PUT_EXPIRY, putExpiry)
@@ -105,42 +111,26 @@ public class ListenerICacheTest {
                 .addOperation(Operation.REPLACE, replace);
     }
 
-    @Warmup(global = false)
-    public void warmup() {
-        cache = (ICache<Integer, Long>) cacheManager.<Integer, Long>getCache(basename);
-
-        listener = new ICacheEntryListener<Integer, Long>();
-        filter = new ICacheEntryEventFilter<Integer, Long>();
-
-        CacheEntryListenerConfiguration<Integer, Long> conf = new MutableCacheEntryListenerConfiguration<Integer, Long>(
-                FactoryBuilder.factoryOf(listener),
-                FactoryBuilder.factoryOf(filter),
-                false, syncEvents);
-
-        cache.registerCacheEntryListener(conf);
-    }
-
     @Verify(global = false)
-    public void verify() {
-        LOGGER.info(basename + ": listener " + listener);
-        LOGGER.info(basename + ": filter " + filter);
+    public void localVerify() {
+        LOGGER.info(basename + " Listener " + listener);
+        LOGGER.info(basename + " Filter " + filter);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
-        Counter total = new Counter();
-        for (Counter i : results) {
-            total.add(i);
+        Counter totalCounter = new Counter();
+        for (Counter counter : results) {
+            totalCounter.add(counter);
         }
-        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads");
+        LOGGER.info(basename + " " + totalCounter + " from " + results.size() + " Worker threads");
 
         ICacheEntryListener totalEvents = new ICacheEntryListener();
         for (ICacheEntryListener entryListener : listeners) {
             totalEvents.add(entryListener);
         }
-        LOGGER.info(basename + ": totalEvents " + totalEvents);
-
-        assertEquals(basename + ": unExpected Events found ", 0, totalEvents.getUnexpected());
+        LOGGER.info(basename + " totalEvents: " + totalEvents);
+        assertEquals(basename + " unexpected events found", 0, totalEvents.getUnexpected());
     }
 
     @RunWithWorker
@@ -214,8 +204,9 @@ public class ListenerICacheTest {
 
         @Override
         public void afterCompletion() {
-            sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
             listeners.add(listener);
+
+            sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
         }
     }
 
