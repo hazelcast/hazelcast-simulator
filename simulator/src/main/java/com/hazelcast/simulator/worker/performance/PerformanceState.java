@@ -52,6 +52,10 @@ public class PerformanceState {
     }
 
     public void add(PerformanceState other) {
+        add(other, true);
+    }
+
+    public void add(PerformanceState other, boolean addOperationCountAndThroughput) {
         if (other.isEmpty()) {
             return;
         }
@@ -65,9 +69,15 @@ public class PerformanceState {
             intervalPercentileLatency = other.intervalPercentileLatency;
             intervalMaxLatency = other.intervalMaxLatency;
         } else {
-            operationCount += other.operationCount;
-            intervalThroughput += other.intervalThroughput;
-            totalThroughput += other.totalThroughput;
+            if (addOperationCountAndThroughput) {
+                operationCount += other.operationCount;
+                intervalThroughput += other.intervalThroughput;
+                totalThroughput += other.totalThroughput;
+            } else {
+                operationCount = max(operationCount, other.operationCount);
+                intervalThroughput = max(intervalThroughput, other.intervalThroughput);
+                totalThroughput = max(totalThroughput, other.totalThroughput);
+            }
 
             intervalAvgLatency = max(intervalAvgLatency, other.intervalAvgLatency);
             intervalPercentileLatency = max(intervalPercentileLatency, other.intervalPercentileLatency);

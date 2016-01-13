@@ -259,6 +259,8 @@ final class TestCaseRunner implements TestPhaseListener {
         @Override
         public void run() {
             try {
+                performanceStateContainer.init(testCaseId);
+
                 echo(format("Test will run for %s", secondsToHuman(testSuite.getDurationSeconds())));
                 sleepUntilFailure(testSuite.getDurationSeconds());
                 echo("Test finished running");

@@ -19,11 +19,14 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -49,12 +52,30 @@ public class PerformanceStateContainer {
 
     private static final Logger LOGGER = Logger.getLogger(PerformanceStateContainer.class);
 
-    private final ConcurrentMap<SimulatorAddress, Map<String, PerformanceState>> workerPerformanceStateMap
-            = new ConcurrentHashMap<SimulatorAddress, Map<String, PerformanceState>>();
+    // this map holds a map per Worker SimulatorAddress which contains the last PerformanceState per testCaseId
+    private final ConcurrentMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>> workerLastPerformanceStateMap
+            = new ConcurrentHashMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>>();
 
-    public synchronized void updatePerformanceState(SimulatorAddress workerAddress,
-                                                    Map<String, PerformanceState> performanceStates) {
-        workerPerformanceStateMap.put(workerAddress, performanceStates);
+    // this map holds an AtomicReference per testCaseId with a List of WorkerPerformanceState instances over time
+    private final ConcurrentMap<String, AtomicReference<List<WorkerPerformanceState>>> testPerformanceStateList
+            = new ConcurrentHashMap<String, AtomicReference<List<WorkerPerformanceState>>>();
+
+    public void init(String testCaseId) {
+        List<WorkerPerformanceState> list = new ArrayList<WorkerPerformanceState>();
+        AtomicReference<List<WorkerPerformanceState>> atomicReference = new AtomicReference<List<WorkerPerformanceState>>(list);
+        testPerformanceStateList.put(testCaseId, atomicReference);
+    }
+
+    public void updatePerformanceState(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
+        for (Map.Entry<String, PerformanceState> entry : performanceStates.entrySet()) {
+            String testCaseId = entry.getKey();
+            PerformanceState performanceState = entry.getValue();
+
+            ConcurrentMap<String, PerformanceState> map = getOrCreateLastPerformanceStateMap(workerAddress);
+            map.put(testCaseId, performanceState);
+
+            testPerformanceStateList.get(testCaseId).get().add(new WorkerPerformanceState(workerAddress, performanceState));
+        }
     }
 
     public String getPerformanceNumbers(String testCaseId) {
@@ -85,13 +106,31 @@ public class PerformanceStateContainer {
         );
     }
 
-    synchronized PerformanceState getPerformanceStateForTestCase(String testCaseId) {
-        PerformanceState performanceState = new PerformanceState();
-        for (Map<String, PerformanceState> performanceStateMap : workerPerformanceStateMap.values()) {
-            PerformanceState workerPerformanceState = performanceStateMap.get(testCaseId);
-            if (workerPerformanceState != null) {
-                performanceState.add(workerPerformanceState);
+    PerformanceState getPerformanceStateForTestCase(String testCaseId) {
+        // return if no list of WorkerPerformanceState can be found (unknown testCaseId)
+        AtomicReference<List<WorkerPerformanceState>> atomicReference = testPerformanceStateList.get(testCaseId);
+        if (atomicReference == null) {
+            return new PerformanceState();
+        }
+
+        // swap list of WorkerPerformanceState for this testCaseId
+        List<WorkerPerformanceState> performanceStates = atomicReference.getAndSet(new ArrayList<WorkerPerformanceState>());
+
+        // aggregate the PerformanceState instances per Worker by maximum values (since from same Worker)
+        Map<SimulatorAddress, PerformanceState> workerPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
+        for (WorkerPerformanceState workerPerformanceState : performanceStates) {
+            PerformanceState candidate = workerPerformanceStateMap.get(workerPerformanceState.simulatorAddress);
+            if (candidate == null) {
+                workerPerformanceStateMap.put(workerPerformanceState.simulatorAddress, workerPerformanceState.performanceState);
+            } else {
+                candidate.add(workerPerformanceState.performanceState, false);
             }
+        }
+
+        // aggregate the PerformanceState instances from all Workers by adding values (since from different Workers)
+        PerformanceState performanceState = new PerformanceState();
+        for (PerformanceState workerPerformanceState : workerPerformanceStateMap.values()) {
+            performanceState.add(workerPerformanceState);
         }
         return performanceState;
     }
@@ -127,23 +166,50 @@ public class PerformanceStateContainer {
         }
     }
 
-    synchronized void calculatePerformanceStates(PerformanceState totalPerformanceState,
-                                                 Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap) {
-        for (Map.Entry<SimulatorAddress, Map<String, PerformanceState>> workerEntry : workerPerformanceStateMap.entrySet()) {
+    void calculatePerformanceStates(PerformanceState totalPerformanceState,
+                                    Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap) {
+        for (Map.Entry<SimulatorAddress, ConcurrentMap<String, PerformanceState>> workerEntry
+                : workerLastPerformanceStateMap.entrySet()) {
             SimulatorAddress agentAddress = workerEntry.getKey().getParent();
 
+            // get or create PerformanceState for agentAddress
             PerformanceState agentPerformanceState = agentPerformanceStateMap.get(agentAddress);
             if (agentPerformanceState == null) {
                 agentPerformanceState = new PerformanceState();
                 agentPerformanceStateMap.put(agentAddress, agentPerformanceState);
             }
 
+            // aggregate the PerformanceState instances per Agent and in total
             for (PerformanceState performanceState : workerEntry.getValue().values()) {
                 if (performanceState != null) {
                     totalPerformanceState.add(performanceState);
                     agentPerformanceState.add(performanceState);
                 }
             }
+        }
+    }
+
+    private ConcurrentMap<String, PerformanceState> getOrCreateLastPerformanceStateMap(SimulatorAddress workerAddress) {
+        ConcurrentMap<String, PerformanceState> map = workerLastPerformanceStateMap.get(workerAddress);
+        if (map != null) {
+            return map;
+        }
+        ConcurrentMap<String, PerformanceState> candidate = new ConcurrentHashMap<String, PerformanceState>();
+        map = workerLastPerformanceStateMap.putIfAbsent(workerAddress, candidate);
+        if (map != null) {
+            return map;
+        }
+        return candidate;
+    }
+
+    private static final class WorkerPerformanceState {
+
+        private final SimulatorAddress simulatorAddress;
+        private final PerformanceState performanceState;
+
+        WorkerPerformanceState(SimulatorAddress simulatorAddress, PerformanceState performanceState) {
+            this.simulatorAddress = simulatorAddress;
+            this.performanceState = performanceState;
         }
     }
 }
