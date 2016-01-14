@@ -156,7 +156,7 @@ final class PerformanceTracker {
         return probeResults;
     }
 
-    private static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {
+    static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {
         try {
             File latencyFile = getLatencyFile(testId, probeName);
             HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
@@ -170,7 +170,7 @@ final class PerformanceTracker {
         }
     }
 
-    private static HistogramLogReader createHistogramLogReader(String testName, String probeName) {
+    static HistogramLogReader createHistogramLogReader(String testName, String probeName) {
         try {
             File latencyFile = getLatencyFile(testName, probeName);
             return new HistogramLogReader(latencyFile);
