@@ -384,22 +384,22 @@ public class Provisioner {
         bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", getSimulatorVersion()));
 
         // upload Simulator JARs
-        uploadToLibraryJar(ip, "simulator-*");
-        uploadToLibraryJar(ip, "probes-*");
-        uploadToLibraryJar(ip, "tests-*");
-        uploadToLibraryJar(ip, "utils-*");
+        uploadLibraryJar(ip, "simulator-*");
+        uploadLibraryJar(ip, "probes-*");
+        uploadLibraryJar(ip, "tests-*");
+        uploadLibraryJar(ip, "utils-*");
 
         // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
-        uploadToLibraryJar(ip, "cache-api*");
-        uploadToLibraryJar(ip, "commons-codec*");
-        uploadToLibraryJar(ip, "commons-lang3*");
-        uploadToLibraryJar(ip, "gson-*");
-        uploadToLibraryJar(ip, "guava-*");
-        uploadToLibraryJar(ip, "jopt*");
-        uploadToLibraryJar(ip, "junit*");
-        uploadToLibraryJar(ip, "HdrHistogram-*");
-        uploadToLibraryJar(ip, "log4j*");
-        uploadToLibraryJar(ip, "netty-*");
+        uploadLibraryJar(ip, "cache-api*");
+        uploadLibraryJar(ip, "commons-codec*");
+        uploadLibraryJar(ip, "commons-lang3*");
+        uploadLibraryJar(ip, "gson-*");
+        uploadLibraryJar(ip, "guava-*");
+        uploadLibraryJar(ip, "jopt*");
+        uploadLibraryJar(ip, "junit*");
+        uploadLibraryJar(ip, "HdrHistogram-*");
+        uploadLibraryJar(ip, "log4j*");
+        uploadLibraryJar(ip, "netty-*");
 
         // upload remaining files
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");
@@ -421,7 +421,7 @@ public class Provisioner {
         bash.ssh(ip, initScript);
     }
 
-    private void uploadToLibraryJar(String ip, String jarName) {
+    private void uploadLibraryJar(String ip, String jarName) {
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/" + jarName, "lib");
     }
 
