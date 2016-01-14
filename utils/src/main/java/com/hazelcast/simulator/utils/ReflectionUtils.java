@@ -15,16 +15,40 @@
  */
 package com.hazelcast.simulator.utils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.String.format;
 
 public final class ReflectionUtils {
 
     private ReflectionUtils() {
+    }
+
+    public static Field getFirstField(Class classType, Class<? extends Annotation> annotationClass) {
+        List<Field> fields = getFields(classType, annotationClass);
+        if (fields.isEmpty()) {
+            return null;
+        }
+        return fields.get(0);
+    }
+
+    public static List<Field> getFields(Class classType, Class<? extends Annotation> annotationClass) {
+        List<Field> fields = new ArrayList<Field>();
+        do {
+            for (Field field : classType.getDeclaredFields()) {
+                if (field.isAnnotationPresent(annotationClass)) {
+                    fields.add(field);
+                }
+            }
+            classType = classType.getSuperclass();
+        } while (classType != null);
+        return fields;
     }
 
     public static Field getField(Class classType, String fieldName, Class fieldType) {

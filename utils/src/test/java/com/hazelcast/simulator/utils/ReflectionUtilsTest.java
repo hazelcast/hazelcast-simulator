@@ -2,12 +2,19 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFields;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFirstField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -24,6 +31,40 @@ public class ReflectionUtilsTest {
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(ReflectionUtils.class);
+    }
+
+    @Test
+    public void testGetFirstField() {
+        Field field = getFirstField(GetFieldByAnnotationTest.class, InjectTest.class);
+        assertNotNull(field);
+        assertEquals("firstField", field.getName());
+    }
+
+    @Test
+    public void testGetFirstField_notFound() {
+        Field field = getFirstField(GetFieldTest.class, InjectTest.class);
+        assertNull(field);
+    }
+
+    @Test
+    public void testGetFields() {
+        List<Field> fields = getFields(GetFieldByAnnotationTest.class, InjectTest.class);
+        assertEquals(3, fields.size());
+
+        Field firstField = fields.get(0);
+        assertEquals("firstField", firstField.getName());
+
+        Field secondField = fields.get(1);
+        assertEquals("secondField", secondField.getName());
+
+        Field parentField = fields.get(2);
+        assertEquals("parentField", parentField.getName());
+    }
+
+    @Test
+    public void testGetFields_notFound() {
+        List<Field> fields = getFields(GetFieldTest.class, InjectTest.class);
+        assertTrue(fields.isEmpty());
     }
 
     @Test
@@ -175,6 +216,28 @@ public class ReflectionUtilsTest {
     public void testGetFieldValueInternal_privateField() {
         Field field = getField(StaticClass.class, "staticField", int.class);
         getFieldValueInternal(null, field, "StaticClass", "staticField");
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    private @interface InjectTest {
+    }
+
+    @SuppressWarnings("unused")
+    private static final class GetFieldByAnnotationTest extends GetFieldByAnnotationParent {
+
+        @InjectTest
+        private String firstField;
+
+        @InjectTest
+        private String secondField;
+    }
+
+    @SuppressWarnings("unused")
+    private static class GetFieldByAnnotationParent {
+
+        @InjectTest
+        private String parentField;
     }
 
     @SuppressWarnings("unused")
