@@ -127,11 +127,7 @@ public class RemoteClient {
             joinThread(workerPingThread);
         }
 
-        // shutdown non-member Workers first
-        sendToAllWorkers(new TerminateWorkerOperation(false));
-
-        // after that shutdown member Workers
-        sendToAllWorkers(new TerminateWorkerOperation(true));
+        sendToAllWorkers(new TerminateWorkerOperation());
     }
 
     public void initTestSuite(TestSuite testSuite) {

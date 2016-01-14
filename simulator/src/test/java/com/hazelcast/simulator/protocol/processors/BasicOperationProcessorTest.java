@@ -89,8 +89,8 @@ public class BasicOperationProcessorTest {
     }
 
     @Test
-    public void testOtherOperation() throws Exception {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(true);
+    public void testOtherOperation() {
+        TerminateWorkerOperation operation = new TerminateWorkerOperation();
 
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 
