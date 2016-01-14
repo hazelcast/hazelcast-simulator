@@ -77,8 +77,18 @@ public class RemoteClient {
 
         sendToAllAgents(new StartTimeoutDetectionOperation());
         if (startPokeThread) {
-            workerPingThread.start();
+            startWorkerPingThread();
         }
+    }
+
+    void startWorkerPingThread() {
+        workerPingThread.start();
+    }
+
+    void stopWorkerPingThread() {
+        workerPingThread.running = false;
+        workerPingThread.interrupt();
+        joinThread(workerPingThread);
     }
 
     private void createWorkersByType(ClusterLayout clusterLayout, boolean isMemberType) {
@@ -122,9 +132,7 @@ public class RemoteClient {
         if (stopPokeThread) {
             sendToAllAgents(new StopTimeoutDetectionOperation());
 
-            workerPingThread.running = false;
-            workerPingThread.interrupt();
-            joinThread(workerPingThread);
+            stopWorkerPingThread();
         }
 
         sendToAllWorkers(new TerminateWorkerOperation());
@@ -195,7 +203,6 @@ public class RemoteClient {
                     if (e.getCause() instanceof InterruptedException) {
                         break;
                     }
-                    throw e;
                 }
             }
         }

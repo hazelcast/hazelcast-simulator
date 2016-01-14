@@ -4,6 +4,7 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -11,6 +12,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
+import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -20,13 +22,16 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -204,6 +209,44 @@ public class RemoteClientTest {
             verify(coordinatorConnector).write(eq(firstWorkerAddress), eq(operation));
             verifyNoMoreInteractions(coordinatorConnector);
         }
+    }
+
+    @Test
+    public void testPingWorkerThread_shouldStopAfterInterruptedException() {
+        Response response = new Response(1L, ALL_WORKERS);
+        response.addResponse(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
+
+        when(coordinatorConnector.write(eq(ALL_WORKERS), any(PingOperation.class)))
+                .thenThrow(new SimulatorProtocolException("expected exception", new InterruptedException()))
+                .thenReturn(response);
+
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+        remoteClient.startWorkerPingThread();
+
+        sleepMillis(500);
+
+        verify(coordinatorConnector).write(eq(ALL_WORKERS), any(PingOperation.class));
+        verifyNoMoreInteractions(coordinatorConnector);
+    }
+
+    @Test
+    public void testPingWorkerThread_shouldContinueAfterOtherException() {
+        Response response = new Response(1L, ALL_WORKERS);
+        response.addResponse(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
+
+        when(coordinatorConnector.write(eq(ALL_WORKERS), any(PingOperation.class)))
+                .thenThrow(new SimulatorProtocolException("expected exception", new TimeoutException()))
+                .thenReturn(response);
+
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+        remoteClient.startWorkerPingThread();
+
+        sleepMillis(500);
+
+        remoteClient.stopWorkerPingThread();
+
+        verify(coordinatorConnector, atLeast(2)).write(eq(ALL_WORKERS), any(PingOperation.class));
+        verifyNoMoreInteractions(coordinatorConnector);
     }
 
     private void initMockForCreateWorkerOperation(ResponseType responseType) {
