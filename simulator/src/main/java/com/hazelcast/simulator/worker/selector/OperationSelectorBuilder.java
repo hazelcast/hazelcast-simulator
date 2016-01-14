@@ -131,8 +131,5 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
                 }
             }
         }
-        if (index < arraySize) {
-            throw new IllegalStateException(format("Operations array is not filled completely (%d/%d)", index, arraySize));
-        }
     }
 }
