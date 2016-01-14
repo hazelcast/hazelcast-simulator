@@ -203,6 +203,7 @@ public class RemoteClient {
                     if (e.getCause() instanceof InterruptedException) {
                         break;
                     }
+                    LOGGER.error("Exception in WorkerPingThread", e);
                 }
             }
         }
