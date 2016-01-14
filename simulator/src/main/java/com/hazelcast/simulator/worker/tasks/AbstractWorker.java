@@ -20,6 +20,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
+import com.hazelcast.simulator.test.annotations.InjectTestContainer;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
@@ -36,6 +37,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
+@SuppressWarnings("unused")
 public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
@@ -48,6 +50,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     final OperationSelector<O> selector;
 
     // these fields will be injected by the TestContainer
+    @InjectTestContainer
     TestContext testContext;
     @InjectProbe(useForThroughput = true)
     Probe workerProbe;
