@@ -20,6 +20,8 @@ import com.hazelcast.simulator.probes.impl.ProbeImpl;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
+import com.hazelcast.simulator.test.annotations.InjectTestContainer;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -47,7 +49,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFirstField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static java.lang.String.format;
@@ -293,8 +295,11 @@ public class TestContainer {
         // create instance to get class of worker
         Class workerClass = invokeMethod(testClassInstance, runWithWorkerMethod).getClass();
 
-        Field testContextField = getField(workerClass, "testContext", TestContext.class);
-        Field workerProbeField = getField(workerClass, "workerProbe", Probe.class);
+        Field testContextField = getFirstField(workerClass, InjectTestContainer.class);
+        Field workerProbeField = getFirstField(workerClass, InjectProbe.class);
+
+        LOGGER.warn("testContextField: " + testContextField);
+        LOGGER.warn("workerProbeField: " + workerProbeField);
 
         Probe probe = null;
         if (workerProbeField != null) {
