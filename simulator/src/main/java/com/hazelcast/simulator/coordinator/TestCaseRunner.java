@@ -111,6 +111,8 @@ final class TestCaseRunner implements TestPhaseListener {
         for (TestPhase testPhase : TestPhase.values()) {
             phaseCompletedMap.put(testPhase, new AtomicInteger());
         }
+
+        performanceStateContainer.init(testCaseId);
     }
 
     @Override
@@ -259,8 +261,6 @@ final class TestCaseRunner implements TestPhaseListener {
         @Override
         public void run() {
             try {
-                performanceStateContainer.init(testCaseId);
-
                 echo(format("Test will run for %s", secondsToHuman(testSuite.getDurationSeconds())));
                 sleepUntilFailure(testSuite.getDurationSeconds());
                 echo("Test finished running");

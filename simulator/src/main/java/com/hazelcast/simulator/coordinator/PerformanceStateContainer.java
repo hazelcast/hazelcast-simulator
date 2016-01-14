@@ -74,8 +74,13 @@ public class PerformanceStateContainer {
             ConcurrentMap<String, PerformanceState> lastPerformanceStateMap = getOrCreateLastPerformanceStateMap(workerAddress);
             lastPerformanceStateMap.put(testCaseId, performanceState);
 
-            Queue<WorkerPerformanceState> performanceStateQueue = testPerformanceStateQueue.get(testCaseId).get();
-            performanceStateQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
+            AtomicReference<Queue<WorkerPerformanceState>> atomicReference = testPerformanceStateQueue.get(testCaseId);
+            if (atomicReference != null) {
+                Queue<WorkerPerformanceState> performanceStateQueue = atomicReference.get();
+                if (performanceStateQueue != null) {
+                    performanceStateQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
+                }
+            }
         }
     }
 
