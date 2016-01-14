@@ -70,7 +70,7 @@ public class WorkerOperationProcessorTest {
         when(worker.startPerformanceMonitor()).thenReturn(true);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress);
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress, 0);
     }
 
     @Test
@@ -83,16 +83,8 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_TerminateWorkers_shutdownNonMemberWorker_onMemberWorker() {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(false);
-        processor.process(operation, COORDINATOR);
-
-        verifyNoMoreInteractions(worker);
-    }
-
-    @Test
-    public void process_TerminateWorkers_shutdownMemberWorker_onMemberWorker() {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(true);
+    public void process_TerminateWorkers_onMemberWorker() {
+        TerminateWorkerOperation operation = new TerminateWorkerOperation();
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown();
@@ -100,23 +92,13 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_TerminateWorkers_shutdownNonMemberWorker_onClientWorker() {
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
+    public void process_TerminateWorkers_onClientWorker() {
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress, 0);
 
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(false);
+        TerminateWorkerOperation operation = new TerminateWorkerOperation();
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown();
-        verifyNoMoreInteractions(worker);
-    }
-
-    @Test
-    public void process_TerminateWorkers_shutdownMemberWorker_onClientWorker() {
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
-
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(true);
-        processor.process(operation, COORDINATOR);
-
         verifyNoMoreInteractions(worker);
     }
 
