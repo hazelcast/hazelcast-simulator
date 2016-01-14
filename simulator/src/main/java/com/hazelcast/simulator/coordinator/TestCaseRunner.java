@@ -111,8 +111,6 @@ final class TestCaseRunner implements TestPhaseListener {
         for (TestPhase testPhase : TestPhase.values()) {
             phaseCompletedMap.put(testPhase, new AtomicInteger());
         }
-
-        performanceStateContainer.init(testCaseId);
     }
 
     @Override
@@ -122,6 +120,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     void run() {
         try {
+            initPerformanceMonitor();
             createTest();
             runPhase(SETUP);
 
@@ -142,6 +141,12 @@ final class TestCaseRunner implements TestPhaseListener {
             runPhase(LOCAL_TEARDOWN);
         } catch (Exception e) {
             throw rethrow(e);
+        }
+    }
+
+    private void initPerformanceMonitor() {
+        if (monitorPerformance) {
+            performanceStateContainer.init(testCaseId);
         }
     }
 
