@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
@@ -45,17 +44,16 @@ import static java.lang.String.format;
 public class TestRunner<E> {
 
     private static final int DEFAULT_DURATION_SECONDS = 60;
+    private static final int DEFAULT_SLEEP_INTERVAL_SECONDS = 5;
 
     private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
 
-    private final StopThread stopThread = new StopThread();
-    private final TestContextImpl testContext = new TestContextImpl();
-
-    private final TestContainer testInvoker;
     private final E test;
+    private final TestCase testCase;
 
-    private int durationSeconds = DEFAULT_DURATION_SECONDS;
     private HazelcastInstance hazelcastInstance;
+    private int durationSeconds = DEFAULT_DURATION_SECONDS;
+    private int sleepIntervalSeconds = DEFAULT_SLEEP_INTERVAL_SECONDS;
 
     public TestRunner(E test) {
         this(test, null);
@@ -66,26 +64,14 @@ public class TestRunner<E> {
             throw new NullPointerException("test can't be null");
         }
 
-        TestCase testCase = null;
         if (properties != null) {
             testCase = new TestCase("TestRunner", properties);
             bindProperties(test, testCase, null);
+        } else {
+            testCase = null;
         }
 
-        this.testInvoker = new TestContainer(test, testContext, testCase);
         this.test = test;
-    }
-
-    public E getTest() {
-        return test;
-    }
-
-    public long getDurationSeconds() {
-        return durationSeconds;
-    }
-
-    public HazelcastInstance getHazelcastInstance() {
-        return hazelcastInstance;
     }
 
     public TestRunner withHazelcastInstance(HazelcastInstance hz) {
@@ -122,7 +108,6 @@ public class TestRunner<E> {
         }
 
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-
         return this;
     }
 
@@ -135,13 +120,29 @@ public class TestRunner<E> {
         return this;
     }
 
-    TestRunner withSleepInterval(int sleepInterval) {
-        if (sleepInterval < 1) {
+    // just for testing
+    TestRunner withSleepInterval(int sleepIntervalSeconds) {
+        if (sleepIntervalSeconds < 1) {
             throw new IllegalArgumentException("sleepInterval can't be smaller than 1");
         }
 
-        stopThread.defaultSleepInterval = sleepInterval;
+        this.sleepIntervalSeconds = sleepIntervalSeconds;
         return this;
+    }
+
+    // just for testing
+    E getTest() {
+        return test;
+    }
+
+    // just for testing
+    HazelcastInstance getHazelcastInstance() {
+        return hazelcastInstance;
+    }
+
+    // just for testing
+    long getDurationSeconds() {
+        return durationSeconds;
     }
 
     public void run() throws Exception {
@@ -149,35 +150,40 @@ public class TestRunner<E> {
             if (hazelcastInstance == null) {
                 hazelcastInstance = Hazelcast.newHazelcastInstance();
             }
+            TestContextImpl testContext = new TestContextImpl(hazelcastInstance);
+            TestContainer testInvoker = new TestContainer(test, testContext, testCase);
 
-            runPhase(TestPhase.SETUP);
+            StopThread stopThread = new StopThread(testContext, sleepIntervalSeconds);
+            try {
+                runPhase(testInvoker, TestPhase.SETUP);
 
-            runPhase(TestPhase.LOCAL_WARMUP);
-            runPhase(TestPhase.GLOBAL_WARMUP);
+                runPhase(testInvoker, TestPhase.LOCAL_WARMUP);
+                runPhase(testInvoker, TestPhase.GLOBAL_WARMUP);
 
-            LOGGER.info("Starting run");
-            stopThread.start();
-            testInvoker.invoke(TestPhase.RUN);
-            LOGGER.info("Finished run");
+                LOGGER.info("Starting run");
+                stopThread.start();
+                testInvoker.invoke(TestPhase.RUN);
+                LOGGER.info("Finished run");
 
-            runPhase(TestPhase.GLOBAL_VERIFY);
-            runPhase(TestPhase.LOCAL_VERIFY);
+                runPhase(testInvoker, TestPhase.GLOBAL_VERIFY);
+                runPhase(testInvoker, TestPhase.LOCAL_VERIFY);
 
-            runPhase(TestPhase.GLOBAL_TEARDOWN);
-            runPhase(TestPhase.LOCAL_TEARDOWN);
+                runPhase(testInvoker, TestPhase.GLOBAL_TEARDOWN);
+                runPhase(testInvoker, TestPhase.LOCAL_TEARDOWN);
+            } finally {
+                LOGGER.info("Shutdown...");
+                stopThread.interrupt();
+                joinThread(stopThread);
+            }
         } finally {
-            LOGGER.info("Shutdown...");
             if (hazelcastInstance != null) {
                 hazelcastInstance.shutdown();
             }
-
-            stopThread.interrupt();
-            joinThread(stopThread);
             LOGGER.info("Finished");
         }
     }
 
-    private void runPhase(TestPhase testPhase) throws Exception {
+    private void runPhase(TestContainer testInvoker, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc());
         testInvoker.invoke(testPhase);
         LOGGER.info("Finished " + testPhase.desc());
@@ -185,55 +191,30 @@ public class TestRunner<E> {
 
     private final class StopThread extends Thread {
 
-        private static final int DEFAULT_SLEEP_INTERVAL = 5;
         private static final float ONE_HUNDRED = 100f;
 
-        private volatile int defaultSleepInterval = DEFAULT_SLEEP_INTERVAL;
+        private final TestContext testContext;
+        private final int sleepIntervalSeconds;
+
+        StopThread(TestContext testContext, int sleepIntervalSeconds) {
+            this.testContext = testContext;
+            this.sleepIntervalSeconds = sleepIntervalSeconds;
+        }
 
         @Override
         public void run() {
-            testContext.stopped = false;
-
-            int sleepInterval = defaultSleepInterval;
-            int sleepIterations = durationSeconds / sleepInterval;
+            int sleepIterations = durationSeconds / sleepIntervalSeconds;
             for (int i = 1; i <= sleepIterations; i++) {
-                sleepSeconds(sleepInterval);
+                sleepSeconds(sleepIntervalSeconds);
 
-                int elapsed = i * sleepInterval;
+                int elapsed = i * sleepIntervalSeconds;
                 float percentage = elapsed * ONE_HUNDRED / durationSeconds;
                 LOGGER.info(format("Running %d of %d seconds %-4.2f percent complete", elapsed, durationSeconds, percentage));
             }
 
-            sleepSeconds(durationSeconds % sleepInterval);
+            sleepSeconds(durationSeconds % sleepIntervalSeconds);
             testContext.stop();
             LOGGER.info("Notified test to stop");
-        }
-    }
-
-    private final class TestContextImpl implements TestContext {
-
-        private final String testId = UUID.randomUUID().toString();
-
-        private volatile boolean stopped;
-
-        @Override
-        public HazelcastInstance getTargetInstance() {
-            return hazelcastInstance;
-        }
-
-        @Override
-        public String getTestId() {
-            return testId;
-        }
-
-        @Override
-        public boolean isStopped() {
-            return stopped;
-        }
-
-        @Override
-        public void stop() {
-            stopped = true;
         }
     }
 }

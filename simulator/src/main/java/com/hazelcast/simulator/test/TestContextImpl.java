@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.TestContext;
+
+import java.util.UUID;
 
 public class TestContextImpl implements TestContext {
+
     private final String testId;
     private final HazelcastInstance hazelcastInstance;
 
     private volatile boolean stopped;
+
+    TestContextImpl(HazelcastInstance hazelcastInstance) {
+        this(UUID.randomUUID().toString(), hazelcastInstance);
+    }
 
     public TestContextImpl(String testId, HazelcastInstance hazelcastInstance) {
         this.testId = testId;

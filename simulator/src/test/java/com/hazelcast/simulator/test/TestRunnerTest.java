@@ -74,8 +74,14 @@ public class TestRunnerTest {
     public void testTestContextImpl() throws Exception {
         TestContextImplTest test = new TestContextImplTest();
         TestRunner<TestContextImplTest> testRunner = new TestRunner<TestContextImplTest>(test);
+        HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance();
 
-        testRunner.withDuration(0).withHazelcastInstance(Hazelcast.newHazelcastInstance()).run();
+        testRunner.withDuration(0).withHazelcastInstance(hazelcastInstance).run();
+
+        TestContext testContext = test.getTestContext();
+        assertNotNull(testContext);
+        assertNotNull(testContext.getTestId());
+        assertEquals(hazelcastInstance, testContext.getTargetInstance());
     }
 
     @Test

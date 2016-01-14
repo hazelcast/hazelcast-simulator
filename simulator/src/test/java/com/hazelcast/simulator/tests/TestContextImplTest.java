@@ -23,15 +23,22 @@ import static org.junit.Assert.assertNotNull;
 
 public class TestContextImplTest {
 
-    @Setup
-    public void setUp(TestContext context) {
-        assertNotNull(context.getTargetInstance());
-        assertNotNull(context.getTestId());
+    private TestContext testContext;
 
-        context.stop();
+    @Setup
+    public void setUp(TestContext testContext) {
+        this.testContext = testContext;
+        assertNotNull(testContext.getTargetInstance());
+        assertNotNull(testContext.getTestId());
+
+        testContext.stop();
     }
 
     @Run
     void run() {
+    }
+
+    public TestContext getTestContext() {
+        return testContext;
     }
 }
