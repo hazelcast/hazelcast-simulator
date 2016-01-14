@@ -7,6 +7,7 @@ import com.hazelcast.simulator.test.TestContextImpl;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,9 +40,11 @@ public class AbstractMonotonicWorkerTest {
         properties.put("threadCount", String.valueOf(THREAD_COUNT));
 
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractWorkerTest", null);
-        TestCase testCase = new TestCase("AbstractWorkerTest", properties);
+        testContext = new TestContextImpl("AbstractMonotonicWorkerTest", null);
+        TestCase testCase = new TestCase("AbstractMonotonicWorkerTest", properties);
         testContainer = new TestContainer(test, testContext, testCase);
+
+        ExceptionReporter.reset();
     }
 
     @After
@@ -49,6 +52,8 @@ public class AbstractMonotonicWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             deleteQuiet(new File(i + ".exception"));
         }
+
+        ExceptionReporter.reset();
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -49,6 +50,8 @@ public class AbstractWorkerTest {
         testContext = new TestContextImpl("AbstractWorkerTest", null);
         TestCase testCase = new TestCase("AbstractWorkerTest", properties);
         testContainer = new TestContainer(test, testContext, testCase);
+
+        ExceptionReporter.reset();
     }
 
     @After
@@ -56,6 +59,8 @@ public class AbstractWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             deleteQuiet(new File(i + ".exception"));
         }
+
+        ExceptionReporter.reset();
     }
 
     @Test
@@ -78,7 +83,7 @@ public class AbstractWorkerTest {
         }
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 10000)
     public void testStopWorker() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.STOP_WORKER);
 
@@ -89,7 +94,7 @@ public class AbstractWorkerTest {
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 10000)
     public void testStopTestContext() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.STOP_TEST_CONTEXT);
 
@@ -100,7 +105,7 @@ public class AbstractWorkerTest {
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 10000)
     public void testRandomMethods() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.RANDOM);
 
@@ -112,7 +117,7 @@ public class AbstractWorkerTest {
         assertNotNull(test.randomLong);
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = 10000)
     public void testGetIteration() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.ITERATION);
 

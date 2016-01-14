@@ -31,9 +31,10 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
  */
 public final class ExceptionReporter {
 
-    public static final int MAX_EXCEPTION_COUNT = 1000;
+    static final int MAX_EXCEPTION_COUNT = 1000;
 
     static final AtomicLong FAILURE_ID = new AtomicLong(0);
+
     private static final Logger LOGGER = Logger.getLogger(ExceptionReporter.class);
 
     private ExceptionReporter() {
@@ -78,5 +79,10 @@ public final class ExceptionReporter {
 
         File file = new File(targetFileName);
         rename(tmpFile, file);
+    }
+
+    // just for testing
+    public static void reset() {
+        FAILURE_ID.set(0);
     }
 }

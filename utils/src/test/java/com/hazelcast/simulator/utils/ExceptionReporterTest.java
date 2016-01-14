@@ -23,13 +23,13 @@ public class ExceptionReporterTest {
     @Before
     public void setUp() {
         FileUtils.deleteQuiet(EXCEPTION_FILE);
-        ExceptionReporter.FAILURE_ID.set(0);
+        ExceptionReporter.reset();
     }
 
     @After
     public void tearDown() {
         FileUtils.deleteQuiet(EXCEPTION_FILE);
-        ExceptionReporter.FAILURE_ID.set(0);
+        ExceptionReporter.reset();
     }
 
     @Test
