@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates {@link com.hazelcast.simulator.worker.TestContainer} fields.
+ * Annotates {@link com.hazelcast.simulator.test.TestContainer} fields.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

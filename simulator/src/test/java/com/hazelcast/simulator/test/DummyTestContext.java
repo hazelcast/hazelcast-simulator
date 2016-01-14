@@ -1,7 +1,6 @@
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.TestContext;
 
 public class DummyTestContext implements TestContext {
 

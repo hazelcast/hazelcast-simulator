@@ -19,7 +19,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.worker.TestContainer;
 import org.apache.log4j.Logger;
 
 import java.io.File;

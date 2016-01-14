@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.ProbeImpl;
-import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContainer;
 import com.hazelcast.simulator.test.annotations.Run;

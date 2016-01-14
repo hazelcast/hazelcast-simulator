@@ -20,7 +20,7 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
-import com.hazelcast.simulator.worker.TestContainer;
+import com.hazelcast.simulator.test.TestContainer;
 import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
 

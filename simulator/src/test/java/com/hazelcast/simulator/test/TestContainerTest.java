@@ -1,9 +1,6 @@
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;

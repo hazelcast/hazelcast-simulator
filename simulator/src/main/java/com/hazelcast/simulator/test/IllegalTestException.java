@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.test;
 
 /**
  * Exception thrown when a test is not valid, e.g. it has no method with a {@link com.hazelcast.simulator.test.annotations.Run}
