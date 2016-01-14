@@ -40,7 +40,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 @SuppressWarnings("unused")
 public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
-    static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
+    protected static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
     // these fields will be injected by test.properties of the test
     @SuppressWarnings("checkstyle:visibilitymodifier")
