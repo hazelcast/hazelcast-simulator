@@ -49,15 +49,17 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
 
     @Override
     public final void onResponse(V response) {
-        workerProbe.done();
         increaseIteration();
         handleResponse(response);
     }
 
     @Override
     public final void onFailure(Throwable t) {
-        ExceptionReporter.report(testContext.getTestId(), t);
-        handleFailure(t);
+        try {
+            ExceptionReporter.report(testContext.getTestId(), t);
+        } finally {
+            handleFailure(t);
+        }
     }
 
     /**
