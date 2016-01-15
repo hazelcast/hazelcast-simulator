@@ -67,7 +67,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     }
 
     /**
-     * Override this method if you need to execute code on each worker after the iteration has been increased in
+     * Implement this method if you need to execute code on each worker after the iteration has been increased in
      * {@link ExecutionCallback#onResponse(Object)}.
      *
      * @param response the result of the successful execution
@@ -75,7 +75,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     protected abstract void handleResponse(V response);
 
     /**
-     * Override this method if you need to execute code on each worker after the throwable has been reported in
+     * Implement this method if you need to execute code on each worker after the throwable has been reported in
      * {@link ExecutionCallback#onFailure(Throwable)}.
      *
      * @param t the exception that is thrown
