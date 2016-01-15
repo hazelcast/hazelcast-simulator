@@ -33,8 +33,9 @@ public class AbstractAsyncWorkerTest {
     private static final int THREAD_COUNT = 3;
 
     private enum Operation {
-        RESPONSE,
-        EXCEPTION
+        EXCEPTION,
+        ON_RESPONSE,
+        ON_FAILURE
     }
 
     private WorkerTest test;
@@ -74,8 +75,20 @@ public class AbstractAsyncWorkerTest {
     }
 
     @Test(timeout = 10000)
-    public void testRun() throws Exception {
-        test.operationSelectorBuilder.addDefaultOperation(Operation.RESPONSE);
+    public void testRun_withException() throws Exception {
+        test.operationSelectorBuilder.addDefaultOperation(Operation.EXCEPTION);
+
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
+
+        for (int i = 1; i <= THREAD_COUNT; i++) {
+            assertTrue(new File(i + ".exception").exists());
+        }
+    }
+
+    @Test(timeout = 10000)
+    public void testRun_onResponse() throws Exception {
+        test.operationSelectorBuilder.addDefaultOperation(Operation.ON_RESPONSE);
 
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);
@@ -83,8 +96,8 @@ public class AbstractAsyncWorkerTest {
     }
 
     @Test(timeout = 10000)
-    public void testRun_withException() throws Exception {
-        test.operationSelectorBuilder.addDefaultOperation(Operation.EXCEPTION);
+    public void testRun_onFailure() throws Exception {
+        test.operationSelectorBuilder.addDefaultOperation(Operation.ON_FAILURE);
 
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);
@@ -128,10 +141,12 @@ public class AbstractAsyncWorkerTest {
             protected void timeStep(final Operation operation) throws Exception {
                 ICompletableFuture<String> future;
                 switch (operation) {
-                    case RESPONSE:
+                    case EXCEPTION:
+                        throw new TestException("expected exception");
+                    case ON_RESPONSE:
                         future = new CompletedFuture<String>(null, "test", executor);
                         break;
-                    case EXCEPTION:
+                    case ON_FAILURE:
                         future = new CompletedFuture<String>(null, new TestException("expected exception"), executor);
                         break;
                     default:

@@ -190,6 +190,14 @@ public class AsyncAtomicLongTest {
         }
 
         @Override
+        protected void handleResponse(Long response) {
+        }
+
+        @Override
+        protected void handleFailure(Throwable t) {
+        }
+
+        @Override
         protected void afterRun() {
             totalCounter.addAndGet(increments);
         }

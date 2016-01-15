@@ -49,8 +49,11 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
 
     @Override
     public final void onResponse(V response) {
-        increaseIteration();
-        handleResponse(response);
+        try {
+            increaseIteration();
+        } finally {
+            handleResponse(response);
+        }
     }
 
     @Override
@@ -68,9 +71,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
      *
      * @param response the result of the successful execution
      */
-    @SuppressWarnings("unused")
-    protected void handleResponse(V response) {
-    }
+    protected abstract void handleResponse(V response);
 
     /**
      * Override this method if you need to execute code on each worker after the throwable has been reported in
@@ -78,7 +79,5 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
      *
      * @param t the exception that is thrown
      */
-    @SuppressWarnings("unused")
-    protected void handleFailure(Throwable t) {
-    }
+    protected abstract void handleFailure(Throwable t);
 }
