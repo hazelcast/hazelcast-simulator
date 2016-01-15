@@ -295,9 +295,6 @@ public class TestContainer {
         Field testContextField = getFirstField(workerClass, InjectTestContainer.class);
         Field workerProbeField = getFirstField(workerClass, InjectProbe.class);
 
-        LOGGER.warn("testContextField: " + testContextField);
-        LOGGER.warn("workerProbeField: " + workerProbeField);
-
         Probe probe = null;
         if (workerProbeField != null) {
             // create one probe per test and inject it in all worker instances of the test
