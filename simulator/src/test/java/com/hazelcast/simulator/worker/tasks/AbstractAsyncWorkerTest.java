@@ -92,6 +92,7 @@ public class AbstractAsyncWorkerTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_onResponse() throws Exception {
+        System.out.println("########## testRun_onResponse()");
         test.operationSelectorBuilder.addDefaultOperation(Operation.ON_RESPONSE);
 
         testContainer.invoke(TestPhase.SETUP);
