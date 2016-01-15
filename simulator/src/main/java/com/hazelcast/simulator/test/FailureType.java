@@ -72,13 +72,11 @@ public enum FailureType {
     }
 
     public static String getIdsAsString() {
-        FailureType[] types = FailureType.values();
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < types.length; i++) {
-            builder.append(types[i].id);
-            if (i < types.length - 1) {
-                builder.append(", ");
-            }
+        String delimiter = "";
+        for (FailureType type : values()) {
+            builder.append(delimiter).append(type.id);
+            delimiter = ", ";
         }
         return builder.toString();
     }

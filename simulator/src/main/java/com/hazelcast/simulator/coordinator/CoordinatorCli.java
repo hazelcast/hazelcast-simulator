@@ -120,7 +120,9 @@ final class CoordinatorCli {
             "If defined tests are run in parallel.");
 
     private final OptionSpec<TestPhase> syncToTestPhaseSpec = parser.accepts("syncToTestPhase",
-            "Defines the last TestPhase which is synchronized between all parallel running tests.")
+            format("Defines the last TestPhase which is synchronized between all parallel running tests."
+                    + " Use --syncToTestPhase %s to synchronize all test phases."
+                    + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.SETUP);
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",

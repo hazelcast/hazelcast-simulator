@@ -45,6 +45,21 @@ public enum TestPhase {
         return isGlobal;
     }
 
+    public static TestPhase getLastTestPhase() {
+        TestPhase[] values = values();
+        return values[values.length - 1];
+    }
+
+    public static String getIdsAsString() {
+        StringBuilder builder = new StringBuilder();
+        String delimiter = "";
+        for (TestPhase testPhase : values()) {
+            builder.append(delimiter).append(testPhase);
+            delimiter = ", ";
+        }
+        return builder.toString();
+    }
+
     public static ConcurrentMap<TestPhase, CountDownLatch> getTestPhaseSyncMap(boolean isParallel, int testCount,
                                                                                TestPhase latestTestPhaseToSync) {
         if (!isParallel) {
