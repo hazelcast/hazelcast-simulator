@@ -132,7 +132,7 @@ public class AbstractAsyncWorkerTest {
 
         @RunWithWorker
         public Worker createWorker() {
-            return new Worker(++workerCreated);
+            return new Worker(workerCreated++);
         }
 
         private class Worker extends AbstractAsyncWorker<Operation, String> {
