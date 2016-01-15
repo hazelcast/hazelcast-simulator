@@ -310,6 +310,7 @@ public final class Coordinator {
             echo(HORIZONTAL_RULER);
         } finally {
             int runningWorkerCount = componentRegistry.workerCount();
+            echo("Terminating %d Workers...", runningWorkerCount);
             remoteClient.terminateWorkers(true);
             if (!failureContainer.waitForWorkerShutdown(runningWorkerCount, FINISHED_WORKER_TIMEOUT_SECONDS)) {
                 Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
