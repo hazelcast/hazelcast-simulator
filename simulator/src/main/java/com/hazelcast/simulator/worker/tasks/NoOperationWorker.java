@@ -23,11 +23,7 @@ package com.hazelcast.simulator.worker.tasks;
 public final class NoOperationWorker extends AbstractMonotonicWorker {
 
     @Override
-    protected void beforeRun() {
-        testContext.stop();
-    }
-
-    @Override
     protected void timeStep() throws Exception {
+        testContext.stop();
     }
 }
