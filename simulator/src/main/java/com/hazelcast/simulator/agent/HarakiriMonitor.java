@@ -32,14 +32,16 @@ public class HarakiriMonitor {
     private static final Logger LOGGER = Logger.getLogger(HarakiriMonitor.class);
 
     private final String cloudProvider;
-    private final String cloudIdentity;
-    private final String cloudCredential;
+    private final String command;
     private final int waitSeconds;
 
     public HarakiriMonitor(String cloudProvider, String cloudIdentity, String cloudCredential, int waitSeconds) {
+        this(cloudProvider, getHarakiriCommand(cloudIdentity, cloudCredential), waitSeconds);
+    }
+
+    HarakiriMonitor(String cloudProvider, String command, int waitSeconds) {
         this.cloudProvider = cloudProvider;
-        this.cloudIdentity = cloudIdentity;
-        this.cloudCredential = cloudCredential;
+        this.command = command;
         this.waitSeconds = waitSeconds;
     }
 
@@ -54,13 +56,16 @@ public class HarakiriMonitor {
 
         LOGGER.info("Trying to commit Harakiri once!");
         try {
-            String cmd = format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id) "
-                    + "--aws-access-key %s --aws-secret-key %s", cloudIdentity, cloudCredential);
-            LOGGER.info("Harakiri command: " + cmd);
-            execute(cmd);
+            LOGGER.info("Harakiri command: " + command);
+            execute(command);
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to execute Harakiri", e);
         }
+    }
+
+    private static String getHarakiriCommand(String cloudIdentity, String cloudCredential) {
+        return format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
+                + " --aws-access-key %s --aws-secret-key %s", cloudIdentity, cloudCredential);
     }
 
     public static void main(String[] args) {
