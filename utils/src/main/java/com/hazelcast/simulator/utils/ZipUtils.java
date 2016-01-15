@@ -42,12 +42,11 @@ public final class ZipUtils {
     }
 
     public static byte[] zip(List<File> roots) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
         Deque<File> queue = new LinkedList<File>();
-
         Set<String> names = new HashSet<String>();
 
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
         try {
             for (File root : roots) {
                 URI base = root.isDirectory() ? root.toURI() : root.getParentFile().toURI();
@@ -66,10 +65,42 @@ public final class ZipUtils {
                 }
             }
         } finally {
-            zipOutputStream.close();
+            closeQuietly(zipOutputStream);
         }
-
         return outputStream.toByteArray();
+    }
+
+    public static void unzip(byte[] content, final File destinationDir) throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+
+        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(content));
+        try {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                String fileName = zipEntry.getName();
+                File file = new File(destinationDir + File.separator + fileName);
+
+                if (zipEntry.isDirectory()) {
+                    ensureExistingDirectory(file);
+                } else {
+                    ensureExistingDirectory(file.getParentFile());
+
+                    FileOutputStream fos = new FileOutputStream(file);
+                    try {
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    } finally {
+                        closeQuietly(fos);
+                    }
+                }
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+        } finally {
+            closeQuietly(zis);
+        }
     }
 
     private static void addDirectory(ZipOutputStream zipOutputStream, Deque<File> queue, Set<String> names, URI base, File file)
@@ -94,38 +125,5 @@ public final class ZipUtils {
         zipOutputStream.putNextEntry(new ZipEntry(name));
         copy(file, zipOutputStream);
         zipOutputStream.closeEntry();
-    }
-
-    public static void unzip(byte[] content, final File destinationDir) throws IOException {
-        byte[] buffer = new byte[BUFFER_SIZE];
-
-        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(content));
-        ZipEntry zipEntry = zis.getNextEntry();
-
-        while (zipEntry != null) {
-            String fileName = zipEntry.getName();
-            File file = new File(destinationDir + File.separator + fileName);
-
-            if (zipEntry.isDirectory()) {
-                ensureExistingDirectory(file);
-            } else {
-                ensureExistingDirectory(file.getParentFile());
-
-                FileOutputStream fos = new FileOutputStream(file);
-                try {
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-                } finally {
-                    closeQuietly(fos);
-                }
-            }
-
-            zipEntry = zis.getNextEntry();
-        }
-
-        zis.closeEntry();
-        zis.close();
     }
 }
