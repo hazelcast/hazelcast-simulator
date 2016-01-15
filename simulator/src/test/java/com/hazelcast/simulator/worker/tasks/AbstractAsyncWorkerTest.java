@@ -131,14 +131,16 @@ public class AbstractAsyncWorkerTest {
 
         @RunWithWorker
         public Worker createWorker() {
-            workerCreated++;
-            return new Worker();
+            return new Worker(++workerCreated);
         }
 
         private class Worker extends AbstractAsyncWorker<Operation, String> {
 
-            Worker() {
+            private final int workerId;
+
+            Worker(int workerId) {
                 super(operationSelectorBuilder);
+                this.workerId = workerId;
             }
 
             @Override
@@ -148,7 +150,8 @@ public class AbstractAsyncWorkerTest {
                     case EXCEPTION:
                         throw new TestException("expected exception");
                     case ON_RESPONSE:
-                        future = new CompletedFuture<String>(null, "test", executor);
+                        LOGGER.info("########## " + workerId + " ON_RESPONSE");
+                        future = new CompletedFuture<String>(null, "test" + workerId, executor);
                         break;
                     case ON_FAILURE:
                         future = new CompletedFuture<String>(null, new TestException("expected exception"), executor);
@@ -159,6 +162,7 @@ public class AbstractAsyncWorkerTest {
                 future.andThen(this);
 
                 try {
+                    LOGGER.info("########## " + workerId + " future.get()");
                     future.get();
                 } catch (Exception e) {
                     EmptyStatement.ignore(e);
@@ -169,6 +173,7 @@ public class AbstractAsyncWorkerTest {
 
             @Override
             protected void handleResponse(String response) {
+                LOGGER.info("########## " + workerId + " handleResponse(" + response + ")");
                 responseLatch.countDown();
             }
 

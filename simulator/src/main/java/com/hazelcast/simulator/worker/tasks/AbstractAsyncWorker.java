@@ -50,6 +50,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     @Override
     public final void onResponse(V response) {
         try {
+            LOGGER.info("############ onResponse(" + response + ")");
             increaseIteration();
         } finally {
             handleResponse(response);
