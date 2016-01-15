@@ -55,12 +55,14 @@ public class RemoteClient {
     private final CoordinatorConnector coordinatorConnector;
     private final ComponentRegistry componentRegistry;
     private final WorkerPingThread workerPingThread;
+    private final int memberWorkerShutdownDelaySeconds;
 
     public RemoteClient(CoordinatorConnector coordinatorConnector, ComponentRegistry componentRegistry,
-                        int workerPingIntervalSeconds) {
+                        int workerPingIntervalSeconds, int memberWorkerShutdownDelaySeconds) {
         this.coordinatorConnector = coordinatorConnector;
         this.componentRegistry = componentRegistry;
         this.workerPingThread = new WorkerPingThread(workerPingIntervalSeconds);
+        this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
     }
 
     public void logOnAllAgents(String message) {
@@ -135,7 +137,8 @@ public class RemoteClient {
             stopWorkerPingThread();
         }
 
-        sendToAllWorkers(new TerminateWorkerOperation());
+        int shutdownDelaySeconds = (componentRegistry.hasClientWorkers() ? memberWorkerShutdownDelaySeconds : 0);
+        sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds));
     }
 
     public void initTestSuite(TestSuite testSuite) {

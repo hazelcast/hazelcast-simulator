@@ -99,6 +99,15 @@ public class ComponentRegistry {
         return workers.size();
     }
 
+    public boolean hasClientWorkers() {
+        for (WorkerData workerData : workers) {
+            if (!workerData.isMemberWorker()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public List<WorkerData> getWorkers() {
         return unmodifiableList(workers);
     }

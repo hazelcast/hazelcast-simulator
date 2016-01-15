@@ -201,7 +201,7 @@ public final class Coordinator {
         }
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry,
-                simulatorProperties.getWorkerPingIntervalSeconds());
+                simulatorProperties.getWorkerPingIntervalSeconds(), simulatorProperties.getMemberWorkerShutdownDelaySeconds());
         remoteClient.initTestSuite(testSuite);
     }
 

@@ -130,6 +130,10 @@ public class SimulatorProperties {
         return getWorkerPingIntervalSeconds() * WORKER_TIMEOUT_FACTOR;
     }
 
+    public int getMemberWorkerShutdownDelaySeconds() {
+        return parseInt(get("MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS", "5"));
+    }
+
     public int getAgentThreadPoolSize() {
         return parseInt(get("AGENT_THREAD_POOL_SIZE", "0"));
     }

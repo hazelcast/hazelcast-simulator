@@ -70,7 +70,7 @@ public class WorkerOperationProcessorTest {
         when(worker.startPerformanceMonitor()).thenReturn(true);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress, 0);
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress);
     }
 
     @Test
@@ -84,7 +84,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_TerminateWorkers_onMemberWorker() {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation();
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(0);
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown();
@@ -93,9 +93,9 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_TerminateWorkers_onClientWorker() {
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress, 0);
+        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
 
-        TerminateWorkerOperation operation = new TerminateWorkerOperation();
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(0);
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown();

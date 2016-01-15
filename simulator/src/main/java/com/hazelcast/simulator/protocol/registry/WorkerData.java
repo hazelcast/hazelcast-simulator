@@ -17,6 +17,7 @@ package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.worker.WorkerType;
 
 /**
  * Contains the metadata of a Simulator Worker.
@@ -39,5 +40,9 @@ public class WorkerData {
 
     public WorkerJvmSettings getSettings() {
         return settings;
+    }
+
+    public boolean isMemberWorker() {
+        return (settings.getWorkerType() == WorkerType.MEMBER);
     }
 }

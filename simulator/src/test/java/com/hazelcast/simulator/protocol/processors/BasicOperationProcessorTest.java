@@ -90,7 +90,7 @@ public class BasicOperationProcessorTest {
 
     @Test
     public void testOtherOperation() {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation();
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(0);
 
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 

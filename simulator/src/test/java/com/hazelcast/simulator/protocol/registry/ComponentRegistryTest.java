@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -81,6 +82,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, settingsList);
 
         assertEquals(10, componentRegistry.workerCount());
+        assertFalse(componentRegistry.hasClientWorkers());
     }
 
     @Test

@@ -189,6 +189,11 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
+    public void testGetMemberWorkerShutdownDelaySeconds() {
+        assertEquals(5, simulatorProperties.getMemberWorkerShutdownDelaySeconds());
+    }
+
+    @Test
     public void testGetWorkerLastSeenTimeoutSeconds() {
         assertEquals(180, simulatorProperties.getWorkerLastSeenTimeoutSeconds());
     }

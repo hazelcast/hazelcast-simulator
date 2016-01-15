@@ -93,7 +93,7 @@ public class AgentSmokeTest implements FailureListener {
                 testHistogramContainer, failureContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 10);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 10, 0);
     }
 
     @AfterClass

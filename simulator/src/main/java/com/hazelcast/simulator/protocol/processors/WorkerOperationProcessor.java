@@ -24,6 +24,7 @@ import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PongOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -48,7 +49,6 @@ import static java.lang.String.format;
  */
 public class WorkerOperationProcessor extends OperationProcessor {
 
-    private static final int MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS = 3;
     private static final String DASHES = "---------------------------";
 
     private static final PongOperation PONG_OPERATION = new PongOperation();
@@ -61,22 +61,15 @@ public class WorkerOperationProcessor extends OperationProcessor {
     private final HazelcastInstance hazelcastInstance;
     private final Worker worker;
     private final SimulatorAddress workerAddress;
-    private final int memberWorkerShutdownDelaySeconds;
 
     public WorkerOperationProcessor(ExceptionLogger exceptionLogger, WorkerType type, HazelcastInstance hazelcastInstance,
                                     Worker worker, SimulatorAddress workerAddress) {
-        this(exceptionLogger, type, hazelcastInstance, worker, workerAddress, MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
-    }
-
-    WorkerOperationProcessor(ExceptionLogger exceptionLogger, WorkerType type, HazelcastInstance hazelcastInstance,
-                             Worker worker, SimulatorAddress workerAddress, int memberWorkerShutdownDelaySeconds) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.type = type;
         this.hazelcastInstance = hazelcastInstance;
         this.worker = worker;
         this.workerAddress = workerAddress;
-        this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
     }
 
     public Collection<TestContainer> getTests() {
@@ -88,7 +81,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
                                             SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             case TERMINATE_WORKER:
-                processTerminateWorker();
+                processTerminateWorker((TerminateWorkerOperation) operation);
                 break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
@@ -102,9 +95,9 @@ public class WorkerOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processTerminateWorker() {
+    private void processTerminateWorker(TerminateWorkerOperation operation) {
         if (type == WorkerType.MEMBER) {
-            sleepSeconds(memberWorkerShutdownDelaySeconds);
+            sleepSeconds(operation.getMemberWorkerShutdownDelaySeconds());
         }
         worker.shutdown();
     }
