@@ -92,7 +92,6 @@ public class AbstractAsyncWorkerTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_onResponse() throws Exception {
-        System.out.println("########## testRun_onResponse()");
         test.operationSelectorBuilder.addDefaultOperation(Operation.ON_RESPONSE);
 
         testContainer.invoke(TestPhase.SETUP);
@@ -151,7 +150,6 @@ public class AbstractAsyncWorkerTest {
                     case EXCEPTION:
                         throw new TestException("expected exception");
                     case ON_RESPONSE:
-                        LOGGER.info("########## " + workerId + " ON_RESPONSE");
                         future = new CompletedFuture<String>(null, "test" + workerId, executor);
                         break;
                     case ON_FAILURE:
@@ -163,18 +161,16 @@ public class AbstractAsyncWorkerTest {
                 future.andThen(this);
 
                 try {
-                    LOGGER.info("########## " + workerId + " future.get()");
                     future.get();
                 } catch (Exception e) {
                     EmptyStatement.ignore(e);
                 }
 
-                stopTestContext();
+                stopWorker();
             }
 
             @Override
             protected void handleResponse(String response) {
-                LOGGER.info("########## " + workerId + " handleResponse(" + response + ")");
                 responseLatch.countDown();
             }
 
