@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 public class AbstractAsyncWorkerTest {
 
     private static final int THREAD_COUNT = 3;
+    private static final int DEFAULT_TEST_TIMEOUT = 30000;
 
     private enum Operation {
         EXCEPTION,
@@ -58,15 +59,18 @@ public class AbstractAsyncWorkerTest {
 
     @After
     public void tearDown() throws Exception {
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            deleteQuiet(new File(i + ".exception"));
-        }
+        try {
+            for (int i = 1; i <= THREAD_COUNT; i++) {
+                deleteQuiet(new File(i + ".exception"));
+            }
 
-        ExceptionReporter.reset();
-        test.executor.shutdown();
+            ExceptionReporter.reset();
+        } finally {
+            test.executor.shutdown();
+        }
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInvokeSetup() throws Exception {
         testContainer.invoke(TestPhase.SETUP);
 
@@ -74,7 +78,7 @@ public class AbstractAsyncWorkerTest {
         assertEquals(0, test.workerCreated);
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_withException() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.EXCEPTION);
 
@@ -86,7 +90,7 @@ public class AbstractAsyncWorkerTest {
         }
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_onResponse() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.ON_RESPONSE);
 
@@ -95,7 +99,7 @@ public class AbstractAsyncWorkerTest {
         test.responseLatch.await();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_onFailure() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.ON_FAILURE);
 
@@ -111,7 +115,7 @@ public class AbstractAsyncWorkerTest {
     private static class WorkerTest {
 
         private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-        private final ExecutorService executor = createFixedThreadPool(THREAD_COUNT, "AbstractAsyncWorkerTest");
+        private final ExecutorService executor = createFixedThreadPool(THREAD_COUNT * 2, "AbstractAsyncWorkerTest");
 
         private final CountDownLatch responseLatch = new CountDownLatch(THREAD_COUNT);
         private final CountDownLatch failureLatch = new CountDownLatch(THREAD_COUNT);

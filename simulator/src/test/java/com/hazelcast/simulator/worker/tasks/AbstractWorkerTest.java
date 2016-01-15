@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 public class AbstractWorkerTest {
 
     private static final int THREAD_COUNT = 3;
+    private static final int DEFAULT_TEST_TIMEOUT = 30000;
 
     private enum Operation {
         EXCEPTION,
@@ -63,7 +64,7 @@ public class AbstractWorkerTest {
         ExceptionReporter.reset();
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInvokeSetup() throws Exception {
         testContainer.invoke(TestPhase.SETUP);
 
@@ -71,7 +72,7 @@ public class AbstractWorkerTest {
         assertEquals(0, test.workerCreated);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_withException() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.EXCEPTION);
 
@@ -83,7 +84,7 @@ public class AbstractWorkerTest {
         }
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testStopWorker() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.STOP_WORKER);
 
@@ -94,7 +95,7 @@ public class AbstractWorkerTest {
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testStopTestContext() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.STOP_TEST_CONTEXT);
 
@@ -105,7 +106,7 @@ public class AbstractWorkerTest {
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRandomMethods() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.RANDOM);
 
@@ -117,7 +118,7 @@ public class AbstractWorkerTest {
         assertNotNull(test.randomLong);
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetIteration() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.ITERATION);
 

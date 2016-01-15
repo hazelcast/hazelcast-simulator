@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 public class AbstractMonotonicWorkerTest {
 
     private static final int THREAD_COUNT = 3;
+    private static final int DEFAULT_TEST_TIMEOUT = 30000;
 
     private enum Operation {
         STOP_TEST_CONTEXT,
@@ -56,7 +57,7 @@ public class AbstractMonotonicWorkerTest {
         ExceptionReporter.reset();
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testInvokeSetup() throws Exception {
         testContainer.invoke(TestPhase.SETUP);
 
@@ -64,7 +65,7 @@ public class AbstractMonotonicWorkerTest {
         assertEquals(0, test.workerCreated);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun() throws Exception {
         test.operation = Operation.STOP_TEST_CONTEXT;
 
@@ -75,7 +76,7 @@ public class AbstractMonotonicWorkerTest {
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTimeStep_withOperation_shouldThrowException() throws Exception {
         test.operation = Operation.CALL_TIMESTEP_WITH_ENUM;
 

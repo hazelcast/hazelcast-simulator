@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class NoOperationWorkerTest {
 
     private static final int THREAD_COUNT = 3;
+    private static final int DEFAULT_TEST_TIMEOUT = 30000;
 
     private WorkerTest test;
     private TestContainer testContainer;
@@ -32,7 +33,7 @@ public class NoOperationWorkerTest {
         testContainer = new TestContainer(test, testContext, testCase);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun_withException() throws Exception {
         testContainer.invoke(TestPhase.RUN);
 
