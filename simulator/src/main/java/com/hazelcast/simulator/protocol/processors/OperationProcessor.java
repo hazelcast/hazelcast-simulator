@@ -56,8 +56,7 @@ public abstract class OperationProcessor {
         try {
             switch (operationType) {
                 case INTEGRATION_TEST:
-                    processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress);
-                    break;
+                    return processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress);
                 case LOG:
                     processLog((LogOperation) operation, sourceAddress);
                     break;
@@ -74,17 +73,18 @@ public abstract class OperationProcessor {
         return SUCCESS;
     }
 
-    private void processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
-                                        SimulatorAddress sourceAddress) throws Exception {
+    private ResponseType processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
+                                                SimulatorAddress sourceAddress) throws Exception {
         switch (operation.getOperation()) {
             case EQUALS:
                 if (!IntegrationTestOperation.TEST_DATA.equals(operation.getTestData())) {
                     throw new IllegalStateException("operationData has not the expected value");
                 }
-            default:
-                processOperation(operationType, operation, sourceAddress);
                 break;
+            default:
+                return processOperation(operationType, operation, sourceAddress);
         }
+        return SUCCESS;
     }
 
     private void processLog(LogOperation operation, SimulatorAddress sourceAddress) {
