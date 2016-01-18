@@ -60,10 +60,25 @@ public class TestHistogramContainerTest {
     }
 
     @Test
+    public void testCreateProbeResults_noHistogramForTestId() {
+        String histogram = createEncodedHistogram();
+        testHistogramContainer.addTestHistograms(workerAddress1, "anotherTestId", singletonMap("workerProbe", histogram));
+
+        testHistogramContainer.createProbeResults("testSuiteId", "testId");
+        assertFalse(probeFile.exists());
+    }
+
+    @Test
     public void testCreateProbeResults_invalidHistogram() {
         testHistogramContainer.addTestHistograms(workerAddress1, "testId", singletonMap("workerProbe", "invalidHistogram"));
 
         testHistogramContainer.createProbeResults("testSuiteId", "testId");
+        assertFalse(probeFile.exists());
+    }
+
+    @Test
+    public void testCreateProbeResults_unknownTestId() {
+        testHistogramContainer.createProbeResults("testSuiteId", "unknownTestId");
         assertFalse(probeFile.exists());
     }
 
