@@ -5,6 +5,7 @@ import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseCodec;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.ExecutorFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,6 +18,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -26,6 +30,7 @@ import static org.mockito.Mockito.when;
 public class ForwardToWorkerHandlerTest {
 
     private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
+    private final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(2, "ForwardToWorkerHandlerTest");
 
     @Mock
     private Attribute<Integer> forwardAddressIndexAttribute;
@@ -44,14 +49,19 @@ public class ForwardToWorkerHandlerTest {
         when(ctx.attr(forwardAddressIndex)).thenReturn(forwardAddressIndexAttribute);
 
         ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
-        forwardToWorkerHandler = new ForwardToWorkerHandler(SimulatorAddress.COORDINATOR, clientConnectorManager);
+
+        forwardToWorkerHandler = new ForwardToWorkerHandler(SimulatorAddress.COORDINATOR, clientConnectorManager,
+                executorService);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (buffer != null) {
             buffer.release();
         }
+
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test

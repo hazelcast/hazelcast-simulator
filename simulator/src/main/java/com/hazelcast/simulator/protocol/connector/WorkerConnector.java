@@ -53,6 +53,8 @@ import static com.hazelcast.simulator.protocol.exception.ExceptionType.WORKER_EX
  */
 public class WorkerConnector extends AbstractServerConnector {
 
+    private static final int THREAD_POOL_SIZE = 2;
+
     private final OperationProcessor processor;
 
     private final SimulatorAddress localAddress;
@@ -65,7 +67,7 @@ public class WorkerConnector extends AbstractServerConnector {
     WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                     boolean useRemoteLogger, WorkerType type, HazelcastInstance hazelcastInstance, Worker worker,
                     ConnectionManager connectionManager) {
-        super(futureMap, localAddress, port);
+        super(futureMap, localAddress, port, THREAD_POOL_SIZE);
 
         ExceptionLogger exceptionLogger = createExceptionLogger(localAddress, useRemoteLogger);
         this.processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker, localAddress);
@@ -86,9 +88,10 @@ public class WorkerConnector extends AbstractServerConnector {
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getExecutorService()));
         pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
-        pipeline.addLast("testMessageConsumeHandler", new MessageTestConsumeHandler(testProcessorManager, localAddress));
+        pipeline.addLast("testMessageConsumeHandler", new MessageTestConsumeHandler(testProcessorManager, localAddress,
+                getExecutorService()));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), futureMap, addressIndex));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
     }

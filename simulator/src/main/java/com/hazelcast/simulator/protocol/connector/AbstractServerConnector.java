@@ -38,6 +38,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -48,6 +49,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static java.lang.String.format;
 
 /**
@@ -67,6 +69,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
+    private final ExecutorService executorService;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
     private final SimulatorAddress localAddress;
     private final int addressIndex;
@@ -74,7 +77,9 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private Channel channel;
 
-    AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port) {
+    AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+                            int threadPoolSize) {
+        this.executorService = createFixedThreadPool(threadPoolSize, "AbstractServerConnector");
         this.futureMap = futureMap;
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
@@ -124,6 +129,13 @@ abstract class AbstractServerConnector implements ServerConnector {
         bossGroup
                 .shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
                 .syncUninterruptibly();
+
+        try {
+            executorService.shutdown();
+            executorService.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            LOGGER.error("Error during shutdown of ExecutorService", e);
+        }
     }
 
     @Override
@@ -169,6 +181,10 @@ abstract class AbstractServerConnector implements ServerConnector {
     public ResponseFuture writeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
         return writeAsync(message);
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     int getMessageQueueSizeInternal() {

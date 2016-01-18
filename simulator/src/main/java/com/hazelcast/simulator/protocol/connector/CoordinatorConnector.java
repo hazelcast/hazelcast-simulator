@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -52,6 +53,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_N
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
 
@@ -61,8 +63,10 @@ import static org.junit.Assert.fail;
 public class CoordinatorConnector implements ClientPipelineConfigurator {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorConnector.class);
+    private static final int EXECUTOR_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
 
     private final EventLoopGroup group = new NioEventLoopGroup();
+    private final ExecutorService executorService = createFixedThreadPool(EXECUTOR_POOL_SIZE, "AbstractServerConnector");
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
@@ -84,7 +88,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
         pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, remoteAddress, futureMap));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor, executorService));
     }
 
     /**
@@ -104,6 +108,13 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
 
         processor.shutdown();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+
+        try {
+            executorService.shutdown();
+            executorService.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            LOGGER.error("Error during shutdown of ExecutorService", e);
+        }
     }
 
     /**

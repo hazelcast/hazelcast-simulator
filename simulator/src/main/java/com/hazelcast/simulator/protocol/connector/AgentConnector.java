@@ -54,6 +54,8 @@ import static com.hazelcast.simulator.protocol.exception.ExceptionType.AGENT_EXC
  */
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
+    private static final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
+
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
     private final EventLoopGroup group;
@@ -69,7 +71,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
                    WorkerJvmManager workerJvmManager, ConnectionManager connectionManager, int threadPoolSize) {
-        super(futureMap, localAddress, port);
+        super(futureMap, localAddress, port, THREAD_POOL_SIZE);
 
         this.group = new NioEventLoopGroup(threadPoolSize);
 
@@ -95,7 +97,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("forwardToCoordinatorHandler", new ForwardToCoordinatorHandler(localAddress, connectionManager,
                 workerJvmManager));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, getFutureMap()));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getExecutorService()));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
     }
 
@@ -107,8 +109,9 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, clientConnectorManager));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor));
+        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, clientConnectorManager,
+                getExecutorService()));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getExecutorService()));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
     }

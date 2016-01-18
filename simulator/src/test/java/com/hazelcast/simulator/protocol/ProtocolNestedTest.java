@@ -7,7 +7,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
@@ -42,24 +41,22 @@ public class ProtocolNestedTest {
         resetLogLevel();
     }
 
-    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_syncWrite() {
         IntegrationTestOperation operation = new IntegrationTestOperation(null, NESTED_SYNC);
 
-        // assert that the connection is working downstream
         Response response = sendFromCoordinator(ALL_WORKERS, operation);
+
         LOGGER.info("Response: " + response);
         assertAllTargets(response, ALL_WORKERS, SUCCESS, 2);
     }
 
-    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_asyncWrite() {
         IntegrationTestOperation operation = new IntegrationTestOperation(null, NESTED_ASYNC);
 
-        // assert that the connection is working downstream
         Response response = sendFromCoordinator(ALL_WORKERS, operation);
+
         LOGGER.info("Response: " + response);
         assertAllTargets(response, ALL_WORKERS, SUCCESS, 2);
     }

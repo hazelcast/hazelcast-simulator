@@ -24,6 +24,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import org.apache.log4j.Logger;
 
+import java.util.concurrent.ExecutorService;
+
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
 import static java.lang.String.format;
 
@@ -39,31 +41,39 @@ public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<Simul
 
     private final TestProcessorManager testProcessorManager;
     private final SimulatorAddress localAddress;
+    private final ExecutorService executorService;
 
-    public MessageTestConsumeHandler(TestProcessorManager testProcessorManager, SimulatorAddress localAddress) {
+    public MessageTestConsumeHandler(TestProcessorManager testProcessorManager, SimulatorAddress localAddress,
+                                     ExecutorService executorService) {
         this.testProcessorManager = testProcessorManager;
         this.localAddress = localAddress;
+        this.executorService = executorService;
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, SimulatorMessage msg) {
+    public void channelRead0(final ChannelHandlerContext ctx, final SimulatorMessage msg) {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
         }
 
-        Response response = new Response(msg);
-        int testAddressIndex = ctx.attr(forwardAddressIndex).get();
-        if (testAddressIndex == 0) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                Response response = new Response(msg);
+                int testAddressIndex = ctx.attr(forwardAddressIndex).get();
+                if (testAddressIndex == 0) {
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
+                    }
+                    testProcessorManager.processOnAllTests(response, fromSimulatorMessage(msg), msg.getSource());
+                } else {
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
+                    }
+                    testProcessorManager.processOnTest(response, fromSimulatorMessage(msg), msg.getSource(), testAddressIndex);
+                }
+                ctx.writeAndFlush(response);
             }
-            testProcessorManager.processOnAllTests(response, fromSimulatorMessage(msg), msg.getSource());
-        } else {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
-            }
-            testProcessorManager.processOnTest(response, fromSimulatorMessage(msg), msg.getSource(), testAddressIndex);
-        }
-        ctx.writeAndFlush(response);
+        });
     }
 }
