@@ -32,7 +32,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -108,9 +107,6 @@ public class ClientConnector {
         if (channel.isOpen()) {
             channel.close().syncUninterruptibly();
         }
-
-        // take care about eventually pending ResponseFuture instances
-        handlePendingResponseFutures();
     }
 
     public ConcurrentMap<String, ResponseFuture> getFutureMap() {
@@ -159,13 +155,6 @@ public class ClientConnector {
             return future.get();
         } catch (InterruptedException e) {
             throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
-        }
-    }
-
-    private void handlePendingResponseFutures() {
-        for (Map.Entry<String, ResponseFuture> futureEntry : futureMap.entrySet()) {
-            String futureKey = futureEntry.getKey();
-            LOGGER.warn(format("ResponseFuture %s still pending after shutdown!", futureKey));
         }
     }
 }
