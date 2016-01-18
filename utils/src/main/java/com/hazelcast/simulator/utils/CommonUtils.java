@@ -110,6 +110,7 @@ public final class CommonUtils {
             thread.join();
         } catch (InterruptedException e) {
             EmptyStatement.ignore(e);
+            Thread.currentThread().interrupt();
         }
     }
 

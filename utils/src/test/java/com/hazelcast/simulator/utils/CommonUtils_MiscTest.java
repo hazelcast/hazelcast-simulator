@@ -2,9 +2,13 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
+import java.util.concurrent.CountDownLatch;
+
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static java.lang.String.format;
@@ -63,5 +67,50 @@ public class CommonUtils_MiscTest {
         String actual = throwableToString(throwable);
 
         assertTrue(format("Expected throwable string to contain marker %s, but was %s", marker, actual), actual.contains(marker));
+    }
+
+    @Test(timeout = 5000)
+    public void testJoinThread() {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                sleepMillis(500);
+            }
+        };
+
+        thread.start();
+        joinThread(thread);
+    }
+
+    @Test(timeout = 5000)
+    public void testJoinThread_interrupted() {
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        final Thread thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        final Thread joiner = new Thread() {
+            @Override
+            public void run() {
+                joinThread(thread);
+            }
+        };
+
+        thread.start();
+        joiner.start();
+
+        joiner.interrupt();
+        assertTrue(joiner.isInterrupted());
+        joinThread(joiner);
+
+        latch.countDown();
+        joinThread(thread);
     }
 }
