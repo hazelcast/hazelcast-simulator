@@ -1,11 +1,13 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
+import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -18,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +29,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static org.junit.Assert.assertEquals;
@@ -74,8 +78,17 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_unsupportedCommand() throws Exception {
-        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+    public void process_unsupportedOperation() throws Exception {
+        SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerJvmSettings>emptyList());
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
+        exceptionLogger.assertNoException();
+    }
+
+    @Test
+    public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
+        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA, EQUALS);
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
