@@ -42,7 +42,7 @@ public class TestOperationProcessorTest {
     private TestOperationProcessor processor;
 
     @Test
-    public void testProcessOperation_UnsupportedOperation() throws Exception {
+    public void testProcessOperation_unsupportedOperation() throws Exception {
         createTestOperationProcessor();
 
         SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
