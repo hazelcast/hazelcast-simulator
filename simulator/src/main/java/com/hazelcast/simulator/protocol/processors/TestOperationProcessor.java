@@ -15,9 +15,13 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
+import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -88,6 +92,8 @@ public class TestOperationProcessor extends OperationProcessor {
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
                                             SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
+            case INTEGRATION_TEST:
+                return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
             case START_TEST_PHASE:
                 processStartTestPhase((StartTestPhaseOperation) operation);
                 break;
@@ -96,6 +102,27 @@ public class TestOperationProcessor extends OperationProcessor {
                 break;
             case STOP_TEST:
                 processStopTest();
+                break;
+            default:
+                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+        }
+        return SUCCESS;
+    }
+
+    private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)
+            throws Exception {
+        LogOperation logOperation;
+        Response response;
+        switch (operation.getOperation()) {
+            case NESTED_SYNC:
+                logOperation = new LogOperation("Sync nested integration test message");
+                response = worker.getWorkerConnector().write(sourceAddress, logOperation);
+                LOGGER.debug("Got response for sync nested message: " + response);
+                break;
+            case NESTED_ASYNC:
+                logOperation = new LogOperation("Async nested integration test message");
+                ResponseFuture future = worker.getWorkerConnector().submitFromTest(testAddress, sourceAddress, logOperation);
+                LOGGER.debug("Got response for async nested message: " + future.get());
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
