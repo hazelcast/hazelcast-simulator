@@ -217,20 +217,18 @@ public class WorkerJvmFailureMonitor {
             FailureOperation operation = new FailureOperation(message, type, workerAddress, agent.getPublicAddress(),
                     jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
             if (isFailure) {
-                LOGGER.error(format("Detected failure on Worker %s: %s", jvm.getId(), operation.getLogMessage(++failureCount)));
+                LOGGER.error(format("Detected failure on Worker %s (%s): %s", jvm.getId(), jvm.getAddress(),
+                        operation.getLogMessage(++failureCount)));
+            } else {
+                LOGGER.info(format("Worker %s (%s) finished.", jvm.getId(), jvm.getAddress()));
             }
 
             AgentConnector agentConnector = agent.getAgentConnector();
-            if (type.isWorkerFinishedFailure()) {
-                String finishedType = (isFailure) ? "failed" : "finished";
-                LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
-                agentConnector.removeWorker(workerAddress.getWorkerIndex());
-            }
-
             try {
                 Response response = agentConnector.write(SimulatorAddress.COORDINATOR, operation);
-                if (response.getFirstErrorResponseType() != ResponseType.SUCCESS) {
-                    LOGGER.error(format("Could not send failure to coordinator! %s", operation.getFileMessage()));
+                ResponseType firstErrorResponseType = response.getFirstErrorResponseType();
+                if (firstErrorResponseType != ResponseType.SUCCESS) {
+                    LOGGER.error(format("Could not send failure to coordinator: %s", firstErrorResponseType));
                 } else if (isFailure) {
                     LOGGER.info("Failure successfully sent to Coordinator!");
                 }
@@ -238,6 +236,12 @@ public class WorkerJvmFailureMonitor {
                 if (!isInterrupted() && !(e.getCause() instanceof InterruptedException)) {
                     LOGGER.error(format("Could not send failure to coordinator! %s", operation.getFileMessage()), e);
                 }
+            }
+
+            if (type.isWorkerFinishedFailure()) {
+                String finishedType = (isFailure) ? "failed" : "finished";
+                LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
+                agentConnector.removeWorker(workerAddress.getWorkerIndex());
             }
         }
     }
