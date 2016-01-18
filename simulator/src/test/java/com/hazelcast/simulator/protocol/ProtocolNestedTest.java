@@ -4,6 +4,7 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -13,7 +14,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.getCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.stopSimulatorComponents;
@@ -23,6 +23,10 @@ import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperatio
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.NESTED_SYNC;
 
 public class ProtocolNestedTest {
+
+    private static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(WORKER, 0, 0, 0);
+
+    private static final Logger LOGGER = Logger.getLogger(ProtocolNestedTest.class);
 
     @Before
     public void setUp() {
@@ -38,27 +42,25 @@ public class ProtocolNestedTest {
         resetLogLevel();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     @Ignore
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_syncWrite() {
-        SimulatorAddress allWorkers = new SimulatorAddress(WORKER, 0, 0, 0);
-
-        getCoordinatorConnector().write(allWorkers, new IntegrationTestOperation(null, NESTED_SYNC));
+        IntegrationTestOperation operation = new IntegrationTestOperation(null, NESTED_SYNC);
 
         // assert that the connection is working downstream
-        Response response = sendFromCoordinator(allWorkers);
-        assertAllTargets(response, allWorkers, SUCCESS, 2);
+        Response response = sendFromCoordinator(ALL_WORKERS, operation);
+        LOGGER.info("Response: " + response);
+        assertAllTargets(response, ALL_WORKERS, SUCCESS, 2);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     @Ignore
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_asyncWrite() {
-        SimulatorAddress allWorkers = new SimulatorAddress(WORKER, 0, 0, 0);
-
-        getCoordinatorConnector().write(allWorkers, new IntegrationTestOperation(null, NESTED_ASYNC));
+        IntegrationTestOperation operation = new IntegrationTestOperation(null, NESTED_ASYNC);
 
         // assert that the connection is working downstream
-        Response response = sendFromCoordinator(allWorkers);
-        assertAllTargets(response, allWorkers, SUCCESS, 2);
+        Response response = sendFromCoordinator(ALL_WORKERS, operation);
+        LOGGER.info("Response: " + response);
+        assertAllTargets(response, ALL_WORKERS, SUCCESS, 2);
     }
 }
