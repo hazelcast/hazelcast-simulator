@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.util.ExceptionUtil;
 import org.apache.log4j.Logger;
@@ -118,8 +119,10 @@ class ProtocolUtil {
     }
 
     private static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
+        Worker worker = mock(Worker.class);
         WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port,
-                WorkerType.MEMBER, null, null, true);
+                WorkerType.MEMBER, null, worker, true);
+        when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
             TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, null, WorkerType.MEMBER, testIndex,
