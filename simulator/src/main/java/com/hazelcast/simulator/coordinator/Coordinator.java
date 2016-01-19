@@ -277,13 +277,12 @@ public final class Coordinator {
 
     void runTestSuite() {
         try {
-            boolean isParallel = coordinatorParameters.isParallel();
-            int testCount = testSuite.size();
             int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
+            int testCount = testSuite.size();
+            boolean isParallel = (coordinatorParameters.isParallel() && testCount > 1);
 
-            TestPhase lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
-            ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncs = getTestPhaseSyncMap(isParallel, testCount,
-                    lastTestPhaseToSync);
+            ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(isParallel, testCount,
+                    coordinatorParameters.getLastTestPhaseToSync());
 
             echo("Starting testsuite: %s", testSuite.getId());
             logTestSuiteDuration();
@@ -292,21 +291,29 @@ public final class Coordinator {
                 int testIndex = testData.getTestIndex();
                 TestCase testCase = testData.getTestCase();
                 echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
-                TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncs);
+                TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncMap);
                 testPhaseListenerContainer.addListener(testIndex, runner);
             }
 
             echo(HORIZONTAL_RULER);
-            echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
+            if (testCount == 1) {
+                echo("Running test...");
+            } else {
+                echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
+            }
             echo(HORIZONTAL_RULER);
             long started = System.nanoTime();
             if (isParallel) {
                 runParallel();
             } else {
-                runSequential();
+                runSequential(testCount);
             }
             echo(HORIZONTAL_RULER);
-            echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
+            if (testCount == 1) {
+                echo("Finished running of test (%s)", secondsToHuman(getElapsedSeconds(started)));
+            } else {
+                echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
+            }
             echo(HORIZONTAL_RULER);
         } finally {
             int runningWorkerCount = componentRegistry.workerCount();
@@ -356,7 +363,8 @@ public final class Coordinator {
         spawner.awaitCompletion();
     }
 
-    private void runSequential() {
+    private void runSequential(int testCount) {
+        int testIndex = 0;
         for (TestPhaseListener testCaseRunner : testPhaseListenerContainer.getListeners()) {
             ((TestCaseRunner) testCaseRunner).run();
             boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
@@ -364,7 +372,8 @@ public final class Coordinator {
                 LOGGER.info("Aborting testsuite due to critical failure");
                 break;
             }
-            if (hasCriticalFailure || coordinatorParameters.isRefreshJvm()) {
+            // restart Workers if needed, but not after last test
+            if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testCount) {
                 startWorkers();
             }
         }
