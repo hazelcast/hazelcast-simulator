@@ -19,8 +19,6 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
-
 /**
  * Asynchronous version of {@link AbstractWorker}.
  *
@@ -37,13 +35,9 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
     }
 
     @Override
-    public final void run() {
+    public final void doRun() throws Exception {
         while (!testContext.isStopped() && !isWorkerStopped) {
-            try {
-                timeStep(selector.select());
-            } catch (Exception e) {
-                throw rethrow(e);
-            }
+            timeStep(selector.select());
         }
     }
 
