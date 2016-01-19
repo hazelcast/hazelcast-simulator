@@ -136,7 +136,7 @@ public class SerializationStrategyTest {
         }
 
         @Override
-        protected void beforeRun() {
+        protected void beforeRun() throws Exception {
             localUniqueStrings = uniqueStrings.toArray(new String[uniqueStrings.size()]);
             super.beforeRun();
         }

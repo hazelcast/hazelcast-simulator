@@ -32,5 +32,5 @@ public interface IWorker extends Runnable {
      * Will always be called by the {@link com.hazelcast.simulator.test.TestContainer}, regardless of errors in the run phase.
      * Will be executed after {@link com.hazelcast.simulator.utils.ThreadSpawner#awaitCompletion()} on a single worker instance.
      */
-    void afterCompletion();
+    void afterCompletion() throws Exception;
 }

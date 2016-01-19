@@ -71,16 +71,20 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     }
 
     @Override
-    public void run() {
+    public final void run() {
+        try {
+            doRun();
+        } catch (Exception e) {
+            throw rethrow(e);
+        }
+    }
+
+    protected void doRun() throws Exception {
         beforeRun();
 
         while (!testContext.isStopped() && !isWorkerStopped) {
             long started = System.nanoTime();
-            try {
-                timeStep(selector.select());
-            } catch (Exception e) {
-                throw rethrow(e);
-            }
+            timeStep(selector.select());
             workerProbe.recordValue(System.nanoTime() - started);
 
             increaseIteration();
@@ -110,7 +114,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     /**
      * Override this method if you need to execute code on each worker before {@link #run()} is called.
      */
-    protected void beforeRun() {
+    protected void beforeRun() throws Exception {
     }
 
     /**
@@ -127,7 +131,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      *
      * Won't be called if an error occurs in {@link #beforeRun()} or {@link #timeStep(Enum)}.
      */
-    protected void afterRun() {
+    protected void afterRun() throws Exception {
     }
 
     /**
@@ -135,7 +139,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      *
      * @see IWorker
      */
-    public void afterCompletion() {
+    public void afterCompletion() throws Exception {
     }
 
     /**
