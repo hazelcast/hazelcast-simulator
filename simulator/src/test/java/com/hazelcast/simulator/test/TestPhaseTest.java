@@ -2,7 +2,7 @@ package com.hazelcast.simulator.test;
 
 import org.junit.Test;
 
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
@@ -13,7 +13,7 @@ public class TestPhaseTest {
 
     @Test
     public void testGetTestPhaseSyncMap() {
-        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(true, 5, TestPhase.RUN);
+        Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(5, true, TestPhase.RUN);
 
         assertEquals(5, testPhaseSyncMap.get(TestPhase.SETUP).getCount());
         assertEquals(5, testPhaseSyncMap.get(TestPhase.LOCAL_WARMUP).getCount());
@@ -28,7 +28,7 @@ public class TestPhaseTest {
     @Test
     @SuppressWarnings("all")
     public void testGetTestPhaseSyncMap_notParallel() {
-        ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(false, 5, TestPhase.RUN);
+        Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(5, false, TestPhase.RUN);
 
         assertNull(testPhaseSyncMap);
     }

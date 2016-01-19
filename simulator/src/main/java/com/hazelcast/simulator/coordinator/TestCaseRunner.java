@@ -25,6 +25,7 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.Logger;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -73,7 +74,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private final ComponentRegistry componentRegistry;
 
     private final String prefix;
-    private final ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap;
+    private final Map<TestPhase, CountDownLatch> testPhaseSyncMap;
 
     private final boolean isVerifyEnabled;
     private final boolean isPassiveMembers;
@@ -83,7 +84,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private final int logRunPhaseIntervalSeconds;
 
     TestCaseRunner(int testIndex, TestCase testCase, Coordinator coordinator, int paddingLength,
-                   ConcurrentMap<TestPhase, CountDownLatch> testPhaseSyncMap) {
+                   Map<TestPhase, CountDownLatch> testPhaseSyncMap) {
         this.testIndex = testIndex;
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
