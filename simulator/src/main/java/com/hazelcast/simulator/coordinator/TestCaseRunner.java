@@ -159,6 +159,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void runPhase(TestPhase testPhase) {
         if (testSuite.isFailFast() && failureContainer.hasCriticalFailure(testCaseId)) {
             echo("Skipping Test " + testPhase.desc() + " (critical failure)");
+            decrementAndGetCountDownLatch(testPhase);
             return;
         }
 
@@ -231,8 +232,7 @@ final class TestCaseRunner implements TestPhaseListener {
             return;
         }
         try {
-            CountDownLatch latch = testPhaseSyncMap.get(testPhase);
-            latch.countDown();
+            CountDownLatch latch = decrementAndGetCountDownLatch(testPhase);
             latch.await();
             if (LOG_TEST_PHASE_COMPLETION.putIfAbsent(testPhase, true) == null) {
                 LOGGER.info("Completed TestPhase " + testPhase.desc());
@@ -248,6 +248,12 @@ final class TestCaseRunner implements TestPhaseListener {
             return 0;
         }
         return (testPhase.isGlobal()) ? 1 : workerCount;
+    }
+
+    private CountDownLatch decrementAndGetCountDownLatch(TestPhase testPhase) {
+        CountDownLatch latch = testPhaseSyncMap.get(testPhase);
+        latch.countDown();
+        return latch;
     }
 
     private void echo(String msg) {
@@ -283,11 +289,11 @@ final class TestCaseRunner implements TestPhaseListener {
             int sleepLoops = sleepSeconds / logRunPhaseIntervalSeconds;
             for (int i = 1; i <= sleepLoops && isRunning; i++) {
                 if (failureContainer.hasCriticalFailure(testCaseId)) {
-                    echo("Critical failure detected, aborting execution of test");
+                    echo("Critical failure detected, aborting run phase");
                     return;
                 }
                 if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
-                    echo("Aborting testsuite due to failure");
+                    echo("Aborting run phase due to failure");
                     return;
                 }
 

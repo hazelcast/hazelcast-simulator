@@ -42,7 +42,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class CoordinatorRunTestSuiteTest {
+public class TestCaseRunnerTest {
 
     private TestSuite testSuite;
     private SimulatorProperties simulatorProperties;
@@ -85,7 +85,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test
-    public void runTestSuiteParallel_waitForTestCase_and_duration() throws Exception {
+    public void runTestSuiteParallel_waitForTestCase_and_duration() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(3);
         parallel = true;
@@ -97,7 +97,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test
-    public void runTestSuiteParallel_waitForTestCase_noVerify() throws Exception {
+    public void runTestSuiteParallel_waitForTestCase_noVerify() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         parallel = true;
@@ -110,7 +110,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test
-    public void runTestSuiteParallel_performanceMonitorEnabled() throws Exception {
+    public void runTestSuiteParallel_performanceMonitorEnabled() {
         testSuite.setDurationSeconds(4);
         parallel = true;
         monitorPerformance = true;
@@ -122,7 +122,7 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     @Test
-    public void runTestSuiteSequential_hasCriticalFailures() throws Exception {
+    public void runTestSuiteSequential_hasCriticalFailures() {
         testSuite.setDurationSeconds(4);
         parallel = false;
 
@@ -133,11 +133,11 @@ public class CoordinatorRunTestSuiteTest {
         );
         coordinator.runTestSuite();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient(coordinator, true);
     }
 
     @Test
-    public void runTestSuiteParallel_hasCriticalFailures() throws Exception {
+    public void runTestSuiteParallel_hasCriticalFailures() {
         testSuite.setDurationSeconds(4);
         testSuite.setFailFast(false);
         parallel = true;
@@ -149,7 +149,23 @@ public class CoordinatorRunTestSuiteTest {
         );
         coordinator.runTestSuite();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient(coordinator, true);
+    }
+
+    @Test
+    public void runTestSuiteParallel_hasCriticalFailures_withFailFast() {
+        testSuite.setDurationSeconds(1);
+        testSuite.setFailFast(true);
+        parallel = true;
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.getFailureContainer().addFailureOperation(
+                new FailureOperation("expected critical failure", WORKER_EXCEPTION, null, "127.0.0.1", "127.0.0.1:5701",
+                        "workerId", "CoordinatorTest1", testSuite, "stacktrace")
+        );
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator, true);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -208,6 +224,10 @@ public class CoordinatorRunTestSuiteTest {
     }
 
     private void verifyRemoteClient(Coordinator coordinator) {
+        verifyRemoteClient(coordinator, false);
+    }
+
+    private void verifyRemoteClient(Coordinator coordinator, boolean hasCriticalFailures) {
         boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = testSuite.size();
         int sendToTestOnFirstWorkerTimes = 0;
@@ -232,6 +252,11 @@ public class CoordinatorRunTestSuiteTest {
             sendToTestOnFirstWorkerTimes--;
             sendToTestOnAllWorkersTimes--;
         }
+        if (testSuite.isFailFast() && hasCriticalFailures) {
+            verifyExecuteOnAllWorkersWithRange = true;
+            sendToTestOnFirstWorkerTimes = 2;
+            sendToTestOnAllWorkersTimes = 4;
+        }
 
         verify(remoteClient, times(numberOfTests)).sendToAllWorkers(any(SimulatorOperation.class));
         if (verifyExecuteOnAllWorkersWithRange) {
@@ -239,12 +264,18 @@ public class CoordinatorRunTestSuiteTest {
             VerificationMode atMost = atMost(sendToTestOnAllWorkersTimes * numberOfTests);
             verify(remoteClient, atLeast).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
             verify(remoteClient, atMost).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
+
+            atLeast = atLeast((sendToTestOnFirstWorkerTimes - 1) * numberOfTests);
+            atMost = atMost(sendToTestOnFirstWorkerTimes * numberOfTests);
+            verify(remoteClient, atLeast).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
+            verify(remoteClient, atMost).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
         } else {
             VerificationMode times = times(sendToTestOnAllWorkersTimes * numberOfTests);
             verify(remoteClient, times).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
+
+            times = times(sendToTestOnFirstWorkerTimes * numberOfTests);
+            verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
         }
-        VerificationMode times = times(sendToTestOnFirstWorkerTimes * numberOfTests);
-        verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
         verify(remoteClient, times(1)).terminateWorkers(true);
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
     }
