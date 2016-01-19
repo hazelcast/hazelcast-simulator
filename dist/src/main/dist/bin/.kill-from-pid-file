@@ -13,7 +13,7 @@ fi
 
 if [ "${PID}" -ne "-1" ]
 then
-    kill ${PID}
+    kill ${PID} || true
 else
     killall -9 java || true
 fi
