@@ -176,42 +176,35 @@ public class Provisioner {
         final String sshOptions = properties.getSshOptions();
         final String sshUser = properties.getUser();
 
-        // download Worker logs
-        final String rsyncCommand = format(baseCommand, "", sshOptions, sshUser, target);
         final String workersPath = format("hazelcast-simulator-%s/workers/*", getSimulatorVersion());
+
+        final String rsyncCommand = format(baseCommand, "", sshOptions, sshUser, target);
+        final String rsyncCommandSuffix = format(baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, target);
+
+        final File agentOut = new File(target, "agent.out");
+        final File agentErr = new File(target, "agent.err");
 
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Downloading Worker logs from %s", agentData.getPublicAddress());
-                    bash.executeQuiet(format(rsyncCommand, agentData.getPublicAddress(), workersPath));
-                }
-            });
-        }
-
-        // download Agent logs
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                String rsyncCommandSuffix = format(baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, target);
-                File agentOut = new File(target, "agent.out");
-                File agentErr = new File(target, "agent.err");
-
-                for (AgentData agentData : componentRegistry.getAgents()) {
-                    String agentAddress = agentData.getAddress().toString();
                     String ip = agentData.getPublicAddress();
-                    echo("Downloading Agent logs from %s", ip);
+                    String agentAddress = agentData.getAddress().toString();
 
+                    // download Worker logs
+                    echo("Downloading Worker logs from %s", ip);
+                    bash.executeQuiet(format(rsyncCommand, ip, workersPath));
+
+                    // download Agent logs
+                    echo("Downloading Agent logs from %s", ip);
                     bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.out"));
                     bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.err"));
 
                     rename(agentOut, new File(target, agentAddress + '-' + ip + "-agent.out"));
                     rename(agentErr, new File(target, agentAddress + '-' + ip + "-agent.err"));
                 }
-            }
-        });
-
+            });
+        }
         spawner.awaitCompletion();
         echoImportant("Finished downloading artifacts of %s machines", componentRegistry.agentCount());
     }
