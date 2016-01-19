@@ -4,7 +4,6 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -24,7 +23,7 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -45,6 +44,8 @@ import static org.mockito.Mockito.when;
 public class TestCaseRunnerTest {
 
     private TestSuite testSuite;
+    private FailureOperation criticalFailureOperation;
+
     private SimulatorProperties simulatorProperties;
     private RemoteClient remoteClient;
 
@@ -70,6 +71,10 @@ public class TestCaseRunnerTest {
         testSuite = new TestSuite();
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);
+
+        SimulatorAddress address = new SimulatorAddress(WORKER, 1, 1, 0);
+        criticalFailureOperation = new FailureOperation("expected critical failure", WORKER_EXCEPTION, address, "127.0.0.1",
+                "127.0.0.1:5701", "workerId", "CoordinatorTest1", testSuite, "stacktrace");
 
         simulatorProperties = new SimulatorProperties();
 
@@ -122,15 +127,42 @@ public class TestCaseRunnerTest {
     }
 
     @Test
+    public void runTestSuiteSequential_withSingleTest() {
+        TestCase testCase = new TestCase("CoordinatorTest");
+
+        testSuite = new TestSuite();
+        testSuite.addTest(testCase);
+        testSuite.setDurationSeconds(1);
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator);
+    }
+
+    @Test
+    public void runTestSuiteParallel_withSingleTest() {
+        TestCase testCase = new TestCase("CoordinatorTest");
+
+        testSuite = new TestSuite();
+        testSuite.addTest(testCase);
+        testSuite.setDurationSeconds(1);
+
+        parallel = true;
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator);
+    }
+
+    @Test
     public void runTestSuiteSequential_hasCriticalFailures() {
         testSuite.setDurationSeconds(4);
         parallel = false;
 
         Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(
-                new FailureOperation("expected critical failure", NETTY_EXCEPTION, null, "127.0.0.1", "127.0.0.1:5701",
-                        "workerId", "testId", testSuite, "stacktrace")
-        );
+        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
 
         verifyRemoteClient(coordinator, true);
@@ -143,10 +175,19 @@ public class TestCaseRunnerTest {
         parallel = true;
 
         Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(
-                new FailureOperation("expected critical failure", WORKER_EXCEPTION, null, "127.0.0.1", "127.0.0.1:5701",
-                        "workerId", "CoordinatorTest1", testSuite, "stacktrace")
-        );
+        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator, true);
+    }
+
+    @Test
+    public void runTestSuiteSequential_hasCriticalFailures_withFailFast() {
+        testSuite.setDurationSeconds(1);
+        testSuite.setFailFast(true);
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
 
         verifyRemoteClient(coordinator, true);
@@ -159,10 +200,7 @@ public class TestCaseRunnerTest {
         parallel = true;
 
         Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(
-                new FailureOperation("expected critical failure", WORKER_EXCEPTION, null, "127.0.0.1", "127.0.0.1:5701",
-                        "workerId", "CoordinatorTest1", testSuite, "stacktrace")
-        );
+        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
 
         verifyRemoteClient(coordinator, true);
@@ -230,9 +268,12 @@ public class TestCaseRunnerTest {
     private void verifyRemoteClient(Coordinator coordinator, boolean hasCriticalFailures) {
         boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = testSuite.size();
+        int createTestCount = numberOfTests;
+        // there are no default operations sent to the first Worker
         int sendToTestOnFirstWorkerTimes = 0;
         // StopTestOperation
         int sendToTestOnAllWorkersTimes = 1;
+        // increase expected counters for each TestPhase
         for (TestPhase testPhase : TestPhase.values()) {
             if (testPhase.isGlobal()) {
                 sendToTestOnFirstWorkerTimes++;
@@ -254,11 +295,17 @@ public class TestCaseRunnerTest {
         }
         if (testSuite.isFailFast() && hasCriticalFailures) {
             verifyExecuteOnAllWorkersWithRange = true;
-            sendToTestOnFirstWorkerTimes = 2;
-            sendToTestOnAllWorkersTimes = 4;
+            if (parallel) {
+                sendToTestOnFirstWorkerTimes = 2;
+                sendToTestOnAllWorkersTimes = 4;
+            } else {
+                createTestCount = 1;
+                sendToTestOnFirstWorkerTimes = 1;
+                sendToTestOnAllWorkersTimes = 2;
+            }
         }
 
-        verify(remoteClient, times(numberOfTests)).sendToAllWorkers(any(SimulatorOperation.class));
+        verify(remoteClient, times(createTestCount)).sendToAllWorkers(any(SimulatorOperation.class));
         if (verifyExecuteOnAllWorkersWithRange) {
             VerificationMode atLeast = atLeast((sendToTestOnAllWorkersTimes - 1) * numberOfTests);
             VerificationMode atMost = atMost(sendToTestOnAllWorkersTimes * numberOfTests);
@@ -307,7 +354,7 @@ public class TestCaseRunnerTest {
             }
 
             sleepMillis(100);
-            SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
+            SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
             FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
                     "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
             failureContainer.addFailureOperation(operation);
