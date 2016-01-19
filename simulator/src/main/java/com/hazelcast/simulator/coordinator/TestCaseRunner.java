@@ -251,6 +251,9 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private CountDownLatch decrementAndGetCountDownLatch(TestPhase testPhase) {
+        if (testPhaseSyncMap == null) {
+            return new CountDownLatch(0);
+        }
         CountDownLatch latch = testPhaseSyncMap.get(testPhase);
         latch.countDown();
         return latch;
