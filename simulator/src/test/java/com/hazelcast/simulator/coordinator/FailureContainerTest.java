@@ -28,6 +28,8 @@ import static org.mockito.Mockito.mock;
 
 public class FailureContainerTest {
 
+    private final static int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
+
     private ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
     private FailureContainer failureContainer = new FailureContainer("testSuite", componentRegistry, singleton(WORKER_TIMEOUT));
 
@@ -122,7 +124,7 @@ public class FailureContainerTest {
             }
         });
 
-        boolean success = failureContainer.waitForWorkerShutdown(3, FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS);
+        boolean success = failureContainer.waitForWorkerShutdown(3, FINISHED_WORKER_TIMEOUT_SECONDS);
         assertTrue(success);
     }
 

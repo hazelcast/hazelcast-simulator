@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
-import static com.hazelcast.simulator.coordinator.FailureContainer.FINISHED_WORKER_TIMEOUT_SECONDS;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -319,7 +318,9 @@ public final class Coordinator {
             int runningWorkerCount = componentRegistry.workerCount();
             echo("Terminating %d Workers...", runningWorkerCount);
             remoteClient.terminateWorkers(true);
-            if (!failureContainer.waitForWorkerShutdown(runningWorkerCount, FINISHED_WORKER_TIMEOUT_SECONDS)) {
+
+            int waitForWorkerShutdownTimeoutSeconds = simulatorProperties.getWaitForWorkerShutdownTimeoutSeconds();
+            if (!failureContainer.waitForWorkerShutdown(runningWorkerCount, waitForWorkerShutdownTimeoutSeconds)) {
                 Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
                 LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
             }

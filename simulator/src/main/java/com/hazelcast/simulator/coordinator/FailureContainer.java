@@ -43,8 +43,7 @@ import static java.lang.String.format;
  */
 public class FailureContainer {
 
-    static final int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
-    static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
+    private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
 
