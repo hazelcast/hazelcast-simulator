@@ -133,15 +133,15 @@ public class TestOperationProcessor extends OperationProcessor {
     private void processStartTestPhase(StartTestPhaseOperation operation) throws Exception {
         final TestPhase testPhase = operation.getTestPhase();
 
+        LOGGER.info(format("%s Starting %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
         try {
             OperationThread operationThread = new OperationThread(testPhase) {
                 @Override
                 public void doRun() throws Exception {
                     try {
-                        LOGGER.info(format("%s Starting %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                         testContainer.invoke(testPhase);
-                        LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                     } finally {
+                        LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                         if (testPhase == TestPhase.LOCAL_TEARDOWN) {
                             worker.getWorkerConnector().removeTest(testIndex);
                         }
@@ -166,17 +166,20 @@ public class TestOperationProcessor extends OperationProcessor {
             return;
         }
 
+        LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
         OperationThread operationThread = new OperationThread(TestPhase.RUN) {
             @Override
             public void doRun() throws Exception {
-                LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
-                testContainer.invoke(TestPhase.RUN);
-                LOGGER.info(format("%s Completed run of %s %s", DASHES, testId, DASHES));
+                try {
+                    testContainer.invoke(TestPhase.RUN);
+                } finally {
+                    LOGGER.info(format("%s Completed run of %s %s", DASHES, testId, DASHES));
 
-                // stop performance monitor if all tests have completed their run phase
-                if (TESTS_COMPLETED.incrementAndGet() == TESTS_PENDING.get()) {
-                    LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
-                    worker.shutdownPerformanceMonitor();
+                    // stop performance monitor if all tests have completed their run phase
+                    if (TESTS_COMPLETED.incrementAndGet() == TESTS_PENDING.get()) {
+                        LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
+                        worker.shutdownPerformanceMonitor();
+                    }
                 }
             }
         };
@@ -215,6 +218,6 @@ public class TestOperationProcessor extends OperationProcessor {
             }
         }
 
-        public abstract void doRun() throws Exception;
+        abstract void doRun() throws Exception;
     }
 }
