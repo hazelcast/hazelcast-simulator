@@ -82,8 +82,9 @@ public class TxnQueueWithLockTest {
                         secondLock.lock();
                         secondLock.unlock();
 
-                        ctx.commitTransaction();
                         queue.take();
+
+                        ctx.commitTransaction();
                         counter.committed++;
 
                     } catch (Exception txnException) {
