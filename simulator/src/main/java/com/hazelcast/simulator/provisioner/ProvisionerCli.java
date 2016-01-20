@@ -27,7 +27,7 @@ import org.jclouds.compute.ComputeService;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isCloudProvider;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.isPrepareRequired;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.newInstance;
@@ -82,7 +82,7 @@ final class ProvisionerCli {
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
         SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-        ComputeService computeService = isStatic(properties) ? null : new ComputeServiceBuilder(properties).build();
+        ComputeService computeService = (isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null);
         Bash bash = new Bash(properties);
 
         HazelcastJARs hazelcastJARs = null;

@@ -19,11 +19,20 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 
 public final class CloudProviderUtils {
 
+    public static final String PROVIDER_LOCAL = "local";
     public static final String PROVIDER_STATIC = "static";
     public static final String PROVIDER_EC2 = "aws-ec2";
     public static final String PROVIDER_GCE = "google-compute-engine";
 
     private CloudProviderUtils() {
+    }
+
+    public static boolean isCloudProvider(SimulatorProperties properties) {
+        return (!isLocal(properties) && !isStatic(properties));
+    }
+
+    public static boolean isLocal(SimulatorProperties properties) {
+        return isLocal(properties.getCloudProvider());
     }
 
     public static boolean isStatic(SimulatorProperties properties) {
@@ -36,6 +45,10 @@ public final class CloudProviderUtils {
 
     public static boolean isGCE(SimulatorProperties properties) {
         return isGCE(properties.getCloudProvider());
+    }
+
+    public static boolean isLocal(String cloudProvider) {
+        return PROVIDER_LOCAL.equals(cloudProvider);
     }
 
     public static boolean isStatic(String cloudProvider) {

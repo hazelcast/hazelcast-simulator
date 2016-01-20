@@ -32,21 +32,27 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
+import static com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher.WORKERS_HOME_NAME;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
+import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
-import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
 
 public final class Coordinator {
@@ -156,7 +162,9 @@ public final class Coordinator {
         try {
             uploadFiles();
 
-            startAgents();
+            startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+            startCoordinatorConnector();
+            startRemoteClient();
             startWorkers();
 
             runTestSuite();
@@ -174,53 +182,46 @@ public final class Coordinator {
                     coordinatorConnector.shutdown();
                 }
 
-                stopAgents();
+                stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+                moveLogFiles();
             }
         }
     }
 
     private void uploadFiles() {
+        if (isLocal(simulatorProperties)) {
+            return;
+        }
         CoordinatorUploader uploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs,
                 coordinatorParameters.isUploadHazelcastJARs(), coordinatorParameters.isEnterpriseEnabled(),
                 coordinatorParameters.getWorkerClassPath(), workerParameters.getProfiler(), testSuite.getId());
         uploader.run();
     }
 
-    private void startAgents() {
-        echoLocal("Starting %s Agents", componentRegistry.agentCount());
-        ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
-        int agentPort = simulatorProperties.getAgentPort();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new StartAgentRunnable(agentData, agentPort));
-        }
-        spawner.awaitCompletion();
-        echoLocal("Successfully started agents on %s boxes", componentRegistry.agentCount());
-
+    private void startCoordinatorConnector() {
         try {
-            startCoordinatorConnector();
+            coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer, performanceStateContainer,
+                    testHistogramContainer, failureContainer);
+            ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
+            for (final AgentData agentData : componentRegistry.getAgents()) {
+                final int agentPort = simulatorProperties.getAgentPort();
+                spawner.spawn(new Runnable() {
+                    @Override
+                    public void run() {
+                        coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
+                    }
+                });
+            }
+            spawner.awaitCompletion();
         } catch (Exception e) {
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
+    }
 
+    private void startRemoteClient() {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry,
                 simulatorProperties.getWorkerPingIntervalSeconds(), simulatorProperties.getMemberWorkerShutdownDelaySeconds());
         remoteClient.initTestSuite(testSuite);
-    }
-
-    private void startCoordinatorConnector() {
-        coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer, performanceStateContainer,
-                testHistogramContainer, failureContainer);
-        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            final int agentPort = simulatorProperties.getAgentPort();
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
-                }
-            });
-        }
-        spawner.awaitCompletion();
     }
 
     private void startWorkers() {
@@ -347,6 +348,18 @@ public final class Coordinator {
         }
     }
 
+    private void moveLogFiles() {
+        if (isLocal(simulatorProperties)) {
+            File targetDirectory = new File(".", WORKERS_HOME_NAME);
+            ensureExistingDirectory(targetDirectory);
+
+            String targetPath = targetDirectory.getAbsolutePath();
+            execute(format("mv %s/%s/* %s || true", getSimulatorHome(), WORKERS_HOME_NAME, targetPath));
+            execute(format("mv ./agent.err %s/%s/ || true", targetPath, testSuite.getId()));
+            execute(format("mv ./agent.out %s/%s/ || true", targetPath, testSuite.getId()));
+        }
+    }
+
     private void echoTestSuiteStart(int testCount, boolean isParallel) {
         echo(HORIZONTAL_RULER);
         if (testCount == 1) {
@@ -367,18 +380,6 @@ public final class Coordinator {
         echo(HORIZONTAL_RULER);
     }
 
-    private void stopAgents() {
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(simulatorProperties);
-
-        echoLocal("Stopping %s Agents", componentRegistry.agentCount());
-        ThreadSpawner spawner = new ThreadSpawner("killAgents", true);
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new AgentStopRunnable(agentData, startHarakiriMonitorCommand));
-        }
-        spawner.awaitCompletion();
-        echoLocal("Successfully stopped %s Agents", componentRegistry.agentCount());
-    }
-
     private void echoLocal(String msg, Object... args) {
         LOGGER.info(format(msg, args));
     }
@@ -394,64 +395,6 @@ public final class Coordinator {
             init(args).run();
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run testsuite", e);
-        }
-    }
-
-    private class StartAgentRunnable implements Runnable {
-
-        private final AgentData agentData;
-        private final int agentPort;
-
-        StartAgentRunnable(AgentData agentData, int agentPort) {
-            this.agentData = agentData;
-            this.agentPort = agentPort;
-        }
-
-        @Override
-        public void run() {
-            String ip = agentData.getPublicAddress();
-            echoLocal("Killing Java processes on %s", ip);
-            bash.killAllJavaProcesses(ip);
-
-            echoLocal("Starting Agent on %s", ip);
-            String mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s",
-                    agentData.getAddressIndex(), ip, agentPort);
-            String optionalParameters = format(" --threadPoolSize %d --workerLastSeenTimeoutSeconds %d",
-                    simulatorProperties.getAgentThreadPoolSize(),
-                    simulatorProperties.getWorkerLastSeenTimeoutSeconds());
-            if (isEC2(simulatorProperties)) {
-                optionalParameters += format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
-                        simulatorProperties.getCloudProvider(),
-                        simulatorProperties.getCloudIdentity(),
-                        simulatorProperties.getCloudCredential());
-            }
-            bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
-                    SIMULATOR_VERSION, mandatoryParameters, optionalParameters));
-
-            bash.ssh(ip, format("hazelcast-simulator-%s/bin/.await-file-exists agent.pid", SIMULATOR_VERSION));
-        }
-    }
-
-    private class AgentStopRunnable implements Runnable {
-
-        private final AgentData agentData;
-        private final String startHarakiriMonitorCommand;
-
-        AgentStopRunnable(AgentData agentData, String startHarakiriMonitorCommand) {
-            this.agentData = agentData;
-            this.startHarakiriMonitorCommand = startHarakiriMonitorCommand;
-        }
-
-        @Override
-        public void run() {
-            String ip = agentData.getPublicAddress();
-            echoLocal("Stopping Agent %s", ip);
-            bash.ssh(ip, format("hazelcast-simulator-%s/bin/.kill-from-pid-file agent.pid", SIMULATOR_VERSION));
-
-            if (startHarakiriMonitorCommand != null) {
-                LOGGER.info(format("Starting HarakiriMonitor on %s", ip));
-                bash.ssh(ip, startHarakiriMonitorCommand);
-            }
         }
     }
 }

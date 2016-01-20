@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.Test;
 
@@ -8,7 +9,8 @@ import java.io.File;
 
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.INIT_SH_SCRIPT_NAME;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
-import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureNotStaticCloudProvider;
+import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
+import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -67,19 +69,43 @@ public class ProvisionerUtilsTest {
     }
 
     @Test
-    public void testEnsureNotStaticCloudProvider_isEC2() {
+    public void testEnsureIsRemoteSetup_withEC2() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.getCloudProvider()).thenReturn("aws-ec2");
+        when(properties.getCloudProvider()).thenReturn(CloudProviderUtils.PROVIDER_EC2);
 
-        ensureNotStaticCloudProvider(properties, "terminate");
+        ensureIsRemoteSetup(properties, "terminate");
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testEnsureNotStaticCloudProvider_isStatic() {
+    public void testEnsureIsRemoteSetup_withLocal() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.getCloudProvider()).thenReturn("static");
+        when(properties.getCloudProvider()).thenReturn(CloudProviderUtils.PROVIDER_LOCAL);
 
-        ensureNotStaticCloudProvider(properties, "terminate");
+        ensureIsRemoteSetup(properties, "terminate");
+    }
+
+    @Test
+    public void testEnsureIsCloudProviderSetup_withEC2() {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(CloudProviderUtils.PROVIDER_EC2);
+
+        ensureIsCloudProviderSetup(properties, "terminate");
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testEnsureIsCloudProviderSetup_withLocal() {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(CloudProviderUtils.PROVIDER_LOCAL);
+
+        ensureIsCloudProviderSetup(properties, "terminate");
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testEnsureIsCloudProviderSetup_withStatic() {
+        SimulatorProperties properties = mock(SimulatorProperties.class);
+        when(properties.getCloudProvider()).thenReturn(CloudProviderUtils.PROVIDER_STATIC);
+
+        ensureIsCloudProviderSetup(properties, "terminate");
     }
 
     @Test

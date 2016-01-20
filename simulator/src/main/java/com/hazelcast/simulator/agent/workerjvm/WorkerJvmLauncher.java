@@ -44,6 +44,8 @@ import static java.util.Arrays.asList;
 
 public class WorkerJvmLauncher {
 
+    public static final String WORKERS_HOME_NAME = "workers";
+
     private static final int WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS = 500;
 
     private static final String CLASSPATH = System.getProperty("java.class.path");
@@ -179,7 +181,7 @@ public class WorkerJvmLauncher {
     }
 
     private void copyResourcesToWorkerId(String workerId) {
-        File workersDir = new File(getSimulatorHome(), "workers");
+        File workersDir = new File(getSimulatorHome(), WORKERS_HOME_NAME);
         String testSuiteId = agent.getTestSuite().getId();
         File uploadDirectory = new File(workersDir, testSuiteId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {

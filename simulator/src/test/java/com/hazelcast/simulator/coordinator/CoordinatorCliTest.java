@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.AfterClass;
@@ -326,6 +328,29 @@ public class CoordinatorCliTest {
             assertEquals(CLUSTER_XML, coordinator.getClusterLayoutParameters().getClusterConfiguration());
         } finally {
             deleteQuiet(clusterConfigFile);
+        }
+    }
+
+    @Test
+    public void testInit_withLocalSetup() {
+        File simulatorProperties = new File("simulator.properties").getAbsoluteFile();
+        writeText("CLOUD_PROVIDER=local", simulatorProperties);
+
+        try {
+            args.add("--waitForTestCaseCompletion");
+            args.add("--propertiesFile");
+            args.add(simulatorProperties.getAbsolutePath());
+
+            Coordinator coordinator = createCoordinator();
+
+            ComponentRegistry componentRegistry = coordinator.getComponentRegistry();
+            assertEquals(1, componentRegistry.agentCount());
+
+            AgentData firstAgent = componentRegistry.getFirstAgent();
+            assertEquals("localhost", firstAgent.getPublicAddress());
+            assertEquals("localhost", firstAgent.getPrivateAddress());
+        } finally {
+            deleteQuiet(simulatorProperties);
         }
     }
 

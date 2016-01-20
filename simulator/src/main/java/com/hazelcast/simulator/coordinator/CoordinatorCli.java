@@ -40,6 +40,7 @@ import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzC
 import static com.hazelcast.simulator.test.FailureType.fromPropertyValue;
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
@@ -203,13 +204,12 @@ final class CoordinatorCli {
 
         TestSuite testSuite = getTestSuite(cli, options);
 
-        ComponentRegistry componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
-        componentRegistry.addTests(testSuite);
-
         SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
         if (options.has(cli.gitSpec)) {
             simulatorProperties.forceGit(options.valueOf(cli.gitSpec));
         }
+
+        ComponentRegistry componentRegistry = getComponentRegistry(cli, options, testSuite, simulatorProperties);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
@@ -268,6 +268,19 @@ final class CoordinatorCli {
             throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
         }
         return testSuite;
+    }
+
+    private static ComponentRegistry getComponentRegistry(CoordinatorCli cli, OptionSet options, TestSuite testSuite,
+                                                          SimulatorProperties simulatorProperties) {
+        ComponentRegistry componentRegistry;
+        if (isLocal(simulatorProperties)) {
+            componentRegistry = new ComponentRegistry();
+            componentRegistry.addAgent("localhost", "localhost");
+        } else {
+            componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
+        }
+        componentRegistry.addTests(testSuite);
+        return componentRegistry;
     }
 
     private static File getTestSuiteFile(OptionSet options) {

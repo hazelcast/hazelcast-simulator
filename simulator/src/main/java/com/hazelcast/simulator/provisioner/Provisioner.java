@@ -44,7 +44,8 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
-import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureNotStaticCloudProvider;
+import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
+import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
@@ -127,7 +128,7 @@ public class Provisioner {
     }
 
     void scale(int size) {
-        ensureNotStaticCloudProvider(properties, "scale");
+        ensureIsCloudProviderSetup(properties, "scale");
 
         int agentSize = componentRegistry.agentCount();
         int delta = size - agentSize;
@@ -143,6 +144,8 @@ public class Provisioner {
     }
 
     void installSimulator() {
+        ensureIsRemoteSetup(properties, "install");
+
         echoImportant("Installing Simulator on %d machines", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
@@ -167,6 +170,8 @@ public class Provisioner {
     }
 
     void download(final String target) {
+        ensureIsRemoteSetup(properties, "download");
+
         echoImportant("Download artifacts of %s machines", componentRegistry.agentCount());
         bash.execute("mkdir -p " + target);
 
@@ -210,6 +215,8 @@ public class Provisioner {
     }
 
     void clean() {
+        ensureIsRemoteSetup(properties, "clean");
+
         echoImportant("Cleaning Worker homes of %s machines", componentRegistry.agentCount());
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
@@ -229,6 +236,8 @@ public class Provisioner {
     }
 
     void killJavaProcesses() {
+        ensureIsRemoteSetup(properties, "kill");
+
         echoImportant("Killing %s Java processes", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
@@ -247,7 +256,7 @@ public class Provisioner {
     }
 
     void terminate() {
-        ensureNotStaticCloudProvider(properties, "terminate");
+        ensureIsCloudProviderSetup(properties, "terminate");
 
         scaleDown(Integer.MAX_VALUE);
     }
