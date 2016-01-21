@@ -37,6 +37,7 @@ import static com.hazelcast.simulator.test.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
@@ -146,10 +147,12 @@ public class WorkerJvmFailureMonitor {
                     testId = null;
                 }
 
-                // we delete the exception file so that we don't detect the same exception again
-                deleteQuiet(exceptionFile);
-
-                sendFailureOperation("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerJvm, testId, cause);
+                // we delete or rename the exception file so that we don't detect the same exception again
+                if (sendFailureOperation("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerJvm, testId, cause)) {
+                    deleteQuiet(exceptionFile);
+                } else {
+                    rename(exceptionFile, new File(exceptionFile.getName() + ".sendFailure"));
+                }
             }
         }
 
@@ -211,7 +214,8 @@ public class WorkerJvmFailureMonitor {
             sendFailureOperation(message, type, jvm, null, null);
         }
 
-        private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
+        private boolean sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
+            boolean sentSuccessfully = true;
             boolean isFailure = (type != WORKER_FINISHED);
             SimulatorAddress workerAddress = jvm.getAddress();
             FailureOperation operation = new FailureOperation(message, type, workerAddress, agent.getPublicAddress(),
@@ -229,12 +233,14 @@ public class WorkerJvmFailureMonitor {
                 ResponseType firstErrorResponseType = response.getFirstErrorResponseType();
                 if (firstErrorResponseType != ResponseType.SUCCESS) {
                     LOGGER.error(format("Could not send failure to coordinator: %s", firstErrorResponseType));
+                    sentSuccessfully = false;
                 } else if (isFailure) {
                     LOGGER.info("Failure successfully sent to Coordinator!");
                 }
             } catch (SimulatorProtocolException e) {
                 if (!isInterrupted() && !(e.getCause() instanceof InterruptedException)) {
                     LOGGER.error(format("Could not send failure to coordinator! %s", operation.getFileMessage()), e);
+                    sentSuccessfully = false;
                 }
             }
 
@@ -243,6 +249,8 @@ public class WorkerJvmFailureMonitor {
                 LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
                 agentConnector.removeWorker(workerAddress.getWorkerIndex());
             }
+
+            return sentSuccessfully;
         }
     }
 

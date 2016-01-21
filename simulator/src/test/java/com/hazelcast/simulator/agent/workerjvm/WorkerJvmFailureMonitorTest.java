@@ -30,7 +30,6 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -63,6 +62,7 @@ public class WorkerJvmFailureMonitorTest {
     @Before
     public void setUp() {
         response = mock(Response.class);
+        when(response.getFirstErrorResponseType()).thenReturn(SUCCESS);
 
         agentConnector = mock(AgentConnector.class);
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
@@ -89,6 +89,7 @@ public class WorkerJvmFailureMonitorTest {
             deleteQuiet(workerJvm.getWorkerHome());
         }
         deleteQuiet(new File("worker3"));
+        deleteQuiet(new File("1.exception.sendFailure"));
     }
 
     @Test
@@ -119,7 +120,9 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldContinueAfterErrorResponse() {
-        when(response.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
+        Response failOnceResponse = mock(Response.class);
+        when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
+        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class))).thenReturn(failOnceResponse);
 
         workerJvmFailureMonitor.startTimeoutDetection();
         workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
@@ -177,6 +180,40 @@ public class WorkerJvmFailureMonitorTest {
         assertThatFailureOperationHasBeenSent(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
         assertThatExceptionFileDoesNotExist(exceptionFile);
+    }
+
+    @Test
+    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withErrorResponse() {
+        Response failOnceResponse = mock(Response.class);
+        when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
+        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class))).thenReturn(failOnceResponse);
+
+        String cause = throwableToString(new RuntimeException());
+        File exceptionFile = createExceptionFile(workerHome, "WorkerJvmFailureMonitorTest", cause);
+
+        sleepMillis(DEFAULT_SLEEP_TIME);
+
+        assertThatFailureOperationHasBeenSent(agentConnector, 1);
+        verifyNoMoreInteractions(agentConnector);
+        assertThatExceptionFileDoesNotExist(exceptionFile);
+        assertThatRenamedExceptionFileExists(exceptionFile);
+    }
+
+    @Test
+    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withException() {
+        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class)))
+                .thenThrow(new SimulatorProtocolException("expected exception"))
+                .thenReturn(response);
+
+        String cause = throwableToString(new RuntimeException());
+        File exceptionFile = createExceptionFile(workerHome, "WorkerJvmFailureMonitorTest", cause);
+
+        sleepMillis(DEFAULT_SLEEP_TIME);
+
+        assertThatFailureOperationHasBeenSent(agentConnector, 1);
+        verifyNoMoreInteractions(agentConnector);
+        assertThatExceptionFileDoesNotExist(exceptionFile);
+        assertThatRenamedExceptionFileExists(exceptionFile);
     }
 
     @Test
@@ -343,8 +380,11 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     private static void assertThatExceptionFileDoesNotExist(File firstExceptionFile) {
-        if (firstExceptionFile.exists()) {
-            fail("Exception file should be deleted: " + firstExceptionFile);
-        }
+        assertFalse("Exception file should be deleted: " + firstExceptionFile, firstExceptionFile.exists());
+    }
+
+    private static void assertThatRenamedExceptionFileExists(File exceptionFile) {
+        File expectedFile = new File(exceptionFile.getName() + ".sendFailure");
+        assertTrue("Exception file should be renamed: " + expectedFile.getName(), expectedFile.exists());
     }
 }
