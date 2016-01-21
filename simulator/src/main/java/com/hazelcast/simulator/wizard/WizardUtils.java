@@ -24,6 +24,8 @@ import java.net.URL;
 
 final class WizardUtils {
 
+    private static final int FILE_EXTENSION_LENGTH = 4;
+
     private WizardUtils() {
     }
 
@@ -72,7 +74,7 @@ final class WizardUtils {
             String suffix = "/" + className.replace(".", "/") + ".class";
             extURL = extURL.replace(suffix, "");
             if (extURL.startsWith("jar:") && extURL.endsWith(".jar!")) {
-                extURL = extURL.substring(4, extURL.lastIndexOf("/"));
+                extURL = extURL.substring(FILE_EXTENSION_LENGTH, extURL.lastIndexOf("/"));
             }
         }
 
