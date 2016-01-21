@@ -56,7 +56,7 @@ public class WorkerJvmManager {
         }
     }
 
-    private void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
+    void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
         AddressLevel sourceAddressLevel = sourceAddress.getAddressLevel();
         if (sourceAddressLevel == AddressLevel.TEST) {
             sourceAddress = sourceAddress.getParent();
@@ -87,7 +87,7 @@ public class WorkerJvmManager {
         spawner.awaitCompletion();
     }
 
-    public void shutdown(WorkerJvm workerJvm) {
+    void shutdown(WorkerJvm workerJvm) {
         workerJVMs.remove(workerJvm.getAddress());
         try {
             // this sends SIGTERM on *nix
