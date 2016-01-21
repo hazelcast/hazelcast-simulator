@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.wizard;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
@@ -32,6 +33,8 @@ import static com.hazelcast.simulator.wizard.WizardCli.run;
 import static java.lang.String.format;
 
 public class Wizard {
+
+    private static final Logger LOGGER = Logger.getLogger(Wizard.class);
 
     Wizard() {
         echo("Hazelcast Simulator Wizard");
@@ -60,7 +63,7 @@ public class Wizard {
     }
 
     private void echo(String message, Object... args) {
-        System.out.println(message == null ? "null" : format(message, args));
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 
     private void echoImportant(String message, Object... args) {
@@ -73,10 +76,7 @@ public class Wizard {
         try {
             run(args, init());
         } catch (Exception e) {
-            if (e instanceof CommandLineExitException) {
-                System.err.println(e.getMessage());
-            }
-            exitWithError();
+            exitWithError(LOGGER, "Could not execute command", e);
         }
     }
 }

@@ -68,13 +68,13 @@ final class WizardUtils {
         // prune for various cases
         if (extURL.endsWith(".jar")) {
             // from getCodeSource
-            extURL = extURL.substring(0, extURL.lastIndexOf("/"));
+            extURL = extURL.substring(0, extURL.lastIndexOf('/'));
         } else {
             // from getResource
             String suffix = "/" + className.replace(".", "/") + ".class";
             extURL = extURL.replace(suffix, "");
             if (extURL.startsWith("jar:") && extURL.endsWith(".jar!")) {
-                extURL = extURL.substring(FILE_EXTENSION_LENGTH, extURL.lastIndexOf("/"));
+                extURL = extURL.substring(FILE_EXTENSION_LENGTH, extURL.lastIndexOf('/'));
             }
         }
 
