@@ -23,7 +23,9 @@ public class IntegrationTestOperation implements SimulatorOperation {
     public enum Operation {
         EQUALS,
         NESTED_SYNC,
-        NESTED_ASYNC
+        NESTED_ASYNC,
+        DEEP_NESTED_SYNC,
+        DEEP_NESTED_ASYNC
     }
 
     public static final String TEST_DATA = "IntegrationTestData";

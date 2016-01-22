@@ -42,6 +42,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_ASYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_SYNC;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
@@ -103,19 +105,31 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
     private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)
             throws Exception {
-        LogOperation logOperation;
+        SimulatorOperation nestedOperation;
         Response response;
+        ResponseFuture future;
         switch (operation.getOperation()) {
             case NESTED_SYNC:
-                logOperation = new LogOperation("Sync nested integration test message");
-                response = worker.getWorkerConnector().write(sourceAddress, logOperation);
+                nestedOperation = new LogOperation("Sync nested integration test message");
+                response = worker.getWorkerConnector().write(sourceAddress, nestedOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
                 return response.getFirstErrorResponseType();
             case NESTED_ASYNC:
-                logOperation = new LogOperation("Async nested integration test message");
-                ResponseFuture future = worker.getWorkerConnector().submit(sourceAddress, logOperation);
+                nestedOperation = new LogOperation("Async nested integration test message");
+                future = worker.getWorkerConnector().submit(sourceAddress, nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async nested message: " + response);
+                return response.getFirstErrorResponseType();
+            case DEEP_NESTED_SYNC:
+                nestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
+                response = worker.getWorkerConnector().write(workerAddress.getParent(), nestedOperation);
+                LOGGER.debug("Got response for sync deep nested message: " + response);
+                return response.getFirstErrorResponseType();
+            case DEEP_NESTED_ASYNC:
+                nestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
+                future = worker.getWorkerConnector().submit(workerAddress.getParent(), nestedOperation);
+                response = future.get();
+                LOGGER.debug("Got response for async deep nested message: " + response);
                 return response.getFirstErrorResponseType();
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;

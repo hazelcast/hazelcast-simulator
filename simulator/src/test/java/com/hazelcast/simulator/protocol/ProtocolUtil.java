@@ -134,13 +134,16 @@ class ProtocolUtil {
         return workerConnector;
     }
 
-    private static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort, int numberOfWorkers) {
+    private static AgentConnector startAgent(int addressIndex, int port, String workerHost, int workerStartPort,
+                                             int numberOfWorkers) {
         Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(addressIndex);
 
         WorkerJvmManager workerJvmManager = new WorkerJvmManager();
 
         AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJvmManager, port, 0);
+        when(agent.getAgentConnector()).thenReturn(agentConnector);
+
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {
             agentConnector.addWorker(workerIndex, workerHost, workerStartPort + workerIndex);
         }

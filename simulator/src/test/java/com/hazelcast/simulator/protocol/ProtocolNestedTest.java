@@ -18,16 +18,20 @@ import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.stopSimulatorComponents;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_ASYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_SYNC;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.NESTED_ASYNC;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.NESTED_SYNC;
 
 public class ProtocolNestedTest {
 
-    private static final int CONCURRENCY_LEVEL = 500;
+    private static final int CONCURRENCY_LEVEL = 50;
 
+    private static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AGENT, 0, 0, 0);
     private static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(WORKER, 0, 0, 0);
     private static final SimulatorAddress ALL_TESTS = new SimulatorAddress(TEST, 0, 0, 0);
 
@@ -40,7 +44,7 @@ public class ProtocolNestedTest {
     public void setUp() {
         setLogLevel(Level.TRACE);
 
-        startSimulatorComponents(1, 2, 2);
+        startSimulatorComponents(2, 2, 2);
     }
 
     @After
@@ -51,43 +55,87 @@ public class ProtocolNestedTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void nestedMessage_toAgent_syncWrite() {
+        run(ALL_AGENTS, NESTED_SYNC_OPERATION, 2);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void nestedMessage_toAgent_syncWrite_concurrently() {
+        runConcurrently("nestedMessage_toAgent_syncWrite_concurrently", ALL_AGENTS, NESTED_SYNC_OPERATION, 2);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void nestedMessage_toAgent_asyncWrite() {
+        run(ALL_AGENTS, NESTED_ASYNC_OPERATION, 2);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void nestedMessage_toAgent_asyncWrite_concurrently() {
+        runConcurrently("nestedMessage_toAgent_syncWrite_concurrently", ALL_AGENTS, NESTED_ASYNC_OPERATION, 2);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toWorker_syncWrite() {
-        run(ALL_WORKERS, NESTED_SYNC_OPERATION, 2);
+        run(ALL_WORKERS, NESTED_SYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toWorker_syncWrite_concurrently() {
-        runConcurrently("nestedMessage_toWorker_syncWrite_concurrently", ALL_WORKERS, NESTED_SYNC_OPERATION, 2);
+        runConcurrently("nestedMessage_toWorker_syncWrite_concurrently", ALL_WORKERS, NESTED_SYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toWorker_asyncWrite() {
-        run(ALL_WORKERS, NESTED_ASYNC_OPERATION, 2);
+        run(ALL_WORKERS, NESTED_ASYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toWorker_asyncWrite_concurrently() {
-        runConcurrently("nestedMessage_toWorker_asyncWrite_concurrently", ALL_WORKERS, NESTED_ASYNC_OPERATION, 2);
+        runConcurrently("nestedMessage_toWorker_asyncWrite_concurrently", ALL_WORKERS, NESTED_ASYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toTest_syncWrite() {
-        run(ALL_TESTS, NESTED_SYNC_OPERATION, 4);
+        run(ALL_TESTS, NESTED_SYNC_OPERATION, 8);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toTest_syncWrite_concurrently() {
-        runConcurrently("nestedMessage_toTest_syncWrite_concurrently", ALL_TESTS, NESTED_SYNC_OPERATION, 4);
+        runConcurrently("nestedMessage_toTest_syncWrite_concurrently", ALL_TESTS, NESTED_SYNC_OPERATION, 8);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toTest_asyncWrite() {
-        run(ALL_TESTS, NESTED_ASYNC_OPERATION, 4);
+        run(ALL_TESTS, NESTED_ASYNC_OPERATION, 8);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void nestedMessage_toTest_asyncWrite_concurrently() {
-        runConcurrently("nestedMessage_toTest_asyncWrite_concurrently", ALL_TESTS, NESTED_ASYNC_OPERATION, 4);
+        runConcurrently("nestedMessage_toTest_asyncWrite_concurrently", ALL_TESTS, NESTED_ASYNC_OPERATION, 8);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void deepNestedMessage_syncWrite() {
+        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
+        run(ALL_WORKERS, deepNestedOperation, 4);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void deepNestedMessage_syncWrite_concurrently() {
+        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
+        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4, 5);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void deepNestedMessage_asyncWrite() {
+        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
+        run(ALL_WORKERS, deepNestedOperation, 4);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
+    public void deepNestedMessage_asyncWrite_concurrently() {
+        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
+        runConcurrently("deepNestedMessage_asyncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4, 5);
     }
 
     private static void run(SimulatorAddress target, SimulatorOperation operation, int expectedResponseCount) {
@@ -99,8 +147,13 @@ public class ProtocolNestedTest {
 
     private static void runConcurrently(String spawnerName, final SimulatorAddress target, final SimulatorOperation operation,
                                         final int expectedResponseCount) {
+        runConcurrently(spawnerName, target, operation, expectedResponseCount, CONCURRENCY_LEVEL);
+    }
+
+    private static void runConcurrently(String spawnerName, final SimulatorAddress target, final SimulatorOperation operation,
+                                        final int expectedResponseCount, int concurrencyLevel) {
         ThreadSpawner spawner = new ThreadSpawner(spawnerName, true);
-        for (int i = 0; i < CONCURRENCY_LEVEL; i++) {
+        for (int i = 0; i < concurrencyLevel; i++) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {

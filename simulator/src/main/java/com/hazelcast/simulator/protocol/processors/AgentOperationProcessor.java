@@ -19,11 +19,15 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
+import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.EmptyStatement;
@@ -87,6 +91,8 @@ public class AgentOperationProcessor extends OperationProcessor {
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
                                             SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
+            case INTEGRATION_TEST:
+                return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
             case CREATE_WORKER:
                 return processCreateWorker((CreateWorkerOperation) operation);
             case INIT_TEST_SUITE:
@@ -102,6 +108,39 @@ public class AgentOperationProcessor extends OperationProcessor {
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
         return SUCCESS;
+    }
+
+    private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)
+            throws Exception {
+        SimulatorOperation nestedOperation;
+        Response response;
+        ResponseFuture future;
+        switch (operation.getOperation()) {
+            case NESTED_SYNC:
+                nestedOperation = new LogOperation("Sync nested integration test message");
+                response = agent.getAgentConnector().write(sourceAddress, nestedOperation);
+                LOGGER.debug("Got response for sync nested message: " + response);
+                return response.getFirstErrorResponseType();
+            case NESTED_ASYNC:
+                nestedOperation = new LogOperation("Async nested integration test message");
+                future = agent.getAgentConnector().submit(sourceAddress, nestedOperation);
+                response = future.get();
+                LOGGER.debug("Got response for async nested message: " + response);
+                return response.getFirstErrorResponseType();
+            case DEEP_NESTED_SYNC:
+                nestedOperation = new LogOperation("Sync deep nested integration test message");
+                response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, nestedOperation);
+                LOGGER.debug("Got response for sync deep nested message: " + response);
+                return response.getFirstErrorResponseType();
+            case DEEP_NESTED_ASYNC:
+                nestedOperation = new LogOperation("Sync deep nested integration test message");
+                future = agent.getAgentConnector().submit(SimulatorAddress.COORDINATOR, nestedOperation);
+                response = future.get();
+                LOGGER.debug("Got response for async deep nested message: " + response);
+                return response.getFirstErrorResponseType();
+            default:
+                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+        }
     }
 
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
