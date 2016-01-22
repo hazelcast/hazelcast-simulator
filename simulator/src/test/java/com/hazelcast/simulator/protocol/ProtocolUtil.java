@@ -43,7 +43,7 @@ class ProtocolUtil {
 
     static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
 
-    static final long DEFAULT_TEST_TIMEOUT_MILLIS = 5000;
+    static final long DEFAULT_TEST_TIMEOUT_MILLIS = 10000;
 
     static final int AGENT_START_PORT = 11000;
     private static final int WORKER_START_PORT = 11100;
