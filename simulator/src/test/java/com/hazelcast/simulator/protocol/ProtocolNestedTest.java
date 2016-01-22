@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperatio
 
 public class ProtocolNestedTest {
 
-    private static final int CONCURRENCY_LEVEL = 50;
+    private static final int CONCURRENCY_LEVEL = 5;
 
     private static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AGENT, 0, 0, 0);
     private static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(WORKER, 0, 0, 0);
@@ -123,7 +123,7 @@ public class ProtocolNestedTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_syncWrite_concurrently() {
         IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
-        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4, 5);
+        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4, CONCURRENCY_LEVEL);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
