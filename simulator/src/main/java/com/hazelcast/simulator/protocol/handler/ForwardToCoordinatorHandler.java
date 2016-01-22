@@ -61,11 +61,12 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
                 LOGGER.trace(format("[%d] %s %s forwarding message to parent", messageId, addressLevel, localAddress));
             }
 
-            workerJvmManager.updateLastSeenTimestamp(buffer);
+            SimulatorAddress sourceAddress = getSourceAddress(buffer);
+            workerJvmManager.updateLastSeenTimestamp(sourceAddress);
 
             Iterator<Channel> iterator = connectionManager.getChannels().iterator();
             if (!iterator.hasNext()) {
-                ctx.writeAndFlush(new Response(messageId, getSourceAddress(buffer), localAddress, FAILURE_COORDINATOR_NOT_FOUND));
+                ctx.writeAndFlush(new Response(messageId, sourceAddress, localAddress, FAILURE_COORDINATOR_NOT_FOUND));
                 return;
             }
 

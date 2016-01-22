@@ -3,11 +3,6 @@ package com.hazelcast.simulator.agent.workerjvm;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.core.SimulatorMessageCodec;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +10,6 @@ import java.util.Collection;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.operation.OperationType.INTEGRATION_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.atLeastOnce;
@@ -26,8 +20,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class WorkerJvmManagerTest {
-
-    private ByteBuf buffer;
 
     private SimulatorAddress firstWorkerAddress;
     private SimulatorAddress secondWorkerAddress;
@@ -57,13 +49,6 @@ public class WorkerJvmManagerTest {
         workerJvmManager.add(secondWorkerAddress, secondWorkerJvm);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        if (buffer != null) {
-            buffer.release();
-        }
-    }
-
     @Test
     public void testGetWorkerJVMs() {
         Collection<WorkerJvm> workerJVMs = workerJvmManager.getWorkerJVMs();
@@ -71,19 +56,6 @@ public class WorkerJvmManagerTest {
         assertEquals(2, workerJVMs.size());
         assertTrue(workerJVMs.contains(firstWorkerJvm));
         assertTrue(workerJVMs.contains(secondWorkerJvm));
-    }
-
-    @Test
-    public void testUpdateLastSeenTimestamp_withByteBuf() {
-        buffer = Unpooled.buffer();
-        SimulatorMessage message = new SimulatorMessage(COORDINATOR, firstWorkerAddress, 1L, INTEGRATION_TEST, "test");
-        SimulatorMessageCodec.encodeByteBuf(message, buffer);
-
-        workerJvmManager.updateLastSeenTimestamp(buffer);
-
-        verify(firstWorkerJvm).updateLastSeen();
-        verifyNoMoreInteractions(firstWorkerJvm);
-        verifyNoMoreInteractions(secondWorkerJvm);
     }
 
     @Test

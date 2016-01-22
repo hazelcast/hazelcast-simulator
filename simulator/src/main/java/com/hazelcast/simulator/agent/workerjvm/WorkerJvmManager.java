@@ -20,7 +20,6 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import io.netty.buffer.ByteBuf;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -28,8 +27,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
 
 public class WorkerJvmManager {
 
@@ -45,18 +42,13 @@ public class WorkerJvmManager {
         return workerJVMs.values();
     }
 
-    public void updateLastSeenTimestamp(ByteBuf buffer) {
-        SimulatorAddress sourceAddress = getSourceAddress(buffer);
-        updateLastSeenTimestamp(sourceAddress);
-    }
-
     public void updateLastSeenTimestamp(Response response) {
         for (Map.Entry<SimulatorAddress, ResponseType> responseTypeEntry : response.entrySet()) {
             updateLastSeenTimestamp(responseTypeEntry.getKey());
         }
     }
 
-    void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
+    public void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
         AddressLevel sourceAddressLevel = sourceAddress.getAddressLevel();
         if (sourceAddressLevel == AddressLevel.TEST) {
             sourceAddress = sourceAddress.getParent();
