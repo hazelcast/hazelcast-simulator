@@ -14,7 +14,6 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.PongOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -211,15 +210,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         FailureOperation failure = failureOperations.poll();
         assertNull(failure.getTestId());
         assertExceptionClassInFailure(failure, TestException.class);
-    }
-
-    @Test
-    public void processPong() {
-        PongOperation operation = new PongOperation();
-
-        ResponseType responseType = processor.process(operation, workerAddress);
-
-        assertEquals(SUCCESS, responseType);
     }
 
     private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {

@@ -26,7 +26,6 @@ import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
-import com.hazelcast.simulator.protocol.operation.PongOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.test.TestCase;
@@ -57,7 +56,6 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
     private static final String DASHES = "---------------------------";
 
-    private static final PongOperation PONG_OPERATION = new PongOperation();
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
@@ -181,7 +179,5 @@ public class WorkerOperationProcessor extends OperationProcessor {
     private void processPing(SimulatorAddress sourceAddress) {
         WorkerConnector workerConnector = worker.getWorkerConnector();
         LOGGER.info(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
-
-        workerConnector.submit(sourceAddress, PONG_OPERATION);
     }
 }

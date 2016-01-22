@@ -80,9 +80,6 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
             case FAILURE:
                 processFailure((FailureOperation) operation);
                 break;
-            case PONG:
-                processPong(sourceAddress);
-                break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
@@ -113,11 +110,5 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
 
     private void processFailure(FailureOperation operation) {
         failureContainer.addFailureOperation(operation);
-    }
-
-    private void processPong(SimulatorAddress sourceAddress) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Received Pong from " + sourceAddress);
-        }
     }
 }
