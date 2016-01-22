@@ -53,7 +53,7 @@ import static com.hazelcast.simulator.protocol.exception.ExceptionType.WORKER_EX
  */
 public class WorkerConnector extends AbstractServerConnector {
 
-    private static final int THREAD_POOL_SIZE = 2;
+    private static final int THREAD_POOL_SIZE = 3;
 
     private final OperationProcessor processor;
 
