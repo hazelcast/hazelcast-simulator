@@ -178,7 +178,7 @@ public final class Coordinator {
                 failureContainer.logFailureInfo();
             } finally {
                 if (coordinatorConnector != null) {
-                    LOGGER.info("Shutdown of ClientConnector...");
+                    echo("Shutdown of ClientConnector...");
                     coordinatorConnector.shutdown();
                 }
 
@@ -243,13 +243,13 @@ public final class Coordinator {
 
             if (componentRegistry.workerCount() > 0) {
                 WorkerData firstWorker = componentRegistry.getFirstWorker();
-                LOGGER.info(format("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
-                        firstWorker.getSettings().getWorkerType()));
+                echo("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
+                        firstWorker.getSettings().getWorkerType());
             }
 
             long elapsed = getElapsedSeconds(started);
             echo(HORIZONTAL_RULER);
-            LOGGER.info((format("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed)));
+            echo("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed);
             echo(HORIZONTAL_RULER);
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to start Workers", e);
@@ -338,7 +338,7 @@ public final class Coordinator {
             ((TestCaseRunner) testCaseRunner).run();
             boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
-                LOGGER.info("Aborting testsuite due to critical failure");
+                echo("Aborting testsuite due to critical failure");
                 break;
             }
             // restart Workers if needed, but not after last test
