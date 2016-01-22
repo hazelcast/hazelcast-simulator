@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
 <log4j:configuration>
-
     <!--
         We configure Log4j with RollingFileAppender to prevent "out of disk" errors on the test machines.
         If you need full reports to debug a special test situation you can switch to the FileAppender config.
@@ -34,5 +33,4 @@
         <priority value="debug"/>
         <appender-ref ref="file"/>
     </root>
-
 </log4j:configuration>

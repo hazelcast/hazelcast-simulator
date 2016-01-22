@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <hazelcast-client
         xsi:schemaLocation="http://www.hazelcast.com/schema/client-config
             http://www.hazelcast.com/schema/config/hazelcast-client-config-3.6.xsd"
@@ -32,5 +31,4 @@
             <portable-factory factory-id="10000002">com.hazelcast.simulator.tests.map.helpers.ComplexDomainObjectPortableFactory</portable-factory>
         </portable-factories>
     </serialization>
-
 </hazelcast-client>
