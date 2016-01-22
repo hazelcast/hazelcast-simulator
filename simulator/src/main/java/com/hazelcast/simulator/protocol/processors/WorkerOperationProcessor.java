@@ -110,16 +110,16 @@ public class WorkerOperationProcessor extends OperationProcessor {
                 logOperation = new LogOperation("Sync nested integration test message");
                 response = worker.getWorkerConnector().write(sourceAddress, logOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
-                break;
+                return response.getFirstErrorResponseType();
             case NESTED_ASYNC:
                 logOperation = new LogOperation("Async nested integration test message");
                 ResponseFuture future = worker.getWorkerConnector().submit(sourceAddress, logOperation);
-                LOGGER.debug("Got response for async nested message: " + future.get());
-                break;
+                response = future.get();
+                LOGGER.debug("Got response for async nested message: " + response);
+                return response.getFirstErrorResponseType();
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
-        return SUCCESS;
     }
 
     private void processTerminateWorker(TerminateWorkerOperation operation) {
