@@ -123,7 +123,7 @@ public class ProtocolNestedTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_syncWrite_concurrently() {
         IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
-        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4, CONCURRENCY_LEVEL);
+        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
@@ -135,7 +135,7 @@ public class ProtocolNestedTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_asyncWrite_concurrently() {
         IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
-        runConcurrently("deepNestedMessage_asyncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4, 5);
+        runConcurrently("deepNestedMessage_asyncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4);
     }
 
     private static void run(SimulatorAddress target, SimulatorOperation operation, int expectedResponseCount) {
@@ -147,13 +147,8 @@ public class ProtocolNestedTest {
 
     private static void runConcurrently(String spawnerName, final SimulatorAddress target, final SimulatorOperation operation,
                                         final int expectedResponseCount) {
-        runConcurrently(spawnerName, target, operation, expectedResponseCount, CONCURRENCY_LEVEL);
-    }
-
-    private static void runConcurrently(String spawnerName, final SimulatorAddress target, final SimulatorOperation operation,
-                                        final int expectedResponseCount, int concurrencyLevel) {
         ThreadSpawner spawner = new ThreadSpawner(spawnerName, true);
-        for (int i = 0; i < concurrencyLevel; i++) {
+        for (int i = 0; i < CONCURRENCY_LEVEL; i++) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
