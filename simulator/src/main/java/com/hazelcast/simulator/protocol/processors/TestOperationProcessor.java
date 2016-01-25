@@ -58,19 +58,17 @@ public class TestOperationProcessor extends OperationProcessor {
     private final Worker worker;
     private final WorkerType type;
 
-    private final int testIndex;
     private final String testId;
     private final TestContainer testContainer;
     private final SimulatorAddress testAddress;
 
-    public TestOperationProcessor(ExceptionLogger exceptionLogger, Worker worker, WorkerType type, int testIndex,
-                                  String testId, TestContainer testContainer, SimulatorAddress testAddress) {
+    public TestOperationProcessor(ExceptionLogger exceptionLogger, Worker worker, WorkerType type, String testId,
+                                  TestContainer testContainer, SimulatorAddress testAddress) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.worker = worker;
         this.type = type;
 
-        this.testIndex = testIndex;
         this.testId = testId;
         this.testContainer = testContainer;
         this.testAddress = testAddress;
@@ -138,14 +136,8 @@ public class TestOperationProcessor extends OperationProcessor {
             OperationThread operationThread = new OperationThread(testPhase) {
                 @Override
                 public void doRun() throws Exception {
-                    try {
-                        testContainer.invoke(testPhase);
-                    } finally {
-                        LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
-                        if (testPhase == TestPhase.LOCAL_TEARDOWN) {
-                            worker.getWorkerConnector().removeTest(testIndex);
-                        }
-                    }
+                    testContainer.invoke(testPhase);
+                    LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                 }
             };
             operationThread.start();

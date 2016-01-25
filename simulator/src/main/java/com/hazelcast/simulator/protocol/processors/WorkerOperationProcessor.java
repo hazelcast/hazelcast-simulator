@@ -165,8 +165,8 @@ public class WorkerOperationProcessor extends OperationProcessor {
         bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
         TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
         TestContainer testContainer = new TestContainer(testInstance, testContext, testCase);
-        TestOperationProcessor processor = new TestOperationProcessor(exceptionLogger, worker, type, testIndex, testId,
-                testContainer, workerAddress.getChild(testIndex));
+        TestOperationProcessor processor = new TestOperationProcessor(exceptionLogger, worker, type, testId, testContainer,
+                workerAddress.getChild(testIndex));
 
         workerConnector.addTest(testIndex, processor);
         tests.put(testId, testContainer);

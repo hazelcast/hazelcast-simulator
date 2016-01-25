@@ -16,8 +16,10 @@
 package com.hazelcast.simulator.protocol.core;
 
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.simulator.test.TestPhase;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,7 +65,9 @@ public class TestProcessorManager {
     public void processOnAllTests(Response response, SimulatorOperation operation, SimulatorAddress source) {
         for (Map.Entry<Integer, TestOperationProcessor> entry : testProcessors.entrySet()) {
             ResponseType responseType = entry.getValue().process(operation, source);
-            response.addResponse(testAddresses.get(entry.getKey()), responseType);
+            int testAddressIndex = entry.getKey();
+            response.addResponse(testAddresses.get(testAddressIndex), responseType);
+            removeTestAfterLastTestPhase(operation, testAddressIndex);
         }
     }
 
@@ -74,6 +78,16 @@ public class TestProcessorManager {
         } else {
             ResponseType responseType = processor.process(operation, source);
             response.addResponse(testAddresses.get(testAddressIndex), responseType);
+            removeTestAfterLastTestPhase(operation, testAddressIndex);
+        }
+    }
+
+    private void removeTestAfterLastTestPhase(SimulatorOperation operation, int testIndex) {
+        if (operation instanceof StartTestPhaseOperation) {
+            StartTestPhaseOperation startTestPhaseOperation = (StartTestPhaseOperation) operation;
+            if (startTestPhaseOperation.getTestPhase() == TestPhase.getLastTestPhase()) {
+                removeTest(testIndex);
+            }
         }
     }
 }

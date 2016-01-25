@@ -1,10 +1,11 @@
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
@@ -17,8 +18,9 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -27,10 +29,10 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TestOperationProcessorTest {
@@ -45,7 +47,7 @@ public class TestOperationProcessorTest {
     public void testProcessOperation_unsupportedOperation() throws Exception {
         createTestOperationProcessor();
 
-        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+        SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerJvmSettings>emptyList());
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
@@ -125,8 +127,6 @@ public class TestOperationProcessorTest {
         runPhase(TestPhase.LOCAL_TEARDOWN);
 
         exceptionLogger.assertNoException();
-
-        verify(workerConnector).removeTest(1);
     }
 
 
@@ -189,8 +189,7 @@ public class TestOperationProcessorTest {
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
 
             TestOperationProcessor.resetPendingTests();
-            processor = new TestOperationProcessor(exceptionLogger, worker, WorkerType.MEMBER, 1, testId, testContainer,
-                    testAddress);
+            processor = new TestOperationProcessor(exceptionLogger, worker, MEMBER, testId, testContainer, testAddress);
         } catch (Exception e) {
             e.printStackTrace();
             fail(e.getMessage());

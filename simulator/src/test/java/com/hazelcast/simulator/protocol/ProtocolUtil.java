@@ -21,7 +21,6 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.util.ExceptionUtil;
 import org.apache.log4j.Logger;
 
@@ -33,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -120,13 +120,13 @@ class ProtocolUtil {
 
     private static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
         Worker worker = mock(Worker.class);
-        WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port,
-                WorkerType.MEMBER, null, worker, true);
+        WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port, MEMBER, null,
+                worker, true);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
-            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, WorkerType.MEMBER, testIndex,
-                    "ProtocolUtilTest", null, workerConnector.getAddress().getChild(testIndex));
+            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, MEMBER, "ProtocolUtilTest",
+                    null, workerConnector.getAddress().getChild(testIndex));
             workerConnector.addTest(testIndex, processor);
         }
 
