@@ -119,7 +119,6 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     @Override
     void connectorShutdown() {
-        processor.shutdown();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
     }
 

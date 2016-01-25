@@ -81,14 +81,17 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize) {
-        int poolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
-        this.executorService = createFixedThreadPool(poolSize, "AbstractServerConnector");
+        this(futureMap, localAddress, port, createFixedThreadPool(max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize),
+                "AbstractServerConnector"));
+    }
+
+    AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+                            ExecutorService executorService) {
+        this.executorService = executorService;
         this.futureMap = futureMap;
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
         this.port = port;
-
-        LOGGER.debug("Size of ExecutorService thread pool: " + poolSize);
     }
 
     abstract void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector);

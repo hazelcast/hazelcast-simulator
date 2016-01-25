@@ -66,18 +66,27 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
     private static final int EXECUTOR_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
 
     private final EventLoopGroup group = new NioEventLoopGroup();
-    private final ExecutorService executorService = createFixedThreadPool(EXECUTOR_POOL_SIZE, "AbstractServerConnector");
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
     private final CoordinatorOperationProcessor processor;
+    private final ExecutorService executorService;
 
     public CoordinatorConnector(TestPhaseListenerContainer testPhaseListenerContainer,
                                 PerformanceStateContainer performanceStateContainer,
                                 TestHistogramContainer testHistogramContainer, FailureContainer failureContainer) {
+        this(testPhaseListenerContainer, performanceStateContainer, testHistogramContainer, failureContainer,
+                createFixedThreadPool(EXECUTOR_POOL_SIZE, "CoordinatorConnector"));
+    }
+
+    CoordinatorConnector(TestPhaseListenerContainer testPhaseListenerContainer,
+                                PerformanceStateContainer performanceStateContainer,
+                                TestHistogramContainer testHistogramContainer, FailureContainer failureContainer,
+                                ExecutorService executorService) {
         this.processor = new CoordinatorOperationProcessor(exceptionLogger, testPhaseListenerContainer, performanceStateContainer,
                 testHistogramContainer, failureContainer);
+        this.executorService = executorService;
     }
 
     @Override
@@ -106,7 +115,6 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
         }
         spawner.awaitCompletion();
 
-        processor.shutdown();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
 
         try {

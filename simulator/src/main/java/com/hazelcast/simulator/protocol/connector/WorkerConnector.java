@@ -98,7 +98,6 @@ public class WorkerConnector extends AbstractServerConnector {
 
     @Override
     void connectorShutdown() {
-        processor.shutdown();
     }
 
     @Override

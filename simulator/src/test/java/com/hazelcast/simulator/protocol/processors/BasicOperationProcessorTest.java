@@ -10,7 +10,6 @@ import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import org.apache.log4j.Level;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -41,11 +40,6 @@ public class BasicOperationProcessorTest {
         exceptionLogger = new LocalExceptionLogger();
 
         processor = new IntegrationTestOperationProcessor();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        processor.shutdown();
     }
 
     @Test

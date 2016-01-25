@@ -9,15 +9,14 @@ import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
+import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -49,8 +48,6 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,26 +100,10 @@ public class AgentOperationProcessorTest {
 
     @Test
     public void testProcessOperation_unsupportedOperation() throws Exception {
-        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+        SimulatorOperation operation = new CreateTestOperation(1, new TestCase("AgentOperationProcessorTest"));
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-    }
-
-    @Test
-    public void testShutdown_withInterruptedException() throws Exception {
-        ExecutorService executorService = mock(ExecutorService.class);
-        when(executorService.awaitTermination(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
-
-        AgentOperationProcessor processor = new AgentOperationProcessor(exceptionLogger, null, null, executorService) {
-            @Override
-            protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                                    SimulatorAddress sourceAddress) throws Exception {
-                return null;
-            }
-        };
-
-        processor.shutdown();
     }
 
     @Test(timeout = 10000)

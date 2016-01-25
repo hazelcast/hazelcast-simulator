@@ -44,9 +44,6 @@ public abstract class OperationProcessor {
         this.exceptionLogger = exceptionLogger;
     }
 
-    public void shutdown() {
-    }
-
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     public final ResponseType process(SimulatorOperation operation, SimulatorAddress sourceAddress) {
         OperationType operationType = getOperationType(operation);
