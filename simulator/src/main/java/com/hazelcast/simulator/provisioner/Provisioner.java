@@ -407,6 +407,7 @@ public class Provisioner {
         uploadLibraryJar(ip, "commons-lang3*");
         uploadLibraryJar(ip, "gson-*");
         uploadLibraryJar(ip, "guava-*");
+        uploadLibraryJar(ip, "javassist-*");
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");
         uploadLibraryJar(ip, "HdrHistogram-*");
