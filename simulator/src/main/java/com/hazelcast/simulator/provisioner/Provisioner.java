@@ -189,18 +189,27 @@ public class Provisioner {
         final File agentOut = new File(target, "agent.out");
         final File agentErr = new File(target, "agent.err");
 
+        // download Worker logs
         for (final AgentData agentData : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     String ip = agentData.getPublicAddress();
-                    String agentAddress = agentData.getAddress().toString();
 
-                    // download Worker logs
                     echo("Downloading Worker logs from %s", ip);
                     bash.executeQuiet(format(rsyncCommand, ip, workersPath));
+                }
+            });
+        }
 
-                    // download Agent logs
+        // download Agent logs
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                for (final AgentData agentData : componentRegistry.getAgents()) {
+                    String ip = agentData.getPublicAddress();
+                    String agentAddress = agentData.getAddress().toString();
+
                     echo("Downloading Agent logs from %s", ip);
                     bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.out"));
                     bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.err"));
@@ -208,8 +217,9 @@ public class Provisioner {
                     rename(agentOut, new File(target, agentAddress + '-' + ip + "-agent.out"));
                     rename(agentErr, new File(target, agentAddress + '-' + ip + "-agent.err"));
                 }
-            });
-        }
+            }
+        });
+
         spawner.awaitCompletion();
         echoImportant("Finished downloading artifacts of %s machines", componentRegistry.agentCount());
     }
