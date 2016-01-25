@@ -13,6 +13,7 @@ import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
+import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
@@ -36,6 +37,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -101,6 +103,14 @@ public class AgentOperationProcessorTest {
     @Test
     public void testProcessOperation_unsupportedOperation() throws Exception {
         SimulatorOperation operation = new CreateTestOperation(1, new TestCase("AgentOperationProcessorTest"));
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
+    }
+
+    @Test
+    public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
+        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA, EQUALS);
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);

@@ -6,6 +6,7 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
@@ -26,6 +27,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
@@ -52,6 +54,17 @@ public class TestOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
+    }
+
+    @Test
+    public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
+        createTestOperationProcessor();
+
+        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA, EQUALS);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
+        exceptionLogger.assertNoException();
     }
 
     @Test
