@@ -33,6 +33,7 @@ import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TestOperationProcessorTest {
@@ -127,8 +128,8 @@ public class TestOperationProcessorTest {
         runPhase(TestPhase.LOCAL_TEARDOWN);
 
         exceptionLogger.assertNoException();
+        verify(workerConnector).removeTest(1);
     }
-
 
     private void runPhase(TestPhase testPhase) {
         runPhase(testPhase, SUCCESS);
@@ -189,7 +190,7 @@ public class TestOperationProcessorTest {
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
 
             TestOperationProcessor.resetPendingTests();
-            processor = new TestOperationProcessor(exceptionLogger, worker, MEMBER, testId, testContainer, testAddress);
+            processor = new TestOperationProcessor(exceptionLogger, worker, MEMBER, 1, testId, testContainer, testAddress);
         } catch (Exception e) {
             e.printStackTrace();
             fail(e.getMessage());

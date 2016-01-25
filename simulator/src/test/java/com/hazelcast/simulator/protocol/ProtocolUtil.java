@@ -125,8 +125,8 @@ class ProtocolUtil {
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
-            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, MEMBER, "ProtocolUtilTest",
-                    null, workerConnector.getAddress().getChild(testIndex));
+            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, MEMBER, testIndex,
+                    "ProtocolUtilTest", null, workerConnector.getAddress().getChild(testIndex));
             workerConnector.addTest(testIndex, processor);
         }
 
