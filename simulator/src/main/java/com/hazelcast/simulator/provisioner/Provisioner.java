@@ -413,6 +413,7 @@ public class Provisioner {
         uploadLibraryJar(ip, "HdrHistogram-*");
         uploadLibraryJar(ip, "log4j*");
         uploadLibraryJar(ip, "netty-*");
+        uploadLibraryJar(ip, "slf4j-log4j12-*");
 
         // upload remaining files
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");

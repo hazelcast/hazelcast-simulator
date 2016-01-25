@@ -17,17 +17,42 @@
         </layout>
     </appender>
 
-    <!-- if there are ssh problems, put this on info or debug-->
-    <logger name="net.schmizz">
-        <level value="warn"/>
-    </logger>
+    <appender name="jclouds" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="logs/jclouds.log"/>
+        <param name="Threshold" value="DEBUG"/>
+        <param name="MaxBackupIndex" value="10"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
+        </layout>
+    </appender>
 
-    <!-- enable this if you want to se what is being send over the wire -->
+    <appender name="ssh" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="logs/ssh.log"/>
+        <param name="Threshold" value="DEBUG"/>
+        <param name="MaxBackupIndex" value="10"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
+        </layout>
+    </appender>
+
+    <!-- enable this if you want to se what is being sent over the wire -->
     <logger name="jclouds">
         <level value="warn"/>
+        <appender-ref ref="jclouds"/>
     </logger>
     <logger name="org.jclouds">
         <level value="warn"/>
+        <appender-ref ref="jclouds"/>
+    </logger>
+
+    <!-- if there are SSH problems, put this on info or debug -->
+    <logger name="net.schmizz">
+        <level value="warn"/>
+        <appender-ref ref="ssh"/>
+    </logger>
+    <logger name="jclouds.ssh">
+        <level value="warn"/>
+        <appender-ref ref="ssh"/>
     </logger>
 
     <root>
