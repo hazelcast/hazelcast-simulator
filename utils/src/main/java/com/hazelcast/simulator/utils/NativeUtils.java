@@ -28,6 +28,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.lang.String.format;
 
 public final class NativeUtils {
 
@@ -55,7 +56,7 @@ public final class NativeUtils {
             int shellExitStatus = shell.waitFor();
 
             if (shellExitStatus != 0) {
-                LOGGER.error(String.format("Failed to execute [%s]", command));
+                LOGGER.error(format("Failed to execute [%s]", command));
                 LOGGER.error(sb.toString());
                 exitWithError();
             } else {
