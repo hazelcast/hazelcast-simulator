@@ -48,13 +48,14 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.exception.ExceptionType.AGENT_EXCEPTION;
+import static java.lang.Math.max;
 
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
-    private static final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
+    private static final int MIN_THREAD_POOL_SIZE = 10;
 
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
@@ -71,12 +72,12 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
                    WorkerJvmManager workerJvmManager, ConnectionManager connectionManager, int threadPoolSize) {
-        super(futureMap, localAddress, port, THREAD_POOL_SIZE);
+        super(futureMap, localAddress, port, max(MIN_THREAD_POOL_SIZE, threadPoolSize));
 
-        this.group = new NioEventLoopGroup(threadPoolSize);
+        this.group = new NioEventLoopGroup(max(MIN_THREAD_POOL_SIZE, threadPoolSize));
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
-        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager);
+        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, getExecutorService());
 
         this.futureMap = futureMap;
 

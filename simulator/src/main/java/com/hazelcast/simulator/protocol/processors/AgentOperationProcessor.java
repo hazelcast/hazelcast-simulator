@@ -30,7 +30,6 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
@@ -38,9 +37,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -53,20 +50,13 @@ import static java.lang.String.format;
  */
 public class AgentOperationProcessor extends OperationProcessor {
 
-    private static final int EXECUTOR_SERVICE_THREAD_POOL_SIZE = 5;
-    private static final int EXECUTOR_SERVICE_TERMINATION_TIMEOUT_SECONDS = 10;
-
     private static final Logger LOGGER = Logger.getLogger(AgentOperationProcessor.class);
 
     private final Agent agent;
     private final WorkerJvmManager workerJvmManager;
     private final ExecutorService executorService;
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager) {
-        this(exceptionLogger, agent, workerJvmManager, Executors.newFixedThreadPool(EXECUTOR_SERVICE_THREAD_POOL_SIZE));
-    }
-
-    AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
+    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
                             ExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
@@ -77,14 +67,6 @@ public class AgentOperationProcessor extends OperationProcessor {
     @Override
     public void shutdown() {
         super.shutdown();
-        try {
-            LOGGER.info("Shutdown of ExecutorService in AgentOperationProcessor...");
-            executorService.shutdown();
-            executorService.awaitTermination(EXECUTOR_SERVICE_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            LOGGER.info("Shutdown of ExecutorService in AgentOperationProcessor completed!");
-        } catch (InterruptedException e) {
-            EmptyStatement.ignore(e);
-        }
     }
 
     @Override

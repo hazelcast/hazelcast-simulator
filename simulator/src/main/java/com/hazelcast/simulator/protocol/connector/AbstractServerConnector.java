@@ -50,6 +50,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 
 /**
@@ -57,8 +58,9 @@ import static java.lang.String.format;
  */
 abstract class AbstractServerConnector implements ServerConnector {
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
+    private static final int DEFAULT_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
 
+    private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
 
     private final EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -79,11 +81,14 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize) {
-        this.executorService = createFixedThreadPool(threadPoolSize, "AbstractServerConnector");
+        int poolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
+        this.executorService = createFixedThreadPool(poolSize, "AbstractServerConnector");
         this.futureMap = futureMap;
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
         this.port = port;
+
+        LOGGER.debug("Size of ExecutorService thread pool: " + poolSize);
     }
 
     abstract void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector);

@@ -53,7 +53,7 @@ import static com.hazelcast.simulator.protocol.exception.ExceptionType.WORKER_EX
  */
 public class WorkerConnector extends AbstractServerConnector {
 
-    private static final int THREAD_POOL_SIZE = 3;
+    private static final int MIN_THREAD_POOL_SIZE = 3;
 
     private final OperationProcessor processor;
 
@@ -67,7 +67,7 @@ public class WorkerConnector extends AbstractServerConnector {
     WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                     boolean useRemoteLogger, WorkerType type, HazelcastInstance hazelcastInstance, Worker worker,
                     ConnectionManager connectionManager) {
-        super(futureMap, localAddress, port, THREAD_POOL_SIZE);
+        super(futureMap, localAddress, port, MIN_THREAD_POOL_SIZE);
 
         ExceptionLogger exceptionLogger = createExceptionLogger(localAddress, useRemoteLogger);
         this.processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker, localAddress);

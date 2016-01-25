@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -52,7 +53,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class AgentOperationProcessorTest {
@@ -62,6 +62,7 @@ public class AgentOperationProcessorTest {
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
     private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
+    private final ExecutorService executorService = createFixedThreadPool(3, "AgentOperationProcessorTest");
 
     private TestSuite testSuite;
     private File testSuiteDir;
@@ -88,13 +89,16 @@ public class AgentOperationProcessorTest {
         when(agent.getCoordinatorLogger()).thenReturn(coordinatorLogger);
         when(agent.getWorkerJvmFailureMonitor()).thenReturn(failureMonitor);
 
-        processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager);
+        processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, executorService);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         resetUserDir();
         deleteLogs();
+
+        executorService.shutdown();
+        executorService.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @Test
@@ -119,10 +123,6 @@ public class AgentOperationProcessorTest {
         };
 
         processor.shutdown();
-
-        verify(executorService).shutdown();
-        verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
-        verifyNoMoreInteractions(executorService);
     }
 
     @Test(timeout = 10000)
