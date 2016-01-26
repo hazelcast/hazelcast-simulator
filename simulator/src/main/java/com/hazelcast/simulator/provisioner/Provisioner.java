@@ -58,7 +58,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
@@ -146,7 +145,8 @@ public class Provisioner {
     void installSimulator() {
         ensureIsRemoteSetup(properties, "install");
 
-        echoImportant("Installing Simulator on %d machines", componentRegistry.agentCount());
+        long started = System.nanoTime();
+        echoImportant("Installing Simulator on %d machines...", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -160,7 +160,8 @@ public class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Installing Simulator on %d machines", componentRegistry.agentCount());
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Finished installing Simulator on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
     void listMachines() {
@@ -172,7 +173,8 @@ public class Provisioner {
     void download(final String target) {
         ensureIsRemoteSetup(properties, "download");
 
-        echoImportant("Download artifacts of %s machines", componentRegistry.agentCount());
+        long started = System.nanoTime();
+        echoImportant("Download artifacts of %s machines...", componentRegistry.agentCount());
         bash.execute("mkdir -p " + target);
 
         ThreadSpawner spawner = new ThreadSpawner("download", true);
@@ -221,13 +223,16 @@ public class Provisioner {
         });
 
         spawner.awaitCompletion();
-        echoImportant("Finished downloading artifacts of %s machines", componentRegistry.agentCount());
+
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Finished downloading artifacts of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
     void clean() {
         ensureIsRemoteSetup(properties, "clean");
 
-        echoImportant("Cleaning Worker homes of %s machines", componentRegistry.agentCount());
+        long started = System.nanoTime();
+        echoImportant("Cleaning Worker homes of %s machines...", componentRegistry.agentCount());
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
         ThreadSpawner spawner = new ThreadSpawner("clean", true);
@@ -242,13 +247,15 @@ public class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Finished cleaning Worker homes of %s machines", componentRegistry.agentCount());
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Finished cleaning Worker homes of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
     void killJavaProcesses() {
         ensureIsRemoteSetup(properties, "kill");
 
-        echoImportant("Killing %s Java processes", componentRegistry.agentCount());
+        long started = System.nanoTime();
+        echoImportant("Killing %s Java processes...", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -262,7 +269,8 @@ public class Provisioner {
         }
         spawner.awaitCompletion();
 
-        echoImportant("Successfully killed %s Java processes", componentRegistry.agentCount());
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Successfully killed %s Java processes (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
     void terminate() {
@@ -295,24 +303,22 @@ public class Provisioner {
         echoImportant("Provisioning %s %s machines", delta, properties.getCloudProvider());
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
+
         String groupName = properties.get("GROUP_NAME", "simulator-agent");
         echo("GroupName: " + groupName);
         echo("Username: " + properties.getUser());
-
-        LOGGER.info("Using init script: " + initScriptFile.getAbsolutePath());
-
-        long started = System.nanoTime();
+        echo("Using init script: " + initScriptFile.getAbsolutePath());
 
         String jdkFlavor = properties.get("JDK_FLAVOR", "outofthebox");
         if ("outofthebox".equals(jdkFlavor)) {
-            LOGGER.info("JDK spec: outofthebox");
+            echo("JDK spec: outofthebox");
         } else {
             String jdkVersion = properties.get("JDK_VERSION", "7");
-            LOGGER.info(format("JDK spec: %s %s", jdkFlavor, jdkVersion));
+            echo("JDK spec: %s %s", jdkFlavor, jdkVersion);
         }
 
+        long started = System.nanoTime();
         Template template = new TemplateBuilder(computeService, properties).build();
-
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
 
         try {
@@ -344,11 +350,11 @@ public class Provisioner {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
-        echo(format("Pausing for machine warmup... (%d sec)", machineWarmupSeconds));
+        echo("Pausing for machine warmup... (%d sec)", machineWarmupSeconds);
         sleepSeconds(machineWarmupSeconds);
 
-        echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
-        echoImportant(format("Successfully provisioned %s %s machines", delta, properties.getCloudProvider()));
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Successfully provisioned %s %s machines (%s seconds)", delta, properties.getCloudProvider(), elapsed);
     }
 
     private void scaleDown(int count) {
@@ -356,7 +362,7 @@ public class Provisioner {
             count = componentRegistry.agentCount();
         }
 
-        echoImportant(format("Terminating %s %s machines (can take some time)", count, properties.getCloudProvider()));
+        echoImportant("Terminating %s %s machines (can take some time)", count, properties.getCloudProvider());
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() - count));
 
@@ -372,11 +378,12 @@ public class Provisioner {
             destroyedCount += destroyedSet.size();
         }
 
-        LOGGER.info("Updating " + agentsFile.getAbsolutePath());
+        echo("Updating " + agentsFile.getAbsolutePath());
         AgentsFile.save(agentsFile, componentRegistry);
 
-        echo("Duration: " + secondsToHuman(getElapsedSeconds(started)));
-        echoImportant("Terminated %s of %s, remaining=%s", destroyedCount, count, componentRegistry.agentCount());
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Terminated %s of %s machines (%s remaining) (%s seconds)", destroyedCount, count,
+                componentRegistry.agentCount(), elapsed);
 
         if (destroyedCount != count) {
             throw new IllegalStateException("Terminated " + destroyedCount + " of " + count
