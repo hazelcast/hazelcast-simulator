@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.test.TestPhase.getLastTestPhase;
 import static java.lang.String.format;
 
 /**
@@ -142,7 +143,7 @@ public class TestOperationProcessor extends OperationProcessor {
                         testContainer.invoke(testPhase);
                     } finally {
                         LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
-                        if (testPhase == TestPhase.LOCAL_TEARDOWN) {
+                        if (testPhase == getLastTestPhase()) {
                             worker.getWorkerConnector().removeTest(testIndex);
                         }
                     }
