@@ -8,8 +8,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Before;
 import org.junit.Test;
@@ -172,6 +171,7 @@ public class TestContainerTest {
     public void testRun() throws Exception {
         DummyTest test = new DummyTest();
         testContainer = createTestContainer(test);
+
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.runCalled);
@@ -210,18 +210,11 @@ public class TestContainerTest {
 
         testContainer.invoke(TestPhase.RUN);
 
-        assertTrue(test.runWithWorkerCreated);
+        assertFalse(test.runWithWorkerCreated);
         assertFalse(test.runWithWorkerCalled);
     }
 
     private static class RunWithWorkerTest {
-
-        private enum Operation {
-            NOP
-        }
-
-        private static final OperationSelectorBuilder<Operation> BUILDER = new OperationSelectorBuilder<Operation>()
-                .addDefaultOperation(Operation.NOP);
 
         volatile boolean runWithWorkerCreated;
         volatile boolean runWithWorkerCalled;
@@ -230,10 +223,10 @@ public class TestContainerTest {
         IWorker createWorker() {
             runWithWorkerCreated = true;
 
-            return new AbstractWorker<Operation>(BUILDER) {
+            return new AbstractMonotonicWorker() {
 
                 @Override
-                protected void timeStep(Operation operation) throws Exception {
+                protected void timeStep() throws Exception {
                     runWithWorkerCalled = true;
                 }
             };
