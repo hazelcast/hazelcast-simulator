@@ -14,6 +14,7 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -93,6 +94,18 @@ public class TestContainerTest {
 
         @Setup
         public void anotherSetup() {
+        }
+    }
+
+    @Test(expected = IllegalTestException.class)
+    public void testSetupWithIllegalParameterType() {
+        createTestContainer(new IllegalSetupParameterTest());
+    }
+
+    private static class IllegalSetupParameterTest {
+
+        @Setup
+        public void setUp(TestContext testContext, Probe probe) {
         }
     }
 
@@ -182,7 +195,23 @@ public class TestContainerTest {
         testContainer.invoke(TestPhase.RUN);
         testStopper.join();
 
+        assertTrue(test.runWithWorkerCreated);
         assertTrue(test.runWithWorkerCalled);
+    }
+
+    @Test
+    public void testRunWithWorker_withThreadCountZero() throws Exception {
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("threadCount", "0");
+        testCase = new TestCase("TestContainerTest", properties);
+
+        RunWithWorkerTest test = new RunWithWorkerTest();
+        testContainer = createTestContainer(test);
+
+        testContainer.invoke(TestPhase.RUN);
+
+        assertTrue(test.runWithWorkerCreated);
+        assertFalse(test.runWithWorkerCalled);
     }
 
     private static class RunWithWorkerTest {
@@ -194,10 +223,13 @@ public class TestContainerTest {
         private static final OperationSelectorBuilder<Operation> BUILDER = new OperationSelectorBuilder<Operation>()
                 .addDefaultOperation(Operation.NOP);
 
+        volatile boolean runWithWorkerCreated;
         volatile boolean runWithWorkerCalled;
 
         @RunWithWorker
         IWorker createWorker() {
+            runWithWorkerCreated = true;
+
             return new AbstractWorker<Operation>(BUILDER) {
 
                 @Override
