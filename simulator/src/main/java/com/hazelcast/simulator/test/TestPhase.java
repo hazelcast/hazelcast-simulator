@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 public enum TestPhase {
+
     SETUP("setup", false),
     LOCAL_WARMUP("local warmup", false),
     GLOBAL_WARMUP("global warmup", true),
@@ -28,6 +29,8 @@ public enum TestPhase {
     LOCAL_VERIFY("local verify", false),
     GLOBAL_TEARDOWN("global tear down", true),
     LOCAL_TEARDOWN("local tear down", false);
+
+    private static final TestPhase LAST_TEST_PHASE = values()[values().length - 1];
 
     private final String description;
     private final boolean isGlobal;
@@ -46,8 +49,7 @@ public enum TestPhase {
     }
 
     public static TestPhase getLastTestPhase() {
-        TestPhase[] values = values();
-        return values[values.length - 1];
+        return LAST_TEST_PHASE;
     }
 
     public static String getIdsAsString() {
