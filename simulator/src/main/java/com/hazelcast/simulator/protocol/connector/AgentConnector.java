@@ -60,7 +60,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
-    private final EventLoopGroup group;
+    private final EventLoopGroup clientConnectorGroup;
 
     private final AgentOperationProcessor processor;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
@@ -75,7 +75,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
                    WorkerJvmManager workerJvmManager, ConnectionManager connectionManager, int threadPoolSize) {
         super(futureMap, localAddress, port, threadPoolSize);
 
-        this.group = new NioEventLoopGroup();
+        this.clientConnectorGroup = new NioEventLoopGroup(threadPoolSize);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
         this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, getExecutorService());
@@ -120,7 +120,9 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     @Override
     void connectorShutdown() {
-        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+        clientConnectorGroup
+                .shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
+                .syncUninterruptibly();
     }
 
     @Override
@@ -162,8 +164,8 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      */
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
         SimulatorAddress remoteAddress = localAddress.getChild(workerIndex);
-        ClientConnector clientConnector = new ClientConnector(this, group, futureMap, localAddress, remoteAddress, workerIndex,
-                workerHost, workerPort);
+        ClientConnector clientConnector = new ClientConnector(this, clientConnectorGroup, futureMap, localAddress, remoteAddress,
+                workerIndex, workerHost, workerPort);
         clientConnector.start();
 
         clientConnectorManager.addClient(workerIndex, clientConnector);
