@@ -60,34 +60,35 @@ abstract class AbstractServerConnector implements ServerConnector {
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
 
-    private final EventLoopGroup bossGroup = new NioEventLoopGroup();
-    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
-
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<String, ResponseFuture> messageQueueFutures = new ConcurrentHashMap<String, ResponseFuture>();
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
-    private final ExecutorService executorService;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
     private final SimulatorAddress localAddress;
     private final int addressIndex;
     private final int port;
 
+    private final EventLoopGroup group;
+    private final ExecutorService executorService;
+
     private Channel channel;
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize) {
-        this(futureMap, localAddress, port, createFixedThreadPool(threadPoolSize, "AbstractServerConnector"));
+        this(futureMap, localAddress, port, threadPoolSize, createFixedThreadPool(threadPoolSize, "AbstractServerConnector"));
     }
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
-                            ExecutorService executorService) {
-        this.executorService = executorService;
+                            int threadPoolSize, ExecutorService executorService) {
         this.futureMap = futureMap;
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
         this.port = port;
+
+        this.group = new NioEventLoopGroup(threadPoolSize);
+        this.executorService = executorService;
     }
 
     abstract void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector);
@@ -109,7 +110,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private ServerBootstrap getServerBootstrap() {
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(bossGroup, workerGroup)
+        bootstrap.group(group)
                 .channel(NioServerSocketChannel.class)
                 .localAddress(new InetSocketAddress(port))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -126,13 +127,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         messageQueueThread.shutdown();
         connectorShutdown();
         channel.close().syncUninterruptibly();
-
-        workerGroup.
-                shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
-                .syncUninterruptibly();
-        bossGroup
-                .shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)
-                .syncUninterruptibly();
+        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
 
         try {
             executorService.shutdown();

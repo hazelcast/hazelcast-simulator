@@ -33,6 +33,9 @@ import static org.mockito.Mockito.when;
 
 public class AbstractServerConnectorTest {
 
+    private static final int PORT = 9000;
+    private static final int THREAD_POOL_SIZE = 3;
+
     private boolean shutdownAfterTest = true;
 
     private SimulatorAddress connectorAddress;
@@ -47,7 +50,7 @@ public class AbstractServerConnectorTest {
         connectorAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
         executorService = mock(ExecutorService.class);
 
-        testServerConnector = new TestServerConnector(futureMap, connectorAddress, 9000, executorService);
+        testServerConnector = new TestServerConnector(futureMap, connectorAddress, PORT, THREAD_POOL_SIZE, executorService);
     }
 
     @After
@@ -153,8 +156,8 @@ public class AbstractServerConnectorTest {
         private final ChannelGroup channelGroup = mock(ChannelGroup.class);
 
         TestServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
-                            ExecutorService executorService) {
-            super(futureMap, localAddress, port, executorService);
+                            int threadPoolSize, ExecutorService executorService) {
+            super(futureMap, localAddress, port, threadPoolSize, executorService);
         }
 
         @Override
