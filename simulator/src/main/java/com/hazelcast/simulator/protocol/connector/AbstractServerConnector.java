@@ -50,15 +50,12 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 /**
  * Abstract {@link ServerConnector} class for Simulator Agent and Worker.
  */
 abstract class AbstractServerConnector implements ServerConnector {
-
-    private static final int DEFAULT_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
 
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
@@ -81,8 +78,7 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize) {
-        this(futureMap, localAddress, port, createFixedThreadPool(max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize),
-                "AbstractServerConnector"));
+        this(futureMap, localAddress, port, createFixedThreadPool(threadPoolSize, "AbstractServerConnector"));
     }
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,

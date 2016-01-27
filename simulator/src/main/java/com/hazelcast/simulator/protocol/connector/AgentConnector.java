@@ -56,6 +56,7 @@ import static java.lang.Math.max;
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
     private static final int MIN_THREAD_POOL_SIZE = 10;
+    private static final int DEFAULT_THREAD_POOL_SIZE = max(MIN_THREAD_POOL_SIZE, Runtime.getRuntime().availableProcessors() + 1);
 
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
@@ -72,9 +73,9 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
                    WorkerJvmManager workerJvmManager, ConnectionManager connectionManager, int threadPoolSize) {
-        super(futureMap, localAddress, port, max(MIN_THREAD_POOL_SIZE, threadPoolSize));
+        super(futureMap, localAddress, port, threadPoolSize);
 
-        this.group = new NioEventLoopGroup(max(MIN_THREAD_POOL_SIZE, threadPoolSize));
+        this.group = new NioEventLoopGroup();
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
         this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, getExecutorService());
@@ -145,6 +146,8 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
         ConnectionManager connectionManager = new ConnectionManager();
+
+        threadPoolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
 
         return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager, threadPoolSize);
     }
