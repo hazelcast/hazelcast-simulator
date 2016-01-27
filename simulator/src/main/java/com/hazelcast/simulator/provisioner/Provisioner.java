@@ -397,10 +397,15 @@ public class Provisioner {
     }
 
     private void uploadJARs(String ip) {
-        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", getSimulatorVersion()));
+        String simulatorVersion = getSimulatorVersion();
+        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", simulatorVersion));
+        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/user-lib/", simulatorVersion));
 
-        // first we delete the old lib files to prevent different versions of the same JAR to bite us
-        bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", getSimulatorVersion()));
+        // delete the old lib folder to prevent different versions of the same JAR to bite us
+        bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", simulatorVersion));
+
+        // delete the old user-lib folder to prevent interference with older setups
+        bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/user-lib/*", simulatorVersion));
 
         // upload Simulator JARs
         uploadLibraryJar(ip, "simulator-*");
@@ -430,7 +435,7 @@ public class Provisioner {
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
 
         // purge Hazelcast JARs
-        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", getSimulatorVersion()));
+        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", simulatorVersion));
 
         // upload Hazelcast JARs if configured
         if (hazelcastJARs != null) {
