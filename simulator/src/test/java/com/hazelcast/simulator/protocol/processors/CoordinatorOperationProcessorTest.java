@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.LATENCY_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.OPERATION_COUNT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.THROUGHPUT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
@@ -168,7 +169,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         assertEquals(SUCCESS, responseType);
 
         String performanceNumbers = performanceStateContainer.getPerformanceNumbers("testId");
-        assertTrue(performanceNumbers.contains(formatLong(1000, THROUGHPUT_FORMAT_LENGTH)));
+        assertTrue(performanceNumbers.contains(formatLong(1000, OPERATION_COUNT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatDouble(50, THROUGHPUT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(33, LATENCY_FORMAT_LENGTH)));

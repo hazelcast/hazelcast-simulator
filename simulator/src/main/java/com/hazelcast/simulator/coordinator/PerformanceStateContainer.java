@@ -43,6 +43,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  */
 public class PerformanceStateContainer {
 
+    public static final int OPERATION_COUNT_FORMAT_LENGTH = 14;
     public static final int THROUGHPUT_FORMAT_LENGTH = 12;
     public static final int LATENCY_FORMAT_LENGTH = 10;
 
@@ -100,7 +101,7 @@ public class PerformanceStateContainer {
             maxLatencyValue = MICROSECONDS.toMillis(maxLatencyValue);
         }
         return String.format("%s ops %s ops/s %s %s (avg) %s %s (%sth) %s %s (max)",
-                formatLong(performanceState.getOperationCount(), THROUGHPUT_FORMAT_LENGTH),
+                formatLong(performanceState.getOperationCount(), OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
                 formatLong(avgLatencyValue, LATENCY_FORMAT_LENGTH),
                 latencyUnit,
@@ -157,7 +158,7 @@ public class PerformanceStateContainer {
         appendText(totalOperationCount + NEW_LINE, PERFORMANCE_FILE_NAME);
         LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                 formatPercentage(1, 1),
-                formatLong(totalOperationCount, THROUGHPUT_FORMAT_LENGTH),
+                formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(totalPerformanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
 
         for (Map.Entry<SimulatorAddress, PerformanceState> entry : agentPerformanceStateMap.entrySet()) {
@@ -168,7 +169,7 @@ public class PerformanceStateContainer {
             LOGGER.info(format("  Agent %-15s %s%% %s ops %s ops/s",
                     agentAddress,
                     formatPercentage(operationCount, totalOperationCount),
-                    formatLong(operationCount, THROUGHPUT_FORMAT_LENGTH),
+                    formatLong(operationCount, OPERATION_COUNT_FORMAT_LENGTH),
                     formatDouble(performanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
         }
     }
