@@ -217,9 +217,9 @@ public class HazelcastJARsTest {
     public void testGetSnapshotUrl() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs();
 
-        String url = hazelcastJARs.getSnapshotUrl("hazelcast", "3.6-SNAPSHOT", false);
+        String url = hazelcastJARs.getSnapshotUrl("hazelcast", "3.7-SNAPSHOT", false);
         assertTrue(url.contains("hazelcast"));
-        assertTrue(url.contains("3.6-SNAPSHOT"));
+        assertTrue(url.contains("3.7-SNAPSHOT"));
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -233,9 +233,9 @@ public class HazelcastJARsTest {
     public void testGetReleaseUrl() {
         HazelcastJARs hazelcastJARs = getHazelcastJARs();
 
-        String url = hazelcastJARs.getReleaseUrl("hazelcast", "3.5.3", false);
+        String url = hazelcastJARs.getReleaseUrl("hazelcast", "3.6", false);
         assertTrue(url.contains("hazelcast"));
-        assertTrue(url.contains("3.5.3"));
+        assertTrue(url.contains("3.6"));
     }
 
     @Test
