@@ -93,8 +93,6 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     abstract void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector);
 
-    abstract void connectorShutdown();
-
     abstract ChannelGroup getChannelGroup();
 
     @Override
@@ -125,7 +123,6 @@ abstract class AbstractServerConnector implements ServerConnector {
     @Override
     public void shutdown() {
         messageQueueThread.shutdown();
-        connectorShutdown();
         channel.close().syncUninterruptibly();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
 
@@ -182,7 +179,11 @@ abstract class AbstractServerConnector implements ServerConnector {
         return writeAsync(message);
     }
 
-    public ExecutorService getExecutorService() {
+    EventLoopGroup getEventLoopGroup() {
+        return group;
+    }
+
+    ExecutorService getExecutorService() {
         return executorService;
     }
 

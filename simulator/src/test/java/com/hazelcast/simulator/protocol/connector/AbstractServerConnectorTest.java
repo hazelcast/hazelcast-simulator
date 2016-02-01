@@ -165,10 +165,6 @@ public class AbstractServerConnectorTest {
         }
 
         @Override
-        void connectorShutdown() {
-        }
-
-        @Override
         ChannelGroup getChannelGroup() {
             return channelGroup;
         }

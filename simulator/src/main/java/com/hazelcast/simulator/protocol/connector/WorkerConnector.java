@@ -97,10 +97,6 @@ public class WorkerConnector extends AbstractServerConnector {
     }
 
     @Override
-    void connectorShutdown() {
-    }
-
-    @Override
     ChannelGroup getChannelGroup() {
         connectionManager.waitForAtLeastOneChannel();
         return connectionManager.getChannels();
