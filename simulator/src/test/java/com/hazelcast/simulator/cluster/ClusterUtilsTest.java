@@ -75,20 +75,20 @@ public class ClusterUtilsTest {
 
     @Test
     public void testInitMemberLayout_fromXml() {
-        String xml = "<clusterConfiguration>\n"
-                + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>\n"
-                + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"memberWorker\" count=\"3\"/>\n"
-                + "    <workerGroup configuration=\"clientWorker\" count=\"4\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "</clusterConfiguration>";
+        String xml = "<clusterConfiguration>"
+                + NEW_LINE + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>"
+                + NEW_LINE + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>"
+                + NEW_LINE + "  <nodeConfiguration>"
+                + NEW_LINE + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>"
+                + NEW_LINE + "  </nodeConfiguration>"
+                + NEW_LINE + "  <nodeConfiguration>"
+                + NEW_LINE + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>"
+                + NEW_LINE + "  </nodeConfiguration>"
+                + NEW_LINE + "  <nodeConfiguration>"
+                + NEW_LINE + "    <workerGroup configuration=\"memberWorker\" count=\"3\"/>"
+                + NEW_LINE + "    <workerGroup configuration=\"clientWorker\" count=\"4\"/>"
+                + NEW_LINE + "  </nodeConfiguration>"
+                + NEW_LINE + "</clusterConfiguration>";
 
         when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
@@ -100,16 +100,16 @@ public class ClusterUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInitMemberLayout_fromXml_countMismatch() {
-        String xml = "<clusterConfiguration>\n"
-                + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>\n"
-                + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "  <nodeConfiguration>\n"
-                + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>\n"
-                + "  </nodeConfiguration>\n"
-                + "</clusterConfiguration>";
+        String xml = "<clusterConfiguration>"
+                + NEW_LINE + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>"
+                + NEW_LINE + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>"
+                + NEW_LINE + "  <nodeConfiguration>"
+                + NEW_LINE + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>"
+                + NEW_LINE + "  </nodeConfiguration>"
+                + NEW_LINE + "  <nodeConfiguration>"
+                + NEW_LINE + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>"
+                + NEW_LINE + "  </nodeConfiguration>"
+                + NEW_LINE + "</clusterConfiguration>";
 
         when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
 
