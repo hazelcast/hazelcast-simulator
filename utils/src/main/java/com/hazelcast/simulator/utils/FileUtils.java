@@ -30,8 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
@@ -87,43 +85,6 @@ public final class FileUtils {
             file = new File(file, items[i]);
         }
         return file;
-    }
-
-    public static void writeObject(Object o, File file) {
-        File tmpFile = new File(file.getParent(), file.getName() + ".tmp");
-
-        FileOutputStream stream = null;
-        ObjectOutputStream outputStream = null;
-        try {
-            stream = new FileOutputStream(tmpFile);
-            outputStream = new ObjectOutputStream(stream);
-            outputStream.writeObject(o);
-        } catch (IOException e) {
-            throw new FileUtilsException(e);
-        } finally {
-            closeQuietly(outputStream);
-            closeQuietly(stream);
-        }
-
-        rename(tmpFile, file);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <E> E readObject(File file) {
-        FileInputStream stream = null;
-        ObjectInputStream inputStream = null;
-        try {
-            stream = new FileInputStream(file);
-            inputStream = new ObjectInputStream(stream);
-            return (E) inputStream.readObject();
-        } catch (IOException e) {
-            throw new FileUtilsException(e);
-        } catch (ClassNotFoundException e) {
-            throw new FileUtilsException(e);
-        } finally {
-            closeQuietly(inputStream);
-            closeQuietly(stream);
-        }
     }
 
     public static void writeText(String text, File file) {

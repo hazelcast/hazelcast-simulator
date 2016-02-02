@@ -10,8 +10,6 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.FileUtils.readObject;
-import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
@@ -54,31 +52,6 @@ public class FileUtilsTest {
     public void testNewFileUserHomeBased() {
         File actual = newFile("~" + File.separator + "foobar");
         assertEquals(USER_HOME + File.separator + "foobar", actual.getPath());
-    }
-
-    @Test
-    public void testWriteAndReadObject() {
-        File file = new File("testWriteAndReadObject");
-        try {
-            String expected = "Hello World!";
-
-            writeObject(expected, file);
-            String actual = readObject(file);
-
-            assertEquals(expected, actual);
-        } finally {
-            deleteQuiet(file);
-        }
-    }
-
-    @Test(expected = FileUtilsException.class)
-    public void testWriteObject_withInvalidFilename() {
-        writeObject(null, INVALID_FILE);
-    }
-
-    @Test(expected = FileUtilsException.class)
-    public void testReadObject_withInvalidFilename() {
-        readObject(INVALID_FILE);
     }
 
     @Test
