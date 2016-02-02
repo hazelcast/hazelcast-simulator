@@ -45,21 +45,21 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
     private final LocalExceptionLogger exceptionLogger;
+    private final FailureContainer failureContainer;
     private final TestPhaseListenerContainer testPhaseListenerContainer;
     private final PerformanceStateContainer performanceStateContainer;
     private final TestHistogramContainer testHistogramContainer;
-    private final FailureContainer failureContainer;
 
     public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger,
-                                         TestPhaseListenerContainer testPhaseListenerContainer,
+                                         FailureContainer failureContainer, TestPhaseListenerContainer testPhaseListenerContainer,
                                          PerformanceStateContainer performanceStateContainer,
-                                         TestHistogramContainer testHistogramContainer, FailureContainer failureContainer) {
+                                         TestHistogramContainer testHistogramContainer) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
+        this.failureContainer = failureContainer;
         this.testPhaseListenerContainer = testPhaseListenerContainer;
         this.performanceStateContainer = performanceStateContainer;
         this.testHistogramContainer = testHistogramContainer;
-        this.failureContainer = failureContainer;
     }
 
     @Override
@@ -69,6 +69,9 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
             case EXCEPTION:
                 processException((ExceptionOperation) operation);
                 break;
+            case FAILURE:
+                processFailure((FailureOperation) operation);
+                break;
             case PHASE_COMPLETED:
                 return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
             case PERFORMANCE_STATE:
@@ -76,9 +79,6 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
                 break;
             case TEST_HISTOGRAMS:
                 processTestHistogram((TestHistogramOperation) operation, sourceAddress);
-                break;
-            case FAILURE:
-                processFailure((FailureOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -88,6 +88,10 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
 
     private void processException(ExceptionOperation operation) {
         exceptionLogger.logOperation(operation);
+    }
+
+    private void processFailure(FailureOperation operation) {
+        failureContainer.addFailureOperation(operation);
     }
 
     private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
@@ -106,9 +110,5 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
 
     private void processTestHistogram(TestHistogramOperation operation, SimulatorAddress sourceAddress) {
         testHistogramContainer.addTestHistograms(sourceAddress, operation.getTestId(), operation.getProbeHistograms());
-    }
-
-    private void processFailure(FailureOperation operation) {
-        failureContainer.addFailureOperation(operation);
     }
 }

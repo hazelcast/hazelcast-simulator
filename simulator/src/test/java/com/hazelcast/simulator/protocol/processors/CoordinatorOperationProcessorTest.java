@@ -94,8 +94,8 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", componentRegistry);
 
-        processor = new CoordinatorOperationProcessor(exceptionLogger, testPhaseListenerContainer, performanceStateContainer,
-                testHistogramContainer, failureContainer);
+        processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListenerContainer,
+                performanceStateContainer, testHistogramContainer);
     }
 
     @After
@@ -125,6 +125,23 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         assertEquals(SUCCESS, responseType);
         assertEquals(1, exceptionLogger.getExceptionCount());
+    }
+
+    @Test
+    public void processFailureOperation() {
+        failureContainer.addListener(this);
+
+        TestException exception = new TestException("expected exception");
+        FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOM,
+                workerAddress, workerAddress.getParent().toString(), exception);
+        ResponseType responseType = processor.process(operation, workerAddress);
+
+        assertEquals(SUCCESS, responseType);
+        assertEquals(1, failureOperations.size());
+
+        FailureOperation failure = failureOperations.poll();
+        assertNull(failure.getTestId());
+        assertExceptionClassInFailure(failure, TestException.class);
     }
 
     @Test
@@ -194,23 +211,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         assertNotNull(actualProbeHistograms);
         assertEquals("histogram1", actualProbeHistograms.get("probe1"));
         assertEquals("histogram2", actualProbeHistograms.get("probe2"));
-    }
-
-    @Test
-    public void processFailureOperation() {
-        failureContainer.addListener(this);
-
-        TestException exception = new TestException("expected exception");
-        FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOM,
-                workerAddress, workerAddress.getParent().toString(), exception);
-        ResponseType responseType = processor.process(operation, workerAddress);
-
-        assertEquals(SUCCESS, responseType);
-        assertEquals(1, failureOperations.size());
-
-        FailureOperation failure = failureOperations.poll();
-        assertNull(failure.getTestId());
-        assertExceptionClassInFailure(failure, TestException.class);
     }
 
     private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {

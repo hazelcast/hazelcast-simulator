@@ -96,6 +96,16 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
+    public void process_Ping() {
+        PingOperation operation = new PingOperation();
+        ResponseType responseType = processor.process(operation, COORDINATOR);
+
+        assertEquals(SUCCESS, responseType);
+        verify(worker).getWorkerConnector();
+        verifyNoMoreInteractions(worker);
+    }
+
+    @Test
     public void process_TerminateWorkers_onMemberWorker() {
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0);
         processor.process(operation, COORDINATOR);
@@ -160,16 +170,6 @@ public class WorkerOperationProcessorTest {
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         exceptionLogger.assertException(ClassNotFoundException.class);
-    }
-
-    @Test
-    public void process_Ping() {
-        PingOperation operation = new PingOperation();
-        ResponseType responseType = processor.process(operation, COORDINATOR);
-
-        assertEquals(SUCCESS, responseType);
-        verify(worker).getWorkerConnector();
-        verifyNoMoreInteractions(worker);
     }
 
     private void setTestCaseClass(String className) {

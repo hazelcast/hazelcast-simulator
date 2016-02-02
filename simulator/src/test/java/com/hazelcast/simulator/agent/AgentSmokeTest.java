@@ -89,8 +89,8 @@ public class AgentSmokeTest implements FailureListener {
         TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("agentSmokeTest", null);
 
-        coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer, performanceStateContainer,
-                testHistogramContainer, failureContainer);
+        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListenerContainer, performanceStateContainer,
+                testHistogramContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 10, 0);

@@ -73,19 +73,18 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
     private final CoordinatorOperationProcessor processor;
     private final ExecutorService executorService;
 
-    public CoordinatorConnector(TestPhaseListenerContainer testPhaseListenerContainer,
+    public CoordinatorConnector(FailureContainer failureContainer, TestPhaseListenerContainer testPhaseListenerContainer,
                                 PerformanceStateContainer performanceStateContainer,
-                                TestHistogramContainer testHistogramContainer, FailureContainer failureContainer) {
-        this(testPhaseListenerContainer, performanceStateContainer, testHistogramContainer, failureContainer,
+                                TestHistogramContainer testHistogramContainer) {
+        this(failureContainer, testPhaseListenerContainer, performanceStateContainer, testHistogramContainer,
                 createFixedThreadPool(EXECUTOR_POOL_SIZE, "CoordinatorConnector"));
     }
 
-    CoordinatorConnector(TestPhaseListenerContainer testPhaseListenerContainer,
-                                PerformanceStateContainer performanceStateContainer,
-                                TestHistogramContainer testHistogramContainer, FailureContainer failureContainer,
-                                ExecutorService executorService) {
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, testPhaseListenerContainer, performanceStateContainer,
-                testHistogramContainer, failureContainer);
+    CoordinatorConnector(FailureContainer failureContainer, TestPhaseListenerContainer testPhaseListenerContainer,
+                         PerformanceStateContainer performanceStateContainer, TestHistogramContainer testHistogramContainer,
+                         ExecutorService executorService) {
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListenerContainer,
+                performanceStateContainer, testHistogramContainer);
         this.executorService = executorService;
     }
 

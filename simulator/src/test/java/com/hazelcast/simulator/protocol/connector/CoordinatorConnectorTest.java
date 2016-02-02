@@ -29,8 +29,8 @@ public class CoordinatorConnectorTest {
         FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
         executorService = mock(ExecutorService.class);
 
-        coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer, performanceStateContainer,
-                testHistogramContainer, failureContainer, executorService);
+        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListenerContainer, performanceStateContainer,
+                testHistogramContainer, executorService);
     }
 
     @Test

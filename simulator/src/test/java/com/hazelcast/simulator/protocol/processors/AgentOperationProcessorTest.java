@@ -116,6 +116,18 @@ public class AgentOperationProcessorTest {
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
 
+    @Test
+    public void testInitTestSuiteOperation() throws Exception {
+        SimulatorOperation operation = new InitTestSuiteOperation(testSuite);
+        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+
+        System.out.println(getSimulatorHome());
+        System.out.println(testSuiteDir.getAbsolutePath());
+
+        assertEquals(SUCCESS, responseType);
+        assertTrue(testSuiteDir.exists());
+    }
+
     @Test(timeout = 10000)
     public void testCreateWorkerOperation() throws Exception {
         ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT);
@@ -155,18 +167,6 @@ public class AgentOperationProcessorTest {
         }
 
         assertWorkerLifecycle();
-    }
-
-    @Test
-    public void testInitTestSuiteOperation() throws Exception {
-        SimulatorOperation operation = new InitTestSuiteOperation(testSuite);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
-
-        System.out.println(getSimulatorHome());
-        System.out.println(testSuiteDir.getAbsolutePath());
-
-        assertEquals(SUCCESS, responseType);
-        assertTrue(testSuiteDir.exists());
     }
 
     @Test

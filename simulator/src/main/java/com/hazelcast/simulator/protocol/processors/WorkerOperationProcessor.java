@@ -86,14 +86,14 @@ public class WorkerOperationProcessor extends OperationProcessor {
         switch (operationType) {
             case INTEGRATION_TEST:
                 return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
+            case PING:
+                processPing(sourceAddress);
+                break;
             case TERMINATE_WORKER:
                 processTerminateWorker((TerminateWorkerOperation) operation);
                 break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
-                break;
-            case PING:
-                processPing(sourceAddress);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -132,6 +132,11 @@ public class WorkerOperationProcessor extends OperationProcessor {
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
+    }
+
+    private void processPing(SimulatorAddress sourceAddress) {
+        WorkerConnector workerConnector = worker.getWorkerConnector();
+        LOGGER.info(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
     }
 
     private void processTerminateWorker(TerminateWorkerOperation operation) {
@@ -174,10 +179,5 @@ public class WorkerOperationProcessor extends OperationProcessor {
         if (type == WorkerType.MEMBER) {
             hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
         }
-    }
-
-    private void processPing(SimulatorAddress sourceAddress) {
-        WorkerConnector workerConnector = worker.getWorkerConnector();
-        LOGGER.info(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
     }
 }

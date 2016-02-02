@@ -70,11 +70,11 @@ public class AgentOperationProcessor extends OperationProcessor {
         switch (operationType) {
             case INTEGRATION_TEST:
                 return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
-            case CREATE_WORKER:
-                return processCreateWorker((CreateWorkerOperation) operation);
             case INIT_TEST_SUITE:
                 processInitTestSuite((InitTestSuiteOperation) operation);
                 break;
+            case CREATE_WORKER:
+                return processCreateWorker((CreateWorkerOperation) operation);
             case START_TIMEOUT_DETECTION:
                 processStartTimeoutDetection();
                 break;
@@ -120,6 +120,17 @@ public class AgentOperationProcessor extends OperationProcessor {
         }
     }
 
+    private void processInitTestSuite(InitTestSuiteOperation operation) {
+        agent.setTestSuite(operation.getTestSuite());
+
+        File workersHome = new File(getSimulatorHome(), "workers");
+        File testSuiteDir = new File(workersHome, operation.getTestSuite().getId());
+        ensureExistingDirectory(testSuiteDir);
+
+        File libDir = new File(testSuiteDir, "lib");
+        ensureExistingDirectory(libDir);
+    }
+
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
         for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
@@ -133,17 +144,6 @@ public class AgentOperationProcessor extends OperationProcessor {
             }
         }
         return SUCCESS;
-    }
-
-    private void processInitTestSuite(InitTestSuiteOperation operation) {
-        agent.setTestSuite(operation.getTestSuite());
-
-        File workersHome = new File(getSimulatorHome(), "workers");
-        File testSuiteDir = new File(workersHome, operation.getTestSuite().getId());
-        ensureExistingDirectory(testSuiteDir);
-
-        File libDir = new File(testSuiteDir, "lib");
-        ensureExistingDirectory(libDir);
     }
 
     private void processStartTimeoutDetection() {

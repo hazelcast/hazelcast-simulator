@@ -157,8 +157,8 @@ class ProtocolUtil {
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
-        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(testPhaseListenerContainer,
-                performanceStateContainer, testHistogramContainer, failureContainer);
+        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListenerContainer,
+                performanceStateContainer, testHistogramContainer);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }
