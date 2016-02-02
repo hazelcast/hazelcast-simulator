@@ -24,7 +24,7 @@ public final class ProbeTestUtils {
 
     private static final int HISTOGRAM_RECORD_COUNT = 5000;
     private static final int MAX_LATENCY = 30000;
-    private static final int TOLERANCE_MILLIS = 500;
+    private static final int TOLERANCE_MILLIS = 1000;
 
     private static final Random RANDOM = new Random();
     private static File resultFile = new File("tmpProbeResult.xml");
