@@ -49,6 +49,7 @@ public class WorkerJvmLauncher {
 
     private static final int WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS = 500;
 
+    private static final String CLASSPATH = System.getProperty("java.class.path");
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
 
     private static final Logger LOGGER = Logger.getLogger(WorkerJvmLauncher.class);
@@ -282,7 +283,7 @@ public class WorkerJvmLauncher {
     private String getClasspath() {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
         String hzVersionDirectory = directoryForVersionSpec(workerJvmSettings.getHazelcastVersionSpec());
-        return simulatorHome + "/lib/*"
+        return CLASSPATH
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + new File(agent.getTestSuiteDir(), "lib/*").getAbsolutePath();
