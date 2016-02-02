@@ -33,7 +33,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -42,8 +41,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.writeObject;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
+import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
@@ -91,15 +91,7 @@ public final class MemberWorker implements Worker {
 
         Runtime.getRuntime().addShutdownHook(new ShutdownThread(true));
 
-        signalStartToAgent(hazelcastInstance);
-    }
-
-    private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int workerPerformanceMonitorIntervalSeconds) {
-        if (workerPerformanceMonitorIntervalSeconds < 1) {
-            return null;
-        }
-        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
-        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), workerPerformanceMonitorIntervalSeconds);
+        signalStartToAgent();
     }
 
     @Override
@@ -167,10 +159,10 @@ public final class MemberWorker implements Worker {
         return HazelcastClient.newHazelcastClient(clientConfig);
     }
 
-    private void warmupPartitions(HazelcastInstance hz) {
+    private void warmupPartitions(HazelcastInstance hazelcastInstance) {
         LOGGER.info("Waiting for partition warmup");
 
-        PartitionService partitionService = hz.getPartitionService();
+        PartitionService partitionService = hazelcastInstance.getPartitionService();
         long started = System.nanoTime();
         for (Partition partition : partitionService.getPartitions()) {
             if (System.nanoTime() - started > PARTITION_WARMUP_TIMEOUT_NANOS) {
@@ -186,20 +178,18 @@ public final class MemberWorker implements Worker {
         LOGGER.info("Partitions are warmed up successfully");
     }
 
-    private void signalStartToAgent(HazelcastInstance serverInstance) {
-        String address;
-        if (type == WorkerType.MEMBER) {
-            if (serverInstance != null) {
-                InetSocketAddress socketAddress = serverInstance.getCluster().getLocalMember().getInetSocketAddress();
-                address = socketAddress.getAddress().getHostAddress() + ':' + socketAddress.getPort();
-            } else {
-                address = "server:" + publicAddress;
-            }
-        } else {
-            address = "client:" + publicAddress;
+    private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int workerPerformanceMonitorIntervalSeconds) {
+        if (workerPerformanceMonitorIntervalSeconds < 1) {
+            return null;
         }
+        WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
+        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), workerPerformanceMonitorIntervalSeconds);
+    }
+
+    private void signalStartToAgent() {
+        String address = getHazelcastAddress(type, publicAddress, hazelcastInstance);
         File file = new File("worker.address");
-        writeObject(address, file);
+        writeText(address, file);
     }
 
     public static void main(String[] args) {

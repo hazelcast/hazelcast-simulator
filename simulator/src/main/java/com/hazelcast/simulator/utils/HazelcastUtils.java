@@ -17,7 +17,9 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
+import com.hazelcast.simulator.worker.WorkerType;
 
+import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -59,5 +61,27 @@ public final class HazelcastUtils {
     public static boolean isOldestMember(HazelcastInstance hazelcastInstance) {
         Iterator<Member> memberIterator = hazelcastInstance.getCluster().getMembers().iterator();
         return memberIterator.hasNext() && memberIterator.next().equals(hazelcastInstance.getLocalEndpoint());
+    }
+
+    public static String getHazelcastAddress(WorkerType workerType, String publicAddress, HazelcastInstance hazelcastInstance) {
+        if (hazelcastInstance != null) {
+            InetSocketAddress socketAddress = getInetSocketAddress(hazelcastInstance);
+            if (socketAddress != null) {
+                return socketAddress.getAddress().getHostAddress() + ':' + socketAddress.getPort();
+            }
+        }
+        return (workerType == WorkerType.MEMBER ? "server:" : "client:") + publicAddress;
+    }
+
+    private static InetSocketAddress getInetSocketAddress(HazelcastInstance hazelcastInstance) {
+        try {
+            return (InetSocketAddress) hazelcastInstance.getLocalEndpoint().getSocketAddress();
+        } catch (NoSuchMethodError ignored) {
+            try {
+                return hazelcastInstance.getCluster().getLocalMember().getInetSocketAddress();
+            } catch (Exception e) {
+                return null;
+            }
+        }
     }
 }

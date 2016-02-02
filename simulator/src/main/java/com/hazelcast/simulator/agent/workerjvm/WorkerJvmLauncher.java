@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
-import static com.hazelcast.simulator.utils.FileUtils.readObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
@@ -213,7 +213,7 @@ public class WorkerJvmLauncher {
             return null;
         }
 
-        String address = readObject(file);
+        String address = fileAsText(file);
         deleteQuiet(file);
 
         return address;

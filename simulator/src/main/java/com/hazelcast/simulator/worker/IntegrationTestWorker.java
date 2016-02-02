@@ -24,7 +24,6 @@ import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.FileUtils.writeObject;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 public final class IntegrationTestWorker implements Worker {
@@ -46,7 +45,7 @@ public final class IntegrationTestWorker implements Worker {
         writeText("" + pid, pidFile);
 
         File addressFile = new File("worker.address");
-        writeObject("127.0.0.1:5701", addressFile);
+        writeText("127.0.0.1:5701", addressFile);
 
         LOGGER.info("Waiting for shutdown...");
         boolean success = latch.await(WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
