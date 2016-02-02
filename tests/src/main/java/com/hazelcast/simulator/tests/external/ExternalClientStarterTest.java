@@ -24,7 +24,6 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.utils.Bash;
 
-import java.io.File;
 import java.util.UUID;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
@@ -57,7 +56,7 @@ public class ExternalClientStarterTest {
         }
 
         // delete the local binary, so it won't get downloaded again
-        deleteQuiet(new File(binaryName));
+        deleteQuiet(binaryName);
     }
 
     @Run

@@ -21,21 +21,13 @@ import static org.junit.Assert.assertTrue;
 
 public class ZipUtilsTest {
 
-    private File parent;
-    private File file;
-    private File dsStore;
+    private File parent = ensureExistingDirectory("test");
+    private File file = ensureExistingFile(parent, "zip-test.txt");
+    private File dsStore = ensureExistingFile(parent, ".DS_Store");
 
     @Before
     public void setUp() {
-        parent = new File("test");
-        ensureExistingDirectory(parent);
-
-        file = new File("test", "zip-test.txt");
-        ensureExistingFile(file);
         appendText("Lore ipsum", file);
-
-        dsStore = new File("test", ".DS_Store");
-        ensureExistingFile(dsStore);
     }
 
     @After

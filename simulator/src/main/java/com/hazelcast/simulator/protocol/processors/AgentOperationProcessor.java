@@ -57,7 +57,7 @@ public class AgentOperationProcessor extends OperationProcessor {
     private final ExecutorService executorService;
 
     public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
-                            ExecutorService executorService) {
+                                   ExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
         this.workerJvmManager = workerJvmManager;
@@ -123,12 +123,9 @@ public class AgentOperationProcessor extends OperationProcessor {
     private void processInitTestSuite(InitTestSuiteOperation operation) {
         agent.setTestSuite(operation.getTestSuite());
 
-        File workersHome = new File(getSimulatorHome(), "workers");
-        File testSuiteDir = new File(workersHome, operation.getTestSuite().getId());
-        ensureExistingDirectory(testSuiteDir);
-
-        File libDir = new File(testSuiteDir, "lib");
-        ensureExistingDirectory(libDir);
+        File workersHome = ensureExistingDirectory(getSimulatorHome(), "workers");
+        File testSuiteDir = ensureExistingDirectory(workersHome, operation.getTestSuite().getId());
+        ensureExistingDirectory(testSuiteDir, "lib");
     }
 
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {

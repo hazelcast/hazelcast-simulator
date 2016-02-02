@@ -17,7 +17,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.verification.VerificationWithTimeout;
 
-import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -62,10 +61,10 @@ public class WorkerPerformanceMonitorTest {
 
     @AfterClass
     public static void cleanUp() {
-        deleteQuiet(new File("throughput.txt"));
-        deleteQuiet(new File("throughput-DummyTestContext.txt"));
-        deleteQuiet(new File("latency-DummyTestContext-DummyTestContextWorkerProbe.txt"));
-        deleteQuiet(new File("latency-DummyTestContext-aggregated.txt"));
+        deleteQuiet("throughput.txt");
+        deleteQuiet("throughput-DummyTestContext.txt");
+        deleteQuiet("latency-DummyTestContext-DummyTestContextWorkerProbe.txt");
+        deleteQuiet("latency-DummyTestContext-aggregated.txt");
     }
 
     @Test

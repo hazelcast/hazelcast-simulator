@@ -45,8 +45,8 @@ public class CoordinatorUploaderTest {
     private String testSuiteId = "testSuiteId";
 
     private File notExists = new File("/notExists");
-    private File uploadDirectory = new File("upload");
-    private File workerClassPathFile = new File("workerClassPath");
+    private File uploadDirectory = ensureExistingDirectory("upload");
+    private File workerClassPathFile = ensureExistingDirectory("workerClassPath");
     private String workerClassPath = workerClassPathFile.getAbsolutePath();
 
     private CoordinatorUploader coordinatorUploader;
@@ -62,9 +62,6 @@ public class CoordinatorUploaderTest {
         ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(null, null, 2, 0, 0, 2);
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
-
-        ensureExistingDirectory(uploadDirectory);
-        ensureExistingDirectory(workerClassPathFile);
 
         coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 workerClassPath, YOURKIT, testSuiteId);

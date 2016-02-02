@@ -58,10 +58,10 @@ public class AbstractAsyncWorkerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         try {
             for (int i = 1; i <= THREAD_COUNT; i++) {
-                deleteQuiet(new File(i + ".exception"));
+                deleteQuiet(i + ".exception");
             }
 
             ExceptionReporter.reset();

@@ -67,7 +67,7 @@ class GitSupport {
     }
 
     File[] checkout(String revision) {
-        File srcDirectory = getOrCreateSourceDirectory();
+        File srcDirectory = ensureExistingDirectory(baseDir, "src");
         String fullSha1 = fetchSources(srcDirectory, revision);
 
         File buildCache = getCacheDirectory(fullSha1);
@@ -200,12 +200,6 @@ class GitSupport {
 
     private File getCacheDirectory(String fullSha1) {
         return newFile(baseDir, "build-cache", fullSha1);
-    }
-
-    private File getOrCreateSourceDirectory() {
-        File src = newFile(baseDir, "src");
-        ensureExistingDirectory(src);
-        return src;
     }
 
     private void fetchAllRepositories(Git git) throws GitAPIException {

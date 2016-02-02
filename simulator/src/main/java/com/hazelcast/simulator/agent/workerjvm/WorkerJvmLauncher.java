@@ -109,8 +109,7 @@ public class WorkerJvmLauncher {
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
         String workerId = "worker-" + agent.getPublicAddress() + '-' + workerIndex + '-' + type.toLowerCase();
-        File workerHome = new File(testSuiteDir, workerId);
-        ensureExistingDirectory(workerHome);
+        File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
 
         WorkerJvm workerJvm = new WorkerJvm(workerAddress, workerId, workerHome);
 

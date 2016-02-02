@@ -26,16 +26,16 @@ public class HeatMapTest extends AbstractComputeServiceTest {
 
     @Before
     public void setUp() {
-        directory = createDirectory("workers");
+        directory = ensureExistingDirectory("workers");
 
-        File directory1 = createDirectory(directory, "workers1");
-        File directory2 = createDirectory(directory, "workers2");
+        File directory1 = ensureExistingDirectory(directory, "workers1");
+        File directory2 = ensureExistingDirectory(directory, "workers2");
 
-        createEmptyFile(directory1, "latency-HeatMapTest-aggregated.txt");
-        createEmptyFile(directory2, "latency-HeatMapTest-aggregated.txt");
+        ensureExistingFile(directory1, "latency-HeatMapTest-aggregated.txt");
+        ensureExistingFile(directory2, "latency-HeatMapTest-aggregated.txt");
 
-        createEmptyFile(directory1, "latency-IntIntMapTest-aggregated.txt");
-        createEmptyFile(directory2, "latency-IntIntMapTest-aggregated.txt");
+        ensureExistingFile(directory1, "latency-IntIntMapTest-aggregated.txt");
+        ensureExistingFile(directory2, "latency-IntIntMapTest-aggregated.txt");
 
         ClassLoader classLoader = getClass().getClassLoader();
         createLatencyFile(classLoader, "heatmap-test-sample-1.txt", directory1);
@@ -71,24 +71,7 @@ public class HeatMapTest extends AbstractComputeServiceTest {
         createHistogramLogReader(new File("notFound"), "HeatMapTest");
     }
 
-    private File createDirectory(String pathname) {
-        File directory = new File(pathname).getAbsoluteFile();
-        ensureExistingDirectory(directory);
-        return directory;
-    }
-
-    private File createDirectory(File baseDir, String pathname) {
-        File directory = new File(baseDir, pathname).getAbsoluteFile();
-        ensureExistingDirectory(directory);
-        return directory;
-    }
-
-    private void createEmptyFile(File directory, String filename) {
-        File aggregatedFile = new File(directory, filename);
-        ensureExistingFile(aggregatedFile);
-    }
-
-    private void createLatencyFile(ClassLoader classLoader, String resourceFile, File directory) {
+    private static void createLatencyFile(ClassLoader classLoader, String resourceFile, File directory) {
         URL resource1 = classLoader.getResource(resourceFile);
         assertNotNull(resource1);
 

@@ -30,10 +30,8 @@ public class ProvisionerUtilsTest {
 
     @Test
     public void testGetInitScriptFile() {
-        File initScriptFile = new File(INIT_SH_SCRIPT_NAME);
+        File initScriptFile = ensureExistingFile(INIT_SH_SCRIPT_NAME);
         try {
-            ensureExistingFile(initScriptFile);
-
             File actualInitScriptFile = getInitScriptFile(null);
             assertEquals(initScriptFile, actualInitScriptFile);
         } finally {

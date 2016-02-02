@@ -9,8 +9,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
@@ -64,11 +62,11 @@ public class MemberWorkerTest {
         } finally {
             deleteLogs();
 
-            deleteQuiet(new File("throughput.txt"));
-            deleteQuiet(new File("worker.address"));
+            deleteQuiet("throughput.txt");
+            deleteQuiet("worker.address");
 
-            deleteQuiet(new File(MEMBER_CONFIG_FILE));
-            deleteQuiet(new File(CLIENT_CONFIG_FILE));
+            deleteQuiet(MEMBER_CONFIG_FILE);
+            deleteQuiet(CLIENT_CONFIG_FILE);
         }
     }
 

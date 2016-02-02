@@ -80,9 +80,9 @@ public class TestEnvironmentUtils {
     }
 
     public static void deleteLogs() {
-        deleteQuiet(new File("dist/src/main/dist/workers"));
-        deleteQuiet(new File("logs"));
-        deleteQuiet(new File("workers"));
+        deleteQuiet("dist/src/main/dist/workers");
+        deleteQuiet("logs");
+        deleteQuiet("workers");
     }
 
     public static void createAgentsFileWithLocalhost() {

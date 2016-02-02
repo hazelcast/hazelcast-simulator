@@ -14,10 +14,10 @@ import java.util.List;
 import static com.hazelcast.simulator.common.AgentsFile.load;
 import static com.hazelcast.simulator.common.AgentsFile.save;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static java.io.File.createTempFile;
 import static org.junit.Assert.assertEquals;
 
 public class AgentsFileTest {
@@ -27,7 +27,7 @@ public class AgentsFileTest {
 
     @Before
     public void setUp() throws IOException {
-        agentsFile = createTempFile("AgentsFileTest", "txt");
+        agentsFile = ensureExistingFile("AgentsFileTest-agents.txt");
     }
 
     @After

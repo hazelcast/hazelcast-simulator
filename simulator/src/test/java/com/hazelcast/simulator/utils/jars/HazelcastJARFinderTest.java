@@ -21,17 +21,17 @@ public class HazelcastJARFinderTest {
 
     @Before
     public void setUp() {
-        ensureExistingDirectory(new File(path, "hazelcast/target"));
+        ensureExistingDirectory(path, "hazelcast/target");
         ensureExistingFile(existingFile);
 
-        ensureExistingDirectory(new File(path, "multipleJARs/target"));
-        ensureExistingFile(new File(path, "multipleJARs/target/hazelcast-3.6.jar"));
-        ensureExistingFile(new File(path, "multipleJARs/target/hazelcast-3.7.jar"));
+        ensureExistingDirectory(path, "multipleJARs/target");
+        ensureExistingFile(path, "multipleJARs/target/hazelcast-3.6.jar");
+        ensureExistingFile(path, "multipleJARs/target/hazelcast-3.7.jar");
 
-        ensureExistingDirectory(new File(path, "noJAR/target"));
+        ensureExistingDirectory(path, "noJAR/target");
 
-        ensureExistingDirectory(new File(path, "isFile"));
-        ensureExistingFile(new File(path, "isFile/target"));
+        ensureExistingDirectory(path, "isFile");
+        ensureExistingFile(path, "isFile/target");
     }
 
     @After

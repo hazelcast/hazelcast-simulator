@@ -112,8 +112,7 @@ public class AwsProvisionerCliTest {
     }
 
     private static void createAwsCredentialsFile() {
-        awsCredentials = new File("awscredentials.properties");
-        ensureExistingFile(awsCredentials);
+        awsCredentials = ensureExistingFile("awscredentials.properties");
         appendText("accessKey=foo" + NEW_LINE, awsCredentials);
         appendText("secretKey=bar" + NEW_LINE, awsCredentials);
     }

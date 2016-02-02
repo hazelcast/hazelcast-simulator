@@ -31,7 +31,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -109,7 +108,7 @@ public class AgentSmokeTest implements FailureListener {
 
             resetUserDir();
             deleteLogs();
-            deleteQuiet(new File("failures-agentSmokeTest.txt"));
+            deleteQuiet("failures-agentSmokeTest.txt");
 
             resetLogLevel();
         }

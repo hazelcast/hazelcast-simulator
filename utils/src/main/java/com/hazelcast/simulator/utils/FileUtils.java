@@ -199,7 +199,14 @@ public final class FileUtils {
         }
     }
 
+    public static void deleteQuiet(String fileName) {
+        deleteQuiet(new File(fileName));
+    }
+
     public static void deleteQuiet(File file) {
+        if (file == null) {
+            return;
+        }
         try {
             delete(file);
         } catch (Exception ignored) {
@@ -227,6 +234,18 @@ public final class FileUtils {
         }
     }
 
+    public static File ensureExistingFile(String fileName) {
+        File file = new File(fileName);
+        ensureExistingFile(file);
+        return file;
+    }
+
+    public static File ensureExistingFile(File parent, String fileName) {
+        File file = new File(parent, fileName);
+        ensureExistingFile(file);
+        return file;
+    }
+
     public static void ensureExistingFile(File file) {
         if (file.isFile()) {
             return;
@@ -245,6 +264,18 @@ public final class FileUtils {
                 throw new FileUtilsException(e);
             }
         }
+    }
+
+    public static File ensureExistingDirectory(String dirName) {
+        File dir = new File(dirName);
+        ensureExistingDirectory(dir);
+        return dir;
+    }
+
+    public static File ensureExistingDirectory(File parent, String dirName) {
+        File dir = new File(parent, dirName);
+        ensureExistingDirectory(dir);
+        return dir;
     }
 
     public static void ensureExistingDirectory(File dir) {

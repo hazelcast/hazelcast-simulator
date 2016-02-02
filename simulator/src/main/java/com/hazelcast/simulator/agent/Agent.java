@@ -128,9 +128,8 @@ public class Agent {
         if (testSuite == null) {
             return null;
         }
-        File workersDir = new File(getSimulatorHome(), "workers");
-        ensureExistingDirectory(workersDir);
 
+        File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
         return new File(workersDir, testSuite.getId());
     }
 

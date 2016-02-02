@@ -18,16 +18,13 @@ import static org.junit.Assert.assertTrue;
 public class WizardTest {
 
     private File profileFile;
-
     private Wizard wizard;
 
     @Before
     public void setUp() {
         setDistributionUserDir();
 
-        profileFile = new File("wizardTest.txt");
-        ensureExistingFile(profileFile);
-
+        profileFile = ensureExistingFile("wizardTest.txt");
         wizard = new Wizard();
     }
 

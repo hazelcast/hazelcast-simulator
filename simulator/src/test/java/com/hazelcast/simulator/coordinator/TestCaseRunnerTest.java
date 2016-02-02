@@ -19,7 +19,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.verification.VerificationMode;
 
-import java.io.File;
 import java.util.Set;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
@@ -85,10 +84,10 @@ public class TestCaseRunnerTest {
 
     @After
     public void cleanUp() {
-        deleteQuiet(new File(AgentsFile.NAME));
-        deleteQuiet(new File("failures-" + testSuite.getId() + ".txt"));
-        deleteQuiet(new File("probes-" + testSuite.getId() + "_CoordinatorTest1.xml"));
-        deleteQuiet(new File("probes-" + testSuite.getId() + "_CoordinatorTest2.xml"));
+        deleteQuiet(AgentsFile.NAME);
+        deleteQuiet("failures-" + testSuite.getId() + ".txt");
+        deleteQuiet("probes-" + testSuite.getId() + "_CoordinatorTest1.xml");
+        deleteQuiet("probes-" + testSuite.getId() + "_CoordinatorTest2.xml");
     }
 
     @Test

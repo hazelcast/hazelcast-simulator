@@ -56,9 +56,9 @@ public class AbstractWorkerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         for (int i = 1; i <= THREAD_COUNT; i++) {
-            deleteQuiet(new File(i + ".exception"));
+            deleteQuiet(i + ".exception");
         }
 
         ExceptionReporter.reset();

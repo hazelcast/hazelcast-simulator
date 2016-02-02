@@ -149,11 +149,8 @@ public class AgentOperationProcessorTest {
 
     @Test(timeout = 10000)
     public void testCreateWorkerOperation_withUploadDirectory() throws Exception {
-        File uploadDir = new File(testSuiteDir, "upload");
-        ensureExistingDirectory(uploadDir);
-
-        File uploadFile = new File(uploadDir, "testFile");
-        ensureExistingFile(uploadFile);
+        File uploadDir = ensureExistingDirectory(testSuiteDir, "upload");
+        ensureExistingFile(uploadDir, "testFile");
 
         ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT);
         assertEquals(SUCCESS, responseType);

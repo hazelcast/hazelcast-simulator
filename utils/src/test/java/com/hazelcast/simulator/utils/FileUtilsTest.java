@@ -120,6 +120,6 @@ public class FileUtilsTest {
 
     @Test
     public void testDeleteQuiet_withInvalidFilename() {
-        deleteQuiet(new File("/dev/null"));
+        deleteQuiet("/dev/null");
     }
 }

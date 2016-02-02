@@ -21,7 +21,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -74,7 +73,7 @@ public class AwsProvisionerTest {
         resetUserDir();
         deleteAgentsFile();
 
-        deleteQuiet(new File(AwsProvisioner.AWS_ELB_FILE_NAME));
+        deleteQuiet(AwsProvisioner.AWS_ELB_FILE_NAME);
     }
 
     @Test

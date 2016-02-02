@@ -77,13 +77,10 @@ public class HarakiriMonitorUtilsTest {
         properties.set("CLOUD_IDENTITY", "identity");
         properties.set("CLOUD_CREDENTIAL", "credential");
 
-        File identity = new File("identity");
-        File credentials = new File("credential");
+        File identity = ensureExistingFile("identity");
+        File credentials = ensureExistingFile("credential");
         try {
-            ensureExistingFile(identity);
             appendText("someIdentity", identity);
-
-            ensureExistingFile(credentials);
             appendText("someCredential", credentials);
 
             String command = getStartHarakiriMonitorCommandOrNull(properties);

@@ -2,6 +2,8 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -10,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertEquals;
@@ -19,6 +23,18 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestSuiteTest {
+
+    private File testSuiteFile;
+
+    @Before
+    public void setUp() {
+        testSuiteFile = ensureExistingFile("simulator.properties");
+    }
+
+    @After
+    public void tearDown() {
+        deleteQuiet(testSuiteFile);
+    }
 
     @Test
     public void testConstructor() {
@@ -200,15 +216,13 @@ public class TestSuiteTest {
         assertEquals(8, testSuite.getMaxTestCaseIdLength());
     }
 
-    private static TestSuite createTestSuite(String txt) throws Exception {
+    private TestSuite createTestSuite(String txt) throws Exception {
         return createTestSuite(txt, "");
     }
 
-    private static TestSuite createTestSuite(String txt, String overrideProperties) throws Exception {
-        File file = File.createTempFile("simulator", "properties");
-        file.deleteOnExit();
-        writeText(txt, file);
+    private TestSuite createTestSuite(String txt, String overrideProperties) throws Exception {
+        writeText(txt, testSuiteFile);
 
-        return loadTestSuite(file, overrideProperties, null);
+        return loadTestSuite(testSuiteFile, overrideProperties, null);
     }
 }

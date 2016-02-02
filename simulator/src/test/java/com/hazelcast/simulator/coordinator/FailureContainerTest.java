@@ -11,7 +11,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.Set;
 
 import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
@@ -58,7 +57,7 @@ public class FailureContainerTest {
 
     @After
     public void tearDown() {
-        deleteQuiet(new File("failures-testSuite.txt"));
+        deleteQuiet("failures-testSuite.txt");
     }
 
     @Test

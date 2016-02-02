@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -100,7 +99,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     @After
     public void tearDown() {
-        deleteQuiet(new File("failures-CoordinatorOperationProcessorTest.txt"));
+        deleteQuiet("failures-CoordinatorOperationProcessorTest.txt");
     }
 
     @Override

@@ -14,12 +14,12 @@ import java.io.IOException;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.SimulatorUtils.getPropertiesFile;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static java.io.File.createTempFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -33,7 +33,7 @@ public class SimulatorUtilsTest {
 
     @Before
     public void setUp() throws IOException {
-        agentsFile = createTempFile("AgentsFileTest", "txt");
+        agentsFile = ensureExistingFile("SimulatorUtilsTest-agentsFile.txt");
     }
 
     @After

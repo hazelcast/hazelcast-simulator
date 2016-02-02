@@ -6,7 +6,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.tests.PropertiesTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.tests.TestContextImplTest;
-import com.hazelcast.simulator.utils.FileUtils;
 import org.junit.After;
 import org.junit.Test;
 
@@ -15,6 +14,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,9 +29,12 @@ public class TestRunnerTest {
     private final SuccessTest successTest = new SuccessTest();
     private final TestRunner<SuccessTest> testRunner = new TestRunner<SuccessTest>(successTest);
 
+    private File configFile;
+
     @After
     public void tearDown() {
         Hazelcast.shutdownAll();
+        deleteQuiet(configFile);
     }
 
     @Test(expected = NullPointerException.class)
@@ -124,12 +129,12 @@ public class TestRunnerTest {
 
     @Test
     public void withHazelcastConfigFile() throws Exception {
-        File configFile = File.createTempFile("config", "xml");
-        FileUtils.appendText("<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config" + NEW_LINE
-                + "                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\"" + NEW_LINE
-                + "           xmlns=\"http://www.hazelcast.com/schema/config\"" + NEW_LINE
-                + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" + NEW_LINE
-                + "</hazelcast>", configFile);
+        configFile = ensureExistingFile("config.xml");
+        writeText("<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config"
+                + NEW_LINE + "                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\""
+                + NEW_LINE + "           xmlns=\"http://www.hazelcast.com/schema/config\""
+                + NEW_LINE + "           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + NEW_LINE + "</hazelcast>", configFile);
 
         testRunner.withHazelcastConfigFile(configFile);
     }

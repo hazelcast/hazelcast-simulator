@@ -88,8 +88,8 @@ public class WorkerJvmFailureMonitorTest {
         for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
             deleteQuiet(workerJvm.getWorkerHome());
         }
-        deleteQuiet(new File("worker3"));
-        deleteQuiet(new File("1.exception.sendFailure"));
+        deleteQuiet("worker3");
+        deleteQuiet("1.exception.sendFailure");
     }
 
     @Test
@@ -218,7 +218,7 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure_withOomeFile() {
-        createFile(workerHome, "worker.oome");
+        ensureExistingFile(workerHome, "worker.oome");
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -229,7 +229,7 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure_withHprofFile() {
-        createFile(workerHome, "java_pid3140.hprof");
+        ensureExistingFile(workerHome, "java_pid3140.hprof");
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -343,20 +343,13 @@ public class WorkerJvmFailureMonitorTest {
     private static File createExceptionFile(File workerHome, String testId, String cause) {
         String targetFileName = "1.exception";
 
-        File tmpFile = createFile(workerHome, targetFileName + "tmp");
+        File tmpFile = ensureExistingFile(workerHome, targetFileName + "tmp");
         File exceptionFile = new File(workerHome, targetFileName);
 
         appendText(testId + NEW_LINE + cause, tmpFile);
         rename(tmpFile, exceptionFile);
 
         return exceptionFile;
-    }
-
-    private static File createFile(File workerHome, String fileName) {
-        File file = new File(workerHome, fileName);
-        ensureExistingFile(file);
-
-        return file;
     }
 
     private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, int times) {
