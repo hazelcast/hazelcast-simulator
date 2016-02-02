@@ -27,13 +27,13 @@ public class ChaosMonkeyOperation implements SimulatorOperation {
         HARD_KILL
     }
 
-    private final ChaosMonkeyType type;
+    private final String type;
 
     public ChaosMonkeyOperation(ChaosMonkeyType type) {
-        this.type = type;
+        this.type = type.name();
     }
 
     public ChaosMonkeyType getType() {
-        return type;
+        return ChaosMonkeyType.valueOf(type);
     }
 }
