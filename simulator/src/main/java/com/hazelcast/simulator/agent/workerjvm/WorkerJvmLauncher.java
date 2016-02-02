@@ -97,7 +97,7 @@ public class WorkerJvmLauncher {
         WorkerType type = workerJvmSettings.getWorkerType();
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
-        String workerId = "worker-" + agent.getPublicAddress() + '-' + workerIndex + '-' + type.toLowerCase();
+        String workerId = "worker-" + workerAddress + '-' + agent.getPublicAddress() + '-' + type.toLowerCase();
         File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
 
         String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
