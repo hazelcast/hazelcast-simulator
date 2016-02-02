@@ -19,6 +19,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.BRING_MY_OWN;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.isPrepareRequired;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.newInstance;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
@@ -40,15 +41,20 @@ public class HazelcastJARsTest {
     private Bash bash = mock(Bash.class);
     private GitSupport gitSupport = mock(GitSupport.class);
 
+    private HazelcastJARs hazelcastJARs;
+
     @After
     public void tearDown() {
         deleteLogs();
+        if (hazelcastJARs != null) {
+            hazelcastJARs.shutdown();
+        }
     }
 
     @Test
     public void testNewInstance() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
-        HazelcastJARs hazelcastJARs = newInstance(bash, properties, Collections.<String>emptySet());
+        hazelcastJARs = newInstance(bash, properties, Collections.<String>emptySet());
 
         assertEquals(0, hazelcastJARs.getVersionSpecs().size());
     }
@@ -61,7 +67,7 @@ public class HazelcastJARsTest {
         versionSpecs.add("maven=3.5.2");
         versionSpecs.add("maven=3.5.3");
 
-        HazelcastJARs hazelcastJARs = newInstance(bash, properties, versionSpecs);
+        hazelcastJARs = newInstance(bash, properties, versionSpecs);
 
         assertEquals(3, hazelcastJARs.getVersionSpecs().size());
     }
@@ -76,60 +82,65 @@ public class HazelcastJARsTest {
 
     @Test
     public void testIsPrepareRequired() {
-        assertTrue(HazelcastJARs.isPrepareRequired("maven=3.6"));
+        assertTrue(isPrepareRequired("maven=3.6"));
     }
 
     @Test
     public void testIsPrepareRequired_outOfTheBox() {
-        assertFalse(HazelcastJARs.isPrepareRequired(OUT_OF_THE_BOX));
+        assertFalse(isPrepareRequired(OUT_OF_THE_BOX));
     }
 
     @Test
     public void testIsPrepareRequired_bringMyOwn() {
-        assertFalse(HazelcastJARs.isPrepareRequired(BRING_MY_OWN));
+        assertFalse(isPrepareRequired(BRING_MY_OWN));
     }
 
     @Test
     public void testPrepare_outOfTheBox() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs(OUT_OF_THE_BOX);
+        initHazelcastJARs(OUT_OF_THE_BOX);
+
         hazelcastJARs.prepare(false);
     }
 
     @Test
     public void testPrepare_outOfTheBox_enterpriseEnabled() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs(OUT_OF_THE_BOX);
+        initHazelcastJARs(OUT_OF_THE_BOX);
+
         hazelcastJARs.prepare(true);
     }
 
     @Test
     public void testPrepare_bringMyOwn() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs(BRING_MY_OWN);
+        initHazelcastJARs(BRING_MY_OWN);
+
         hazelcastJARs.prepare(false);
     }
 
     @Test
     public void testPrepare_bringMyOwn_enterpriseEnabled() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs(BRING_MY_OWN);
+        initHazelcastJARs(BRING_MY_OWN);
+
         hazelcastJARs.prepare(true);
     }
 
     @Test
     public void testPrepare_git() {
         when(gitSupport.checkout("tag=8.7")).thenReturn(new File[]{});
+        initHazelcastJARs("git=tag=8.7");
 
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("git=tag=8.7");
         hazelcastJARs.prepare(false);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testPrepare_git_enterpriseEnabled() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("git=tag=3.5.3");
+        initHazelcastJARs("git=tag=3.5.3");
+
         hazelcastJARs.prepare(true);
     }
 
     @Test
     public void testPrepare_maven_existingRelease() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=8.7");
+        initHazelcastJARs("maven=8.7");
         File artifactFile = hazelcastJARs.getArtifactFile("hazelcast", "8.7");
         File artifactDir = new File(artifactFile.getParent());
         try {
@@ -149,7 +160,8 @@ public class HazelcastJARsTest {
 
     @Test
     public void testPrepare_maven_invalidRelease_enterpriseEnabled() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=8.7");
+        initHazelcastJARs("maven=8.7");
+
         hazelcastJARs.prepare(true);
 
         verify(bash, atLeastOnce()).download(anyString(), anyString());
@@ -158,19 +170,21 @@ public class HazelcastJARsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testPrepare_maven_invalidSNAPSHOT() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=8.7-SNAPSHOT");
+        initHazelcastJARs("maven=8.7-SNAPSHOT");
+
         hazelcastJARs.prepare(false);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testPrepare_invalidVersionSpec() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("invalidSpec");
+        initHazelcastJARs("invalidSpec");
+
         hazelcastJARs.prepare(false);
     }
 
     @Test
     public void testUpload_allVersions() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=3.6");
+        initHazelcastJARs("maven=3.6");
         String sourceDir = hazelcastJARs.getAbsolutePath("maven=3.6");
         String targetDir = directoryForVersionSpec("maven=3.6");
 
@@ -183,7 +197,7 @@ public class HazelcastJARsTest {
 
     @Test
     public void testUpload() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs("maven=3.6");
+        initHazelcastJARs("maven=3.6");
         String sourceDir = hazelcastJARs.getAbsolutePath("maven=3.6");
         String targetDir = directoryForVersionSpec("maven=3.6");
 
@@ -197,7 +211,8 @@ public class HazelcastJARsTest {
     @Test
     public void testUpload_outOfTheBox() {
         String targetDir = directoryForVersionSpec(OUT_OF_THE_BOX);
-        HazelcastJARs hazelcastJARs = getHazelcastJARs(OUT_OF_THE_BOX);
+        initHazelcastJARs(OUT_OF_THE_BOX);
+
         hazelcastJARs.upload("127.0.0.1", "simulatorHome", singleton(OUT_OF_THE_BOX));
 
         verify(bash, times(1)).ssh(eq("127.0.0.1"), contains(targetDir));
@@ -207,7 +222,8 @@ public class HazelcastJARsTest {
 
     @Test
     public void testUpload_bringMyOwn() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs(BRING_MY_OWN);
+        initHazelcastJARs(BRING_MY_OWN);
+
         hazelcastJARs.upload("127.0.0.1", getSimulatorHome().getAbsolutePath(), singleton(BRING_MY_OWN));
 
         verifyNoMoreInteractions(bash);
@@ -215,7 +231,7 @@ public class HazelcastJARsTest {
 
     @Test
     public void testGetSnapshotUrl() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs();
+        initHazelcastJARs();
 
         String url = hazelcastJARs.getSnapshotUrl("hazelcast", "3.7-SNAPSHOT", false);
         assertTrue(url.contains("hazelcast"));
@@ -224,14 +240,14 @@ public class HazelcastJARsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testGetSnapshotUrl_invalidVersion() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs();
+        initHazelcastJARs();
 
         hazelcastJARs.getSnapshotUrl("hazelcast", "8.7-SNAPSHOT", false);
     }
 
     @Test
     public void testGetReleaseUrl() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs();
+        initHazelcastJARs();
 
         String url = hazelcastJARs.getReleaseUrl("hazelcast", "3.6", false);
         assertTrue(url.contains("hazelcast"));
@@ -240,7 +256,7 @@ public class HazelcastJARsTest {
 
     @Test
     public void testGetTagValue() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs();
+        initHazelcastJARs();
 
         String buildNumber = hazelcastJARs.getTagValue(getMavenMetadata(), "buildNumber");
         assertEquals("565", buildNumber);
@@ -248,33 +264,32 @@ public class HazelcastJARsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testGetTagValue_invalidTag() {
-        HazelcastJARs hazelcastJARs = getHazelcastJARs();
+        initHazelcastJARs();
 
         hazelcastJARs.getTagValue(getMavenMetadata(), "notFound");
     }
 
-    private HazelcastJARs getHazelcastJARs() {
-        return getHazelcastJARs(OUT_OF_THE_BOX);
+    private void initHazelcastJARs() {
+        initHazelcastJARs(OUT_OF_THE_BOX);
     }
 
-    private HazelcastJARs getHazelcastJARs(String version) {
-        HazelcastJARs hazelcastJARs = new HazelcastJARs(bash, gitSupport);
+    private void initHazelcastJARs(String version) {
+        hazelcastJARs = new HazelcastJARs(bash, gitSupport);
         hazelcastJARs.addVersionSpec(version);
-        return hazelcastJARs;
     }
 
     private String getMavenMetadata() {
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                "<metadata>  <groupId>com.hazelcast</groupId>" +
-                "  <artifactId>hazelcast</artifactId>" +
-                "  <version>3.6-SNAPSHOT</version>" +
-                "  <versioning>" +
-                "    <snapshot>" +
-                "      <timestamp>20151018.215739</timestamp>" +
-                "      <buildNumber>565</buildNumber>" +
-                "    </snapshot>" +
-                "    <lastUpdated>20151018215739</lastUpdated>" +
-                "  </versioning>" +
-                "</metadata>";
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<metadata>  <groupId>com.hazelcast</groupId>"
+                + "  <artifactId>hazelcast</artifactId>"
+                + "  <version>3.6-SNAPSHOT</version>"
+                + "  <versioning>"
+                + "    <snapshot>"
+                + "      <timestamp>20151018.215739</timestamp>"
+                + "      <buildNumber>565</buildNumber>"
+                + "    </snapshot>"
+                + "    <lastUpdated>20151018215739</lastUpdated>"
+                + "  </versioning>"
+                + "</metadata>";
     }
 }

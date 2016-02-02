@@ -181,7 +181,9 @@ public final class Coordinator {
                     echo("Shutdown of ClientConnector...");
                     coordinatorConnector.shutdown();
                 }
-
+                if (hazelcastJARs != null) {
+                    hazelcastJARs.shutdown();
+                }
                 stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 moveLogFiles();
             }

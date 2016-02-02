@@ -295,6 +295,10 @@ public class Provisioner {
             computeService.getContext().close();
         }
 
+        if (hazelcastJARs != null) {
+            hazelcastJARs.shutdown();
+        }
+
         echo("Done!");
     }
 

@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -114,6 +115,12 @@ public class HazelcastJARs {
                 File versionSpecDir = versionSpecDirs.get(versionSpec);
                 bash.uploadToRemoteSimulatorDir(ip, versionSpecDir + "/*.jar", "hz-lib/" + versionDir);
             }
+        }
+    }
+
+    public void shutdown() {
+        for (File versionDir : versionSpecDirs.values()) {
+            deleteQuiet(versionDir);
         }
     }
 

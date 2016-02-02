@@ -30,7 +30,6 @@ import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isCloudProvider;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.isPrepareRequired;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.newInstance;
 import static java.util.Collections.singleton;
 
 final class ProvisionerCli {
@@ -90,7 +89,7 @@ final class ProvisionerCli {
         if (options.has(cli.uploadHazelcastSpec)) {
             String hazelcastVersionSpec = properties.getHazelcastVersionSpec();
             if (isPrepareRequired(hazelcastVersionSpec) || !enterpriseEnabled) {
-                hazelcastJARs = newInstance(bash, properties, singleton(hazelcastVersionSpec));
+                hazelcastJARs = HazelcastJARs.newInstance(bash, properties, singleton(hazelcastVersionSpec));
             }
         }
 
