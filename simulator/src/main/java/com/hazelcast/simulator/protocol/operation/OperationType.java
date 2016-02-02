@@ -118,7 +118,6 @@ public enum OperationType {
     static class OperationTypeRegistry {
 
         private static final ConcurrentMap<Integer, OperationType> CLASS_IDS = new ConcurrentHashMap<Integer, OperationType>();
-
         private static final ConcurrentMap<Class<? extends SimulatorOperation>, OperationType> OPERATION_TYPES
                 = new ConcurrentHashMap<Class<? extends SimulatorOperation>, OperationType>();
 
