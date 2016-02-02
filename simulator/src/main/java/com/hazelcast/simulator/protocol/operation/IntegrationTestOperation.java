@@ -31,7 +31,7 @@ public class IntegrationTestOperation implements SimulatorOperation {
     public static final String TEST_DATA = "IntegrationTestData";
 
     private final String testData;
-    private final int operation;
+    private final String operation;
 
     public IntegrationTestOperation(String testData) {
         this(testData, Operation.EQUALS);
@@ -39,7 +39,7 @@ public class IntegrationTestOperation implements SimulatorOperation {
 
     public IntegrationTestOperation(String testData, Operation operation) {
         this.testData = testData;
-        this.operation = operation.ordinal();
+        this.operation = operation.name();
     }
 
     public String getTestData() {
@@ -47,6 +47,6 @@ public class IntegrationTestOperation implements SimulatorOperation {
     }
 
     public Operation getOperation() {
-        return Operation.values()[operation];
+        return Operation.valueOf(operation);
     }
 }
