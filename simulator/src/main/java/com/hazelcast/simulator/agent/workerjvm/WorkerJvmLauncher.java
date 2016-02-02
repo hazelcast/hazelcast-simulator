@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -78,11 +79,7 @@ public class WorkerJvmLauncher {
             int workerIndex = workerJvmSettings.getWorkerIndex();
             LOGGER.info(format("Starting a Java Virtual Machine for %s Worker #%d", type, workerIndex));
 
-            String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
-            hzConfigFile = createTmpXmlFile(hzConfigFileName, workerJvmSettings.getHazelcastConfig());
-            log4jFile = createTmpXmlFile("worker-log4j", workerJvmSettings.getLog4jConfig());
             LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
-
             WorkerJvm worker = startWorkerJvm();
             LOGGER.info(format("Finished starting a JVM for %s Worker #%d", type, workerIndex));
 
@@ -95,14 +92,6 @@ public class WorkerJvmLauncher {
         }
     }
 
-    private File createTmpXmlFile(String name, String content) throws IOException {
-        File tmpXmlFile = File.createTempFile(name, ".xml");
-        tmpXmlFile.deleteOnExit();
-        writeText(content, tmpXmlFile);
-
-        return tmpXmlFile;
-    }
-
     private WorkerJvm startWorkerJvm() throws IOException {
         int workerIndex = workerJvmSettings.getWorkerIndex();
         WorkerType type = workerJvmSettings.getWorkerType();
@@ -110,6 +99,13 @@ public class WorkerJvmLauncher {
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
         String workerId = "worker-" + agent.getPublicAddress() + '-' + workerIndex + '-' + type.toLowerCase();
         File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
+
+        String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
+        hzConfigFile = ensureExistingFile(workerHome, hzConfigFileName + ".xml");
+        writeText(workerJvmSettings.getHazelcastConfig(), hzConfigFile);
+
+        log4jFile = ensureExistingFile(workerHome, "log4j.xml");
+        writeText(workerJvmSettings.getLog4jConfig(), log4jFile);
 
         WorkerJvm workerJvm = new WorkerJvm(workerAddress, workerId, workerHome);
 

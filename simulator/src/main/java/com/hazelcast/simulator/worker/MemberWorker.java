@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
 import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
@@ -232,9 +231,6 @@ public final class MemberWorker implements Worker {
         LOGGER.info("autoCreateHzInstance: " + autoCreateHzInstance);
         LOGGER.info("workerPerformanceMonitorIntervalSeconds: " + workerPerformanceMonitorIntervalSeconds);
 
-        LOGGER.info("Hazelcast config file: " + hzConfigFile);
-        LOGGER.info(fileAsText(new File(hzConfigFile)));
-
         MemberWorker worker = new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, autoCreateHzInstance,
                 workerPerformanceMonitorIntervalSeconds, hzConfigFile);
 
@@ -263,7 +259,6 @@ public final class MemberWorker implements Worker {
         logSystemProperty("user.name");
         logSystemProperty("SIMULATOR_HOME");
         logSystemProperty("hazelcast.logging.type");
-        logSystemProperty("log4j.configuration");
     }
 
     private static void logSystemProperty(String name) {
