@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +34,7 @@ import static org.mockito.Mockito.when;
 
 public class AbstractServerConnectorTest {
 
-    private static final int PORT = 9000;
+    private static final int PORT = 10000 + new Random().nextInt(1000);
     private static final int THREAD_POOL_SIZE = 3;
 
     private boolean shutdownAfterTest = true;

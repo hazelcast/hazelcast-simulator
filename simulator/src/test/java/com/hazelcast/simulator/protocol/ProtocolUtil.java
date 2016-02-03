@@ -45,8 +45,8 @@ class ProtocolUtil {
 
     static final long DEFAULT_TEST_TIMEOUT_MILLIS = 10000;
 
-    static final int AGENT_START_PORT = 11000;
-    private static final int WORKER_START_PORT = 11100;
+    static final int AGENT_START_PORT = 10000 + new Random().nextInt(1000);
+    private static final int WORKER_START_PORT = AGENT_START_PORT + 1000;
 
     private static final Logger LOGGER = Logger.getLogger(ProtocolUtil.class);
 

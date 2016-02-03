@@ -31,6 +31,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -54,7 +55,7 @@ import static org.junit.Assert.assertTrue;
 public class AgentSmokeTest implements FailureListener {
 
     private static final String AGENT_IP_ADDRESS = "127.0.0.1";
-    private static final int AGENT_PORT = 9000;
+    private static final int AGENT_PORT = 10000 + new Random().nextInt(1000);
     private static final int TEST_RUNTIME_SECONDS = 3;
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
