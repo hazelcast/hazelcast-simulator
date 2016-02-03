@@ -24,19 +24,16 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
-import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -90,14 +87,14 @@ public final class MemberWorker implements Worker {
 
         this.workerPerformanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
 
-        Runtime.getRuntime().addShutdownHook(new ShutdownThread(true));
+        Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
         signalStartToAgent();
     }
 
     @Override
     public void shutdown() {
-        shutdownThread = new ShutdownThread(false);
+        shutdownThread = new WorkerShutdownThread(false);
         shutdownThread.start();
     }
 
@@ -277,53 +274,28 @@ public final class MemberWorker implements Worker {
         LOGGER.info(dashes);
     }
 
-    private final class ShutdownThread extends Thread {
+    private final class WorkerShutdownThread extends ShutdownThread {
 
-        private final CountDownLatch shutdownComplete = new CountDownLatch(1);
-
-        private final boolean shutdownLog4j;
-
-        private ShutdownThread(boolean shutdownLog4j) {
-            super("WorkerShutdownThread");
-            setDaemon(true);
-
-            this.shutdownLog4j = shutdownLog4j;
-        }
-
-        private void awaitShutdown() throws Exception {
-            shutdownComplete.await();
+        private WorkerShutdownThread(boolean shutdownLog4j) {
+            super("WorkerShutdownThread", SHUTDOWN_STARTED, shutdownLog4j);
         }
 
         @Override
-        public void run() {
-            if (!SHUTDOWN_STARTED.compareAndSet(false, true)) {
-                return;
-            }
-
-            LOGGER.info("Stopping HazelcastInstance...");
+        public void doRun() {
             if (hazelcastInstance != null) {
+                LOGGER.info("Stopping HazelcastInstance...");
                 hazelcastInstance.shutdown();
             }
 
-            LOGGER.info("Stopping WorkerPerformanceMonitor");
             if (workerPerformanceMonitor != null) {
+                LOGGER.info("Stopping WorkerPerformanceMonitor");
                 workerPerformanceMonitor.shutdown();
             }
 
-            LOGGER.info("Stopping WorkerConnector...");
             if (workerConnector != null) {
+                LOGGER.info("Stopping WorkerConnector...");
                 workerConnector.shutdown();
             }
-
-            OperationTypeCounter.printStatistics(Level.INFO);
-
-            if (shutdownLog4j) {
-                // makes sure that log4j will always flush the log buffers
-                LOGGER.info("Stopping log4j...");
-                LogManager.shutdown();
-            }
-
-            shutdownComplete.countDown();
         }
     }
 }
