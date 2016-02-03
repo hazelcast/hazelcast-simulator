@@ -42,7 +42,7 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeT
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
- * Monitors the performance of all running tests on {@link com.hazelcast.simulator.worker.MemberWorker}
+ * Monitors the performance of all running Simulator Tests on {@link com.hazelcast.simulator.worker.MemberWorker}
  * and {@link com.hazelcast.simulator.worker.ClientWorker} instances.
  */
 public class WorkerPerformanceMonitor {
@@ -73,6 +73,15 @@ public class WorkerPerformanceMonitor {
         joinThread(thread);
     }
 
+    /**
+     * Internal thread to monitor the performance of Simulator Tests.
+     *
+     * Iterates over all {@link TestContainer} to retrieve performance values from all {@link Probe} instances.
+     * Sends performance numbers as {@link PerformanceState} to the Coordinator.
+     * Writes performance stats to files.
+     *
+     * Holds one {@link PerformanceTracker} instance per Simulator Test.
+     */
     private static final class MonitorThread extends Thread {
 
         private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = TimeUnit.MILLISECONDS.toNanos(100);

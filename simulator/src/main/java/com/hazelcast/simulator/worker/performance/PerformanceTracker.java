@@ -36,6 +36,13 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SE
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
 
+/**
+ * Container for performance related values for a single Simulator Test.
+ *
+ * Has methods to update the performance values and write them to files.
+ *
+ * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
+ */
 final class PerformanceTracker {
 
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();

@@ -24,6 +24,9 @@ import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+/**
+ * Utility class for performance related methods.
+ */
 final class PerformanceUtils {
 
     static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
@@ -33,6 +36,8 @@ final class PerformanceUtils {
     private static final int HUNDRED = 100;
     private static final int TEN = 10;
     private static final int THREE = 3;
+    private static final int TWO = 2;
+    private static final int ONE = 1;
 
     private PerformanceUtils() {
     }
@@ -53,9 +58,13 @@ final class PerformanceUtils {
         }
         dataString += "%n";
         int fieldLength = getNumberOfDigits(totalTests);
-        appendText(format(dataString, timestamp, formatLong(opsSum, NUMBER_FORMAT_LENGTH),
-                formatLong(opsDelta, NUMBER_FORMAT_LENGTH), formatDouble(opsPerSecDelta, NUMBER_FORMAT_LENGTH),
-                formatLong(numberOfTests, NUMBER_FORMAT_LENGTH - fieldLength), formatLong(totalTests, fieldLength)), file);
+        appendText(format(dataString, timestamp,
+                formatLong(opsSum, NUMBER_FORMAT_LENGTH),
+                formatLong(opsDelta, NUMBER_FORMAT_LENGTH),
+                formatDouble(opsPerSecDelta, NUMBER_FORMAT_LENGTH),
+                formatLong(numberOfTests, NUMBER_FORMAT_LENGTH - fieldLength),
+                formatLong(totalTests, fieldLength)),
+                file);
     }
 
     static int getNumberOfDigits(long number) {
@@ -63,8 +72,8 @@ final class PerformanceUtils {
             return THREE;
         }
         if (number >= TEN) {
-            return 2;
+            return TWO;
         }
-        return 1;
+        return ONE;
     }
 }
