@@ -236,10 +236,6 @@ public final class Coordinator {
             echo("Starting Workers...");
             echo(HORIZONTAL_RULER);
 
-            echo("Killing all remaining Workers...");
-            remoteClient.terminateWorkers(false);
-            echo("Successfully killed all remaining Workers");
-
             int totalWorkerCount = clusterLayout.getTotalWorkerCount();
             echo("Starting %d Workers (%d members, %d clients)...", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
                     clusterLayout.getClientWorkerCount());
