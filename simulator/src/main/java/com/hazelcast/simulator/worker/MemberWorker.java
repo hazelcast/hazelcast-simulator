@@ -26,9 +26,11 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -296,6 +298,8 @@ public final class MemberWorker implements Worker {
                 LOGGER.info("Stopping WorkerConnector...");
                 workerConnector.shutdown();
             }
+
+            OperationTypeCounter.printStatistics(Level.INFO);
         }
     }
 }

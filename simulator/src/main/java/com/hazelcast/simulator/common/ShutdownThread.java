@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -50,8 +49,6 @@ public abstract class ShutdownThread extends Thread {
         }
 
         doRun();
-
-        OperationTypeCounter.printStatistics();
 
         LOGGER.info("Stopping log4j...");
         if (shutdownLog4j) {
