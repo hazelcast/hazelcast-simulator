@@ -15,29 +15,26 @@
  */
 package com.hazelcast.simulator.worker;
 
+import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.utils.NativeUtils;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 public final class IntegrationTestWorker implements Worker {
 
-    private static final int WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS = 5;
-
     private static final Logger LOGGER = Logger.getLogger(IntegrationTestWorker.class);
 
-    private final CountDownLatch latch = new CountDownLatch(1);
+    private final IntegrationTestWorkerShutdownThread shutdownThread = new IntegrationTestWorkerShutdownThread();
 
     private IntegrationTestWorker() throws Exception {
         LOGGER.info("Starting IntegrationTestWorker...");
 
-        Runtime.getRuntime().addShutdownHook(new ShutdownThread(latch));
+        Runtime.getRuntime().addShutdownHook(shutdownThread);
 
         int pid = NativeUtils.getPID();
         LOGGER.info("PID: " + pid);
@@ -48,7 +45,7 @@ public final class IntegrationTestWorker implements Worker {
         writeText("127.0.0.1:5701", addressFile);
 
         LOGGER.info("Waiting for shutdown...");
-        boolean success = latch.await(WAIT_FOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        boolean success = shutdownThread.awaitShutdownWithTimeout();
 
         if (success) {
             LOGGER.info("Done!");
@@ -59,7 +56,7 @@ public final class IntegrationTestWorker implements Worker {
 
     @Override
     public void shutdown() {
-        new ShutdownThread(latch).start();
+        shutdownThread.start();
     }
 
     @Override
@@ -80,25 +77,15 @@ public final class IntegrationTestWorker implements Worker {
         new IntegrationTestWorker();
     }
 
-    private static final class ShutdownThread extends Thread {
+    private static final class IntegrationTestWorkerShutdownThread extends ShutdownThread {
 
-        private final CountDownLatch latch;
-
-        private ShutdownThread(CountDownLatch latch) {
-            super("WorkerShutdownThread");
-            setDaemon(true);
-
-            this.latch = latch;
+        private IntegrationTestWorkerShutdownThread() {
+            super("IntegrationTestWorkerShutdownThread", new AtomicBoolean(), true);
         }
 
         @Override
-        public void run() {
+        public void doRun() {
             LOGGER.info("Stopping IntegrationTestWorker...");
-            latch.countDown();
-
-            // makes sure that log4j will always flush the log buffers
-            LOGGER.info("Stopping log4j...");
-            LogManager.shutdown();
         }
     }
 }

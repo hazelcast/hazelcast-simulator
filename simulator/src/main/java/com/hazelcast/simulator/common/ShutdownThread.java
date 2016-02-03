@@ -19,9 +19,12 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class ShutdownThread extends Thread {
+
+    private static final long DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(5);
 
     private static final Logger LOGGER = Logger.getLogger(ShutdownThread.class);
 
@@ -29,17 +32,28 @@ public abstract class ShutdownThread extends Thread {
 
     private final AtomicBoolean shutdownStarted;
     private final boolean shutdownLog4j;
+    private final long waitForShutdownTimeoutMillis;
 
     protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j) {
+        this(name, shutdownStarted, shutdownLog4j, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
+    }
+
+    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
+                             long waitForShutdownTimeoutMillis) {
         super(name);
         setDaemon(false);
 
         this.shutdownStarted = shutdownStarted;
         this.shutdownLog4j = shutdownLog4j;
+        this.waitForShutdownTimeoutMillis = waitForShutdownTimeoutMillis;
     }
 
     public void awaitShutdown() throws Exception {
         shutdownComplete.await();
+    }
+
+    public boolean awaitShutdownWithTimeout() throws Exception {
+        return shutdownComplete.await(waitForShutdownTimeoutMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -50,9 +64,9 @@ public abstract class ShutdownThread extends Thread {
 
         doRun();
 
-        LOGGER.info("Stopping log4j...");
+        // ensures that log4j will always flush the log buffers
         if (shutdownLog4j) {
-            // makes sure that log4j will always flush the log buffers
+            LOGGER.info("Stopping log4j...");
             LogManager.shutdown();
         }
 
