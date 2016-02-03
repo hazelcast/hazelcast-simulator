@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -127,6 +128,7 @@ public class ClientConnector {
     }
 
     public ResponseFuture writeAsync(SimulatorMessage message) {
+        OperationTypeCounter.sent(message.getOperationType());
         return writeAsync(message.getSource(), message.getMessageId(), message);
     }
 

@@ -21,6 +21,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -210,6 +211,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(format("[%d] %s created ResponseFuture %s", messageId, localAddress, futureKey));
         }
+        OperationTypeCounter.sent(message.getOperationType());
         getChannelGroup().writeAndFlush(message);
 
         return future;

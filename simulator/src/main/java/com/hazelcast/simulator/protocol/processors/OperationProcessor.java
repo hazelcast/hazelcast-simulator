@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.operation.ChaosMonkeyOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.ChaosMonkeyUtils;
 import org.apache.log4j.Logger;
@@ -50,6 +51,7 @@ public abstract class OperationProcessor {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ')');
         }
+        OperationTypeCounter.received(operationType);
         try {
             switch (operationType) {
                 case INTEGRATION_TEST:

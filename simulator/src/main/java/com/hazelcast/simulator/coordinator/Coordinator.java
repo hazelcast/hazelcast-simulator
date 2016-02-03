@@ -19,6 +19,7 @@ import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
@@ -186,6 +187,7 @@ public final class Coordinator {
                 }
                 stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 moveLogFiles();
+                OperationTypeCounter.printStatistics();
             }
         }
     }

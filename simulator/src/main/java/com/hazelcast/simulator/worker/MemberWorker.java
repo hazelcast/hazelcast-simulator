@@ -25,9 +25,11 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
+import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -312,6 +314,8 @@ public final class MemberWorker implements Worker {
             if (workerConnector != null) {
                 workerConnector.shutdown();
             }
+
+            OperationTypeCounter.printStatistics(Level.INFO);
 
             if (shutdownLog4j) {
                 // makes sure that log4j will always flush the log buffers

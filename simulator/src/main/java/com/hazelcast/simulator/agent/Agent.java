@@ -19,6 +19,7 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -219,6 +220,8 @@ public class Agent {
 
             LOGGER.info("Removing PID file...");
             deleteQuiet(pidFile);
+
+            OperationTypeCounter.printStatistics();
 
             if (shutdownLog4j) {
                 // makes sure that log4j will always flush the log buffers
