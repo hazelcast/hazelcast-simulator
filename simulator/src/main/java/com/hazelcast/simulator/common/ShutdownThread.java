@@ -32,7 +32,7 @@ public abstract class ShutdownThread extends Thread {
 
     protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j) {
         super(name);
-        setDaemon(true);
+        setDaemon(false);
 
         this.shutdownStarted = shutdownStarted;
         this.shutdownLog4j = shutdownLog4j;
