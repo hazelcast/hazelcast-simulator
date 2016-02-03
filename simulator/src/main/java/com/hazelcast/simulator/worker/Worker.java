@@ -19,7 +19,7 @@ import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 
 public interface Worker {
 
-    void shutdown();
+    void shutdown(boolean shutdownLog4j);
 
     boolean startPerformanceMonitor();
 

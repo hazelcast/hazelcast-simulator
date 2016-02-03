@@ -55,7 +55,7 @@ public final class IntegrationTestWorker implements Worker {
     }
 
     @Override
-    public void shutdown() {
+    public void shutdown(boolean shutdownLog4j) {
         shutdownThread.start();
     }
 

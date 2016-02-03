@@ -107,10 +107,10 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_TerminateWorkers_onMemberWorker() {
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(0);
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
         processor.process(operation, COORDINATOR);
 
-        verify(worker).shutdown();
+        verify(worker).shutdown(false);
         verifyNoMoreInteractions(worker);
     }
 
@@ -118,10 +118,10 @@ public class WorkerOperationProcessorTest {
     public void process_TerminateWorkers_onClientWorker() {
         processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
 
-        TerminateWorkerOperation operation = new TerminateWorkerOperation(0);
+        TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
         processor.process(operation, COORDINATOR);
 
-        verify(worker).shutdown();
+        verify(worker).shutdown(false);
         verifyNoMoreInteractions(worker);
     }
 

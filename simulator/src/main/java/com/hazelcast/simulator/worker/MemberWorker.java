@@ -95,8 +95,8 @@ public final class MemberWorker implements Worker {
     }
 
     @Override
-    public void shutdown() {
-        shutdownThread = new WorkerShutdownThread(false);
+    public void shutdown(boolean shutdownLog4j) {
+        shutdownThread = new WorkerShutdownThread(shutdownLog4j);
         shutdownThread.start();
     }
 

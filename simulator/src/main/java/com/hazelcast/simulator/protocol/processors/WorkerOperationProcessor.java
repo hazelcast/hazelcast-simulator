@@ -143,7 +143,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         if (type == WorkerType.MEMBER) {
             sleepSeconds(operation.getMemberWorkerShutdownDelaySeconds());
         }
-        worker.shutdown();
+        worker.shutdown(operation.isShutdownLog4j());
     }
 
     private void processCreateTest(CreateTestOperation operation) throws Exception {

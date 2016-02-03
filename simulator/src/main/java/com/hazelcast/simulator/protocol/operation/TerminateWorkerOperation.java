@@ -18,12 +18,18 @@ package com.hazelcast.simulator.protocol.operation;
 public class TerminateWorkerOperation implements SimulatorOperation {
 
     private final int memberWorkerShutdownDelaySeconds;
+    private final boolean shutdownLog4j;
 
-    public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds) {
+    public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds, boolean shutdownLog4j) {
         this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
+        this.shutdownLog4j = shutdownLog4j;
     }
 
     public int getMemberWorkerShutdownDelaySeconds() {
         return memberWorkerShutdownDelaySeconds;
+    }
+
+    public boolean isShutdownLog4j() {
+        return shutdownLog4j;
     }
 }

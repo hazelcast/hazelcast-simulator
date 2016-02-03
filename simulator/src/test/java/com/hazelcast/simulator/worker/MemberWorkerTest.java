@@ -54,7 +54,7 @@ public class MemberWorkerTest {
     public void tearDown() throws Exception {
         try {
             if (worker != null) {
-                worker.shutdown();
+                worker.shutdown(false);
                 worker.awaitShutdown();
             }
 

@@ -138,7 +138,7 @@ public class RemoteClient {
         }
 
         int shutdownDelaySeconds = (componentRegistry.hasClientWorkers() ? memberWorkerShutdownDelaySeconds : 0);
-        sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds));
+        sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
     }
 
     public void initTestSuite(TestSuite testSuite) {
