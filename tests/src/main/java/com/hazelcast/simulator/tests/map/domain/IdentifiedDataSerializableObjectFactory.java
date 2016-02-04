@@ -20,7 +20,7 @@ import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
 public class IdentifiedDataSerializableObjectFactory implements DataSerializableFactory {
 
-    public static final int FACTORY_ID = 4000;
+    static final int FACTORY_ID = 4000;
 
     @Override
     public IdentifiedDataSerializable create(int typeId) {
