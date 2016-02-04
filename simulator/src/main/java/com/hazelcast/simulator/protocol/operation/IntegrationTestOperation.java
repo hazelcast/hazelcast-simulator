@@ -30,23 +30,27 @@ public class IntegrationTestOperation implements SimulatorOperation {
 
     public static final String TEST_DATA = "IntegrationTestData";
 
-    private final String testData;
     private final String operation;
+    private final String testData;
 
-    public IntegrationTestOperation(String testData) {
-        this(testData, Operation.EQUALS);
+    public IntegrationTestOperation() {
+        this(Operation.EQUALS, TEST_DATA);
     }
 
-    public IntegrationTestOperation(String testData, Operation operation) {
-        this.testData = testData;
+    public IntegrationTestOperation(Operation operation) {
+        this(operation, null);
+    }
+
+    public IntegrationTestOperation(Operation operation, String testData) {
         this.operation = operation.name();
-    }
-
-    public String getTestData() {
-        return testData;
+        this.testData = testData;
     }
 
     public Operation getOperation() {
         return Operation.valueOf(operation);
+    }
+
+    public String getTestData() {
+        return testData;
     }
 }

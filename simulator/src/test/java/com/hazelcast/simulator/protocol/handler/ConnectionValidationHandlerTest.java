@@ -75,7 +75,7 @@ public class ConnectionValidationHandlerTest {
 
     @Test
     public void testChannelRead_SimulatorMessage() throws Exception {
-        String operationData = OperationCodec.toJson(new IntegrationTestOperation("test"));
+        String operationData = OperationCodec.toJson(new IntegrationTestOperation());
         SimulatorMessage message = new SimulatorMessage(COORDINATOR, COORDINATOR, 1, INTEGRATION_TEST, operationData);
         buffer = Unpooled.buffer();
         SimulatorMessageCodec.encodeByteBuf(message, buffer);

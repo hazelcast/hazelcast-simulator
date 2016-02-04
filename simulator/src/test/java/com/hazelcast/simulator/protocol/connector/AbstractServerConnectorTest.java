@@ -6,7 +6,6 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 import org.junit.After;
@@ -36,6 +35,7 @@ public class AbstractServerConnectorTest {
 
     private static final int PORT = 10000 + new Random().nextInt(1000);
     private static final int THREAD_POOL_SIZE = 3;
+    private static final IntegrationTestOperation DEFAULT_OPERATION = new IntegrationTestOperation();
 
     private boolean shutdownAfterTest = true;
 
@@ -87,11 +87,10 @@ public class AbstractServerConnectorTest {
     @Test
     public void testShutdown_withMessageOnQueue() throws Exception {
         shutdownAfterTest = false;
-        SimulatorOperation operation = new IntegrationTestOperation(null);
         testServerConnector.start();
 
-        testServerConnector.submit(COORDINATOR, operation);
-        ResponseFuture future = testServerConnector.submit(COORDINATOR, operation);
+        testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
+        ResponseFuture future = testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
 
         Thread responseSetter = new Thread() {
             @Override
@@ -111,11 +110,9 @@ public class AbstractServerConnectorTest {
 
     @Test
     public void testGetMessageQueueSizeInternal() throws Exception {
-        SimulatorOperation operation = new IntegrationTestOperation(null);
-
-        testServerConnector.submit(COORDINATOR, operation);
-        testServerConnector.submit(COORDINATOR, operation);
-        ResponseFuture future = testServerConnector.submit(COORDINATOR, operation);
+        testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
+        testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
+        ResponseFuture future = testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
 
         assertEquals(3, testServerConnector.getMessageQueueSizeInternal());
 
@@ -128,10 +125,9 @@ public class AbstractServerConnectorTest {
 
     @Test
     public void testSubmit_withFailureResponse() throws Exception {
-        SimulatorOperation operation = new IntegrationTestOperation(null);
         testServerConnector.start();
 
-        ResponseFuture future = testServerConnector.submit(COORDINATOR, operation);
+        ResponseFuture future = testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
         setResponse(EXCEPTION_DURING_OPERATION_EXECUTION, 1);
         Response response = future.get();
 

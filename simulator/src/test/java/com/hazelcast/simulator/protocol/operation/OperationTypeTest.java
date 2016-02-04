@@ -26,7 +26,7 @@ public class OperationTypeTest {
 
     @Test
     public void testGetOperationType() {
-        SimulatorOperation operation = new IntegrationTestOperation("foobar");
+        SimulatorOperation operation = new IntegrationTestOperation();
         OperationType operationType = OperationType.getOperationType(operation);
 
         assertEquals(OperationType.INTEGRATION_TEST, operationType);

@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -44,7 +45,7 @@ public class BasicOperationProcessorTest {
 
     @Test
     public void testProcessIntegrationTestOperation() throws Exception {
-        IntegrationTestOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+        IntegrationTestOperation operation = new IntegrationTestOperation();
 
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 
@@ -54,7 +55,7 @@ public class BasicOperationProcessorTest {
 
     @Test
     public void testProcessIntegrationTestOperation_withInvalidData() throws Exception {
-        IntegrationTestOperation operation = new IntegrationTestOperation("invalid");
+        IntegrationTestOperation operation = new IntegrationTestOperation(EQUALS, "invalid");
 
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 

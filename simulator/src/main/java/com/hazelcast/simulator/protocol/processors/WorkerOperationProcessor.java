@@ -119,12 +119,12 @@ public class WorkerOperationProcessor extends OperationProcessor {
                 LOGGER.debug("Got response for async nested message: " + response);
                 return response.getFirstErrorResponseType();
             case DEEP_NESTED_SYNC:
-                nestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
+                nestedOperation = new IntegrationTestOperation(DEEP_NESTED_SYNC);
                 response = worker.getWorkerConnector().write(workerAddress.getParent(), nestedOperation);
                 LOGGER.debug("Got response for sync deep nested message: " + response);
                 return response.getFirstErrorResponseType();
             case DEEP_NESTED_ASYNC:
-                nestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
+                nestedOperation = new IntegrationTestOperation(DEEP_NESTED_ASYNC);
                 future = worker.getWorkerConnector().submit(workerAddress.getParent(), nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async deep nested message: " + response);

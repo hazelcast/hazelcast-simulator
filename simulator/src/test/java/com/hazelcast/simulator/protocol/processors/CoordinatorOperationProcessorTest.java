@@ -109,7 +109,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     @Test
     public void testProcessOperation_unsupportedOperation() throws Exception {
-        SimulatorOperation operation = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+        SimulatorOperation operation = new IntegrationTestOperation();
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
@@ -117,7 +117,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     @Test
     public void processException() {
-        TestException exception = new TestException("expeced exception");
+        TestException exception = new TestException("expected exception");
         ExceptionOperation operation = new ExceptionOperation(WORKER_EXCEPTION.name(), "C_A1_W1", "FailingTest", exception);
 
         ResponseType responseType = processor.process(operation, workerAddress);

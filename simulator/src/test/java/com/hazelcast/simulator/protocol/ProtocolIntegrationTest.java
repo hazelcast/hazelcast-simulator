@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NO
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -256,7 +257,7 @@ public class ProtocolIntegrationTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_SingleWorker_withExceptionDuringOperationProcessing() {
         SimulatorAddress destination = getWorkerConnector(0).getAddress();
-        SimulatorOperation operation = new IntegrationTestOperation("foobar");
+        SimulatorOperation operation = new IntegrationTestOperation(EQUALS, "invalid");
 
         Response response = sendFromCoordinator(destination, operation);
 

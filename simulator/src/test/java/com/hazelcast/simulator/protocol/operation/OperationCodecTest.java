@@ -11,6 +11,10 @@ import org.junit.Test;
 import java.util.Collections;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromJson;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
+import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
@@ -28,22 +32,22 @@ public class OperationCodecTest {
 
     @Test
     public void testCodec_fromJson() {
-        IntegrationTestOperation operation = new IntegrationTestOperation("codecTest_fromJson");
-        String json = OperationCodec.toJson(operation);
+        IntegrationTestOperation operation = new IntegrationTestOperation(EQUALS, "codecTest_fromJson");
+        String json = toJson(operation);
         assertNotNull(json);
 
-        IntegrationTestOperation decoded = (IntegrationTestOperation) OperationCodec.fromJson(json, IntegrationTestOperation.class);
+        IntegrationTestOperation decoded = (IntegrationTestOperation) fromJson(json, IntegrationTestOperation.class);
         assertEquals(operation.getTestData(), decoded.getTestData());
     }
 
     @Test
     public void testCodec_fromSimulatorMessage() {
-        IntegrationTestOperation operation = new IntegrationTestOperation("codecTest_fromSimulatorMessage");
-        String json = OperationCodec.toJson(operation);
+        IntegrationTestOperation operation = new IntegrationTestOperation(EQUALS, "codecTest_fromSimulatorMessage");
+        String json = toJson(operation);
         assertNotNull(json);
 
         SimulatorMessage message = new SimulatorMessage(COORDINATOR, COORDINATOR, 0, OperationType.INTEGRATION_TEST, json);
-        IntegrationTestOperation decoded = (IntegrationTestOperation) OperationCodec.fromSimulatorMessage(message);
+        IntegrationTestOperation decoded = (IntegrationTestOperation) fromSimulatorMessage(message);
         assertEquals(operation.getTestData(), decoded.getTestData());
     }
 
@@ -69,11 +73,11 @@ public class OperationCodecTest {
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, workerParameters);
 
         CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerJvmSettings));
-        String json = OperationCodec.toJson(operation);
+        String json = toJson(operation);
         assertNotNull(json);
         LOGGER.info(json);
 
-        CreateWorkerOperation decoded = (CreateWorkerOperation) OperationCodec.fromJson(json, CreateWorkerOperation.class);
+        CreateWorkerOperation decoded = (CreateWorkerOperation) fromJson(json, CreateWorkerOperation.class);
         WorkerJvmSettings decodedSettings = decoded.getWorkerJvmSettings().get(0);
         assertEquals(workerJvmSettings.getWorkerIndex(), decodedSettings.getWorkerIndex());
         assertEquals(workerJvmSettings.getWorkerType(), decodedSettings.getWorkerType());

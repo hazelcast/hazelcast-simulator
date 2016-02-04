@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 
 class ProtocolUtil {
 
-    static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation(IntegrationTestOperation.TEST_DATA);
+    static final SimulatorOperation DEFAULT_OPERATION = new IntegrationTestOperation();
 
     static final long DEFAULT_TEST_TIMEOUT_MILLIS = 10000;
 

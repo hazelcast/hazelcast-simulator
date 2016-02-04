@@ -35,8 +35,10 @@ public class ProtocolNestedTest {
     private static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(WORKER, 0, 0, 0);
     private static final SimulatorAddress ALL_TESTS = new SimulatorAddress(TEST, 0, 0, 0);
 
-    private static final IntegrationTestOperation NESTED_SYNC_OPERATION = new IntegrationTestOperation(null, NESTED_SYNC);
-    private static final IntegrationTestOperation NESTED_ASYNC_OPERATION = new IntegrationTestOperation(null, NESTED_ASYNC);
+    private static final IntegrationTestOperation NESTED_SYNC_OPERATION = new IntegrationTestOperation(NESTED_SYNC);
+    private static final IntegrationTestOperation NESTED_ASYNC_OPERATION = new IntegrationTestOperation(NESTED_ASYNC);
+    private static final IntegrationTestOperation DEEP_NESTED_SYNC_OPERATION = new IntegrationTestOperation(DEEP_NESTED_SYNC);
+    private static final IntegrationTestOperation DEEP_NESTED_ASYNC_OPERATION = new IntegrationTestOperation(DEEP_NESTED_ASYNC);
 
     private static final Logger LOGGER = Logger.getLogger(ProtocolNestedTest.class);
 
@@ -116,26 +118,22 @@ public class ProtocolNestedTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_syncWrite() {
-        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
-        run(ALL_WORKERS, deepNestedOperation, 4);
+        run(ALL_WORKERS, DEEP_NESTED_SYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_syncWrite_concurrently() {
-        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_SYNC);
-        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4);
+        runConcurrently("deepNestedMessage_syncWrite_concurrently", ALL_WORKERS, DEEP_NESTED_SYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_asyncWrite() {
-        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
-        run(ALL_WORKERS, deepNestedOperation, 4);
+        run(ALL_WORKERS, DEEP_NESTED_ASYNC_OPERATION, 4);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void deepNestedMessage_asyncWrite_concurrently() {
-        IntegrationTestOperation deepNestedOperation = new IntegrationTestOperation(null, DEEP_NESTED_ASYNC);
-        runConcurrently("deepNestedMessage_asyncWrite_concurrently", ALL_WORKERS, deepNestedOperation, 4);
+        runConcurrently("deepNestedMessage_asyncWrite_concurrently", ALL_WORKERS, DEEP_NESTED_ASYNC_OPERATION, 4);
     }
 
     private static void run(SimulatorAddress target, SimulatorOperation operation, int expectedResponseCount) {
