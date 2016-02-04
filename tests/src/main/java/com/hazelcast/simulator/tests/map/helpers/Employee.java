@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Random;
 
-@SuppressWarnings("unused")
 public class Employee implements Serializable, Comparable<Employee> {
 
     public static final int MAX_AGE = 75;
@@ -28,11 +27,11 @@ public class Employee implements Serializable, Comparable<Employee> {
     private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
     private static final Random RANDOM = new Random();
 
-    private int id;
-    private String name;
-    private int age;
-    private double salary;
-    private boolean active;
+    int id;
+    String name;
+    int age;
+    double salary;
+    boolean active;
 
     public Employee() {
     }
@@ -42,11 +41,12 @@ public class Employee implements Serializable, Comparable<Employee> {
         randomizeProperties();
     }
 
-    public Employee(String name, int age, boolean live, double salary) {
+    public Employee(int id, String name, int age, boolean active, double salary) {
+        this.id = id;
         this.name = name;
         this.age = age;
         this.salary = salary;
-        this.active = live;
+        this.active = active;
     }
 
     public static String getRandomName() {
@@ -78,17 +78,6 @@ public class Employee implements Serializable, Comparable<Employee> {
 
     public boolean isActive() {
         return active;
-    }
-
-    @Override
-    public String toString() {
-        return "Employee{"
-                + "id=" + id
-                + ", name='" + name + '\''
-                + ", age=" + age
-                + ", active=" + active
-                + ", salary=" + salary
-                + '}';
     }
 
     @Override
@@ -137,5 +126,16 @@ public class Employee implements Serializable, Comparable<Employee> {
         temp = Double.doubleToLongBits(salary);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{"
+                + "id=" + id
+                + ", name='" + name + '\''
+                + ", age=" + age
+                + ", active=" + active
+                + ", salary=" + salary
+                + '}';
     }
 }
