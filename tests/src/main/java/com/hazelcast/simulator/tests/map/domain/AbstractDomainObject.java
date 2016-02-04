@@ -17,11 +17,11 @@ package com.hazelcast.simulator.tests.map.domain;
 
 abstract class AbstractDomainObject implements DomainObject {
 
-    protected String key;
-    protected String stringVal;
-    protected double doubleVal;
-    protected long longVal;
-    protected int intVal;
+    String key;
+    String stringVal;
+    double doubleVal;
+    long longVal;
+    int intVal;
 
     @Override
     public String getKey() {

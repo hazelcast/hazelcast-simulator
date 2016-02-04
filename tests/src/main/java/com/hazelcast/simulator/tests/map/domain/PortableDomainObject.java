@@ -23,8 +23,7 @@ import java.io.IOException;
 
 public class PortableDomainObject extends AbstractDomainObject implements Portable {
 
-    public static final int CLASS_ID = 1;
-    public static final int FACTORY_ID = PortableObjectFactory.FACTORY_ID;
+    static final int CLASS_ID = 1;
 
     @Override
     public int getClassId() {
@@ -33,7 +32,7 @@ public class PortableDomainObject extends AbstractDomainObject implements Portab
 
     @Override
     public int getFactoryId() {
-        return FACTORY_ID;
+        return PortableObjectFactory.FACTORY_ID;
     }
 
     @Override

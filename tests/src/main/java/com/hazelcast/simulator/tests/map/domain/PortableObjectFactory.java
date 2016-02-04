@@ -20,7 +20,7 @@ import com.hazelcast.nio.serialization.PortableFactory;
 
 public class PortableObjectFactory implements PortableFactory {
 
-    public static final int FACTORY_ID = 10000001;
+    static final int FACTORY_ID = 10000001;
 
     @Override
     public Portable create(int classId) {
