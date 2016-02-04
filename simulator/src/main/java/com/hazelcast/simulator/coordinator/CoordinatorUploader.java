@@ -60,8 +60,8 @@ class CoordinatorUploader {
     private final String testSuiteId;
 
     CoordinatorUploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
-                               HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
-                               String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
+                        HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
+                        String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
         this.bash = bash;
         this.componentRegistry = componentRegistry;
         this.clusterLayout = clusterLayout;
@@ -121,35 +121,17 @@ class CoordinatorUploader {
     }
 
     void uploadUploadDirectory() {
+        if (!UPLOAD_DIRECTORY.exists()) {
+            return;
+        }
+        String sourcePath = UPLOAD_DIRECTORY.getAbsolutePath();
+        String targetPath = format("workers/%s/", testSuiteId);
         try {
-            if (!UPLOAD_DIRECTORY.exists()) {
-                return;
-            }
-
-            String sourcePath = UPLOAD_DIRECTORY.getAbsolutePath();
-            final String targetPath = format("workers/%s/", testSuiteId);
-            final List<File> sourceFiles = getFilesFromClassPath(sourcePath);
-
             LOGGER.info(format("Starting uploading '%s' to agents", sourcePath));
-            ThreadSpawner spawner = new ThreadSpawner("uploadUploadDirectory", true);
-            long started = System.nanoTime();
-            for (AgentData agentData : componentRegistry.getAgents()) {
-                final String ip = agentData.getPublicAddress();
-                spawner.spawn(new Runnable() {
-                    @Override
-                    public void run() {
-                        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/%s", SIMULATOR_VERSION, targetPath));
-                        for (File sourceFile : sourceFiles) {
-                            bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
-                        }
-                        logAgentDone(ip);
-                    }
-                });
-            }
-            spawner.awaitCompletion();
-            LOGGER.info(format("Finished uploading '%s' to agents (%d seconds)", sourcePath, getElapsedSeconds(started)));
+            long elapsed = uploadSourcePathToTargetPath("uploadUploadDirectory", sourcePath, targetPath);
+            LOGGER.info(format("Finished uploading '%s' to agents (%d seconds)", sourcePath, elapsed));
         } catch (Exception e) {
-            throw new CommandLineExitException("Could not copy upload directory to agents", e);
+            throw new CommandLineExitException(format("Could not upload directory '%s' to agents", sourcePath), e);
         }
     }
 
@@ -157,32 +139,13 @@ class CoordinatorUploader {
         if (workerClassPath == null) {
             return;
         }
-
+        String targetPath = format("workers/%s/lib/", testSuiteId);
         try {
-            final String targetPath = format("workers/%s/lib/", testSuiteId);
-            final List<File> sourceFiles = getFilesFromClassPath(workerClassPath);
-
-            LOGGER.info(format("Copying %d files from workerClasspath '%s' to agents", sourceFiles.size(), workerClassPath));
-            ThreadSpawner spawner = new ThreadSpawner("uploadWorkerClassPath", true);
-            long started = System.nanoTime();
-            for (AgentData agentData : componentRegistry.getAgents()) {
-                final String ip = agentData.getPublicAddress();
-                spawner.spawn(new Runnable() {
-                    @Override
-                    public void run() {
-                        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/%s", SIMULATOR_VERSION, targetPath));
-                        for (File sourceFile : sourceFiles) {
-                            bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
-                        }
-                        logAgentDone(ip);
-                    }
-                });
-            }
-            spawner.awaitCompletion();
-            long elapsed = getElapsedSeconds(started);
-            LOGGER.info(format("Finished copying workerClasspath '%s' to agents (%d seconds)", workerClassPath, elapsed));
+            LOGGER.info(format("Starting uploading workerClasspath '%s' to agents", workerClassPath));
+            long elapsed = uploadSourcePathToTargetPath("uploadWorkerClassPath", workerClassPath, targetPath);
+            LOGGER.info(format("Finished uploading workerClasspath '%s' to agents (%d seconds)", workerClassPath, elapsed));
         } catch (Exception e) {
-            throw new CommandLineExitException("Could not upload Worker classpath to Agents", e);
+            throw new CommandLineExitException(format("Could not upload workerClasspath '%s' to agents", workerClassPath), e);
         }
     }
 
@@ -208,6 +171,29 @@ class CoordinatorUploader {
         }
         spawner.awaitCompletion();
         LOGGER.info(format("Finished upload of YourKit to Agents (%d seconds)", getElapsedSeconds(started)));
+    }
+
+    private long uploadSourcePathToTargetPath(String name, String sourcePath, final String targetPath) {
+        final List<File> sourceFiles = getFilesFromClassPath(sourcePath);
+
+        ThreadSpawner spawner = new ThreadSpawner(name, true);
+        long started = System.nanoTime();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            final String ip = agentData.getPublicAddress();
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/%s", SIMULATOR_VERSION, targetPath));
+                    for (File sourceFile : sourceFiles) {
+                        bash.uploadToRemoteSimulatorDir(ip, sourceFile.getAbsolutePath(), targetPath);
+                    }
+                    logAgentDone(ip);
+                }
+            });
+        }
+        spawner.awaitCompletion();
+
+        return getElapsedSeconds(started);
     }
 
     private void logAgentDone(String ip) {

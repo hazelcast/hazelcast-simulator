@@ -85,7 +85,6 @@ public class CoordinatorUploaderTest {
         verify(hazelcastJARs, times(1)).prepare(false);
         verify(hazelcastJARs, times(2)).upload(contains("192.168.0."), anyString(), eq(singleton(OUT_OF_THE_BOX)));
         verifyNoMoreInteractions(hazelcastJARs);
-
         verifyNoMoreInteractions(bash);
     }
 
@@ -123,7 +122,6 @@ public class CoordinatorUploaderTest {
         verify(hazelcastJARs, times(1)).upload(contains("192.168.0.1"), anyString(), eq(versionSpecs));
         verify(hazelcastJARs, times(1)).upload(contains("192.168.0.2"), anyString(), eq(singleton("maven=3.5.2")));
         verifyNoMoreInteractions(hazelcastJARs);
-
         verifyNoMoreInteractions(bash);
     }
 
@@ -149,6 +147,7 @@ public class CoordinatorUploaderTest {
     @Test
     public void testUploadUploadDirectory_uploadDirectoryNotExists() {
         deleteQuiet(uploadDirectory);
+
         coordinatorUploader.uploadUploadDirectory();
 
         verifyNoMoreInteractions(bash);
@@ -158,6 +157,7 @@ public class CoordinatorUploaderTest {
     public void testUploadUploadDirectory_withException() {
         TestException exception = new TestException("expected");
         doThrow(exception).when(bash).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
+
         coordinatorUploader.uploadUploadDirectory();
     }
 
