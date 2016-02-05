@@ -293,7 +293,7 @@ public class TestCaseRunnerTest {
         int createTestCount = numberOfTests;
         // there are no default operations sent to the first Worker
         int sendToTestOnFirstWorkerTimes = 0;
-        // StopTestOperation
+        // there are default operations sent to all Workers: StopTestOperation
         int sendToTestOnAllWorkersTimes = 1;
         // increase expected counters for each TestPhase
         for (TestPhase testPhase : TestPhase.values()) {
@@ -303,6 +303,11 @@ public class TestCaseRunnerTest {
                 sendToTestOnAllWorkersTimes++;
             }
         }
+        if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
+            // no StartTestPhaseOperation for global and local verify phase are sent
+            sendToTestOnFirstWorkerTimes--;
+            sendToTestOnAllWorkersTimes--;
+        }
         if (testSuite.getDurationSeconds() == 0) {
             // no StopTestOperation is sent
             sendToTestOnAllWorkersTimes--;
@@ -310,12 +315,8 @@ public class TestCaseRunnerTest {
             // has duration and waitForTestCase
             verifyExecuteOnAllWorkersWithRange = true;
         }
-        if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
-            // no StartTestPhaseOperation for global and local verify phase are sent
-            sendToTestOnFirstWorkerTimes--;
-            sendToTestOnAllWorkersTimes--;
-        }
         if (testSuite.isFailFast() && hasCriticalFailures) {
+            // adjust expected counters if test has critical failures
             verifyExecuteOnAllWorkersWithRange = true;
             if (parallel) {
                 sendToTestOnFirstWorkerTimes = 2;
