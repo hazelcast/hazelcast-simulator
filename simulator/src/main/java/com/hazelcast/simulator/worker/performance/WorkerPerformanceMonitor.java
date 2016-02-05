@@ -52,8 +52,9 @@ public class WorkerPerformanceMonitor {
     private final MonitorThread thread;
 
     public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers,
-                                    int workerPerformanceMonitorIntervalSeconds) {
-        this.thread = new MonitorThread(serverConnector, testContainers, workerPerformanceMonitorIntervalSeconds);
+                                    int workerPerformanceMonitorInterval, TimeUnit workerPerformanceIntervalTimeUnit) {
+        long intervalNanos = workerPerformanceIntervalTimeUnit.toNanos(workerPerformanceMonitorInterval);
+        this.thread = new MonitorThread(serverConnector, testContainers, intervalNanos);
     }
 
     public boolean start() {
@@ -98,14 +99,13 @@ public class WorkerPerformanceMonitor {
 
         private volatile boolean isRunning = true;
 
-        private MonitorThread(ServerConnector serverConnector, Collection<TestContainer> testContainers,
-                              int workerPerformanceMonitorIntervalSeconds) {
+        private MonitorThread(ServerConnector serverConnector, Collection<TestContainer> testContainers, long intervalNanos) {
             super("WorkerPerformanceMonitorThread");
             setDaemon(true);
 
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
-            this.intervalNanos = TimeUnit.SECONDS.toNanos(workerPerformanceMonitorIntervalSeconds);
+            this.intervalNanos = intervalNanos;
 
             writeThroughputHeader(globalThroughputFile, true);
         }

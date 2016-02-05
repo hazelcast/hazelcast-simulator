@@ -178,12 +178,12 @@ public final class MemberWorker implements Worker {
         LOGGER.info("Partitions are warmed up successfully");
     }
 
-    private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int workerPerformanceMonitorIntervalSeconds) {
-        if (workerPerformanceMonitorIntervalSeconds < 1) {
+    private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int intervalSeconds) {
+        if (intervalSeconds < 1) {
             return null;
         }
         WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
-        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), workerPerformanceMonitorIntervalSeconds);
+        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), intervalSeconds, TimeUnit.SECONDS);
     }
 
     private void signalStartToAgent() {

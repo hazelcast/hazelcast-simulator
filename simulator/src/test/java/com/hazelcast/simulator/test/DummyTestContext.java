@@ -2,7 +2,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 
-public class DummyTestContext implements TestContext {
+class DummyTestContext implements TestContext {
 
     private volatile boolean isStopped;
 
