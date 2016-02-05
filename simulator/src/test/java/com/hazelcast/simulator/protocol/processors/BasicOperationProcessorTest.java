@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.EQUALS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 

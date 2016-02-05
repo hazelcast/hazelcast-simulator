@@ -20,7 +20,7 @@ package com.hazelcast.simulator.protocol.operation;
  */
 public class IntegrationTestOperation implements SimulatorOperation {
 
-    public enum Operation {
+    public enum Type {
         EQUALS,
         NESTED_SYNC,
         NESTED_ASYNC,
@@ -34,20 +34,20 @@ public class IntegrationTestOperation implements SimulatorOperation {
     private final String testData;
 
     public IntegrationTestOperation() {
-        this(Operation.EQUALS, TEST_DATA);
+        this(Type.EQUALS, TEST_DATA);
     }
 
-    public IntegrationTestOperation(Operation operation) {
-        this(operation, null);
+    public IntegrationTestOperation(Type type) {
+        this(type, null);
     }
 
-    public IntegrationTestOperation(Operation operation, String testData) {
-        this.operation = operation.name();
+    public IntegrationTestOperation(Type type, String testData) {
+        this.operation = type.name();
         this.testData = testData;
     }
 
-    public Operation getOperation() {
-        return Operation.valueOf(operation);
+    public Type getType() {
+        return Type.valueOf(operation);
     }
 
     public String getTestData() {

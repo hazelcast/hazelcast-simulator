@@ -41,8 +41,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_ASYNC;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_SYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_ASYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_SYNC;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
@@ -106,7 +106,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         SimulatorOperation nestedOperation;
         Response response;
         ResponseFuture future;
-        switch (operation.getOperation()) {
+        switch (operation.getType()) {
             case NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync nested integration test message");
                 response = worker.getWorkerConnector().write(sourceAddress, nestedOperation);

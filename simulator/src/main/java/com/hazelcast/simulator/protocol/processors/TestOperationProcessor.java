@@ -114,7 +114,7 @@ public class TestOperationProcessor extends OperationProcessor {
             throws Exception {
         LogOperation logOperation;
         Response response;
-        switch (operation.getOperation()) {
+        switch (operation.getType()) {
             case NESTED_SYNC:
                 logOperation = new LogOperation("Sync nested integration test message");
                 response = worker.getWorkerConnector().write(sourceAddress, logOperation);

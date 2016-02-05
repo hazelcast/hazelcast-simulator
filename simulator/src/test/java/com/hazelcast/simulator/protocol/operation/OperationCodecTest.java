@@ -11,7 +11,7 @@ import org.junit.Test;
 import java.util.Collections;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.EQUALS;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.EQUALS;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromJson;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;

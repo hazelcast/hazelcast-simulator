@@ -22,10 +22,10 @@ import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_ASYNC;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.DEEP_NESTED_SYNC;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.NESTED_ASYNC;
-import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Operation.NESTED_SYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_ASYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_SYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.NESTED_ASYNC;
+import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.NESTED_SYNC;
 
 public class ProtocolNestedTest {
 

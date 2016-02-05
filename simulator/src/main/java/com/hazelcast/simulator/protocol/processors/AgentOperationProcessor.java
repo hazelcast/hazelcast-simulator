@@ -92,7 +92,7 @@ public class AgentOperationProcessor extends OperationProcessor {
         SimulatorOperation nestedOperation;
         Response response;
         ResponseFuture future;
-        switch (operation.getOperation()) {
+        switch (operation.getType()) {
             case NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync nested integration test message");
                 response = agent.getAgentConnector().write(sourceAddress, nestedOperation);

@@ -74,7 +74,7 @@ public abstract class OperationProcessor {
 
     private ResponseType processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
                                                 SimulatorAddress sourceAddress) throws Exception {
-        switch (operation.getOperation()) {
+        switch (operation.getType()) {
             case EQUALS:
                 if (!IntegrationTestOperation.TEST_DATA.equals(operation.getTestData())) {
                     throw new IllegalStateException("operationData has not the expected value");
