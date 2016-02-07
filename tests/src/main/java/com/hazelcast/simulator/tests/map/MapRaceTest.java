@@ -28,8 +28,8 @@ import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
+import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -114,7 +114,7 @@ public class MapRaceTest {
 
         @Override
         protected void afterRun() {
-            resultMap.put(UUID.randomUUID().toString(), result);
+            resultMap.put(newSecureUuidString(), result);
         }
 
         private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {

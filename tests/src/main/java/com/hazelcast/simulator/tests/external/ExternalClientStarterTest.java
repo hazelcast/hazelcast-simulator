@@ -24,12 +24,11 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.utils.Bash;
 
-import java.util.UUID;
-
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.HostAddressPicker.pickHostAddress;
+import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 
 public class ExternalClientStarterTest {
@@ -69,7 +68,7 @@ public class ExternalClientStarterTest {
             String tmpArguments = arguments
                     .replace("$PROCESS_INDEX", String.valueOf(i))
                     .replace("$IP_ADDRESS", ipAddress)
-                    .replace("$UUID", UUID.randomUUID().toString());
+                    .replace("$UUID", newSecureUuidString());
 
             String tmpLogFileName = logFileName + '_' + i;
 

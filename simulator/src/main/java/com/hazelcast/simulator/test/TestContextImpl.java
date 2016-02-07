@@ -17,7 +17,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 
-import java.util.UUID;
+import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 
 public class TestContextImpl implements TestContext {
 
@@ -27,7 +27,7 @@ public class TestContextImpl implements TestContext {
     private volatile boolean stopped;
 
     TestContextImpl(HazelcastInstance hazelcastInstance) {
-        this(UUID.randomUUID().toString(), hazelcastInstance);
+        this(newSecureUuidString(), hazelcastInstance);
     }
 
     public TestContextImpl(String testId, HazelcastInstance hazelcastInstance) {

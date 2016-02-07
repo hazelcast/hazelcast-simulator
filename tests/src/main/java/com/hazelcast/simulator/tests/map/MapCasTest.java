@@ -29,8 +29,8 @@ import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
+import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -126,7 +126,7 @@ public class MapCasTest {
         }
 
         protected void afterRun() {
-            resultsPerWorker.put(UUID.randomUUID().toString(), result);
+            resultsPerWorker.put(newSecureUuidString(), result);
         }
 
         private void increment(int key, long increment) {

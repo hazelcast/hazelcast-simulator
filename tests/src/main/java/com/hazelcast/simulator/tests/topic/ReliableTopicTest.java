@@ -41,11 +41,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
@@ -116,7 +116,7 @@ public class ReliableTopicTest {
         private long messagesSend = 0;
 
         private final Map<ITopic, AtomicLong> counterMap = new HashMap<ITopic, AtomicLong>();
-        private final String id = UUID.randomUUID().toString();
+        private final String id = newSecureUuidString();
 
         public Worker() {
             for (ITopic topic : topics) {

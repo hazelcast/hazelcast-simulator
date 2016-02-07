@@ -25,7 +25,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +35,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 
 /**
@@ -126,7 +126,7 @@ public class HazelcastJARs {
 
     void addVersionSpec(String versionSpec) {
         File tmpDir = new File(System.getProperty("java.io.tmpdir"));
-        versionSpecDirs.put(versionSpec, new File(tmpDir, "hazelcastjars-" + UUID.randomUUID().toString()).getAbsoluteFile());
+        versionSpecDirs.put(versionSpec, new File(tmpDir, "hazelcastjars-" + newSecureUuidString()).getAbsoluteFile());
     }
 
     // just for testing
