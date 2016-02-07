@@ -50,6 +50,7 @@ import static java.lang.Math.max;
 /**
  * Connector which listens for incoming Simulator Coordinator connections and manages Simulator Worker instances.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
     private static final int MIN_THREAD_POOL_SIZE = 10;

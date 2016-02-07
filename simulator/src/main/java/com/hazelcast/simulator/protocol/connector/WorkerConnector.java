@@ -51,6 +51,7 @@ import static com.hazelcast.simulator.protocol.exception.ExceptionType.WORKER_EX
 /**
  * Connector which listens for incoming Simulator Agent connections and manages Simulator Test instances.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class WorkerConnector extends AbstractServerConnector {
 
     private static final int DEFAULT_THREAD_POOL_SIZE = 3;

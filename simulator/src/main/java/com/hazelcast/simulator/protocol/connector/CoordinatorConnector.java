@@ -60,6 +60,7 @@ import static org.junit.Assert.fail;
 /**
  * Connector which connects to remote Simulator Agent instances.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class CoordinatorConnector implements ClientPipelineConfigurator {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorConnector.class);
