@@ -202,7 +202,7 @@ public class TestOperationProcessorTest {
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
 
             TestOperationProcessor.resetPendingTests();
-            processor = new TestOperationProcessor(exceptionLogger, worker, MEMBER, 1, testId, testContainer, testAddress);
+            processor = new TestOperationProcessor(exceptionLogger, worker, MEMBER, testId, testContainer, testAddress);
         } catch (Exception e) {
             e.printStackTrace();
             fail(e.getMessage());
