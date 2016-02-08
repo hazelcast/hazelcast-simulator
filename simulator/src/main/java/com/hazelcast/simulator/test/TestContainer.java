@@ -18,7 +18,7 @@ package com.hazelcast.simulator.test;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.ProbeImpl;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
-import com.hazelcast.simulator.test.annotations.InjectTestContainer;
+import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -285,7 +285,7 @@ public class TestContainer {
         // create instance to get class of worker
         Class workerClass = invokeMethod(testClassInstance, method).getClass();
 
-        Field testContextField = getFirstField(workerClass, InjectTestContainer.class);
+        Field testContextField = getFirstField(workerClass, InjectTestContext.class);
         Field workerProbeField = getFirstField(workerClass, InjectProbe.class);
 
         Probe probe = null;

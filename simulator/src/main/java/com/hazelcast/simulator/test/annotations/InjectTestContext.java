@@ -21,9 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates {@link com.hazelcast.simulator.test.TestContainer} fields.
+ * Annotates {@link com.hazelcast.simulator.test.TestContext} fields.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface InjectTestContainer {
+public @interface InjectTestContext {
 }
