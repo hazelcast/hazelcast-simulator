@@ -20,7 +20,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.query.TruePredicate;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -55,7 +54,6 @@ public class AllEntrySetTest {
     public int valueLength = 1000;
     // a switch between using IMap.keySet() or IMap.keySet(true-predicate)
     public boolean usePredicate = false;
-    public Probe latency;
 
     private IMap<String, String> map;
     private HazelcastInstance targetInstance;
@@ -92,14 +90,12 @@ public class AllEntrySetTest {
 
         @Override
         protected void timeStep() throws Exception {
-            latency.started();
             Set<Map.Entry<String, String>> result;
             if (usePredicate) {
                 result = map.entrySet(TruePredicate.INSTANCE);
             } else {
                 result = map.entrySet();
             }
-            latency.done();
 
             assertEquals(entryCount, result.size());
         }
