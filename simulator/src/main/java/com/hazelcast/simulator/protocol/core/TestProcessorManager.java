@@ -21,9 +21,7 @@ import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
 
 /**
@@ -31,18 +29,12 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NO
  */
 public class TestProcessorManager {
 
-    private final ConcurrentMap<Integer, SimulatorAddress> testAddresses = new ConcurrentHashMap<Integer, SimulatorAddress>();
-    private final ConcurrentMap<Integer, TestOperationProcessor> testProcessors
-            = new ConcurrentHashMap<Integer, TestOperationProcessor>();
+    private final Map<Integer, TestOperationProcessor> testProcessors = new ConcurrentHashMap<Integer, TestOperationProcessor>();
 
     private final SimulatorAddress localAddress;
-    private final int agentIndex;
-    private final int workerIndex;
 
     public TestProcessorManager(SimulatorAddress localAddress) {
         this.localAddress = localAddress;
-        this.agentIndex = localAddress.getAgentIndex();
-        this.workerIndex = localAddress.getWorkerIndex();
     }
 
     public TestOperationProcessor getTest(int testIndex) {
@@ -50,32 +42,33 @@ public class TestProcessorManager {
     }
 
     public void addTest(int testIndex, TestOperationProcessor processor) {
-        SimulatorAddress testAddress = new SimulatorAddress(TEST, agentIndex, workerIndex, testIndex);
-        testAddresses.put(testIndex, testAddress);
         testProcessors.put(testIndex, processor);
     }
 
     public void removeTest(int testIndex) {
-        testAddresses.remove(testIndex);
         testProcessors.remove(testIndex);
     }
 
     public void processOnAllTests(Response response, SimulatorOperation operation, SimulatorAddress source) {
         for (Map.Entry<Integer, TestOperationProcessor> entry : testProcessors.entrySet()) {
-            SimulatorAddress testAddress = testAddresses.get(entry.getKey());
-            ResponseType responseType = entry.getValue().process(operation, source);
-            response.addResponse(testAddress, responseType);
+            TestOperationProcessor processor = entry.getValue();
+            processOperation(processor, response, operation, source);
         }
     }
 
     public void processOnTest(Response response, SimulatorOperation operation, SimulatorAddress source, int testAddressIndex) {
-        OperationProcessor processor = testProcessors.get(testAddressIndex);
+        TestOperationProcessor processor = testProcessors.get(testAddressIndex);
         if (processor == null) {
             response.addResponse(localAddress, FAILURE_TEST_NOT_FOUND);
         } else {
-            SimulatorAddress testAddress = testAddresses.get(testAddressIndex);
-            ResponseType responseType = processor.process(operation, source);
-            response.addResponse(testAddress, responseType);
+            processOperation(processor, response, operation, source);
         }
+    }
+
+    private void processOperation(TestOperationProcessor processor, Response response, SimulatorOperation operation,
+                                  SimulatorAddress source) {
+        SimulatorAddress testAddress = processor.getTestAddress();
+        ResponseType responseType = processor.process(operation, source);
+        response.addResponse(testAddress, responseType);
     }
 }

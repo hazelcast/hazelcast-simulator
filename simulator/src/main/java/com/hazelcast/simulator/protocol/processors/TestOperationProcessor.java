@@ -89,6 +89,10 @@ public class TestOperationProcessor extends OperationProcessor {
         return testPhaseReference.get();
     }
 
+    public SimulatorAddress getTestAddress() {
+        return testAddress;
+    }
+
     @Override
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
                                             SimulatorAddress sourceAddress) throws Exception {
