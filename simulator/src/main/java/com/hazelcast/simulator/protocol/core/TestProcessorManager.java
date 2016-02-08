@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.protocol.core;
 
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 
 import java.util.Map;
@@ -25,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
 
 /**
- * Manages {@link OperationProcessor} and {@link SimulatorAddress} instances for tests.
+ * Manages {@link TestOperationProcessor} instances for tests.
  */
 public class TestProcessorManager {
 
