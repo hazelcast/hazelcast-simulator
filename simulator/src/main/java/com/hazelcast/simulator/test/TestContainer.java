@@ -178,10 +178,9 @@ public class TestContainer {
 
             Method setupMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
             if (setupMethod != null) {
-                assertSetupArguments(setupMethod);
                 setupArguments = getSetupArguments(setupMethod);
+                testMethods.put(TestPhase.SETUP, setupMethod);
             }
-            testMethods.put(TestPhase.SETUP, setupMethod);
 
             setTestMethod(Warmup.class, new WarmupFilter(false), TestPhase.LOCAL_WARMUP);
             setTestMethod(Warmup.class, new WarmupFilter(true), TestPhase.GLOBAL_WARMUP);
@@ -199,44 +198,29 @@ public class TestContainer {
         }
     }
 
-    private void assertSetupArguments(Method method) {
-        Class[] parameterTypes = method.getParameterTypes();
-        if (parameterTypes.length < 1) {
-            return;
-        }
-
-        boolean testContextFound = false;
-        boolean illegalArgumentFound = false;
-        for (Class<?> parameterType : parameterTypes) {
-            boolean isObject = parameterType.isAssignableFrom(Object.class);
-            if (!isObject && parameterType.isAssignableFrom(TestContext.class)) {
-                testContextFound = true;
-            } else if (!parameterType.isAssignableFrom(Probe.class) || isObject) {
-                illegalArgumentFound = true;
-                break;
-            }
-        }
-        if (!testContextFound || illegalArgumentFound) {
-            throw new IllegalTestException(
-                    format("Method %s.%s must have argument of type %s and zero or more arguments of type %s",
-                            testClassType, method, TestContext.class, Probe.class));
-        }
-    }
-
     private Object[] getSetupArguments(Method setupMethod) {
         Class[] parameterTypes = setupMethod.getParameterTypes();
         Object[] arguments = new Object[parameterTypes.length];
+        if (parameterTypes.length < 1) {
+            return arguments;
+        }
+
+        boolean illegalArgumentFound = false;
+        boolean testContextFound = false;
         for (int i = 0; i < parameterTypes.length; i++) {
-            arguments[i] = getSetupArgumentForParameterType(parameterTypes[i], i);
+            Class<?> parameterType = parameterTypes[i];
+            if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
+                illegalArgumentFound = true;
+                break;
+            }
+            testContextFound = true;
+            arguments[i] = testContext;
+        }
+        if (illegalArgumentFound || !testContextFound) {
+            throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s", testClassType, setupMethod,
+                    TestContext.class));
         }
         return arguments;
-    }
-
-    private Object getSetupArgumentForParameterType(Class<?> parameterType, int index) {
-        if (parameterType.isAssignableFrom(TestContext.class)) {
-            return testContext;
-        }
-        throw new IllegalTestException(format("Unknown parameter type %s at index %s in setup method", parameterType, index));
     }
 
     private void setTestMethod(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {

@@ -22,34 +22,6 @@ public class TestContainer_SetupTest extends AbstractTestContainerTest {
     }
 
     @Test
-    public void testSetup_withAnnotationInheritance() throws Exception {
-        // @Setup method will be called from child class, not from base class
-        // @Run method will be called from base class, not from child class
-        ChildWithOwnSetupMethodTest test = new ChildWithOwnSetupMethodTest();
-        testContainer = createTestContainer(test);
-        testContainer.invoke(TestPhase.SETUP);
-        testContainer.invoke(TestPhase.RUN);
-
-        // ChildWithOwnSetupMethodTest
-        assertTrue(test.childSetupCalled);
-        // BaseSetupTest
-        assertFalse(test.setupCalled);
-        // BaseTest
-        assertTrue(test.runCalled);
-    }
-
-    private static class ChildWithOwnSetupMethodTest extends BaseSetupTest {
-
-        private boolean childSetupCalled;
-
-        @Setup
-        public void setUp(TestContext context) {
-            this.context = context;
-            this.childSetupCalled = true;
-        }
-    }
-
-    @Test
     public void testSetup_withoutArguments() {
         createTestContainer(new SetupWithoutArgumentsTest());
     }
@@ -74,11 +46,11 @@ public class TestContainer_SetupTest extends AbstractTestContainerTest {
     }
 
     @Test(expected = IllegalTestException.class)
-    public void testSetup_withProbe() {
-        createTestContainer(new SetupWithProbe());
+    public void testSetup_withInvalidArgument() {
+        createTestContainer(new SetupWithInvalidArgument());
     }
 
-    private static class SetupWithProbe extends BaseTest {
+    private static class SetupWithInvalidArgument extends BaseTest {
 
         @Setup
         public void setUp(Probe probe) {
@@ -86,11 +58,11 @@ public class TestContainer_SetupTest extends AbstractTestContainerTest {
     }
 
     @Test(expected = IllegalTestException.class)
-    public void testSetup_withIllegalSetupArguments() {
-        createTestContainer(new IllegalSetupArgumentsTest());
+    public void testSetup_withMixedSetupArguments() {
+        createTestContainer(new MixedSetupArgumentsTest());
     }
 
-    private static class IllegalSetupArgumentsTest extends BaseTest {
+    private static class MixedSetupArgumentsTest extends BaseTest {
 
         @Setup
         public void setUp(TestContext testContext, Object wrongType) {

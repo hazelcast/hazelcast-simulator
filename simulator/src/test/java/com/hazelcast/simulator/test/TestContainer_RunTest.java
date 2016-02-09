@@ -122,33 +122,6 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         }
     }
 
-    @Test
-    public void testRun_withAnnotationInheritance() throws Exception {
-        // @Setup method will be called from base class, not from child class
-        // @Run method will be called from child class, not from base class
-        ChildWithOwnRunMethodTest test = new ChildWithOwnRunMethodTest();
-        testContainer = createTestContainer(test);
-        testContainer.invoke(TestPhase.SETUP);
-        testContainer.invoke(TestPhase.RUN);
-
-        // ChildWithOwnRunMethodTest
-        assertTrue(test.childRunCalled);
-        // BaseSetupTest
-        assertTrue(test.setupCalled);
-        // BaseTest
-        assertFalse(test.runCalled);
-    }
-
-    private static class ChildWithOwnRunMethodTest extends BaseSetupTest {
-
-        private boolean childRunCalled;
-
-        @Run
-        void run() {
-            this.childRunCalled = true;
-        }
-    }
-
     @Test(expected = IllegalTestException.class)
     public void testRun_withMissingAnnotation() {
         createTestContainer(new MissingRunAnnotationTest());
