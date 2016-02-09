@@ -172,7 +172,7 @@ public class SyntheticTest {
         private void timeStep() throws Exception {
             ICompletableFuture<Object> future = invokeOnNextPartition();
             if (syncInvocation) {
-                probe.started();
+                long started = System.nanoTime();
                 if (syncFrequency == 1) {
                     future.get();
                 } else {
@@ -184,7 +184,7 @@ public class SyntheticTest {
                         futureList.clear();
                     }
                 }
-                probe.done();
+                probe.recordValue(System.nanoTime() - started);
             } else {
                 future.andThen(this);
             }
