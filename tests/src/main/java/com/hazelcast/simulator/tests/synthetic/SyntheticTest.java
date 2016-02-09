@@ -94,7 +94,7 @@ public class SyntheticTest {
     @InjectHazelcastInstance
     private HazelcastInstance targetInstance;
     @InjectProbe(useForThroughput = true)
-    public Probe probe;
+    private Probe probe;
 
     @Teardown
     public void teardown() {

@@ -42,15 +42,14 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     protected static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
-    private final Random random = new Random();
-
     final OperationSelector<O> selector;
 
-    // these fields will be injected by the TestContainer
     @InjectTestContext
     TestContext testContext;
     @InjectProbe(useForThroughput = true)
     Probe workerProbe;
+
+    private final Random random = new Random();
 
     private long iteration;
     private boolean isWorkerStopped;
