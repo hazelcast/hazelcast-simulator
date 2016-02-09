@@ -64,7 +64,7 @@ public class WorkerPerformanceMonitorTest {
     public static void cleanUp() {
         deleteQuiet("throughput.txt");
         deleteQuiet("throughput-" + TEST_NAME + ".txt");
-        deleteQuiet("latency-" + TEST_NAME + "-" + TEST_NAME + "WorkerProbe.txt");
+        deleteQuiet("latency-" + TEST_NAME + "-" + "workerProbe.txt");
         deleteQuiet("latency-" + TEST_NAME + "-aggregated.txt");
     }
 
