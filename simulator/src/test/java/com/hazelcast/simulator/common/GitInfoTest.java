@@ -40,14 +40,14 @@ public class GitInfoTest {
     public void testLoadProperties() {
         Properties properties = GitInfo.loadGitProperties(GitInfo.GIT_INFO_FILE);
         assertNotNull(properties);
-        assertFalse(properties instanceof GitInfo.DummyProperties);
+        assertFalse(properties instanceof GitInfo.UnknownGitProperties);
     }
 
     @Test
     public void testLoadProperties_notExists() {
         Properties properties = GitInfo.loadGitProperties("notExists");
         assertNotNull(properties);
-        assertTrue(properties instanceof GitInfo.DummyProperties);
+        assertTrue(properties instanceof GitInfo.UnknownGitProperties);
 
         assertEquals(GitInfo.UNKNOWN, properties.getProperty(GitInfo.GIT_COMMIT_ID_AABREV));
         assertEquals(GitInfo.UNKNOWN, properties.getProperty(GitInfo.GIT_COMMIT_ID));

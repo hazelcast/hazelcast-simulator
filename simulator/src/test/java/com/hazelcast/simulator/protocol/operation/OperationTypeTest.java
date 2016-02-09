@@ -34,13 +34,13 @@ public class OperationTypeTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetOperationType_unregisteredOperationType() {
-        SimulatorOperation operation = new DummyOperation();
+        SimulatorOperation operation = new UnregisteredOperation();
         OperationType.getOperationType(operation);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRegistry_classIdNegative() {
-        OperationTypeRegistry.register(INTEGRATION_TEST, DummyOperation.class, -1);
+        OperationTypeRegistry.register(INTEGRATION_TEST, UnregisteredOperation.class, -1);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -50,9 +50,9 @@ public class OperationTypeTest {
 
     @Test(expected = IllegalStateException.class)
     public void testRegistry_ClassIdAlreadyRegistered() {
-        OperationTypeRegistry.register(INTEGRATION_TEST, DummyOperation.class, INTEGRATION_TEST.toInt());
+        OperationTypeRegistry.register(INTEGRATION_TEST, UnregisteredOperation.class, INTEGRATION_TEST.toInt());
     }
 
-    private static class DummyOperation implements SimulatorOperation {
+    private static class UnregisteredOperation implements SimulatorOperation {
     }
 }

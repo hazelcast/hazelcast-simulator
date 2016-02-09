@@ -75,10 +75,10 @@ public final class GitInfo {
         } finally {
             closeQuietly(inputStream);
         }
-        return new DummyProperties();
+        return new UnknownGitProperties();
     }
 
-    static class DummyProperties extends Properties {
+    static class UnknownGitProperties extends Properties {
 
         @Override
         public String getProperty(String key) {
