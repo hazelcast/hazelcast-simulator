@@ -48,7 +48,7 @@ public class GenericOperationTest {
 
     private static final ILogger LOGGER = Logger.getLogger(GenericOperationTest.class);
 
-    public enum PrioritySelector {
+    private enum PrioritySelector {
         PRIORITY,
         NORMAL
     }
@@ -143,16 +143,16 @@ public class GenericOperationTest {
         }
     }
 
-    public static class GenericOperation extends AbstractOperation {
+    private static class GenericOperation extends AbstractOperation {
 
-        public int delayNanos;
+        private int delayNanos;
 
-        public GenericOperation(int delayNanos) {
+        GenericOperation(int delayNanos) {
             this();
             this.delayNanos = delayNanos;
         }
 
-        public GenericOperation() {
+        GenericOperation() {
             setPartitionId(-1);
         }
 
@@ -177,13 +177,13 @@ public class GenericOperationTest {
         }
     }
 
-    @SuppressWarnings("unused")
-    public static class GenericPriorityOperation extends GenericOperation implements UrgentSystemOperation {
+    private static class GenericPriorityOperation extends GenericOperation implements UrgentSystemOperation {
 
+        @SuppressWarnings("unused")
         public GenericPriorityOperation() {
         }
 
-        public GenericPriorityOperation(int delayNanos) {
+        GenericPriorityOperation(int delayNanos) {
             super(delayNanos);
         }
     }

@@ -59,7 +59,7 @@ public class AnnotationFilterTest {
         assertEquals("globalVerify", method.getName());
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings("DefaultAnnotationParam")
     private static class AnnotationTestClass {
 
         @Setup

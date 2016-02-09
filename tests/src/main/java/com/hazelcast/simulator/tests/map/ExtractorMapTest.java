@@ -149,12 +149,12 @@ public class ExtractorMapTest {
         }
     }
 
-    @SuppressWarnings("unused")
     private static class SillySequence implements DataSerializable {
 
         int count;
         List<Integer> payloadField;
 
+        @SuppressWarnings("unused")
         SillySequence() {
         }
 

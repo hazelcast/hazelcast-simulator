@@ -37,7 +37,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
  *
  * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
-@SuppressWarnings("unused")
 public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     protected static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);

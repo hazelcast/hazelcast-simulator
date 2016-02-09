@@ -150,12 +150,12 @@ public class MultiValueMapTest {
         }
     }
 
-    @SuppressWarnings("unused")
     private static class SillySequence implements DataSerializable {
 
         int count;
         Collection<Integer> payloadField;
 
+        @SuppressWarnings("unused")
         SillySequence() {
         }
 

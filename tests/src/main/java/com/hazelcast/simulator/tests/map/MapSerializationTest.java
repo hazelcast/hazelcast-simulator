@@ -45,7 +45,7 @@ import java.io.Serializable;
  */
 public class MapSerializationTest {
 
-    public enum Serializer {
+    private enum Serializer {
         SERIALIZABLE,
         EXTERNALIZABLE,
         DATA_SERIALIZABLE,
@@ -106,14 +106,14 @@ public class MapSerializationTest {
         new TestRunner<MapSerializationTest>(test).run();
     }
 
-    public static class ExternalizableValue implements Externalizable {
+    private static class ExternalizableValue implements Externalizable {
 
         private int value;
 
         public ExternalizableValue() {
         }
 
-        public ExternalizableValue(int value) {
+        ExternalizableValue(int value) {
             this.value = value;
         }
 
@@ -132,11 +132,11 @@ public class MapSerializationTest {
         }
     }
 
-    public static class SerializableValue implements Serializable {
+    private static class SerializableValue implements Serializable {
 
         private int value;
 
-        public SerializableValue(int value) {
+        SerializableValue(int value) {
             this.value = value;
         }
 
@@ -145,15 +145,15 @@ public class MapSerializationTest {
         }
     }
 
-    @SuppressWarnings("unused")
-    public static class DataSerializableValue implements DataSerializable {
+    private static class DataSerializableValue implements DataSerializable {
 
         private int value;
 
+        @SuppressWarnings("unused")
         public DataSerializableValue() {
         }
 
-        public DataSerializableValue(int value) {
+        DataSerializableValue(int value) {
             this.value = value;
         }
 
