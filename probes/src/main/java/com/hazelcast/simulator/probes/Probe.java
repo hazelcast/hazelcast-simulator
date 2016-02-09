@@ -37,6 +37,13 @@ public interface Probe {
     void done();
 
     /**
+     * Calculates the latency from an external start time and records the value.
+     *
+     * @param started external start time from {@link System#nanoTime()}.
+     */
+    void done(long started);
+
+    /**
      * Adds a latency value in nanoseconds to the probe result.
      *
      * Can be used if {@link #started()} and {@link #done()} are not directly related, e.g. in asynchronous tests or are collected

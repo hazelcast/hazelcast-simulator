@@ -60,6 +60,14 @@ public class ProbeImpl implements Probe {
     }
 
     @Override
+    public void done(long started) {
+        if (started <= 0) {
+            throw new IllegalStateException("started has to be a positive number");
+        }
+        recordValue(System.nanoTime() - started);
+    }
+
+    @Override
     public void recordValue(long latencyNanos) {
         int latencyMicros = (int) TimeUnit.NANOSECONDS.toMicros(latencyNanos);
         recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : (latencyMicros < 0 ? 0 : latencyMicros));

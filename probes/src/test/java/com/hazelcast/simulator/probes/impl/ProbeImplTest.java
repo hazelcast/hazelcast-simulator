@@ -44,6 +44,28 @@ public class ProbeImplTest {
     }
 
     @Test
+    public void testDone_withExternalStarted() {
+        int expectedCount = 1;
+        long expectedLatency = 150;
+
+        long started = System.nanoTime();
+        sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
+        probe.done(started);
+
+        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDone_withExternalStarted_withZero() {
+        probe.done(0);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDone_withExternalStarted_withNegativeValue() {
+        probe.done(-23);
+    }
+
+    @Test
     public void testRecordValues() {
         int expectedCount = 3;
         long latencyValue = 500;
