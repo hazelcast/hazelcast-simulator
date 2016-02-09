@@ -254,15 +254,18 @@ public class TestContainer {
     }
 
     private void invokeRun() throws Exception {
-        Method method = testMethods.get(TestPhase.RUN);
-        testStartedTimestamp = System.currentTimeMillis();
-        if (runWithWorker) {
-            invokeRunWithWorkerMethod(method);
-        } else {
-            isRunning = true;
-            invokeMethod(testClassInstance, method);
+        try {
+            Method method = testMethods.get(TestPhase.RUN);
+            if (runWithWorker) {
+                invokeRunWithWorkerMethod(method);
+            } else {
+                testStartedTimestamp = System.currentTimeMillis();
+                isRunning = true;
+                invokeMethod(testClassInstance, method);
+            }
+        } finally {
+            isRunning = false;
         }
-        isRunning = false;
     }
 
     private void invokeRunWithWorkerMethod(Method runMethod) throws Exception {
@@ -288,6 +291,7 @@ public class TestContainer {
         }
 
         // everything is prepared, we can notify the outside world now
+        testStartedTimestamp = System.currentTimeMillis();
         isRunning = true;
 
         // spawn worker and wait for completion
