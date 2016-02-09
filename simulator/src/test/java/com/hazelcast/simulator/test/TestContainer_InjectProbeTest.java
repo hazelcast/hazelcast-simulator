@@ -8,8 +8,10 @@ import org.junit.Test;
 
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
@@ -48,6 +50,14 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         assertTrue(testContainer.hasProbe("throughputProbe"));
     }
 
+    @Test
+    public void testInjectProbe_withoutAnnotation() {
+        ProbeTest test = new ProbeTest();
+        testContainer = createTestContainer(test);
+
+        assertNull(test.notAnnotatedProbe);
+    }
+
     private static class ProbeTest extends BaseTest {
 
         @InjectTestContext
@@ -62,10 +72,48 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         @InjectProbe(useForThroughput = true)
         private Probe throughputProbe;
 
+        @SuppressWarnings("unused")
+        private Probe notAnnotatedProbe;
+
         @Run
         public void run() {
             probe.started();
             probe.done();
         }
+    }
+
+    @Test(expected = IllegalTestException.class)
+    public void testInjectProbe_withIllegalFieldType() {
+        IllegalFieldTypeTest test = new IllegalFieldTypeTest();
+        testContainer = createTestContainer(test);
+    }
+
+    private static class IllegalFieldTypeTest extends BaseTest {
+
+        @InjectProbe
+        private Object noProbeField;
+    }
+
+    @Test
+    public void testInjectProbe_withDuplicateProbeName() {
+        DuplicateProbeNameTest test = new DuplicateProbeNameTest();
+        testContainer = createTestContainer(test);
+
+        assertTrue(testContainer.hasProbe("sameProbeName"));
+        assertEquals(test.sameProbeName, test.explicitSameProbeName);
+        assertEquals(test.sameProbeName, test.anotherExplicitSameProbeName);
+        assertEquals(test.explicitSameProbeName, test.anotherExplicitSameProbeName);
+    }
+
+    private static class DuplicateProbeNameTest extends BaseTest {
+
+        @InjectProbe
+        private Probe sameProbeName;
+
+        @InjectProbe(name = "sameProbeName")
+        private Probe explicitSameProbeName;
+
+        @InjectProbe(name = "sameProbeName")
+        private Probe anotherExplicitSameProbeName;
     }
 }

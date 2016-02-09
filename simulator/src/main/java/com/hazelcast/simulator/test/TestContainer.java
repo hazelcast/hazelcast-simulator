@@ -228,19 +228,25 @@ public class TestContainer {
         Field[] fields = testClassType.getDeclaredFields();
         for (Field field : fields) {
             Class<?> fieldType = field.getType();
-            if (TestContext.class.equals(fieldType)) {
-                if (field.isAnnotationPresent(InjectTestContext.class)) {
-                    setFieldValue(testClassInstance, field, testContext);
-                }
-            } else if (HazelcastInstance.class.equals(fieldType)) {
-                if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
-                    setFieldValue(testClassInstance, field, testContext.getTargetInstance());
-                }
-            } else if (Probe.class.equals(fieldType)) {
+            if (field.isAnnotationPresent(InjectTestContext.class)) {
+                assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
+                setFieldValue(testClassInstance, field, testContext);
+            } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
+                assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
+                setFieldValue(testClassInstance, field, testContext.getTargetInstance());
+            } else if (field.isAnnotationPresent(InjectProbe.class)) {
+                assertFieldType(fieldType, Probe.class, InjectProbe.class);
                 String probeName = getProbeName(field);
                 Probe probe = getOrCreateProbe(probeName, field);
                 setFieldValue(testClassInstance, field, probe);
             }
+        }
+    }
+
+    private void assertFieldType(Class<?> fieldType, Class<?> expectedFieldType, Class<? extends Annotation> annotation) {
+        if (!expectedFieldType.equals(fieldType)) {
+            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
+                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
         }
     }
 
