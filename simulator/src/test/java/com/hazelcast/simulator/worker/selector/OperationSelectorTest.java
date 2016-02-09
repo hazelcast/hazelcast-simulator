@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static java.lang.String.format;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class OperationSelectorTest {
@@ -126,6 +127,20 @@ public class OperationSelectorTest {
     public void testAddOperation_afterBuild() {
         builder.addDefaultOperation(Operation.DEFAULT).build();
         builder.addOperation(Operation.OP1, 0.0);
+    }
+
+    @Test
+    public void testGetOperations() {
+        assertEquals(0, builder.getOperations().size());
+
+        builder.addOperation(Operation.OP1, 0.1);
+        assertEquals(1, builder.getOperations().size());
+
+        builder.addOperation(Operation.OP2, 0.1);
+        assertEquals(2, builder.getOperations().size());
+
+        builder.addDefaultOperation(Operation.OP3);
+        assertEquals(3, builder.getOperations().size());
     }
 
     @Test

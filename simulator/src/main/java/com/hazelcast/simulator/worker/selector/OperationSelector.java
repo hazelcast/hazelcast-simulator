@@ -29,6 +29,7 @@ import java.util.Random;
  * @param <T> enum of operations
  */
 public class OperationSelector<T extends Enum<T>> {
+
     private final Random random = new Random();
     private final Object[] operations;
 

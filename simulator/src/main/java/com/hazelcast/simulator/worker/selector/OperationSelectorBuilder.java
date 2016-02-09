@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker.selector;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
@@ -82,6 +83,15 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
     public OperationSelectorBuilder<T> addDefaultOperation(T operation) {
         addOperation(operation, 1.0 - probSum);
         return this;
+    }
+
+    /**
+     * Returns a set of all defined operations.
+     *
+     * @return {@link Set<T>} of all defined operations.
+     */
+    public Set<T> getOperations() {
+        return operations.keySet();
     }
 
     /**
