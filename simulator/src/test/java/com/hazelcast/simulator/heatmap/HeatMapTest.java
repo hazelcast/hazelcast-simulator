@@ -46,8 +46,6 @@ public class HeatMapTest extends AbstractComputeServiceTest {
 
     @After
     public void tearDown() {
-        heatMap.shutdown();
-
         deleteQuiet(directory);
     }
 

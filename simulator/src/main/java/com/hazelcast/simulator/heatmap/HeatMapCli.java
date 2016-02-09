@@ -61,11 +61,7 @@ final class HeatMapCli {
     }
 
     static void run(HeatMap heatMap) {
-        try {
-            heatMap.createHeatMap();
-        } finally {
-            heatMap.shutdown();
-        }
+        heatMap.createHeatMap();
     }
 
     private static File getPropertiesFile(HeatMapCli cli, OptionSet options) {

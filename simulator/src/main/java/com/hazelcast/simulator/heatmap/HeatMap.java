@@ -50,7 +50,7 @@ public class HeatMap {
 
     private int histogramCount;
 
-    public HeatMap(String directory, String testName, String probeName) {
+    HeatMap(String directory, String testName, String probeName) {
         LOGGER.info("Hazelcast Simulator HeatMap");
         LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(),
                 getBuildTime()));
@@ -59,9 +59,6 @@ public class HeatMap {
         this.directory = new File(directory).getAbsoluteFile();
         this.testName = testName;
         this.probeName = probeName;
-    }
-
-    void shutdown() {
     }
 
     void createHeatMap() {

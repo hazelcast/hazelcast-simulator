@@ -54,7 +54,6 @@ public class HeatMapCliTest {
         run(heatMap);
 
         verify(heatMap).createHeatMap();
-        verify(heatMap).shutdown();
         verifyNoMoreInteractions(heatMap);
     }
 
