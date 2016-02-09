@@ -19,6 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -27,7 +28,7 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import static org.junit.Assert.assertEquals;
 
@@ -93,21 +94,27 @@ public class ExampleTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
 
         public Worker() {
             super(operationSelectorBuilder);
         }
 
         @Override
-        protected void timeStep(Operation operation) throws Exception {
+        protected void timeStep(Operation operation, Probe probe) throws Exception {
             int key = randomInt(maxKeys);
+            long started;
+
             switch (operation) {
                 case PUT:
+                    started = System.nanoTime();
                     map.put(key, "value" + key);
+                    probe.done(started);
                     break;
                 case GET:
+                    started = System.nanoTime();
                     map.get(key);
+                    probe.done(started);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown operation: " + operation);
