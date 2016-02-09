@@ -22,14 +22,13 @@ import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorkerWithProbeControl;
 
 import java.util.Map;
 
@@ -45,9 +44,6 @@ public class MapEntryProcessorTest {
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
-
-    @InjectProbe
-    private Probe probe;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
@@ -106,17 +102,19 @@ public class MapEntryProcessorTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    private class Worker extends AbstractMonotonicWorkerWithProbeControl {
         private final long[] localIncrementsAtKey = new long[keyCount];
 
         @Override
-        public void timeStep() {
+        public void timeStep(Probe probe) {
             int key = generateIntKey(keyCount, keyLocality, targetInstance);
             long increment = randomInt(100);
             int delayMs = calculateDelay();
-            probe.started();
+
+            long started = System.nanoTime();
             map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
-            probe.done();
+            probe.recordValue(System.nanoTime() - started);
+
             localIncrementsAtKey[key] += increment;
         }
 
