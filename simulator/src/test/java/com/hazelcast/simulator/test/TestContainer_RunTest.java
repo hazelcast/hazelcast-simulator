@@ -1,22 +1,30 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.test.TestContainer_RunTest.MultiProbeWorkerTest.Operation.FIRST_OPERATION;
+import static com.hazelcast.simulator.test.TestContainer_RunTest.MultiProbeWorkerTest.Operation.SECOND_OPERATION;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class TestContainer_RunTest extends AbstractTestContainerTest {
+
+    private static final int ITERATION_COUNT = 10;
 
     @Test
     public void testRun() throws Exception {
@@ -133,6 +141,74 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
                 public void afterCompletion() {
                 }
             };
+        }
+    }
+
+    @Test
+    public void testRunWithWorker_withAbstractWorkerWithMultipleProbesWorker() throws Exception {
+        final MultiProbeWorkerTest test = new MultiProbeWorkerTest();
+        testContainer = createTestContainer(test);
+
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
+
+        assertTrue(test.runWithWorkerCreated);
+        assertTrue(test.runWithWorkerCalled);
+
+        Map<String, Probe> probeMap = testContainer.getProbeMap();
+        assertEquals(MultiProbeWorkerTest.Operation.values().length, probeMap.size());
+
+        long totalCount = 0;
+        for (Probe probe : probeMap.values()) {
+            totalCount += probe.getIntervalHistogram().getTotalCount();
+        }
+        assertEquals(TestContainer.DEFAULT_THREAD_COUNT * ITERATION_COUNT, totalCount);
+    }
+
+    static class MultiProbeWorkerTest {
+
+        enum Operation {
+            FIRST_OPERATION,
+            SECOND_OPERATION
+        }
+
+        private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+
+        volatile boolean runWithWorkerCreated;
+        volatile boolean runWithWorkerCalled;
+
+        @Setup
+        public void setup() {
+            operationSelectorBuilder
+                    .addOperation(FIRST_OPERATION, 0.5)
+                    .addDefaultOperation(SECOND_OPERATION);
+        }
+
+        @RunWithWorker
+        IWorker createWorker() {
+            runWithWorkerCreated = true;
+
+            return new Worker(operationSelectorBuilder, this);
+        }
+
+        private static class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+
+            private MultiProbeWorkerTest test;
+
+            public Worker(OperationSelectorBuilder<Operation> operationSelectorBuilder, MultiProbeWorkerTest test) {
+                super(operationSelectorBuilder);
+                this.test = test;
+            }
+
+            @Override
+            protected void timeStep(Operation operation, Probe probe) throws Exception {
+                test.runWithWorkerCalled = true;
+                if (getIteration() == ITERATION_COUNT) {
+                    stopWorker();
+                    return;
+                }
+                probe.recordValue(randomInt(5000));
+            }
         }
     }
 

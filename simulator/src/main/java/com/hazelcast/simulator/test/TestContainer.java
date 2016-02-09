@@ -32,6 +32,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.apache.log4j.Logger;
 
@@ -53,8 +54,10 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughp
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
+import static com.hazelcast.simulator.worker.tasks.AbstractWorker.DEFAULT_WORKER_PROBE_NAME;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 /**
  * Since the test is based on annotations there is no API we can call easily.
@@ -67,7 +70,7 @@ public class TestContainer {
      */
     public static final Set<String> OPTIONAL_TEST_PROPERTIES;
 
-    private static final int DEFAULT_THREAD_COUNT = 10;
+    static final int DEFAULT_THREAD_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
@@ -223,9 +226,13 @@ public class TestContainer {
     }
 
     private Probe getOrCreateProbe(String probeName, Field field) {
+        return getOrCreateProbe(probeName, isThroughputProbe(field));
+    }
+
+    private Probe getOrCreateProbe(String probeName, boolean isThroughputProbe) {
         Probe probe = probeMap.get(probeName);
         if (probe == null) {
-            probe = new ProbeImpl(isThroughputProbe(field));
+            probe = new ProbeImpl(isThroughputProbe);
             probeMap.put(probeName, probe);
         }
         return probe;
@@ -255,33 +262,54 @@ public class TestContainer {
             return;
         }
 
-        // create instance to get class of worker
-        Class workerClass = invokeMethod(testClassInstance, runMethod).getClass();
+        // create instance to get the class of the IWorker implementation
+        IWorker workerInstance = invokeMethod(testClassInstance, runMethod);
+        Class<? extends IWorker> workerClass = workerInstance.getClass();
 
         @SuppressWarnings("unchecked")
         Map<Field, Object> injectMap = getInjectMap(workerClass);
+        Map<Enum<?>, Probe> operationProbeMap = getOperationProbeMap(workerClass, workerInstance);
 
         // everything is prepared, we can notify the outside world now
         testStartedTimestamp = System.currentTimeMillis();
         isRunning = true;
 
-        // spawn worker and wait for completion
-        IWorker worker = spawnWorkerThreads(threadCount, runMethod, injectMap);
+        // spawn workers and wait for completion
+        IWorker worker = spawnWorkerThreads(threadCount, runMethod, injectMap, operationProbeMap);
 
-        // call the afterCompletion method on a single instance of the worker
-        if (worker != null) {
-            worker.afterCompletion();
-        }
+        // call the afterCompletion() method on a single instance of the worker
+        worker.afterCompletion();
     }
 
-    private IWorker spawnWorkerThreads(int threadCount, Method method, Map<Field, Object> injectMap) throws Exception {
+    private Map<Enum<?>, Probe> getOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
+        if (!AbstractWorkerWithMultipleProbes.class.isAssignableFrom(workerClass)) {
+            return null;
+        }
+
+        // remove the default worker probe
+        probeMap.remove(DEFAULT_WORKER_PROBE_NAME);
+
+        Map<Enum<?>, Probe> operationProbes = new HashMap<Enum<?>, Probe>();
+        for (Object object : ((AbstractWorkerWithMultipleProbes) worker).getOperations()) {
+            Enum operation = (Enum) object;
+            String probeName = capitalizeFully(operation.name(), '_').replace("_", "") + "Probe";
+            operationProbes.put(operation, getOrCreateProbe(probeName, true));
+        }
+        return operationProbes;
+    }
+
+    @SuppressWarnings("unchecked")
+    private IWorker spawnWorkerThreads(int threadCount, Method method, Map<Field, Object> injectMap,
+                                       Map<Enum<?>, Probe> operationProbes) throws Exception {
         IWorker worker = null;
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             worker = invokeMethod(testClassInstance, method);
             injectObjects(injectMap, worker);
-
+            if (operationProbes != null) {
+                ((AbstractWorkerWithMultipleProbes) worker).setProbeMap(operationProbes);
+            }
             spawner.spawn(worker);
         }
         spawner.awaitCompletion();
