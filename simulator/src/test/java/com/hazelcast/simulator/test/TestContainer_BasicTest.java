@@ -1,9 +1,11 @@
+
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import org.junit.Test;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -25,6 +27,33 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
         testContainer = createTestContainer(new BaseTest());
 
         assertEquals(testContext, testContainer.getTestContext());
+    }
+
+    @Test
+    public void testGetTestStartedTimestamp() throws Exception {
+        long now = System.currentTimeMillis();
+        testContainer = createTestContainer(new BaseTest());
+
+        assertEquals(0, testContainer.getTestStartedTimestamp());
+
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
+
+        long testStartedTimestamp = testContainer.getTestStartedTimestamp();
+        assertTrue(format("testStartedTimestamp should be >= %d, but was %d", now, testStartedTimestamp),
+                testStartedTimestamp >= now);
+    }
+
+    @Test
+    public void testIsRunning() throws Exception {
+        testContainer = createTestContainer(new BaseTest());
+
+        assertFalse(testContainer.isRunning());
+
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
+
+        assertFalse(testContainer.isRunning());
     }
 
     @Test
