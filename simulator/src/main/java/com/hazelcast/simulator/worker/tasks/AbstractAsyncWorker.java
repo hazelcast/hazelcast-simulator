@@ -36,7 +36,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends Abstract
 
     @Override
     public final void doRun() throws Exception {
-        while (!testContext.isStopped() && !isWorkerStopped) {
+        while (!testContext.isStopped() && !isWorkerStopped()) {
             timeStep(selector.select());
         }
     }

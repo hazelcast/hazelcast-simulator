@@ -22,7 +22,6 @@ package com.hazelcast.simulator.worker.tasks;
  * Your implementation will get the following (optional) fields injected by {@link com.hazelcast.simulator.test.TestContainer}:
  * {@link com.hazelcast.simulator.test.TestContext TestContext} testContext;
  * {@link com.hazelcast.simulator.probes.Probe Probe} workerProbe;
- * <code>long</code> logFrequency;
  */
 public interface IWorker extends Runnable {
 

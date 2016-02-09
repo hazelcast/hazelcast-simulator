@@ -50,10 +50,11 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFirstField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
+import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
 /**
@@ -72,8 +73,7 @@ public class TestContainer {
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
     private enum OptionalTestProperties {
-        THREAD_COUNT("threadCount"),
-        LOG_FREQUENCY("logFrequency");
+        THREAD_COUNT("threadCount");
 
         private final String propertyName;
 
@@ -93,10 +93,6 @@ public class TestContainer {
         }
         OPTIONAL_TEST_PROPERTIES = Collections.unmodifiableSet(optionalTestProperties);
     }
-
-    // properties
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    public int threadCount = DEFAULT_THREAD_COUNT;
 
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final Map<TestPhase, Method> testMethods = new HashMap<TestPhase, Method>();
@@ -270,7 +266,8 @@ public class TestContainer {
     }
 
     private void invokeRunWithWorkerMethod(Method method) throws Exception {
-        bindOptionalProperty(this, testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
+        String threadCountProperty = getPropertyValue(testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
+        int threadCount = (threadCountProperty == null ? DEFAULT_THREAD_COUNT : parseInt(threadCountProperty));
 
         LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
         if (threadCount <= 0) {
@@ -293,7 +290,7 @@ public class TestContainer {
         isRunning = true;
 
         // spawn worker and wait for completion
-        IWorker worker = spawnWorkerThreads(method, testContextField, workerProbeField, probe);
+        IWorker worker = spawnWorkerThreads(method, testContextField, workerProbeField, probe, threadCount);
 
         // call the afterCompletion method on a single instance of the worker
         if (worker != null) {
@@ -301,8 +298,8 @@ public class TestContainer {
         }
     }
 
-    private IWorker spawnWorkerThreads(Method method, Field testContextField, Field workerProbeField, Probe probe)
-            throws Exception {
+    private IWorker spawnWorkerThreads(Method method, Field testContextField, Field workerProbeField, Probe probe,
+                                       int threadCount) throws Exception {
         IWorker worker = null;
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
@@ -315,8 +312,6 @@ public class TestContainer {
             if (workerProbeField != null) {
                 setFieldValue(worker, workerProbeField, probe);
             }
-
-            bindOptionalProperty(worker, testCase, OptionalTestProperties.LOG_FREQUENCY.getPropertyName());
 
             spawner.spawn(worker);
         }

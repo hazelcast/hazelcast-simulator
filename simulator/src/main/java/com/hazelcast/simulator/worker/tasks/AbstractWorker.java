@@ -42,11 +42,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     protected static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
-    // these fields will be injected by test.properties of the test
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    public long logFrequency;
+    private final Random random = new Random();
 
-    final Random random = new Random();
     final OperationSelector<O> selector;
 
     // these fields will be injected by the TestContainer
@@ -55,9 +52,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     @InjectProbe(useForThroughput = true)
     Probe workerProbe;
 
-    // local variables
-    long iteration;
-    boolean isWorkerStopped;
+    private long iteration;
+    private boolean isWorkerStopped;
 
     public AbstractWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         this.selector = operationSelectorBuilder.build();
@@ -183,8 +179,9 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     void increaseIteration() {
         iteration++;
-        if (logFrequency > 0 && iteration % logFrequency == 0) {
-            LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-        }
+    }
+
+    boolean isWorkerStopped() {
+        return isWorkerStopped;
     }
 }

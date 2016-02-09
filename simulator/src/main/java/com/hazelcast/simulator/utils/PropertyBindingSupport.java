@@ -64,9 +64,9 @@ public final class PropertyBindingSupport {
     }
 
     /**
-     * Binds a single property contained in the testCase object onto the object instance.
+     * Binds a single property contained in the {@link TestCase} instance onto the object instance.
      *
-     * There will be no warning if the property is not defined in the TestCase.
+     * There will be no warning if the property is not defined in the {@link TestCase}.
      * There will be no exception if the property will not be found in the object instance, just a warning.
      *
      * @param instance     Instance were the property should be injected
@@ -74,12 +74,8 @@ public final class PropertyBindingSupport {
      * @param propertyName Name of the property which should be injected
      */
     public static void bindOptionalProperty(Object instance, TestCase testCase, String propertyName) {
-        if (testCase == null) {
-            return;
-        }
-
-        String propertyValue = testCase.getProperty(propertyName);
-        if (propertyValue == null || propertyValue.isEmpty()) {
+        String propertyValue = getPropertyValue(testCase, propertyName);
+        if (propertyValue == null) {
             return;
         }
 
@@ -88,6 +84,27 @@ public final class PropertyBindingSupport {
         } catch (Exception e) {
             LOGGER.warn("Optional property could not be bound", e);
         }
+    }
+
+    /**
+     * Returns a single property contained in the {@link TestCase} instance.
+     *
+     * There will be no warning if the property is not defined in the {@link TestCase}.
+     *
+     * @param testCase     TestCase which contains
+     * @param propertyName Name of the property which should be injected
+     * @return Value of the property if found, {@code null} otherwise
+     */
+    public static String getPropertyValue(TestCase testCase, String propertyName) {
+        if (testCase == null) {
+            return null;
+        }
+
+        String propertyValue = testCase.getProperty(propertyName);
+        if (propertyValue == null || propertyValue.isEmpty()) {
+            return null;
+        }
+        return propertyValue;
     }
 
     static void bindProperty(Object object, String property, String value) {

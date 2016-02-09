@@ -44,7 +44,6 @@ public class AbstractWorkerTest {
     @Before
     public void setUp() {
         Map<String, String> properties = new HashMap<String, String>();
-        properties.put("logFrequency", "5");
         properties.put("threadCount", String.valueOf(THREAD_COUNT));
 
         test = new WorkerTest();
