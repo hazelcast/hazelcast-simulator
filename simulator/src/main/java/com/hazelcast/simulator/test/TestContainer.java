@@ -15,8 +15,10 @@
  */
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.ProbeImpl;
+import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -245,7 +247,16 @@ public class TestContainer {
     private void injectDependencies() {
         Field[] fields = testClassType.getDeclaredFields();
         for (Field field : fields) {
-            if (Probe.class.equals(field.getType())) {
+            Class<?> fieldType = field.getType();
+            if (TestContext.class.equals(fieldType)) {
+                if (field.isAnnotationPresent(InjectTestContext.class)) {
+                    setFieldValue(testClassInstance, field, testContext);
+                }
+            } else if (HazelcastInstance.class.equals(fieldType)) {
+                if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
+                    setFieldValue(testClassInstance, field, testContext.getTargetInstance());
+                }
+            } else if (Probe.class.equals(fieldType)) {
                 String probeName = getProbeName(field);
                 Probe probe = getOrCreateProbe(probeName, field);
                 setFieldValue(testClassInstance, field, probe);
