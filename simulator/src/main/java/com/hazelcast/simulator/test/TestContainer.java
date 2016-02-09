@@ -266,9 +266,8 @@ public class TestContainer {
         IWorker workerInstance = invokeMethod(testClassInstance, runMethod);
         Class<? extends IWorker> workerClass = workerInstance.getClass();
 
-        @SuppressWarnings("unchecked")
         Map<Field, Object> injectMap = getInjectMap(workerClass);
-        Map<Enum<?>, Probe> operationProbeMap = getOperationProbeMap(workerClass, workerInstance);
+        Map<Enum, Probe> operationProbeMap = getOperationProbeMap(workerClass, workerInstance);
 
         // everything is prepared, we can notify the outside world now
         testStartedTimestamp = System.currentTimeMillis();
@@ -281,7 +280,7 @@ public class TestContainer {
         worker.afterCompletion();
     }
 
-    private Map<Enum<?>, Probe> getOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
+    private Map<Enum, Probe> getOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
         if (!AbstractWorkerWithMultipleProbes.class.isAssignableFrom(workerClass)) {
             return null;
         }
@@ -289,7 +288,7 @@ public class TestContainer {
         // remove the default worker probe
         probeMap.remove(DEFAULT_WORKER_PROBE_NAME);
 
-        Map<Enum<?>, Probe> operationProbes = new HashMap<Enum<?>, Probe>();
+        Map<Enum, Probe> operationProbes = new HashMap<Enum, Probe>();
         for (Object object : ((AbstractWorkerWithMultipleProbes) worker).getOperations()) {
             Enum operation = (Enum) object;
             String probeName = capitalizeFully(operation.name(), '_').replace("_", "") + "Probe";
@@ -298,14 +297,13 @@ public class TestContainer {
         return operationProbes;
     }
 
-    @SuppressWarnings("unchecked")
-    private IWorker spawnWorkerThreads(int threadCount, Method method, Map<Field, Object> injectMap,
-                                       Map<Enum<?>, Probe> operationProbes) throws Exception {
+    private IWorker spawnWorkerThreads(int threadCount, Method runMethod, Map<Field, Object> injectMap,
+                                       Map<Enum, Probe> operationProbes) throws Exception {
         IWorker worker = null;
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            worker = invokeMethod(testClassInstance, method);
+            worker = invokeMethod(testClassInstance, runMethod);
             injectObjects(injectMap, worker);
             if (operationProbes != null) {
                 ((AbstractWorkerWithMultipleProbes) worker).setProbeMap(operationProbes);

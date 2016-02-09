@@ -33,7 +33,7 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extend
 
     private final OperationSelectorBuilder<O> operationSelectorBuilder;
 
-    private Map<Enum<O>, Probe> probeMap;
+    private Map<Enum, Probe> probeMap;
 
     public AbstractWorkerWithMultipleProbes(OperationSelectorBuilder<O> operationSelectorBuilder) {
         super(operationSelectorBuilder);
@@ -58,7 +58,7 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extend
      *
      * @param probeMap {@link Map} with individual probes per operation.
      */
-    public void setProbeMap(Map<Enum<O>, Probe> probeMap) {
+    public void setProbeMap(Map<Enum, Probe> probeMap) {
         this.probeMap = probeMap;
     }
 
