@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -10,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -83,7 +86,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
 
     @Test
     public void testRunWithWorker_withLocalIWorkerImplementation() throws Exception {
-        final RunWithIWorkerTest test = new RunWithIWorkerTest();
+        final RunWithIWorkerTest test = new RunWithIWorkerTest(testContext.getTargetInstance());
         testContainer = createTestContainer(test);
         Thread testStopper = new Thread() {
             @Override
@@ -104,15 +107,26 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
 
     private static class RunWithIWorkerTest {
 
+        private final HazelcastInstance hazelcastInstance;
+
         volatile boolean runWithWorkerCalled;
+
+        RunWithIWorkerTest(HazelcastInstance hazelcastInstance) {
+            this.hazelcastInstance = hazelcastInstance;
+        }
 
         @RunWithWorker
         IWorker createWorker() {
             return new IWorker() {
 
+                @InjectHazelcastInstance
+                HazelcastInstance injectedHazelcastInstance;
+
                 @Override
                 public void run() {
                     runWithWorkerCalled = true;
+
+                    assertEquals(hazelcastInstance, injectedHazelcastInstance);
                 }
 
                 @Override

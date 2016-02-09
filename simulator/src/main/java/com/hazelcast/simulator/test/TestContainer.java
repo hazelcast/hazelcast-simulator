@@ -265,7 +265,7 @@ public class TestContainer {
         isRunning = false;
     }
 
-    private void invokeRunWithWorkerMethod(Method method) throws Exception {
+    private void invokeRunWithWorkerMethod(Method runMethod) throws Exception {
         String threadCountProperty = getPropertyValue(testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
         int threadCount = (threadCountProperty == null ? DEFAULT_THREAD_COUNT : parseInt(threadCountProperty));
 
@@ -275,9 +275,10 @@ public class TestContainer {
         }
 
         // create instance to get class of worker
-        Class workerClass = invokeMethod(testClassInstance, method).getClass();
+        Class workerClass = invokeMethod(testClassInstance, runMethod).getClass();
 
         Field testContextField = getFirstField(workerClass, InjectTestContext.class);
+        Field hazelcastInstanceField = getFirstField(workerClass, InjectHazelcastInstance.class);
         Field workerProbeField = getFirstField(workerClass, InjectProbe.class);
 
         Probe probe = null;
@@ -290,7 +291,8 @@ public class TestContainer {
         isRunning = true;
 
         // spawn worker and wait for completion
-        IWorker worker = spawnWorkerThreads(method, testContextField, workerProbeField, probe, threadCount);
+        IWorker worker = spawnWorkerThreads(threadCount, runMethod, testContextField, hazelcastInstanceField, workerProbeField,
+                probe);
 
         // call the afterCompletion method on a single instance of the worker
         if (worker != null) {
@@ -298,8 +300,8 @@ public class TestContainer {
         }
     }
 
-    private IWorker spawnWorkerThreads(Method method, Field testContextField, Field workerProbeField, Probe probe,
-                                       int threadCount) throws Exception {
+    private IWorker spawnWorkerThreads(int threadCount, Method method, Field testContextField, Field hazelcastInstanceField,
+                                       Field workerProbeField, Probe probe) throws Exception {
         IWorker worker = null;
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
@@ -308,6 +310,9 @@ public class TestContainer {
 
             if (testContextField != null) {
                 setFieldValue(worker, testContextField, testContext);
+            }
+            if (hazelcastInstanceField != null) {
+                setFieldValue(worker, hazelcastInstanceField, testContext.getTargetInstance());
             }
             if (workerProbeField != null) {
                 setFieldValue(worker, workerProbeField, probe);
