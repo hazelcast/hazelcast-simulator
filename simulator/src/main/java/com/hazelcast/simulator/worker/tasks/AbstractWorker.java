@@ -29,13 +29,13 @@ import java.util.Random;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 
 /**
- * Abstract worker class which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
- * methods.
+ * Base implementation of {@link IWorker} which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker}
+ * annotated test methods.
  *
- * Implicitly logs and measures performance. The related properties can be overwritten with the properties of the test.
- * The Operation counter is automatically increased after each {@link #timeStep(Enum)} call.
+ * Implicitly measures throughput and latency with a built-in {@link Probe}.
+ * The operation counter is automatically increased after each call of {@link #timeStep(Enum)}.
  *
- * @param <O> Type of Enum used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
+ * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
 public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
@@ -58,7 +58,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     }
 
     /**
-     * This constructor is just for child classes who also override the {@link #run()} method.
+     * This constructor is for inherited classes which don't use the {@link OperationSelectorBuilder}.
      */
     AbstractWorker() {
         this.selector = null;

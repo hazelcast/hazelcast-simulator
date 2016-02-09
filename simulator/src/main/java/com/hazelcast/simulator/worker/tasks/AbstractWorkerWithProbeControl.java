@@ -23,6 +23,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  *
  * This worker provides a {@link #timeStep(Enum, Probe)} method with the built-in {@link Probe} as additional parameter.
  * This can be used to make a finer selection of the measured code block.
+ *
+ * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
 public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends AbstractWorker<O> {
 

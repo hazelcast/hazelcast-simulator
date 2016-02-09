@@ -19,9 +19,10 @@ package com.hazelcast.simulator.worker.tasks;
  * Interface for workers who are returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
  * methods.
  *
- * Your implementation will get the following (optional) fields injected by {@link com.hazelcast.simulator.test.TestContainer}:
- * {@link com.hazelcast.simulator.test.TestContext TestContext} testContext;
- * {@link com.hazelcast.simulator.probes.Probe Probe} workerProbe;
+ * The {@link com.hazelcast.simulator.test.TestContainer} supports the following injections for your implementation:
+ * {@link com.hazelcast.simulator.test.annotations.InjectTestContext}
+ * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
+ * {@link com.hazelcast.simulator.test.annotations.InjectProbe}
  */
 public interface IWorker extends Runnable {
 

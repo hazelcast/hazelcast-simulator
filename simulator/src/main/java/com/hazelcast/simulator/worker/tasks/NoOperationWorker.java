@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker.tasks;
 
 /**
- * Worker class which does nothing.
+ * Worker implementation which does nothing.
  *
  * Can be used on nodes which should not interact with the cluster.
  */
@@ -24,6 +24,6 @@ public final class NoOperationWorker extends AbstractMonotonicWorker {
 
     @Override
     protected void timeStep() throws Exception {
-        testContext.stop();
+        stopTestContext();
     }
 }
