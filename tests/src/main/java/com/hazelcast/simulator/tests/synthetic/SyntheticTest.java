@@ -30,10 +30,10 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
@@ -89,12 +89,12 @@ public class SyntheticTest {
     public int syncFrequency = 1;
     public String serviceName;
 
+    @InjectTestContext
+    private TestContext testContext;
+    @InjectHazelcastInstance
     private HazelcastInstance targetInstance;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-    }
+    @InjectProbe(useForThroughput = true)
+    public Probe probe;
 
     @Teardown
     public void teardown() {
@@ -108,12 +108,6 @@ public class SyntheticTest {
     }
 
     private class Worker implements IWorker, ExecutionCallback<Object> {
-
-        // these fields will be injected by the TestContainer
-        @InjectTestContext
-        public TestContext testContext;
-        @InjectProbe(useForThroughput = true)
-        public Probe workerProbe;
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();
         private final List<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
@@ -178,7 +172,7 @@ public class SyntheticTest {
         private void timeStep() throws Exception {
             ICompletableFuture<Object> future = invokeOnNextPartition();
             if (syncInvocation) {
-                workerProbe.started();
+                probe.started();
                 if (syncFrequency == 1) {
                     future.get();
                 } else {
@@ -190,7 +184,7 @@ public class SyntheticTest {
                         futureList.clear();
                     }
                 }
-                workerProbe.done();
+                probe.done();
             } else {
                 future.andThen(this);
             }
@@ -235,7 +229,7 @@ public class SyntheticTest {
 
         @Override
         public void onResponse(Object response) {
-            workerProbe.done();
+            probe.done();
         }
 
         @Override
