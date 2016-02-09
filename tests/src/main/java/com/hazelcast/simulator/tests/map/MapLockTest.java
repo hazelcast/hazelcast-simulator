@@ -43,7 +43,6 @@ public class MapLockTest {
 
     // properties
     public String basename = MapLockTest.class.getSimpleName();
-    public int threadCount = 3;
     public int keyCount = 1000;
 
     private IMap<Integer, Long> map;

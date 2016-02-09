@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 public class MapRaceTest {
 
     // properties
-    public int threadCount = 10;
     public String basename = MapRaceTest.class.getSimpleName();
     public int keyCount = 1000;
 

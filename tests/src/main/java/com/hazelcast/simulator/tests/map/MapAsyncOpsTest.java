@@ -47,7 +47,6 @@ public class MapAsyncOpsTest {
 
     // properties
     public String basename = MapAsyncOpsTest.class.getSimpleName();
-    public int threadCount = 3;
     public int keyCount = 10;
     public int maxTTLExpirySeconds = 3;
 

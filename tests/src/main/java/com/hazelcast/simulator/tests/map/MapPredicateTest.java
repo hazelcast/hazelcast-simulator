@@ -69,7 +69,6 @@ public class MapPredicateTest {
     private static final ILogger LOGGER = Logger.getLogger(MapPredicateTest.class);
 
     public String basename = MapPredicateTest.class.getSimpleName();
-    public int threadCount = 3;
     public int keyCount = 100;
     public int pageSize = 5;
 

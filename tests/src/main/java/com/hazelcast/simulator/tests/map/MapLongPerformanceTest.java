@@ -38,7 +38,6 @@ public class MapLongPerformanceTest {
 
     // properties
     public String basename = MapLongPerformanceTest.class.getSimpleName();
-    public int threadCount = 10;
     public int keyCount = 1000000;
     public double writeProb = 0.1;
 

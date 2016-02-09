@@ -56,7 +56,6 @@ public class ExpiryTest {
     private static final ILogger LOGGER = Logger.getLogger(ExpiryTest.class);
 
     public String basename = ExpiryTest.class.getSimpleName();
-    public int threadCount = 3;
     public int expiryDuration = 500;
     public int keyCount = 1000;
 

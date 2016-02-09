@@ -54,7 +54,6 @@ public class ReadWriteICacheTest {
     }
 
     public String basename = ReadWriteICacheTest.class.getSimpleName();
-    public int threadCount = 3;
     public int keyCount = 10;
     public double putProb = 0.4;
     public double getProb = 0.4;

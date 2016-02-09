@@ -54,7 +54,6 @@ public class MapSerializationTest {
 
     // properties
     public String basename = MapSerializationTest.class.getSimpleName();
-    public int threadCount = 10;
     public int keyCount = 1000000;
     public Serializer serializer = Serializer.SERIALIZABLE;
 
