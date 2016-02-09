@@ -51,7 +51,6 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFirstField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static java.lang.Integer.parseInt;
@@ -121,8 +120,8 @@ public class TestContainer {
         this.testContext = testContext;
         this.testCase = testCase;
 
-        initTestMethods();
         injectDependencies();
+        initTestMethods();
     }
 
     public TestContext getTestContext() {
@@ -157,6 +156,12 @@ public class TestContainer {
     // just for testing
     boolean hasProbe(String probeName) {
         return probeMap.keySet().contains(probeName);
+    }
+
+    private void injectDependencies() {
+        @SuppressWarnings("unchecked")
+        Map<Field, Object> injectMap = getInjectMap(testClassType);
+        injectObjects(injectMap, testClassInstance);
     }
 
     private void initTestMethods() {
@@ -224,32 +229,6 @@ public class TestContainer {
         testMethods.put(testPhase, method);
     }
 
-    private void injectDependencies() {
-        Field[] fields = testClassType.getDeclaredFields();
-        for (Field field : fields) {
-            Class<?> fieldType = field.getType();
-            if (field.isAnnotationPresent(InjectTestContext.class)) {
-                assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
-                setFieldValue(testClassInstance, field, testContext);
-            } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
-                assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
-                setFieldValue(testClassInstance, field, testContext.getTargetInstance());
-            } else if (field.isAnnotationPresent(InjectProbe.class)) {
-                assertFieldType(fieldType, Probe.class, InjectProbe.class);
-                String probeName = getProbeName(field);
-                Probe probe = getOrCreateProbe(probeName, field);
-                setFieldValue(testClassInstance, field, probe);
-            }
-        }
-    }
-
-    private void assertFieldType(Class<?> fieldType, Class<?> expectedFieldType, Class<? extends Annotation> annotation) {
-        if (!expectedFieldType.equals(fieldType)) {
-            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
-                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
-        }
-    }
-
     private Probe getOrCreateProbe(String probeName, Field field) {
         Probe probe = probeMap.get(probeName);
         if (probe == null) {
@@ -286,23 +265,15 @@ public class TestContainer {
         // create instance to get class of worker
         Class workerClass = invokeMethod(testClassInstance, runMethod).getClass();
 
-        Field testContextField = getFirstField(workerClass, InjectTestContext.class);
-        Field hazelcastInstanceField = getFirstField(workerClass, InjectHazelcastInstance.class);
-        Field workerProbeField = getFirstField(workerClass, InjectProbe.class);
-
-        Probe probe = null;
-        if (workerProbeField != null) {
-            // create one probe per test and inject it in all worker instances of the test
-            probe = getOrCreateProbe(testContext.getTestId() + "WorkerProbe", workerProbeField);
-        }
+        @SuppressWarnings("unchecked")
+        Map<Field, Object> injectMap = getInjectMap(workerClass);
 
         // everything is prepared, we can notify the outside world now
         testStartedTimestamp = System.currentTimeMillis();
         isRunning = true;
 
         // spawn worker and wait for completion
-        IWorker worker = spawnWorkerThreads(threadCount, runMethod, testContextField, hazelcastInstanceField, workerProbeField,
-                probe);
+        IWorker worker = spawnWorkerThreads(threadCount, runMethod, injectMap);
 
         // call the afterCompletion method on a single instance of the worker
         if (worker != null) {
@@ -310,28 +281,54 @@ public class TestContainer {
         }
     }
 
-    private IWorker spawnWorkerThreads(int threadCount, Method method, Field testContextField, Field hazelcastInstanceField,
-                                       Field workerProbeField, Probe probe) throws Exception {
+    private IWorker spawnWorkerThreads(int threadCount, Method method, Map<Field, Object> injectMap) throws Exception {
         IWorker worker = null;
 
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             worker = invokeMethod(testClassInstance, method);
-
-            if (testContextField != null) {
-                setFieldValue(worker, testContextField, testContext);
-            }
-            if (hazelcastInstanceField != null) {
-                setFieldValue(worker, hazelcastInstanceField, testContext.getTargetInstance());
-            }
-            if (workerProbeField != null) {
-                setFieldValue(worker, workerProbeField, probe);
-            }
+            injectObjects(injectMap, worker);
 
             spawner.spawn(worker);
         }
         spawner.awaitCompletion();
 
         return worker;
+    }
+
+    private Map<Field, Object> getInjectMap(Class<?> classType) {
+        Map<Field, Object> injectMap = new HashMap<Field, Object>();
+        do {
+            for (Field field : classType.getDeclaredFields()) {
+                Class<?> fieldType = field.getType();
+                if (field.isAnnotationPresent(InjectTestContext.class)) {
+                    assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
+                    injectMap.put(field, testContext);
+                } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
+                    assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
+                    injectMap.put(field, testContext.getTargetInstance());
+                } else if (field.isAnnotationPresent(InjectProbe.class)) {
+                    assertFieldType(fieldType, Probe.class, InjectProbe.class);
+                    String probeName = getProbeName(field);
+                    Probe probe = getOrCreateProbe(probeName, field);
+                    injectMap.put(field, probe);
+                }
+            }
+            classType = classType.getSuperclass();
+        } while (classType != null);
+        return injectMap;
+    }
+
+    private static void assertFieldType(Class<?> fieldType, Class<?> expectedFieldType, Class<? extends Annotation> annotation) {
+        if (!expectedFieldType.equals(fieldType)) {
+            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
+                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
+        }
+    }
+
+    private static void injectObjects(Map<Field, Object> injectMap, Object worker) {
+        for (Map.Entry<Field, Object> entry : injectMap.entrySet()) {
+            setFieldValue(worker, entry.getKey(), entry.getValue());
+        }
     }
 }
