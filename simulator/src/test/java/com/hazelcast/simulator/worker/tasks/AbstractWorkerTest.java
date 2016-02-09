@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 public class AbstractWorkerTest {
 
     private static final int THREAD_COUNT = 3;
+    private static final int ITERATION_COUNT = 10;
     private static final int DEFAULT_TEST_TIMEOUT = 30000;
 
     private enum Operation {
@@ -81,6 +82,7 @@ public class AbstractWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(i + ".exception").exists());
         }
+        assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -124,7 +126,8 @@ public class AbstractWorkerTest {
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);
 
-        assertEquals(10, test.testIteration);
+        assertEquals(ITERATION_COUNT, test.testIteration);
+        assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
     private static class WorkerTest {
@@ -174,7 +177,7 @@ public class AbstractWorkerTest {
                         stopTestContext();
                         break;
                     case ITERATION:
-                        if (getIteration() == 10) {
+                        if (getIteration() == ITERATION_COUNT) {
                             testIteration = getIteration();
                             stopTestContext();
                         }

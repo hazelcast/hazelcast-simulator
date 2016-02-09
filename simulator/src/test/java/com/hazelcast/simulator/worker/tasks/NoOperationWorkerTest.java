@@ -33,7 +33,7 @@ public class NoOperationWorkerTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testRun_withException() throws Exception {
+    public void testRun() throws Exception {
         testContainer.invoke(TestPhase.RUN);
 
         assertEquals(THREAD_COUNT + 1, test.workerCreated);

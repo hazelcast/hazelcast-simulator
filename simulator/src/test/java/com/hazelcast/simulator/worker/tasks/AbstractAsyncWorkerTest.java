@@ -87,6 +87,7 @@ public class AbstractAsyncWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(i + ".exception").exists());
         }
+        assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -109,6 +110,7 @@ public class AbstractAsyncWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(i + ".exception").exists());
         }
+        assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
     private static class WorkerTest {
