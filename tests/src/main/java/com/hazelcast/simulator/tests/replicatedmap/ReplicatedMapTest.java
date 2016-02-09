@@ -22,7 +22,6 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -30,7 +29,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
@@ -56,13 +55,6 @@ public class ReplicatedMapTest {
 
     public double putProb = 0.45;
     public double getProb = 0.45;
-
-    @InjectProbe
-    private Probe putProbe;
-    @InjectProbe
-    private Probe getProbe;
-    @InjectProbe
-    private Probe removeProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -97,7 +89,7 @@ public class ReplicatedMapTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
 
         private final Metronome metronome = withFixedIntervalMs(intervalMs, metronomeType);
 
@@ -106,26 +98,27 @@ public class ReplicatedMapTest {
         }
 
         @Override
-        protected void timeStep(Operation operation) {
+        protected void timeStep(Operation operation, Probe probe) {
             metronome.waitForNext();
             int key = randomInt(keyCount);
+            long started;
 
             switch (operation) {
                 case PUT:
                     String value = randomValue();
-                    putProbe.started();
+                    started = System.nanoTime();
                     map.put(key, value);
-                    putProbe.done();
+                    probe.done(started);
                     break;
                 case GET:
-                    getProbe.started();
+                    started = System.nanoTime();
                     map.get(key);
-                    getProbe.done();
+                    probe.done(started);
                     break;
                 case REMOVE:
-                    removeProbe.started();
+                    started = System.nanoTime();
                     map.remove(key);
-                    removeProbe.done();
+                    probe.done(started);
                     break;
                 default:
                     throw new UnsupportedOperationException();

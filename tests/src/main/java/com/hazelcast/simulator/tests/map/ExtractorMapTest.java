@@ -27,7 +27,6 @@ import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -35,7 +34,7 @@ import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -62,9 +61,6 @@ public class ExtractorMapTest {
     public int indexValuesCount = 5;
     public double putProbability = 0.5;
     public boolean useIndex;
-
-    @InjectProbe
-    private Probe queryProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -104,35 +100,34 @@ public class ExtractorMapTest {
         return new Worker(operationSelectorBuilder);
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
 
         public Worker(OperationSelectorBuilder<Operation> operationSelectorBuilder) {
             super(operationSelectorBuilder);
         }
 
-        private int getRandomKey() {
-            return abs(randomInt(keyCount)) % indexValuesCount;
-        }
-
         @Override
-        protected void timeStep(Operation operation) throws Exception {
+        protected void timeStep(Operation operation, Probe probe) throws Exception {
             int key = getRandomKey();
+            long started;
 
             switch (operation) {
                 case PUT:
                     SillySequence sillySequence = new SillySequence(key, nestedValuesCount);
+                    started = System.nanoTime();
                     map.put(key, sillySequence);
+                    probe.done(started);
                     break;
                 case QUERY:
                     int index = key % nestedValuesCount;
                     String query = format("payloadFromExtractor[%d]", index);
                     Predicate predicate = Predicates.equal(query, key);
-                    queryProbe.started();
+                    started = System.nanoTime();
                     Collection<SillySequence> result = null;
                     try {
                         result = map.values(predicate);
                     } finally {
-                        queryProbe.done();
+                        probe.done(started);
                     }
                     THROTTLING_LOGGER.info(format("Query 'payloadFromExtractor[%d]= %d' returned %d results.", index, key,
                             result.size()));
@@ -143,6 +138,10 @@ public class ExtractorMapTest {
                 default:
                     throw new UnsupportedOperationException("Unsupported operation: " + operation);
             }
+        }
+
+        private int getRandomKey() {
+            return abs(randomInt(keyCount)) % indexValuesCount;
         }
 
         private void assertValidSequence(Integer key, SillySequence sillySequence) {

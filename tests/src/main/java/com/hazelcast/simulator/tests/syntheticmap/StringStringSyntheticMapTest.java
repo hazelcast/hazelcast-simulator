@@ -21,14 +21,13 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import java.util.Random;
 
@@ -56,11 +55,6 @@ public class StringStringSyntheticMapTest {
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;
-
-    @InjectProbe
-    private Probe putProbe;
-    @InjectProbe
-    private Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -105,27 +99,28 @@ public class StringStringSyntheticMapTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
 
         public Worker() {
             super(operationSelectorBuilder);
         }
 
         @Override
-        protected void timeStep(Operation operation) throws Exception {
+        protected void timeStep(Operation operation, Probe probe) throws Exception {
             String key = randomKey();
+            long started;
 
             switch (operation) {
                 case PUT:
                     String value = randomValue();
-                    putProbe.started();
+                    started = System.nanoTime();
                     map.put(key, value);
-                    putProbe.done();
+                    probe.done(started);
                     break;
                 case GET:
-                    getProbe.started();
+                    started = System.nanoTime();
                     map.get(key);
-                    getProbe.done();
+                    probe.done(started);
                     break;
                 default:
                     throw new UnsupportedOperationException();

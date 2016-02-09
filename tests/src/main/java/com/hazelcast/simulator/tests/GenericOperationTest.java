@@ -25,15 +25,15 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.InternalCompletableFuture;
+import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.UrgentSystemOperation;
 
@@ -57,11 +57,6 @@ public class GenericOperationTest {
     // properties
     public double priorityProb = 0.1;
     public int delayNs = 100 * 1000;
-
-    @InjectProbe
-    private Probe normalLatency;
-    @InjectProbe
-    private Probe priorityLatency;
 
     private OperationService operationService;
     private Address[] memberAddresses;
@@ -102,22 +97,22 @@ public class GenericOperationTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorker<PrioritySelector> {
+    private class Worker extends AbstractWorkerWithMultipleProbes<PrioritySelector> {
 
         public Worker() {
             super(operationSelectorBuilder);
         }
 
         @Override
-        protected void timeStep(PrioritySelector operationSelector) {
+        protected void timeStep(PrioritySelector operationSelector, Probe probe) {
             Address address = randomAddress();
 
             switch (operationSelector) {
                 case PRIORITY:
-                    invokePriorityOperation(address);
+                    invokeOperation(new GenericPriorityOperation(delayNs), address, probe);
                     break;
                 case NORMAL:
-                    invokeNormalOperation(address);
+                    invokeOperation(new GenericOperation(delayNs), address, probe);
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -128,20 +123,11 @@ public class GenericOperationTest {
             return memberAddresses[randomInt(memberAddresses.length)];
         }
 
-        private void invokeNormalOperation(Address address) {
-            GenericOperation operation = new GenericOperation(delayNs);
-            normalLatency.started();
+        private void invokeOperation(Operation operation, Address address, Probe probe) {
+            long started = System.nanoTime();
             InternalCompletableFuture future = operationService.invokeOnTarget(null, operation, address);
             future.getSafely();
-            normalLatency.done();
-        }
-
-        private void invokePriorityOperation(Address address) {
-            GenericPriorityOperation operation = new GenericPriorityOperation(delayNs);
-            priorityLatency.started();
-            InternalCompletableFuture future = operationService.invokeOnTarget(null, operation, address);
-            future.getSafely();
-            priorityLatency.done();
+            probe.done(started);
         }
     }
 

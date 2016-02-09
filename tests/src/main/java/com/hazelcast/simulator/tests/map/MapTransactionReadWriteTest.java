@@ -23,7 +23,6 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -32,7 +31,7 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
@@ -62,11 +61,6 @@ public class MapTransactionReadWriteTest {
 
     public double putProb = 0.1;
     public boolean useSet = false;
-
-    @InjectProbe
-    private Probe putProbe;
-    @InjectProbe
-    private Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
@@ -107,20 +101,21 @@ public class MapTransactionReadWriteTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
 
         public Worker() {
             super(builder);
         }
 
         @Override
-        public void timeStep(Operation operation) {
+        public void timeStep(Operation operation, Probe probe) {
             final int key = randomKey();
             final int value = randomValue();
+            long started;
 
             switch (operation) {
                 case PUT:
-                    putProbe.started();
+                    started = System.nanoTime();
                     targetInstance.executeTransaction(new TransactionalTask<Object>() {
                         @Override
                         public Object execute(TransactionalTaskContext transactionalTaskContext) {
@@ -133,10 +128,10 @@ public class MapTransactionReadWriteTest {
                             return null;
                         }
                     });
-                    putProbe.done();
+                    probe.done(started);
                     break;
                 case GET:
-                    getProbe.started();
+                    started = System.nanoTime();
                     targetInstance.executeTransaction(new TransactionalTask<Object>() {
                         @Override
                         public Object execute(TransactionalTaskContext transactionalTaskContext) {
@@ -145,7 +140,7 @@ public class MapTransactionReadWriteTest {
                             return null;
                         }
                     });
-                    getProbe.done();
+                    probe.done(started);
                     break;
                 default:
                     throw new UnsupportedOperationException();
