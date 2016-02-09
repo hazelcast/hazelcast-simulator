@@ -20,6 +20,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -51,9 +52,10 @@ public class IntByteMapTest {
     public KeyLocality keyLocality = KeyLocality.RANDOM;
     public double putProb = 0.3;
 
-    // probes
-    public Probe putProbe;
-    public Probe getProbe;
+    @InjectProbe
+    private Probe putProbe;
+    @InjectProbe
+    private Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 

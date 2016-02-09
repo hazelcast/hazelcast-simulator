@@ -22,6 +22,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -56,10 +57,12 @@ public class ReplicatedMapTest {
     public double putProb = 0.45;
     public double getProb = 0.45;
 
-    // probes
-    public Probe putProbe;
-    public Probe getProbe;
-    public Probe removeProbe;
+    @InjectProbe
+    private Probe putProbe;
+    @InjectProbe
+    private Probe getProbe;
+    @InjectProbe
+    private Probe removeProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 

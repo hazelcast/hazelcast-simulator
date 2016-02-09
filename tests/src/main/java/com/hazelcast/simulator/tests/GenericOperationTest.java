@@ -25,6 +25,7 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -57,9 +58,10 @@ public class GenericOperationTest {
     public double priorityProb = 0.1;
     public int delayNs = 100 * 1000;
 
-    // probes
-    public Probe normalLatency;
-    public Probe priorityLatency;
+    @InjectProbe
+    private Probe normalLatency;
+    @InjectProbe
+    private Probe priorityLatency;
 
     private OperationService operationService;
     private Address[] memberAddresses;

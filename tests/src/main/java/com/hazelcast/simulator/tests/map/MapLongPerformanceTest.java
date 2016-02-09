@@ -20,6 +20,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -41,8 +42,8 @@ public class MapLongPerformanceTest {
     public int keyCount = 1000000;
     public double writeProb = 0.1;
 
-    // probes
-    public Probe probe;
+    @InjectProbe
+    private Probe probe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 

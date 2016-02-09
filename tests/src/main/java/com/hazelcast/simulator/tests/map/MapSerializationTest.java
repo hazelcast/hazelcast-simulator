@@ -20,7 +20,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -56,9 +55,6 @@ public class MapSerializationTest {
     public String basename = MapSerializationTest.class.getSimpleName();
     public int keyCount = 1000000;
     public Serializer serializer = Serializer.SERIALIZABLE;
-
-    // probes
-    public Probe probe;
 
     private IMap<Integer, Object> map;
 

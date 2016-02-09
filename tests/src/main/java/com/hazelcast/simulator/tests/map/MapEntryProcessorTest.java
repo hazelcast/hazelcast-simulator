@@ -46,8 +46,8 @@ public class MapEntryProcessorTest {
     public int maxProcessorDelayMs = 0;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
 
-    @InjectProbe(useForThroughput = false)
-    public Probe probe;
+    @InjectProbe
+    private Probe probe;
 
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;

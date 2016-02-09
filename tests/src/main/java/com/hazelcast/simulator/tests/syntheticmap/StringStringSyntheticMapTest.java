@@ -21,6 +21,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -56,9 +57,10 @@ public class StringStringSyntheticMapTest {
 
     public double putProb = 0.1;
 
-    // probes
-    public Probe putProbe;
-    public Probe getProbe;
+    @InjectProbe
+    private Probe putProbe;
+    @InjectProbe
+    private Probe getProbe;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 

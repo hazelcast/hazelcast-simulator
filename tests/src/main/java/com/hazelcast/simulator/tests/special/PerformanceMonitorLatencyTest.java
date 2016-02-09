@@ -33,7 +33,7 @@ public class PerformanceMonitorLatencyTest {
     private static final long LATENCY_NANOS = TimeUnit.MICROSECONDS.toNanos(20);
 
     @InjectProbe(useForThroughput = true)
-    Probe latencyProbe;
+    Probe probe;
 
     private TestContext testContext;
 
@@ -45,7 +45,7 @@ public class PerformanceMonitorLatencyTest {
     @Run
     public void run() {
         while (!testContext.isStopped()) {
-            latencyProbe.recordValue(LATENCY_NANOS);
+            probe.recordValue(LATENCY_NANOS);
             sleepMillis(1);
         }
     }

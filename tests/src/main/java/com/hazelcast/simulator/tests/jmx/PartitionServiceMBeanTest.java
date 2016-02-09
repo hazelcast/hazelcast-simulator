@@ -21,6 +21,7 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -48,9 +49,10 @@ public class PartitionServiceMBeanTest {
     public int minNumberOfMembers = 0;
     public double isLocalMemberSafeProb = 0;
 
-    // probes
-    public Probe isLocalMemberSafeProbe;
-    public Probe isClusterSafe;
+    @InjectProbe
+    private Probe isLocalMemberSafeProbe;
+    @InjectProbe
+    private Probe isClusterSafe;
 
     private MBeanServer mBeanServer;
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();

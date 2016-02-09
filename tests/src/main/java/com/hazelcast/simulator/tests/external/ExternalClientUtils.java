@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
 
-public final class ExternalClientUtils {
+final class ExternalClientUtils {
 
     private static final int SET_COUNT_DOWN_LATCH_RETRIES = 5;
     private static final int EXPECTED_RESULTS_MAX_RETRIES = 60;
@@ -39,7 +39,7 @@ public final class ExternalClientUtils {
     private ExternalClientUtils() {
     }
 
-    public static void setCountDownLatch(ICountDownLatch countDownLatch, int value) {
+    static void setCountDownLatch(ICountDownLatch countDownLatch, int value) {
         if (value < 1) {
             fail("Value for CountDownLatch must be positive, but was: " + value);
         }
@@ -55,7 +55,7 @@ public final class ExternalClientUtils {
         }
     }
 
-    public static void getThroughputResults(HazelcastInstance hazelcastInstance, int expectedResultSize) {
+    static void getThroughputResults(HazelcastInstance hazelcastInstance, int expectedResultSize) {
         IList<String> throughputResults = getResultList(hazelcastInstance, "externalClientsThroughputResults",
                 expectedResultSize);
         int resultSize = throughputResults.size();
@@ -91,7 +91,7 @@ public final class ExternalClientUtils {
                 totalInvocations, avgDuration, performance));
     }
 
-    public static void getLatencyResults(HazelcastInstance hazelcastInstance, Probe probe, int expectedResultSize) {
+    static void getLatencyResults(HazelcastInstance hazelcastInstance, Probe probe, int expectedResultSize) {
         IList<String> latencyLists = getResultList(hazelcastInstance, "externalClientsLatencyResults", expectedResultSize);
 
         LOGGER.info(format("Collecting %d latency result lists...", latencyLists.size()));
@@ -105,7 +105,7 @@ public final class ExternalClientUtils {
         LOGGER.info("Done!");
     }
 
-    public static IList<String> getResultList(HazelcastInstance hazelcastInstance, String listName, int expectedResultSize) {
+    static IList<String> getResultList(HazelcastInstance hazelcastInstance, String listName, int expectedResultSize) {
         int lastSize = 0;
         int retries = 0;
         IList<String> resultList = hazelcastInstance.getList(listName);
