@@ -206,20 +206,13 @@ public class TestContainer {
             return arguments;
         }
 
-        boolean illegalArgumentFound = false;
-        boolean testContextFound = false;
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
             if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
-                illegalArgumentFound = true;
-                break;
+                throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found %s at position %d",
+                        testClassType.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName(), i));
             }
-            testContextFound = true;
             arguments[i] = testContext;
-        }
-        if (illegalArgumentFound || !testContextFound) {
-            throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s", testClassType, setupMethod,
-                    TestContext.class));
         }
         return arguments;
     }

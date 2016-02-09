@@ -58,6 +58,18 @@ public class TestContainer_SetupTest extends AbstractTestContainerTest {
     }
 
     @Test(expected = IllegalTestException.class)
+    public void testSetup_withObjectArgument() {
+        createTestContainer(new SetupWithObjectArgument());
+    }
+
+    private static class SetupWithObjectArgument extends BaseTest {
+
+        @Setup
+        public void setUp(Object object) {
+        }
+    }
+
+    @Test(expected = IllegalTestException.class)
     public void testSetup_withMixedSetupArguments() {
         createTestContainer(new MixedSetupArgumentsTest());
     }
