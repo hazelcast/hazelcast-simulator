@@ -28,7 +28,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         testContainer.invoke(TestPhase.RUN);
         Map<String, Probe> probeMap = testContainer.getProbeMap();
         assertTrue(probeMap.size() > 0);
-        assertTrue(probeMap.keySet().contains("probe"));
+        assertTrue(probeMap.containsKey("probe"));
     }
 
     @Test

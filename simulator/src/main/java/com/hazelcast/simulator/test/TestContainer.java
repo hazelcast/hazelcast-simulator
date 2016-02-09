@@ -158,7 +158,7 @@ public class TestContainer {
 
     // just for testing
     boolean hasProbe(String probeName) {
-        return probeMap.keySet().contains(probeName);
+        return probeMap.containsKey(probeName);
     }
 
     private void injectDependencies() {
