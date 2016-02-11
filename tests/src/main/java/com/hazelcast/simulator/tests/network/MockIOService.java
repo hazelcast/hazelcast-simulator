@@ -259,6 +259,7 @@ public class MockIOService implements IOService {
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     public void executeAsync(final Runnable runnable) {
         new Thread() {
             public void run() {
