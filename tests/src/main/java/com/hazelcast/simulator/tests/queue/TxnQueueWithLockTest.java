@@ -125,7 +125,7 @@ public class TxnQueueWithLockTest {
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
         assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
         assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
-        //assertEquals(total.committed - total.rolled, queue.size());
+        // TODO: check if we can re-enable this assert: assertEquals(total.committed - total.rolled, queue.size());
     }
 
     public static void main(String[] args) throws Exception {
