@@ -31,12 +31,11 @@ import java.util.Random;
 public class OperationSelector<T extends Enum<T>> {
 
     private final Random random = new Random();
-    private final T[] operations;
+    private final Object[] operations;
     private final int length;
 
-    @SuppressWarnings("unchecked")
     OperationSelector(Object[] operations) {
-        this.operations = (T[]) operations.clone();
+        this.operations = operations.clone();
         this.length = operations.length;
     }
 
@@ -45,8 +44,9 @@ public class OperationSelector<T extends Enum<T>> {
      *
      * @return selected operation
      */
+    @SuppressWarnings("unchecked")
     public T select() {
         int chance = random.nextInt(length);
-        return operations[chance];
+        return (T) operations[chance];
     }
 }
