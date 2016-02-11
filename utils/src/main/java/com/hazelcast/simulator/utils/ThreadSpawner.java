@@ -178,6 +178,7 @@ public class ThreadSpawner {
         }
 
         @Override
+        @SuppressWarnings("PMD.AvoidCatchingThrowable")
         public void run() {
             try {
                 super.run();
