@@ -34,8 +34,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -152,12 +152,19 @@ public class MapEntryListenerTest {
         }
         total.waitWhileListenerEventsIncrease(listener, 10);
 
-        LOGGER.info("Event counter for " + basename + " (actual / expected)"
-                + NEW_LINE + "add: " + listener.addCount.get() + " / " + total.addCount.get()
-                + NEW_LINE + "update: " + listener.updateCount.get() + " / " + total.updateCount.get()
-                + NEW_LINE + "remove: " + listener.removeCount.get() + " / " + total.removeCount.get()
-                + NEW_LINE + "evict: " + listener.evictCount.get() + " / " + total.evictCount.get()
-                + NEW_LINE + "mapSize: " + total.calculateMapSize(listener) + " / " + total.calculateMapSize());
+        LOGGER.info(format("Event counter for %s (actual / expected)"
+                        + "%n add: %d / %d"
+                        + "%n update: %d / %d"
+                        + "%n remove: %d / %d"
+                        + "%n evict: %d / %d"
+                        + "%n mapSize: %d / %d",
+                basename,
+                listener.addCount.get(), total.addCount.get(),
+                listener.updateCount.get(), total.updateCount.get(),
+                listener.removeCount.get(), total.removeCount.get(),
+                listener.evictCount.get(), total.evictCount.get(),
+                total.calculateMapSize(listener), total.calculateMapSize()
+        ));
 
         total.assertEventsEquals(listener);
     }
