@@ -110,7 +110,6 @@ public class TxnQueueWithLockTest {
     }
 
     @Verify(global = true)
-    @SuppressWarnings("squid:CommentedOutCodeLine")
     public void verify() {
         IQueue queue = instance.getQueue(basename + 'q');
         ILock firstLock = instance.getLock(basename + "l1");
@@ -126,8 +125,7 @@ public class TxnQueueWithLockTest {
         LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
         assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
         assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
-        // TODO: check if this assert can be re-enabled
-        //assertEquals(total.committed - total.rolled, queue.size());
+        // TODO: check if this assert can be re-enabled: assertEquals(total.committed - total.rolled, queue.size())
     }
 
     public static void main(String[] args) throws Exception {
