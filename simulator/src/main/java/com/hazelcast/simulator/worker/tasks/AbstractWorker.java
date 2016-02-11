@@ -39,15 +39,13 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
  */
 public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
-    public static final String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
-
     protected static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
     final OperationSelector<O> selector;
 
     @InjectTestContext
     TestContext testContext;
-    @InjectProbe(name = DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
+    @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
     Probe workerProbe;
 
     private final Random random = new Random();

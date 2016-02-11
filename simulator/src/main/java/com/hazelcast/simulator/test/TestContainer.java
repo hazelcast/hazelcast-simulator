@@ -32,7 +32,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
+import com.hazelcast.simulator.worker.tasks.IMultipleProbesWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.apache.log4j.Logger;
 
@@ -54,7 +54,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughp
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
-import static com.hazelcast.simulator.worker.tasks.AbstractWorker.DEFAULT_WORKER_PROBE_NAME;
+import static com.hazelcast.simulator.worker.tasks.IWorker.DEFAULT_WORKER_PROBE_NAME;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
@@ -162,7 +162,6 @@ public class TestContainer {
     }
 
     private void injectDependencies() {
-        @SuppressWarnings("unchecked")
         Map<Field, Object> injectMap = getInjectMap(testClassType);
         injectObjects(injectMap, testClassInstance);
     }
@@ -281,7 +280,7 @@ public class TestContainer {
     }
 
     private Map<Enum, Probe> getOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
-        if (!AbstractWorkerWithMultipleProbes.class.isAssignableFrom(workerClass)) {
+        if (!IMultipleProbesWorker.class.isAssignableFrom(workerClass)) {
             return null;
         }
 
@@ -289,8 +288,7 @@ public class TestContainer {
         probeMap.remove(DEFAULT_WORKER_PROBE_NAME);
 
         Map<Enum, Probe> operationProbes = new HashMap<Enum, Probe>();
-        for (Object object : ((AbstractWorkerWithMultipleProbes) worker).getOperations()) {
-            Enum operation = (Enum) object;
+        for (Enum operation : ((IMultipleProbesWorker) worker).getOperations()) {
             String probeName = capitalizeFully(operation.name(), '_').replace("_", "") + "Probe";
             operationProbes.put(operation, getOrCreateProbe(probeName, true));
         }
@@ -306,7 +304,7 @@ public class TestContainer {
             worker = invokeMethod(testClassInstance, runMethod);
             injectObjects(injectMap, worker);
             if (operationProbes != null) {
-                ((AbstractWorkerWithMultipleProbes) worker).setProbeMap(operationProbes);
+                ((IMultipleProbesWorker) worker).setProbeMap(operationProbes);
             }
             spawner.spawn(worker);
         }
@@ -315,11 +313,11 @@ public class TestContainer {
         return worker;
     }
 
-    private Map<Field, Object> getInjectMap(Class<?> classType) {
+    private Map<Field, Object> getInjectMap(Class classType) {
         Map<Field, Object> injectMap = new HashMap<Field, Object>();
         do {
             for (Field field : classType.getDeclaredFields()) {
-                Class<?> fieldType = field.getType();
+                Class fieldType = field.getType();
                 if (field.isAnnotationPresent(InjectTestContext.class)) {
                     assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
                     injectMap.put(field, testContext);
@@ -338,7 +336,7 @@ public class TestContainer {
         return injectMap;
     }
 
-    private static void assertFieldType(Class<?> fieldType, Class<?> expectedFieldType, Class<? extends Annotation> annotation) {
+    private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {
         if (!expectedFieldType.equals(fieldType)) {
             throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
                     annotation.getName(), fieldType.getName(), expectedFieldType.getName()));

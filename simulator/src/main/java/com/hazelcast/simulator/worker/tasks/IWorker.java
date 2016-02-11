@@ -27,6 +27,12 @@ package com.hazelcast.simulator.worker.tasks;
 public interface IWorker extends Runnable {
 
     /**
+     * Name for the default {@link com.hazelcast.simulator.probes.Probe} which will be injected to the worker by the
+     * {@link com.hazelcast.simulator.test.TestContainer}.
+     */
+    String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
+
+    /**
      * Implement this method if you need to execute code once after all workers have finished their run phase.
      *
      * Will always be called by the {@link com.hazelcast.simulator.test.TestContainer}, regardless of errors in the run phase.

@@ -29,36 +29,25 @@ import java.util.Set;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
-public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extends AbstractWorker<O> {
+public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extends AbstractWorker<O>
+        implements IMultipleProbesWorker {
 
     private final OperationSelectorBuilder<O> operationSelectorBuilder;
 
-    private Map<Enum, Probe> probeMap;
+    private Map<? extends Enum, Probe> probeMap;
 
     public AbstractWorkerWithMultipleProbes(OperationSelectorBuilder<O> operationSelectorBuilder) {
         super(operationSelectorBuilder);
         this.operationSelectorBuilder = operationSelectorBuilder;
     }
 
-    /**
-     * Returns a set of all defined operations.
-     *
-     * Is used by the {@link com.hazelcast.simulator.test.TestContainer} and should not be called by the user.
-     *
-     * @return {@link Set<O>} of all defined operations.
-     */
-    public Set<O> getOperations() {
+    @Override
+    public Set<? extends Enum> getOperations() {
         return operationSelectorBuilder.getOperations();
     }
 
-    /**
-     * Sets the map with individual probes for each operation.
-     *
-     * Is used by the {@link com.hazelcast.simulator.test.TestContainer} and should not be called by the user.
-     *
-     * @param probeMap {@link Map} with individual probes per operation.
-     */
-    public void setProbeMap(Map<Enum, Probe> probeMap) {
+    @Override
+    public void setProbeMap(Map<? extends Enum, Probe> probeMap) {
         this.probeMap = probeMap;
     }
 
