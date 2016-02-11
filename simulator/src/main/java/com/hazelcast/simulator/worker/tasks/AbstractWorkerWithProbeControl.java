@@ -34,15 +34,9 @@ public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends 
 
     @Override
     protected void doRun() throws Exception {
-        beforeRun();
+        timeStep(getRandomOperation(), getWorkerProbe());
 
-        while (!testContext.isStopped() && !isWorkerStopped()) {
-            timeStep(selector.select(), workerProbe);
-
-            increaseIteration();
-        }
-
-        afterRun();
+        increaseIteration();
     }
 
     /**

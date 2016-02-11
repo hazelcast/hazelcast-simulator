@@ -25,17 +25,11 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
 
     @Override
     public final void doRun() throws Exception {
-        beforeRun();
+        long started = System.nanoTime();
+        timeStep();
+        getWorkerProbe().recordValue(System.nanoTime() - started);
 
-        while (!testContext.isStopped() && !isWorkerStopped()) {
-            long started = System.nanoTime();
-            timeStep();
-            workerProbe.recordValue(System.nanoTime() - started);
-
-            increaseIteration();
-        }
-
-        afterRun();
+        increaseIteration();
     }
 
     /**

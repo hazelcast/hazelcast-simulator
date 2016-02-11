@@ -41,14 +41,13 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     protected static final ILogger LOGGER = Logger.getLogger(AbstractWorker.class);
 
-    final OperationSelector<O> selector;
+    private final Random random = new Random();
+    private final OperationSelector<O> selector;
 
     @InjectTestContext
-    TestContext testContext;
+    private TestContext testContext;
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
-    Probe workerProbe;
-
-    private final Random random = new Random();
+    private Probe workerProbe;
 
     private long iteration;
     private boolean isWorkerStopped;
@@ -67,24 +66,22 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     @Override
     public final void run() {
         try {
-            doRun();
+            beforeRun();
+            while ((!testContext.isStopped() && !isWorkerStopped)) {
+                doRun();
+            }
+            afterRun();
         } catch (Exception e) {
             throw rethrow(e);
         }
     }
 
     protected void doRun() throws Exception {
-        beforeRun();
+        long started = System.nanoTime();
+        timeStep(selector.select());
+        workerProbe.recordValue(System.nanoTime() - started);
 
-        while (!testContext.isStopped() && !isWorkerStopped) {
-            long started = System.nanoTime();
-            timeStep(selector.select());
-            workerProbe.recordValue(System.nanoTime() - started);
-
-            increaseIteration();
-        }
-
-        afterRun();
+        increaseIteration();
     }
 
     /**
@@ -138,6 +135,15 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     }
 
     /**
+     * Returns the test ID from the {@link TestContext}.
+     *
+     * @return the test ID
+     */
+    protected String getTestId() {
+        return testContext.getTestId();
+    }
+
+    /**
      * Calls {@link Random#nextInt()} on an internal Random instance.
      *
      * @return the next pseudo random, uniformly distributed {@code int} value from this random number generator's sequence
@@ -180,7 +186,11 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         iteration++;
     }
 
-    boolean isWorkerStopped() {
-        return isWorkerStopped;
+    O getRandomOperation() {
+        return selector.select();
+    }
+
+    Probe getWorkerProbe() {
+        return workerProbe;
     }
 }

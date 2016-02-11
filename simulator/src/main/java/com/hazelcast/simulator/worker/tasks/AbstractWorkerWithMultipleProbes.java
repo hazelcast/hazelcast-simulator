@@ -53,18 +53,12 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extend
 
     @Override
     protected void doRun() throws Exception {
-        beforeRun();
+        O operation = getRandomOperation();
+        Probe probe = probeMap.get(operation);
 
-        while (!testContext.isStopped() && !isWorkerStopped()) {
-            O operation = selector.select();
-            Probe probe = probeMap.get(operation);
+        timeStep(operation, probe);
 
-            timeStep(operation, probe);
-
-            increaseIteration();
-        }
-
-        afterRun();
+        increaseIteration();
     }
 
     /**

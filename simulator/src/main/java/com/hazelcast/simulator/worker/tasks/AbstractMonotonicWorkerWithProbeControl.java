@@ -27,15 +27,9 @@ public abstract class AbstractMonotonicWorkerWithProbeControl extends AbstractWo
 
     @Override
     public final void doRun() throws Exception {
-        beforeRun();
+        timeStep(getWorkerProbe());
 
-        while (!testContext.isStopped() && !isWorkerStopped()) {
-            timeStep(workerProbe);
-
-            increaseIteration();
-        }
-
-        afterRun();
+        increaseIteration();
     }
 
     /**
