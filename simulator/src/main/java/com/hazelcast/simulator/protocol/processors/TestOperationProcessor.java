@@ -63,14 +63,14 @@ public class TestOperationProcessor extends OperationProcessor {
     private final TestContainer testContainer;
     private final SimulatorAddress testAddress;
 
-    public TestOperationProcessor(ExceptionLogger exceptionLogger, Worker worker, WorkerType type, String testId,
-                                  TestContainer testContainer, SimulatorAddress testAddress) {
+    public TestOperationProcessor(ExceptionLogger exceptionLogger, Worker worker, WorkerType type, TestContainer testContainer,
+                                  SimulatorAddress testAddress) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.worker = worker;
         this.type = type;
 
-        this.testId = testId;
+        this.testId = testContainer.getTestContext().getTestId();
         this.testContainer = testContainer;
         this.testAddress = testAddress;
 

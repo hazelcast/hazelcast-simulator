@@ -19,6 +19,7 @@ import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.util.ExceptionUtil;
@@ -36,6 +37,7 @@ import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -124,9 +126,12 @@ class ProtocolUtil {
                 worker, true);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
+        TestContainer testContainer = mock(TestContainer.class, RETURNS_DEEP_STUBS);
+        when(testContainer.getTestContext().getTestId()).thenReturn("ProtocolUtilTest");
+
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
-            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, MEMBER, "ProtocolUtilTest",
-                    null, workerConnector.getAddress().getChild(testIndex));
+            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, MEMBER, testContainer,
+                    workerConnector.getAddress().getChild(testIndex));
             workerConnector.addTest(testIndex, processor);
         }
 
