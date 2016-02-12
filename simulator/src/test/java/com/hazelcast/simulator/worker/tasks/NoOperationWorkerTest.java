@@ -1,15 +1,11 @@
 package com.hazelcast.simulator.worker.tasks;
 
-import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContextImpl;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -23,13 +19,9 @@ public class NoOperationWorkerTest {
 
     @Before
     public void setUp() {
-        Map<String, String> properties = new HashMap<String, String>();
-        properties.put("threadCount", String.valueOf(THREAD_COUNT));
-
         test = new WorkerTest();
         TestContextImpl testContext = new TestContextImpl("AbstractWorkerTest", null);
-        TestCase testCase = new TestCase("AbstractWorkerTest", properties);
-        testContainer = new TestContainer(testContext, testCase, test);
+        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

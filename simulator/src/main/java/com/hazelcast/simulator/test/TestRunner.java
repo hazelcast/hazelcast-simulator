@@ -48,7 +48,6 @@ public class TestRunner<E> {
     private static final Logger LOGGER = Logger.getLogger(TestRunner.class);
 
     private final E test;
-    private final TestCase testCase;
 
     private HazelcastInstance hazelcastInstance;
     private int durationSeconds = DEFAULT_DURATION_SECONDS;
@@ -64,10 +63,8 @@ public class TestRunner<E> {
         }
 
         if (properties != null) {
-            testCase = new TestCase("TestRunner", properties);
+            TestCase testCase = new TestCase("TestRunner", properties);
             bindProperties(test, testCase, null);
-        } else {
-            testCase = null;
         }
 
         this.test = test;
@@ -150,7 +147,7 @@ public class TestRunner<E> {
                 hazelcastInstance = Hazelcast.newHazelcastInstance();
             }
             TestContextImpl testContext = new TestContextImpl(hazelcastInstance);
-            TestContainer testInvoker = new TestContainer(testContext, testCase, test);
+            TestContainer testInvoker = new TestContainer(testContext, test);
 
             StopThread stopThread = new StopThread(testContext, sleepIntervalSeconds);
             try {

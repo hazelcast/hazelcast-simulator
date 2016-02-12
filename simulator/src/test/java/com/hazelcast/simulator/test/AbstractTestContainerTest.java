@@ -9,7 +9,6 @@ import static org.mockito.Mockito.mock;
 abstract class AbstractTestContainerTest {
 
     TestContext testContext = new TestContainerTestContext();
-    TestCase testCase = new TestCase("TestContainerTest");
 
     TestContainer testContainer;
 
@@ -26,7 +25,7 @@ abstract class AbstractTestContainerTest {
 
         @Override
         public String getTestId() {
-            return "TestContainerTestContext";
+            return "TestContainerTest";
         }
 
         @Override
@@ -41,7 +40,7 @@ abstract class AbstractTestContainerTest {
     }
 
     <T> TestContainer createTestContainer(T test) {
-        return new TestContainer(testContext, testCase, test);
+        return new TestContainer(testContext, test);
     }
 
     static class BaseTest {

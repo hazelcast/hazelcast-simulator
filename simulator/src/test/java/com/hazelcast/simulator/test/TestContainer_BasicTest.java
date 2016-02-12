@@ -3,28 +3,71 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.Test;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestContainer_BasicTest extends AbstractTestContainerTest {
 
-    @Test(expected = NullPointerException.class)
-    public void testConstructor_withNullTestObject() {
-        createTestContainer(null);
+    @Test
+    public void testConstructor_withTestcase() {
+        TestCase testCase = new TestCase("TestContainerNullContextTest");
+        testCase.setProperty("class", SuccessTest.class.getName());
+
+        testContainer = new TestContainer(testContext, testCase);
+
+        assertNotNull(testContainer.getTestInstance());
+        assertTrue(testContainer.getTestInstance() instanceof SuccessTest);
+    }
+
+    @Test
+    public void testConstructor_withTestClassInstance() {
+        SuccessTest test = new SuccessTest();
+        testContainer = new TestContainer(testContext, test);
+
+        assertEquals(test, testContainer.getTestInstance());
+        assertTrue(testContainer.getTestInstance() instanceof SuccessTest);
     }
 
     @Test(expected = NullPointerException.class)
-    public void testConstructor_withNullTestContext() {
-        new TestContainer(null, null);
+    public void testConstructor_withNullTestContext_withTestCase() {
+        TestCase testCase = new TestCase("TestContainerNullContextTest");
+        testCase.setProperty("class", SuccessTest.class.getName());
+
+        new TestContainer(null, testCase);
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_withNullTestContext_withTestClassInstance() {
-        new TestContainer(null, null, new BaseTest());
+        new TestContainer(null, new BaseTest());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructor_withNullTestContext_withTestClassInstance_withThreadCount() {
+        new TestContainer(null, new BaseTest(), 3);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructor_withNullTestClassInstance() {
+        new TestContainer(testContext, null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructor_withNullTestClassInstance_withThreadCount() {
+        new TestContainer(testContext, null, 3);
+    }
+
+    @Test
+    public void testGetTestInstance() {
+        BaseTest test = new BaseTest();
+        testContainer = createTestContainer(test);
+
+        assertEquals(test, testContainer.getTestInstance());
     }
 
     @Test
@@ -59,6 +102,13 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertFalse(testContainer.isRunning());
+    }
+
+    @Test
+    public void testGetProbeMap() {
+        testContainer = createTestContainer(new BaseTest());
+
+        assertEquals(0, testContainer.getProbeMap().size());
     }
 
     @Test

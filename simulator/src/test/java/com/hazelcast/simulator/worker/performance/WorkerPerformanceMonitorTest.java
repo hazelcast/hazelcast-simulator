@@ -152,7 +152,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void addTest(Object test, int delayMillis) {
-        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), null, test);
+        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test);
         tests.put(TEST_NAME, testContainer);
     }
 

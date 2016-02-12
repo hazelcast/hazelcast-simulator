@@ -12,7 +12,6 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Test;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.test.TestContainer_RunTest.MultiProbeWorkerTest.Operation.FIRST_OPERATION;
@@ -24,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TestContainer_RunTest extends AbstractTestContainerTest {
 
+    private static final int THREAD_COUNT = 3;
     private static final int ITERATION_COUNT = 10;
 
     @Test
@@ -60,12 +60,8 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
 
     @Test
     public void testRunWithWorker_withThreadCountZero() throws Exception {
-        Map<String, String> properties = new HashMap<String, String>();
-        properties.put("threadCount", "0");
-        testCase = new TestCase("TestContainerTest", properties);
-
         RunWithWorkerTest test = new RunWithWorkerTest();
-        testContainer = createTestContainer(test);
+        testContainer = new TestContainer(testContext, test, 0);
 
         testContainer.invoke(TestPhase.RUN);
 
@@ -146,8 +142,8 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
 
     @Test
     public void testRunWithWorker_withAbstractWorkerWithMultipleProbesWorker() throws Exception {
-        final MultiProbeWorkerTest test = new MultiProbeWorkerTest();
-        testContainer = createTestContainer(test);
+        MultiProbeWorkerTest test = new MultiProbeWorkerTest();
+        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);
@@ -162,7 +158,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         for (Probe probe : probeMap.values()) {
             totalCount += probe.getIntervalHistogram().getTotalCount();
         }
-        assertEquals(TestContainer.DEFAULT_THREAD_COUNT * ITERATION_COUNT, totalCount);
+        assertEquals(THREAD_COUNT * ITERATION_COUNT, totalCount);
     }
 
     static class MultiProbeWorkerTest {

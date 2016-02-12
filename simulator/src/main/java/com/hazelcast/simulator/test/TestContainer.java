@@ -66,7 +66,7 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
  */
 public class TestContainer {
 
-    static final int DEFAULT_THREAD_COUNT = 10;
+    private static final int DEFAULT_RUN_WITH_WORKER_THREAD_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
@@ -97,10 +97,10 @@ public class TestContainer {
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final Map<TestPhase, Method> testMethods = new HashMap<TestPhase, Method>();
 
+    private final TestContext testContext;
     private final Object testClassInstance;
     private final Class testClassType;
-    private final TestContext testContext;
-    private final TestCase testCase;
+    private final int runWithWorkerThreadCount;
 
     private boolean runWithWorker;
     private Object[] setupArguments;
@@ -109,21 +109,25 @@ public class TestContainer {
     private volatile boolean isRunning;
 
     public TestContainer(TestContext testContext, TestCase testCase) {
-        this(testContext, testCase, createTestClassInstance(testCase));
+        this(testContext, getTestClassInstance(testCase), getThreadCount(testCase));
     }
 
-    public TestContainer(TestContext testContext, TestCase testCase, Object testClassInstance) {
-        if (testClassInstance == null) {
-            throw new NullPointerException();
-        }
+    public TestContainer(TestContext testContext, Object testClassInstance) {
+        this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT);
+    }
+
+    public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount) {
         if (testContext == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("testContext cannot be null!");
+        }
+        if (testClassInstance == null) {
+            throw new NullPointerException("testClassInstance cannot be null!");
         }
 
+        this.testContext = testContext;
         this.testClassInstance = testClassInstance;
         this.testClassType = testClassInstance.getClass();
-        this.testContext = testContext;
-        this.testCase = testCase;
+        this.runWithWorkerThreadCount = runWithWorkerThreadCount;
 
         injectDependencies();
         initTestMethods();
@@ -259,11 +263,8 @@ public class TestContainer {
     }
 
     private void invokeRunWithWorkerMethod(Method runMethod) throws Exception {
-        String threadCountProperty = getPropertyValue(testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
-        int threadCount = (threadCountProperty == null ? DEFAULT_THREAD_COUNT : parseInt(threadCountProperty));
-
-        LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
-        if (threadCount <= 0) {
+        LOGGER.info(format("Spawning %d worker threads for test %s", runWithWorkerThreadCount, testContext.getTestId()));
+        if (runWithWorkerThreadCount <= 0) {
             return;
         }
 
@@ -279,7 +280,7 @@ public class TestContainer {
         isRunning = true;
 
         // spawn workers and wait for completion
-        IWorker worker = spawnWorkerThreads(threadCount, runMethod, injectMap, operationProbeMap);
+        IWorker worker = spawnWorkerThreads(runWithWorkerThreadCount, runMethod, injectMap, operationProbeMap);
 
         // call the afterCompletion() method on a single instance of the worker
         worker.afterCompletion();
@@ -342,7 +343,7 @@ public class TestContainer {
         return injectMap;
     }
 
-    private static Object createTestClassInstance(TestCase testCase) {
+    private static Object getTestClassInstance(TestCase testCase) {
         if (testCase == null) {
             throw new NullPointerException();
         }
@@ -356,6 +357,11 @@ public class TestContainer {
         }
         bindProperties(testObject, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
         return testObject;
+    }
+
+    private static int getThreadCount(TestCase testCase) {
+        String threadCountProperty = getPropertyValue(testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
+        return (threadCountProperty == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(threadCountProperty));
     }
 
     private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {

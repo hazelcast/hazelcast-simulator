@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.worker.tasks;
 
-import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -13,8 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertEquals;
@@ -36,13 +33,9 @@ public class AbstractMonotonicWorkerTest {
 
     @Before
     public void setUp() {
-        Map<String, String> properties = new HashMap<String, String>();
-        properties.put("threadCount", String.valueOf(THREAD_COUNT));
-
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerTest", null);
-        TestCase testCase = new TestCase("AbstractMonotonicWorkerTest", properties);
-        testContainer = new TestContainer(testContext, testCase, test);
+        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();
     }
