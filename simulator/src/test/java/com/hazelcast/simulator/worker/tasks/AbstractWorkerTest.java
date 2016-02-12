@@ -50,7 +50,7 @@ public class AbstractWorkerTest {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerTest", null);
         TestCase testCase = new TestCase("AbstractWorkerTest", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
 
         ExceptionReporter.reset();
     }

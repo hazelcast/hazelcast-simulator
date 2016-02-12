@@ -41,7 +41,7 @@ abstract class AbstractTestContainerTest {
     }
 
     <T> TestContainer createTestContainer(T test) {
-        return new TestContainer(test, testContext, testCase);
+        return new TestContainer(testContext, testCase, test);
     }
 
     static class BaseTest {

@@ -42,7 +42,7 @@ public class AbstractMonotonicWorkerTest {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerTest", null);
         TestCase testCase = new TestCase("AbstractMonotonicWorkerTest", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
 
         ExceptionReporter.reset();
     }

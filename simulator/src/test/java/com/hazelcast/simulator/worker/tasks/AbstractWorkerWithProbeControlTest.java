@@ -53,7 +53,7 @@ public class AbstractWorkerWithProbeControlTest {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerWithProbeControl", null);
         TestCase testCase = new TestCase("AbstractWorkerWithProbeControl", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
 
         ExceptionReporter.reset();
     }

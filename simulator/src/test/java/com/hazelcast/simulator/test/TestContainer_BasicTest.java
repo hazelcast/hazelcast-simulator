@@ -23,8 +23,8 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testConstructor_withTestClassInstance_withNullTestContext() {
-        new TestContainer(new BaseTest(), null, null);
+    public void testConstructor_withNullTestContext_withTestClassInstance() {
+        new TestContainer(null, null, new BaseTest());
     }
 
     @Test

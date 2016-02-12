@@ -53,7 +53,7 @@ public class AbstractWorkerWithMultipleProbesTest {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerWithMultipleProbesTest", null);
         TestCase testCase = new TestCase("AbstractWorkerWithMultipleProbesTest", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
 
         ExceptionReporter.reset();
     }

@@ -51,7 +51,7 @@ public class AbstractAsyncWorkerTest {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractAsyncWorkerTest", null);
         TestCase testCase = new TestCase("AbstractAsyncWorkerTest", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
 
         ExceptionReporter.reset();
     }

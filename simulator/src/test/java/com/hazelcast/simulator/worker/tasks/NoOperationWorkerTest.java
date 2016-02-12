@@ -29,7 +29,7 @@ public class NoOperationWorkerTest {
         test = new WorkerTest();
         TestContextImpl testContext = new TestContextImpl("AbstractWorkerTest", null);
         TestCase testCase = new TestCase("AbstractWorkerTest", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

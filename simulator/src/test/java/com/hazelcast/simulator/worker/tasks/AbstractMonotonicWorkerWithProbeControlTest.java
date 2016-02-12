@@ -47,7 +47,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerWithProbeControlTest", null);
         TestCase testCase = new TestCase("AbstractMonotonicWorkerWithProbeControlTest", properties);
-        testContainer = new TestContainer(test, testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, test);
 
         ExceptionReporter.reset();
     }

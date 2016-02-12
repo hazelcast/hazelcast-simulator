@@ -150,7 +150,7 @@ public class TestRunner<E> {
                 hazelcastInstance = Hazelcast.newHazelcastInstance();
             }
             TestContextImpl testContext = new TestContextImpl(hazelcastInstance);
-            TestContainer testInvoker = new TestContainer(test, testContext, testCase);
+            TestContainer testInvoker = new TestContainer(testContext, testCase, test);
 
             StopThread stopThread = new StopThread(testContext, sleepIntervalSeconds);
             try {

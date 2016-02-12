@@ -109,10 +109,10 @@ public class TestContainer {
     private volatile boolean isRunning;
 
     public TestContainer(TestContext testContext, TestCase testCase) {
-        this(createTestClassInstance(testCase), testContext, testCase);
+        this(testContext, testCase, createTestClassInstance(testCase));
     }
 
-    public TestContainer(Object testClassInstance, TestContext testContext, TestCase testCase) {
+    public TestContainer(TestContext testContext, TestCase testCase, Object testClassInstance) {
         if (testClassInstance == null) {
             throw new NullPointerException();
         }
