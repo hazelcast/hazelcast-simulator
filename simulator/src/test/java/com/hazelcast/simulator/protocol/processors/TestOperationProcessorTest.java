@@ -29,7 +29,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -195,10 +194,8 @@ public class TestOperationProcessorTest {
             TestCase testCase = new TestCase(testId);
             testCase.setProperty("class", testClass.getName());
 
-            Object testInstance = getClass().getClassLoader().loadClass(testCase.getClassname()).newInstance();
-            bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
             TestContextImpl testContext = new TestContextImpl(testId, null);
-            TestContainer testContainer = new TestContainer(testInstance, testContext, testCase);
+            TestContainer testContainer = new TestContainer(testContext, testCase);
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
 
             TestOperationProcessor.resetPendingTests();

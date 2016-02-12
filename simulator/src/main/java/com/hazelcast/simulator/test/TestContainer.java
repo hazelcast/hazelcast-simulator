@@ -51,6 +51,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
@@ -65,14 +66,11 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
  */
 public class TestContainer {
 
-    /**
-     * List of optional test properties, which are allowed to be defined in the properties file, but not in the test class.
-     */
-    public static final Set<String> OPTIONAL_TEST_PROPERTIES;
-
     static final int DEFAULT_THREAD_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
+
+    private static final Set<String> OPTIONAL_TEST_PROPERTIES;
 
     private enum OptionalTestProperties {
         THREAD_COUNT("threadCount");
@@ -110,21 +108,29 @@ public class TestContainer {
     private long testStartedTimestamp;
     private volatile boolean isRunning;
 
-    public TestContainer(Object testObject, TestContext testContext, TestCase testCase) {
-        if (testObject == null) {
+    public TestContainer(TestContext testContext, TestCase testCase) {
+        this(createTestClassInstance(testCase), testContext, testCase);
+    }
+
+    public TestContainer(Object testClassInstance, TestContext testContext, TestCase testCase) {
+        if (testClassInstance == null) {
             throw new NullPointerException();
         }
         if (testContext == null) {
             throw new NullPointerException();
         }
 
-        this.testClassInstance = testObject;
-        this.testClassType = testObject.getClass();
+        this.testClassInstance = testClassInstance;
+        this.testClassType = testClassInstance.getClass();
         this.testContext = testContext;
         this.testCase = testCase;
 
         injectDependencies();
         initTestMethods();
+    }
+
+    public Object getTestInstance() {
+        return testClassInstance;
     }
 
     public TestContext getTestContext() {
@@ -194,7 +200,7 @@ public class TestContainer {
             setTestMethod(Teardown.class, new TeardownFilter(false), TestPhase.LOCAL_TEARDOWN);
             setTestMethod(Teardown.class, new TeardownFilter(true), TestPhase.GLOBAL_TEARDOWN);
         } catch (Exception e) {
-            throw new IllegalTestException(e);
+            throw new IllegalTestException("Error during search for annotated test methods in" + testClassType.getName(), e);
         }
         if ((runMethod == null) == (runWithWorkerMethod == null)) {
             throw new IllegalTestException(format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
@@ -334,6 +340,22 @@ public class TestContainer {
             classType = classType.getSuperclass();
         } while (classType != null);
         return injectMap;
+    }
+
+    private static Object createTestClassInstance(TestCase testCase) {
+        if (testCase == null) {
+            throw new NullPointerException();
+        }
+        String classname = testCase.getClassname();
+        Object testObject;
+        try {
+            ClassLoader classLoader = TestContainer.class.getClassLoader();
+            testObject = classLoader.loadClass(classname).newInstance();
+        } catch (Exception e) {
+            throw new IllegalTestException("Could not create instance of " + classname, e);
+        }
+        bindProperties(testObject, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
+        return testObject;
     }
 
     private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {

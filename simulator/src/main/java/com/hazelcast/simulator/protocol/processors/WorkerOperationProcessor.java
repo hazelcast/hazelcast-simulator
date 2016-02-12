@@ -45,7 +45,6 @@ import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperatio
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_SYNC;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
 
@@ -146,7 +145,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         worker.shutdown(operation.isShutdownLog4j());
     }
 
-    private void processCreateTest(CreateTestOperation operation) throws Exception {
+    private void processCreateTest(CreateTestOperation operation) {
         TestCase testCase = operation.getTestCase();
         int testIndex = operation.getTestIndex();
         WorkerConnector workerConnector = worker.getWorkerConnector();
@@ -166,10 +165,8 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
         LOGGER.info(format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
 
-        Object testInstance = CreateTestOperation.class.getClassLoader().loadClass(testCase.getClassname()).newInstance();
-        bindProperties(testInstance, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
         TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
-        TestContainer testContainer = new TestContainer(testInstance, testContext, testCase);
+        TestContainer testContainer = new TestContainer(testContext, testCase);
         TestOperationProcessor processor = new TestOperationProcessor(exceptionLogger, worker, type, testId, testContainer,
                 workerAddress.getChild(testIndex));
 
@@ -177,7 +174,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
         tests.put(testId, testContainer);
 
         if (type == WorkerType.MEMBER) {
-            hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testInstance);
+            hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testContainer.getTestInstance());
         }
     }
 }

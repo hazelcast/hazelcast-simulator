@@ -12,6 +12,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
+import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.worker.Worker;
@@ -168,7 +169,7 @@ public class WorkerOperationProcessorTest {
         ResponseType responseType = runCreateTestOperation(defaultTestCase);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        exceptionLogger.assertException(ClassNotFoundException.class);
+        exceptionLogger.assertException(IllegalTestException.class);
     }
 
     private void setTestCaseClass(String className) {
