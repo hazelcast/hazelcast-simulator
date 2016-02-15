@@ -18,10 +18,13 @@ package com.hazelcast.simulator.protocol.operation;
 import com.hazelcast.simulator.test.TestPhase;
 
 /**
- * Notifies the Coordinator which {@link TestPhase} of a Simulator test is completed.
+ * Signals the Coordinator which {@link TestPhase} of a Simulator Test is completed.
  */
 public class PhaseCompletedOperation implements SimulatorOperation {
 
+    /**
+     * Defines the {@link TestPhase} which is completed.
+     */
     private final String testPhase;
 
     public PhaseCompletedOperation(TestPhase testPhase) {

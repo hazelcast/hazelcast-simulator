@@ -17,9 +17,22 @@ package com.hazelcast.simulator.protocol.operation;
 
 import java.util.Map;
 
+/**
+ * Sends a binary representation of {@link org.HdrHistogram.Histogram} of all {@link com.hazelcast.simulator.probes.Probe}
+ * instances of a Simulator Test to the Coordinator.
+ *
+ * There is one operation sent per Simulator Test, which contains all probes of that test.
+ */
 public class TestHistogramOperation implements SimulatorOperation {
 
+    /**
+     * Id of the Simulator Test.
+     */
     private final String testId;
+
+    /**
+     * Map of {@link org.HdrHistogram.Histogram} data per {@link com.hazelcast.simulator.probes.Probe}.
+     */
     private final Map<String, String> probeHistograms;
 
     public TestHistogramOperation(String testId, Map<String, String> probeHistograms) {
