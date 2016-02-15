@@ -41,7 +41,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,32 +66,10 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 public class TestContainer {
 
     private static final int DEFAULT_RUN_WITH_WORKER_THREAD_COUNT = 10;
+    private static final String THREAD_COUNT_PROPERTY_NAME = "threadCount";
+    private static final Set<String> OPTIONAL_TEST_PROPERTIES = Collections.singleton(THREAD_COUNT_PROPERTY_NAME);
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
-
-    private static final Set<String> OPTIONAL_TEST_PROPERTIES;
-
-    private enum OptionalTestProperties {
-        THREAD_COUNT("threadCount");
-
-        private final String propertyName;
-
-        OptionalTestProperties(String propertyName) {
-            this.propertyName = propertyName;
-        }
-
-        public String getPropertyName() {
-            return propertyName;
-        }
-    }
-
-    static {
-        Set<String> optionalTestProperties = new HashSet<String>();
-        for (OptionalTestProperties optionalTestProperty : OptionalTestProperties.values()) {
-            optionalTestProperties.add(optionalTestProperty.getPropertyName());
-        }
-        OPTIONAL_TEST_PROPERTIES = Collections.unmodifiableSet(optionalTestProperties);
-    }
 
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final Map<TestPhase, Method> testMethods = new HashMap<TestPhase, Method>();
@@ -360,7 +337,7 @@ public class TestContainer {
     }
 
     private static int getThreadCount(TestCase testCase) {
-        String threadCountProperty = getPropertyValue(testCase, OptionalTestProperties.THREAD_COUNT.getPropertyName());
+        String threadCountProperty = getPropertyValue(testCase, THREAD_COUNT_PROPERTY_NAME);
         return (threadCountProperty == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(threadCountProperty));
     }
 
