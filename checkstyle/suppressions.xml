@@ -25,9 +25,6 @@
     <suppress checks="JUnitTestCase" files="Test\.java$"/>
     <suppress checks="ExplicitInitialization" files="Test\.java$"/>
 
-    <!-- Simulator -->
-    <suppress checks="VisibilityModifier" files="/com/hazelcast/simulator/worker/commands/"/>
-
     <!-- Simulator tests -->
     <suppress checks="MagicNumber" files="/com/hazelcast/simulator/tests/"/>
     <suppress checks="VisibilityModifier" files="/com/hazelcast/simulator/tests/"/>
