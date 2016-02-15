@@ -15,9 +15,27 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+/**
+ * Initiates the shutdown process of the Worker.
+ */
 public class TerminateWorkerOperation implements SimulatorOperation {
 
+    /**
+     * Defines a delay for {@link com.hazelcast.simulator.worker.MemberWorker} for the shutdown, to give Hazelcast clients enough
+     * time to disconnect gracefully, before the Hazelcast members are gone.
+     *
+     * Client Workers can ignore this parameter.
+     */
     private final int memberWorkerShutdownDelaySeconds;
+
+    /**
+     * Defines if Java Workers should shutdown their log4j instances.
+     *
+     * This is done to flush the log files and must be prevented in integration tests, otherwise the logging will be gone in
+     * subsequent tests.
+     *
+     * Non-Java Workers can ignore this parameter.
+     */
     private final boolean shutdownLog4j;
 
     public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds, boolean shutdownLog4j) {

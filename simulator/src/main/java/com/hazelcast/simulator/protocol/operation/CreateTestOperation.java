@@ -20,12 +20,23 @@ import com.hazelcast.simulator.test.TestCase;
 import java.util.Map;
 
 /**
- * Creates a new Simulator test with the defined properties.
+ * Creates a Simulator Test based on an index, a testId and a property map.
  */
 public class CreateTestOperation implements SimulatorOperation {
 
+    /**
+     * Test index for the {@link com.hazelcast.simulator.protocol.core.SimulatorAddress}.
+     */
     private final int testIndex;
+
+    /**
+     * Test id for for {@link TestCase}.
+     */
     private final String testId;
+
+    /**
+     * Test parameters which are injected to public variables of the same name.
+     */
     private final Map<String, String> properties;
 
     public CreateTestOperation(int testIndex, TestCase testCase) {

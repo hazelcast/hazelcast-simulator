@@ -15,5 +15,11 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+/**
+ * Creates traffic on the wire, so the {@link com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor} on the Agent can
+ * see, that the Worker is still responsive.
+ *
+ * This is needed for long running test phases, which lead to a radio silence on the wire.
+ */
 public class PingOperation implements SimulatorOperation {
 }
