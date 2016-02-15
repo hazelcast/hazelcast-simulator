@@ -18,10 +18,13 @@ package com.hazelcast.simulator.protocol.operation;
 import com.hazelcast.simulator.test.TestPhase;
 
 /**
- * Starts a {@link TestPhase} of a Simulator test.
+ * Starts a {@link TestPhase} of the addressed Simulator Test.
  */
 public class StartTestPhaseOperation implements SimulatorOperation {
 
+    /**
+     * Defines the {@link TestPhase} which should be started.
+     */
     private final String testPhase;
 
     public StartTestPhaseOperation(TestPhase testPhase) {

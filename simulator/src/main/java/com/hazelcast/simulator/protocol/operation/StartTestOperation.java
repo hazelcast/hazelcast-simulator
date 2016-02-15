@@ -16,10 +16,16 @@
 package com.hazelcast.simulator.protocol.operation;
 
 /**
- * Starts the {@link com.hazelcast.simulator.test.TestPhase#RUN} of a Simulator test.
+ * Starts the {@link com.hazelcast.simulator.test.TestPhase#RUN} phase of a Simulator test.
  */
 public class StartTestOperation implements SimulatorOperation {
 
+    /**
+     * Defines if a {@link com.hazelcast.simulator.worker.MemberWorker} should execute the
+     * {@link com.hazelcast.simulator.test.TestPhase#RUN} phase.
+     *
+     * Can be ignored on client Workers.
+     */
     private final boolean isPassiveMember;
 
     public StartTestOperation(boolean isPassiveMember) {
