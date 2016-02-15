@@ -15,9 +15,12 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+/**
+ * Starts a ChaosMonkey on the target.
+ */
 public class ChaosMonkeyOperation implements SimulatorOperation {
 
-    public enum ChaosMonkeyType {
+    public enum Type {
         INTEGRATION_TEST,
         BLOCK_TRAFFIC,
         UNBLOCK_TRAFFIC,
@@ -27,13 +30,16 @@ public class ChaosMonkeyOperation implements SimulatorOperation {
         HARD_KILL
     }
 
+    /**
+     * {@link Type} of this operation.
+     */
     private final String type;
 
-    public ChaosMonkeyOperation(ChaosMonkeyType type) {
+    public ChaosMonkeyOperation(Type type) {
         this.type = type.name();
     }
 
-    public ChaosMonkeyType getType() {
-        return ChaosMonkeyType.valueOf(type);
+    public Type getType() {
+        return Type.valueOf(type);
     }
 }

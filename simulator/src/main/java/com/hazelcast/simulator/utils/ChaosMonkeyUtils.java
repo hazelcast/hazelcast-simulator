@@ -41,7 +41,7 @@ public final class ChaosMonkeyUtils {
     private ChaosMonkeyUtils() {
     }
 
-    public static void execute(ChaosMonkeyOperation.ChaosMonkeyType type) {
+    public static void execute(ChaosMonkeyOperation.Type type) {
         switch (type) {
             case INTEGRATION_TEST:
                 LOGGER.info("This is a NOOP for integration tests");

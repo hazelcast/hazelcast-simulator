@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.protocol.operation;
 
 /**
- * Operation for integration tests of the Simulator Protocol.
+ * Executes tasks for integration tests of the Simulator Protocol.
  */
 public class IntegrationTestOperation implements SimulatorOperation {
 
@@ -28,9 +28,19 @@ public class IntegrationTestOperation implements SimulatorOperation {
         DEEP_NESTED_ASYNC
     }
 
+    /**
+     * Test data which is used for the {@link Type#EQUALS} type.
+     */
     public static final String TEST_DATA = "IntegrationTestData";
 
-    private final String operation;
+    /**
+     * Defines the {@link Type} of this operation.
+     */
+    private final String type;
+
+    /**
+     * Defines the payload of this operation.
+     */
     private final String testData;
 
     public IntegrationTestOperation() {
@@ -42,12 +52,12 @@ public class IntegrationTestOperation implements SimulatorOperation {
     }
 
     public IntegrationTestOperation(Type type, String testData) {
-        this.operation = type.name();
+        this.type = type.name();
         this.testData = testData;
     }
 
     public Type getType() {
-        return Type.valueOf(operation);
+        return Type.valueOf(type);
     }
 
     public String getTestData() {

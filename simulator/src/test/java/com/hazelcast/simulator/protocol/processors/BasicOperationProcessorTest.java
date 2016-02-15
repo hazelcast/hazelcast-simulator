@@ -75,7 +75,7 @@ public class BasicOperationProcessorTest {
 
     @Test
     public void testChaosMonkey() {
-        ChaosMonkeyOperation operation = new ChaosMonkeyOperation(ChaosMonkeyOperation.ChaosMonkeyType.INTEGRATION_TEST);
+        ChaosMonkeyOperation operation = new ChaosMonkeyOperation(ChaosMonkeyOperation.Type.INTEGRATION_TEST);
 
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 

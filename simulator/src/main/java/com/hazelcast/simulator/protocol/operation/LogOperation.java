@@ -17,9 +17,19 @@ package com.hazelcast.simulator.protocol.operation;
 
 import org.apache.log4j.Level;
 
+/**
+ * Writes the message with the requested log level to the local logging framework.
+ */
 public class LogOperation implements SimulatorOperation {
 
+    /**
+     * Defines the message which should be logged.
+     */
     private final String message;
+
+    /**
+     * Defines the desired log level of the message.
+     */
     private final String level;
 
     public LogOperation(String message) {
