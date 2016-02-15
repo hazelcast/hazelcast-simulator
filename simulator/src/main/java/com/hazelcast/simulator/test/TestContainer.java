@@ -218,19 +218,6 @@ public class TestContainer {
         testMethods.put(testPhase, method);
     }
 
-    private Probe getOrCreateProbe(String probeName, Field field) {
-        return getOrCreateProbe(probeName, isThroughputProbe(field));
-    }
-
-    private Probe getOrCreateProbe(String probeName, boolean isThroughputProbe) {
-        Probe probe = probeMap.get(probeName);
-        if (probe == null) {
-            probe = new ProbeImpl(isThroughputProbe);
-            probeMap.put(probeName, probe);
-        }
-        return probe;
-    }
-
     private void invokeRun() throws Exception {
         try {
             Method method = testMethods.get(TestPhase.RUN);
@@ -270,6 +257,29 @@ public class TestContainer {
         worker.afterCompletion();
     }
 
+    private Map<Field, Object> getInjectMap(Class classType) {
+        Map<Field, Object> injectMap = new HashMap<Field, Object>();
+        do {
+            for (Field field : classType.getDeclaredFields()) {
+                Class fieldType = field.getType();
+                if (field.isAnnotationPresent(InjectTestContext.class)) {
+                    assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
+                    injectMap.put(field, testContext);
+                } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
+                    assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
+                    injectMap.put(field, testContext.getTargetInstance());
+                } else if (field.isAnnotationPresent(InjectProbe.class)) {
+                    assertFieldType(fieldType, Probe.class, InjectProbe.class);
+                    String probeName = getProbeName(field);
+                    Probe probe = getOrCreateProbe(probeName, isThroughputProbe(field));
+                    injectMap.put(field, probe);
+                }
+            }
+            classType = classType.getSuperclass();
+        } while (classType != null);
+        return injectMap;
+    }
+
     private Map<Enum, Probe> getOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
         if (!IMultipleProbesWorker.class.isAssignableFrom(workerClass)) {
             return null;
@@ -284,6 +294,15 @@ public class TestContainer {
             operationProbes.put(operation, getOrCreateProbe(probeName, true));
         }
         return operationProbes;
+    }
+
+    private Probe getOrCreateProbe(String probeName, boolean isThroughputProbe) {
+        Probe probe = probeMap.get(probeName);
+        if (probe == null) {
+            probe = new ProbeImpl(isThroughputProbe);
+            probeMap.put(probeName, probe);
+        }
+        return probe;
     }
 
     private IWorker spawnWorkerThreads(int threadCount, Method runMethod, Map<Field, Object> injectMap,
@@ -302,29 +321,6 @@ public class TestContainer {
         spawner.awaitCompletion();
 
         return worker;
-    }
-
-    private Map<Field, Object> getInjectMap(Class classType) {
-        Map<Field, Object> injectMap = new HashMap<Field, Object>();
-        do {
-            for (Field field : classType.getDeclaredFields()) {
-                Class fieldType = field.getType();
-                if (field.isAnnotationPresent(InjectTestContext.class)) {
-                    assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
-                    injectMap.put(field, testContext);
-                } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
-                    assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
-                    injectMap.put(field, testContext.getTargetInstance());
-                } else if (field.isAnnotationPresent(InjectProbe.class)) {
-                    assertFieldType(fieldType, Probe.class, InjectProbe.class);
-                    String probeName = getProbeName(field);
-                    Probe probe = getOrCreateProbe(probeName, field);
-                    injectMap.put(field, probe);
-                }
-            }
-            classType = classType.getSuperclass();
-        } while (classType != null);
-        return injectMap;
     }
 
     private static Object getTestClassInstance(TestCase testCase) {
