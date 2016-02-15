@@ -60,8 +60,15 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 /**
- * Since the test is based on annotations there is no API we can call easily.
- * That is the task of this test container.
+ * Container for test class instances.
+ *
+ * <ul>
+ * <li>Creates the test class instance by its fully qualified class name.</li>
+ * <li>Binds properties to the test class instance (test parameters).</li>
+ * <li>Injects required objects to annotated fields.</li>
+ * <li>Analyses the test class instance for annotated test phase methods.</li>
+ * <li>Provides a method to invoke test methods.</li>
+ * </ul>
  */
 public class TestContainer {
 
