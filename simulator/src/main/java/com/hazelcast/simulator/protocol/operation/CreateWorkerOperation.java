@@ -19,8 +19,14 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 
 import java.util.List;
 
+/**
+ * Creates one or more Simulator Workers, based on a list of {@link WorkerJvmSettings}.
+ */
 public class CreateWorkerOperation implements SimulatorOperation {
 
+    /**
+     * Defines a list of {@link WorkerJvmSettings} to create Simulator Workers.
+     */
     private final List<WorkerJvmSettings> settingsList;
 
     public CreateWorkerOperation(List<WorkerJvmSettings> settingsList) {

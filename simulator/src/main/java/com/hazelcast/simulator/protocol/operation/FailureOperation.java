@@ -23,6 +23,9 @@ import com.hazelcast.simulator.test.TestSuite;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
+/**
+ * Reports a Simulator Worker failure.
+ */
 public class FailureOperation implements SimulatorOperation {
 
     private final long timestamp = System.currentTimeMillis();
