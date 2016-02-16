@@ -127,9 +127,6 @@ public class AgentOperationProcessorTest {
         SimulatorOperation operation = new InitTestSuiteOperation(testSuite);
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
-        System.out.println(getSimulatorHome());
-        System.out.println(testSuiteDir.getAbsolutePath());
-
         assertEquals(SUCCESS, responseType);
         assertTrue(testSuiteDir.exists());
     }
