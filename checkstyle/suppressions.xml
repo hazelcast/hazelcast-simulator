@@ -6,11 +6,11 @@
 <suppressions>
 
     <!-- General -->
-    <suppress checks="JavadocMethod" files=".*"/>
-    <suppress checks="JavadocType" files=".*"/>
-    <suppress checks="JavadocMethod" files=".*"/>
-    <suppress checks="JavadocVariable" files=".*"/>
-    <suppress checks="JavadocPackage" files=".*"/>
+    <suppress checks="JavadocMethod" files=""/>
+    <suppress checks="JavadocType" files=""/>
+    <suppress checks="JavadocMethod" files=""/>
+    <suppress checks="JavadocVariable" files=""/>
+    <suppress checks="JavadocPackage" files=""/>
 
     <!-- Suppress duplicate checking of copyright notice -->
     <suppress checks="StrictDuplicateCode" files="\.java" lines="1-15"/>
@@ -19,18 +19,9 @@
     <suppress checks="Header" files="Zipfian.*\.java"/>
     <suppress checks="Header" files="IntegerGenerator\.java"/>
 
-    <!-- Suppress some checks for JUnit tests -->
-    <suppress checks="MethodName" files="Test\.java$"/>
-    <suppress checks="TypeName" files="Test\.java$"/>
-    <suppress checks="JUnitTestCase" files="Test\.java$"/>
-    <suppress checks="ExplicitInitialization" files="Test\.java$"/>
-
-    <!-- Simulator tests -->
-    <suppress checks="MagicNumber" files="/com/hazelcast/simulator/tests/"/>
-    <suppress checks="VisibilityModifier" files="/com/hazelcast/simulator/tests/"/>
-
-    <!-- Visualizer -->
-    <suppress checks="AvoidStarImport" files="com/hazelcast/simulator/visualizer/"/>
-    <suppress checks="MagicNumber" files="/com/hazelcast/simulator/visualizer/"/>
+    <!-- Simulator Tests -->
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/tests/"/>
+    <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
+              files="/com/hazelcast/simulator/tests/.*Test\.java$"/>
 
 </suppressions>
