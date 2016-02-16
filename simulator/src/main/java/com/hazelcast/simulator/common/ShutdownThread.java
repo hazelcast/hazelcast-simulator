@@ -28,24 +28,33 @@ public abstract class ShutdownThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(ShutdownThread.class);
 
-    private final CountDownLatch shutdownComplete = new CountDownLatch(1);
-
     private final AtomicBoolean shutdownStarted;
     private final boolean shutdownLog4j;
     private final long waitForShutdownTimeoutMillis;
+    private final CountDownLatch shutdownComplete;
 
     protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j) {
         this(name, shutdownStarted, shutdownLog4j, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
     }
 
-    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
+    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j, CountDownLatch shutdownComplete) {
+        this(name, shutdownStarted, shutdownLog4j, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS, shutdownComplete);
+    }
+
+    ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
                              long waitForShutdownTimeoutMillis) {
+        this(name, shutdownStarted, shutdownLog4j, waitForShutdownTimeoutMillis, new CountDownLatch(1));
+    }
+
+    private ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
+                             long waitForShutdownTimeoutMillis, CountDownLatch shutdownComplete) {
         super(name);
         setDaemon(false);
 
         this.shutdownStarted = shutdownStarted;
         this.shutdownLog4j = shutdownLog4j;
         this.waitForShutdownTimeoutMillis = waitForShutdownTimeoutMillis;
+        this.shutdownComplete = shutdownComplete;
     }
 
     public void awaitShutdown() throws Exception {

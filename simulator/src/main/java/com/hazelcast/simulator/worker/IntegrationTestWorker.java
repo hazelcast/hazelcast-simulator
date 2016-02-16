@@ -21,20 +21,25 @@ import com.hazelcast.simulator.utils.NativeUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 
 public final class IntegrationTestWorker implements Worker {
 
+    private static final int DEFAULT_TIMEOUT_SECONDS = 5;
+
     private static final Logger LOGGER = Logger.getLogger(IntegrationTestWorker.class);
 
-    private final IntegrationTestWorkerShutdownThread shutdownThread = new IntegrationTestWorkerShutdownThread();
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
+    private final CountDownLatch shutdownComplete = new CountDownLatch(1);
 
-    private IntegrationTestWorker() throws Exception {
+    IntegrationTestWorker() {
         LOGGER.info("Starting IntegrationTestWorker...");
 
-        Runtime.getRuntime().addShutdownHook(shutdownThread);
+        Runtime.getRuntime().addShutdownHook(new IntegrationTestWorkerShutdownThread(shutdownStarted, true, shutdownComplete));
 
         int pid = NativeUtils.getPID();
         LOGGER.info("PID: " + pid);
@@ -43,9 +48,11 @@ public final class IntegrationTestWorker implements Worker {
 
         File addressFile = new File("worker.address");
         writeText("127.0.0.1:5701", addressFile);
+    }
 
+    void awaitShutdown(int timeoutSeconds) throws Exception {
         LOGGER.info("Waiting for shutdown...");
-        boolean success = shutdownThread.awaitShutdownWithTimeout();
+        boolean success = shutdownComplete.await(timeoutSeconds, TimeUnit.SECONDS);
 
         if (success) {
             LOGGER.info("Done!");
@@ -56,7 +63,7 @@ public final class IntegrationTestWorker implements Worker {
 
     @Override
     public void shutdown(boolean shutdownLog4j) {
-        shutdownThread.start();
+        new IntegrationTestWorkerShutdownThread(shutdownStarted, false, shutdownComplete).start();
     }
 
     @Override
@@ -74,13 +81,15 @@ public final class IntegrationTestWorker implements Worker {
     }
 
     public static void main(String[] args) throws Exception {
-        new IntegrationTestWorker();
+        IntegrationTestWorker worker = new IntegrationTestWorker();
+        worker.awaitShutdown(DEFAULT_TIMEOUT_SECONDS);
     }
 
     private static final class IntegrationTestWorkerShutdownThread extends ShutdownThread {
 
-        private IntegrationTestWorkerShutdownThread() {
-            super("IntegrationTestWorkerShutdownThread", new AtomicBoolean(), true);
+        private IntegrationTestWorkerShutdownThread(AtomicBoolean shutdownStarted, boolean shutdownLog4j,
+                                                    CountDownLatch shutdownComplete) {
+            super("IntegrationTestWorkerShutdownThread", shutdownStarted, shutdownLog4j, shutdownComplete);
         }
 
         @Override
