@@ -30,6 +30,9 @@ import java.io.File;
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class MainUI extends JFrame {
 
+    private static final int WIDTH = 600;
+    private static final int HEIGHT = 400;
+
     private final Model model = new Model();
 
     private JMenuItem loadMenuItem;
@@ -44,7 +47,7 @@ public final class MainUI extends JFrame {
 
     private void createUI() {
         setTitle("Simulator Workbench");
-        setSize(600, 400);
+        setSize(WIDTH, HEIGHT);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationByPlatform(true);
         setVisible(true);
@@ -107,7 +110,7 @@ public final class MainUI extends JFrame {
 
         JMenuItem exitMenuItem = new JMenuItem("Exit");
         exitMenuItem.addActionListener(new ActionListener() {
-            @SuppressFBWarnings({"DM_EXIT"})
+            @SuppressFBWarnings("DM_EXIT")
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);

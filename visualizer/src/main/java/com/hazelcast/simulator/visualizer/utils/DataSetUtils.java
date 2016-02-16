@@ -22,6 +22,8 @@ import org.jfree.data.statistics.SimpleHistogramBin;
 
 public final class DataSetUtils {
 
+    private static final int PERCENTILE_FACTOR = 100;
+
     private DataSetUtils() {
     }
 
@@ -44,7 +46,7 @@ public final class DataSetUtils {
             }
         }
 
-        histogramDataSet.setAutoScaleValue(histogram.getValueAtPercentile(scalingPercentile * 100));
+        histogramDataSet.setAutoScaleValue(histogram.getValueAtPercentile(scalingPercentile * PERCENTILE_FACTOR));
         return histogramDataSet;
     }
 }
