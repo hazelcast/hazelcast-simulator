@@ -156,7 +156,7 @@ public class TestSuite {
         return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString, testSuiteId);
     }
 
-    @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
+    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
     private static Properties loadProperties(File file) {
         FileReader reader = null;
         try {

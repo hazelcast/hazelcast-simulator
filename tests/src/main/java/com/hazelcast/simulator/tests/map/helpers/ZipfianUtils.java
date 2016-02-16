@@ -50,7 +50,7 @@ final class ZipfianUtils {
     /**
      * Generate a random ASCII string of a given length.
      */
-    @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
+    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
     public static String generateASCIIString(int length) {
         int interval = '~' - ' ' + 1;
 

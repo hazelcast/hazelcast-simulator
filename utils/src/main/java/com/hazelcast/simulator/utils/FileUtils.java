@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.lang.String.format;
 
-@SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
+@SuppressFBWarnings("DM_DEFAULT_ENCODING")
 public final class FileUtils {
 
     public static final String USER_HOME = System.getProperty("user.home");
