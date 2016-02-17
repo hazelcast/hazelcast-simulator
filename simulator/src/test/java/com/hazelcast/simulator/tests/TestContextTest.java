@@ -20,7 +20,6 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,10 +37,8 @@ public class TestContextTest {
         assertNotNull(testContext.getTargetInstance());
         assertNotNull(testContext.getTestId());
         assertEquals(TestContext.LOCALHOST, testContext.getPublicIpAddress());
-        assertFalse(testContext.isStopped());
 
         testContext.stop();
-
         assertTrue(testContext.isStopped());
     }
 
