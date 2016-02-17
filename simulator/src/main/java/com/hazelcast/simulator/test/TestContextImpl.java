@@ -17,22 +17,26 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 
-import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
-
 public class TestContextImpl implements TestContext {
 
-    private final String testId;
     private final HazelcastInstance hazelcastInstance;
+    private final String testId;
+    private final String publicIpAddress;
 
     private volatile boolean stopped;
 
-    TestContextImpl(HazelcastInstance hazelcastInstance) {
-        this(newSecureUuidString(), hazelcastInstance);
+    public TestContextImpl(String testId) {
+        this(null, testId, LOCALHOST);
     }
 
-    public TestContextImpl(String testId, HazelcastInstance hazelcastInstance) {
-        this.testId = testId;
+    public TestContextImpl(HazelcastInstance hazelcastInstance, String testId) {
+        this(hazelcastInstance, testId, LOCALHOST);
+    }
+
+    public TestContextImpl(HazelcastInstance hazelcastInstance, String testId, String publicIpAddress) {
         this.hazelcastInstance = hazelcastInstance;
+        this.testId = testId;
+        this.publicIpAddress = publicIpAddress;
     }
 
     @Override
@@ -43,6 +47,11 @@ public class TestContextImpl implements TestContext {
     @Override
     public String getTestId() {
         return testId;
+    }
+
+    @Override
+    public String getPublicIpAddress() {
+        return publicIpAddress;
     }
 
     @Override

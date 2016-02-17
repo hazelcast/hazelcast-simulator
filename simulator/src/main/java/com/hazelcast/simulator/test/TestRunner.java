@@ -30,6 +30,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
 
 /**
@@ -146,7 +147,7 @@ public class TestRunner<E> {
             if (hazelcastInstance == null) {
                 hazelcastInstance = Hazelcast.newHazelcastInstance();
             }
-            TestContextImpl testContext = new TestContextImpl(hazelcastInstance);
+            TestContextImpl testContext = new TestContextImpl(hazelcastInstance, newUnsecureUuidString());
             TestContainer testInvoker = new TestContainer(testContext, test);
 
             StopThread stopThread = new StopThread(testContext, sleepIntervalSeconds);

@@ -182,6 +182,11 @@ public class WorkerPerformanceMonitorTest {
         }
 
         @Override
+        public String getPublicIpAddress() {
+            return LOCALHOST;
+        }
+
+        @Override
         public boolean isStopped() {
             return true;
         }

@@ -45,7 +45,7 @@ public class AbstractWorkerWithMultipleProbesTest {
     @Before
     public void setUp() {
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractWorkerWithMultipleProbesTest", null);
+        testContext = new TestContextImpl("AbstractWorkerWithMultipleProbesTest");
         testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();

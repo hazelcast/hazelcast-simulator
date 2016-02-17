@@ -19,9 +19,16 @@ import com.hazelcast.core.HazelcastInstance;
 
 public interface TestContext {
 
+    /**
+     * Default IP address which is used if no public IP address is defined.
+     */
+    String LOCALHOST = "127.0.0.1";
+
     HazelcastInstance getTargetInstance();
 
     String getTestId();
+
+    String getPublicIpAddress();
 
     boolean isStopped();
 

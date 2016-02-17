@@ -5,7 +5,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.tests.PropertiesTest;
 import com.hazelcast.simulator.tests.SuccessTest;
-import com.hazelcast.simulator.tests.TestContextImplTest;
+import com.hazelcast.simulator.tests.TestContextTest;
 import org.junit.After;
 import org.junit.Test;
 
@@ -59,6 +59,21 @@ public class TestRunnerTest {
     }
 
     @Test
+    public void testTestContext() throws Exception {
+        TestContextTest test = new TestContextTest();
+        TestRunner<TestContextTest> testRunner = new TestRunner<TestContextTest>(test);
+        HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance();
+
+        testRunner.withDuration(0).withHazelcastInstance(hazelcastInstance).run();
+
+        TestContext testContext = test.getTestContext();
+        assertNotNull(testContext);
+        assertEquals(hazelcastInstance, testContext.getTargetInstance());
+        assertNotNull(testContext.getTestId());
+        assertNotNull(testContext.getPublicIpAddress());
+    }
+
+    @Test
     public void testWithProperties() throws Exception {
         Map<String, String> properties = new HashMap<String, String>();
         properties.put("testProperty", "testValue");
@@ -73,20 +88,6 @@ public class TestRunnerTest {
 
         testRunner.run();
         assertEquals("testValue", propertiesTest.testProperty);
-    }
-
-    @Test
-    public void testTestContextImpl() throws Exception {
-        TestContextImplTest test = new TestContextImplTest();
-        TestRunner<TestContextImplTest> testRunner = new TestRunner<TestContextImplTest>(test);
-        HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance();
-
-        testRunner.withDuration(0).withHazelcastInstance(hazelcastInstance).run();
-
-        TestContext testContext = test.getTestContext();
-        assertNotNull(testContext);
-        assertNotNull(testContext.getTestId());
-        assertEquals(hazelcastInstance, testContext.getTargetInstance());
     }
 
     @Test

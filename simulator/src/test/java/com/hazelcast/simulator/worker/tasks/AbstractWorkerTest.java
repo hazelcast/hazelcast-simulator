@@ -42,7 +42,7 @@ public class AbstractWorkerTest {
     @Before
     public void setUp() {
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractWorkerTest", null);
+        testContext = new TestContextImpl("AbstractWorkerTest");
         testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();

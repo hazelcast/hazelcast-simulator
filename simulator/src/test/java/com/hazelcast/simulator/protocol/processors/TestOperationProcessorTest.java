@@ -28,6 +28,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.test.TestContext.LOCALHOST;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
@@ -194,7 +195,7 @@ public class TestOperationProcessorTest {
             TestCase testCase = new TestCase(testId);
             testCase.setProperty("class", testClass.getName());
 
-            TestContextImpl testContext = new TestContextImpl(testId, null);
+            TestContextImpl testContext = new TestContextImpl(null, testId, LOCALHOST);
             TestContainer testContainer = new TestContainer(testContext, testCase);
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
 

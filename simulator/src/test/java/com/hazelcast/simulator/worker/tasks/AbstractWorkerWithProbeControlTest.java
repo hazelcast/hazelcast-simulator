@@ -45,7 +45,7 @@ public class AbstractWorkerWithProbeControlTest {
     @Before
     public void setUp() {
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractWorkerWithProbeControl", null);
+        testContext = new TestContextImpl("AbstractWorkerWithProbeControl");
         testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();

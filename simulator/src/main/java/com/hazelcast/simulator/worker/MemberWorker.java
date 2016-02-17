@@ -127,6 +127,11 @@ public final class MemberWorker implements Worker {
         return workerConnector;
     }
 
+    @Override
+    public String getPublicIpAddress() {
+        return publicAddress;
+    }
+
     private HazelcastInstance getHazelcastInstance() throws Exception {
         HazelcastInstance instance = null;
         if (autoCreateHzInstance) {

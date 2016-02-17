@@ -34,7 +34,7 @@ public class AbstractMonotonicWorkerTest {
     @Before
     public void setUp() {
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractMonotonicWorkerTest", null);
+        testContext = new TestContextImpl("AbstractMonotonicWorkerTest");
         testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();

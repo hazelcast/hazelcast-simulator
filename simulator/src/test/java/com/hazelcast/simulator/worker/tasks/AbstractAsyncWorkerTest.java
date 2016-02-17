@@ -43,7 +43,7 @@ public class AbstractAsyncWorkerTest {
     @Before
     public void setUp() {
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractAsyncWorkerTest", null);
+        testContext = new TestContextImpl("AbstractAsyncWorkerTest");
         testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();

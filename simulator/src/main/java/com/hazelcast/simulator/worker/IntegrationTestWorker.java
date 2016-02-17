@@ -80,6 +80,11 @@ public final class IntegrationTestWorker implements Worker {
         return null;
     }
 
+    @Override
+    public String getPublicIpAddress() {
+        return null;
+    }
+
     public static void main(String[] args) throws Exception {
         IntegrationTestWorker worker = new IntegrationTestWorker();
         worker.awaitShutdown(DEFAULT_TIMEOUT_SECONDS);

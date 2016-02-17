@@ -20,7 +20,7 @@ public class NoOperationWorkerTest {
     @Before
     public void setUp() {
         test = new WorkerTest();
-        TestContextImpl testContext = new TestContextImpl("AbstractWorkerTest", null);
+        TestContextImpl testContext = new TestContextImpl("AbstractWorkerTest");
         testContainer = new TestContainer(testContext, test, THREAD_COUNT);
     }
 

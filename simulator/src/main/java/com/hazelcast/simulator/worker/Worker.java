@@ -26,4 +26,6 @@ public interface Worker {
     void shutdownPerformanceMonitor();
 
     WorkerConnector getWorkerConnector();
+
+    String getPublicIpAddress();
 }

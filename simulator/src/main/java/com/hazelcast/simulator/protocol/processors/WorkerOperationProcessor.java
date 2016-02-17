@@ -165,7 +165,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
         LOGGER.info(format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
 
-        TestContextImpl testContext = new TestContextImpl(testId, hazelcastInstance);
+        TestContextImpl testContext = new TestContextImpl(hazelcastInstance, testId, worker.getPublicIpAddress());
         TestContainer testContainer = new TestContainer(testContext, testCase);
         SimulatorAddress testAddress = workerAddress.getChild(testIndex);
         TestOperationProcessor processor = new TestOperationProcessor(exceptionLogger, worker, type, testContainer, testAddress);
