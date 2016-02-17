@@ -72,7 +72,7 @@ public class MemberWorkerTest {
 
     @Test
     public void testConstructor_MemberWorker() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, true, 10, MEMBER_CONFIG_FILE);
+        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, MEMBER_CONFIG_FILE, true, 10);
         assertMemberWorker();
     }
 
@@ -80,19 +80,19 @@ public class MemberWorkerTest {
     public void testConstructor_ClientWorker() throws Exception {
         Hazelcast.newHazelcastInstance();
 
-        worker = new MemberWorker(CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, true, 10, CLIENT_CONFIG_FILE);
+        worker = new MemberWorker(CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, CLIENT_CONFIG_FILE, true, 10);
         assertMemberWorker();
     }
 
     @Test
     public void testConstructor_noAutoCreateHzInstance() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, false, 10, "");
+        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
         assertMemberWorker();
     }
 
     @Test
     public void testConstructor_noAutoCreateHzInstance_withPerformanceMonitor() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, false, 10, "");
+        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
         assertMemberWorker();
 
         worker.startPerformanceMonitor();
@@ -101,7 +101,7 @@ public class MemberWorkerTest {
 
     @Test
     public void testConstructor_noAutoCreateHzInstance_withPerformanceMonitor_invalidInterval() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, false, 0, "");
+        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 0);
         assertMemberWorker();
 
         worker.startPerformanceMonitor();
@@ -125,6 +125,8 @@ public class MemberWorkerTest {
     }
 
     private void assertMemberWorker() {
+        assertEquals(PUBLIC_ADDRESS, worker.getPublicIpAddress());
+
         WorkerConnector workerConnector = worker.getWorkerConnector();
         assertEquals(WORKER_PORT, workerConnector.getPort());
 

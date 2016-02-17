@@ -15,15 +15,7 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.client.config.XmlClientConfigBuilder;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Partition;
-import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
@@ -40,10 +32,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
+import static com.hazelcast.simulator.utils.HazelcastUtils.createClientHazelcastInstance;
+import static com.hazelcast.simulator.utils.HazelcastUtils.createServerHazelcastInstance;
 import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
+import static com.hazelcast.simulator.utils.HazelcastUtils.warmupPartitions;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
@@ -52,9 +46,6 @@ import static java.lang.String.format;
 public final class MemberWorker implements Worker {
 
     private static final String DASHES = "---------------------------";
-
-    private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
-    private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
@@ -72,15 +63,15 @@ public final class MemberWorker implements Worker {
 
     private ShutdownThread shutdownThread;
 
-    MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort,
-                 boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds, String hConfigFile) throws Exception {
+    MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort, String hzConfigFile,
+                 boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds) throws Exception {
         SHUTDOWN_STARTED.set(false);
 
         this.type = type;
         this.publicAddress = publicAddress;
 
         this.autoCreateHzInstance = autoCreateHzInstance;
-        this.hzConfigFile = hConfigFile;
+        this.hzConfigFile = hzConfigFile;
 
         this.hazelcastInstance = getHazelcastInstance();
 
@@ -138,49 +129,16 @@ public final class MemberWorker implements Worker {
             logHeader("Creating " + type + " HazelcastInstance");
             switch (type) {
                 case CLIENT:
-                    instance = createClientHazelcastInstance();
+                    instance = createClientHazelcastInstance(hzConfigFile);
                     break;
                 default:
-                    instance = createServerHazelcastInstance();
+                    instance = createServerHazelcastInstance(hzConfigFile);
             }
             logHeader("Successfully created " + type + " HazelcastInstance");
 
             warmupPartitions(instance);
         }
         return instance;
-    }
-
-    private HazelcastInstance createServerHazelcastInstance() throws Exception {
-        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzConfigFile);
-        Config config = configBuilder.build();
-
-        return Hazelcast.newHazelcastInstance(config);
-    }
-
-    private HazelcastInstance createClientHazelcastInstance() throws Exception {
-        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(hzConfigFile);
-        ClientConfig clientConfig = configBuilder.build();
-
-        return HazelcastClient.newHazelcastClient(clientConfig);
-    }
-
-    private void warmupPartitions(HazelcastInstance hazelcastInstance) {
-        LOGGER.info("Waiting for partition warmup");
-
-        PartitionService partitionService = hazelcastInstance.getPartitionService();
-        long started = System.nanoTime();
-        for (Partition partition : partitionService.getPartitions()) {
-            if (System.nanoTime() - started > PARTITION_WARMUP_TIMEOUT_NANOS) {
-                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
-            }
-
-            while (partition.getOwner() == null) {
-                LOGGER.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
-                sleepMillisThrowException(PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS);
-            }
-        }
-
-        LOGGER.info("Partitions are warmed up successfully");
     }
 
     private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int intervalSeconds) {
@@ -237,8 +195,8 @@ public final class MemberWorker implements Worker {
         LOGGER.info("autoCreateHzInstance: " + autoCreateHzInstance);
         LOGGER.info("workerPerformanceMonitorIntervalSeconds: " + workerPerformanceMonitorIntervalSeconds);
 
-        MemberWorker worker = new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, autoCreateHzInstance,
-                workerPerformanceMonitorIntervalSeconds, hzConfigFile);
+        MemberWorker worker = new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, hzConfigFile,
+                autoCreateHzInstance, workerPerformanceMonitorIntervalSeconds);
 
         logHeader("Successfully started Hazelcast Worker #" + workerIndex);
 

@@ -15,9 +15,19 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.config.XmlClientConfigBuilder;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
+import com.hazelcast.simulator.worker.MemberWorker;
 import com.hazelcast.simulator.worker.WorkerType;
+import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
@@ -28,11 +38,50 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+
 public final class HazelcastUtils {
 
     private static final int TIMEOUT_SECONDS = 60;
+    private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
+    private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
+
+    private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
 
     private HazelcastUtils() {
+    }
+
+    public static HazelcastInstance createServerHazelcastInstance(String hzConfigFile) throws Exception {
+        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzConfigFile);
+        Config config = configBuilder.build();
+
+        return Hazelcast.newHazelcastInstance(config);
+    }
+
+    public static HazelcastInstance createClientHazelcastInstance(String hzConfigFile) throws Exception {
+        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(hzConfigFile);
+        ClientConfig clientConfig = configBuilder.build();
+
+        return HazelcastClient.newHazelcastClient(clientConfig);
+    }
+
+    public static void warmupPartitions(HazelcastInstance hazelcastInstance) {
+        LOGGER.info("Waiting for partition warmup");
+
+        PartitionService partitionService = hazelcastInstance.getPartitionService();
+        long started = System.nanoTime();
+        for (Partition partition : partitionService.getPartitions()) {
+            if (System.nanoTime() - started > PARTITION_WARMUP_TIMEOUT_NANOS) {
+                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
+            }
+
+            while (partition.getOwner() == null) {
+                LOGGER.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                sleepMillisThrowException(PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS);
+            }
+        }
+
+        LOGGER.info("Partitions are warmed up successfully");
     }
 
     public static boolean isMaster(final HazelcastInstance hazelcastInstance, ScheduledExecutorService executor,
