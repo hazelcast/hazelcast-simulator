@@ -52,4 +52,9 @@ public class IntegrationTestWorkerTest {
     public void testGetWorkerConnector() {
         assertNull(worker.getWorkerConnector());
     }
+
+    @Test
+    public void testGetPublicIpAddress() {
+        assertNull(worker.getPublicIpAddress());
+    }
 }
