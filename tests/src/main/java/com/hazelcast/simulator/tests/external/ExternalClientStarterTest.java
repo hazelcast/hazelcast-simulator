@@ -27,7 +27,6 @@ import com.hazelcast.simulator.utils.Bash;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.HostAddressPicker.pickHostAddress;
 import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 
@@ -43,9 +42,9 @@ public class ExternalClientStarterTest {
 
     private final SimulatorProperties properties = new SimulatorProperties();
     private final Bash bash = new Bash(properties);
-    private final String ipAddress = pickHostAddress();
 
     private HazelcastInstance hazelcastInstance;
+    private String ipAddress;
 
     @Setup
     public void setUp(TestContext testContext) {
@@ -53,6 +52,7 @@ public class ExternalClientStarterTest {
         if (isClient(hazelcastInstance)) {
             hazelcastInstance.getAtomicLong("externalClientsStarted").addAndGet(processCount);
         }
+        ipAddress = testContext.getPublicIpAddress();
 
         // delete the local binary, so it won't get downloaded again
         deleteQuiet(binaryName);

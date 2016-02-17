@@ -29,7 +29,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.utils.HostAddressPicker;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -199,8 +198,7 @@ public class FailingTest {
             case ALL:
                 return true;
             case ONE_PER_NODE:
-                String ipAddress = HostAddressPicker.pickHostAddress();
-                return (getMap(testContext).putIfAbsent(ipAddress, true) == null);
+                return (getMap(testContext).putIfAbsent(testContext.getPublicIpAddress(), true) == null);
             case ONE_PER_CLUSTER:
                 return (getMap(testContext).putIfAbsent(testContext.getTestId(), true) == null);
             default:
