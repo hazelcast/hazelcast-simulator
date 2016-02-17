@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker;
 
 /**
- * This class serves no other purpose than to provide a name in the jps listing that reflects that the JVM is a client JVM.
+ * This class serves no other purpose than to provide a name in the jps listing that reflects that the JVM is a Client Worker.
  * It has no other purpose and it will delegate all its work to the {@link MemberWorker} class.
  */
 public final class ClientWorker {
