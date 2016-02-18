@@ -16,8 +16,8 @@
     <suppress checks="StrictDuplicateCode" files="\.java" lines="1-15"/>
 
     <!-- Suppress checking of copyright notice -->
-    <suppress checks="Header" files="Zipfian.*\.java"/>
-    <suppress checks="Header" files="IntegerGenerator\.java"/>
+    <suppress checks="Header" files="Zipfian.*\.java$"/>
+    <suppress checks="Header" files="IntegerGenerator\.java$"/>
 
     <!-- Simulator Tests -->
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/tests/"/>
