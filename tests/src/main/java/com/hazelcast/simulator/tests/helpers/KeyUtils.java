@@ -26,6 +26,7 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
+import static java.lang.String.format;
 
 public final class KeyUtils {
 
@@ -61,12 +62,10 @@ public final class KeyUtils {
                 return new BalancedIntKeyGenerator(hz, keyLocality, keyCount);
             case RANDOM:
                 return new BalancedIntKeyGenerator(hz, keyLocality, keyCount);
-            case SHARED:
-                return new SharedIntKeyGenerator();
             case SINGLE_PARTITION:
                 return new SinglePartitionIntKeyGenerator();
             default:
-                throw new IllegalStateException("Unrecognized keyLocality:" + keyLocality);
+                return new SharedIntKeyGenerator();
         }
     }
 
@@ -79,12 +78,10 @@ public final class KeyUtils {
                 return new BalancedStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
             case RANDOM:
                 return new BalancedStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
-            case SHARED:
-                return new SharedStringKeyGenerator(keyCount, keyLength, prefix);
             case SINGLE_PARTITION:
                 return new SinglePartitionStringKeyGenerator(keyLength, prefix);
             default:
-                throw new IllegalStateException("Unrecognized keyLocality:" + keyLocality);
+                return new SharedStringKeyGenerator(keyLength, prefix);
         }
     }
 
@@ -166,11 +163,10 @@ public final class KeyUtils {
      */
     public static String[] generateStringKeys(String prefix, int keyCount, int keyLength, KeyLocality keyLocality,
                                               HazelcastInstance hz) {
-
         String[] keys = new String[keyCount];
         KeyGenerator<String> keyGenerator = newStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
-        for (int k = 0; k < keys.length; k++) {
-            keys[k] = keyGenerator.next();
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = keyGenerator.next();
         }
 
         return keys;
@@ -181,6 +177,7 @@ public final class KeyUtils {
     }
 
     private abstract static class BalancedKeyGenerator<K> implements KeyGenerator<K> {
+
         protected final Random random = new Random();
         protected final HazelcastInstance hz;
         protected final int keyCount;
@@ -188,14 +185,13 @@ public final class KeyUtils {
         private final Set<K>[] keysPerPartition;
         private final PartitionService partitionService;
         private final int maxKeysPerPartition;
-        private final Member localMember;
         private final KeyLocality keyLocality;
 
+        @SuppressWarnings("unchecked")
         private BalancedKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount) {
             this.hz = hz;
             this.keyLocality = keyLocality;
             this.keyCount = keyCount;
-            this.localMember = getLocalMember(hz);
 
             this.partitionService = hz.getPartitionService();
 
@@ -206,15 +202,6 @@ public final class KeyUtils {
             this.keysPerPartition = new Set[partitionCount];
             for (Integer partitionId : targetPartitions) {
                 keysPerPartition[partitionId] = new HashSet<K>();
-            }
-        }
-
-        private Member getLocalMember(HazelcastInstance hz) {
-            try {
-                return hz.getCluster().getLocalMember();
-            } catch (UnsupportedOperationException ignore) {
-                // clients throw UnsupportedOperationExceptions.
-                return null;
             }
         }
 
@@ -273,6 +260,15 @@ public final class KeyUtils {
             }
             return targetPartitions;
         }
+
+        private Member getLocalMember(HazelcastInstance hz) {
+            try {
+                return hz.getCluster().getLocalMember();
+            } catch (UnsupportedOperationException ignore) {
+                // clients throw UnsupportedOperationExceptions
+                return null;
+            }
+        }
     }
 
     private static final class SharedIntKeyGenerator implements KeyGenerator<Integer> {
@@ -329,12 +325,12 @@ public final class KeyUtils {
         }
     }
 
-    static final class SinglePartitionStringKeyGenerator implements KeyGenerator<String> {
+    private static final class SinglePartitionStringKeyGenerator implements KeyGenerator<String> {
 
         private final String key;
 
         SinglePartitionStringKeyGenerator(int keyLength, String prefix) {
-            key = padWithZero(new StringBuffer(prefix), keyLength).toString();
+            key = padWithZero(new StringBuilder(prefix), keyLength).toString();
         }
 
         @Override
@@ -343,24 +339,22 @@ public final class KeyUtils {
         }
     }
 
-    private static StringBuffer padWithZero(StringBuffer sb, int length) {
+    private static StringBuilder padWithZero(StringBuilder sb, int length) {
         int count = length - sb.length();
 
-        for (int k = 0; k < count; k++) {
+        for (int i = 0; i < count; i++) {
             sb.append('0');
         }
         return sb;
     }
 
-    static final class SharedStringKeyGenerator implements KeyGenerator<String> {
+    private static final class SharedStringKeyGenerator implements KeyGenerator<String> {
 
         private int current;
-        private final int keyCount;
         private final int keyLength;
         private final String prefix;
 
-        SharedStringKeyGenerator(int keyCount, int keyLength, String prefix) {
-            this.keyCount = keyCount;
+        SharedStringKeyGenerator(int keyLength, String prefix) {
             this.keyLength = keyLength;
             this.prefix = prefix;
         }
@@ -371,9 +365,7 @@ public final class KeyUtils {
             current++;
 
             int x = keyLength - prefix.length();
-            StringBuffer sb = new StringBuffer(prefix);
-            sb.append(String.format("%0" + x + "d", id));
-            return sb.toString();
+            return prefix + format("%0" + x + "d", id);
         }
     }
 }
