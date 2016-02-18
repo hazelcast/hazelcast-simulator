@@ -18,16 +18,37 @@ package com.hazelcast.simulator.tests.helpers;
 /**
  * Indicates if a key should be:
  * <ol>
- *     <li>LOCAL: so the key will be stored on the member</li>
- *     <li>REMOTE: if the key should be stored remote</li>
- *     <li>RANDOM: if you don't care where the key is stored</li>
- *     <li>SINGLE_PARTITION: if all traffic should go to a single partition</li>
+ * <li>LOCAL: random generated local keys (perfectly balanced)</li>
+ * <li>REMOTE: random generated remote keys (perfectly balanced)</li>
+ * <li>RANDOM: random generated keys (perfectly balanced)</li>
+ * <li>SHARED: random generated keys (same sequence on all Workers)</li>
+ * <li>SINGLE_PARTITION: constant key for hitting a single partition</li>
  * </ol>
  */
 public enum KeyLocality {
+
+    /**
+     * Generates random generated local keys (perfectly balanced)
+     */
     LOCAL,
+
+    /**
+     * Generates random generated remote keys (perfectly balanced)
+     */
     REMOTE,
+
+    /**
+     * Generates random generated keys (perfectly balanced)
+     */
     RANDOM,
+
+    /**
+     * Generates random generated keys (same sequence on all Workers)
+     */
     SHARED,
+
+    /**
+     * Generates a constant key for hitting a single partition
+     */
     SINGLE_PARTITION,
 }
