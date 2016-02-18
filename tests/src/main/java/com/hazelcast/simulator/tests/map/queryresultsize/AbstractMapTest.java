@@ -104,7 +104,7 @@ abstract class AbstractMapTest {
                 streamer.pushEntry(key, value++);
             }
         } else if ("Integer".equals(keyType)) {
-            for (int key : generateIntKeys(localKeyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance)) {
+            for (int key : generateIntKeys(localKeyCount, KeyLocality.LOCAL, hazelcastInstance)) {
                 streamer.pushEntry(key, value++);
             }
         } else {

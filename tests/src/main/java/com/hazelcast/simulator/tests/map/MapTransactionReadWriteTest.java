@@ -85,7 +85,7 @@ public class MapTransactionReadWriteTest {
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
-        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
+        keys = generateIntKeys(keyCount, keyLocality, targetInstance);
 
         Random random = new Random();
         Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);

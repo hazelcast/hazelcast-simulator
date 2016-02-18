@@ -28,11 +28,11 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorkerWithProbeControl;
 
 import java.util.Map;
 
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
@@ -48,6 +48,7 @@ public class MapEntryProcessorTest {
     private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
     private IList<long[]> resultsPerWorker;
+    private int[] keys;
 
     @Setup
     public void setUp(TestContext testContext) {
@@ -60,6 +61,7 @@ public class MapEntryProcessorTest {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         resultsPerWorker = targetInstance.getList(basename + ":ResultMap");
+        this.keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
     }
 
     @Teardown
@@ -107,7 +109,8 @@ public class MapEntryProcessorTest {
 
         @Override
         public void timeStep(Probe probe) {
-            int key = generateIntKey(keyCount, keyLocality, targetInstance);
+            int key = keys[randomInt(keys.length)];
+
             long increment = randomInt(100);
             int delayMs = calculateDelay();
 
