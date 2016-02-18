@@ -61,7 +61,7 @@ public class IntByteMapTest {
     public void setUp(TestContext testContext) {
         HazelcastInstance instance = testContext.getTargetInstance();
         map = instance.getMap(basename);
-        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, instance);
+        keys = generateIntKeys(keyCount, keyLocality, instance);
 
         if (minSize > maxSize) {
             throw new IllegalStateException("minSize can't be larger than maxSize");

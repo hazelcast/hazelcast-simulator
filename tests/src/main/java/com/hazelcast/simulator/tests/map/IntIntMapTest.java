@@ -83,7 +83,7 @@ public class IntIntMapTest {
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
-        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, keyLocality, targetInstance);
+        keys = generateIntKeys(keyCount, keyLocality, targetInstance);
         Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);
         Random random = new Random();
         for (int key : keys) {

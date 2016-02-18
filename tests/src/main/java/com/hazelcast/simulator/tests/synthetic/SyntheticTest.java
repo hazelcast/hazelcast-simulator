@@ -37,6 +37,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.spi.OperationService;
@@ -50,7 +51,6 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKey;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 
 /**
@@ -143,8 +143,8 @@ public class SyntheticTest {
                 clientPartitionService = null;
             }
 
-            for (int i = 0; i < keyCount; i++) {
-                Integer key = generateIntKey(keyCount, keyLocality, targetInstance);
+            int[] keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
+            for (int key: keys) {
                 Partition partition = targetInstance.getPartitionService().getPartition(key);
                 partitionSequence.add(partition.getPartitionId());
             }

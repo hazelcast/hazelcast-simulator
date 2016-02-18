@@ -87,7 +87,7 @@ public class SlowOperationMapTest {
     public void setUp(TestContext testContext) {
         HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
         isClient = isClient(hazelcastInstance);
-        keys = generateIntKeys(keyCount, Integer.MAX_VALUE, KeyLocality.LOCAL, hazelcastInstance);
+        keys = generateIntKeys(keyCount, KeyLocality.LOCAL, hazelcastInstance);
         map = hazelcastInstance.getMap(basename);
 
         operationSelectorBuilder

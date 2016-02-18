@@ -28,5 +28,6 @@ public enum KeyLocality {
     LOCAL,
     REMOTE,
     RANDOM,
-    SINGLE_PARTITION
+    SHARED,
+    SINGLE_PARTITION,
 }
