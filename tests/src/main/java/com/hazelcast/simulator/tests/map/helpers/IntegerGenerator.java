@@ -14,14 +14,14 @@
  * permissions and limitations under the License. See accompanying
  * LICENSE file.
  */
-package com.hazelcast.simulator.tests.helpers;
+package com.hazelcast.simulator.tests.map.helpers;
 
 /**
  * A generator that is capable of generating ints as well as strings
  *
  * @author cooperb
  */
-public abstract class IntegerGenerator {
+abstract class IntegerGenerator {
 
     int lastInt;
 

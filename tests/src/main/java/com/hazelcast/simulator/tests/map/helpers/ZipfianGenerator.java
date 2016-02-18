@@ -16,7 +16,6 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;

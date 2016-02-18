@@ -16,8 +16,6 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import com.hazelcast.simulator.tests.helpers.IntegerGenerator;
-
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
 
 /**
