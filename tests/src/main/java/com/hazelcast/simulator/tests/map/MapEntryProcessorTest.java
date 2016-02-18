@@ -45,7 +45,6 @@ public class MapEntryProcessorTest {
     public int maxProcessorDelayMs = 0;
     public KeyLocality keyLocality = KeyLocality.RANDOM;
 
-    private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
     private IList<long[]> resultsPerWorker;
     private int[] keys;
@@ -58,10 +57,10 @@ public class MapEntryProcessorTest {
                     + " maxProcessorDelayMs = " + maxProcessorDelayMs);
         }
 
-        targetInstance = testContext.getTargetInstance();
+        HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         resultsPerWorker = targetInstance.getList(basename + ":ResultMap");
-        this.keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
+        keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
     }
 
     @Teardown
