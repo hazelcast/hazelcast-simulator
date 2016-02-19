@@ -47,7 +47,7 @@ public class AtomicLongTest {
 
     // properties
     public String basename = AtomicLongTest.class.getSimpleName();
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int countersLength = 1000;
     public int warmupIterations = 100;
 

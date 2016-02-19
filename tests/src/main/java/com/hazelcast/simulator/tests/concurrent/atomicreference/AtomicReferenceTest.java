@@ -47,7 +47,7 @@ public class AtomicReferenceTest {
     // properties
     public String basename = AtomicReferenceTest.class.getSimpleName();
     public int countersLength = 1000;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int valueCount = 1000;
     public int valueLength = 512;
     public boolean useStringValue = true;

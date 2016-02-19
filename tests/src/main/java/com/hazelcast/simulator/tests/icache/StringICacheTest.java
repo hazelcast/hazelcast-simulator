@@ -57,7 +57,7 @@ public class StringICacheTest {
     public int valueCount = 10000;
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
     public double putProb = 0.1;
 

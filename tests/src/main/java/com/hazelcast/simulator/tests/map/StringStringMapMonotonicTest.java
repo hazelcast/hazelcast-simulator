@@ -57,7 +57,7 @@ public class StringStringMapMonotonicTest {
     public int valueCount = 10000;
     public int keyLength = 10;
     public int valueLength = 10;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
     public double putProb = 0.1;
     public double setProb = 0.0;
