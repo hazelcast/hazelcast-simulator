@@ -37,6 +37,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher.WORKERS_HOME_NAME;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
@@ -223,8 +224,10 @@ public final class Coordinator {
     }
 
     private void startRemoteClient() {
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry,
-                simulatorProperties.getWorkerPingIntervalSeconds(), simulatorProperties.getMemberWorkerShutdownDelaySeconds());
+        int workerPingIntervalMillis = (int) TimeUnit.SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
+        int shutdownDelaySeconds = simulatorProperties.getMemberWorkerShutdownDelaySeconds();
+
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis, shutdownDelaySeconds);
         remoteClient.initTestSuite(testSuite);
     }
 

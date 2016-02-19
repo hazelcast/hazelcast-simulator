@@ -249,7 +249,15 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     @Test
-    public void testRun_shouldNotDetectInactivityIfDetectionNotStarted() {
+    public void testRun_shouldNotDetectInactivity_ifDetectionDisabled() {
+        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, -1, DEFAULT_CHECK_INTERVAL);
+
+        workerJvmFailureMonitor.startTimeoutDetection();
+        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(DEFAULT_SLEEP_TIME);
+
+        workerJvmFailureMonitor.stopTimeoutDetection();
         workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
@@ -258,7 +266,16 @@ public class WorkerJvmFailureMonitorTest {
     }
 
     @Test
-    public void testRun_shouldNotDetectInactivityAfterDetectionIsStopped() {
+    public void testRun_shouldNotDetectInactivity_ifDetectionNotStarted() {
+        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+
+        sleepMillis(DEFAULT_SLEEP_TIME);
+
+        verifyNoMoreInteractions(agentConnector);
+    }
+
+    @Test
+    public void testRun_shouldNotDetectInactivity_afterDetectionIsStopped() {
         workerJvmFailureMonitor.startTimeoutDetection();
 
         sleepMillis(DEFAULT_SLEEP_TIME);

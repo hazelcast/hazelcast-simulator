@@ -66,14 +66,18 @@ public class WorkerJvmFailureMonitor {
     }
 
     public void startTimeoutDetection() {
-        LOGGER.info("Starting timeout detection for Workers...");
-        monitorThread.updateLastSeen();
-        monitorThread.detectTimeouts = true;
+        if (monitorThread.lastSeenTimeoutSeconds > 0) {
+            LOGGER.info("Starting timeout detection for Workers...");
+            monitorThread.updateLastSeen();
+            monitorThread.detectTimeouts = true;
+        }
     }
 
     public void stopTimeoutDetection() {
-        LOGGER.info("Stopping timeout detection for Workers...");
-        monitorThread.detectTimeouts = false;
+        if (monitorThread.lastSeenTimeoutSeconds > 0) {
+            LOGGER.info("Stopping timeout detection for Workers...");
+            monitorThread.detectTimeouts = false;
+        }
     }
 
     private final class MonitorThread extends Thread {
@@ -184,7 +188,7 @@ public class WorkerJvmFailureMonitor {
             }
 
             long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerJvm.getLastSeen());
-            if (elapsed > lastSeenTimeoutSeconds) {
+            if (elapsed > 0 && elapsed % lastSeenTimeoutSeconds == 0) {
                 sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
             }
         }

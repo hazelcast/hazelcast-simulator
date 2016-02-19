@@ -45,7 +45,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_WORKERS;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
 public class RemoteClient {
@@ -58,10 +58,10 @@ public class RemoteClient {
     private final int memberWorkerShutdownDelaySeconds;
 
     public RemoteClient(CoordinatorConnector coordinatorConnector, ComponentRegistry componentRegistry,
-                        int workerPingIntervalSeconds, int memberWorkerShutdownDelaySeconds) {
+                        int workerPingIntervalMillis, int memberWorkerShutdownDelaySeconds) {
         this.coordinatorConnector = coordinatorConnector;
         this.componentRegistry = componentRegistry;
-        this.workerPingThread = new WorkerPingThread(workerPingIntervalSeconds);
+        this.workerPingThread = new WorkerPingThread(workerPingIntervalMillis);
         this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
     }
 
@@ -84,7 +84,9 @@ public class RemoteClient {
     }
 
     void startWorkerPingThread() {
-        workerPingThread.start();
+        if (workerPingThread.pingIntervalMillis > 0) {
+            workerPingThread.start();
+        }
     }
 
     void stopWorkerPingThread() {
@@ -184,13 +186,13 @@ public class RemoteClient {
 
     private final class WorkerPingThread extends Thread {
 
-        private final int pingIntervalSeconds;
+        private final int pingIntervalMillis;
 
         private volatile boolean running = true;
 
-        private WorkerPingThread(int pingIntervalSeconds) {
+        private WorkerPingThread(int pingIntervalMillis) {
             super("WorkerPingThread");
-            this.pingIntervalSeconds = pingIntervalSeconds;
+            this.pingIntervalMillis = pingIntervalMillis;
 
             setDaemon(true);
         }
@@ -201,7 +203,7 @@ public class RemoteClient {
             while (running) {
                 try {
                     sendToAllWorkers(operation);
-                    sleepSeconds(pingIntervalSeconds);
+                    sleepMillis(pingIntervalMillis);
                 } catch (SimulatorProtocolException e) {
                     if (e.getCause() instanceof InterruptedException) {
                         break;
