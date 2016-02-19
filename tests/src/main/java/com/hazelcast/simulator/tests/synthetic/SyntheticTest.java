@@ -84,7 +84,7 @@ public class SyntheticTest {
     public byte asyncBackupCount = 1;
     public long backupDelayNanos = 1000 * 1000;
     public boolean randomizeBackupDelay = true;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int keyCount = 1000;
     public int syncFrequency = 1;
     public String serviceName;

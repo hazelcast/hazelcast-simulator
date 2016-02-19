@@ -41,7 +41,7 @@ public class QueueTest {
 
     // properties
     public String basename = QueueTest.class.getSimpleName();
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;

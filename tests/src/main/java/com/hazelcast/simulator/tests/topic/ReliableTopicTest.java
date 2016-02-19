@@ -57,7 +57,7 @@ public class ReliableTopicTest {
     public String basename = ReliableTopicTest.class.getSimpleName();
     public int topicCount = 10;
     public int listenersPerTopic = 2;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
 
     private AtomicLong failures = new AtomicLong();
     private IAtomicLong totalMessagesSend;

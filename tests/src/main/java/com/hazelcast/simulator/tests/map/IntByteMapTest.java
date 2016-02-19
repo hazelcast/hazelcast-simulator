@@ -48,7 +48,7 @@ public class IntByteMapTest {
     public int valueCount = 1000;
     public int minSize = 16;
     public int maxSize = 2000;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public double putProb = 0.3;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();

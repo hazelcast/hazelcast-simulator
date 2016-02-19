@@ -56,7 +56,7 @@ public class MapTransactionReadWriteTest {
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
 
     public double putProb = 0.1;

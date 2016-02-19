@@ -43,7 +43,7 @@ public class MapEntryProcessorTest {
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
-    public KeyLocality keyLocality = KeyLocality.RANDOM;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
 
     private IMap<Integer, Long> map;
     private IList<long[]> resultsPerWorker;
