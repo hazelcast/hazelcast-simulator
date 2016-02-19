@@ -28,22 +28,39 @@ package com.hazelcast.simulator.tests.helpers;
 public enum KeyLocality {
 
     /**
-     * Generates random generated local keys (perfectly balanced)
+     * Generates random generated local keys (keys that point to locally owned partitions).
+     *
+     * The keys will be perfectly balanced over the partitions.
      */
     LOCAL,
 
     /**
-     * Generates random generated remote keys (perfectly balanced)
+     * Generates random generated remote keys.
+     *
+     * Each worker will generate it own random set of keys, so it is very unlikely they are going to be shared.
+     *
+     * The keys will be perfectly balanced over remote partitions.
      */
     REMOTE,
 
     /**
-     * Generates random generated keys (perfectly balanced)
+     * Generates random generated keys.
+     *
+     * Each worker will generate it own random set of keys, so it is very unlikely they are going to be shared. Also becase
+     * each worker generates its own keys, the total size of key domain is 'load-generating-worker * keycount'.
+     *
+     * If you want to pound the same keys by all members, use {@link #SHARED}.
+     *
+     * The keys will be perfectly balanced over the partitions.
      */
     RANDOM,
 
     /**
-     * Generates random generated keys (same sequence on all Workers)
+     * Generates random generated keys (same sequence on all Workers).
+     *
+     * In doubt, this is the keyLocality you want to use. All keys will be shared by all members.
+     *
+     * Since all keys are shared, the total size of the key domain is equal to the keyCount configured on the member.
      */
     SHARED,
 
