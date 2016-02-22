@@ -163,9 +163,11 @@ public class WorkerPerformanceMonitor {
                 long intervalOperationalCount = 0;
 
                 for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+                    String probeName = entry.getKey();
                     Probe probe = entry.getValue();
+
                     Histogram intervalHistogram = probe.getIntervalHistogram();
-                    intervalHistograms.put(entry.getKey(), intervalHistogram);
+                    intervalHistograms.put(probeName, intervalHistogram);
 
                     long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
                     if (percentileValue > intervalPercentileLatency) {
@@ -205,10 +207,10 @@ public class WorkerPerformanceMonitor {
         private void sendPerformanceStates() {
             PerformanceStateOperation operation = new PerformanceStateOperation();
             for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
-                PerformanceTracker stats = trackerEntry.getValue();
-                if (stats.isUpdated()) {
+                PerformanceTracker tracker = trackerEntry.getValue();
+                if (tracker.isUpdated()) {
                     String testId = trackerEntry.getKey();
-                    operation.addPerformanceState(testId, stats.createPerformanceState());
+                    operation.addPerformanceState(testId, tracker.createPerformanceState());
                 }
             }
             if (operation.getPerformanceStates().size() > 0) {
@@ -226,14 +228,14 @@ public class WorkerPerformanceMonitor {
             long globalOperationsCount = 0;
             double globalIntervalThroughput = 0;
 
-            // test performance stats
-            for (PerformanceTracker stats : trackerMap.values()) {
-                if (stats.getAndResetIsUpdated()) {
-                    stats.writeStatsToFile(dateString);
+            // performance stats per Simulator Test
+            for (PerformanceTracker tracker : trackerMap.values()) {
+                if (tracker.getAndResetIsUpdated()) {
+                    tracker.writeStatsToFile(dateString);
 
-                    globalIntervalOperationCount += stats.getIntervalOperationCount();
-                    globalOperationsCount += stats.getTotalOperationCount();
-                    globalIntervalThroughput += stats.getIntervalThroughput();
+                    globalIntervalOperationCount += tracker.getIntervalOperationCount();
+                    globalOperationsCount += tracker.getTotalOperationCount();
+                    globalIntervalThroughput += tracker.getIntervalThroughput();
                 }
             }
 
