@@ -258,7 +258,6 @@
         </module>
         <module name="EqualsHashCode"/>
         <module name="IllegalInstantiation"/>
-        <module name="InnerAssignment"/>
         <module name="MissingSwitchDefault"/>
 
         <!-- Checks for class design                         -->
