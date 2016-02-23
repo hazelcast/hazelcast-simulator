@@ -52,19 +52,24 @@ public class ProbeImpl implements Probe {
     @Override
     public void done() {
         long now = System.nanoTime();
+
         Long started = threadLocalStarted.get();
         if (started == null) {
             throw new IllegalStateException("You have to call started() before done()");
         }
+
         recordValue(now - started);
     }
 
     @Override
     public void done(long started) {
+        long now = System.nanoTime();
+
         if (started <= 0) {
-            throw new IllegalStateException("started has to be a positive number");
+            throw new IllegalArgumentException("started has to be a positive number");
         }
-        recordValue(System.nanoTime() - started);
+
+        recordValue(now - started);
     }
 
     @Override

@@ -55,12 +55,12 @@ public class ProbeImplTest {
         assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testDone_withExternalStarted_withZero() {
         probe.done(0);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testDone_withExternalStarted_withNegativeValue() {
         probe.done(-23);
     }
