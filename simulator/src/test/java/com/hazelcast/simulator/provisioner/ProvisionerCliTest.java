@@ -137,17 +137,6 @@ public class ProvisionerCliTest {
     }
 
     @Test
-    public void testRun_list() {
-        args.add("--list");
-
-        run(getArgs(), provisioner);
-
-        verify(provisioner).listMachines();
-        verify(provisioner).shutdown();
-        verifyNoMoreInteractions(provisioner);
-    }
-
-    @Test
     public void testRun_download_defaultDirectory() {
         args.add("--download");
 

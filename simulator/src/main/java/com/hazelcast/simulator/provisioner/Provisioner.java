@@ -164,12 +164,6 @@ public class Provisioner {
         echoImportant("Finished installing Simulator on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
-    void listMachines() {
-        echo("Provisioned machines (from " + AgentsFile.NAME + "):");
-        String machines = fileAsText(agentsFile);
-        echo(INDENTATION + machines);
-    }
-
     void download(final String target) {
         ensureIsRemoteSetup(properties, "download");
 

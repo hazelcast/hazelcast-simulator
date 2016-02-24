@@ -103,11 +103,6 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
     }
 
     @Test
-    public void testListMachines() {
-        provisioner.listMachines();
-    }
-
-    @Test
     public void testDownload() {
         provisioner.download("workers");
 

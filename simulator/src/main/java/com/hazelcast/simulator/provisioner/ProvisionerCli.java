@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
@@ -50,9 +49,6 @@ final class ProvisionerCli {
     private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
             "Use JARs of Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
-    private final OptionSpec listAgentsSpec = parser.accepts("list",
-            "Lists the provisioned machines (from " + AgentsFile.NAME + " file).");
 
     private final OptionSpec<String> downloadSpec = parser.accepts("download",
             "Download all files from the remote Worker directories. Use --clean to delete all Worker directories.")
@@ -106,8 +102,6 @@ final class ProvisionerCli {
                 provisioner.scale(size);
             } else if (options.has(cli.installSpec)) {
                 provisioner.installSimulator();
-            } else if (options.has(cli.listAgentsSpec)) {
-                provisioner.listMachines();
             } else if (options.has(cli.downloadSpec)) {
                 String dir = options.valueOf(cli.downloadSpec);
                 provisioner.download(dir);
