@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.Math.ceil;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 
@@ -78,6 +79,7 @@ public class ComponentRegistry {
     public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerJvmSettings> settingsList) {
         for (WorkerJvmSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
+            agents.get(workerData.getAddress().getAgentIndex() - 1).addWorker(workerData);
             workers.add(workerData);
         }
     }
@@ -85,13 +87,14 @@ public class ComponentRegistry {
     public synchronized void removeWorker(SimulatorAddress workerAddress) {
         for (WorkerData workerData : workers) {
             if (workerData.getAddress().equals(workerAddress)) {
-                workers.remove(workerData);
+                removeWorker(workerData);
                 break;
             }
         }
     }
 
     public synchronized void removeWorker(WorkerData workerData) {
+        agents.get(workerData.getAddress().getAgentIndex() - 1).removeWorker(workerData);
         workers.remove(workerData);
     }
 
@@ -110,6 +113,24 @@ public class ComponentRegistry {
 
     public List<WorkerData> getWorkers() {
         return unmodifiableList(workers);
+    }
+
+    public List<WorkerData> getWorkers(int workerCount) {
+        if (workerCount > workers.size()) {
+            throw new IllegalArgumentException("Cannot return more workers than registered");
+        }
+
+        List<WorkerData> workers = new ArrayList<WorkerData>();
+        int workersPerAgent = (int) ceil(workerCount / (double) agents.size());
+        for (AgentData agentData : agents) {
+            int tmpCount = 0;
+            for (WorkerData workerData : agentData.getWorkers()) {
+                if (tmpCount++ < workersPerAgent && workers.size() < workerCount) {
+                    workers.add(workerData);
+                }
+            }
+        }
+        return workers;
     }
 
     public WorkerData getFirstWorker() {
@@ -141,6 +162,10 @@ public class ComponentRegistry {
 
     public void removeTests() {
         tests.clear();
+    }
+
+    public int testCount() {
+        return tests.size();
     }
 
     public Collection<TestData> getTests() {
