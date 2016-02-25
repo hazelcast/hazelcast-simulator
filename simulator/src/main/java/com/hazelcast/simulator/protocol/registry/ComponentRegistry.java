@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.ceil;
+import static java.lang.String.format;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 
@@ -116,8 +117,12 @@ public class ComponentRegistry {
     }
 
     public List<WorkerData> getWorkers(int workerCount) {
+        return getWorkers(workerCount, TargetType.ALL);
+    }
+
+    public List<WorkerData> getWorkers(int workerCount, TargetType targetType) {
         if (workerCount > workers.size()) {
-            throw new IllegalArgumentException("Cannot return more workers than registered");
+            throw new IllegalArgumentException("Cannot return more Workers than registered");
         }
 
         int workersPerAgent = (int) ceil(workerCount / (double) agents.size());
@@ -125,10 +130,20 @@ public class ComponentRegistry {
         for (AgentData agentData : agents) {
             int count = 0;
             for (WorkerData workerData : agentData.getWorkers()) {
+                if (targetType != TargetType.ALL
+                        && (targetType != TargetType.MEMBER || !workerData.isMemberWorker())
+                        && (targetType != TargetType.CLIENT || workerData.isMemberWorker())) {
+                    continue;
+                }
                 if (count++ < workersPerAgent && workerList.size() < workerCount) {
                     workerList.add(workerData);
                 }
             }
+        }
+
+        if (workerList.size() < workerCount) {
+            throw new IllegalStateException(format("Could not find enough Workers of type %s (wanted: %d, found: %d)",
+                    targetType, workerCount, workerList.size()));
         }
         return workerList;
     }

@@ -160,8 +160,7 @@ public class ComponentRegistryTest {
         assertEquals(3, componentRegistry.agentCount());
 
         for (AgentData agentData : componentRegistry.getAgents()) {
-            List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
-            componentRegistry.addWorkers(agentData.getAddress(), settingsList);
+            componentRegistry.addWorkers(agentData.getAddress(), getWorkerJvmSettingsList(5));
         }
         assertEquals(15, componentRegistry.workerCount());
 
@@ -180,14 +179,70 @@ public class ComponentRegistryTest {
         assertEquals(2, agentCount[3]);
     }
 
+    @Test
+    public void testGetWorkers_withTargetType() {
+        componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
+        componentRegistry.addAgent("172.16.16.2", "127.0.0.1");
+        componentRegistry.addAgent("172.16.16.3", "127.0.0.1");
+        assertEquals(3, componentRegistry.agentCount());
+
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            List<WorkerJvmSettings> memberSettings = getWorkerJvmSettingsList(1, WorkerType.MEMBER);
+            List<WorkerJvmSettings> clientSettings = getWorkerJvmSettingsList(1, WorkerType.CLIENT);
+
+            componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
+            componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
+            componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
+            componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
+            componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
+            componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
+        }
+        assertEquals(18, componentRegistry.workerCount());
+
+        List<WorkerData> workers = componentRegistry.getWorkers(12, TargetType.ALL);
+        assertEquals(12, workers.size());
+
+        workers = componentRegistry.getWorkers(7, TargetType.MEMBER);
+        assertEquals(7, workers.size());
+        for (WorkerData workerData : workers) {
+            assertTrue(workerData.isMemberWorker());
+        }
+
+        workers = componentRegistry.getWorkers(7, TargetType.CLIENT);
+        assertEquals(7, workers.size());
+        for (WorkerData workerData : workers) {
+            assertFalse(workerData.isMemberWorker());
+        }
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testGetWorkers_withHigherWorkerCountThanRegisteredWorkers() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(3);
-        componentRegistry.addWorkers(parentAddress, settingsList);
-        assertEquals(3, componentRegistry.workerCount());
+        componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.MEMBER));
+        componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
+        assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkers(4);
+        componentRegistry.getWorkers(5);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetWorkers_getClientWorkers_notEnoughWorkersFound() {
+        SimulatorAddress parentAddress = getSingleAgent();
+        componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.MEMBER));
+        componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
+        assertEquals(4, componentRegistry.workerCount());
+
+        componentRegistry.getWorkers(3, TargetType.CLIENT);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetWorkers_getMemberWorkers_notEnoughWorkersFound() {
+        SimulatorAddress parentAddress = getSingleAgent();
+        componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.MEMBER));
+        componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
+        assertEquals(4, componentRegistry.workerCount());
+
+        componentRegistry.getWorkers(3, TargetType.MEMBER);
     }
 
     @Test
