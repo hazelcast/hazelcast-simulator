@@ -120,17 +120,17 @@ public class ComponentRegistry {
             throw new IllegalArgumentException("Cannot return more workers than registered");
         }
 
-        List<WorkerData> workers = new ArrayList<WorkerData>();
         int workersPerAgent = (int) ceil(workerCount / (double) agents.size());
+        List<WorkerData> workerList = new ArrayList<WorkerData>();
         for (AgentData agentData : agents) {
-            int tmpCount = 0;
+            int count = 0;
             for (WorkerData workerData : agentData.getWorkers()) {
-                if (tmpCount++ < workersPerAgent && workers.size() < workerCount) {
-                    workers.add(workerData);
+                if (count++ < workersPerAgent && workerList.size() < workerCount) {
+                    workerList.add(workerData);
                 }
             }
         }
-        return workers;
+        return workerList;
     }
 
     public WorkerData getFirstWorker() {
