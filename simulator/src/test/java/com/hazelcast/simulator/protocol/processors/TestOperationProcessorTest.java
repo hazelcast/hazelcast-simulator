@@ -99,7 +99,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_withTargetTypeClient() {
+    public void process_StartTest_skipRunPhase() {
         createTestOperationProcessor();
 
         StartTestOperation operation = new StartTestOperation(TargetType.CLIENT);
