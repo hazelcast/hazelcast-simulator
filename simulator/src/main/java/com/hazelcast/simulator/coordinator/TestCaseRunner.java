@@ -179,7 +179,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void startTest() {
-        echo(format("Starting Test start on %s Workers", targetType.toString(targetCount)));
+        echo(format("Starting Test start on %s", targetType.toString(targetCount)));
         List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
         remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
         echo("Completed Test start");

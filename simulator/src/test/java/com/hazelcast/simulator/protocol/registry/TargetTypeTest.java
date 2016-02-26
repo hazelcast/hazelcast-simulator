@@ -41,13 +41,13 @@ public class TargetTypeTest {
 
     @Test
     public void testToString() {
-        assertEquals("all", ALL.toString(0));
-        assertEquals("3", ALL.toString(3));
+        assertEquals("all Workers", ALL.toString(0));
+        assertEquals("3 Workers", ALL.toString(3));
 
-        assertEquals("all member", MEMBER.toString(0));
-        assertEquals("2 member", MEMBER.toString(2));
+        assertEquals("all member Workers", MEMBER.toString(0));
+        assertEquals("1 member Worker", MEMBER.toString(1));
 
-        assertEquals("all client", CLIENT.toString(0));
-        assertEquals("4 client", CLIENT.toString(4));
+        assertEquals("all client Workers", CLIENT.toString(0));
+        assertEquals("4 client Workers", CLIENT.toString(4));
     }
 }

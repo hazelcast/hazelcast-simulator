@@ -58,13 +58,13 @@ public enum TargetType {
     public String toString(int targetCount) {
         if (this == ALL) {
             if (targetCount > 0) {
-                return "" + targetCount;
+                return targetCount + " " + (targetCount == 1 ? "Worker" : "Workers");
             }
-            return "all";
+            return "all Workers";
         }
         if (targetCount > 0) {
-            return targetCount + " " + name().toLowerCase();
+            return targetCount + " " + name().toLowerCase() + " " + (targetCount == 1 ? "Worker" : "Workers");
         }
-        return "all " + name().toLowerCase();
+        return "all " + name().toLowerCase() + " Workers";
     }
 }

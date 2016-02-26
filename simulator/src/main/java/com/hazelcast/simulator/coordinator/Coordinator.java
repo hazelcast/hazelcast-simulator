@@ -283,7 +283,7 @@ public final class Coordinator {
             if (targetCount > 0) {
                 TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
                 List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-                echo("RUN phase will be executed on %s Workers: %s", targetType.toString(targetCount), targetWorkers);
+                echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
             }
 
             echoTestSuiteStart(testCount, isParallel);
