@@ -195,12 +195,12 @@ public class TestOperationProcessor extends OperationProcessor {
     }
 
     private boolean skipRunPhase(StartTestOperation operation) {
-        TargetType targetType = operation.getTargetType();
-        if (!targetType.matches(type.isMember())) {
+        if (!operation.matchesTargetType(type)) {
+            TargetType targetType = operation.getTargetType();
             LOGGER.info(format("%s Skipping run of %s (%s Worker vs. %s target) %s", DASHES, testId, type, targetType, DASHES));
             return true;
         }
-        if (operation.hasTargetWorkers() && !operation.getTargetWorkers().contains(testAddress.getParent().toString())) {
+        if (!operation.matchesTargetWorkers(testAddress.getParent())) {
             LOGGER.info(format("%s Skipping run of %s (Worker is not on target list) %s", DASHES, testId, DASHES));
             return true;
         }

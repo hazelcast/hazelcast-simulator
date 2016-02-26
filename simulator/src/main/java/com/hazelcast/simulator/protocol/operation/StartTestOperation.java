@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +27,14 @@ import java.util.List;
  */
 public class StartTestOperation implements SimulatorOperation {
 
+    /**
+     * Defines which Workers should execute the RUN phase by their {@link WorkerType}.
+     */
     private final TargetType targetType;
+
+    /**
+     * Defines which Workers should execute the RUN phase by their {@link SimulatorAddress}.
+     */
     private final List<String> targetWorkers;
 
     public StartTestOperation() {
@@ -41,15 +50,15 @@ public class StartTestOperation implements SimulatorOperation {
         this.targetWorkers = targetWorkers;
     }
 
+    public boolean matchesTargetType(WorkerType workerType) {
+        return targetType.matches(workerType.isMember());
+    }
+
+    public boolean matchesTargetWorkers(SimulatorAddress workerAddress) {
+        return (targetWorkers.isEmpty() || targetWorkers.contains(workerAddress.toString()));
+    }
+
     public TargetType getTargetType() {
         return targetType;
-    }
-
-    public List<String> getTargetWorkers() {
-        return targetWorkers;
-    }
-
-    public boolean hasTargetWorkers() {
-        return !targetWorkers.isEmpty();
     }
 }
