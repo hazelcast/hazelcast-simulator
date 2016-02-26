@@ -44,11 +44,7 @@ public enum TargetType {
      */
     PREFER_CLIENT;
 
-    public boolean isMemberTarget() {
-        return (this == ALL || this == MEMBER);
-    }
-
-    public TargetType resolvePreferClients(boolean hasClientWorkers) {
+    public TargetType resolvePreferClient(boolean hasClientWorkers) {
         if (this != PREFER_CLIENT) {
             return this;
         }

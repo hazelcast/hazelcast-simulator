@@ -13,26 +13,18 @@ import static org.junit.Assert.assertTrue;
 public class TargetTypeTest {
 
     @Test
-    public void testIsMemberTarget() {
-        assertTrue(ALL.isMemberTarget());
-        assertTrue(MEMBER.isMemberTarget());
-        assertFalse(CLIENT.isMemberTarget());
-        assertFalse(PREFER_CLIENT.isMemberTarget());
-    }
+    public void testResolvePreferClient() {
+        assertEquals(ALL, ALL.resolvePreferClient(true));
+        assertEquals(ALL, ALL.resolvePreferClient(false));
 
-    @Test
-    public void testResolvePreferClients() {
-        assertEquals(ALL, ALL.resolvePreferClients(true));
-        assertEquals(ALL, ALL.resolvePreferClients(false));
+        assertEquals(MEMBER, MEMBER.resolvePreferClient(true));
+        assertEquals(MEMBER, MEMBER.resolvePreferClient(false));
 
-        assertEquals(MEMBER, MEMBER.resolvePreferClients(true));
-        assertEquals(MEMBER, MEMBER.resolvePreferClients(false));
+        assertEquals(CLIENT, CLIENT.resolvePreferClient(true));
+        assertEquals(CLIENT, CLIENT.resolvePreferClient(false));
 
-        assertEquals(CLIENT, CLIENT.resolvePreferClients(true));
-        assertEquals(CLIENT, CLIENT.resolvePreferClients(false));
-
-        assertEquals(CLIENT, PREFER_CLIENT.resolvePreferClients(true));
-        assertEquals(MEMBER, PREFER_CLIENT.resolvePreferClients(false));
+        assertEquals(CLIENT, PREFER_CLIENT.resolvePreferClient(true));
+        assertEquals(MEMBER, PREFER_CLIENT.resolvePreferClient(false));
     }
 
     @Test

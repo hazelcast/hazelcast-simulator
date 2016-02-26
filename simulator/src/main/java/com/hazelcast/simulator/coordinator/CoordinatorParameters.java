@@ -85,7 +85,7 @@ class CoordinatorParameters {
     }
 
     TargetType getTargetType(boolean hasClientWorkers) {
-        return targetType.resolvePreferClients(hasClientWorkers);
+        return targetType.resolvePreferClient(hasClientWorkers);
     }
 
     int getTargetTypeCount() {
