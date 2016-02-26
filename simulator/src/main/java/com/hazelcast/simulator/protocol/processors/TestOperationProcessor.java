@@ -160,13 +160,13 @@ public class TestOperationProcessor extends OperationProcessor {
     }
 
     private void processStartTest(StartTestOperation operation) {
-        if (worker.startPerformanceMonitor()) {
-            LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
-        }
-
         if (skipRunPhase(operation)) {
             sendPhaseCompletedOperation(TestPhase.RUN);
             return;
+        }
+
+        if (worker.startPerformanceMonitor()) {
+            LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
         }
 
         LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
