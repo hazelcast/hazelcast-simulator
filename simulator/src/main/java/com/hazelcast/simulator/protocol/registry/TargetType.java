@@ -18,6 +18,7 @@ package com.hazelcast.simulator.protocol.registry;
 /**
  * Defines a target type for a Worker to select groups of Workers from the {@link ComponentRegistry}.
  *
+ * The type {@link #PREFER_CLIENT} equates to the old passive members mode.
  * The type {@link #CLIENT} selects all kinds of client Workers (Java, C#, C++, Python etc.).
  */
 public enum TargetType {
@@ -39,8 +40,6 @@ public enum TargetType {
 
     /**
      * Selects client Workers if there are any registered, member Workers otherwise.
-     *
-     * This equates to the old passive members mode.
      */
     PREFER_CLIENT;
 
