@@ -55,15 +55,15 @@ public enum TargetType {
         return (this == ALL || (this == MEMBER && isMemberWorker) || (this == CLIENT && !isMemberWorker));
     }
 
-    public String toString(int targetTypeCount) {
+    public String toString(int targetCount) {
         if (this == ALL) {
-            if (targetTypeCount > 0) {
-                return "" + targetTypeCount;
+            if (targetCount > 0) {
+                return "" + targetCount;
             }
             return "all";
         }
-        if (targetTypeCount > 0) {
-            return targetTypeCount + " " + name().toLowerCase();
+        if (targetCount > 0) {
+            return targetCount + " " + name().toLowerCase();
         }
         return "all " + name().toLowerCase();
     }
