@@ -57,14 +57,14 @@ public enum TargetType {
 
     public String toString(int targetTypeCount) {
         if (this == ALL) {
-            if (targetTypeCount == 0) {
-                return "all";
+            if (targetTypeCount > 0) {
+                return "" + targetTypeCount;
             }
-            return "" + targetTypeCount;
+            return "all";
         }
-        if (targetTypeCount == 0) {
-            return "all " + name().toLowerCase();
+        if (targetTypeCount > 0) {
+            return targetTypeCount + " " + name().toLowerCase();
         }
-        return targetTypeCount + " " + name().toLowerCase();
+        return "all " + name().toLowerCase();
     }
 }
