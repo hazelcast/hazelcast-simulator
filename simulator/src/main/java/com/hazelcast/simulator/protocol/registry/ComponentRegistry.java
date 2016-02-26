@@ -116,27 +116,37 @@ public class ComponentRegistry {
         return unmodifiableList(workers);
     }
 
-    public List<WorkerData> getWorkers(int workerCount) {
-        return getWorkers(workerCount, TargetType.ALL);
+    public List<WorkerData> getWorkers(int workerCount, TargetType targetType) {
+        List<WorkerData> workerList = new ArrayList<WorkerData>();
+        getWorkers(workerCount, targetType, workerList, true);
+        return workerList;
     }
 
-    public List<WorkerData> getWorkers(int workerCount, TargetType targetType) {
+    public List<SimulatorAddress> getWorkerAddresses(int workerCount, TargetType targetType) {
+        List<SimulatorAddress> workerList = new ArrayList<SimulatorAddress>();
+        getWorkers(workerCount, targetType, workerList, false);
+        return workerList;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void getWorkers(int workerCount, TargetType targetType, List workerList, boolean addWorkerData) {
         if (workerCount > workers.size()) {
             throw new IllegalArgumentException("Cannot return more Workers than registered");
         }
 
         int workersPerAgent = (int) ceil(workerCount / (double) agents.size());
-        List<WorkerData> workerList = new ArrayList<WorkerData>();
         for (AgentData agentData : agents) {
             int count = 0;
             for (WorkerData workerData : agentData.getWorkers()) {
-                if (targetType != TargetType.ALL
-                        && (targetType != TargetType.MEMBER || !workerData.isMemberWorker())
-                        && (targetType != TargetType.CLIENT || workerData.isMemberWorker())) {
+                if (!targetType.matches(workerData.isMemberWorker())) {
                     continue;
                 }
                 if (count++ < workersPerAgent && workerList.size() < workerCount) {
-                    workerList.add(workerData);
+                    if (addWorkerData) {
+                        workerList.add(workerData);
+                    } else {
+                        workerList.add(workerData.getAddress());
+                    }
                 }
             }
         }
@@ -145,7 +155,6 @@ public class ComponentRegistry {
             throw new IllegalStateException(format("Could not find enough Workers of type %s (wanted: %d, found: %d)",
                     targetType, workerCount, workerList.size()));
         }
-        return workerList;
     }
 
     public WorkerData getFirstWorker() {

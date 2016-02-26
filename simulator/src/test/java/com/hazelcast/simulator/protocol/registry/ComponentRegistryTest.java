@@ -153,33 +153,6 @@ public class ComponentRegistryTest {
     }
 
     @Test
-    public void testGetWorkers_withWorkerCount() {
-        componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
-        componentRegistry.addAgent("172.16.16.2", "127.0.0.1");
-        componentRegistry.addAgent("172.16.16.3", "127.0.0.1");
-        assertEquals(3, componentRegistry.agentCount());
-
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            componentRegistry.addWorkers(agentData.getAddress(), getWorkerJvmSettingsList(5));
-        }
-        assertEquals(15, componentRegistry.workerCount());
-
-        List<WorkerData> workers = componentRegistry.getWorkers(8);
-        assertEquals(8, workers.size());
-
-        int[] agentCount = new int[4];
-        for (WorkerData workerData : workers) {
-            assertEquals(AddressLevel.WORKER, workerData.getAddress().getAddressLevel());
-            assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
-
-            agentCount[workerData.getAddress().getAgentIndex()]++;
-        }
-        assertEquals(3, agentCount[1]);
-        assertEquals(3, agentCount[2]);
-        assertEquals(2, agentCount[3]);
-    }
-
-    @Test
     public void testGetWorkers_withTargetType() {
         componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
         componentRegistry.addAgent("172.16.16.2", "127.0.0.1");
@@ -199,18 +172,21 @@ public class ComponentRegistryTest {
         }
         assertEquals(18, componentRegistry.workerCount());
 
-        List<WorkerData> workers = componentRegistry.getWorkers(12, TargetType.ALL);
+        List<SimulatorAddress> workers = componentRegistry.getWorkerAddresses(12, TargetType.ALL);
         assertEquals(12, workers.size());
 
-        workers = componentRegistry.getWorkers(7, TargetType.MEMBER);
-        assertEquals(7, workers.size());
-        for (WorkerData workerData : workers) {
+        workers = componentRegistry.getWorkerAddresses(8, TargetType.ALL);
+        assertEquals(8, workers.size());
+
+        List<WorkerData> workerDataList = componentRegistry.getWorkers(7, TargetType.MEMBER);
+        assertEquals(7, workerDataList.size());
+        for (WorkerData workerData : workerDataList) {
             assertTrue(workerData.isMemberWorker());
         }
 
-        workers = componentRegistry.getWorkers(7, TargetType.CLIENT);
-        assertEquals(7, workers.size());
-        for (WorkerData workerData : workers) {
+        workerDataList = componentRegistry.getWorkers(7, TargetType.CLIENT);
+        assertEquals(7, workerDataList.size());
+        for (WorkerData workerData : workerDataList) {
             assertFalse(workerData.isMemberWorker());
         }
     }
@@ -222,7 +198,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
         assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkers(5);
+        componentRegistry.getWorkerAddresses(5, TargetType.ALL);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -232,7 +208,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
         assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkers(3, TargetType.CLIENT);
+        componentRegistry.getWorkerAddresses(3, TargetType.CLIENT);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -242,7 +218,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
         assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkers(3, TargetType.MEMBER);
+        componentRegistry.getWorkerAddresses(3, TargetType.MEMBER);
     }
 
     @Test
