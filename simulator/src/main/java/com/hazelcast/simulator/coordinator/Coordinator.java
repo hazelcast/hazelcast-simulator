@@ -279,13 +279,6 @@ public final class Coordinator {
                 testPhaseListenerContainer.addListener(testIndex, runner);
             }
 
-            int targetCount = coordinatorParameters.getTargetCount();
-            if (targetCount > 0) {
-                TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
-                List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-                echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
-            }
-
             echoTestSuiteStart(testCount, isParallel);
             long started = System.nanoTime();
             if (isParallel) {
@@ -379,6 +372,13 @@ public final class Coordinator {
             echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
         }
         echo(HORIZONTAL_RULER);
+
+        int targetCount = coordinatorParameters.getTargetCount();
+        if (targetCount > 0) {
+            TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
+            List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+            echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
+        }
     }
 
     private void echoTestSuiteEnd(int testCount, long started) {
