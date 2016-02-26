@@ -19,6 +19,7 @@ import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -78,15 +79,25 @@ final class CoordinatorCli {
             "Number of cluster client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
-    private final OptionSpec<Boolean> autoCreateHzInstanceSpec = parser.accepts("autoCreateHzInstances",
-            "Auto create Hazelcast instances.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
             "Controls the number of dedicated member machines. For example when there are 4 machines,"
                     + " 2 members and 9 clients with 1 dedicated member machine defined, then"
                     + " 1 machine gets the 2 members and the 3 remaining machines get 3 clients each.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
+    private final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
+            format("Defines the type of Workers which execute the RUN phase."
+                    + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
+                    + " List of allowed types: %s", TargetType.getIdsAsString()))
+            .withRequiredArg().ofType(TargetType.class).defaultsTo(TargetType.PREFER_CLIENT);
+
+    private final OptionSpec<Integer> targetCountSpec = parser.accepts("targetCount",
+            "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
+    private final OptionSpec<Boolean> autoCreateHzInstanceSpec = parser.accepts("autoCreateHzInstances",
+            "Auto create Hazelcast instances.")
+            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
             "A file/directory containing the classes/jars/resources that are going to be uploaded to the agents."
@@ -113,7 +124,7 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
-            String.format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
+            format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
                     FailureType.getIdsAsString()))
             .withRequiredArg().ofType(String.class).defaultsTo("workerTimeout");
 
@@ -219,6 +230,8 @@ final class CoordinatorCli {
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.workerRefreshSpec),
+                options.valueOf(cli.targetTypeSpec),
+                options.valueOf(cli.targetCountSpec),
                 options.valueOf(cli.syncToTestPhaseSpec)
         );
 

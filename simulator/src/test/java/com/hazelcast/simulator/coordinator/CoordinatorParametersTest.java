@@ -9,17 +9,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class CoordinatorParametersTest {
 
     @Test
     public void testConstructor() {
         SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.getTargetType()).thenReturn(TargetType.PREFER_CLIENT);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(properties, "workerClassPath", false, true, false,
-                true, false, LOCAL_TEARDOWN);
+                true, false, TargetType.PREFER_CLIENT, 5, LOCAL_TEARDOWN);
 
         assertEquals(properties, coordinatorParameters.getSimulatorProperties());
         assertEquals("workerClassPath", coordinatorParameters.getWorkerClassPath());
@@ -30,7 +28,7 @@ public class CoordinatorParametersTest {
         assertFalse(coordinatorParameters.isRefreshJvm());
         assertEquals(TargetType.CLIENT, coordinatorParameters.getTargetType(true));
         assertEquals(TargetType.MEMBER, coordinatorParameters.getTargetType(false));
-        assertEquals(0, coordinatorParameters.getTargetCount());
+        assertEquals(5, coordinatorParameters.getTargetCount());
         assertEquals(LOCAL_TEARDOWN, coordinatorParameters.getLastTestPhaseToSync());
     }
 }

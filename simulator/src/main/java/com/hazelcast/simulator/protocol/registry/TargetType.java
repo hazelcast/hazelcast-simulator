@@ -18,10 +18,17 @@ package com.hazelcast.simulator.protocol.registry;
 /**
  * Defines a target type for a Worker to select groups of Workers from the {@link ComponentRegistry}.
  *
- * The type {@link #CLIENT} selects all kinds of client Workers (Java, C#, C++, Python etc.).
  * The type {@link #PREFER_CLIENT} equates to the old passive member mode.
+ * The type {@link #CLIENT} selects all kinds of client Workers (Java, C#, C++, Python etc.).
  */
 public enum TargetType {
+
+    /**
+     * Selects client Workers if there are any registered, member Workers otherwise.
+     *
+     * Will be resolved to {@link #MEMBER} or {@link #CLIENT} before usage (see {@link #resolvePreferClient(boolean)}).
+     */
+    PREFER_CLIENT,
 
     /**
      * Selects all types of Workers.
@@ -36,14 +43,7 @@ public enum TargetType {
     /**
      * Selects just client Workers.
      */
-    CLIENT,
-
-    /**
-     * Selects client Workers if there are any registered, member Workers otherwise.
-     *
-     * Will be resolved to {@link #MEMBER} or {@link #CLIENT} before usage (see {@link #resolvePreferClient(boolean)}).
-     */
-    PREFER_CLIENT;
+    CLIENT;
 
     public TargetType resolvePreferClient(boolean hasClientWorkers) {
         if (this != PREFER_CLIENT) {
@@ -67,5 +67,15 @@ public enum TargetType {
             return targetCount + " " + name().toLowerCase() + " " + (targetCount == 1 ? "Worker" : "Workers");
         }
         return "all " + name().toLowerCase() + " Workers";
+    }
+
+    public static String getIdsAsString() {
+        StringBuilder builder = new StringBuilder();
+        String delimiter = "";
+        for (TargetType targetType : values()) {
+            builder.append(delimiter).append(targetType);
+            delimiter = ", ";
+        }
+        return builder.toString();
     }
 }
