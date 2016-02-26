@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 
@@ -116,32 +117,41 @@ public class ComponentRegistry {
         return unmodifiableList(workers);
     }
 
-    public List<WorkerData> getWorkers(int workerCount, TargetType targetType) {
+    public List<WorkerData> getWorkers(TargetType targetType, int targetCount) {
+        if (targetCount <= 0) {
+            return emptyList();
+        }
+
         List<WorkerData> workerList = new ArrayList<WorkerData>();
-        getWorkers(workerCount, targetType, workerList, true);
+        getWorkers(targetType, targetCount, workerList, true);
         return workerList;
     }
 
-    public List<SimulatorAddress> getWorkerAddresses(int workerCount, TargetType targetType) {
+    public List<SimulatorAddress> getWorkerAddresses(TargetType targetType, int targetCount) {
+        if (targetCount <= 0) {
+            return emptyList();
+        }
+
         List<SimulatorAddress> workerList = new ArrayList<SimulatorAddress>();
-        getWorkers(workerCount, targetType, workerList, false);
+        getWorkers(targetType, targetCount, workerList, false);
         return workerList;
     }
 
     @SuppressWarnings("unchecked")
-    private void getWorkers(int workerCount, TargetType targetType, List workerList, boolean addWorkerData) {
-        if (workerCount > workers.size()) {
-            throw new IllegalArgumentException("Cannot return more Workers than registered");
+    private void getWorkers(TargetType targetType, int targetCount, List workerList, boolean addWorkerData) {
+        if (targetCount > workers.size()) {
+            throw new IllegalArgumentException(format("Cannot return more Workers than registered (wanted: %d, registered: %d)",
+                    targetCount, workers.size()));
         }
 
-        int workersPerAgent = (int) ceil(workerCount / (double) agents.size());
+        int workersPerAgent = (int) ceil(targetCount / (double) agents.size());
         for (AgentData agentData : agents) {
             int count = 0;
             for (WorkerData workerData : agentData.getWorkers()) {
                 if (!targetType.matches(workerData.isMemberWorker())) {
                     continue;
                 }
-                if (count++ < workersPerAgent && workerList.size() < workerCount) {
+                if (count++ < workersPerAgent && workerList.size() < targetCount) {
                     if (addWorkerData) {
                         workerList.add(workerData);
                     } else {
@@ -151,9 +161,9 @@ public class ComponentRegistry {
             }
         }
 
-        if (workerList.size() < workerCount) {
+        if (workerList.size() < targetCount) {
             throw new IllegalStateException(format("Could not find enough Workers of type %s (wanted: %d, found: %d)",
-                    targetType, workerCount, workerList.size()));
+                    targetType, targetCount, workerList.size()));
         }
     }
 

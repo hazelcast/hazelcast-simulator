@@ -172,19 +172,28 @@ public class ComponentRegistryTest {
         }
         assertEquals(18, componentRegistry.workerCount());
 
-        List<SimulatorAddress> workers = componentRegistry.getWorkerAddresses(12, TargetType.ALL);
+        List<SimulatorAddress> workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 0);
+        assertEquals(0, workers.size());
+
+        workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 12);
         assertEquals(12, workers.size());
 
-        workers = componentRegistry.getWorkerAddresses(8, TargetType.ALL);
+        workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 8);
         assertEquals(8, workers.size());
 
-        List<WorkerData> workerDataList = componentRegistry.getWorkers(7, TargetType.MEMBER);
+        List<WorkerData> workerDataList = componentRegistry.getWorkers(TargetType.MEMBER, 0);
+        assertEquals(0, workerDataList.size());
+
+        workerDataList = componentRegistry.getWorkers(TargetType.MEMBER, 7);
         assertEquals(7, workerDataList.size());
         for (WorkerData workerData : workerDataList) {
             assertTrue(workerData.isMemberWorker());
         }
 
-        workerDataList = componentRegistry.getWorkers(7, TargetType.CLIENT);
+        workerDataList = componentRegistry.getWorkers(TargetType.CLIENT, 0);
+        assertEquals(0, workerDataList.size());
+
+        workerDataList = componentRegistry.getWorkers(TargetType.CLIENT, 7);
         assertEquals(7, workerDataList.size());
         for (WorkerData workerData : workerDataList) {
             assertFalse(workerData.isMemberWorker());
@@ -198,7 +207,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
         assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkerAddresses(5, TargetType.ALL);
+        componentRegistry.getWorkerAddresses(TargetType.ALL, 5);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -208,7 +217,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
         assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkerAddresses(3, TargetType.CLIENT);
+        componentRegistry.getWorkerAddresses(TargetType.CLIENT, 3);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -218,7 +227,7 @@ public class ComponentRegistryTest {
         componentRegistry.addWorkers(parentAddress, getWorkerJvmSettingsList(2, WorkerType.CLIENT));
         assertEquals(4, componentRegistry.workerCount());
 
-        componentRegistry.getWorkerAddresses(3, TargetType.MEMBER);
+        componentRegistry.getWorkerAddresses(TargetType.MEMBER, 3);
     }
 
     @Test
