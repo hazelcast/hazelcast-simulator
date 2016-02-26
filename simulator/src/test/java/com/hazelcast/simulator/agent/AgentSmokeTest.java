@@ -180,7 +180,7 @@ public class AgentSmokeTest implements FailureListener {
             runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_WARMUP);
 
             LOGGER.info("Starting run phase...");
-            remoteClient.sendToTestOnAllWorkers(testId, new StartTestOperation(false));
+            remoteClient.sendToTestOnAllWorkers(testId, new StartTestOperation());
 
             LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
             sleepSeconds(TEST_RUNTIME_SECONDS);

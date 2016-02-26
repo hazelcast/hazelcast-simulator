@@ -15,24 +15,24 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.protocol.registry.TargetType;
+
 /**
- * Starts the {@link com.hazelcast.simulator.test.TestPhase#RUN} phase of a Simulator test.
+ * Starts the {@link com.hazelcast.simulator.test.TestPhase#RUN} phase of a Simulator Test.
  */
 public class StartTestOperation implements SimulatorOperation {
 
-    /**
-     * Defines if a {@link com.hazelcast.simulator.worker.MemberWorker} should execute the
-     * {@link com.hazelcast.simulator.test.TestPhase#RUN} phase.
-     *
-     * Can be ignored on client Workers.
-     */
-    private final boolean isPassiveMember;
+    private final TargetType targetType;
 
-    public StartTestOperation(boolean isPassiveMember) {
-        this.isPassiveMember = isPassiveMember;
+    public StartTestOperation() {
+        this(TargetType.ALL);
     }
 
-    public boolean isPassiveMember() {
-        return isPassiveMember;
+    public StartTestOperation(TargetType targetType) {
+        this.targetType = targetType;
+    }
+
+    public TargetType getTargetType() {
+        return targetType;
     }
 }

@@ -178,7 +178,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private void startTest() {
         echo(format("Starting Test start on %s Workers", targetType.toString(targetTypeCount)));
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(!targetType.isMemberTarget()));
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType));
         echo("Completed Test start");
     }
 

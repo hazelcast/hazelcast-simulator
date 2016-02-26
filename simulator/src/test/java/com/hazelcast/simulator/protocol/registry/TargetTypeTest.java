@@ -36,6 +36,18 @@ public class TargetTypeTest {
     }
 
     @Test
+    public void testMatchWorkerType() {
+        assertTrue(ALL.matches(true));
+        assertTrue(ALL.matches(false));
+
+        assertTrue(MEMBER.matches(true));
+        assertFalse(MEMBER.matches(false));
+
+        assertFalse(CLIENT.matches(true));
+        assertTrue(CLIENT.matches(false));
+    }
+
+    @Test
     public void testToString() {
         assertEquals("all", ALL.toString(0));
         assertEquals("3", ALL.toString(3));

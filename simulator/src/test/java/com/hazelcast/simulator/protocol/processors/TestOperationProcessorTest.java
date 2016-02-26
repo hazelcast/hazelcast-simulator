@@ -11,6 +11,7 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -98,10 +99,10 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_passiveMember() {
+    public void process_StartTest_withTargetTypeClient() {
         createTestOperationProcessor();
 
-        StartTestOperation operation = new StartTestOperation(true);
+        StartTestOperation operation = new StartTestOperation(TargetType.CLIENT);
         ResponseType responseType = processor.process(operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);
 
@@ -157,7 +158,7 @@ public class TestOperationProcessorTest {
     }
 
     private void runTest() {
-        StartTestOperation operation = new StartTestOperation(false);
+        StartTestOperation operation = new StartTestOperation();
         processor.process(operation, COORDINATOR);
 
         waitForPhaseCompletion(TestPhase.RUN);

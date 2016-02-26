@@ -55,6 +55,10 @@ public enum TargetType {
         return (hasClientWorkers ? CLIENT : MEMBER);
     }
 
+    public boolean matches(boolean isMemberWorker) {
+        return (this == ALL || (this == MEMBER && isMemberWorker) || (this == CLIENT && !isMemberWorker));
+    }
+
     public String toString(int targetTypeCount) {
         if (this == ALL) {
             if (targetTypeCount == 0) {

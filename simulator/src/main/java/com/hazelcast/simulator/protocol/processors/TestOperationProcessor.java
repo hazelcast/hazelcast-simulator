@@ -27,6 +27,7 @@ import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.worker.Worker;
@@ -163,8 +164,9 @@ public class TestOperationProcessor extends OperationProcessor {
             LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
         }
 
-        if (operation.isPassiveMember() && type == WorkerType.MEMBER) {
-            LOGGER.info(format("%s Skipping run of %s (member is passive) %s", DASHES, testId, DASHES));
+        TargetType targetType = operation.getTargetType();
+        if (!targetType.matches(type.isMember())) {
+            LOGGER.info(format("%s Skipping run of %s (%s Worker vs. %s target) %s", DASHES, testId, type, targetType, DASHES));
             sendPhaseCompletedOperation(TestPhase.RUN);
             return;
         }
