@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
@@ -180,7 +179,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private void startTest() {
         echo(format("Starting Test start on %s", targetType.toString(targetCount)));
-        List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
         remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
         echo("Completed Test start");
     }

@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 
 import java.util.Collections;
@@ -27,17 +26,17 @@ import java.util.List;
 public class StartTestOperation implements SimulatorOperation {
 
     private final TargetType targetType;
-    private final List<SimulatorAddress> targetWorkers;
+    private final List<String> targetWorkers;
 
     public StartTestOperation() {
         this(TargetType.ALL);
     }
 
     public StartTestOperation(TargetType targetType) {
-        this(targetType, Collections.<SimulatorAddress>emptyList());
+        this(targetType, Collections.<String>emptyList());
     }
 
-    public StartTestOperation(TargetType targetType, List<SimulatorAddress> targetWorkers) {
+    public StartTestOperation(TargetType targetType, List<String> targetWorkers) {
         this.targetType = targetType;
         this.targetWorkers = targetWorkers;
     }
@@ -46,7 +45,7 @@ public class StartTestOperation implements SimulatorOperation {
         return targetType;
     }
 
-    public List<SimulatorAddress> getTargetWorkers() {
+    public List<String> getTargetWorkers() {
         return targetWorkers;
     }
 

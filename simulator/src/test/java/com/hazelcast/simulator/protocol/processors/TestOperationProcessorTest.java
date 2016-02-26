@@ -117,7 +117,7 @@ public class TestOperationProcessorTest {
     public void process_StartTest_skipRunPhase_notOnTargetWorkersList() {
         createTestOperationProcessor();
 
-        List<SimulatorAddress> targetWorkers = singletonList(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0));
+        List<String> targetWorkers = singletonList(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0).toString());
         StartTestOperation operation = new StartTestOperation(TargetType.ALL, targetWorkers);
         ResponseType responseType = processor.process(operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);

@@ -127,12 +127,12 @@ public class ComponentRegistry {
         return workerList;
     }
 
-    public List<SimulatorAddress> getWorkerAddresses(TargetType targetType, int targetCount) {
+    public List<String> getWorkerAddresses(TargetType targetType, int targetCount) {
         if (targetCount <= 0) {
             return emptyList();
         }
 
-        List<SimulatorAddress> workerList = new ArrayList<SimulatorAddress>();
+        List<String> workerList = new ArrayList<String>();
         getWorkers(targetType, targetCount, workerList, false);
         return workerList;
     }
@@ -155,7 +155,7 @@ public class ComponentRegistry {
                     if (addWorkerData) {
                         workerList.add(workerData);
                     } else {
-                        workerList.add(workerData.getAddress());
+                        workerList.add(workerData.getAddress().toString());
                     }
                 }
             }

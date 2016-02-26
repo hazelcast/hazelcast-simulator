@@ -200,7 +200,7 @@ public class TestOperationProcessor extends OperationProcessor {
             LOGGER.info(format("%s Skipping run of %s (%s Worker vs. %s target) %s", DASHES, testId, type, targetType, DASHES));
             return true;
         }
-        if (operation.hasTargetWorkers() && !operation.getTargetWorkers().contains(testAddress.getParent())) {
+        if (operation.hasTargetWorkers() && !operation.getTargetWorkers().contains(testAddress.getParent().toString())) {
             LOGGER.info(format("%s Skipping run of %s (Worker is not on target list) %s", DASHES, testId, DASHES));
             return true;
         }

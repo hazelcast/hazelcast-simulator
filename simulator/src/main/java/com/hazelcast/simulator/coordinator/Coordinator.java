@@ -376,7 +376,7 @@ public final class Coordinator {
         int targetCount = coordinatorParameters.getTargetCount();
         if (targetCount > 0) {
             TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
-            List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+            List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
             echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
         }
     }

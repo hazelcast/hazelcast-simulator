@@ -172,7 +172,7 @@ public class ComponentRegistryTest {
         }
         assertEquals(18, componentRegistry.workerCount());
 
-        List<SimulatorAddress> workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 0);
+        List<String> workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 0);
         assertEquals(0, workers.size());
 
         workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 12);
