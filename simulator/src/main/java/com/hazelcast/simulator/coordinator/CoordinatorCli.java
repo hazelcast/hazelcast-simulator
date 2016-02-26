@@ -104,7 +104,7 @@ final class CoordinatorCli {
             "Defines if tests are verified.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-    private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerFresh",
+    private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerRefresh",
             "Defines if the Worker JVMs should be restarted after every test (in serial execution).")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
