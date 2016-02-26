@@ -176,8 +176,8 @@ public class SimulatorProperties {
         }
     }
 
-    public int getTargetTypeCount() {
-        return parseInt(get("TARGET_TYPE_COUNT", "0"));
+    public int getTargetCount() {
+        return parseInt(get("TARGET_COUNT", "0"));
     }
 
     public String get(String name) {

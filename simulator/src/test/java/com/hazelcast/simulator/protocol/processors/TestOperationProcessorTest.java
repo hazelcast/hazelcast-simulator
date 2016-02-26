@@ -23,6 +23,7 @@ import com.hazelcast.simulator.worker.Worker;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.List;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -32,6 +33,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static com.hazelcast.simulator.test.TestContext.LOCALHOST;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -99,10 +101,24 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_skipRunPhase() {
+    public void process_StartTest_skipRunPhase_targetTypeMismatch() {
         createTestOperationProcessor();
 
         StartTestOperation operation = new StartTestOperation(TargetType.CLIENT);
+        ResponseType responseType = processor.process(operation, COORDINATOR);
+        assertEquals(SUCCESS, responseType);
+
+        waitForPhaseCompletion(TestPhase.RUN);
+
+        exceptionLogger.assertNoException();
+    }
+
+    @Test
+    public void process_StartTest_skipRunPhase_notOnTargetWorkersList() {
+        createTestOperationProcessor();
+
+        List<SimulatorAddress> targetWorkers = singletonList(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0));
+        StartTestOperation operation = new StartTestOperation(TargetType.ALL, targetWorkers);
         ResponseType responseType = processor.process(operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);
 

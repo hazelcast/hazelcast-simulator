@@ -34,7 +34,7 @@ class CoordinatorParameters {
     private final boolean refreshJvm;
 
     private final TargetType targetType;
-    private final int targetTypeCount;
+    private final int targetCount;
 
     private final TestPhase lastTestPhaseToSync;
 
@@ -51,7 +51,7 @@ class CoordinatorParameters {
         this.refreshJvm = refreshJvm;
 
         this.targetType = properties.getTargetType();
-        this.targetTypeCount = properties.getTargetTypeCount();
+        this.targetCount = properties.getTargetCount();
 
         this.lastTestPhaseToSync = lastTestPhaseToSync;
     }
@@ -88,8 +88,8 @@ class CoordinatorParameters {
         return targetType.resolvePreferClient(hasClientWorkers);
     }
 
-    int getTargetTypeCount() {
-        return targetTypeCount;
+    int getTargetCount() {
+        return targetCount;
     }
 
     TestPhase getLastTestPhaseToSync() {

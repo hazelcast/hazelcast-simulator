@@ -249,15 +249,15 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
-    public void testGet_TARGET_TYPE_COUNT() {
-        initProperty("TARGET_TYPE_COUNT", "50");
+    public void testGet_TARGET_COUNT() {
+        initProperty("TARGET_COUNT", "50");
 
-        assertEquals(50, simulatorProperties.getTargetTypeCount());
+        assertEquals(50, simulatorProperties.getTargetCount());
     }
 
     @Test
-    public void testGet_TARGET_TYPE_COUNT_defaultValue() {
-        assertEquals(0, simulatorProperties.getTargetTypeCount());
+    public void testGet_TARGET_COUNT_defaultValue() {
+        assertEquals(0, simulatorProperties.getTargetCount());
     }
 
     private void initProperty(String key, Object value) {

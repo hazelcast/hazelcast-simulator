@@ -164,9 +164,7 @@ public class TestOperationProcessor extends OperationProcessor {
             LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
         }
 
-        TargetType targetType = operation.getTargetType();
-        if (!targetType.matches(type.isMember())) {
-            LOGGER.info(format("%s Skipping run of %s (%s Worker vs. %s target) %s", DASHES, testId, type, targetType, DASHES));
+        if (skipRunPhase(operation)) {
             sendPhaseCompletedOperation(TestPhase.RUN);
             return;
         }
@@ -194,6 +192,19 @@ public class TestOperationProcessor extends OperationProcessor {
     private void processStopTest() {
         LOGGER.info(format("%s Stopping %s %s", DASHES, testId, DASHES));
         testContainer.getTestContext().stop();
+    }
+
+    private boolean skipRunPhase(StartTestOperation operation) {
+        TargetType targetType = operation.getTargetType();
+        if (!targetType.matches(type.isMember())) {
+            LOGGER.info(format("%s Skipping run of %s (%s Worker vs. %s target) %s", DASHES, testId, type, targetType, DASHES));
+            return true;
+        }
+        if (operation.hasTargetWorkers() && !operation.getTargetWorkers().contains(testAddress.getParent())) {
+            LOGGER.info(format("%s Skipping run of %s (Worker is not on target list) %s", DASHES, testId, DASHES));
+            return true;
+        }
+        return false;
     }
 
     private void sendPhaseCompletedOperation(TestPhase testPhase) {

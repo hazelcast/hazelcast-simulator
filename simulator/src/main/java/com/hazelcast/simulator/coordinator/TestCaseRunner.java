@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
@@ -26,6 +27,7 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import org.apache.log4j.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -79,7 +81,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private final boolean isVerifyEnabled;
     private final TargetType targetType;
-    private final int targetTypeCount;
+    private final int targetCount;
 
     private final boolean monitorPerformance;
     private final int logPerformanceIntervalSeconds;
@@ -103,7 +105,7 @@ final class TestCaseRunner implements TestPhaseListener {
         CoordinatorParameters coordinatorParameters = coordinator.getCoordinatorParameters();
         this.isVerifyEnabled = coordinatorParameters.isVerifyEnabled();
         this.targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
-        this.targetTypeCount = coordinatorParameters.getTargetTypeCount();
+        this.targetCount = coordinatorParameters.getTargetCount();
 
         WorkerParameters workerParameters = coordinator.getWorkerParameters();
         this.monitorPerformance = workerParameters.isMonitorPerformance();
@@ -177,8 +179,9 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void startTest() {
-        echo(format("Starting Test start on %s Workers", targetType.toString(targetTypeCount)));
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType));
+        echo(format("Starting Test start on %s Workers", targetType.toString(targetCount)));
+        List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
         echo("Completed Test start");
     }
 
@@ -245,11 +248,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private int getExpectedWorkerCount(TestPhase testPhase) {
-        int workerCount = componentRegistry.workerCount();
-        if (workerCount == 0) {
-            return 0;
-        }
-        return (testPhase.isGlobal()) ? 1 : workerCount;
+        return (testPhase.isGlobal()) ? 1 : componentRegistry.workerCount();
     }
 
     private CountDownLatch decrementAndGetCountDownLatch(TestPhase testPhase) {

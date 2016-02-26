@@ -15,7 +15,11 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.TargetType;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Starts the {@link com.hazelcast.simulator.test.TestPhase#RUN} phase of a Simulator Test.
@@ -23,16 +27,30 @@ import com.hazelcast.simulator.protocol.registry.TargetType;
 public class StartTestOperation implements SimulatorOperation {
 
     private final TargetType targetType;
+    private final List<SimulatorAddress> targetWorkers;
 
     public StartTestOperation() {
         this(TargetType.ALL);
     }
 
     public StartTestOperation(TargetType targetType) {
+        this(targetType, Collections.<SimulatorAddress>emptyList());
+    }
+
+    public StartTestOperation(TargetType targetType, List<SimulatorAddress> targetWorkers) {
         this.targetType = targetType;
+        this.targetWorkers = targetWorkers;
     }
 
     public TargetType getTargetType() {
         return targetType;
+    }
+
+    public List<SimulatorAddress> getTargetWorkers() {
+        return targetWorkers;
+    }
+
+    public boolean hasTargetWorkers() {
+        return !targetWorkers.isEmpty();
     }
 }

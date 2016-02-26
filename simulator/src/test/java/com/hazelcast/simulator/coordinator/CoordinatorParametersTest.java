@@ -30,7 +30,7 @@ public class CoordinatorParametersTest {
         assertFalse(coordinatorParameters.isRefreshJvm());
         assertEquals(TargetType.CLIENT, coordinatorParameters.getTargetType(true));
         assertEquals(TargetType.MEMBER, coordinatorParameters.getTargetType(false));
-        assertEquals(0, coordinatorParameters.getTargetTypeCount());
+        assertEquals(0, coordinatorParameters.getTargetCount());
         assertEquals(LOCAL_TEARDOWN, coordinatorParameters.getLastTestPhaseToSync());
     }
 }

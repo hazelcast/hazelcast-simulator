@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.test.TestCase;
@@ -34,6 +35,7 @@ import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -275,6 +277,13 @@ public final class Coordinator {
                 echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
                 TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncMap);
                 testPhaseListenerContainer.addListener(testIndex, runner);
+            }
+
+            int targetCount = coordinatorParameters.getTargetCount();
+            if (targetCount > 0) {
+                TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
+                List<SimulatorAddress> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+                echo("RUN phase will be executed on %s Worker: %s", targetCount, targetType.toString(targetCount), targetWorkers);
             }
 
             echoTestSuiteStart(testCount, isParallel);
