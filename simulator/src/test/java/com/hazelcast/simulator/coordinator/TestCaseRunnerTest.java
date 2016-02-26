@@ -18,9 +18,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.mockito.verification.VerificationMode;
 
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
@@ -38,6 +41,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -45,6 +49,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TestCaseRunnerTest {
+
+    private CountDownLatch finishWorkerLatch = new CountDownLatch(1);
 
     private TestSuite testSuite;
     private FailureOperation criticalFailureOperation;
@@ -82,6 +88,15 @@ public class TestCaseRunnerTest {
         simulatorProperties = new SimulatorProperties();
 
         remoteClient = mock(RemoteClient.class);
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+                if (finishWorkerLatch != null) {
+                    finishWorkerLatch.countDown();
+                }
+                return null;
+            }
+        }).when(remoteClient).terminateWorkers(anyBoolean());
     }
 
     @After
@@ -124,6 +139,19 @@ public class TestCaseRunnerTest {
         monitorPerformance = true;
 
         Coordinator coordinator = createCoordinator();
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator);
+    }
+
+    @Test
+    public void runTestSuiteParallel_withTargetCount() {
+        testSuite.setWaitForTestCase(true);
+        testSuite.setDurationSeconds(0);
+        parallel = true;
+        verifyEnabled = false;
+
+        Coordinator coordinator = createCoordinator(1);
         coordinator.runTestSuite();
 
         verifyRemoteClient(coordinator);
@@ -233,8 +261,9 @@ public class TestCaseRunnerTest {
     public void runTestSuiteSequential_withWorkerNotShuttingDown() {
         simulatorProperties.set("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS", "1");
         testSuite.setDurationSeconds(1);
+        finishWorkerLatch = null;
 
-        Coordinator coordinator = createCoordinator(false);
+        Coordinator coordinator = createCoordinator();
         coordinator.runTestSuite();
 
         Set<SimulatorAddress> finishedWorkers = coordinator.getFailureContainer().getFinishedWorkers();
@@ -247,10 +276,10 @@ public class TestCaseRunnerTest {
     }
 
     private Coordinator createCoordinator() {
-        return createCoordinator(true);
+        return createCoordinator(0);
     }
 
-    private Coordinator createCoordinator(boolean finishWorker) {
+    private Coordinator createCoordinator(int targetCount) {
         WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
         when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
 
@@ -265,6 +294,7 @@ public class TestCaseRunnerTest {
         when(coordinatorParameters.isParallel()).thenReturn(parallel);
         when(coordinatorParameters.isRefreshJvm()).thenReturn(false);
         when(coordinatorParameters.getTargetType(anyBoolean())).thenReturn(TargetType.ALL);
+        when(coordinatorParameters.getTargetCount()).thenReturn(targetCount);
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
@@ -281,7 +311,7 @@ public class TestCaseRunnerTest {
                 clusterLayoutParameters);
         coordinator.setRemoteClient(remoteClient);
 
-        new TestPhaseCompleter(coordinator, finishWorker);
+        new TestPhaseCompleter(coordinator);
 
         return coordinator;
     }
@@ -358,15 +388,13 @@ public class TestCaseRunnerTest {
         private final ComponentRegistry componentRegistry;
         private final TestPhaseListenerContainer testPhaseListenerContainer;
         private final FailureContainer failureContainer;
-        private final boolean finishWorker;
 
-        private TestPhaseCompleter(Coordinator coordinator, boolean finishWorker) {
+        private TestPhaseCompleter(Coordinator coordinator) {
             super("TestPhaseCompleter");
 
             this.componentRegistry = coordinator.getComponentRegistry();
             this.testPhaseListenerContainer = coordinator.getTestPhaseListenerContainer();
             this.failureContainer = coordinator.getFailureContainer();
-            this.finishWorker = finishWorker;
 
             setDaemon(true);
             start();
@@ -381,8 +409,12 @@ public class TestCaseRunnerTest {
                 }
             }
 
-            if (finishWorker) {
-                sleepMillis(100);
+            if (finishWorkerLatch != null) {
+                try {
+                    finishWorkerLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
                 FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
                         "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
