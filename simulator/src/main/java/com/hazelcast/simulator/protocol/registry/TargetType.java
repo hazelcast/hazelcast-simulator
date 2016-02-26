@@ -8,17 +8,48 @@ package com.hazelcast.simulator.protocol.registry;
 public enum TargetType {
 
     /**
-     * Returns all types of Workers.
+     * Selects all types of Workers.
      */
     ALL,
 
     /**
-     * Returns just member Workers.
+     * Selects just member Workers.
      */
     MEMBER,
 
     /**
-     * Returns just client Workers.
+     * Selects just client Workers.
      */
-    CLIENT
+    CLIENT,
+
+    /**
+     * Selects client Workers if there are any registered, member Workers otherwise.
+     *
+     * This equates to the old passive members mode.
+     */
+    PREFER_CLIENT;
+
+    public boolean isMemberTarget() {
+        return (this == ALL || this == MEMBER);
+    }
+
+    public TargetType resolvePreferClients(boolean hasClientWorkers) {
+        if (this != PREFER_CLIENT) {
+            return this;
+        }
+        return (hasClientWorkers ? CLIENT : MEMBER);
+    }
+
+    public String toString(int targetTypeCount) {
+        if (this == ALL) {
+            if (targetTypeCount == 0) {
+                return "all";
+            }
+            return "" + targetTypeCount;
+        }
+        if (targetTypeCount == 0) {
+            return "all " + name().toLowerCase();
+        }
+        return targetTypeCount + " " + name().toLowerCase();
+    }
 }

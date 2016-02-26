@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.common;
 
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -231,6 +232,32 @@ public class SimulatorPropertiesTest {
         initProperty("CLOUD_CREDENTIAL", "notFound");
 
         simulatorProperties.getCloudCredential();
+    }
+
+    @Test
+    public void testGet_TARGET_TYPE() {
+        initProperty("TARGET_TYPE", TargetType.MEMBER.name());
+
+        assertEquals(TargetType.MEMBER, simulatorProperties.getTargetType());
+    }
+
+    @Test
+    public void testGet_TARGET_TYPE_notExists() {
+        initProperty("TARGET_TYPE", "FOOBAR");
+
+        assertEquals(TargetType.PREFER_CLIENT, simulatorProperties.getTargetType());
+    }
+
+    @Test
+    public void testGet_TARGET_TYPE_COUNT() {
+        initProperty("TARGET_TYPE_COUNT", "50");
+
+        assertEquals(50, simulatorProperties.getTargetTypeCount());
+    }
+
+    @Test
+    public void testGet_TARGET_TYPE_COUNT_defaultValue() {
+        assertEquals(0, simulatorProperties.getTargetTypeCount());
     }
 
     private void initProperty(String key, Object value) {

@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.common;
 
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -164,6 +165,19 @@ public class SimulatorProperties {
 
     public String getCloudCredential() {
         return get("CLOUD_CREDENTIAL");
+    }
+
+    public TargetType getTargetType() {
+        String targetType = get("TARGET_TYPE", TargetType.PREFER_CLIENT.name());
+        try {
+            return TargetType.valueOf(targetType);
+        } catch (IllegalArgumentException e) {
+            return TargetType.PREFER_CLIENT;
+        }
+    }
+
+    public int getTargetTypeCount() {
+        return parseInt(get("TARGET_TYPE_COUNT", "0"));
     }
 
     public String get(String name) {

@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
@@ -77,7 +78,8 @@ final class TestCaseRunner implements TestPhaseListener {
     private final Map<TestPhase, CountDownLatch> testPhaseSyncMap;
 
     private final boolean isVerifyEnabled;
-    private final boolean isPassiveMembers;
+    private final TargetType targetType;
+    private final int targetTypeCount;
 
     private final boolean monitorPerformance;
     private final int logPerformanceIntervalSeconds;
@@ -100,9 +102,8 @@ final class TestCaseRunner implements TestPhaseListener {
 
         CoordinatorParameters coordinatorParameters = coordinator.getCoordinatorParameters();
         this.isVerifyEnabled = coordinatorParameters.isVerifyEnabled();
-
-        ClusterLayoutParameters clusterLayoutParameters = coordinator.getClusterLayoutParameters();
-        this.isPassiveMembers = (coordinatorParameters.isPassiveMembers() && clusterLayoutParameters.getClientWorkerCount() > 0);
+        this.targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
+        this.targetTypeCount = coordinatorParameters.getTargetTypeCount();
 
         WorkerParameters workerParameters = coordinator.getWorkerParameters();
         this.monitorPerformance = workerParameters.isMonitorPerformance();
@@ -176,8 +177,8 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void startTest() {
-        echo(format("Starting Test start (%s members)", (isPassiveMembers) ? "passive" : "active"));
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(isPassiveMembers));
+        echo(format("Starting Test start on %s Workers", targetType.toString(targetTypeCount)));
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(!targetType.isMemberTarget()));
         echo("Completed Test start");
     }
 

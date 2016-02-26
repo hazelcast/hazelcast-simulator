@@ -16,9 +16,8 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.test.TestPhase;
-
-import static java.lang.Boolean.parseBoolean;
 
 /**
  * Parameters for Simulator Coordinator.
@@ -33,13 +32,15 @@ class CoordinatorParameters {
     private final boolean verifyEnabled;
     private final boolean parallel;
     private final boolean refreshJvm;
-    private final boolean passiveMembers;
+
+    private final TargetType targetType;
+    private final int targetTypeCount;
 
     private final TestPhase lastTestPhaseToSync;
 
     CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean uploadHazelcastJARs,
-                                 boolean enterpriseEnabled, boolean verifyEnabled, boolean parallel, boolean refreshJvm,
-                                 TestPhase lastTestPhaseToSync) {
+                          boolean enterpriseEnabled, boolean verifyEnabled, boolean parallel, boolean refreshJvm,
+                          TestPhase lastTestPhaseToSync) {
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
 
@@ -48,7 +49,9 @@ class CoordinatorParameters {
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
         this.refreshJvm = refreshJvm;
-        this.passiveMembers = parseBoolean(properties.get("PASSIVE_MEMBERS", "true"));
+
+        this.targetType = properties.getTargetType();
+        this.targetTypeCount = properties.getTargetTypeCount();
 
         this.lastTestPhaseToSync = lastTestPhaseToSync;
     }
@@ -81,8 +84,12 @@ class CoordinatorParameters {
         return refreshJvm;
     }
 
-    boolean isPassiveMembers() {
-        return passiveMembers;
+    TargetType getTargetType(boolean hasClientWorkers) {
+        return targetType.resolvePreferClients(hasClientWorkers);
+    }
+
+    int getTargetTypeCount() {
+        return targetTypeCount;
     }
 
     TestPhase getLastTestPhaseToSync() {

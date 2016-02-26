@@ -8,6 +8,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
@@ -31,6 +32,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeast;
@@ -262,6 +264,7 @@ public class TestCaseRunnerTest {
         when(coordinatorParameters.isVerifyEnabled()).thenReturn(verifyEnabled);
         when(coordinatorParameters.isParallel()).thenReturn(parallel);
         when(coordinatorParameters.isRefreshJvm()).thenReturn(false);
+        when(coordinatorParameters.getTargetType(anyBoolean())).thenReturn(TargetType.ALL);
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
