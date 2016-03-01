@@ -200,10 +200,15 @@ public class NetworkTest {
         public Worker() {
             workerId = workerIdGenerator.getAndIncrement();
             responseFuture = packetHandler.futures[workerId];
+
         }
 
         @Override
         protected void timeStep() throws Exception {
+            if (responseFuture.thread == null) {
+                responseFuture.thread = Thread.currentThread();
+            }
+
             Connection connection = nextConnection();
             byte[] payload = makePayload(payloadSize);
             Packet requestPacket = new Packet(payload, workerId);

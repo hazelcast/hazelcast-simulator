@@ -21,15 +21,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.LockSupport;
 
 public class RequestFuture implements Future {
 
-    private final Lock lock = new ReentrantLock(false);
-    private final Condition condition = lock.newCondition();
+    Thread thread;
     private volatile Object result;
+
+    public RequestFuture() {
+    }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
@@ -58,33 +58,25 @@ public class RequestFuture implements Future {
         }
 
         long timeoutNs = unit.toNanos(timeout);
-        lock.lock();
-        try {
-            while (result == null) {
-                if (timeoutNs <= 0) {
-                    throw new TimeoutException();
-                }
-
-                timeoutNs = condition.awaitNanos(timeoutNs);
+        while (result == null) {
+            if (timeoutNs <= 0) {
+                throw new TimeoutException();
             }
-
-            return result;
-        } finally {
-            lock.unlock();
+            long startNs = System.nanoTime();
+            LockSupport.parkNanos(timeout);
+            long durationNs = System.nanoTime() - startNs;
+            timeoutNs -= durationNs;
         }
+
+        return result;
     }
 
     public void set() {
-        lock.lock();
-        try {
-            if (result != null) {
-                throw new TestException("result should be null");
-            }
-            result = Boolean.TRUE;
-            condition.signal();
-        } finally {
-            lock.unlock();
+        if (result != null) {
+            throw new TestException("result should be null");
         }
+        result = Boolean.TRUE;
+        LockSupport.unpark(thread);
     }
 
     public void reset() {
