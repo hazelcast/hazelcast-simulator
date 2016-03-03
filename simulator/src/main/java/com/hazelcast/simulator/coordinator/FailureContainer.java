@@ -50,7 +50,7 @@ public class FailureContainer {
     private final AtomicInteger failureCount = new AtomicInteger();
     private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkers
             = new ConcurrentHashMap<SimulatorAddress, FailureType>();
-    private final ConcurrentHashMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
+    private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
 
     private final AtomicBoolean hasCriticalFailure = new AtomicBoolean();
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
