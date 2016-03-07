@@ -22,8 +22,12 @@ import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.compute.domain.Volume;
+import org.jclouds.compute.options.TemplateOptions;
+import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.ec2.domain.SecurityGroup;
 import org.jclouds.ec2.features.SecurityGroupApi;
+import org.jclouds.scriptbuilder.ScriptBuilder;
 import org.jclouds.scriptbuilder.statements.login.AdminAccess;
 
 import java.util.ArrayList;
@@ -33,24 +37,35 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.toPrimitive;
+import static org.jclouds.compute.domain.Volume.Type.LOCAL;
 import static org.jclouds.net.domain.IpProtocol.TCP;
+import static org.jclouds.scriptbuilder.domain.Statements.exec;
 
 final class TemplateBuilder {
 
     static final int SSH_PORT = 22;
     static final String CIDR_RANGE = "0.0.0.0/0";
 
+    private static final String DEFAULT_SUBNET_ID = "default";
+    private static final String DEFAULT_MKFS_OPTIONS = "-t ext4";
+    private static final String DEFAULT_MOUNT_OPTIONS = "defaults,nofail,noatime,relatime";
+    private static final String EPHEMERAL_DEVICE = "/dev/sdm";
+
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
     private final Map<Integer, Integer> portRangeMap = new HashMap<Integer, Integer>();
+    private final ScriptBuilder scriptBuilder = new ScriptBuilder();
 
     private final ComputeService compute;
     private final SimulatorProperties simulatorProperties;
+    private final boolean isEC2;
 
     TemplateBuilder(ComputeService compute, SimulatorProperties simulatorProperties) {
         this.compute = compute;
         this.simulatorProperties = simulatorProperties;
+        this.isEC2 = isEC2(simulatorProperties);
 
         populatePortRangeMap();
     }
@@ -68,6 +83,9 @@ final class TemplateBuilder {
     Template build() {
         LOGGER.info("Creating jclouds template...");
 
+        String user = simulatorProperties.getUser();
+        LOGGER.info("Login name to remote machines: " + user);
+
         String securityGroup = simulatorProperties.get("SECURITY_GROUP", "simulator");
         LOGGER.info("Security group: " + securityGroup);
 
@@ -75,37 +93,41 @@ final class TemplateBuilder {
         TemplateBuilderSpec spec = TemplateBuilderSpec.parse(machineSpec);
         LOGGER.info("Machine spec: " + machineSpec);
 
-        Template template = buildTemplate(spec);
+        Template template = compute.templateBuilder().from(spec).build();
+        TemplateOptions templateOptions = template.getOptions();
 
-        String user = simulatorProperties.getUser();
-        AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
-        LOGGER.info("Login name to remote machines: " + user);
+        addAdminAccess(user);
 
-        template.getOptions()
-                .inboundPorts(inboundPorts())
-                .runScript(adminAccess);
+        templateOptions.inboundPorts(inboundPorts());
 
-        String subnetId = simulatorProperties.get("SUBNET_ID", "default");
-        if (subnetId.equals("default") || subnetId.isEmpty()) {
+        String subnetId = simulatorProperties.get("SUBNET_ID", DEFAULT_SUBNET_ID);
+        if (DEFAULT_SUBNET_ID.equals(subnetId) || subnetId.isEmpty()) {
             initSecurityGroup(spec, securityGroup);
-            template.getOptions()
-                    .securityGroups(securityGroup);
+            templateOptions.securityGroups(securityGroup);
         } else {
-            if (!isEC2(simulatorProperties)) {
+            if (!isEC2) {
                 throw new IllegalStateException("SUBNET_ID can be used only when EC2 is configured as a cloud provider.");
             }
             LOGGER.info("Using VPC with Subnet ID = " + subnetId);
-            template.getOptions()
+            templateOptions
                     .as(AWSEC2TemplateOptions.class)
                     .subnetId(subnetId);
         }
+
+        if (isEC2) {
+            EC2TemplateOptions ec2TemplateOptions = templateOptions.as(EC2TemplateOptions.class);
+            mapDevices(ec2TemplateOptions, template, user);
+        }
+
+        templateOptions.runScript(scriptBuilder);
 
         LOGGER.info("Successfully created jclouds template");
         return template;
     }
 
-    private Template buildTemplate(TemplateBuilderSpec spec) {
-        return compute.templateBuilder().from(spec).build();
+    private void addAdminAccess(String user) {
+        AdminAccess adminAccess = AdminAccess.builder().adminUsername(user).build();
+        scriptBuilder.addStatement(adminAccess);
     }
 
     private int[] inboundPorts() {
@@ -125,7 +147,7 @@ final class TemplateBuilder {
     }
 
     private void initSecurityGroup(TemplateBuilderSpec spec, String securityGroup) {
-        if (!isEC2(simulatorProperties)) {
+        if (!isEC2) {
             return;
         }
 
@@ -150,5 +172,52 @@ final class TemplateBuilder {
             int endPort = portRangeEntry.getValue();
             securityGroupApi.authorizeSecurityGroupIngressInRegion(region, securityGroup, TCP, startPort, endPort, CIDR_RANGE);
         }
+    }
+
+    private void mapDevices(EC2TemplateOptions ec2TemplateOptions, Template template, String user) {
+        // mapping ephemeral device
+        LOGGER.debug("Mapping ephemeral device");
+        ec2TemplateOptions.mapEphemeralDeviceToDeviceName(EPHEMERAL_DEVICE, "ephemeral0");
+
+        createFileSystem(EPHEMERAL_DEVICE, DEFAULT_MKFS_OPTIONS);
+        mountDevice(EPHEMERAL_DEVICE, "ephemeral", DEFAULT_MOUNT_OPTIONS, user);
+
+        // mapping additional local volumes
+        String mkfsOptions = simulatorProperties.get("INSTANCE_STORAGE_MKFS_OPTIONS", DEFAULT_MKFS_OPTIONS);
+        String mountOptions = simulatorProperties.get("INSTANCE_STORAGE_MOUNT_OPTIONS", DEFAULT_MOUNT_OPTIONS);
+        for (Volume volume : template.getHardware().getVolumes()) {
+            if (!volume.isBootDevice() && LOCAL.equals(volume.getType())) {
+                String device = volume.getDevice();
+                String mountName = device.substring(device.lastIndexOf('/') + 1);
+                int volumeSize = Math.round(volume.getSize());
+
+                LOGGER.debug(format("Mapping device %s (%d GB)", device, volumeSize));
+                ec2TemplateOptions.mapNewVolumeToDeviceName(device, volumeSize, true);
+
+                createFileSystem(device, mkfsOptions);
+                mountDevice(device, mountName, mountOptions, user);
+            }
+        }
+    }
+
+    private void createFileSystem(String device, String mkfsOptions) {
+        if (device.startsWith("/dev/sd")) {
+            String virtualDevice = device.replace("/dev/sd", "/dev/xvd");
+            addStatement("ln -s %s %s || true", virtualDevice, device);
+        }
+        addStatement("mkfs %s %s", mkfsOptions, device);
+    }
+
+    private void mountDevice(String device, String mountName, String mountOptions, String user) {
+        addStatement("mkdir /mnt/%s", mountName);
+        addStatement("mount -o %s %s /mnt/%s", mountOptions, device, mountName);
+
+        addStatement("chown -R %s /mnt/%s", user, mountName);
+        addStatement("ln -s /mnt/%s /home/users/%s/%s", mountName, user, mountName);
+    }
+
+    private void addStatement(String command, Object... options) {
+        String statement = format(command, options);
+        scriptBuilder.addStatement(exec(statement));
     }
 }

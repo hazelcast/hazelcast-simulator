@@ -9,6 +9,7 @@ import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.domain.TemplateBuilderSpec;
+import org.jclouds.compute.domain.Volume;
 import org.jclouds.compute.domain.internal.TemplateImpl;
 import org.jclouds.domain.Location;
 import org.jclouds.ec2.domain.SecurityGroup;
@@ -16,10 +17,12 @@ import org.jclouds.ec2.domain.SecurityGroup;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,8 +36,16 @@ public abstract class AbstractComputeServiceTest {
     ComputeService computeService;
 
     void initComputeServiceMock() {
-        Image image = mock(Image.class);
+        Volume volume = mock(Volume.class);
+        when(volume.isBootDevice()).thenReturn(false);
+        when(volume.getType()).thenReturn(Volume.Type.LOCAL);
+        when(volume.getDevice()).thenReturn("/dev/sdb");
+        when(volume.getSize()).thenReturn(160f);
+
         Hardware hardware = mock(Hardware.class);
+        doReturn(singletonList(volume)).when(hardware).getVolumes();
+
+        Image image = mock(Image.class);
         Location location = mock(Location.class);
         AWSEC2TemplateOptions templateOptions = new AWSEC2TemplateOptions();
 
