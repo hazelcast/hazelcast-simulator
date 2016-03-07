@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.toPrimitive;
 import static org.jclouds.compute.domain.Volume.Type.LOCAL;
@@ -51,7 +52,6 @@ final class TemplateBuilder {
     private static final String DEFAULT_SUBNET_ID = "default";
     private static final String DEFAULT_MKFS_OPTIONS = "-t ext4";
     private static final String DEFAULT_MOUNT_OPTIONS = "defaults,nofail,noatime,relatime";
-    private static final String EPHEMERAL_DEVICE = "/dev/sdm";
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
@@ -175,40 +175,31 @@ final class TemplateBuilder {
     }
 
     private void mapDevices(EC2TemplateOptions ec2TemplateOptions, Template template, String user) {
-        // mapping ephemeral device
-        LOGGER.debug("Mapping ephemeral device");
-        ec2TemplateOptions.mapEphemeralDeviceToDeviceName(EPHEMERAL_DEVICE, "ephemeral0");
-
-        createFileSystem(EPHEMERAL_DEVICE, DEFAULT_MKFS_OPTIONS);
-        mountDevice(EPHEMERAL_DEVICE, "ephemeral", DEFAULT_MOUNT_OPTIONS, user);
-
-        // mapping additional local volumes
         String mkfsOptions = simulatorProperties.get("INSTANCE_STORAGE_MKFS_OPTIONS", DEFAULT_MKFS_OPTIONS);
         String mountOptions = simulatorProperties.get("INSTANCE_STORAGE_MOUNT_OPTIONS", DEFAULT_MOUNT_OPTIONS);
+
+        int ephemeralCounter = 0;
         for (Volume volume : template.getHardware().getVolumes()) {
             if (!volume.isBootDevice() && LOCAL.equals(volume.getType())) {
                 String device = volume.getDevice();
-                String mountName = device.substring(device.lastIndexOf('/') + 1);
-                int volumeSize = Math.round(volume.getSize());
 
-                LOGGER.debug(format("Mapping device %s (%d GB)", device, volumeSize));
-                ec2TemplateOptions.mapNewVolumeToDeviceName(device, volumeSize, true);
+                LOGGER.info(format("Mapping device %s (%d GB)", device, round(volume.getSize())));
+                ec2TemplateOptions.mapEphemeralDeviceToDeviceName(device, "ephemeral" + ephemeralCounter++);
 
-                createFileSystem(device, mkfsOptions);
-                mountDevice(device, mountName, mountOptions, user);
+                mountDevice(device, mkfsOptions, mountOptions, user);
             }
         }
     }
 
-    private void createFileSystem(String device, String mkfsOptions) {
+    private void mountDevice(String device, String mkfsOptions, String mountOptions, String user) {
+        String mountName = device.substring(device.lastIndexOf('/') + 1);
+
         if (device.startsWith("/dev/sd")) {
             String virtualDevice = device.replace("/dev/sd", "/dev/xvd");
             addStatement("ln -s %s %s || true", virtualDevice, device);
         }
         addStatement("mkfs %s %s", mkfsOptions, device);
-    }
 
-    private void mountDevice(String device, String mountName, String mountOptions, String user) {
         addStatement("mkdir /mnt/%s", mountName);
         addStatement("mount -o %s %s /mnt/%s", mountOptions, device, mountName);
 
