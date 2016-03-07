@@ -73,10 +73,6 @@
         <netty.version>4.1.0.CR3</netty.version>
         <javassist.version>3.12.1.GA</javassist.version>
 
-        <tomcat.version>7.0.54</tomcat.version>
-        <jsp.api.version>2.2.1</jsp.api.version>
-        <servlet.api.version>3.0.1</servlet.api.version>
-
         <maven.compiler.plugin.version>3.5.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.0.0</maven.source.plugin.version>
         <maven.javadoc.plugin.version>2.10.3</maven.javadoc.plugin.version>
