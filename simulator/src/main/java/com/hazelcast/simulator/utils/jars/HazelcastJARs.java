@@ -165,7 +165,6 @@ public class HazelcastJARs {
             } else {
                 mavenRetrieve(targetDir, "hazelcast", version, false);
                 mavenRetrieve(targetDir, "hazelcast-client", version, false);
-                mavenRetrieve(targetDir, "hazelcast-wm", version, false);
             }
         } else {
             throw new CommandLineExitException("Unrecognized version spec: " + versionSpecDirs);

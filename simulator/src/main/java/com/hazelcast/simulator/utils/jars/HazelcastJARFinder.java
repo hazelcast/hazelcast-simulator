@@ -24,7 +24,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 class HazelcastJARFinder {
 
-    private static final String[] JAR_NAMES = new String[]{"hazelcast", "hazelcast-client", "hazelcast-wm"};
+    private static final String[] JAR_NAMES = new String[]{"hazelcast", "hazelcast-client"};
 
     public File[] find(File path) {
         return find(path, JAR_NAMES);
