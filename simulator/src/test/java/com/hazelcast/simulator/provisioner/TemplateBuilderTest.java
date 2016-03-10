@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.compute.domain.Template;
 import org.jclouds.compute.options.TemplateOptions;
@@ -39,6 +40,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
         setDistributionUserDir();
 
         simulatorProperties = new SimulatorProperties();
+        simulatorProperties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_EC2);
         simulatorProperties.set("SECURITY_GROUP", SECURITY_GROUP);
         simulatorProperties.set("AGENT_PORT", "1234");
 

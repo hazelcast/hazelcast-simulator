@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -50,7 +51,7 @@ public class CloudInfoCliTest {
         deletePublicPrivateKeyFiles();
     }
 
-    @Test
+    @Test(expected = CommandLineExitException.class)
     public void testInit() {
         init(getArgs());
     }

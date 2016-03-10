@@ -2,6 +2,7 @@ package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -42,6 +43,7 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
         createCloudCredentialFiles();
 
         SimulatorProperties properties = new SimulatorProperties();
+        properties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_EC2);
         initComputeServiceMock();
         bash = mock(Bash.class);
         HazelcastJARs hazelcastJars = mock(HazelcastJARs.class);
