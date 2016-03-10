@@ -99,12 +99,12 @@ final class WizardUtils {
             return clazz.getProtectionDomain().getCodeSource().getLocation();
             // URL is in one of two forms
             //        ./build/classes/    NetBeans test
-            //        jardir/JarName.jar  from a JAR
+            //        jars/JarName.jar    from a JAR
         } catch (SecurityException e) {
             return clazz.getResource(clazz.getSimpleName() + ".class");
-            // URL is in one of two forms, both ending "/com/physpics/tools/ui/PropNode.class"
-            //          file:/U:/Fred/java/Tools/UI/build/classes
-            //          jar:file:/U:/Fred/java/Tools/UI/dist/UI.jar!
+            // URL is in one of two forms, both ending "/com/hazelcast/simulator/wizard/WizardUtils.class"
+            //          file:/U:/Simulator/java/simulator/wizard/build/classes
+            //          jar:file:/U:/Simulator/java/simulator/wizard/dist/Wizard.jar!
         }
     }
 }
