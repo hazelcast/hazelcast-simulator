@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -166,6 +168,15 @@ public final class FileUtils {
                 closeQuietly(streamReader);
             }
         } catch (IOException e) {
+            throw new FileUtilsException(e);
+        }
+    }
+
+    public static String getResourceFile(String fileName) {
+        try {
+            URL url = Resources.getResource(fileName);
+            return Resources.toString(url, Charsets.UTF_8);
+        } catch (Exception e) {
             throw new FileUtilsException(e);
         }
     }

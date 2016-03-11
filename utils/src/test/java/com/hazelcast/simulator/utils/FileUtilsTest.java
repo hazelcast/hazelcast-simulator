@@ -8,6 +8,7 @@ import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -116,6 +117,17 @@ public class FileUtilsTest {
     @Test(expected = FileUtilsException.class)
     public void testFileAsText_withInvalidFilename() {
         fileAsText(INVALID_FILE);
+    }
+
+    @Test
+    public void testGetResourceFile() {
+        String resourceFileContent = getResourceFile("fileUtilsTestFile.txt");
+        assertEquals("testContent", resourceFileContent);
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testGetResourceFile_fileNotFound() {
+        getResourceFile("notFound");
     }
 
     @Test
