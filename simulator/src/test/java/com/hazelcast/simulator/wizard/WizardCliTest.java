@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -20,6 +21,7 @@ import static com.hazelcast.simulator.wizard.WizardCli.run;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -83,6 +85,30 @@ public class WizardCliTest {
         run(getArgs(), wizard);
 
         verify(wizard).install(anyString(), any(File.class));
+        verifyNoMoreInteractions(wizard);
+    }
+
+    @Test
+    public void testRun_createWorkDir() {
+        args.add("--createWorkDir");
+        args.add("tests");
+
+        run(getArgs(), wizard);
+
+        verify(wizard).createWorkDir(eq("tests"), eq(CloudProviderUtils.PROVIDER_LOCAL));
+        verifyNoMoreInteractions(wizard);
+    }
+
+    @Test
+    public void testRun_createWorkDir_withCloudProvider() {
+        args.add("--createWorkDir");
+        args.add("tests");
+        args.add("--cloudProvider");
+        args.add(CloudProviderUtils.PROVIDER_GCE);
+
+        run(getArgs(), wizard);
+
+        verify(wizard).createWorkDir(eq("tests"), eq(CloudProviderUtils.PROVIDER_GCE));
         verifyNoMoreInteractions(wizard);
     }
 

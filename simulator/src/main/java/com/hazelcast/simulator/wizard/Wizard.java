@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -25,9 +27,14 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.wizard.WizardCli.init;
 import static com.hazelcast.simulator.wizard.WizardCli.run;
 import static java.lang.String.format;
@@ -60,6 +67,28 @@ public class Wizard {
 
         appendText(config, profileFile);
         echo("Done!%n%nNOTE: Don't forget to start a new terminal to make changes effective!");
+    }
+
+    void createWorkDir(String pathName, String cloudProvider) {
+        File workDir = new File(pathName).getAbsoluteFile();
+        if (workDir.exists()) {
+            throw new CommandLineExitException(format("Working directory '%s' already exists!", workDir));
+        }
+
+        echo("Will create working directory '%s' for cloud provider '%s'", workDir, cloudProvider);
+        ensureExistingDirectory(workDir);
+
+        File runScript = ensureExistingFile(workDir, "run");
+        writeText(getResourceFile("runScript"), runScript);
+        execute(format("chmod u+x %s", runScript.getAbsolutePath()));
+
+        File testProperties = ensureExistingFile(workDir, "test.properties");
+        writeText("IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest" + NEW_LINE, testProperties);
+
+        if (!CloudProviderUtils.isLocal(cloudProvider)) {
+            File simulatorProperties = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
+            writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorProperties);
+        }
     }
 
     private void echo(String message, Object... args) {

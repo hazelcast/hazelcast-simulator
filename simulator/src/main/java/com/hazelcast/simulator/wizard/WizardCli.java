@@ -21,8 +21,13 @@ import joptsimple.OptionSpec;
 
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_GCE;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.wizard.WizardUtils.getProfileFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getSimulatorPath;
+import static java.lang.String.format;
 
 final class WizardCli {
 
@@ -30,6 +35,17 @@ final class WizardCli {
 
     private final OptionSpec installSpec = parser.accepts("install",
             "Installs Hazelcast Simulator on the local machine.");
+
+    private final OptionSpec<String> createWorkDirSpec = parser.accepts("createWorkDir",
+            "Creates a working directory with the given name."
+                    + " You can specify a cloud provider with --cloudProvider to customize the setup.")
+            .withOptionalArg().ofType(String.class).defaultsTo("tests");
+
+    private final OptionSpec<String> cloudProvider = parser.accepts("cloudProvider",
+            format("Defines the cloud provider for your test setup."
+                            + " Valid values are %s, %s or any cloud provider supported by jclouds (e.g. %s or %s).",
+                    PROVIDER_LOCAL, PROVIDER_STATIC, PROVIDER_EC2, PROVIDER_GCE))
+            .withRequiredArg().ofType(String.class).defaultsTo(PROVIDER_LOCAL);
 
     private WizardCli() {
     }
@@ -45,6 +61,8 @@ final class WizardCli {
         if (options.has(cli.installSpec)) {
             String homeDir = System.getProperty("user.dir");
             wizard.install(getSimulatorPath(), getProfileFile(homeDir));
+        } else if (options.has(cli.createWorkDirSpec)) {
+            wizard.createWorkDir(cli.createWorkDirSpec.value(options), cli.cloudProvider.value(options));
         } else {
             printHelpAndExit(cli.parser);
         }
