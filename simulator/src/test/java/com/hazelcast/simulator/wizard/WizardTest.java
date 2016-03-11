@@ -113,4 +113,9 @@ public class WizardTest {
 
         wizard.createWorkDir(workDir.getName(), PROVIDER_LOCAL);
     }
+
+    @Test
+    public void testListCloudProviders() {
+        wizard.listCloudProviders();
+    }
 }

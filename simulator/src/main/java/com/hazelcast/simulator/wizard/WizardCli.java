@@ -21,13 +21,9 @@ import joptsimple.OptionSpec;
 
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_GCE;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.wizard.WizardUtils.getProfileFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getSimulatorPath;
-import static java.lang.String.format;
 
 final class WizardCli {
 
@@ -42,10 +38,12 @@ final class WizardCli {
             .withOptionalArg().ofType(String.class).defaultsTo("tests");
 
     private final OptionSpec<String> cloudProvider = parser.accepts("cloudProvider",
-            format("Defines the cloud provider for your test setup."
-                            + " Valid values are %s, %s or any cloud provider supported by jclouds (e.g. %s or %s).",
-                    PROVIDER_LOCAL, PROVIDER_STATIC, PROVIDER_EC2, PROVIDER_GCE))
-            .withRequiredArg().ofType(String.class).defaultsTo(PROVIDER_LOCAL);
+            "Defines the cloud provider for your test setup."
+                    + " Retrieve a list of valid cloud providers with --listCloudProviders."
+    ).withRequiredArg().ofType(String.class).defaultsTo(PROVIDER_LOCAL);
+
+    private final OptionSpec listCloudProvidersSpec = parser.accepts("listCloudProviders",
+            "Prints a list of all supported cloud providers.");
 
     private WizardCli() {
     }
@@ -63,6 +61,8 @@ final class WizardCli {
             wizard.install(getSimulatorPath(), getProfileFile(homeDir));
         } else if (options.has(cli.createWorkDirSpec)) {
             wizard.createWorkDir(cli.createWorkDirSpec.value(options), cli.cloudProvider.value(options));
+        } else if (options.has(cli.listCloudProvidersSpec)) {
+            wizard.listCloudProviders();
         } else {
             printHelpAndExit(cli.parser);
         }

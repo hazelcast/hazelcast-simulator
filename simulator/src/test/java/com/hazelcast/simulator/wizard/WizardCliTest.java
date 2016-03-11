@@ -112,6 +112,16 @@ public class WizardCliTest {
         verifyNoMoreInteractions(wizard);
     }
 
+    @Test
+    public void testRun_listCloudProviders() {
+        args.add("--list");
+
+        run(getArgs(), wizard);
+
+        verify(wizard).listCloudProviders();
+        verifyNoMoreInteractions(wizard);
+    }
+
     private String[] getArgs() {
         String[] argsArray = new String[args.size()];
         args.toArray(argsArray);

@@ -19,6 +19,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
+import org.jclouds.providers.ProviderMetadata;
+import org.jclouds.providers.Providers;
 
 import java.io.File;
 
@@ -88,6 +90,15 @@ public class Wizard {
         if (!CloudProviderUtils.isLocal(cloudProvider)) {
             File simulatorProperties = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
             writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorProperties);
+        }
+    }
+
+    void listCloudProviders() {
+        echo("Supported cloud providers:");
+        echo(" • %s: Local Setup", CloudProviderUtils.PROVIDER_LOCAL);
+        echo(" • %s: Static Setup", CloudProviderUtils.PROVIDER_STATIC);
+        for (ProviderMetadata providerMetadata : Providers.all()) {
+            echo(" • %s: %s", providerMetadata.getId(), providerMetadata.getName());
         }
     }
 
