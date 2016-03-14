@@ -99,8 +99,8 @@ public class Wizard {
         writeText("IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest" + NEW_LINE, testProperties);
 
         if (!CloudProviderUtils.isLocal(cloudProvider)) {
-            File simulatorProperties = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
-            writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorProperties);
+            File simulatorPropertiesFile = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
+            writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorPropertiesFile);
 
             ensureExistingFile(workDir, AgentsFile.NAME);
         }
