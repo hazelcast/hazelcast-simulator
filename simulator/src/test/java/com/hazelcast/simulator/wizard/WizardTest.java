@@ -23,9 +23,14 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class WizardTest {
+
+    private SimulatorProperties simulatorProperties;
 
     private File workDir;
     private File runScriptFile;
@@ -34,21 +39,26 @@ public class WizardTest {
     private File agentsFile;
 
     private File profileFile;
+
     private Wizard wizard;
 
     @BeforeClass
-    public static void setUpSecurityManager() {
+    public static void setUpEnvironment() {
+        setDistributionUserDir();
+
         setExitExceptionSecurityManagerWithStatusZero();
     }
 
     @AfterClass
-    public static void tearDownSecurityManager() {
+    public static void resetEnvironment() {
+        resetUserDir();
+
         resetSecurityManager();
     }
 
     @Before
     public void setUp() {
-        setDistributionUserDir();
+        simulatorProperties = mock(SimulatorProperties.class);
 
         workDir = new File("wizardTestWorkDir").getAbsoluteFile();
         runScriptFile = new File(workDir, "run");
@@ -57,15 +67,17 @@ public class WizardTest {
         agentsFile = new File(workDir, AgentsFile.NAME);
 
         profileFile = ensureExistingFile("wizardTest.txt");
-        wizard = new Wizard();
+
+        wizard = new Wizard(simulatorProperties);
     }
 
     @After
     public void tearDown() {
-        resetUserDir();
-
         deleteQuiet(profileFile);
         deleteQuiet(workDir);
+
+        deleteQuiet(Wizard.AGENTS_FILE);
+        deleteQuiet(Wizard.SSH_COPY_ID_FILE);
     }
 
     @Test
@@ -124,5 +136,27 @@ public class WizardTest {
     @Test
     public void testListCloudProviders() {
         wizard.listCloudProviders();
+    }
+
+    @Test
+    public void testCreateSshCopyIdScript() {
+        when(simulatorProperties.getUser()).thenReturn("wizardTestUser");
+
+        appendText("172.16.16.1" + NEW_LINE, Wizard.AGENTS_FILE);
+        appendText("172.16.16.2" + NEW_LINE, Wizard.AGENTS_FILE);
+
+        wizard.createSshCopyIdScript();
+
+        assertTrue(Wizard.SSH_COPY_ID_FILE.exists());
+        assertTrue(Wizard.SSH_COPY_ID_FILE.isFile());
+
+        String sshCopyIdScript = fileAsText(Wizard.SSH_COPY_ID_FILE);
+        assertTrue(sshCopyIdScript.contains("wizardTestUser@172.16.16.1"));
+        assertTrue(sshCopyIdScript.contains("wizardTestUser@172.16.16.2"));
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testSshCopyId_withEmptyAgentsFile() {
+        wizard.createSshCopyIdScript();
     }
 }

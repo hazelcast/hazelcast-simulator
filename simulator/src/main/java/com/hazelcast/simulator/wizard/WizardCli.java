@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -45,11 +46,17 @@ final class WizardCli {
     private final OptionSpec listCloudProvidersSpec = parser.accepts("listCloudProviders",
             "Prints a list of all supported cloud providers.");
 
+    private final OptionSpec createSshCopyIdScriptSpec = parser.accepts("createSshCopyIdScript",
+            "Creates a script file with ssh-copy-id commands for all public IP addressed from the agents.txt file.");
+
     private WizardCli() {
     }
 
     static Wizard init() {
-        return new Wizard();
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        simulatorProperties.init(null);
+
+        return new Wizard(simulatorProperties);
     }
 
     static void run(String[] args, Wizard wizard) {
@@ -63,6 +70,8 @@ final class WizardCli {
             wizard.createWorkDir(cli.createWorkDirSpec.value(options), cli.cloudProvider.value(options));
         } else if (options.has(cli.listCloudProvidersSpec)) {
             wizard.listCloudProviders();
+        } else if (options.has(cli.createSshCopyIdScriptSpec)) {
+            wizard.createSshCopyIdScript();
         } else {
             printHelpAndExit(cli.parser);
         }

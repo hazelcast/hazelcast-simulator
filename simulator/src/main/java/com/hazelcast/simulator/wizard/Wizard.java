@@ -17,6 +17,8 @@ package com.hazelcast.simulator.wizard;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
@@ -38,17 +40,25 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.wizard.WizardCli.init;
 import static com.hazelcast.simulator.wizard.WizardCli.run;
 import static java.lang.String.format;
 
 public class Wizard {
 
+    static final File SSH_COPY_ID_FILE = new File("ssh-copy-id-script").getAbsoluteFile();
+    static final File AGENTS_FILE = new File(AgentsFile.NAME).getAbsoluteFile();
+
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
 
-    Wizard() {
+    private final SimulatorProperties simulatorProperties;
+
+    Wizard(SimulatorProperties simulatorProperties) {
         echo("Hazelcast Simulator Wizard");
         echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+
+        this.simulatorProperties = simulatorProperties;
     }
 
     void install(String simulatorPath, File profileFile) {
@@ -103,6 +113,21 @@ public class Wizard {
         for (ProviderMetadata providerMetadata : Providers.all()) {
             echo(" • %s: %s", providerMetadata.getId(), providerMetadata.getName());
         }
+    }
+
+    void createSshCopyIdScript() {
+        ComponentRegistry componentRegistry = loadComponentRegister(AGENTS_FILE, true);
+        String userName = simulatorProperties.getUser();
+
+        ensureExistingFile(SSH_COPY_ID_FILE);
+        writeText("#!/bin/bash" + NEW_LINE + NEW_LINE, SSH_COPY_ID_FILE);
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String publicAddress = agentData.getPublicAddress();
+            appendText(format("ssh-copy-id -i ~/.ssh/id_rsa.pub %s@%s%n", userName, publicAddress), SSH_COPY_ID_FILE);
+        }
+        execute(format("chmod u+x %s", SSH_COPY_ID_FILE.getAbsoluteFile()));
+
+        echo("Please execute './%s' to copy your public RSA key to all remote machines.", SSH_COPY_ID_FILE.getName());
     }
 
     private void echo(String message, Object... args) {

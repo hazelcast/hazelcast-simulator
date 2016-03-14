@@ -122,6 +122,16 @@ public class WizardCliTest {
         verifyNoMoreInteractions(wizard);
     }
 
+    @Test
+    public void testRun_createSshCopyIdScript() {
+        args.add("--createSshCopyIdScript");
+
+        run(getArgs(), wizard);
+
+        verify(wizard).createSshCopyIdScript();
+        verifyNoMoreInteractions(wizard);
+    }
+
     private String[] getArgs() {
         String[] argsArray = new String[args.size()];
         args.toArray(argsArray);
