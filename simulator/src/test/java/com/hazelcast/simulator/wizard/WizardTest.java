@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.After;
@@ -29,6 +31,7 @@ public class WizardTest {
     private File runScriptFile;
     private File testPropertiesFile;
     private File simulatorPropertiesFile;
+    private File agentsFile;
 
     private File profileFile;
     private Wizard wizard;
@@ -50,7 +53,8 @@ public class WizardTest {
         workDir = new File("wizardTestWorkDir").getAbsoluteFile();
         runScriptFile = new File(workDir, "run");
         testPropertiesFile = new File(workDir, "test.properties");
-        simulatorPropertiesFile = new File(workDir, "simulator.properties");
+        simulatorPropertiesFile = new File(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
+        agentsFile = new File(workDir, AgentsFile.NAME);
 
         profileFile = ensureExistingFile("wizardTest.txt");
         wizard = new Wizard();
@@ -105,6 +109,9 @@ public class WizardTest {
         assertTrue(simulatorPropertiesFile.exists());
         assertTrue(simulatorPropertiesFile.isFile());
         assertTrue(fileAsText(simulatorPropertiesFile).contains(PROVIDER_EC2));
+
+        assertTrue(agentsFile.exists());
+        assertTrue(agentsFile.isFile());
     }
 
     @Test(expected = CommandLineExitException.class)

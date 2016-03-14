@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -90,6 +91,8 @@ public class Wizard {
         if (!CloudProviderUtils.isLocal(cloudProvider)) {
             File simulatorProperties = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
             writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorProperties);
+
+            ensureExistingFile(workDir, AgentsFile.NAME);
         }
     }
 
