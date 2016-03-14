@@ -20,6 +20,8 @@ package com.hazelcast.simulator.protocol.operation;
  */
 public class ChaosMonkeyOperation implements SimulatorOperation {
 
+    // TODO: add types for SIGSTOP and SIGCONT
+
     public enum Type {
         INTEGRATION_TEST,
         BLOCK_TRAFFIC,
