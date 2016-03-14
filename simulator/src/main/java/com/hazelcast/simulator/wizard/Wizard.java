@@ -29,13 +29,14 @@ import java.io.File;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -43,6 +44,7 @@ import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.wizard.WizardCli.init;
 import static com.hazelcast.simulator.wizard.WizardCli.run;
+import static com.hazelcast.simulator.wizard.WizardUtils.createScriptFile;
 import static java.lang.String.format;
 
 public class Wizard {
@@ -91,16 +93,20 @@ public class Wizard {
         echo("Will create working directory '%s' for cloud provider '%s'", workDir, cloudProvider);
         ensureExistingDirectory(workDir);
 
-        File runScript = ensureExistingFile(workDir, "run");
-        writeText(getResourceFile("runScript"), runScript);
-        execute(format("chmod u+x %s", runScript.getAbsolutePath()));
+        createScriptFile(workDir, "run", "runScript");
 
         File testProperties = ensureExistingFile(workDir, "test.properties");
         writeText("IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest" + NEW_LINE, testProperties);
 
-        if (!CloudProviderUtils.isLocal(cloudProvider)) {
+        if (!isLocal(cloudProvider)) {
             File simulatorPropertiesFile = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
             writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorPropertiesFile);
+
+            if (isStatic(cloudProvider)) {
+                createScriptFile(workDir, "prepare", "staticPrepareScript");
+            } else {
+                createScriptFile(workDir, "prepare", "cloudPrepareScript");
+            }
 
             ensureExistingFile(workDir, AgentsFile.NAME);
         }

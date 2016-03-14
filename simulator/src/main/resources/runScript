@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 members=${1:-2}
 clients=${2:-1}

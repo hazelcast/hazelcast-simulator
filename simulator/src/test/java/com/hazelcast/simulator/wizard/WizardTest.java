@@ -18,6 +18,8 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDi
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -33,8 +35,9 @@ public class WizardTest {
     private SimulatorProperties simulatorProperties;
 
     private File workDir;
-    private File runScriptFile;
     private File testPropertiesFile;
+    private File runScriptFile;
+    private File prepareScriptFile;
     private File simulatorPropertiesFile;
     private File agentsFile;
 
@@ -61,8 +64,9 @@ public class WizardTest {
         simulatorProperties = mock(SimulatorProperties.class);
 
         workDir = new File("wizardTestWorkDir").getAbsoluteFile();
-        runScriptFile = new File(workDir, "run");
         testPropertiesFile = new File(workDir, "test.properties");
+        runScriptFile = new File(workDir, "run");
+        prepareScriptFile = new File(workDir, "prepare");
         simulatorPropertiesFile = new File(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
         agentsFile = new File(workDir, AgentsFile.NAME);
 
@@ -106,24 +110,24 @@ public class WizardTest {
     }
 
     @Test
-    public void testCreateWorkDir() {
+    public void testCreateWorkDir_withCloudProviderLocal() {
+        wizard.createWorkDir(workDir.getName(), PROVIDER_LOCAL);
+
+        assertCreateWorkDir(PROVIDER_LOCAL);
+    }
+
+    @Test
+    public void testCreateWorkDir_withCloudProviderStatic() {
+        wizard.createWorkDir(workDir.getName(), PROVIDER_STATIC);
+
+        assertCreateWorkDir(PROVIDER_STATIC);
+    }
+
+    @Test
+    public void testCreateWorkDir_withCloudProviderEC2() {
         wizard.createWorkDir(workDir.getName(), PROVIDER_EC2);
 
-        assertTrue(workDir.exists());
-        assertTrue(workDir.isDirectory());
-
-        assertTrue(runScriptFile.exists());
-        assertTrue(runScriptFile.isFile());
-
-        assertTrue(testPropertiesFile.exists());
-        assertTrue(testPropertiesFile.isFile());
-
-        assertTrue(simulatorPropertiesFile.exists());
-        assertTrue(simulatorPropertiesFile.isFile());
-        assertTrue(fileAsText(simulatorPropertiesFile).contains(PROVIDER_EC2));
-
-        assertTrue(agentsFile.exists());
-        assertTrue(agentsFile.isFile());
+        assertCreateWorkDir(PROVIDER_EC2);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -158,5 +162,30 @@ public class WizardTest {
     @Test(expected = CommandLineExitException.class)
     public void testSshCopyId_withEmptyAgentsFile() {
         wizard.createSshCopyIdScript();
+    }
+
+    private void assertCreateWorkDir(String cloudProvider) {
+        assertTrue(workDir.exists());
+        assertTrue(workDir.isDirectory());
+
+        assertTrue(testPropertiesFile.exists());
+        assertTrue(testPropertiesFile.isFile());
+
+        assertTrue(runScriptFile.exists());
+        assertTrue(runScriptFile.isFile());
+
+        if (isLocal(cloudProvider)) {
+            return;
+        }
+
+        assertTrue(prepareScriptFile.exists());
+        assertTrue(prepareScriptFile.isFile());
+
+        assertTrue(simulatorPropertiesFile.exists());
+        assertTrue(simulatorPropertiesFile.isFile());
+        assertTrue(fileAsText(simulatorPropertiesFile).contains(cloudProvider));
+
+        assertTrue(agentsFile.exists());
+        assertTrue(agentsFile.isFile());
     }
 }

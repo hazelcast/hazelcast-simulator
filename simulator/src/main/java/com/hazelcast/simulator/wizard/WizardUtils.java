@@ -22,11 +22,23 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static com.hazelcast.simulator.utils.NativeUtils.execute;
+import static java.lang.String.format;
+
 final class WizardUtils {
 
     private static final int FILE_EXTENSION_LENGTH = 4;
 
     private WizardUtils() {
+    }
+
+    static void createScriptFile(File workDir, String targetName, String sourceName) {
+        File runScript = ensureExistingFile(workDir, targetName);
+        writeText(getResourceFile(sourceName), runScript);
+        execute(format("chmod u+x %s", runScript.getAbsolutePath()));
     }
 
     static File getProfileFile(String homeDir) {
