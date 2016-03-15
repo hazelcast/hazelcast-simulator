@@ -118,7 +118,7 @@ public class Wizard {
         writeText(format("%s=%s%n", PROPERTY_CLOUD_PROVIDER, cloudProvider), simulatorPropertiesFile);
         if (isEC2(cloudProvider)) {
             appendText(format(
-                    "%n# These files contain your AWS identity and access key (change if needed)%n#%s=%s%n#%s=%s%n",
+                    "%n# These files contain your AWS access key ID and secret access key (change if needed)%n#%s=%s%n#%s=%s%n",
                     PROPERTY_CLOUD_IDENTITY, simulatorProperties.get(PROPERTY_CLOUD_IDENTITY),
                     PROPERTY_CLOUD_CREDENTIAL, simulatorProperties.get(PROPERTY_CLOUD_CREDENTIAL)),
                     simulatorPropertiesFile);
