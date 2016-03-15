@@ -29,8 +29,12 @@ import java.io.File;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -46,7 +50,7 @@ import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.wizard.WizardCli.init;
 import static com.hazelcast.simulator.wizard.WizardCli.run;
-import static com.hazelcast.simulator.wizard.WizardUtils.createScriptFile;
+import static com.hazelcast.simulator.wizard.WizardUtils.copyResourceFile;
 import static java.lang.String.format;
 
 public class Wizard {
@@ -97,22 +101,34 @@ public class Wizard {
         echo("Will create working directory '%s' for cloud provider '%s'", workDir, cloudProvider);
         ensureExistingDirectory(workDir);
 
-        createScriptFile(workDir, "run", "runScript");
+        copyResourceFile(workDir, "run", "runScript");
 
         File testProperties = ensureExistingFile(workDir, "test.properties");
         writeText("IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest" + NEW_LINE, testProperties);
 
-        if (!isLocal(cloudProvider)) {
-            File simulatorPropertiesFile = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
-            writeText(format("CLOUD_PROVIDER=%s%n", cloudProvider), simulatorPropertiesFile);
+        if (isLocal(cloudProvider)) {
+            return;
+        }
 
-            if (isStatic(cloudProvider)) {
-                createScriptFile(workDir, "prepare", "staticPrepareScript");
-            } else {
-                createScriptFile(workDir, "prepare", "cloudPrepareScript");
-            }
+        ensureExistingFile(workDir, AgentsFile.NAME);
 
-            ensureExistingFile(workDir, AgentsFile.NAME);
+        File simulatorPropertiesFile = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
+        writeText(format("%s=%s%n", PROPERTY_CLOUD_PROVIDER, cloudProvider), simulatorPropertiesFile);
+        if (isEC2(cloudProvider)) {
+            appendText(format(
+                    "%n# These files contain your AWS identity and access key (change if needed)%n#%s=%s%n#%s=%s%n",
+                    PROPERTY_CLOUD_IDENTITY, simulatorProperties.get(PROPERTY_CLOUD_IDENTITY),
+                    PROPERTY_CLOUD_CREDENTIAL, simulatorProperties.get(PROPERTY_CLOUD_CREDENTIAL)),
+                    simulatorPropertiesFile);
+            appendText(format(
+                    "%n# Machine specification used for AWS (change if needed)%n#MACHINE_SPEC=%s%n",
+                    simulatorProperties.get("MACHINE_SPEC")), simulatorPropertiesFile);
+        }
+
+        if (isStatic(cloudProvider)) {
+            copyResourceFile(workDir, "prepare", "staticPrepareScript");
+        } else {
+            copyResourceFile(workDir, "prepare", "cloudPrepareScript");
         }
     }
 

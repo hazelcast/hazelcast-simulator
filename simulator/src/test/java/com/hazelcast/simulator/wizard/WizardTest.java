@@ -17,9 +17,12 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -225,7 +228,14 @@ public class WizardTest {
 
         assertTrue(simulatorPropertiesFile.exists());
         assertTrue(simulatorPropertiesFile.isFile());
-        assertTrue(fileAsText(simulatorPropertiesFile).contains(cloudProvider));
+
+        String simulatorPropertiesContent = fileAsText(simulatorPropertiesFile);
+        assertTrue(simulatorPropertiesContent.contains(cloudProvider));
+
+        if (isEC2(cloudProvider)) {
+            assertTrue(simulatorPropertiesContent.contains(PROPERTY_CLOUD_IDENTITY));
+            assertTrue(simulatorPropertiesContent.contains(PROPERTY_CLOUD_CREDENTIAL));
+        }
 
         assertTrue(agentsFile.exists());
         assertTrue(agentsFile.isFile());

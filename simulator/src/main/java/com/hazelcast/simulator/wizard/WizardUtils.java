@@ -35,7 +35,7 @@ final class WizardUtils {
     private WizardUtils() {
     }
 
-    static void createScriptFile(File workDir, String targetName, String sourceName) {
+    static void copyResourceFile(File workDir, String targetName, String sourceName) {
         File runScript = ensureExistingFile(workDir, targetName);
         writeText(getResourceFile(sourceName), runScript);
         execute(format("chmod u+x %s", runScript.getAbsolutePath()));
