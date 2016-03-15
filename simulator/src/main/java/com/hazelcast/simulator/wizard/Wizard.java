@@ -61,7 +61,7 @@ public class Wizard {
     static final File SSH_COPY_ID_FILE = new File("ssh-copy-id-script").getAbsoluteFile();
     static final File AGENTS_FILE = new File(AgentsFile.NAME).getAbsoluteFile();
 
-    private static final String GCE_DEFAULT_MACHINE_SPEC = "CENTOS,os64Bit=true";
+    private static final String GCE_DEFAULT_MACHINE_SPEC = "osFamily=CENTOS,os64Bit=true";
     private static final String GCE_DEFAULT_SSH_OPTIONS = "-o CheckHostIP=no";
 
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
