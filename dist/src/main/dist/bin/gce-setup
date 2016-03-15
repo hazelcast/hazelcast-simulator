@@ -1,25 +1,11 @@
 #!/bin/bash
 
-GCE_ID=$1
-P12_FILE=$2
-
+P12_FILE=$1
 CURRENT_PATH=$(pwd)
-CURRENT_USERNAME=$(whoami)
 
-echo "usually password is: \"notasecret\""
+echo "Converting your P12 file to ~/google.pem..."
+echo "Usually the password is: \"notasecret\""
+
 openssl pkcs12 -in ${CURRENT_PATH}/${P12_FILE} -out ${CURRENT_PATH}/temp1.pem -nodes
-openssl rsa -in ${CURRENT_PATH}/temp1.pem -out ${CURRENT_PATH}/google.pem
-rm temp1.pem
-
-echo "
-CLOUD_PROVIDER=google-compute-engine
-CLOUD_IDENTITY=${GCE_ID}
-CLOUD_CREDENTIAL=${CURRENT_PATH}/google.pem
-
-GROUP_NAME=simulator-agent
-USER=${CURRENT_USERNAME}
-
-SSH_OPTIONS=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o CheckHostIP=no
-
-MACHINE_SPEC=osFamily=CENTOS,os64Bit=true
-" > simulator.properties
+openssl rsa -in ${CURRENT_PATH}/gce-temp.pem -out ~/gce.pem
+rm ${CURRENT_PATH}/gce-temp.pem

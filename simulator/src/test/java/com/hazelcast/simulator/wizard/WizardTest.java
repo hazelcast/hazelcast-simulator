@@ -21,10 +21,11 @@ import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_GCE;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -150,6 +151,13 @@ public class WizardTest {
         assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_EC2);
     }
 
+    @Test
+    public void testCreateWorkDir_withCloudProviderGCE() {
+        wizard.createWorkDir(workDir.getName(), PROVIDER_GCE);
+
+        assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_GCE);
+    }
+
     @Test(expected = CommandLineExitException.class)
     public void testCreateWorkDir_workDirExists() {
         ensureExistingDirectory(workDir);
@@ -255,7 +263,7 @@ public class WizardTest {
         String simulatorPropertiesContent = fileAsText(simulatorPropertiesFile);
         assertTrue(simulatorPropertiesContent.contains(cloudProvider));
 
-        if (isEC2(cloudProvider)) {
+        if (!isStatic(cloudProvider)) {
             assertTrue(simulatorPropertiesContent.contains(PROPERTY_CLOUD_IDENTITY));
             assertTrue(simulatorPropertiesContent.contains(PROPERTY_CLOUD_CREDENTIAL));
         }
