@@ -37,7 +37,7 @@ public final class NativeUtils {
     private NativeUtils() {
     }
 
-    public static void execute(String command) {
+    public static StringBuilder execute(String command) {
         StringBuilder sb = new StringBuilder();
 
         if (LOGGER.isDebugEnabled()) {
@@ -64,6 +64,8 @@ public final class NativeUtils {
                     LOGGER.debug("Bash output: " + NEW_LINE + sb);
                 }
             }
+
+            return sb;
         } catch (Exception e) {
             throw rethrow(e);
         }
