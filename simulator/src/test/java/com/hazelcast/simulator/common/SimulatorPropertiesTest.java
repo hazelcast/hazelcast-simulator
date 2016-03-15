@@ -169,17 +169,22 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
-    public void testGet_systemProperty() {
+    public void testGet_withSystemProperty() {
+        assertEquals(File.pathSeparator, simulatorProperties.get("path.separator"));
+    }
+
+    @Test
+    public void testGet_withSystemProperty_withDefaultValue() {
         assertEquals(File.pathSeparator, simulatorProperties.get("path.separator", "ignored"));
     }
 
     @Test
-    public void testGet_default_isIgnored() {
+    public void testGet_withDefaultValue_defaultIsIgnored() {
         assertEquals("simulator", simulatorProperties.get("USER", "ignored"));
     }
 
     @Test
-    public void testGet_default_isUsed() {
+    public void testGet_withDefaultValue_defaultIsUsed() {
         assertEquals("defaultValue", simulatorProperties.get("notFound", "defaultValue"));
     }
 

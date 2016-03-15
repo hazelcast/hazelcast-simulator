@@ -159,23 +159,15 @@ public class SimulatorProperties {
     }
 
     public String getCloudIdentity() {
-        return get("CLOUD_IDENTITY");
+        return loadPropertyFromFile("CLOUD_IDENTITY");
     }
 
     public String getCloudCredential() {
-        return get("CLOUD_CREDENTIAL");
+        return loadPropertyFromFile("CLOUD_CREDENTIAL");
     }
 
     public String get(String name) {
-        String value = (String) properties.get(name);
-
-        if ("CLOUD_IDENTITY".equals(name)) {
-            value = loadPropertyFromFile("CLOUD_IDENTITY", value);
-        } else if ("CLOUD_CREDENTIAL".equals(name)) {
-            value = loadPropertyFromFile("CLOUD_CREDENTIAL", value);
-        }
-
-        return fixValue(name, value);
+        return get(name, null);
     }
 
     public String get(String name, String defaultValue) {
@@ -196,7 +188,8 @@ public class SimulatorProperties {
         properties.setProperty(name, value);
     }
 
-    private String loadPropertyFromFile(String property, String path) {
+    private String loadPropertyFromFile(String property) {
+        String path = get(property);
         File file = newFile(path);
         if (!file.exists()) {
             throw new CommandLineExitException(format("Can't find property %s file %s", property, path));
