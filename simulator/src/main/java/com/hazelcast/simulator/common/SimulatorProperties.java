@@ -103,6 +103,10 @@ public class SimulatorProperties {
         }
     }
 
+    public boolean containsKey(String name) {
+        return properties.containsKey(name);
+    }
+
     public void forceGit(String gitRevision) {
         if (gitRevision != null && !gitRevision.isEmpty()) {
             forcedHazelcastVersionSpec = GIT_VERSION_PREFIX + gitRevision;

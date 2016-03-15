@@ -13,11 +13,13 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -127,6 +129,12 @@ public class SimulatorPropertiesTest {
         simulatorProperties.load(workingDirFile);
 
         assertNull(simulatorProperties.get("#ignoredMe"));
+    }
+
+    @Test
+    public void testContainsKey() {
+        assertTrue(simulatorProperties.containsKey(PROPERTY_CLOUD_PROVIDER));
+        assertFalse(simulatorProperties.containsKey("UNKNOWN_PROPERTY"));
     }
 
     @Test
