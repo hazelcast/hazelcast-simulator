@@ -2,6 +2,7 @@ package com.hazelcast.simulator.wizard;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.After;
@@ -27,12 +28,19 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class WizardTest {
 
+    private static final String SSH_USERNAME = "wizardTestUser";
+
     private SimulatorProperties simulatorProperties;
+    private Bash bash;
 
     private File workDir;
     private File testPropertiesFile;
@@ -62,6 +70,10 @@ public class WizardTest {
     @Before
     public void setUp() {
         simulatorProperties = mock(SimulatorProperties.class);
+        when(simulatorProperties.getUser()).thenReturn(SSH_USERNAME);
+        when(simulatorProperties.getSshOptions()).thenReturn("");
+
+        bash = mock(Bash.class);
 
         workDir = new File("wizardTestWorkDir").getAbsoluteFile();
         testPropertiesFile = new File(workDir, "test.properties");
@@ -72,7 +84,7 @@ public class WizardTest {
 
         profileFile = ensureExistingFile("wizardTest.txt");
 
-        wizard = new Wizard(simulatorProperties);
+        wizard = new Wizard(simulatorProperties, bash);
     }
 
     @After
@@ -113,21 +125,21 @@ public class WizardTest {
     public void testCreateWorkDir_withCloudProviderLocal() {
         wizard.createWorkDir(workDir.getName(), PROVIDER_LOCAL);
 
-        assertCreateWorkDir(PROVIDER_LOCAL);
+        assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_LOCAL);
     }
 
     @Test
     public void testCreateWorkDir_withCloudProviderStatic() {
         wizard.createWorkDir(workDir.getName(), PROVIDER_STATIC);
 
-        assertCreateWorkDir(PROVIDER_STATIC);
+        assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_STATIC);
     }
 
     @Test
     public void testCreateWorkDir_withCloudProviderEC2() {
         wizard.createWorkDir(workDir.getName(), PROVIDER_EC2);
 
-        assertCreateWorkDir(PROVIDER_EC2);
+        assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_EC2);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -144,10 +156,8 @@ public class WizardTest {
 
     @Test
     public void testCreateSshCopyIdScript() {
-        when(simulatorProperties.getUser()).thenReturn("wizardTestUser");
-
-        appendText("172.16.16.1" + NEW_LINE, Wizard.AGENTS_FILE);
-        appendText("172.16.16.2" + NEW_LINE, Wizard.AGENTS_FILE);
+        addIpAddressToAgentsFile("172.16.16.1");
+        addIpAddressToAgentsFile("172.16.16.2");
 
         wizard.createSshCopyIdScript();
 
@@ -155,8 +165,8 @@ public class WizardTest {
         assertTrue(Wizard.SSH_COPY_ID_FILE.isFile());
 
         String sshCopyIdScript = fileAsText(Wizard.SSH_COPY_ID_FILE);
-        assertTrue(sshCopyIdScript.contains("wizardTestUser@172.16.16.1"));
-        assertTrue(sshCopyIdScript.contains("wizardTestUser@172.16.16.2"));
+        assertTrue(sshCopyIdScript.contains(SSH_USERNAME + "@172.16.16.1"));
+        assertTrue(sshCopyIdScript.contains(SSH_USERNAME + "@172.16.16.2"));
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -164,7 +174,39 @@ public class WizardTest {
         wizard.createSshCopyIdScript();
     }
 
-    private void assertCreateWorkDir(String cloudProvider) {
+    @Test
+    public void testSshConnectionTest() {
+        when(simulatorProperties.getCloudProvider()).thenReturn(PROVIDER_STATIC);
+
+        addIpAddressToAgentsFile("172.16.16.1");
+        addIpAddressToAgentsFile("172.16.16.2");
+
+        wizard.sshConnectionCheck();
+
+        verify(bash).ssh(eq("172.16.16.1"), anyString());
+        verify(bash).ssh(eq("172.16.16.2"), anyString());
+        verifyNoMoreInteractions(bash);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testSshConnectionTest_withCloudProviderLocal() {
+        when(simulatorProperties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
+
+        wizard.sshConnectionCheck();
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testSshConnectionTest_withEmptyAgentsFile() {
+        when(simulatorProperties.getCloudProvider()).thenReturn(PROVIDER_EC2);
+
+        wizard.sshConnectionCheck();
+    }
+
+    private void addIpAddressToAgentsFile(String ipAddress) {
+        appendText(ipAddress + NEW_LINE, Wizard.AGENTS_FILE);
+    }
+
+    private void assertThatWorkingDirFilesHaveBeenCreated(String cloudProvider) {
         assertTrue(workDir.exists());
         assertTrue(workDir.isDirectory());
 

@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.Bash;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -25,6 +27,7 @@ import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.wizard.WizardUtils.getProfileFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getSimulatorPath;
+import static java.lang.String.format;
 
 final class WizardCli {
 
@@ -47,7 +50,11 @@ final class WizardCli {
             "Prints a list of all supported cloud providers.");
 
     private final OptionSpec createSshCopyIdScriptSpec = parser.accepts("createSshCopyIdScript",
-            "Creates a script file with ssh-copy-id commands for all public IP addressed from the agents.txt file.");
+            format("Creates a script file with ssh-copy-id commands for all public IP addressed from the %s file.",
+                    AgentsFile.NAME));
+
+    private final OptionSpec sshConnectionCheckSpec = parser.accepts("sshConnectionCheck",
+            format("Checks the SSH connection to all remote machines in the %s file.", AgentsFile.NAME));
 
     private WizardCli() {
     }
@@ -56,7 +63,9 @@ final class WizardCli {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
         simulatorProperties.init(null);
 
-        return new Wizard(simulatorProperties);
+        Bash bash = new Bash(simulatorProperties);
+
+        return new Wizard(simulatorProperties, bash);
     }
 
     static void run(String[] args, Wizard wizard) {
@@ -72,6 +81,8 @@ final class WizardCli {
             wizard.listCloudProviders();
         } else if (options.has(cli.createSshCopyIdScriptSpec)) {
             wizard.createSshCopyIdScript();
+        } else if (options.has(cli.sshConnectionCheckSpec)) {
+            wizard.sshConnectionCheck();
         } else {
             printHelpAndExit(cli.parser);
         }

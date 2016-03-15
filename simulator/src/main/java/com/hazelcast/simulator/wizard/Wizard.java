@@ -19,7 +19,7 @@ import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.CloudProviderUtils;
+import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.jclouds.providers.ProviderMetadata;
@@ -29,6 +29,8 @@ import java.io.File;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -55,12 +57,14 @@ public class Wizard {
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
 
     private final SimulatorProperties simulatorProperties;
+    private final Bash bash;
 
-    Wizard(SimulatorProperties simulatorProperties) {
+    Wizard(SimulatorProperties simulatorProperties, Bash bash) {
         echo("Hazelcast Simulator Wizard");
         echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
 
         this.simulatorProperties = simulatorProperties;
+        this.bash = bash;
     }
 
     void install(String simulatorPath, File profileFile) {
@@ -114,8 +118,8 @@ public class Wizard {
 
     void listCloudProviders() {
         echo("Supported cloud providers:");
-        echo(" • %s: Local Setup", CloudProviderUtils.PROVIDER_LOCAL);
-        echo(" • %s: Static Setup", CloudProviderUtils.PROVIDER_STATIC);
+        echo(" • %s: Local Setup", PROVIDER_LOCAL);
+        echo(" • %s: Static Setup", PROVIDER_STATIC);
         for (ProviderMetadata providerMetadata : Providers.all()) {
             echo(" • %s: %s", providerMetadata.getId(), providerMetadata.getName());
         }
@@ -134,6 +138,23 @@ public class Wizard {
         execute(format("chmod u+x %s", SSH_COPY_ID_FILE.getAbsoluteFile()));
 
         echo("Please execute './%s' to copy your public RSA key to all remote machines.", SSH_COPY_ID_FILE.getName());
+    }
+
+    void sshConnectionCheck() {
+        if (isLocal(simulatorProperties)) {
+            throw new CommandLineExitException("SSH is not supported for local setups.");
+        }
+
+        ComponentRegistry componentRegistry = loadComponentRegister(AGENTS_FILE, true);
+        String userName = simulatorProperties.getUser();
+
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String publicAddress = agentData.getPublicAddress();
+            echo("Connecting to %s@%s...", userName, publicAddress);
+            bash.ssh(publicAddress, "echo ok 2>&1");
+        }
+
+        echo("Connected successfully to all remote machines!");
     }
 
     private void echo(String message, Object... args) {

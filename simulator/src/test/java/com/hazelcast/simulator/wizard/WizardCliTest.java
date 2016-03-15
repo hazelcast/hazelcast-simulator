@@ -132,6 +132,16 @@ public class WizardCliTest {
         verifyNoMoreInteractions(wizard);
     }
 
+    @Test
+    public void testRun_sshConnectionCheck() {
+        args.add("--sshConnectionCheck");
+
+        run(getArgs(), wizard);
+
+        verify(wizard).sshConnectionCheck();
+        verifyNoMoreInteractions(wizard);
+    }
+
     private String[] getArgs() {
         String[] argsArray = new String[args.size()];
         args.toArray(argsArray);
