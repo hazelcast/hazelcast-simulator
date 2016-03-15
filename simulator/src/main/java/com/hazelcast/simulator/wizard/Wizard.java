@@ -203,6 +203,10 @@ public class Wizard {
             }
         }
 
+        logResults(size, unknownProperties, changedProperties);
+    }
+
+    private void logResults(int size, int unknownProperties, int changedProperties) {
         StringBuilder sb = new StringBuilder();
         sb.append(size).append((size > 1 ? " properties" : " property")).append(" defined");
         if (changedProperties > 0) {
