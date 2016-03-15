@@ -56,6 +56,10 @@ final class WizardCli {
     private final OptionSpec sshConnectionCheckSpec = parser.accepts("sshConnectionCheck",
             format("Checks the SSH connection to all remote machines in the %s file.", AgentsFile.NAME));
 
+    private final OptionSpec compareSimulatorPropertiesSpec = parser.accepts("compareSimulatorProperties",
+            format("Compares the %s file in your working directory with the default property values.",
+                    SimulatorProperties.PROPERTIES_FILE_NAME));
+
     private WizardCli() {
     }
 
@@ -83,6 +87,8 @@ final class WizardCli {
             wizard.createSshCopyIdScript();
         } else if (options.has(cli.sshConnectionCheckSpec)) {
             wizard.sshConnectionCheck();
+        } else if (options.has(cli.compareSimulatorPropertiesSpec)) {
+            wizard.compareSimulatorProperties();
         } else {
             printHelpAndExit(cli.parser);
         }

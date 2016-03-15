@@ -26,6 +26,8 @@ import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.providers.Providers;
 
 import java.io.File;
+import java.util.Properties;
+import java.util.TreeSet;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
@@ -171,6 +173,48 @@ public class Wizard {
         }
 
         echo("Connected successfully to all remote machines!");
+    }
+
+    void compareSimulatorProperties() {
+        SimulatorProperties defaultProperties = new SimulatorProperties();
+        Properties userProperties = WizardUtils.getUserProperties();
+
+        int size = userProperties.size();
+        if (size == 0) {
+            echo(format("Found no %s file or file was empty!", SimulatorProperties.PROPERTIES_FILE_NAME));
+            return;
+        }
+
+        echo("Defined user properties:");
+        int unknownProperties = 0;
+        int changedProperties = 0;
+        for (String property : new TreeSet<String>(userProperties.stringPropertyNames())) {
+            String userValue = userProperties.getProperty(property);
+            String defaultValue = defaultProperties.get(property);
+
+            if (!defaultProperties.containsKey(property)) {
+                echo("%s = %s [unknown property]", property, userValue);
+                unknownProperties++;
+            } else if (!defaultValue.equals(userValue)) {
+                echo("%s = %s [default: %s]", property, userValue, defaultValue);
+                changedProperties++;
+            } else {
+                echo("%s = %s", property, userValue);
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(size).append((size > 1 ? " properties" : " property")).append(" defined");
+        if (changedProperties > 0) {
+            sb.append(" (").append(changedProperties).append(" changed)");
+        }
+        if (unknownProperties > 0) {
+            sb.append(" (").append(unknownProperties).append(" unknown)");
+        }
+        echo(sb.toString());
+        if (unknownProperties > 0) {
+            LOGGER.warn("Unknown properties will be ignored!");
+        }
     }
 
     private void echo(String message, Object... args) {

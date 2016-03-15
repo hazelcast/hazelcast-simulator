@@ -142,6 +142,16 @@ public class WizardCliTest {
         verifyNoMoreInteractions(wizard);
     }
 
+    @Test
+    public void testRun_compareSimulatorProperties() {
+        args.add("--compareSimulatorProperties");
+
+        run(getArgs(), wizard);
+
+        verify(wizard).compareSimulatorProperties();
+        verifyNoMoreInteractions(wizard);
+    }
+
     private String[] getArgs() {
         String[] argsArray = new String[args.size()];
         args.toArray(argsArray);

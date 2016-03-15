@@ -19,6 +19,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDi
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
@@ -30,6 +31,7 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.lang.String.format;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -52,6 +54,7 @@ public class WizardTest {
     private File simulatorPropertiesFile;
     private File agentsFile;
 
+    private File localSimulatorPropertiesFile;
     private File profileFile;
 
     private Wizard wizard;
@@ -85,6 +88,7 @@ public class WizardTest {
         simulatorPropertiesFile = new File(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
         agentsFile = new File(workDir, AgentsFile.NAME);
 
+        localSimulatorPropertiesFile = new File(SimulatorProperties.PROPERTIES_FILE_NAME).getAbsoluteFile();
         profileFile = ensureExistingFile("wizardTest.txt");
 
         wizard = new Wizard(simulatorProperties, bash);
@@ -92,6 +96,7 @@ public class WizardTest {
 
     @After
     public void tearDown() {
+        deleteQuiet(localSimulatorPropertiesFile);
         deleteQuiet(profileFile);
         deleteQuiet(workDir);
 
@@ -203,6 +208,24 @@ public class WizardTest {
         when(simulatorProperties.getCloudProvider()).thenReturn(PROVIDER_EC2);
 
         wizard.sshConnectionCheck();
+    }
+
+    @Test
+    public void testCompareSimulatorProperties() {
+        SimulatorProperties defaultProperties = new SimulatorProperties();
+        ensureExistingFile(localSimulatorPropertiesFile);
+
+        appendText("invalid=unknown" + NEW_LINE, localSimulatorPropertiesFile);
+        appendText(format("%s=changed%n", PROPERTY_CLOUD_PROVIDER), localSimulatorPropertiesFile);
+        appendText(format("%s=%s%n", PROPERTY_CLOUD_IDENTITY, defaultProperties.get(PROPERTY_CLOUD_IDENTITY)),
+                localSimulatorPropertiesFile);
+
+        wizard.compareSimulatorProperties();
+    }
+
+    @Test
+    public void testCompareSimulatorProperties_noPropertiesDefined() {
+        wizard.compareSimulatorProperties();
     }
 
     private void addIpAddressToAgentsFile(String ipAddress) {

@@ -15,13 +15,19 @@
  */
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.EmptyStatement;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -51,6 +57,27 @@ final class WizardUtils {
             return profileFile;
         }
         throw new CommandLineExitException("Could not find .bashrc or .profile file! Installation not supported on this system!");
+    }
+
+    static Properties getUserProperties() {
+        FileInputStream inputStream = null;
+        try {
+            Properties properties = new Properties();
+
+            File userPropertiesFile = new File(SimulatorProperties.PROPERTIES_FILE_NAME).getAbsoluteFile();
+            if (!userPropertiesFile.exists()) {
+                return properties;
+            }
+
+            inputStream = new FileInputStream(userPropertiesFile);
+            properties.load(inputStream);
+
+            return properties;
+        } catch (IOException e) {
+            throw rethrow(e);
+        } finally {
+            closeQuietly(inputStream);
+        }
     }
 
     static String getSimulatorPath() {
