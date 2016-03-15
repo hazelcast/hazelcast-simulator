@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -17,10 +18,12 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithL
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -334,7 +337,7 @@ public class CoordinatorCliTest {
     @Test
     public void testInit_withLocalSetup() {
         File simulatorProperties = new File("simulator.properties").getAbsoluteFile();
-        writeText("CLOUD_PROVIDER=local", simulatorProperties);
+        writeText(format("%s=%s", PROPERTY_CLOUD_PROVIDER, CloudProviderUtils.PROVIDER_LOCAL), simulatorProperties);
 
         try {
             args.add("--waitForTestCaseCompletion");

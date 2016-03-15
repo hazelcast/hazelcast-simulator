@@ -43,7 +43,7 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
         createCloudCredentialFiles();
 
         SimulatorProperties properties = new SimulatorProperties();
-        properties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_EC2);
+        properties.setCloudProvider(CloudProviderUtils.PROVIDER_EC2);
         initComputeServiceMock();
         bash = mock(Bash.class);
         HazelcastJARs hazelcastJars = mock(HazelcastJARs.class);

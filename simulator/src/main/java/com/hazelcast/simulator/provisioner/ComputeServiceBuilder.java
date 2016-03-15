@@ -30,9 +30,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.jclouds.ContextBuilder.newBuilder;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
@@ -63,7 +65,7 @@ class ComputeServiceBuilder {
 
         String cloudProvider = properties.getCloudProvider();
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Using CLOUD_PROVIDER: " + cloudProvider);
+            LOGGER.debug(format("Using %s: %s", PROPERTY_CLOUD_PROVIDER, cloudProvider));
         }
 
         ContextBuilder contextBuilder = newContextBuilder(cloudProvider);

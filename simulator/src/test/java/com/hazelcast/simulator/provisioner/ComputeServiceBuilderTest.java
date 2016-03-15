@@ -50,7 +50,7 @@ public class ComputeServiceBuilderTest {
     @Test
     public void testBuild() {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_EC2);
+        simulatorProperties.setCloudProvider(CloudProviderUtils.PROVIDER_EC2);
 
         ComputeServiceBuilder builder = new ComputeServiceBuilder(simulatorProperties);
         assertNotNull(builder.build());
@@ -59,7 +59,7 @@ public class ComputeServiceBuilderTest {
     @Test
     public void testBuild_withStaticProvider() {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_STATIC);
+        simulatorProperties.setCloudProvider(CloudProviderUtils.PROVIDER_STATIC);
 
         ComputeServiceBuilder builder = new ComputeServiceBuilder(simulatorProperties);
         assertNull(builder.build());
@@ -68,7 +68,7 @@ public class ComputeServiceBuilderTest {
     @Test(expected = CommandLineExitException.class)
     public void testBuild_invalidCloudProvider() {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.set("CLOUD_PROVIDER", "invalidCloudProvider");
+        simulatorProperties.setCloudProvider("invalidCloudProvider");
 
         ComputeServiceBuilder builder = new ComputeServiceBuilder(simulatorProperties);
         assertNull(builder.build());

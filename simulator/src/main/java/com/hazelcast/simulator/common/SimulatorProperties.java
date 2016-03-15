@@ -44,6 +44,10 @@ public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
+    public static final String PROPERTY_CLOUD_PROVIDER = "CLOUD_PROVIDER";
+    public static final String PROPERTY_CLOUD_IDENTITY = "CLOUD_IDENTITY";
+    public static final String PROPERTY_CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";
+
     private static final int WORKER_TIMEOUT_FACTOR = 3;
 
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
@@ -155,15 +159,19 @@ public class SimulatorProperties {
     }
 
     public String getCloudProvider() {
-        return get("CLOUD_PROVIDER");
+        return get(PROPERTY_CLOUD_PROVIDER);
+    }
+
+    public void setCloudProvider(String value) {
+        set(PROPERTY_CLOUD_PROVIDER, value);
     }
 
     public String getCloudIdentity() {
-        return loadPropertyFromFile("CLOUD_IDENTITY");
+        return loadPropertyFromFile(PROPERTY_CLOUD_IDENTITY);
     }
 
     public String getCloudCredential() {
-        return loadPropertyFromFile("CLOUD_CREDENTIAL");
+        return loadPropertyFromFile(PROPERTY_CLOUD_CREDENTIAL);
     }
 
     public String get(String name) {

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.AfterClass;
@@ -76,7 +77,7 @@ public class HarakiriMonitorTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testHarakiriMonitor_noEC2() {
-        harakiriMonitor = new HarakiriMonitor("static", CLOUD_IDENTITY, CLOUD_PROVIDER, WAIT_SECONDS);
+        harakiriMonitor = new HarakiriMonitor(CloudProviderUtils.PROVIDER_STATIC, CLOUD_IDENTITY, CLOUD_PROVIDER, WAIT_SECONDS);
         harakiriMonitor.start();
     }
 

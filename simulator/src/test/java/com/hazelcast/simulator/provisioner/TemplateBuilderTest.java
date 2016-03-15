@@ -40,7 +40,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
         setDistributionUserDir();
 
         simulatorProperties = new SimulatorProperties();
-        simulatorProperties.set("CLOUD_PROVIDER", CloudProviderUtils.PROVIDER_EC2);
+        simulatorProperties.setCloudProvider(CloudProviderUtils.PROVIDER_EC2);
         simulatorProperties.set("SECURITY_GROUP", SECURITY_GROUP);
         simulatorProperties.set("AGENT_PORT", "1234");
 
@@ -80,7 +80,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
 
     @Test
     public void testBuild_cloudProviderNotEC2() {
-        simulatorProperties.set("CLOUD_PROVIDER", "static");
+        simulatorProperties.setCloudProvider(CloudProviderUtils.PROVIDER_STATIC);
 
         Template template = new TemplateBuilder(computeService, simulatorProperties).build();
         TemplateOptions templateOptions = template.getOptions();
@@ -105,7 +105,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
     @Test(expected = IllegalStateException.class)
     public void testBuild_customSubnetId_cloudProviderNotEC2() {
         simulatorProperties.set("SUBNET_ID", "custom");
-        simulatorProperties.set("CLOUD_PROVIDER", "static");
+        simulatorProperties.setCloudProvider(CloudProviderUtils.PROVIDER_STATIC);
 
         new TemplateBuilder(computeService, simulatorProperties).build();
     }

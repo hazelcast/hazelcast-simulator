@@ -9,6 +9,8 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -43,21 +45,21 @@ public class HarakiriMonitorUtilsTest {
 
     @Test
     public void testIsEnabled_onStatic() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_STATIC);
+        properties.setCloudProvider(PROVIDER_STATIC);
 
         assertFalse(isHarakiriMonitorEnabled(properties));
     }
 
     @Test
     public void testIsEnabled_onEC2() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
+        properties.setCloudProvider(PROVIDER_EC2);
 
         assertTrue(isHarakiriMonitorEnabled(properties));
     }
 
     @Test
     public void testIsEnabled_onEC2_featureDisabled() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
+        properties.setCloudProvider(PROVIDER_EC2);
         properties.set("HARAKIRI_MONITOR_ENABLED", "false");
 
         assertFalse(isHarakiriMonitorEnabled(properties));
@@ -65,7 +67,7 @@ public class HarakiriMonitorUtilsTest {
 
     @Test
     public void testIsEnabled_onEC2_equalsIgnoreCase() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
+        properties.setCloudProvider(PROVIDER_EC2);
         properties.set("HARAKIRI_MONITOR_ENABLED", "TruE");
 
         assertTrue(isHarakiriMonitorEnabled(properties));
@@ -73,9 +75,9 @@ public class HarakiriMonitorUtilsTest {
 
     @Test
     public void testGetStartCommand() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
-        properties.set("CLOUD_IDENTITY", "identity");
-        properties.set("CLOUD_CREDENTIAL", "credential");
+        properties.setCloudProvider(PROVIDER_EC2);
+        properties.set(PROPERTY_CLOUD_IDENTITY, "identity");
+        properties.set(PROPERTY_CLOUD_CREDENTIAL, "credential");
 
         File identity = ensureExistingFile("identity");
         File credentials = ensureExistingFile("credential");
@@ -95,7 +97,7 @@ public class HarakiriMonitorUtilsTest {
 
     @Test
     public void testGetStartCommand_onStatic() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_STATIC);
+        properties.setCloudProvider(PROVIDER_STATIC);
         properties.set("HARAKIRI_MONITOR_ENABLED", "true");
 
         String command = getStartHarakiriMonitorCommandOrNull(properties);
@@ -104,7 +106,7 @@ public class HarakiriMonitorUtilsTest {
 
     @Test
     public void testGetStartCommand_featureDisabled() {
-        properties.set("CLOUD_PROVIDER", PROVIDER_EC2);
+        properties.setCloudProvider(PROVIDER_EC2);
         properties.set("HARAKIRI_MONITOR_ENABLED", "false");
 
         String command = getStartHarakiriMonitorCommandOrNull(properties);

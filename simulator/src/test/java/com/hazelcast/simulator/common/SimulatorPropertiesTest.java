@@ -11,9 +11,12 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -211,14 +214,14 @@ public class SimulatorPropertiesTest {
     @Test
     public void testGet_CLOUD_IDENTITY() {
         appendText("testCloudIdentityString", customFile);
-        initProperty("CLOUD_IDENTITY", customFile.getName());
+        initProperty(PROPERTY_CLOUD_IDENTITY, customFile.getName());
 
         assertEquals("testCloudIdentityString", simulatorProperties.getCloudIdentity());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGet_CLOUD_IDENTITY_notFound() {
-        initProperty("CLOUD_IDENTITY", "notFound");
+        initProperty(PROPERTY_CLOUD_IDENTITY, "notFound");
 
         simulatorProperties.getCloudIdentity();
     }
@@ -226,20 +229,20 @@ public class SimulatorPropertiesTest {
     @Test
     public void testGet_CLOUD_CREDENTIAL() {
         appendText("testCloudCredentialString", customFile);
-        initProperty("CLOUD_CREDENTIAL", customFile.getName());
+        initProperty(PROPERTY_CLOUD_CREDENTIAL, customFile.getName());
 
         assertEquals("testCloudCredentialString", simulatorProperties.getCloudCredential());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGet_CLOUD_CREDENTIAL_notFound() {
-        initProperty("CLOUD_CREDENTIAL", "notFound");
+        initProperty(PROPERTY_CLOUD_CREDENTIAL, "notFound");
 
         simulatorProperties.getCloudCredential();
     }
 
-    private void initProperty(String key, Object value) {
-        appendText(key + '=' + value, workingDirFile);
+    private void initProperty(String key, String value) {
+        appendText(format("%s=%s", key, value), workingDirFile);
         simulatorProperties.init(null);
     }
 }
