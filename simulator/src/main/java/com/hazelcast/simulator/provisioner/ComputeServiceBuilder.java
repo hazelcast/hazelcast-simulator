@@ -79,12 +79,12 @@ class ComputeServiceBuilder {
     static void ensurePublicPrivateKeyExist(File publicKey, File privateKey) {
         if (!publicKey.exists()) {
             throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " not found." + NEW_LINE
-                    + "To create a public/private execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
+                    + "To create a public/private key pair execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
         if (!privateKey.exists()) {
             throw new CommandLineExitException("Public key " + publicKey.getAbsolutePath() + " was found, "
                     + "but private key " + privateKey.getAbsolutePath() + " is missing" + NEW_LINE
-                    + "To create a public/private key execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
+                    + "To create a public/private key pair execute [ssh-keygen -t rsa -C \"your_email@example.com\"]");
         }
     }
 
