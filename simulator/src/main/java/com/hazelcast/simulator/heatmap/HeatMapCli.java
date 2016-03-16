@@ -50,6 +50,8 @@ final class HeatMapCli {
     }
 
     static HeatMap init(String[] args) {
+        HeatMap.logHeader();
+
         HeatMapCli cli = new HeatMapCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 

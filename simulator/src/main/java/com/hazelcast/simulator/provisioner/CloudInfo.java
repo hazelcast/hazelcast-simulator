@@ -44,12 +44,7 @@ public class CloudInfo {
 
     private final ComputeService computeService;
 
-    public CloudInfo(String locationId, boolean verbose, ComputeService computeService) {
-        LOGGER.info("Hazelcast Simulator CloudInfo");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(),
-                getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
-
+    CloudInfo(String locationId, boolean verbose, ComputeService computeService) {
         this.locationId = locationId;
         this.verbose = verbose;
         this.computeService = computeService;
@@ -65,7 +60,7 @@ public class CloudInfo {
     void showLocations() {
         Set<? extends Location> locations = computeService.listAssignableLocations();
         for (Location location : locations) {
-            LOGGER.info(location);
+            echo(location.toString());
         }
     }
 
@@ -73,7 +68,7 @@ public class CloudInfo {
         Set<? extends Hardware> hardwareSet = computeService.listHardwareProfiles();
         for (Hardware hardware : hardwareSet) {
             if (verbose) {
-                LOGGER.info(hardware);
+                echo(hardware.toString());
                 continue;
             }
             StringBuilder sb = new StringBuilder(hardware.getId());
@@ -85,7 +80,7 @@ public class CloudInfo {
                     sb.append(" Location: ").append(location.getId());
                 }
             }
-            LOGGER.info(sb.toString());
+            echo(sb.toString());
         }
     }
 
@@ -96,10 +91,10 @@ public class CloudInfo {
                 continue;
             }
             if (verbose) {
-                LOGGER.info(image);
+                echo(image.toString());
                 continue;
             }
-            LOGGER.info(image.getId() + " OS: " + image.getOperatingSystem() + " Version: " + image.getVersion());
+            echo(image.getId() + " OS: " + image.getOperatingSystem() + " Version: " + image.getVersion());
         }
     }
 
@@ -127,5 +122,15 @@ public class CloudInfo {
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not retrieve cloud information!", e);
         }
+    }
+
+    static void logHeader() {
+        echo("Hazelcast Simulator CloudInfo");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
+    }
+
+    private static void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 }

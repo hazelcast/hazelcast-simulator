@@ -73,9 +73,6 @@ public class Wizard {
     private final Bash bash;
 
     Wizard(SimulatorProperties simulatorProperties, Bash bash) {
-        echo("Hazelcast Simulator Wizard");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-
         this.simulatorProperties = simulatorProperties;
         this.bash = bash;
     }
@@ -248,21 +245,26 @@ public class Wizard {
         }
     }
 
-    private void echo(String message, Object... args) {
-        LOGGER.info(message == null ? "null" : format(message, args));
-    }
-
-    private void echoImportant(String message, Object... args) {
-        echo(HORIZONTAL_RULER);
-        echo(message, args);
-        echo(HORIZONTAL_RULER);
-    }
-
     public static void main(String[] args) {
         try {
             run(args, init());
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not execute command", e);
         }
+    }
+
+    static void logHeader() {
+        echo("Hazelcast Simulator Wizard");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+    }
+
+    private static void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
+    }
+
+    private static void echoImportant(String message, Object... args) {
+        echo(HORIZONTAL_RULER);
+        echo(message, args);
+        echo(HORIZONTAL_RULER);
     }
 }

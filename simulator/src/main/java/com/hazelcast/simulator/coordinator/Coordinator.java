@@ -42,6 +42,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher.WORKERS_HOME_NAME;
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
@@ -391,14 +393,9 @@ public final class Coordinator {
         echo(HORIZONTAL_RULER);
     }
 
-    private void echoLocal(String msg, Object... args) {
-        LOGGER.info(format(msg, args));
-    }
-
-    private void echo(String msg, Object... args) {
-        String message = format(msg, args);
-        remoteClient.logOnAllAgents(message);
-        LOGGER.info(message);
+    private void echo(String message, Object... args) {
+        String log = echoLocal(message, args);
+        remoteClient.logOnAllAgents(log);
     }
 
     public static void main(String[] args) {
@@ -407,5 +404,17 @@ public final class Coordinator {
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run testsuite", e);
         }
+    }
+
+    static void logHeader() {
+        echoLocal("Hazelcast Simulator Coordinator");
+        echoLocal("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime());
+        echoLocal("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
+    }
+
+    private static String echoLocal(String message, Object... args) {
+        String log = message == null ? "null" : format(message, args);
+        LOGGER.info(log);
+        return log;
     }
 }

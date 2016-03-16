@@ -37,7 +37,7 @@ public final class IntegrationTestWorker implements Worker {
     private final CountDownLatch shutdownComplete = new CountDownLatch(1);
 
     IntegrationTestWorker() {
-        LOGGER.info("Starting IntegrationTestWorker...");
+        LOGGER.info("Hazelcast Simulator IntegrationTestWorker");
 
         Runtime.getRuntime().addShutdownHook(new IntegrationTestWorkerShutdownThread(shutdownStarted, true, shutdownComplete));
 

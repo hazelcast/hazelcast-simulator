@@ -58,7 +58,7 @@ public class SimulatorProperties {
     private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
-        LOGGER.debug(format("Loading default %s from: %s", PROPERTIES_FILE_NAME, PROPERTIES_FILE.getAbsolutePath()));
+        LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, PROPERTIES_FILE.getAbsolutePath()));
         check(PROPERTIES_FILE);
         load(PROPERTIES_FILE);
     }
@@ -76,9 +76,7 @@ public class SimulatorProperties {
             // if no file is explicitly given, we look in the working directory
             file = new File(PROPERTIES_FILE_NAME);
             if (!file.exists()) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(format("Found no %s in working directory, relying on default properties", PROPERTIES_FILE_NAME));
-                }
+                LOGGER.info(format("Found no %s in working directory, relying on default properties", PROPERTIES_FILE_NAME));
                 return;
             }
         }

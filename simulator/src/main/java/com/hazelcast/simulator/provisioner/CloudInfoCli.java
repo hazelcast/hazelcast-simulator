@@ -56,6 +56,8 @@ final class CloudInfoCli {
     }
 
     static CloudInfo init(String[] args) {
+        CloudInfo.logHeader();
+
         CloudInfoCli cli = new CloudInfoCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 

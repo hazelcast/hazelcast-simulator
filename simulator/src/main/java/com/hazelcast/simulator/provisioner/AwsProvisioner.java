@@ -96,18 +96,13 @@ public class AwsProvisioner {
     private final String awsBoxId;
     private final String subNetId;
 
-    public AwsProvisioner(AmazonEC2 ec2, AmazonElasticLoadBalancingClient elb, ComponentRegistry componentRegistry,
-                          SimulatorProperties properties) {
+    AwsProvisioner(AmazonEC2 ec2, AmazonElasticLoadBalancingClient elb, ComponentRegistry componentRegistry,
+                   SimulatorProperties properties) {
         this(ec2, elb, componentRegistry, properties, MAX_SLEEPING_ITERATIONS, SLEEPING_MILLIS);
     }
 
-    public AwsProvisioner(AmazonEC2 ec2, AmazonElasticLoadBalancingClient elb, ComponentRegistry componentRegistry,
-                          SimulatorProperties properties, int maxSleepIterations, int sleepMillis) {
-        LOGGER.info("AWS Provisioner");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(),
-                getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
-
+    AwsProvisioner(AmazonEC2 ec2, AmazonElasticLoadBalancingClient elb, ComponentRegistry componentRegistry,
+                   SimulatorProperties properties, int maxSleepIterations, int sleepMillis) {
         this.ec2 = ec2;
         this.elb = elb;
         this.componentRegistry = componentRegistry;
@@ -199,7 +194,7 @@ public class AwsProvisioner {
         List<AgentData> deadList = componentRegistry.getAgents(count);
         List<Instance> deadInstances = getInstancesByPublicIp(deadList, true);
 
-        LOGGER.info("Updating " + agentsFile.getAbsolutePath());
+        echo("Updating " + agentsFile.getAbsolutePath());
         AgentsFile.save(agentsFile, componentRegistry);
 
         terminateInstances(deadInstances);
@@ -293,7 +288,7 @@ public class AwsProvisioner {
 
     private void addInstancesToElb(String name, List<Instance> instances) {
         if (instances.isEmpty()) {
-            LOGGER.info("No instances to add to load balance " + name);
+            echo("No instances to add to load balance " + name);
             return;
         }
 
@@ -317,5 +312,15 @@ public class AwsProvisioner {
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not provision machines", e);
         }
+    }
+
+    static void logHeader() {
+        echo("Hazelcast Simulator AWS Provisioner");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
+    }
+
+    private static void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 }

@@ -84,7 +84,7 @@ public class Agent {
 
         createPidFile();
 
-        LOGGER.info("Simulator Agent is ready for action!");
+        echo("Simulator Agent is ready for action!");
     }
 
     private void createPidFile() {
@@ -147,20 +147,20 @@ public class Agent {
         }
     }
 
-    static Agent createAgent(String[] args) {
-        LOGGER.info("Simulator Agent");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
-                getSimulatorVersion(),
-                getCommitIdAbbrev(),
-                getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome()));
-        logImportantSystemProperties();
+    static void logHeader() {
+        echo("Hazelcast Simulator Agent");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
 
+        logImportantSystemProperties();
+    }
+
+    static Agent createAgent(String[] args) {
         Agent agent = AgentCli.init(args);
 
-        LOGGER.info("CloudIdentity: " + agent.cloudIdentity);
-        LOGGER.info("CloudCredential: " + agent.cloudCredential);
-        LOGGER.info("CloudProvider: " + agent.cloudProvider);
+        echo("CloudIdentity: %s", agent.cloudIdentity);
+        echo("CloudCredential: %s", agent.cloudCredential);
+        echo("CloudProvider: %s", agent.cloudProvider);
 
         return agent;
     }
@@ -182,7 +182,11 @@ public class Agent {
     }
 
     private static void logSystemProperty(String name) {
-        LOGGER.info(format("%s=%s", name, System.getProperty(name)));
+        echo("%s=%s", name, System.getProperty(name));
+    }
+
+    private static void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 
     private final class AgentShutdownThread extends ShutdownThread {
@@ -193,16 +197,16 @@ public class Agent {
 
         @Override
         public void doRun() {
-            LOGGER.info("Stopping workers...");
+            echo("Stopping workers...");
             workerJvmManager.shutdown();
 
-            LOGGER.info("Stopping WorkerJvmFailureMonitor...");
+            echo("Stopping WorkerJvmFailureMonitor...");
             workerJvmFailureMonitor.shutdown();
 
-            LOGGER.info("Stopping AgentConnector...");
+            echo("Stopping AgentConnector...");
             agentConnector.shutdown();
 
-            LOGGER.info("Removing PID file...");
+            echo("Removing PID file...");
             deleteQuiet(pidFile);
 
             OperationTypeCounter.printStatistics();

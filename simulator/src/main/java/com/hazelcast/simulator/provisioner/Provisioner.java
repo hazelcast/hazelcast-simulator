@@ -69,9 +69,8 @@ public class Provisioner {
 
     private static final String INDENTATION = "    ";
 
-    private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
-
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
+    private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
 
     private final File agentsFile = new File(AgentsFile.NAME);
     private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
@@ -93,10 +92,6 @@ public class Provisioner {
 
     public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, HazelcastJARs hazelcastJARs,
                        boolean enterpriseEnabled, int machineWarmupSeconds) {
-        echo("Hazelcast Simulator Provisioner");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-        echo("SIMULATOR_HOME: %s", SIMULATOR_HOME);
-
         this.properties = properties;
         this.computeService = computeService;
         this.bash = bash;
@@ -458,11 +453,25 @@ public class Provisioner {
         return initScript;
     }
 
-    private void echo(String message, Object... args) {
+    public static void main(String[] args) {
+        try {
+            run(args, init(args));
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not execute command", e);
+        }
+    }
+
+    static void logHeader() {
+        echo("Hazelcast Simulator Provisioner");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s", SIMULATOR_HOME);
+    }
+
+    private static void echo(String message, Object... args) {
         LOGGER.info(message == null ? "null" : format(message, args));
     }
 
-    private void echoImportant(String message, Object... args) {
+    private static void echoImportant(String message, Object... args) {
         echo(HORIZONTAL_RULER);
         echo(message, args);
         echo(HORIZONTAL_RULER);
@@ -511,14 +520,6 @@ public class Provisioner {
         private File getJavaSupportScript() {
             File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
             return new File(scriptDir, "jdk-support.sh");
-        }
-    }
-
-    public static void main(String[] args) {
-        try {
-            run(args, init(args));
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Could not execute command", e);
         }
     }
 }

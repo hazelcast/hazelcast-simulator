@@ -63,6 +63,8 @@ final class AgentCli {
     }
 
     static Agent init(String[] args) {
+        Agent.logHeader();
+
         AgentCli agentCli = new AgentCli();
         OptionSet options = CliUtils.initOptionsWithHelp(agentCli.parser, args);
 

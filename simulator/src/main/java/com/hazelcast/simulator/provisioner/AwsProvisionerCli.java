@@ -64,6 +64,8 @@ final class AwsProvisionerCli {
     }
 
     static AwsProvisioner init(String[] args) {
+        AwsProvisioner.logHeader();
+
         AwsProvisionerCli cli = new AwsProvisionerCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 

@@ -51,25 +51,20 @@ public class HeatMap {
     private int histogramCount;
 
     HeatMap(String directory, String testName, String probeName) {
-        LOGGER.info("Hazelcast Simulator HeatMap");
-        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(),
-                getBuildTime()));
-        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
-
         this.directory = new File(directory).getAbsoluteFile();
         this.testName = testName;
         this.probeName = probeName;
     }
 
     void createHeatMap() {
-        LOGGER.info(format("Processing directory %s...", directory));
+        echo("Processing directory %s...", directory);
         HistogramFilenameFilter filenameFilter = new HistogramFilenameFilter(testName, probeName);
         FileWalker fileWalker = new FileWalker(filenameFilter);
         fileWalker.walk(directory);
 
         List<Histogram> histograms = getHistograms(testName, fileWalker);
         histogramCount = histograms.size();
-        LOGGER.info(format("Found %d histograms in total", histogramCount));
+        echo("Found %d histograms in total", histogramCount);
 
         long totalMinLatency = Long.MAX_VALUE;
         long totalMaxLatency = Long.MIN_VALUE;
@@ -82,12 +77,12 @@ public class HeatMap {
             if (maxValue > totalMaxLatency) {
                 totalMaxLatency = maxValue;
             }
-            LOGGER.info(format("Minimum latency: %d µs, maximum latency: %d µs", minValue, maxValue));
+            echo("Minimum latency: %d µs, maximum latency: %d µs", minValue, maxValue);
         }
-        LOGGER.info(format("Total minimum latency: %d µs, total maximum latency: %d µs", totalMinLatency, totalMaxLatency));
+        echo("Total minimum latency: %d µs, total maximum latency: %d µs", totalMinLatency, totalMaxLatency);
 
         double latencyWindowSize = totalMaxLatency / (double) DIMENSION_Y;
-        LOGGER.info(format("Latency window per pixel: %.2f µs", latencyWindowSize));
+        echo("Latency window per pixel: %.2f µs", latencyWindowSize);
 
         calculateLinearHeatMap(histograms, latencyWindowSize, totalMaxLatency);
     }
@@ -105,6 +100,12 @@ public class HeatMap {
         }
     }
 
+    static void logHeader() {
+        echo("Hazelcast Simulator HeatMap");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
+    }
+
     static HistogramLogReader createHistogramLogReader(File latencyFile, String testName) {
         try {
             return new HistogramLogReader(latencyFile);
@@ -116,7 +117,7 @@ public class HeatMap {
     private static List<Histogram> getHistograms(String testName, FileWalker fileWalker) {
         ArrayList<Histogram> histograms = new ArrayList<Histogram>();
         for (File latencyFile : fileWalker.getGetFiles()) {
-            LOGGER.info(format("Processing latency file %s...", latencyFile.getAbsolutePath()));
+            echo("Processing latency file %s...", latencyFile.getAbsolutePath());
             HistogramLogReader histogramLogReader = createHistogramLogReader(latencyFile, testName);
 
             int index = 0;
@@ -156,8 +157,12 @@ public class HeatMap {
                 }
                 heatmap.get(histogramIndex).add(latencyCount);
             }
-            LOGGER.info(format("%4d: lowValue: %d, highValue: %d, maxValue: %d", yPos, lowValue, highValue, maxValue));
+            echo("%4d: lowValue: %d, highValue: %d, maxValue: %d", yPos, lowValue, highValue, maxValue);
         }
         return heatmap;
+    }
+
+    private static void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 }

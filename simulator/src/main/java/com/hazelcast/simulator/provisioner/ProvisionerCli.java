@@ -73,6 +73,8 @@ final class ProvisionerCli {
     }
 
     static Provisioner init(String[] args) {
+        Provisioner.logHeader();
+
         ProvisionerCli cli = new ProvisionerCli();
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 

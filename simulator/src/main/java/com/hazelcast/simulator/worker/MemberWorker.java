@@ -31,7 +31,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
 import static com.hazelcast.simulator.utils.HazelcastUtils.createClientHazelcastInstance;
@@ -165,7 +169,9 @@ public final class MemberWorker implements Worker {
     }
 
     static MemberWorker startWorker() throws Exception {
-        LOGGER.info("Starting Hazelcast Simulator Worker");
+        echo("Hazelcast Simulator Worker");
+        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+        echo("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
 
         String workerId = System.getProperty("workerId");
         WorkerType type = WorkerType.valueOf(System.getProperty("workerType"));
@@ -182,18 +188,18 @@ public final class MemberWorker implements Worker {
         logHeader("Hazelcast Worker #" + workerIndex + " (" + type + ')');
         logInputArguments();
         logInterestingSystemProperties();
-        LOGGER.info("process ID: " + getPID());
+        echo("process ID: " + getPID());
 
-        LOGGER.info("Worker id: " + workerId);
-        LOGGER.info("Worker type: " + type);
+        echo("Worker id: " + workerId);
+        echo("Worker type: " + type);
 
-        LOGGER.info("Public address: " + publicAddress);
-        LOGGER.info("Agent index: " + agentIndex);
-        LOGGER.info("Worker index: " + workerIndex);
-        LOGGER.info("Worker port: " + workerPort);
+        echo("Public address: " + publicAddress);
+        echo("Agent index: " + agentIndex);
+        echo("Worker index: " + workerIndex);
+        echo("Worker port: " + workerPort);
 
-        LOGGER.info("autoCreateHzInstance: " + autoCreateHzInstance);
-        LOGGER.info("workerPerformanceMonitorIntervalSeconds: " + workerPerformanceMonitorIntervalSeconds);
+        echo("autoCreateHzInstance: " + autoCreateHzInstance);
+        echo("workerPerformanceMonitorIntervalSeconds: " + workerPerformanceMonitorIntervalSeconds);
 
         MemberWorker worker = new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, hzConfigFile,
                 autoCreateHzInstance, workerPerformanceMonitorIntervalSeconds);
@@ -205,7 +211,7 @@ public final class MemberWorker implements Worker {
 
     private static void logInputArguments() {
         List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        LOGGER.info("JVM input arguments: " + inputArguments);
+        echo("JVM input arguments: " + inputArguments);
     }
 
     private static void logInterestingSystemProperties() {
@@ -226,7 +232,7 @@ public final class MemberWorker implements Worker {
     }
 
     private static void logSystemProperty(String name) {
-        LOGGER.info(format("%s=%s", name, System.getProperty(name)));
+        echo("%s=%s", name, System.getProperty(name));
     }
 
     private static void logHeader(String header) {
@@ -234,9 +240,13 @@ public final class MemberWorker implements Worker {
         builder.append(DASHES).append(' ').append(header).append(' ').append(DASHES);
 
         String dashes = fillString(builder.length(), '-');
-        LOGGER.info(dashes);
-        LOGGER.info(builder.toString());
-        LOGGER.info(dashes);
+        echo(dashes);
+        echo(builder.toString());
+        echo(dashes);
+    }
+
+    private static void echo(String message, Object... args) {
+        LOGGER.info(message == null ? "null" : format(message, args));
     }
 
     private final class WorkerShutdownThread extends ShutdownThread {
@@ -248,17 +258,17 @@ public final class MemberWorker implements Worker {
         @Override
         public void doRun() {
             if (hazelcastInstance != null) {
-                LOGGER.info("Stopping HazelcastInstance...");
+                echo("Stopping HazelcastInstance...");
                 hazelcastInstance.shutdown();
             }
 
             if (workerPerformanceMonitor != null) {
-                LOGGER.info("Stopping WorkerPerformanceMonitor");
+                echo("Stopping WorkerPerformanceMonitor");
                 workerPerformanceMonitor.shutdown();
             }
 
             if (workerConnector != null) {
-                LOGGER.info("Stopping WorkerConnector...");
+                echo("Stopping WorkerConnector...");
                 workerConnector.shutdown();
             }
 

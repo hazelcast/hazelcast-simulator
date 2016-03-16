@@ -64,6 +64,8 @@ final class WizardCli {
     }
 
     static Wizard init() {
+        Wizard.logHeader();
+
         SimulatorProperties simulatorProperties = new SimulatorProperties();
         simulatorProperties.init(null);
 
