@@ -43,6 +43,7 @@ import static java.lang.String.format;
 public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
+    public static final File PROPERTIES_FILE = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
 
     public static final String PROPERTY_CLOUD_PROVIDER = "CLOUD_PROVIDER";
     public static final String PROPERTY_CLOUD_IDENTITY = "CLOUD_IDENTITY";
@@ -57,37 +58,39 @@ public class SimulatorProperties {
     private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
-        File defaultPropertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
-        LOGGER.debug(format("Loading default %s from: %s", PROPERTIES_FILE_NAME, defaultPropertiesFile.getAbsolutePath()));
-        check(defaultPropertiesFile);
-        load(defaultPropertiesFile);
+        LOGGER.debug(format("Loading default %s from: %s", PROPERTIES_FILE_NAME, PROPERTIES_FILE.getAbsolutePath()));
+        check(PROPERTIES_FILE);
+        load(PROPERTIES_FILE);
     }
 
     /**
      * Initializes the SimulatorProperties.
      *
-     * @param file the file to load the properties from. If the file is <code>null</code>,
-     *             then first the simulator.properties in the working directory is checked.
+     * @param file the file to load the properties from. If {@code null}, the {@value #PROPERTIES_FILE_NAME} file in the working
+     *             directory is tried.
+     * @throws CommandLineExitException if the given file does not exist. If file is {@code null} no exception will be thrown,
+     *                                  even if the {@value #PROPERTIES_FILE_NAME} file in the working directory cannot be found.
      */
     public void init(File file) {
         if (file == null) {
             // if no file is explicitly given, we look in the working directory
             file = new File(PROPERTIES_FILE_NAME);
             if (!file.exists()) {
-                LOGGER.warn(format("%s is not found, relying on defaults", file.getAbsolutePath()));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(format("Found no %s in working directory, relying on default properties", PROPERTIES_FILE_NAME));
+                }
                 return;
             }
         }
 
-        LOGGER.info(format("Loading %s: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
+        LOGGER.info(format("Loading additional %s: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
         check(file);
         load(file);
     }
 
     private void check(File file) {
         if (!file.exists()) {
-            throw new CommandLineExitException(
-                    format("Could not find %s file: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
+            throw new CommandLineExitException(format("Could not find %s: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
         }
     }
 
@@ -204,11 +207,11 @@ public class SimulatorProperties {
         String path = get(property);
         File file = newFile(path);
         if (!file.exists()) {
-            throw new CommandLineExitException(format("Can't find property %s file %s", property, path));
+            throw new CommandLineExitException(format("File %s for property %s not found", file.getAbsolutePath(), property));
         }
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Loading " + property + " from file: " + file.getAbsolutePath());
+            LOGGER.debug(format("Loading property value for %s from file: %s", property, file.getAbsolutePath()));
         }
         return fileAsText(file).trim();
     }
