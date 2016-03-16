@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -78,6 +80,20 @@ final class WizardUtils {
         } finally {
             closeQuietly(inputStream);
         }
+    }
+
+    static boolean containsCommentedOutProperty(String propertiesString, String property) {
+        Pattern pattern = Pattern.compile("^\\h*#\\h*" + property + "\\h*=.*$", Pattern.MULTILINE);
+        return pattern.matcher(propertiesString).find();
+    }
+
+    static String getCommentedOutProperty(String propertiesString, String property) {
+        Pattern pattern = Pattern.compile("^\\h*#\\h*" + property + "\\h*=\\h*(.*)$", Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(propertiesString);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
     }
 
     static String getSimulatorPath() {

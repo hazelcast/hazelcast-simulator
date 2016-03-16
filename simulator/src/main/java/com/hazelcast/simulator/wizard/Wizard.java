@@ -31,6 +31,7 @@ import java.util.TreeSet;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
@@ -53,7 +54,9 @@ import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.wizard.WizardCli.init;
 import static com.hazelcast.simulator.wizard.WizardCli.run;
+import static com.hazelcast.simulator.wizard.WizardUtils.containsCommentedOutProperty;
 import static com.hazelcast.simulator.wizard.WizardUtils.copyResourceFile;
+import static com.hazelcast.simulator.wizard.WizardUtils.getCommentedOutProperty;
 import static java.lang.String.format;
 
 public class Wizard {
@@ -199,6 +202,7 @@ public class Wizard {
     void compareSimulatorProperties() {
         SimulatorProperties defaultProperties = new SimulatorProperties();
         Properties userProperties = WizardUtils.getUserProperties();
+        String defaultPropertiesString = fileAsText(PROPERTIES_FILE);
 
         int size = userProperties.size();
         if (size == 0) {
@@ -210,13 +214,15 @@ public class Wizard {
         int unknownProperties = 0;
         int changedProperties = 0;
         for (String property : new TreeSet<String>(userProperties.stringPropertyNames())) {
+            boolean commentedOutProperty = containsCommentedOutProperty(defaultPropertiesString, property);
             String userValue = userProperties.getProperty(property);
-            String defaultValue = defaultProperties.get(property);
+            String defaultValue = (commentedOutProperty ? getCommentedOutProperty(defaultPropertiesString, property)
+                    : defaultProperties.get(property));
 
-            if (!defaultProperties.containsKey(property)) {
+            if (!defaultProperties.containsKey(property) && !commentedOutProperty) {
                 echo("%s = %s [unknown property]", property, userValue);
                 unknownProperties++;
-            } else if (!defaultValue.equals(userValue)) {
+            } else if (!userValue.equals(defaultValue)) {
                 echo("%s = %s [default: %s]", property, userValue, defaultValue);
                 changedProperties++;
             } else {
