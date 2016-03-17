@@ -1,0 +1,3 @@
+IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest
+IntIntMapTest@threadCount = 10
+IntIntMapTest@putProb = 0.1

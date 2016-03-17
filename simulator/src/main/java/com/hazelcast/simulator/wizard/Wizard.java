@@ -108,9 +108,7 @@ public class Wizard {
         ensureExistingDirectory(workDir);
 
         copyResourceFile(workDir, "run", "runScript");
-
-        File testProperties = ensureExistingFile(workDir, "test.properties");
-        writeText("IntIntMapTest@class = com.hazelcast.simulator.tests.map.IntIntMapTest" + NEW_LINE, testProperties);
+        copyResourceFile(workDir, "test.properties", "testSuite");
 
         if (isLocal(cloudProvider)) {
             return;
@@ -149,9 +147,9 @@ public class Wizard {
         }
 
         if (isStatic(cloudProvider)) {
-            copyResourceFile(workDir, "prepare", "staticPrepareScript");
+            copyResourceFile(workDir, "prepare", "prepareScriptStatic");
         } else {
-            copyResourceFile(workDir, "prepare", "cloudPrepareScript");
+            copyResourceFile(workDir, "prepare", "prepareScriptCloud");
         }
     }
 
