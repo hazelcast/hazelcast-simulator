@@ -102,7 +102,7 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> testSuiteIdSpec = parser.accepts("testSuiteId",
-            "Defines the ID of the testsuite. If not set the actual date will be used.")
+            "Defines the ID of the TestSuite. If not set the actual date will be used.")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
@@ -117,7 +117,7 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-            "Defines if the testsuite should fail immediately when a test from a testsuite fails instead of continuing.")
+            "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
@@ -295,14 +295,14 @@ final class CoordinatorCli {
 
         List testsuiteFiles = options.nonOptionArguments();
         if (testsuiteFiles.size() > 1) {
-            throw new CommandLineExitException(format("Too many testsuite files specified: %s", testsuiteFiles));
+            throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
         } else if (testsuiteFiles.size() == 1) {
             testSuiteFile = new File((String) testsuiteFiles.get(0));
         } else {
             testSuiteFile = new File("test.properties");
         }
 
-        LOGGER.info("Loading testsuite file: " + testSuiteFile.getAbsolutePath());
+        LOGGER.info("Loading TestSuite file: " + testSuiteFile.getAbsolutePath());
         if (!testSuiteFile.exists()) {
             throw new CommandLineExitException(format("TestSuite file '%s' not found", testSuiteFile));
         }

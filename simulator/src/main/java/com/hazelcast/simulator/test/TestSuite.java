@@ -167,7 +167,7 @@ public class TestSuite {
 
             return properties;
         } catch (IOException e) {
-            throw new CommandLineExitException(format("Failed to load testsuite property file [%s]", file.getAbsolutePath()), e);
+            throw new CommandLineExitException(format("Failed to load TestSuite property file [%s]", file.getAbsolutePath()), e);
         } finally {
             closeQuietly(reader);
         }

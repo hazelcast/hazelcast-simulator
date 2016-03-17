@@ -270,7 +270,7 @@ public final class Coordinator {
             int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
             Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, isParallel, lastTestPhaseToSync);
 
-            echo("Starting testsuite: %s", testSuite.getId());
+            echo("Starting TestSuite: %s", testSuite.getId());
             logTestSuiteDuration(isParallel);
 
             for (TestData testData : componentRegistry.getTests()) {
@@ -315,7 +315,7 @@ public final class Coordinator {
             if (testSuite.isWaitForTestCase()) {
                 echo("Testsuite will run until tests are finished for a maximum time of: %s", secondsToHuman(totalDuration));
             } else {
-                echo("Expected total testsuite time: %s", secondsToHuman(totalDuration));
+                echo("Expected total TestSuite time: %s", secondsToHuman(totalDuration));
             }
         } else if (testSuite.isWaitForTestCase()) {
             echo("Testsuite will run until tests are finished");
@@ -345,7 +345,7 @@ public final class Coordinator {
             ((TestCaseRunner) testCaseRunner).run();
             boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
-                echo("Aborting testsuite due to critical failure");
+                echo("Aborting TestSuite due to critical failure");
                 break;
             }
             // restart Workers if needed, but not after last test
@@ -402,7 +402,7 @@ public final class Coordinator {
         try {
             init(args).run();
         } catch (Exception e) {
-            exitWithError(LOGGER, "Failed to run testsuite", e);
+            exitWithError(LOGGER, "Failed to run TestSuite", e);
         }
     }
 
