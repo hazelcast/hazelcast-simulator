@@ -1,12 +1,12 @@
 #!/bin/bash
 
 members=${1:-2}
-clients=${2:-1}
+clients=${2:-4}
 duration=${3:-1m}
 testsuite=${4:-test}
 
-memberHeapSZ=2G
-clientHeapSZ=1G
+memberHeapSZ=1G
+clientHeapSZ=512M
 
 partitions=271
 monitorSec=30
