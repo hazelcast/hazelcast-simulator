@@ -151,6 +151,7 @@ public class Wizard {
         } else {
             copyResourceFile(workDir, "prepare", "prepareScriptCloud");
         }
+        copyResourceFile(workDir, "download", "downloadScript");
     }
 
     void listCloudProviders() {
