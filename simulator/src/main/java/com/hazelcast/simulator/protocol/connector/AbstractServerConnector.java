@@ -261,7 +261,7 @@ abstract class AbstractServerConnector implements ServerConnector {
             while (message != null) {
                 if (!POISON_PILL.equals(message)) {
                     int queueSize = messageQueue.size();
-                    LOGGER.info(format("%d messages pending on messageQueue, first message: %s", queueSize, message));
+                    LOGGER.debug(format("%d messages pending on messageQueue, first message: %s", queueSize, message));
                 }
                 sleepMillis(WAIT_FOR_EMPTY_QUEUE_MILLIS);
                 message = messageQueue.peek();
