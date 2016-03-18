@@ -32,6 +32,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
     private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
+    private static final int SLEEP_MS = 5000;
 
     private final int concurrencyLevel;
     private final Semaphore semaphore;
@@ -45,6 +46,24 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
         this.semaphore = new Semaphore(DEFAULT_CONCURRENCY_LEVEL);
         this.callback = new StreamerExecutionCallback();
+
+        new Thread() {
+            {
+                setDaemon(true);
+            }
+
+            public void run() {
+                for (; ; ) {
+                    try {
+                        Thread.sleep(SLEEP_MS);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+
+                    LOGGER.info("At: " + counter.get());
+                }
+            }
+        };
     }
 
     abstract ICompletableFuture storeAsync(K key, V value);
@@ -94,6 +113,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         public void onResponse(V response) {
             releasePermit(1);
             counter.incrementAndGet();
+
         }
 
         @Override
