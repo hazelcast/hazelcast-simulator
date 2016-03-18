@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.AfterClass;
@@ -19,8 +20,10 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
@@ -44,6 +47,7 @@ public class CoordinatorCliTest {
             + NEW_LINE + "</clusterConfiguration>";
 
     private static File testSuiteFile;
+    private static File propertiesFile;
 
     private final List<String> args = new ArrayList<String>();
 
@@ -52,8 +56,10 @@ public class CoordinatorCliTest {
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
 
-        testSuiteFile = new File("test.properties");
+        testSuiteFile = ensureExistingFile("test.properties");
         appendText("# CoordinatorCliTest", testSuiteFile);
+
+        propertiesFile = ensureExistingFile("simulator.properties");
     }
 
     @AfterClass
@@ -62,11 +68,87 @@ public class CoordinatorCliTest {
         deleteAgentsFile();
 
         deleteQuiet(testSuiteFile);
+        deleteQuiet(propertiesFile);
     }
 
-    @Test(expected = CommandLineExitException.class)
-    public void testInit_noDuration_noWaitForTestCase() {
-        createCoordinator();
+    @Test
+    public void testInit() {
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(CoordinatorCli.DEFAULT_DURATION_SECONDS, testSuite.getDurationSeconds());
+    }
+
+    @Test
+    public void testInit_withCloudProviderStatic() {
+        appendText(format("%s=%s%n", PROPERTY_CLOUD_PROVIDER, PROVIDER_STATIC), propertiesFile);
+
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(CoordinatorCli.DEFAULT_DURATION_SECONDS, testSuite.getDurationSeconds());
+    }
+
+    @Test
+    public void testInit_duration() {
+        args.add("--duration");
+        args.add("423");
+
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(423, testSuite.getDurationSeconds());
+    }
+
+    @Test
+    public void testInit_duration_withSeconds() {
+        args.add("--duration");
+        args.add("3s");
+
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(TimeUnit.SECONDS.toSeconds(3), testSuite.getDurationSeconds());
+    }
+
+    @Test
+    public void testInit_duration_withMinutes() {
+        args.add("--duration");
+        args.add("5m");
+
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(TimeUnit.MINUTES.toSeconds(5), testSuite.getDurationSeconds());
+    }
+
+    @Test
+    public void testInit_duration_withHours() {
+        args.add("--duration");
+        args.add("4h");
+
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(TimeUnit.HOURS.toSeconds(4), testSuite.getDurationSeconds());
+    }
+
+    @Test
+    public void testInit_duration_withDays() {
+        args.add("--duration");
+        args.add("23d");
+
+        Coordinator coordinator = createCoordinator();
+
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(TimeUnit.DAYS.toSeconds(23), testSuite.getDurationSeconds());
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -77,70 +159,16 @@ public class CoordinatorCliTest {
         createCoordinator();
     }
 
-    @Test
-    public void testInit_duration_withSeconds() {
-        args.add("--duration");
-        args.add("3s");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertFalse(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(TimeUnit.SECONDS.toSeconds(3), coordinator.getTestSuite().getDurationSeconds());
-    }
-
-    @Test
-    public void testInit_duration_withMinutes() {
-        args.add("--duration");
-        args.add("5m");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertFalse(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(TimeUnit.MINUTES.toSeconds(5), coordinator.getTestSuite().getDurationSeconds());
-    }
-
-    @Test
-    public void testInit_duration_withHours() {
-        args.add("--duration");
-        args.add("4h");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertFalse(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(TimeUnit.HOURS.toSeconds(4), coordinator.getTestSuite().getDurationSeconds());
-    }
-
-    @Test
-    public void testInit_duration_withDays() {
-        args.add("--duration");
-        args.add("23d");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertFalse(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(TimeUnit.DAYS.toSeconds(23), coordinator.getTestSuite().getDurationSeconds());
-    }
-
-    @Test
-    public void testInit_duration() {
-        args.add("--duration");
-        args.add("423");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertFalse(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(423, coordinator.getTestSuite().getDurationSeconds());
-    }
-
     @Test(expected = CommandLineExitException.class)
-    public void testInit_duration_withException() {
+    public void testInit_duration_withNumberFormatException() {
         args.add("--duration");
         args.add("numberFormatException");
 
         Coordinator coordinator = createCoordinator();
 
-        assertFalse(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(423, coordinator.getTestSuite().getDurationSeconds());
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(423, testSuite.getDurationSeconds());
     }
 
     @Test
@@ -149,25 +177,26 @@ public class CoordinatorCliTest {
 
         Coordinator coordinator = createCoordinator();
 
-        assertTrue(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(0, coordinator.getTestSuite().getDurationSeconds());
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertTrue(testSuite.isWaitForTestCase());
+        assertEquals(0, testSuite.getDurationSeconds());
     }
 
     @Test
     public void testInit_waitForTestCaseCompletion_and_duration() {
         args.add("--waitForTestCaseCompletion");
         args.add("--duration");
-        args.add("42");
+        args.add("42s");
 
         Coordinator coordinator = createCoordinator();
 
-        assertTrue(coordinator.getTestSuite().isWaitForTestCase());
-        assertEquals(42, coordinator.getTestSuite().getDurationSeconds());
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertTrue(testSuite.isWaitForTestCase());
+        assertEquals(42, testSuite.getDurationSeconds());
     }
 
     @Test
     public void testInit_workerClassPath() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--workerClassPath");
         args.add("*.jar");
 
@@ -178,7 +207,6 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_dedicatedMemberMachines() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--dedicatedMemberMachines");
         args.add("1");
 
@@ -189,7 +217,6 @@ public class CoordinatorCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_dedicatedMemberMachines_negativeValue() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--dedicatedMemberMachines");
         args.add("-1");
 
@@ -198,7 +225,6 @@ public class CoordinatorCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_noWorkersDefined() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--memberWorkerCount");
         args.add("0");
         args.add("--clientWorkerCount");
@@ -209,7 +235,6 @@ public class CoordinatorCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_propertiesFile() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--propertiesFile");
         args.add("not.found");
 
@@ -218,29 +243,21 @@ public class CoordinatorCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_testSuite_tooMany() {
-        args.add("test2.properties");
+        args.add("test.properties");
+        args.add("test.properties");
 
         createCoordinator();
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_testSuite_notFound() {
-        args.add("--waitForTestCaseCompletion");
         args.add("not.found");
 
-        CoordinatorCli.init(getArgs(false));
-    }
-
-    @Test
-    public void testInit_testSuite_default() {
-        args.add("--waitForTestCaseCompletion");
-
-        CoordinatorCli.init(getArgs(false));
+        createCoordinator();
     }
 
     @Test(expected = Exception.class)
     public void testInit_syncToTestPhase_invalid() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--syncToTestPhase");
         args.add("INVALID");
 
@@ -249,8 +266,6 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_syncToTestPhase_default() {
-        args.add("--waitForTestCaseCompletion");
-
         Coordinator coordinator = createCoordinator();
 
         assertEquals(TestPhase.SETUP, coordinator.getCoordinatorParameters().getLastTestPhaseToSync());
@@ -258,7 +273,6 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_syncToTestPhase_globalWarmup() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--syncToTestPhase");
         args.add("GLOBAL_WARMUP");
 
@@ -269,7 +283,6 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_syncToTestPhase_localVerify() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--syncToTestPhase");
         args.add("LOCAL_VERIFY");
 
@@ -280,7 +293,6 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_git() {
-        args.add("--waitForTestCaseCompletion");
         args.add("--git");
         args.add("sha123456");
 
@@ -295,8 +307,6 @@ public class CoordinatorCliTest {
         writeText(HAZELCAST_XML, memberConfigFile);
 
         try {
-            args.add("--waitForTestCaseCompletion");
-
             Coordinator coordinator = createCoordinator();
             assertEquals(HAZELCAST_XML, coordinator.getWorkerParameters().getMemberHzConfig());
         } finally {
@@ -310,8 +320,6 @@ public class CoordinatorCliTest {
         writeText(HAZELCAST_XML, clientConfigFile);
 
         try {
-            args.add("--waitForTestCaseCompletion");
-
             Coordinator coordinator = createCoordinator();
             assertEquals(HAZELCAST_XML, coordinator.getWorkerParameters().getClientHzConfig());
         } finally {
@@ -325,8 +333,6 @@ public class CoordinatorCliTest {
         writeText(CLUSTER_XML, clusterConfigFile);
 
         try {
-            args.add("--waitForTestCaseCompletion");
-
             Coordinator coordinator = createCoordinator();
             assertEquals(CLUSTER_XML, coordinator.getClusterLayoutParameters().getClusterConfiguration());
         } finally {
@@ -340,7 +346,6 @@ public class CoordinatorCliTest {
         writeText(format("%s=%s", PROPERTY_CLOUD_PROVIDER, CloudProviderUtils.PROVIDER_LOCAL), simulatorProperties);
 
         try {
-            args.add("--waitForTestCaseCompletion");
             args.add("--propertiesFile");
             args.add(simulatorProperties.getAbsolutePath());
 
@@ -358,14 +363,10 @@ public class CoordinatorCliTest {
     }
 
     private Coordinator createCoordinator() {
-        return CoordinatorCli.init(getArgs(true));
+        return CoordinatorCli.init(getArgs());
     }
 
-    private String[] getArgs(boolean addDefaults) {
-        if (addDefaults) {
-            args.add("test.properties");
-        }
-
+    private String[] getArgs() {
         String[] argsArray = new String[args.size()];
         args.toArray(argsArray);
         return argsArray;

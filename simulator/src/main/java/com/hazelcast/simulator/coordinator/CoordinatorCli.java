@@ -51,16 +51,18 @@ import static java.lang.String.format;
 
 final class CoordinatorCli {
 
+    static final int DEFAULT_DURATION_SECONDS = 60;
+
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
-            "Amount of time to execute run phase per test, e.g. 10s, 1m, 2h or 3d.")
-            .withRequiredArg().ofType(String.class);
+            "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
+            .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
     private final OptionSpec waitForTestCaseSpec = parser.accepts("waitForTestCaseCompletion",
-            "Wait for the TestCase to finish its run phase. Can be combined with --duration to limit runtime.");
+            "Wait for the TestCase to finish its RUN phase. Can be combined with --duration to limit runtime.");
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
             "Properties that override the properties in a given test-case, e.g. --overrides"
@@ -265,15 +267,18 @@ final class CoordinatorCli {
     }
 
     private static TestSuite getTestSuite(CoordinatorCli cli, OptionSet options) {
+        int durationSeconds = getDurationSeconds(options, cli);
+        boolean hasWaitForTestCase = options.has(cli.waitForTestCaseSpec);
+        if (!options.has(cli.durationSpec) && hasWaitForTestCase) {
+            durationSeconds = 0;
+        }
+
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
                 options.valueOf(cli.testSuiteIdSpec));
-        testSuite.setDurationSeconds(getDurationSeconds(options, cli));
-        testSuite.setWaitForTestCase(options.has(cli.waitForTestCaseSpec));
+        testSuite.setDurationSeconds(durationSeconds);
+        testSuite.setWaitForTestCase(hasWaitForTestCase);
         testSuite.setFailFast(options.valueOf(cli.failFastSpec));
         testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
-        if (testSuite.getDurationSeconds() == 0 && !testSuite.isWaitForTestCase()) {
-            throw new CommandLineExitException("You need to define --duration or --waitForTestCase or both!");
-        }
         return testSuite;
     }
 
@@ -342,10 +347,6 @@ final class CoordinatorCli {
     }
 
     private static int getDurationSeconds(OptionSet options, CoordinatorCli cli) {
-        if (!options.has(cli.durationSpec)) {
-            return 0;
-        }
-
         int duration;
         String value = options.valueOf(cli.durationSpec);
         try {
