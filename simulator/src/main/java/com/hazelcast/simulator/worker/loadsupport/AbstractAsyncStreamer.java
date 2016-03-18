@@ -63,7 +63,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
                     LOGGER.info("At: " + counter.get());
                 }
             }
-        };
+        }.start();
     }
 
     abstract ICompletableFuture storeAsync(K key, V value);
