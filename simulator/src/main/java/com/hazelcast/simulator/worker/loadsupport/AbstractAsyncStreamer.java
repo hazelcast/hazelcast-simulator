@@ -17,13 +17,17 @@ package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
+    private static final ILogger LOGGER = Logger.getLogger(AbstractAsyncStreamer.class);
 
     private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
@@ -33,6 +37,8 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private final ExecutionCallback callback;
 
     private volatile Throwable storedException;
+
+    private final AtomicLong counter = new AtomicLong();
 
     AbstractAsyncStreamer() {
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
@@ -74,7 +80,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private void acquirePermit(int count) {
         try {
             if (!semaphore.tryAcquire(count, DEFAULT_TIMEOUT_MINUTES, MINUTES)) {
-                throw new IllegalStateException("Timeout when trying to acquire a permit!");
+                throw new IllegalStateException("Timeout when trying to acquire a permit! Completed:" + counter.get());
             }
         } catch (InterruptedException e) {
             throw rethrow(e);
@@ -86,10 +92,14 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         @Override
         public void onResponse(V response) {
             releasePermit(1);
+            counter.incrementAndGet();
         }
 
         @Override
         public void onFailure(Throwable t) {
+            counter.incrementAndGet();
+            LOGGER.severe(t);
+
             storedException = t;
             releasePermit(1);
         }
