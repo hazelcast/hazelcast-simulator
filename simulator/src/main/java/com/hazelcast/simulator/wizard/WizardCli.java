@@ -66,12 +66,7 @@ final class WizardCli {
     static Wizard init() {
         Wizard.logHeader();
 
-        SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.init(null);
-
-        Bash bash = new Bash(simulatorProperties);
-
-        return new Wizard(simulatorProperties, bash);
+        return new Wizard();
     }
 
     static void run(String[] args, Wizard wizard) {
@@ -82,17 +77,35 @@ final class WizardCli {
             String homeDir = System.getProperty("user.dir");
             wizard.install(getSimulatorPath(), getProfileFile(homeDir));
         } else if (options.has(cli.createWorkDirSpec)) {
-            wizard.createWorkDir(cli.createWorkDirSpec.value(options), cli.cloudProvider.value(options));
+            SimulatorProperties simulatorProperties = getSimulatorProperties(false);
+            wizard.createWorkDir(simulatorProperties, cli.createWorkDirSpec.value(options), cli.cloudProvider.value(options));
         } else if (options.has(cli.listCloudProvidersSpec)) {
             wizard.listCloudProviders();
         } else if (options.has(cli.createSshCopyIdScriptSpec)) {
-            wizard.createSshCopyIdScript();
+            wizard.createSshCopyIdScript(getSimulatorProperties());
         } else if (options.has(cli.sshConnectionCheckSpec)) {
-            wizard.sshConnectionCheck();
+            SimulatorProperties simulatorProperties = getSimulatorProperties();
+            wizard.sshConnectionCheck(simulatorProperties, getBash(simulatorProperties));
         } else if (options.has(cli.compareSimulatorPropertiesSpec)) {
             wizard.compareSimulatorProperties();
         } else {
             printHelpAndExit(cli.parser);
         }
+    }
+
+    private static SimulatorProperties getSimulatorProperties() {
+        return getSimulatorProperties(true);
+    }
+
+    private static SimulatorProperties getSimulatorProperties(boolean initWithWorkingDirFile) {
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
+        if (initWithWorkingDirFile) {
+            simulatorProperties.init(null);
+        }
+        return simulatorProperties;
+    }
+
+    private static Bash getBash(SimulatorProperties simulatorProperties) {
+        return new Bash(simulatorProperties);
     }
 }

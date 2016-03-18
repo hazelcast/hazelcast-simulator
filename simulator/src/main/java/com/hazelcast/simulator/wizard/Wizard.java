@@ -69,12 +69,7 @@ public class Wizard {
 
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
 
-    private final SimulatorProperties simulatorProperties;
-    private final Bash bash;
-
-    Wizard(SimulatorProperties simulatorProperties, Bash bash) {
-        this.simulatorProperties = simulatorProperties;
-        this.bash = bash;
+    Wizard() {
     }
 
     void install(String simulatorPath, File profileFile) {
@@ -98,7 +93,7 @@ public class Wizard {
         echo("Done!%n%nNOTE: Don't forget to start a new terminal to make changes effective!");
     }
 
-    void createWorkDir(String pathName, String cloudProvider) {
+    void createWorkDir(SimulatorProperties simulatorProperties, String pathName, String cloudProvider) {
         File workDir = new File(pathName).getAbsoluteFile();
         if (workDir.exists()) {
             throw new CommandLineExitException(format("Working directory '%s' already exists!", workDir));
@@ -163,7 +158,7 @@ public class Wizard {
         }
     }
 
-    void createSshCopyIdScript() {
+    void createSshCopyIdScript(SimulatorProperties simulatorProperties) {
         ComponentRegistry componentRegistry = loadComponentRegister(AGENTS_FILE, true);
         String userName = simulatorProperties.getUser();
 
@@ -178,7 +173,7 @@ public class Wizard {
         echo("Please execute './%s' to copy your public RSA key to all remote machines.", SSH_COPY_ID_FILE.getName());
     }
 
-    void sshConnectionCheck() {
+    void sshConnectionCheck(SimulatorProperties simulatorProperties, Bash bash) {
         if (isLocal(simulatorProperties)) {
             throw new CommandLineExitException("SSH is not supported for local setups.");
         }

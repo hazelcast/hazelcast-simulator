@@ -1,5 +1,7 @@
 package com.hazelcast.simulator.wizard;
 
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
@@ -95,7 +97,7 @@ public class WizardCliTest {
 
         run(getArgs(), wizard);
 
-        verify(wizard).createWorkDir(eq("tests"), eq(CloudProviderUtils.PROVIDER_LOCAL));
+        verify(wizard).createWorkDir(any(SimulatorProperties.class), eq("tests"), eq(CloudProviderUtils.PROVIDER_LOCAL));
         verifyNoMoreInteractions(wizard);
     }
 
@@ -108,7 +110,7 @@ public class WizardCliTest {
 
         run(getArgs(), wizard);
 
-        verify(wizard).createWorkDir(eq("tests"), eq(CloudProviderUtils.PROVIDER_GCE));
+        verify(wizard).createWorkDir(any(SimulatorProperties.class), eq("tests"), eq(CloudProviderUtils.PROVIDER_GCE));
         verifyNoMoreInteractions(wizard);
     }
 
@@ -128,7 +130,7 @@ public class WizardCliTest {
 
         run(getArgs(), wizard);
 
-        verify(wizard).createSshCopyIdScript();
+        verify(wizard).createSshCopyIdScript(any(SimulatorProperties.class));
         verifyNoMoreInteractions(wizard);
     }
 
@@ -138,7 +140,7 @@ public class WizardCliTest {
 
         run(getArgs(), wizard);
 
-        verify(wizard).sshConnectionCheck();
+        verify(wizard).sshConnectionCheck(any(SimulatorProperties.class), any(Bash.class));
         verifyNoMoreInteractions(wizard);
     }
 
