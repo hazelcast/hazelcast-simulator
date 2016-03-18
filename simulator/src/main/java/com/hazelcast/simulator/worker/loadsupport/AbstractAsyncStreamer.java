@@ -19,6 +19,7 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
@@ -97,6 +98,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
         @Override
         public void onFailure(Throwable t) {
+            ExceptionReporter.report(null, t);
             counter.incrementAndGet();
             LOGGER.severe(t);
 
