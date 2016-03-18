@@ -81,7 +81,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private void acquirePermit(int count) {
         try {
             if (!semaphore.tryAcquire(count, DEFAULT_TIMEOUT_MINUTES, MINUTES)) {
-                throw new IllegalStateException("Timeout when trying to acquire a permit! Completed:" + counter.get());
+                throw new IllegalStateException("Timeout when trying to acquire a permit! Completed: " + counter.get());
             }
         } catch (InterruptedException e) {
             throw rethrow(e);
@@ -99,11 +99,10 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         @Override
         public void onFailure(Throwable t) {
             ExceptionReporter.report(null, t);
-            counter.incrementAndGet();
-            LOGGER.severe(t);
-
             storedException = t;
+
             releasePermit(1);
+            counter.incrementAndGet();
         }
     }
 }
