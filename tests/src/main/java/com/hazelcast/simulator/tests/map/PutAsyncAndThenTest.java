@@ -50,9 +50,7 @@ public class PutAsyncAndThenTest {
         this.context = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
-
-        keys = generateStringKeys(basename, 10, keyLocality, testContext.getTargetInstance());
-
+        keys = generateStringKeys(basename, keyCount, keyLocality, testContext.getTargetInstance());
     }
 
     @Teardown
