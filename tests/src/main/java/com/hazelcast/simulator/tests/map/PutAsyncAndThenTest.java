@@ -23,11 +23,14 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 
 public class PutAsyncAndThenTest {
 
@@ -36,15 +39,20 @@ public class PutAsyncAndThenTest {
     public int maxConcurrentCallsPerWorker = 1000;
     public String basename = PutAsyncAndThenTest.class.getSimpleName();
     public long acquireTimeoutMs = 2 * 60 * 1000;
+    public KeyLocality keyLocality = KeyLocality.SHARED;
 
-    private IMap<Integer, Integer> map;
+    private IMap<String, String> map;
     private TestContext context;
+    private String[] keys;
 
     @Setup
     public void setUp(TestContext testContext) {
         this.context = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
+
+        keys = generateStringKeys(basename, 10, keyLocality, testContext.getTargetInstance());
+
     }
 
     @Teardown
@@ -66,8 +74,8 @@ public class PutAsyncAndThenTest {
                 throw new RuntimeException("Failed to acquire a license from the semaphore within the given timeout");
             }
 
-            Integer key = randomInt(keyCount);
-            ICompletableFuture f = (ICompletableFuture) map.putAsync(key, key);
+            String key = keys[randomInt(keyCount)];
+            ICompletableFuture f = (ICompletableFuture) map.putAsync(key, "");
             f.andThen(this);
         }
 
