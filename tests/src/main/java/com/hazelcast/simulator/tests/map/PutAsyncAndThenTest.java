@@ -63,7 +63,7 @@ public class PutAsyncAndThenTest {
         @Override
         protected void timeStep() throws Exception {
             if (!semaphore.tryAcquire(1, acquireTimeoutMs, TimeUnit.MILLISECONDS)) {
-                throw new RuntimeException();
+                throw new RuntimeException("Failed to acquire a license from the semaphore within the given timeout");
             }
 
             Integer key = randomInt(keyCount);
