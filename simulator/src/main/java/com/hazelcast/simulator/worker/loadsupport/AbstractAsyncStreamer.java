@@ -20,6 +20,7 @@ import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.ThrottlingLogger;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,15 +29,17 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
+
     private static final ILogger LOGGER = Logger.getLogger(AbstractAsyncStreamer.class);
 
     private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
-    private static final int SLEEP_MS = 5000;
+    private static final int MAXIMUM_LOGGING_RATE_MS = 5000;
 
     private final int concurrencyLevel;
     private final Semaphore semaphore;
     private final ExecutionCallback callback;
+    private final ThrottlingLogger throttlingLogger;
 
     private volatile Throwable storedException;
 
@@ -46,24 +49,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         this.concurrencyLevel = DEFAULT_CONCURRENCY_LEVEL;
         this.semaphore = new Semaphore(DEFAULT_CONCURRENCY_LEVEL);
         this.callback = new StreamerExecutionCallback();
-
-        new Thread() {
-            {
-                setDaemon(true);
-            }
-
-            public void run() {
-                for (; ; ) {
-                    try {
-                        Thread.sleep(SLEEP_MS);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-
-                    LOGGER.info("At: " + counter.get());
-                }
-            }
-        }.start();
+        this.throttlingLogger = ThrottlingLogger.newLogger(LOGGER, MAXIMUM_LOGGING_RATE_MS);
     }
 
     abstract ICompletableFuture storeAsync(K key, V value);
@@ -95,9 +81,11 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
     private void releasePermit(int count) {
         semaphore.release(count);
+        throttlingLogger.info("At: " + counter.get());
     }
 
     private void acquirePermit(int count) {
+        throttlingLogger.info("At: " + counter.get());
         try {
             if (!semaphore.tryAcquire(count, DEFAULT_TIMEOUT_MINUTES, MINUTES)) {
                 throw new IllegalStateException("Timeout when trying to acquire a permit! Completed: " + counter.get());
