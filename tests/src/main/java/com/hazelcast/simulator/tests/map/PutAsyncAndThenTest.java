@@ -20,6 +20,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -35,19 +36,17 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 public class PutAsyncAndThenTest {
 
     // properties
+    public String basename = PutAsyncAndThenTest.class.getSimpleName();
     public int keyCount = 1000;
     public int maxConcurrentCallsPerWorker = 1000;
-    public String basename = PutAsyncAndThenTest.class.getSimpleName();
     public long acquireTimeoutMs = 2 * 60 * 1000;
     public KeyLocality keyLocality = KeyLocality.SHARED;
 
     private IMap<String, String> map;
-    private TestContext context;
     private String[] keys;
 
     @Setup
     public void setUp(TestContext testContext) {
-        this.context = testContext;
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         keys = generateStringKeys(basename, keyCount, keyLocality, testContext.getTargetInstance());
@@ -63,28 +62,29 @@ public class PutAsyncAndThenTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractMonotonicWorker implements ExecutionCallback {
+    private class Worker extends AbstractMonotonicWorker implements ExecutionCallback<String> {
+
         private final Semaphore semaphore = new Semaphore(maxConcurrentCallsPerWorker);
 
         @Override
         protected void timeStep() throws Exception {
             if (!semaphore.tryAcquire(1, acquireTimeoutMs, TimeUnit.MILLISECONDS)) {
-                throw new RuntimeException("Failed to acquire a license from the semaphore within the given timeout");
+                throw new TestException("Failed to acquire a license from the semaphore within the given timeout");
             }
 
             String key = keys[randomInt(keyCount)];
-            ICompletableFuture f = (ICompletableFuture) map.putAsync(key, "");
+            ICompletableFuture<String> f = (ICompletableFuture<String>) map.putAsync(key, "");
             f.andThen(this);
         }
 
         @Override
-        public void onResponse(Object o) {
+        public void onResponse(String o) {
             semaphore.release();
         }
 
         @Override
         public void onFailure(Throwable throwable) {
-            ExceptionReporter.report(context.getTestId(), throwable);
+            ExceptionReporter.report(basename, throwable);
         }
     }
 }
