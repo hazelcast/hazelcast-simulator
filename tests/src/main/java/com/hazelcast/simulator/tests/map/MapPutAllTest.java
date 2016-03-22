@@ -26,7 +26,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.utils.GeneratorUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
@@ -35,6 +34,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
 public class MapPutAllTest {
 
@@ -43,17 +43,17 @@ public class MapPutAllTest {
     // properties
     public String basename = MapPutAllTest.class.getSimpleName();
     public int minNumberOfMembers = 0;
-    // number of items in a single map to insert
+    // number of items to insert in a single map
     public int itemCount = 10000;
-    // the number of characters in the key
+    // the length of the key (characters)
     public int keySize = 10;
-    // the number of characters in the value
+    // the length of the the value (characters)
     public int valueSize = 100;
-    // controls the key locality. E.g. a batch can be made for local or single partition etc.
-    public KeyLocality keyLocality;
-    // the number of maps we insert. We don't want to keep inserting the same map over an over
+    // controls the key locality, e.g. a batch can be made for local or single partition etc.
+    public KeyLocality keyLocality = KeyLocality.SHARED;
+    // the number of prepared maps with input values (we don't want to keep inserting the same values over an over again)
     public int mapCount = 2;
-    // if we want to use putAll or put (this is a nice setting to see what kind of speedup or slowdown to expect)
+    // if we want to use putAll() or put() in a loop (this is a nice setting to see what kind of speedup or slowdown to expect)
     public boolean usePutAll = true;
 
     private IMap<String, String> map;
@@ -87,7 +87,7 @@ public class MapPutAllTest {
             Map<String, String> inputMap = new HashMap<String, String>();
             inputMaps[mapIndex] = inputMap;
             for (int itemIndex = 0; itemIndex < itemCount; itemIndex++) {
-                String value = GeneratorUtils.generateString(valueSize);
+                String value = generateString(valueSize);
                 inputMap.put(keys[mapIndex], value);
             }
         }
