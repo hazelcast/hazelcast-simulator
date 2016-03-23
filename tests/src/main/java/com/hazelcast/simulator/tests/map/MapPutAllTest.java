@@ -25,40 +25,50 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.helpers.GenericTypes;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.TreeMap;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
-import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
-import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
+/**
+ * Test for {@link IMap#putAll(Map)} which uses a set of prepared maps with input values during the RUN phase.
+ *
+ * You can configure the {@link #keyType} and {@link #valueType} for the used maps.
+ */
 public class MapPutAllTest {
 
     private static final ILogger LOGGER = Logger.getLogger(MapPutAllTest.class);
 
     // properties
     public String basename = MapPutAllTest.class.getSimpleName();
-    public int minNumberOfMembers = 0;
-    // number of items to insert in a single map
-    public int itemCount = 10000;
-    // the length of the key (characters)
-    public int keySize = 10;
-    // the length of the the value (characters)
-    public int valueSize = 100;
-    // controls the key locality, e.g. a batch can be made for local or single partition etc.
+
     public KeyLocality keyLocality = KeyLocality.SHARED;
+    public GenericTypes keyType = GenericTypes.STRING;
+    public GenericTypes valueType = GenericTypes.STRING;
+    public int keyCount = 1000000;
+    public int itemCount = 10000;
+
+    // the length of the key (just used with keyType STRING)
+    public int keySize = 10;
+    // the length of the the value (just used with keyType STRING)
+    public int valueSize = 100;
     // the number of prepared maps with input values (we don't want to keep inserting the same values over an over again)
     public int mapCount = 2;
+
+    // if we want to used a SortedMap for input values
+    public boolean useSortedMap = true;
     // if we want to use putAll() or put() in a loop (this is a nice setting to see what kind of speedup or slowdown to expect)
     public boolean usePutAll = true;
 
-    private IMap<String, String> map;
     private HazelcastInstance targetInstance;
-    private Map<String, String>[] inputMaps;
+    private IMap<Object, Object> map;
+    private Map<Object, Object>[] inputMaps;
 
     @Setup
     public void setUp(TestContext testContext) {
@@ -70,26 +80,28 @@ public class MapPutAllTest {
     public void tearDown() {
         map.destroy();
         LOGGER.info(getOperationCountInformation(targetInstance));
+
+        if (valueType == GenericTypes.INTEGER) {
+            valueSize = Integer.MAX_VALUE;
+        }
     }
 
     @Warmup(global = false)
     @SuppressWarnings("unchecked")
     public void warmup() {
-        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
-
-        String[] keys = new String[itemCount];
-        for (int i = 0; i < keys.length; i++) {
-            keys[i] = generateStringKey(keySize, keyLocality, targetInstance);
-        }
+        Object[] keys = keyType.generateKeys(targetInstance, keyLocality, keyCount, keySize);
 
         inputMaps = new Map[mapCount];
+        Random random = new Random();
         for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
-            Map<String, String> inputMap = new HashMap<String, String>();
-            inputMaps[mapIndex] = inputMap;
+            // generate a SortedMap or HashMap depending on the configuration
+            Map<Object, Object> tmpMap = (useSortedMap ? new TreeMap<Object, Object>() : new HashMap<Object, Object>(itemCount));
             for (int itemIndex = 0; itemIndex < itemCount; itemIndex++) {
-                String value = generateString(valueSize);
-                inputMap.put(keys[mapIndex], value);
+                Object key = keys[random.nextInt(keyCount)];
+                Object value = valueType.generateValue(random, valueSize);
+                tmpMap.put(key, value);
             }
+            inputMaps[mapIndex] = tmpMap;
         }
     }
 
@@ -102,17 +114,17 @@ public class MapPutAllTest {
 
         @Override
         protected void timeStep() throws Exception {
-            Map<String, String> insertMap = randomMap();
+            Map<Object, Object> insertMap = randomMap();
             if (usePutAll) {
                 map.putAll(insertMap);
             } else {
-                for (Map.Entry<String, String> entry : insertMap.entrySet()) {
+                for (Map.Entry<Object, Object> entry : insertMap.entrySet()) {
                     map.put(entry.getKey(), entry.getValue());
                 }
             }
         }
 
-        private Map<String, String> randomMap() {
+        private Map<Object, Object> randomMap() {
             return inputMaps[randomInt(inputMaps.length)];
         }
     }
