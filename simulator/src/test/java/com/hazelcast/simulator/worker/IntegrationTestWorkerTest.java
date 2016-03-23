@@ -20,7 +20,7 @@ public class IntegrationTestWorkerTest {
     public void tearDown() throws Exception {
         try {
             worker.shutdown(false);
-            worker.awaitShutdown(5);
+            worker.awaitShutdown(30);
         } finally {
             deleteQuiet(workerAddressFile);
             deleteQuiet(workerPidFile);
