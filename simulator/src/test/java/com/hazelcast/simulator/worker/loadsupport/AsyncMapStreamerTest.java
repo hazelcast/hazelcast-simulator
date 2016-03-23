@@ -3,12 +3,13 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
-import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+
+import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -24,6 +25,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class AsyncMapStreamerTest {
+
+    private static final int DEFAULT_TIMEOUT = 30000;
 
     @SuppressWarnings("unchecked")
     private final IMap<Integer, String> map = mock(IMap.class);
@@ -54,7 +57,7 @@ public class AsyncMapStreamerTest {
         verifyNoMoreInteractions(map);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     @SuppressWarnings("unchecked")
     public void testAwait() {
         when(map.putAsync(anyInt(), anyString())).thenReturn(future);
@@ -83,7 +86,7 @@ public class AsyncMapStreamerTest {
         joinThread(thread);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(timeout = DEFAULT_TIMEOUT, expected = IllegalArgumentException.class)
     @SuppressWarnings("unchecked")
     public void testAwait_withExceptionInFuture() {
         when(map.putAsync(anyInt(), anyString())).thenReturn(future);
@@ -103,9 +106,10 @@ public class AsyncMapStreamerTest {
         streamer.await();
     }
 
-    @Test
-    public void testAwait_withExceptionOnPushEntry() {
+    @Test(timeout = DEFAULT_TIMEOUT)
+    public void testAwait_withExceptionOnPushEntry() throws Exception {
         doThrow(new IllegalArgumentException("expected exception")).when(map).putAsync(anyInt(), anyString());
+        final CountDownLatch latch = new CountDownLatch(1);
 
         Thread thread = new Thread() {
             @Override
@@ -114,13 +118,14 @@ public class AsyncMapStreamerTest {
                     streamer.pushEntry(1, "foobar");
                     fail("Expected exception directly thrown by pushEntry() method");
                 } catch (Exception ignored) {
-                    EmptyStatement.ignore(ignored);
+                    latch.countDown();
                 }
             }
         };
         thread.start();
 
         try {
+            latch.await();
             streamer.await();
         } finally {
             joinThread(thread);
