@@ -4,12 +4,14 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 import com.hazelcast.util.EmptyStatement;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -35,6 +37,11 @@ public class AsyncMapStreamerTest {
     public void setUp() {
         StreamerFactory.enforceAsync(true);
         streamer = StreamerFactory.getInstance(map);
+    }
+
+    @After
+    public void tearDown() {
+        deleteQuiet("1.exception");
     }
 
     @Test
@@ -98,7 +105,7 @@ public class AsyncMapStreamerTest {
 
     @Test
     public void testAwait_withExceptionOnPushEntry() {
-        doThrow(new IllegalArgumentException()).when(map).putAsync(anyInt(), anyString());
+        doThrow(new IllegalArgumentException("expected exception")).when(map).putAsync(anyInt(), anyString());
 
         Thread thread = new Thread() {
             @Override

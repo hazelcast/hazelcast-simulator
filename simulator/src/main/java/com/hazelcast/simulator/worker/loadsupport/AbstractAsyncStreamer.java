@@ -58,8 +58,14 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     @SuppressWarnings("unchecked")
     public void pushEntry(K key, V value) {
         acquirePermit(1);
-        ICompletableFuture<V> future = storeAsync(key, value);
-        future.andThen(callback);
+        try {
+            ICompletableFuture<V> future = storeAsync(key, value);
+            future.andThen(callback);
+        } catch (Exception e) {
+            releasePermit(1);
+
+            throw rethrow(e);
+        }
     }
 
     @Override
@@ -101,7 +107,6 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
         public void onResponse(V response) {
             releasePermit(1);
             counter.incrementAndGet();
-
         }
 
         @Override
