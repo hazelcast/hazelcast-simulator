@@ -26,14 +26,13 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 
 /**
- * Test for {@link IMap#putAll(Map)} which creates the input values on the fly during the RUN phase.
+ * Test for {@link IMap#putAll(java.util.Map)} which creates the input values on the fly during the RUN phase.
  *
  * You can configure the {@link #batchSize} to determine the number of inserted values per operation.
  * You can configure the {@link #keyRange} to determine the key range for inserted values.
