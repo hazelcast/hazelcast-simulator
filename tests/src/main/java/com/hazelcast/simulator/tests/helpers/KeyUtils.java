@@ -106,6 +106,26 @@ public final class KeyUtils {
     }
 
     /**
+     * Generates an array of int keys with a configurable keyLocality.
+     *
+     * If the instance is a client, keyLocality is ignored.
+     *
+     * @param keyCount    the number of keys in the array
+     * @param keyLocality if the key is local/remote/random
+     * @param hz          the HazelcastInstance that is used for keyLocality
+     * @return the created array of keys
+     */
+    public static Integer[] generateIntegerKeys(int keyCount, KeyLocality keyLocality, HazelcastInstance hz) {
+        KeyGenerator<Integer> keyGenerator = newIntKeyGenerator(hz, keyLocality, keyCount);
+
+        Integer[] keys = new Integer[keyCount];
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = keyGenerator.next();
+        }
+        return keys;
+    }
+
+    /**
      * Generates a string key with a configurable keyLocality.
      *
      * @param keyLength   the length of each string key
@@ -172,11 +192,11 @@ public final class KeyUtils {
         return keys;
     }
 
-    private interface KeyGenerator<K> {
+    interface KeyGenerator<K> {
         K next();
     }
 
-    private abstract static class BalancedKeyGenerator<K> implements KeyGenerator<K> {
+    abstract static class BalancedKeyGenerator<K> implements KeyGenerator<K> {
 
         protected final Random random = new Random();
         protected final HazelcastInstance hz;
@@ -188,7 +208,7 @@ public final class KeyUtils {
         private final KeyLocality keyLocality;
 
         @SuppressWarnings("unchecked")
-        private BalancedKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount) {
+        BalancedKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount) {
             this.hz = hz;
             this.keyLocality = keyLocality;
             this.keyCount = keyCount;

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.isLocalKey;
@@ -77,10 +78,10 @@ public class KeyUtilsTest {
         invokePrivateConstructor(KeyUtils.class);
     }
 
-    // =========================== generate int keys =============================
+    // =========================== generateIntKeys() =============================
 
     @Test
-    public void generateIntKeys_whenLocal_equalDistributionOverPartitions() {
+    public void testGenerateIntKeys_whenLocal_equalDistributionOverPartitions() {
         Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
         for (Partition partition : hz.getPartitionService().getPartitions()) {
             if (partition.getOwner().localMember()) {
@@ -90,7 +91,115 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        int[] keys = KeyUtils.generateIntKeys(keyCount, KeyLocality.LOCAL, hz);
+        int[] keys = generateIntKeys(keyCount, KeyLocality.LOCAL, hz);
+
+        assertEquals(keyCount, keys.length);
+
+        for (int key : keys) {
+            assertTrue(isLocalKey(hz, key));
+
+            Partition partition = hz.getPartitionService().getPartition(key);
+            Integer count = countsPerPartition.get(partition.getPartitionId());
+            assertNotNull(count);
+            countsPerPartition.put(partition.getPartitionId(), count + 1);
+        }
+
+        LOGGER.info(countsPerPartition);
+        for (int count : countsPerPartition.values()) {
+            assertEquals(keysPerPartition, count);
+        }
+    }
+
+    @Test
+    public void testGenerateIntKeys_whenRemote_equalDistributionOverPartitions() {
+        Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
+        for (Partition partition : hz.getPartitionService().getPartitions()) {
+            if (!partition.getOwner().localMember()) {
+                countsPerPartition.put(partition.getPartitionId(), 0);
+            }
+        }
+
+        int keysPerPartition = 4;
+        int keyCount = countsPerPartition.size() * keysPerPartition;
+        int[] keys = generateIntKeys(keyCount, KeyLocality.REMOTE, hz);
+
+        assertEquals(keyCount, keys.length);
+
+        for (int key : keys) {
+            assertFalse(isLocalKey(hz, key));
+
+            Partition partition = hz.getPartitionService().getPartition(key);
+            Integer count = countsPerPartition.get(partition.getPartitionId());
+            assertNotNull(count);
+            countsPerPartition.put(partition.getPartitionId(), count + 1);
+        }
+
+        LOGGER.info(countsPerPartition);
+        for (int count : countsPerPartition.values()) {
+            assertEquals(keysPerPartition, count);
+        }
+    }
+
+    @Test
+    public void testGenerateIntKeys_whenRandom_equalDistributionOverPartitions() {
+        int keysPerPartition = 4;
+        int keyCount = keysPerPartition * PARTITION_COUNT;
+        int[] keys = generateIntKeys(keyCount, KeyLocality.RANDOM, hz);
+
+        assertEquals(keyCount, keys.length);
+
+        int[] countPerPartition = new int[PARTITION_COUNT];
+        for (Integer key : keys) {
+            Partition partition = hz.getPartitionService().getPartition(key);
+            countPerPartition[partition.getPartitionId()]++;
+        }
+
+        for (int count : countPerPartition) {
+            assertEquals(keysPerPartition, count);
+        }
+    }
+
+    @Test
+    public void testGenerateIntKeys_whenLocal_client() {
+        int[] keys = generateIntKeys(2, KeyLocality.LOCAL, client);
+
+        assertEquals(2, keys.length);
+    }
+
+    @Test
+    public void testGenerateIntKeys_whenShared() {
+        int[] keys = generateIntKeys(100, KeyLocality.SHARED, null);
+
+        assertEquals(100, keys.length);
+        for (int i = 0; i < keys.length; i++) {
+            assertEquals(i, keys[i]);
+        }
+    }
+
+    @Test
+    public void testGenerateIntKeys_whenSinglePartition() {
+        int[] keys = generateIntKeys(10, KeyLocality.SINGLE_PARTITION, null);
+
+        assertEquals(10, keys.length);
+        for (int key : keys) {
+            assertEquals(0, key);
+        }
+    }
+
+    // =========================== generateIntegerKeys() =============================
+
+    @Test
+    public void testGenerateIntegerKeys_whenLocal_equalDistributionOverPartitions() {
+        Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
+        for (Partition partition : hz.getPartitionService().getPartitions()) {
+            if (partition.getOwner().localMember()) {
+                countsPerPartition.put(partition.getPartitionId(), 0);
+            }
+        }
+
+        int keysPerPartition = 4;
+        int keyCount = countsPerPartition.size() * keysPerPartition;
+        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.LOCAL, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -110,7 +219,7 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateIntKeys_whenRemote_equalDistributionOverPartitions() {
+    public void testGenerateIntegerKeys_whenRemote_equalDistributionOverPartitions() {
         Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
         for (Partition partition : hz.getPartitionService().getPartitions()) {
             if (!partition.getOwner().localMember()) {
@@ -120,7 +229,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        int[] keys = KeyUtils.generateIntKeys(keyCount, KeyLocality.REMOTE, hz);
+        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.REMOTE, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -140,10 +249,10 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateIntKeys_whenRandom_equalDistributionOverPartitions() {
+    public void testGenerateIntegerKeys_whenRandom_equalDistributionOverPartitions() {
         int keysPerPartition = 4;
         int keyCount = keysPerPartition * PARTITION_COUNT;
-        int[] keys = KeyUtils.generateIntKeys(keyCount, KeyLocality.RANDOM, hz);
+        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.RANDOM, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -159,25 +268,25 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateIntKey_local_client() {
-        int[] keys = generateIntKeys(2, KeyLocality.LOCAL, client);
+    public void testGenerateIntegerKeys_whenLocal_client() {
+        Integer[] keys = generateIntegerKeys(2, KeyLocality.LOCAL, client);
 
         assertEquals(2, keys.length);
     }
 
     @Test
-    public void generateIntKeys_shared() {
-        int[] keys = generateIntKeys(100, KeyLocality.SHARED, null);
+    public void testGenerateIntegerKeys_whenShared() {
+        Integer[] keys = generateIntegerKeys(100, KeyLocality.SHARED, null);
 
         assertEquals(100, keys.length);
         for (int i = 0; i < keys.length; i++) {
-            assertEquals(i, keys[i]);
+            assertEquals(i, keys[i].intValue());
         }
     }
 
     @Test
-    public void generateIntKeys_singlePartition() {
-        int[] keys = generateIntKeys(10, KeyLocality.SINGLE_PARTITION, null);
+    public void testGenerateIntegerKeys_whenSinglePartition() {
+        Integer[] keys = generateIntegerKeys(10, KeyLocality.SINGLE_PARTITION, null);
 
         assertEquals(10, keys.length);
         for (int key : keys) {
@@ -185,24 +294,10 @@ public class KeyUtilsTest {
         }
     }
 
-    // =========================== generate String key =============================
+    // =========================== generateStringKey() =============================
 
     @Test
-    public void generateStringKey_singlePartition() {
-        String key = generateStringKey(10, KeyLocality.SINGLE_PARTITION, null);
-
-        assertEquals("0000000000", key);
-    }
-
-    @Test
-    public void generateStringKey_shared() {
-        String key = generateStringKey(10, KeyLocality.SHARED, null);
-
-        assertEquals("0000000000", key);
-    }
-
-    @Test
-    public void generateStringKey_local() {
+    public void testGenerateStringKey_whenLocal() {
         String key1 = generateStringKey(100, KeyLocality.LOCAL, hz);
         String key2 = generateStringKey(100, KeyLocality.LOCAL, hz);
 
@@ -216,7 +311,7 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateStringKey_remote() {
+    public void testGenerateStringKey_whenRemote() {
         String key1 = generateStringKey(100, KeyLocality.REMOTE, hz);
         String key2 = generateStringKey(100, KeyLocality.REMOTE, hz);
 
@@ -230,7 +325,7 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateStringKey_random() {
+    public void testGenerateStringKey_whenRandom() {
         String key1 = generateStringKey(100, KeyLocality.RANDOM, hz);
         String key2 = generateStringKey(100, KeyLocality.RANDOM, hz);
 
@@ -241,69 +336,24 @@ public class KeyUtilsTest {
         assertNotEquals(key1, key2);
     }
 
-    // =========================== generate String keys =============================
-
     @Test
-    public void generateStringKeys_singlePartition() {
-        String[] keys = generateStringKeys(50, 10, KeyLocality.SINGLE_PARTITION, null);
+    public void testGenerateStringKey_whenShared() {
+        String key = generateStringKey(10, KeyLocality.SHARED, null);
 
-        assertEquals(50, keys.length);
-        for (String key : keys) {
-            assertEquals("0000000000", key);
-        }
+        assertEquals("0000000000", key);
     }
 
     @Test
-    public void generateStringKeys_singlePartition_prefix() {
-        String[] keys = generateStringKeys("prefix", 50, 10, KeyLocality.SINGLE_PARTITION, null);
+    public void testGenerateStringKey_whenSinglePartition() {
+        String key = generateStringKey(10, KeyLocality.SINGLE_PARTITION, null);
 
-        assertEquals(50, keys.length);
-        for (String key : keys) {
-            assertEquals("prefix0000", key);
-        }
+        assertEquals("0000000000", key);
     }
 
-    @Test
-    public void generateStringKeys_shared() {
-        String[] keys = generateStringKeys("prefix", 12, 10, KeyLocality.SHARED, null);
-
-        assertEquals(12, keys.length);
-        assertEquals(keys[0], "prefix0000");
-        assertEquals(keys[1], "prefix0001");
-        assertEquals(keys[2], "prefix0002");
-        assertEquals(keys[3], "prefix0003");
-        assertEquals(keys[4], "prefix0004");
-        assertEquals(keys[5], "prefix0005");
-        assertEquals(keys[6], "prefix0006");
-        assertEquals(keys[7], "prefix0007");
-        assertEquals(keys[8], "prefix0008");
-        assertEquals(keys[9], "prefix0009");
-        assertEquals(keys[10], "prefix0010");
-        assertEquals(keys[11], "prefix0011");
-    }
+    // =========================== generateStringKeys() =============================
 
     @Test
-    public void generateStringKeys_whenRandom_equalDistributionOverPartitions() {
-        int keysPerPartition = 4;
-        int keyCount = keysPerPartition * PARTITION_COUNT;
-        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.RANDOM, hz);
-
-        assertEquals(keyCount, keys.length);
-
-        int[] countPerPartition = new int[PARTITION_COUNT];
-        for (String key : keys) {
-            Partition partition = hz.getPartitionService().getPartition(key);
-            countPerPartition[partition.getPartitionId()]++;
-            assertTrue(key.startsWith("prefix"));
-        }
-
-        for (int count : countPerPartition) {
-            assertEquals(keysPerPartition, count);
-        }
-    }
-
-    @Test
-    public void generateStringKeys_whenLocal_equalDistributionOverPartitions() {
+    public void testGenerateStringKeys_whenLocal_equalDistributionOverPartitions() {
         Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
         for (Partition partition : hz.getPartitionService().getPartitions()) {
             if (partition.getOwner().localMember()) {
@@ -337,7 +387,7 @@ public class KeyUtilsTest {
     }
 
     @Test
-    public void generateStringKeys_whenRemote_equalDistributionOverPartitions() {
+    public void testGenerateStringKeys_whenRemote_equalDistributionOverPartitions() {
         Map<Integer, Integer> countsPerPartition = new HashMap<Integer, Integer>();
         for (Partition partition : hz.getPartitionService().getPartitions()) {
             if (!partition.getOwner().localMember()) {
@@ -364,6 +414,102 @@ public class KeyUtilsTest {
         LOGGER.info(countsPerPartition);
         for (int count : countsPerPartition.values()) {
             assertEquals(keysPerPartition, count);
+        }
+    }
+
+    @Test
+    public void testGenerateStringKeys_whenRandom_equalDistributionOverPartitions() {
+        int keysPerPartition = 4;
+        int keyCount = keysPerPartition * PARTITION_COUNT;
+        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.RANDOM, hz);
+
+        assertEquals(keyCount, keys.length);
+
+        int[] countPerPartition = new int[PARTITION_COUNT];
+        for (String key : keys) {
+            Partition partition = hz.getPartitionService().getPartition(key);
+            countPerPartition[partition.getPartitionId()]++;
+            assertTrue(key.startsWith("prefix"));
+        }
+
+        for (int count : countPerPartition) {
+            assertEquals(keysPerPartition, count);
+        }
+    }
+
+    @Test
+    public void testGenerateStringKeys_whenShared() {
+        String[] keys = generateStringKeys("prefix", 12, 10, KeyLocality.SHARED, null);
+
+        assertEquals(12, keys.length);
+        assertEquals(keys[0], "prefix0000");
+        assertEquals(keys[1], "prefix0001");
+        assertEquals(keys[2], "prefix0002");
+        assertEquals(keys[3], "prefix0003");
+        assertEquals(keys[4], "prefix0004");
+        assertEquals(keys[5], "prefix0005");
+        assertEquals(keys[6], "prefix0006");
+        assertEquals(keys[7], "prefix0007");
+        assertEquals(keys[8], "prefix0008");
+        assertEquals(keys[9], "prefix0009");
+        assertEquals(keys[10], "prefix0010");
+        assertEquals(keys[11], "prefix0011");
+    }
+
+    @Test
+    public void testGenerateStringKeys_whenSinglePartition() {
+        String[] keys = generateStringKeys(50, 10, KeyLocality.SINGLE_PARTITION, null);
+
+        assertEquals(50, keys.length);
+        for (String key : keys) {
+            assertEquals("0000000000", key);
+        }
+    }
+
+    @Test
+    public void testGenerateStringKeys_whenSinglePartition_withPrefix() {
+        String[] keys = generateStringKeys("prefix", 50, 10, KeyLocality.SINGLE_PARTITION, null);
+
+        assertEquals(50, keys.length);
+        for (String key : keys) {
+            assertEquals("prefix0000", key);
+        }
+    }
+
+    // =========================== BalancedKeyGenerator =============================
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBalancedKeyGenerator_withUnsupportedKeyLocality() {
+        new KeyUtils.BalancedKeyGenerator<Integer>(hz, KeyLocality.SHARED, 0) {
+
+            @Override
+            protected Integer generateKey() {
+                return null;
+            }
+        };
+    }
+
+    @Test
+    public void testBalancedKeyGenerator_willGenerateNewKeyOnDuplicateKey() {
+        GenerateSameKeyOnceGenerator generator = new GenerateSameKeyOnceGenerator(hz);
+
+        assertEquals(0, generator.next().intValue());
+        assertEquals(1, generator.next().intValue());
+    }
+
+    private static class GenerateSameKeyOnceGenerator extends KeyUtils.BalancedKeyGenerator<Integer> {
+
+        private static final Integer[] KEYS = new Integer[]{new Integer(0), new Integer(0), new Integer(1)};
+
+        private int keyIndex;
+
+        private GenerateSameKeyOnceGenerator(HazelcastInstance hz) {
+            super(hz, KeyLocality.RANDOM, 2);
+        }
+
+        @Override
+        protected Integer generateKey() {
+            return KEYS[keyIndex++];
         }
     }
 }
