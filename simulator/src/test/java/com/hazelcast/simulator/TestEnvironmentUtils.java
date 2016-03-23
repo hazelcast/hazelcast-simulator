@@ -72,7 +72,7 @@ public class TestEnvironmentUtils {
 
         LOGGER.info("original userDir: " + originalUserDir);
         LOGGER.info("actual userDir: " + System.getProperty("user.dir"));
-        LOGGER.info("SIMULATOR_HOME: " + getSimulatorHome());
+        LOGGER.info("SIMULATOR_HOME: " + getSimulatorHome().getAbsolutePath());
     }
 
     public static void resetUserDir() {
