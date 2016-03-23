@@ -43,7 +43,6 @@ import static java.lang.String.format;
 public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
-    public static final File PROPERTIES_FILE = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
 
     public static final String PROPERTY_CLOUD_PROVIDER = "CLOUD_PROVIDER";
     public static final String PROPERTY_CLOUD_IDENTITY = "CLOUD_IDENTITY";
@@ -54,13 +53,16 @@ public class SimulatorProperties {
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
     private final Properties properties = new Properties();
+    private final File propertiesFile;
 
     private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
-        LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, PROPERTIES_FILE.getAbsolutePath()));
-        check(PROPERTIES_FILE);
-        load(PROPERTIES_FILE);
+        propertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
+
+        LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, propertiesFile.getAbsolutePath()));
+        check(propertiesFile);
+        load(propertiesFile);
     }
 
     /**
@@ -199,6 +201,10 @@ public class SimulatorProperties {
 
     public void set(String name, String value) {
         properties.setProperty(name, value);
+    }
+
+    public String getAsString() {
+        return fileAsText(propertiesFile);
     }
 
     private String loadPropertyFromFile(String property) {

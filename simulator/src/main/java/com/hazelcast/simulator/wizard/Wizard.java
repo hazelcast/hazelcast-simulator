@@ -31,7 +31,6 @@ import java.util.TreeSet;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
@@ -192,8 +191,8 @@ public class Wizard {
 
     void compareSimulatorProperties() {
         SimulatorProperties defaultProperties = new SimulatorProperties();
+        String defaultPropertiesString = defaultProperties.getAsString();
         Properties userProperties = WizardUtils.getUserProperties();
-        String defaultPropertiesString = fileAsText(PROPERTIES_FILE);
 
         int size = userProperties.size();
         if (size == 0) {
