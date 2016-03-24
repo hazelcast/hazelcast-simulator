@@ -63,6 +63,9 @@ public class FailureOperation implements SimulatorOperation {
     }
 
     public SimulatorAddress getWorkerAddress() {
+        if (workerAddress == null) {
+            return null;
+        }
         return SimulatorAddress.fromString(workerAddress);
     }
 
