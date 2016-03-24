@@ -7,6 +7,7 @@ import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
@@ -239,7 +240,15 @@ class ProtocolUtil {
     static void assertEmptyFutureMaps() {
         LOGGER.info("Asserting that all future maps are empty...");
 
-        coordinatorConnector.assertEmptyFutureMaps();
+        for (ClientConnector clientConnector : coordinatorConnector.getClientConnectors()) {
+            ConcurrentMap<String, ResponseFuture> futureMap = clientConnector.getFutureMap();
+            SimulatorAddress remoteAddress = clientConnector.getRemoteAddress();
+            int futureMapSize = futureMap.size();
+            if (futureMapSize > 0) {
+                LOGGER.error("Future entries: " + futureMap.toString());
+                fail(format("FutureMap of ClientConnector %s is not empty", remoteAddress));
+            }
+        }
         assertEmptyFutureMaps(agentConnectors, "AgentConnector");
         assertEmptyFutureMaps(workerConnectors, "WorkerConnector");
 

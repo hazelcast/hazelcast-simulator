@@ -40,6 +40,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -54,8 +55,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
-import static java.lang.String.format;
-import static org.junit.Assert.fail;
+import static java.util.Collections.unmodifiableCollection;
 
 /**
  * Connector which connects to remote Simulator Agent instances.
@@ -198,18 +198,8 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
         return exceptionLogger.getExceptionCount();
     }
 
-    /**
-     * Asserts that the {@link ResponseFuture} maps from all connected {@link ClientConnector} instances are empty.
-     */
-    public void assertEmptyFutureMaps() {
-        for (ClientConnector clientConnector : agents.values()) {
-            ConcurrentMap<String, ResponseFuture> futureMap = clientConnector.getFutureMap();
-            SimulatorAddress remoteAddress = clientConnector.getRemoteAddress();
-            int futureMapSize = futureMap.size();
-            if (futureMapSize > 0) {
-                LOGGER.error("Future entries: " + futureMap.toString());
-                fail(format("FutureMap of ClientConnector %s is not empty", remoteAddress));
-            }
-        }
+    // just for testing
+    public Collection<ClientConnector> getClientConnectors() {
+        return unmodifiableCollection(agents.values());
     }
 }
