@@ -166,25 +166,25 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
 
         int agentAddressIndex = destination.getAgentIndex();
         Response response = new Response(message);
+        List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
         if (agentAddressIndex == 0) {
-            List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
             for (ClientConnector agent : agents.values()) {
                 futureList.add(agent.writeAsync(message));
-            }
-            try {
-                for (ResponseFuture future : futureList) {
-                    response.addResponse(future.get());
-                }
-            } catch (InterruptedException e) {
-                throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
             }
         } else {
             ClientConnector agent = agents.get(agentAddressIndex);
             if (agent == null) {
                 response.addResponse(COORDINATOR, FAILURE_AGENT_NOT_FOUND);
             } else {
-                response.addResponse(agent.write(message));
+                futureList.add(agent.writeAsync(message));
             }
+        }
+        try {
+            for (ResponseFuture future : futureList) {
+                response.addResponse(future.get());
+            }
+        } catch (InterruptedException e) {
+            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
         }
         return response;
     }
