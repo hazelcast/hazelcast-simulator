@@ -117,7 +117,7 @@ public class AgentSmokeTest implements FailureListener {
     }
 
     @Override
-    public void onFailure(FailureOperation operation) {
+    public void onFailure(FailureOperation operation, boolean isCritical) {
         failureOperations.add(operation);
     }
 

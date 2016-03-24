@@ -211,6 +211,7 @@ public final class Coordinator {
         try {
             coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListenerContainer,
                     performanceStateContainer, testHistogramContainer);
+            failureContainer.addListener(coordinatorConnector);
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
             for (final AgentData agentData : componentRegistry.getAgents()) {
                 final int agentPort = simulatorProperties.getAgentPort();

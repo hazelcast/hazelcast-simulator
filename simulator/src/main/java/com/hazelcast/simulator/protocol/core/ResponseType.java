@@ -55,7 +55,13 @@ public enum ResponseType {
      * Is returned when an exception occurs during the execution of a
      * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}.
      */
-    EXCEPTION_DURING_OPERATION_EXECUTION(6);
+    EXCEPTION_DURING_OPERATION_EXECUTION(6),
+
+    /**
+     * Is returned when a {@link ResponseFuture} was unblocked by a
+     * {@link com.hazelcast.simulator.protocol.operation.FailureOperation}.
+     */
+    UNBLOCKED_BY_FAILURE(7);
 
     private final int ordinal;
 

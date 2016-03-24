@@ -90,7 +90,9 @@ public class FailureContainer {
 
         int failureNumber = failureCount.incrementAndGet();
 
+        boolean isCriticalFailure = false;
         if (!nonCriticalFailures.contains(failureType)) {
+            isCriticalFailure = true;
             hasCriticalFailure.set(true);
             String testId = operation.getTestId();
             if (testId != null) {
@@ -102,7 +104,7 @@ public class FailureContainer {
         appendText(operation.getFileMessage(), file);
 
         for (FailureListener failureListener : listenerMap.keySet()) {
-            failureListener.onFailure(operation);
+            failureListener.onFailure(operation, isCriticalFailure);
         }
     }
 

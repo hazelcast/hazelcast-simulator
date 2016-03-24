@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
@@ -31,6 +32,7 @@ import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -61,7 +63,7 @@ import static java.util.Collections.unmodifiableCollection;
  * Connector which connects to remote Simulator Agent instances.
  */
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
-public class CoordinatorConnector implements ClientPipelineConfigurator {
+public class CoordinatorConnector implements ClientPipelineConfigurator, FailureListener {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorConnector.class);
     private static final int EXECUTOR_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
@@ -69,6 +71,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
     private final EventLoopGroup group = new NioEventLoopGroup();
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
+    private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
     private final CoordinatorOperationProcessor processor;
@@ -98,6 +101,20 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
         pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, remoteAddress, futureMap));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor, executorService));
+    }
+
+    @Override
+    public void onFailure(FailureOperation operation, boolean isCritical) {
+        if (!isCritical) {
+            return;
+        }
+        SimulatorAddress workerAddress = operation.getWorkerAddress();
+        if (workerAddress == null) {
+            return;
+        }
+        for (ResponseFuture future : futureMap.values()) {
+            future.unblockOnFailure(workerAddress, COORDINATOR, workerAddress.getAgentIndex());
+        }
     }
 
     /**
@@ -133,7 +150,6 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
      * @param agentPort  the port of the Simulator Agent
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
-        ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         ClientConnector client = new ClientConnector(this, group, futureMap, COORDINATOR, COORDINATOR.getChild(agentIndex),
                 agentIndex, agentHost, agentPort);
         client.start();
@@ -201,5 +217,15 @@ public class CoordinatorConnector implements ClientPipelineConfigurator {
     // just for testing
     public Collection<ClientConnector> getClientConnectors() {
         return unmodifiableCollection(agents.values());
+    }
+
+    // just for testing
+    void addAgent(int agentIndex, ClientConnector agent) {
+        agents.put(agentIndex, agent);
+    }
+
+    // just for testing
+    ConcurrentHashMap<String, ResponseFuture> getFutureMap() {
+        return futureMap;
     }
 }

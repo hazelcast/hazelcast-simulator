@@ -20,6 +20,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.protocol.core.ResponseType.UNBLOCKED_BY_FAILURE;
+import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.String.format;
 
@@ -74,6 +76,18 @@ public final class ResponseFuture implements Future<Response> {
     public static long getMessageIdFromFutureKey(String futureKey) {
         String messageIdString = futureKey.substring(futureKey.indexOf('-') + 1, futureKey.lastIndexOf('-'));
         return parseLong(messageIdString);
+    }
+
+    public static int getRemoteAddressIndexFromFutureKey(String futureKey) {
+        String remoteAddressIndexString = futureKey.substring(futureKey.lastIndexOf('-') + 1, futureKey.length());
+        return parseInt(remoteAddressIndexString);
+    }
+
+    public void unblockOnFailure(SimulatorAddress source, SimulatorAddress destination, int remoteAddressIndex) {
+        if (getSourceFromFutureKey(key).equals(destination) && getRemoteAddressIndexFromFutureKey(key) == remoteAddressIndex) {
+            long messageId = getMessageIdFromFutureKey(key);
+            set(new Response(messageId, destination, source, UNBLOCKED_BY_FAILURE));
+        }
     }
 
     @Override
