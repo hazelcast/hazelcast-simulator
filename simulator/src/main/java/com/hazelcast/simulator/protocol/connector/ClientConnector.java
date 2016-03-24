@@ -15,11 +15,9 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -122,11 +120,6 @@ public class ClientConnector {
         channel.writeAndFlush(buffer);
     }
 
-    public Response write(SimulatorMessage message) {
-        ResponseFuture future = writeAsync(message);
-        return getResponse(future);
-    }
-
     public ResponseFuture writeAsync(SimulatorMessage message) {
         OperationTypeCounter.sent(message.getOperationType());
         return writeAsync(message.getSource(), message.getMessageId(), message);
@@ -145,13 +138,5 @@ public class ClientConnector {
         channel.writeAndFlush(msg);
 
         return future;
-    }
-
-    private Response getResponse(ResponseFuture future) {
-        try {
-            return future.get();
-        } catch (InterruptedException e) {
-            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
-        }
     }
 }
