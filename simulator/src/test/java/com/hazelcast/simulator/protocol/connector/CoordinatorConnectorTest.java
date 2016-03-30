@@ -128,7 +128,7 @@ public class CoordinatorConnectorTest {
             public void run() {
                 sleepMillis(50);
 
-                coordinatorConnector.onFailure(operation, true);
+                coordinatorConnector.onFailure(operation, true, true);
             }
         };
         thread.start();
@@ -155,7 +155,7 @@ public class CoordinatorConnectorTest {
         final FailureOperation operation = new FailureOperation("expected", WORKER_EXIT, WORKER_ADDRESS, AGENT_ADDRESS.toString(),
                 new NullPointerException("expected"));
 
-        coordinatorConnector.onFailure(operation, false);
+        coordinatorConnector.onFailure(operation, false, false);
 
         assertFalse("ResponseFuture.set() was called on non-critical failure", responseFuture.isDone());
     }
@@ -173,7 +173,7 @@ public class CoordinatorConnectorTest {
         final FailureOperation operation = new FailureOperation("expected", NETTY_EXCEPTION, null, AGENT_ADDRESS.toString(),
                 new NullPointerException("expected"));
 
-        coordinatorConnector.onFailure(operation, true);
+        coordinatorConnector.onFailure(operation, true, true);
 
         assertFalse("ResponseFuture.set() was called on Agent failure", responseFuture.isDone());
     }

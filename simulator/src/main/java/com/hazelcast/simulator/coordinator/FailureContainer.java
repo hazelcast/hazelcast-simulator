@@ -78,33 +78,35 @@ public class FailureContainer {
     }
 
     public void addFailureOperation(FailureOperation operation) {
+        boolean isFinishedFailure = false;
+        boolean isCriticalFailure = false;
+
         FailureType failureType = operation.getType();
         if (failureType.isWorkerFinishedFailure()) {
             SimulatorAddress workerAddress = operation.getWorkerAddress();
             finishedWorkers.put(workerAddress, failureType);
             componentRegistry.removeWorker(workerAddress);
+            isFinishedFailure = true;
         }
         if (failureType.isPoisonPill()) {
             return;
         }
 
-        int failureNumber = failureCount.incrementAndGet();
-
-        boolean isCriticalFailure = false;
         if (!nonCriticalFailures.contains(failureType)) {
-            isCriticalFailure = true;
             hasCriticalFailure.set(true);
             String testId = operation.getTestId();
             if (testId != null) {
                 hasCriticalFailuresMap.put(testId, true);
             }
+            isCriticalFailure = true;
         }
 
+        int failureNumber = failureCount.incrementAndGet();
         LOGGER.error(operation.getLogMessage(failureNumber));
         appendText(operation.getFileMessage(), file);
 
         for (FailureListener failureListener : listenerMap.keySet()) {
-            failureListener.onFailure(operation, isCriticalFailure);
+            failureListener.onFailure(operation, isFinishedFailure, isCriticalFailure);
         }
     }
 

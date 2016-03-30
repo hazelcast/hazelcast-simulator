@@ -104,8 +104,8 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
     }
 
     @Override
-    public void onFailure(FailureOperation operation, boolean isCritical) {
-        if (!isCritical) {
+    public void onFailure(FailureOperation operation, boolean isFinishedFailure, boolean isCritical) {
+        if (!isFinishedFailure) {
             return;
         }
         SimulatorAddress workerAddress = operation.getWorkerAddress();

@@ -103,7 +103,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     }
 
     @Override
-    public void onFailure(FailureOperation operation, boolean isCritical) {
+    public void onFailure(FailureOperation operation, boolean isFinishedFailure, boolean isCritical) {
         failureOperations.add(operation);
     }
 

@@ -19,5 +19,5 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 
 public interface FailureListener {
 
-    void onFailure(FailureOperation operation, boolean isCritical);
+    void onFailure(FailureOperation operation, boolean isFinishedFailure, boolean isCritical);
 }
