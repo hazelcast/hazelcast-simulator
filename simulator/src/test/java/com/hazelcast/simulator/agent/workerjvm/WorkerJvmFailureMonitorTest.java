@@ -79,6 +79,7 @@ public class WorkerJvmFailureMonitorTest {
 
         workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
                 DEFAULT_CHECK_INTERVAL);
+        workerJvmFailureMonitor.start();
     }
 
     @After
@@ -95,6 +96,7 @@ public class WorkerJvmFailureMonitorTest {
     @Test
     public void testConstructor() {
         workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
+        workerJvmFailureMonitor.start();
     }
 
     @Test
@@ -251,6 +253,7 @@ public class WorkerJvmFailureMonitorTest {
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionDisabled() {
         workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, -1, DEFAULT_CHECK_INTERVAL);
+        workerJvmFailureMonitor.start();
 
         workerJvmFailureMonitor.startTimeoutDetection();
         workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));

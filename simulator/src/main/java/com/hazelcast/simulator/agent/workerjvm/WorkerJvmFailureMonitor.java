@@ -57,6 +57,9 @@ public class WorkerJvmFailureMonitor {
 
     WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds, int checkIntervalMillis) {
         monitorThread = new MonitorThread(agent, workerJvmManager, lastSeenTimeoutSeconds, checkIntervalMillis);
+    }
+
+    public void start() {
         monitorThread.start();
     }
 

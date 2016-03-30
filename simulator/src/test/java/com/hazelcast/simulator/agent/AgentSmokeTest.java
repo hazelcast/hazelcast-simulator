@@ -277,7 +277,7 @@ public class AgentSmokeTest implements FailureListener {
 
             @Override
             public void run() {
-                agent = Agent.createAgent(new String[]{
+                agent = Agent.startAgent(new String[]{
                         "--addressIndex", "1",
                         "--publicAddress", AGENT_IP_ADDRESS,
                         "--port", String.valueOf(AGENT_PORT)

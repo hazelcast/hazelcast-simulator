@@ -311,7 +311,7 @@ public class TestCaseRunnerTest {
                 clusterLayoutParameters);
         coordinator.setRemoteClient(remoteClient);
 
-        new TestPhaseCompleter(coordinator);
+        new TestPhaseCompleter(coordinator).start();
 
         return coordinator;
     }
@@ -397,7 +397,6 @@ public class TestCaseRunnerTest {
             this.failureContainer = coordinator.getFailureContainer();
 
             setDaemon(true);
-            start();
         }
 
         @Override

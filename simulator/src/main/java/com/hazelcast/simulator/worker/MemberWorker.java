@@ -78,15 +78,17 @@ public final class MemberWorker implements Worker {
         this.hzConfigFile = hzConfigFile;
 
         this.hazelcastInstance = getHazelcastInstance();
-
         this.workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
-        this.workerConnector.start();
 
         this.workerPerformanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
         signalStartToAgent();
+    }
+
+    void start() {
+        workerConnector.start();
     }
 
     @Override
@@ -203,6 +205,7 @@ public final class MemberWorker implements Worker {
 
         MemberWorker worker = new MemberWorker(type, publicAddress, agentIndex, workerIndex, workerPort, hzConfigFile,
                 autoCreateHzInstance, workerPerformanceMonitorIntervalSeconds);
+        worker.start();
 
         logHeader("Successfully started Hazelcast Worker #" + workerIndex);
 

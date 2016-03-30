@@ -74,10 +74,7 @@ public class Agent {
         this.cloudCredential = cloudCredential;
 
         this.workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJvmManager, workerLastSeenTimeoutSeconds);
-
         this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, port, threadPoolSize);
-        this.agentConnector.start();
-
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
@@ -133,6 +130,11 @@ public class Agent {
         return new File(workersDir, testSuite.getId());
     }
 
+    void start() {
+        agentConnector.start();
+        workerJvmFailureMonitor.start();
+    }
+
     void shutdown() throws Exception {
         ShutdownThread thread = new AgentShutdownThread(false);
         thread.start();
@@ -141,7 +143,7 @@ public class Agent {
 
     public static void main(String[] args) {
         try {
-            createAgent(args);
+            startAgent(args);
         } catch (Exception e) {
             exitWithError(LOGGER, "Could not start Agent!", e);
         }
@@ -155,8 +157,9 @@ public class Agent {
         logImportantSystemProperties();
     }
 
-    static Agent createAgent(String[] args) {
+    static Agent startAgent(String[] args) {
         Agent agent = AgentCli.init(args);
+        agent.start();
 
         echo("CloudIdentity: %s", agent.cloudIdentity);
         echo("CloudCredential: %s", agent.cloudCredential);

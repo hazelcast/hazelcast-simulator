@@ -36,7 +36,7 @@ public class AgentCliTest {
         args.add("--port");
         args.add("9000");
 
-        agent = createAgent();
+        startAgent();
 
         assertEquals(5, agent.getAddressIndex());
         assertEquals("127.0.0.1", agent.getPublicAddress());
@@ -54,7 +54,7 @@ public class AgentCliTest {
         args.add("--port");
         args.add("9000");
 
-        createAgent();
+        startAgent();
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -64,7 +64,7 @@ public class AgentCliTest {
         args.add("--port");
         args.add("9000");
 
-        createAgent();
+        startAgent();
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -74,11 +74,12 @@ public class AgentCliTest {
         args.add("--publicAddress");
         args.add("127.0.0.1");
 
-        createAgent();
+        startAgent();
     }
 
-    private Agent createAgent() {
-        return AgentCli.init(getArgs(true));
+    private void startAgent() {
+        agent = AgentCli.init(getArgs(true));
+        agent.start();
     }
 
     private String[] getArgs(boolean addDefaults) {

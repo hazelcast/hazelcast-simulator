@@ -73,6 +73,7 @@ public class MemberWorkerTest {
     @Test
     public void testConstructor_MemberWorker() throws Exception {
         worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, MEMBER_CONFIG_FILE, true, 10);
+        worker.start();
         assertMemberWorker();
     }
 
@@ -81,18 +82,21 @@ public class MemberWorkerTest {
         Hazelcast.newHazelcastInstance();
 
         worker = new MemberWorker(CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, CLIENT_CONFIG_FILE, true, 10);
+        worker.start();
         assertMemberWorker();
     }
 
     @Test
     public void testConstructor_noAutoCreateHzInstance() throws Exception {
         worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
+        worker.start();
         assertMemberWorker();
     }
 
     @Test
     public void testConstructor_noAutoCreateHzInstance_withPerformanceMonitor() throws Exception {
         worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
+        worker.start();
         assertMemberWorker();
 
         worker.startPerformanceMonitor();
@@ -102,6 +106,7 @@ public class MemberWorkerTest {
     @Test
     public void testConstructor_noAutoCreateHzInstance_withPerformanceMonitor_invalidInterval() throws Exception {
         worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 0);
+        worker.start();
         assertMemberWorker();
 
         worker.startPerformanceMonitor();
