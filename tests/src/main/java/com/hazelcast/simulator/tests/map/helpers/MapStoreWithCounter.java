@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
@@ -49,24 +49,25 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
 
     public static void assertMapStoreConfiguration(ILogger logger, HazelcastInstance instance, String mapName,
                                                    Class<? extends MapStore> mapStoreImplementation) {
-        if (isMemberNode(instance)) {
-            MapStoreConfig mapStoreConfig = instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
-            if (mapStoreConfig == null) {
-                throw new TestException("There is no MapStore configured for map %s", mapName);
-            }
-            logger.info(format("MapStore configuration for map %s: %s", mapName, mapStoreConfig));
-            if (!mapStoreConfig.isEnabled()) {
-                throw new TestException("MapStore for map %s needs to be enabled", mapName);
-            }
-            Object configuredMapStoreImpl = mapStoreConfig.getImplementation();
-            if (configuredMapStoreImpl == null) {
-                throw new TestException("MapStore for map %s needs to be configured with class %s, but was null", mapName,
-                        mapStoreImplementation.getName());
-            }
-            if (!configuredMapStoreImpl.getClass().equals(mapStoreImplementation)) {
-                throw new TestException("MapStore for map %s needs to be configured with class %s, but was %s", mapName,
-                        mapStoreImplementation.getName(), configuredMapStoreImpl.getClass().getName());
-            }
+        if (isClient(instance)) {
+            return;
+        }
+        MapStoreConfig mapStoreConfig = instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
+        if (mapStoreConfig == null) {
+            throw new TestException("There is no MapStore configured for map %s", mapName);
+        }
+        logger.info(format("MapStore configuration for map %s: %s", mapName, mapStoreConfig));
+        if (!mapStoreConfig.isEnabled()) {
+            throw new TestException("MapStore for map %s needs to be enabled", mapName);
+        }
+        Object configuredMapStoreImpl = mapStoreConfig.getImplementation();
+        if (configuredMapStoreImpl == null) {
+            throw new TestException("MapStore for map %s needs to be configured with class %s, but was null", mapName,
+                    mapStoreImplementation.getName());
+        }
+        if (!configuredMapStoreImpl.getClass().equals(mapStoreImplementation)) {
+            throw new TestException("MapStore for map %s needs to be configured with class %s, but was %s", mapName,
+                    mapStoreImplementation.getName(), configuredMapStoreImpl.getClass().getName());
         }
     }
 
