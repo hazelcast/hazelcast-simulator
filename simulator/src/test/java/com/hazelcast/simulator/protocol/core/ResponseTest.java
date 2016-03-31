@@ -22,6 +22,17 @@ public class ResponseTest {
     }
 
     @Test
+    public void testConstructor_withSimulatorMessage_withResponse() {
+        SimulatorMessage simulatorMessage = new SimulatorMessage(destination, COORDINATOR, 21435, null, null);
+        response = new Response(simulatorMessage, ResponseType.FAILURE_COORDINATOR_NOT_FOUND);
+
+        assertEquals(21435, response.getMessageId());
+        assertEquals(COORDINATOR, response.getDestination());
+        assertEquals(1, response.size());
+        assertEquals(ResponseType.FAILURE_COORDINATOR_NOT_FOUND, response.getFirstErrorResponseType());
+    }
+
+    @Test
     public void testConstructor_withResponse() {
         response = new Response(54321, destination, COORDINATOR, ResponseType.FAILURE_AGENT_NOT_FOUND);
 

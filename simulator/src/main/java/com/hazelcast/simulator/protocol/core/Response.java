@@ -36,6 +36,10 @@ public class Response {
         this(message.getMessageId(), message.getSource());
     }
 
+    public Response(SimulatorMessage message, ResponseType responseType) {
+        this(message.getMessageId(), message.getSource(), message.getDestination(), responseType);
+    }
+
     public Response(long messageId, SimulatorAddress destination, SimulatorAddress source, ResponseType responseType) {
         this(messageId, destination);
         responseTypes.put(source, responseType);
