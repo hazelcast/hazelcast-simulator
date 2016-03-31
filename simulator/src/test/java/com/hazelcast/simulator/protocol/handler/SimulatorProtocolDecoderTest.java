@@ -7,6 +7,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
+
 public class SimulatorProtocolDecoderTest {
 
     private SimulatorProtocolDecoder simulatorProtocolDecoder;
@@ -23,6 +25,11 @@ public class SimulatorProtocolDecoderTest {
         if (buffer != null) {
             buffer.release();
         }
+    }
+
+    @Test
+    public void testDecode_withEmptyBuffer() throws Exception {
+        simulatorProtocolDecoder.decode(null, EMPTY_BUFFER, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
