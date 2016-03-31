@@ -20,17 +20,11 @@ import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.ResetCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.RepositoryNotFoundException;
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.transport.RefSpec;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,6 +32,12 @@ import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
+import static org.eclipse.jgit.api.ResetCommand.ResetType.HARD;
+import static org.eclipse.jgit.lib.Constants.R_HEADS;
+import static org.eclipse.jgit.lib.Constants.R_REMOTES;
+import static org.eclipse.jgit.transport.TagOpt.FETCH_TAGS;
 
 class GitSupport {
 
@@ -51,7 +51,7 @@ class GitSupport {
     private final File baseDir;
     private final Set<GitRepository> customRepositories;
 
-    GitSupport(BuildSupport buildSupport, String customRepositories, String basePath) {
+    private GitSupport(BuildSupport buildSupport, String basePath, String customRepositories) {
         this.buildSupport = buildSupport;
         this.baseDir = getBaseDir(basePath);
         this.customRepositories = getCustomRepositories(customRepositories);
@@ -59,11 +59,11 @@ class GitSupport {
 
     static GitSupport newInstance(Bash bash, SimulatorProperties properties) {
         String mvnExec = properties.get("MVN_EXECUTABLE");
-        String customGitRepositories = properties.get("GIT_CUSTOM_REPOSITORIES");
         String gitBuildDirectory = properties.get("GIT_BUILD_DIR");
+        String customGitRepositories = properties.get("GIT_CUSTOM_REPOSITORIES");
 
         BuildSupport buildSupport = new BuildSupport(bash, new HazelcastJARFinder(), mvnExec);
-        return new GitSupport(buildSupport, customGitRepositories, gitBuildDirectory);
+        return new GitSupport(buildSupport, gitBuildDirectory, customGitRepositories);
     }
 
     File[] checkout(String revision) {
@@ -77,84 +77,6 @@ class GitSupport {
             LOGGER.info("Hazelcast JARs found in build-cache " + buildCache.getAbsolutePath());
         }
         return buildCache.listFiles();
-    }
-
-    private Set<GitRepository> getCustomRepositories(String customRepositories) {
-        if (customRepositories == null || customRepositories.isEmpty()) {
-            return Collections.emptySet();
-        }
-        String[] repositoriesArray = customRepositories.split(",");
-        Set<GitRepository> repositories = new HashSet<GitRepository>(repositoriesArray.length);
-        for (String repository : repositoriesArray) {
-            String normalized = repository.trim();
-            if (!normalized.isEmpty()) {
-                GitRepository repo = GitRepository.fromString(normalized);
-                repositories.add(repo);
-            }
-        }
-        return Collections.unmodifiableSet(repositories);
-    }
-
-    private File getDefaultBaseDir() {
-        return newFile(USER_HOME, ".hazelcast-build");
-    }
-
-    private void syncRemoteRepositories(Git git) throws IOException {
-        StoredConfig config = git.getRepository().getConfig();
-        Set<GitRepository> customRepositoriesCopy = new HashSet<GitRepository>(customRepositories);
-
-        Set<String> existingRemoteRepoNames = config.getSubsections(CONFIG_REMOTE);
-        for (String remoteName : existingRemoteRepoNames) {
-            String url = config.getString(CONFIG_REMOTE, remoteName, CONFIG_URL);
-            boolean isConfigured = customRepositoriesCopy.remove(new GitRepository(remoteName, url));
-            if (!isConfigured && isCustomRepository(remoteName)) {
-                removeRepository(config, remoteName);
-            }
-        }
-
-        for (GitRepository repository : customRepositoriesCopy) {
-            addRepository(config, repository);
-        }
-        config.save();
-    }
-
-    private void addRepository(StoredConfig config, GitRepository repository) {
-        String url = repository.getUrl();
-        String name = repository.getName();
-        LOGGER.info("Adding a new custom repository " + url);
-        config.setString(CONFIG_REMOTE, name, CONFIG_URL, url);
-        RefSpec refSpec = new RefSpec()
-                .setForceUpdate(true)
-                .setSourceDestination(Constants.R_HEADS + '*', Constants.R_REMOTES + name + "/*");
-        config.setString(CONFIG_REMOTE, name, "fetch", refSpec.toString());
-    }
-
-    private void removeRepository(StoredConfig config, String remoteName) {
-        config.unsetSection(CONFIG_REMOTE, remoteName);
-    }
-
-    private boolean isCustomRepository(String remoteName) {
-        return !remoteName.equals("origin");
-    }
-
-    private String fetchSources(File path, String revision) {
-        Git git = null;
-        String fullSha1 = null;
-        try {
-            git = cloneIfNecessary(path);
-            syncRemoteRepositories(git);
-            fetchAllRepositories(git);
-            fullSha1 = checkoutRevision(git, revision);
-        } catch (GitAPIException e) {
-            throw new CommandLineExitException("Error while fetching sources from Git", e);
-        } catch (IOException e) {
-            throw new CommandLineExitException("Error while fetching sources from Git", e);
-        } finally {
-            if (git != null) {
-                git.close();
-            }
-        }
-        return fullSha1;
     }
 
     private File getBaseDir(String basePath) {
@@ -198,60 +120,110 @@ class GitSupport {
         return tmpBaseDir;
     }
 
-    private File getCacheDirectory(String fullSha1) {
-        return newFile(baseDir, "build-cache", fullSha1);
+    private File getDefaultBaseDir() {
+        return newFile(USER_HOME, ".hazelcast-build");
     }
 
-    private void fetchAllRepositories(Git git) throws GitAPIException {
+    private Set<GitRepository> getCustomRepositories(String customRepositories) {
+        if (customRepositories == null || customRepositories.isEmpty()) {
+            return emptySet();
+        }
+        String[] repositoriesArray = customRepositories.split(",");
+        Set<GitRepository> repositories = new HashSet<GitRepository>(repositoriesArray.length);
+        for (String repository : repositoriesArray) {
+            String normalized = repository.trim();
+            if (!normalized.isEmpty()) {
+                GitRepository repo = GitRepository.fromString(normalized);
+                repositories.add(repo);
+            }
+        }
+        return unmodifiableSet(repositories);
+    }
+
+    private String fetchSources(File path, String revision) {
+        Git git = null;
+        try {
+            git = openOrCloneRepository(path);
+            syncRemoteRepositories(git);
+            fetchAllRepositories(git);
+            return checkoutRevision(git, revision);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Error while fetching sources from Git", e);
+        } finally {
+            if (git != null) {
+                git.close();
+            }
+        }
+    }
+
+    private Git openOrCloneRepository(File repository) throws Exception {
+        try {
+            return Git.open(repository);
+        } catch (Exception e) {
+            LOGGER.info("Cloning Hazelcast Git repository to " + repository.getAbsolutePath() + ". This might take a while...");
+            return Git.cloneRepository().setURI(HAZELCAST_MAIN_REPO_URL).setDirectory(repository).call();
+        }
+    }
+
+    private void syncRemoteRepositories(Git git) throws Exception {
+        StoredConfig config = git.getRepository().getConfig();
+        Set<GitRepository> customRepositoriesCopy = new HashSet<GitRepository>(customRepositories);
+
+        Set<String> existingRemoteRepoNames = config.getSubsections(CONFIG_REMOTE);
+        for (String remoteName : existingRemoteRepoNames) {
+            String url = config.getString(CONFIG_REMOTE, remoteName, CONFIG_URL);
+            boolean isConfigured = customRepositoriesCopy.remove(new GitRepository(remoteName, url));
+            if (!isConfigured && isCustomRepository(remoteName)) {
+                removeRepository(config, remoteName);
+            }
+        }
+
+        for (GitRepository repository : customRepositoriesCopy) {
+            addRepository(config, repository);
+        }
+        config.save();
+    }
+
+    private boolean isCustomRepository(String remoteName) {
+        return !remoteName.equals("origin");
+    }
+
+    private void removeRepository(StoredConfig config, String remoteName) {
+        config.unsetSection(CONFIG_REMOTE, remoteName);
+    }
+
+    private void addRepository(StoredConfig config, GitRepository repository) {
+        String url = repository.getUrl();
+        String name = repository.getName();
+        LOGGER.info("Adding a new custom repository " + url);
+        config.setString(CONFIG_REMOTE, name, CONFIG_URL, url);
+        RefSpec refSpec = new RefSpec()
+                .setForceUpdate(true)
+                .setSourceDestination(R_HEADS + '*', R_REMOTES + name + "/*");
+        config.setString(CONFIG_REMOTE, name, "fetch", refSpec.toString());
+    }
+
+    private void fetchAllRepositories(Git git) throws Exception {
         Repository repository = git.getRepository();
         Set<String> remotes = repository.getRemoteNames();
         for (String remoteRepository : remotes) {
-            git.fetch().setRemote(remoteRepository).call();
+            git.fetch().setRemote(remoteRepository).setTagOpt(FETCH_TAGS).call();
         }
+    }
+
+    private String checkoutRevision(Git git, String revision) throws Exception {
+        git.reset().setMode(HARD).call();
+        git.checkout().setForce(true).setName(revision).setStartPoint(revision).call();
+        return git.getRepository().resolve(revision).toObjectId().name();
+    }
+
+    private File getCacheDirectory(String fullSha1) {
+        return newFile(baseDir, "build-cache", fullSha1);
     }
 
     private void buildAndCache(File src, File buildCache) {
         File[] files = buildSupport.build(src);
         ensureExistingDirectory(buildCache);
         copyFilesToDirectory(files, buildCache);
-    }
-
-    private Git cloneIfNecessary(File src) throws GitAPIException, IOException {
-        Git git;
-        if (!isValidLocalRepository(src)) {
-            LOGGER.info("Cloning Hazelcast Git repository to " + src.getAbsolutePath() + ". This might take a while...");
-            git = Git.cloneRepository().setURI(HAZELCAST_MAIN_REPO_URL).setDirectory(src).call();
-        } else {
-            git = Git.open(src);
-        }
-        return git;
-    }
-
-    private String checkoutRevision(Git git, String revision) throws GitAPIException, IOException {
-        resetHard(git);
-        git.checkout().setForce(true).setName(revision).setStartPoint(revision).call();
-        return git.getRepository().resolve(revision).toObjectId().name();
-    }
-
-    private void resetHard(Git git) throws GitAPIException {
-        git.reset().setMode(ResetCommand.ResetType.HARD).call();
-    }
-
-    private boolean isValidLocalRepository(File repository) {
-        boolean result = false;
-        Git git = null;
-        try {
-            git = Git.open(repository);
-            result = true;
-        } catch (RepositoryNotFoundException e) {
-            result = false;
-        } catch (IOException e) {
-            result = false;
-        } finally {
-            if (git != null) {
-                git.close();
-            }
-        }
-        return result;
     }
 }
