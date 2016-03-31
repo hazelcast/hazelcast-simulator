@@ -137,6 +137,7 @@ public class AgentOperationProcessor extends OperationProcessor {
         }
         for (Future<Boolean> future : futures) {
             if (!future.get()) {
+                LOGGER.error("Failed to start Worker, settings response type EXCEPTION_DURING_OPERATION_EXECUTION...");
                 return ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
             }
         }
@@ -175,6 +176,9 @@ public class AgentOperationProcessor extends OperationProcessor {
 
                 return true;
             } catch (Exception e) {
+                LOGGER.error("Failed to start Worker", e);
+                agent.getCoordinatorLogger().fatal("Failed to start Worker: " + e.getMessage());
+
                 return false;
             }
         }
