@@ -46,6 +46,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
+import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
@@ -228,28 +230,36 @@ abstract class AbstractServerConnector implements ServerConnector {
         @Override
         public void run() {
             while (true) {
+                SimulatorMessage message = null;
+                ResponseFuture responseFuture = null;
+                Response response = null;
                 try {
-                    SimulatorMessage message = messageQueue.take();
+                    message = messageQueue.take();
                     if (POISON_PILL.equals(message)) {
                         LOGGER.info("ServerConnectorMessageQueueThread received POISON_PILL and will stop...");
                         break;
                     }
 
-                    Response response = writeAsync(message).get();
-
                     String futureKey = createFutureKey(message.getSource(), message.getMessageId(), 0);
-                    ResponseFuture responseFuture = messageQueueFutures.get(futureKey);
+                    responseFuture = messageQueueFutures.get(futureKey);
+
+                    response = writeAsync(message).get();
+                } catch (Exception e) {
+                    LOGGER.error("Error while sending message from messageQueue", e);
+
+                    if (message != null) {
+                        response = new Response(message, EXCEPTION_DURING_OPERATION_EXECUTION);
+                    }
+                }
+                if (response != null) {
                     if (responseFuture != null) {
                         responseFuture.set(response);
                     }
 
                     ResponseType responseType = response.getFirstErrorResponseType();
-                    if (!responseType.equals(ResponseType.SUCCESS)) {
+                    if (!responseType.equals(SUCCESS)) {
                         LOGGER.error("Got response type " + responseType + " for " + message);
                     }
-                } catch (Exception e) {
-                    LOGGER.error("Error while sending message from messageQueue", e);
-                    throw new SimulatorProtocolException("Error while sending message from messageQueue", e);
                 }
             }
         }
