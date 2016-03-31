@@ -27,9 +27,9 @@ public class ClientConnectorTest {
 
     private ClientConnector clientConnector;
 
-    private Channel channel;
-    private ChannelFuture future;
     private Bootstrap bootStrap;
+    private ChannelFuture future;
+    private Channel channel;
 
     @Before
     public void setUp() throws Exception {
@@ -41,19 +41,18 @@ public class ClientConnectorTest {
         clientConnector = new ClientConnector(new TestClientPipelineConfigurator(), eventLoopGroup, futureMap, localAddress,
                 remoteAddress, 1, "localhost", 10023);
 
+        bootStrap = mock(Bootstrap.class);
         channel = mock(Channel.class);
 
         future = mock(ChannelFuture.class);
         when(future.syncUninterruptibly()).thenReturn(future);
         when(future.channel()).thenReturn(channel);
-
-        bootStrap = mock(Bootstrap.class);
     }
 
     @Test
     public void testConnect() {
-        when(future.isSuccess()).thenReturn(true);
         when(bootStrap.connect()).thenReturn(future);
+        when(future.isSuccess()).thenReturn(true);
 
         clientConnector.connect(bootStrap, 5, 3);
 
@@ -71,8 +70,8 @@ public class ClientConnectorTest {
 
     @Test
     public void testConnect_withConnectionSuccessReturnsFalseOnce() {
-        when(future.isSuccess()).thenReturn(false).thenReturn(true);
         when(bootStrap.connect()).thenReturn(future);
+        when(future.isSuccess()).thenReturn(false).thenReturn(true);
 
         clientConnector.connect(bootStrap, 5, 3);
 
@@ -91,8 +90,8 @@ public class ClientConnectorTest {
 
     @Test
     public void testConnect_withConnectionThrowsExceptionOnce() {
-        when(future.isSuccess()).thenReturn(true);
         when(bootStrap.connect()).thenThrow(new RuntimeException("expected")).thenReturn(future);
+        when(future.isSuccess()).thenReturn(true);
 
         clientConnector.connect(bootStrap, 5, 3);
 
