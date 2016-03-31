@@ -39,6 +39,7 @@ public class WorkerConnectorTest {
         assertEquals(WORKER_INDEX, address.getWorkerIndex());
         assertEquals(AGENT_INDEX, address.getAgentIndex());
 
+        assertEquals(0, connector.getMessageQueueSize());
         assertEquals(PORT, connector.getPort());
         assertEquals(WorkerOperationProcessor.class, connector.getProcessor().getClass());
     }
