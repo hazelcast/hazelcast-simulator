@@ -38,6 +38,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureK
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
 /**
@@ -46,6 +48,8 @@ import static java.lang.String.format;
 public class ClientConnector {
 
     private static final int CONNECT_TIMEOUT_MILLIS = (int) TimeUnit.MINUTES.toMillis(2);
+    private static final int CONNECT_RETRY_DELAY_MILLIS = 500;
+    private static final int CONNECT_RETRIES = 5;
 
     private static final Logger LOGGER = Logger.getLogger(ClientConnector.class);
 
@@ -79,10 +83,7 @@ public class ClientConnector {
 
     public void start() {
         Bootstrap bootstrap = getBootstrap();
-        ChannelFuture future = bootstrap.connect().syncUninterruptibly();
-        channel = future.channel();
-
-        LOGGER.info(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress, channel.remoteAddress()));
+        connect(bootstrap, CONNECT_RETRY_DELAY_MILLIS, CONNECT_RETRIES);
     }
 
     private Bootstrap getBootstrap() {
@@ -100,6 +101,30 @@ public class ClientConnector {
                     }
                 });
         return bootstrap;
+    }
+
+    void connect(Bootstrap bootstrap, int connectRetryDelayMillis, int connectRetries) {
+        Exception exception = null;
+        int connectionTry = 1;
+        do {
+            try {
+                ChannelFuture future = bootstrap.connect().syncUninterruptibly();
+                if (future.isSuccess()) {
+                    channel = future.channel();
+                    LOGGER.info(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress,
+                            channel.remoteAddress()));
+                    return;
+                }
+                future.channel().close();
+            } catch (Exception e) {
+                exception = e;
+                LOGGER.warn(format("Connection refused, retrying to connect %s -> %s (%d)...", localAddress, remoteAddress,
+                        connectionTry));
+                sleepMillis(connectRetryDelayMillis * connectionTry);
+            }
+        } while (connectionTry++ < connectRetries);
+
+        throw rethrow(exception);
     }
 
     public void shutdown() {
