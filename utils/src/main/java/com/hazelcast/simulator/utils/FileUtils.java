@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static java.lang.String.format;
 
 @SuppressFBWarnings("DM_DEFAULT_ENCODING")
@@ -116,8 +117,11 @@ public final class FileUtils {
         }
     }
 
-    public static void appendText(String text, String fileName) {
-        appendText(text, new File(fileName));
+    public static File appendText(String text, String fileName) {
+        File file = new File(fileName);
+        appendText(text, file);
+
+        return file;
     }
 
     public static void appendText(String text, File file) {
@@ -181,8 +185,8 @@ public final class FileUtils {
         }
     }
 
-    public static String fileAsText(String filePath) {
-        return fileAsText(new File(filePath));
+    public static String fileAsText(String fileName) {
+        return fileAsText(new File(fileName));
     }
 
     public static String fileAsText(File file) {
@@ -221,7 +225,7 @@ public final class FileUtils {
         try {
             delete(file);
         } catch (Exception ignored) {
-            EmptyStatement.ignore(ignored);
+            ignore(ignored);
         }
     }
 
@@ -232,11 +236,10 @@ public final class FileUtils {
 
         if (file.isDirectory()) {
             File[] files = file.listFiles();
-            if (files == null) {
-                return;
-            }
-            for (File fileInDirectory : files) {
-                delete(fileInDirectory);
+            if (files != null) {
+                for (File fileInDirectory : files) {
+                    delete(fileInDirectory);
+                }
             }
         }
 
