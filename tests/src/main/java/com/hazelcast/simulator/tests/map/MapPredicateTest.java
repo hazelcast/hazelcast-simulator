@@ -283,14 +283,7 @@ public class MapPredicateTest {
             double employee1Salary = ((Employee) (o1.getValue())).getSalary();
             double employee2Salary = ((Employee) (o2.getValue())).getSalary();
 
-            // ascending order
-            if (employee1Salary < employee2Salary) {
-                return -1;
-            }
-            if (employee1Salary > employee2Salary) {
-                return 1;
-            }
-            return 0;
+            return Double.compare(employee1Salary, employee2Salary);
         }
     }
 }
