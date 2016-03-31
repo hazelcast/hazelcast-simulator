@@ -36,6 +36,7 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter.assertMapStoreConfiguration;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
@@ -126,6 +127,8 @@ public class MapStoreTest {
                 .addOperation(MapPutOperation.PUT_TTL, putUsingPutTTLProb)
                 .addOperation(MapPutOperation.PUT_IF_ABSENT, putUsingPutIfAbsent)
                 .addOperation(MapPutOperation.REPLACE, putUsingReplaceProb);
+
+        assertMapStoreConfiguration(LOGGER, targetInstance, basename, MapStoreWithCounter.class);
     }
 
     @Verify(global = true)

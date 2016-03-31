@@ -30,6 +30,7 @@ import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter.assertMapStoreConfiguration;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
@@ -52,6 +53,8 @@ public class MapEvictAndStoreTest {
         targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         keyCounter = targetInstance.getAtomicLong(basename);
+
+        assertMapStoreConfiguration(LOGGER, targetInstance, basename, MapStoreWithCounterPerKey.class);
     }
 
     @Verify(global = false)
