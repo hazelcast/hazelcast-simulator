@@ -28,6 +28,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -73,7 +74,7 @@ public final class CommonUtils {
         try {
             socket.close();
         } catch (IOException ignore) {
-            EmptyStatement.ignore(ignore);
+            ignore(ignore);
         }
     }
 
@@ -90,7 +91,7 @@ public final class CommonUtils {
         try {
             closeable.close();
         } catch (IOException ignore) {
-            EmptyStatement.ignore(ignore);
+            ignore(ignore);
         }
     }
 
@@ -101,7 +102,7 @@ public final class CommonUtils {
         try {
             writer.close();
         } catch (XMLStreamException ignore) {
-            EmptyStatement.ignore(ignore);
+            ignore(ignore);
         }
     }
 
@@ -109,7 +110,7 @@ public final class CommonUtils {
         try {
             thread.join();
         } catch (InterruptedException e) {
-            EmptyStatement.ignore(e);
+            ignore(e);
             Thread.currentThread().interrupt();
         }
     }
@@ -118,7 +119,7 @@ public final class CommonUtils {
         try {
             TimeUnit.SECONDS.sleep(seconds);
         } catch (InterruptedException ignore) {
-            EmptyStatement.ignore(ignore);
+            ignore(ignore);
         }
     }
 
@@ -126,7 +127,7 @@ public final class CommonUtils {
         try {
             TimeUnit.MILLISECONDS.sleep(millis);
         } catch (InterruptedException ignore) {
-            EmptyStatement.ignore(ignore);
+            ignore(ignore);
         }
     }
 
