@@ -1,18 +1,31 @@
 package com.hazelcast.simulator.utils;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
+import static com.hazelcast.simulator.utils.FileUtils.copy;
+import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getText;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
@@ -20,6 +33,7 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,6 +47,8 @@ public class FileUtilsTest {
     private static final File EXAMPLE_FILE = new File("fileUtilsTestFile");
     private static final String EXAMPLE_CONTENT = "exampleContent";
 
+    private static final File TARGET_FILE = new File("target");
+
     @Before
     public void setUp() {
         writeText(EXAMPLE_CONTENT, EXAMPLE_FILE);
@@ -40,8 +56,9 @@ public class FileUtilsTest {
 
     @After
     public void tearDown() {
-        deleteQuiet(EXAMPLE_FILE);
         deleteQuiet(INVALID_FILE);
+        deleteQuiet(EXAMPLE_FILE);
+        deleteQuiet(TARGET_FILE);
     }
 
     @Test
@@ -93,16 +110,11 @@ public class FileUtilsTest {
 
     @Test
     public void testWriteText() {
-        File file = new File("testWriteText");
-        try {
-            String expected = "write test";
-            writeText(expected, file);
+        String expected = "write test";
+        writeText(expected, TARGET_FILE);
 
-            String actual = fileAsText(file);
-            assertEquals(expected, actual);
-        } finally {
-            deleteQuiet(file);
-        }
+        String actual = fileAsText(TARGET_FILE);
+        assertEquals(expected, actual);
     }
 
     @Test(expected = NullPointerException.class)
@@ -122,17 +134,12 @@ public class FileUtilsTest {
 
     @Test
     public void testAppendText() {
-        File file = null;
-        try {
-            String expected = "write test";
-            file = appendText(expected, "testAppendText");
-            appendText(expected, file);
+        String expected = "write test";
+        File file = appendText(expected, TARGET_FILE.getName());
+        appendText(expected, file);
 
-            String actual = fileAsText(file);
-            assertEquals(expected + expected, actual);
-        } finally {
-            deleteQuiet(file);
-        }
+        String actual = fileAsText(file);
+        assertEquals(expected + expected, actual);
     }
 
     @Test(expected = NullPointerException.class)
@@ -152,14 +159,14 @@ public class FileUtilsTest {
 
     @Test
     public void testGetText() throws Exception {
-        String fileContent = FileUtils.getText(EXAMPLE_FILE.toURI().toURL().toExternalForm());
+        String fileContent = getText(EXAMPLE_FILE.toURI().toURL().toExternalForm());
 
         assertEquals(EXAMPLE_CONTENT, fileContent);
     }
 
     @Test(expected = FileUtilsException.class)
     public void testGetText_fileNotFound() throws Exception {
-        FileUtils.getText(FILE_NOT_FOUND.toURI().toURL().toExternalForm());
+        getText(FILE_NOT_FOUND.toURI().toURL().toExternalForm());
     }
 
     @Test
@@ -240,14 +247,9 @@ public class FileUtilsTest {
 
     @Test
     public void testEnsureExistingFile_withFileName() {
-        File file = null;
-        try {
-            file = ensureExistingFile("ensureExistingFileTest");
+        File file = ensureExistingFile(TARGET_FILE.getName());
 
-            assertTrue(file.exists());
-        } finally {
-            deleteQuiet(file);
-        }
+        assertTrue(file.exists());
     }
 
     @Test
@@ -277,13 +279,10 @@ public class FileUtilsTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testEnsureExistingFile_withDirectory() {
-        File parent = ensureExistingDirectory("parent");
-        try {
-            ensureExistingFile(parent);
-        } finally {
-            deleteQuiet(parent);
-        }
+    public void testEnsureExistingFile_withExistingDirectory() {
+        ensureExistingDirectory(TARGET_FILE);
+
+        ensureExistingFile(TARGET_FILE);
     }
 
     @Test(expected = FileUtilsException.class)
@@ -309,14 +308,9 @@ public class FileUtilsTest {
 
     @Test
     public void testEnsureExistingDirectory_withFileName() {
-        File file = null;
-        try {
-            file = ensureExistingDirectory("ensureExistingDirectoryTest");
+        File file = ensureExistingDirectory(TARGET_FILE.getName());
 
-            assertTrue(file.exists());
-        } finally {
-            deleteQuiet(file);
-        }
+        assertTrue(file.exists());
     }
 
     @Test
@@ -332,7 +326,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testEnsureExistingDirectory_withExistingFile() {
+    public void testEnsureExistingDirectory_withExistingDirectory() {
         File file = null;
         try {
             file = ensureExistingDirectory("ensureExistingDirectoryTest");
@@ -346,13 +340,10 @@ public class FileUtilsTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testEnsureExistingDirectory_withFile() {
-        File parent = ensureExistingFile("testFile");
-        try {
-            ensureExistingDirectory(parent);
-        } finally {
-            deleteQuiet(parent);
-        }
+    public void testEnsureExistingDirectory_withExistingFile() {
+        ensureExistingFile(TARGET_FILE);
+
+        ensureExistingDirectory(TARGET_FILE);
     }
 
     @Test(expected = FileUtilsException.class)
@@ -373,15 +364,10 @@ public class FileUtilsTest {
 
     @Test
     public void testRename() {
-        File target = new File(EXAMPLE_FILE + "renamed");
-        try {
-            rename(EXAMPLE_FILE, target);
+        rename(EXAMPLE_FILE, TARGET_FILE);
 
-            assertFalse(EXAMPLE_FILE.exists());
-            assertTrue(target.exists());
-        } finally {
-            deleteQuiet(target);
-        }
+        assertFalse(EXAMPLE_FILE.exists());
+        assertTrue(TARGET_FILE.exists());
     }
 
     @Test
@@ -392,5 +378,67 @@ public class FileUtilsTest {
     @Test(expected = FileUtilsException.class)
     public void testRename_whenCannotRename() {
         rename(EXAMPLE_FILE, INACCESSIBLE_FILE);
+    }
+
+    @Test
+    public void testCopy_toOutputStream() {
+        OutputStream outputStream = new ByteArrayOutputStream();
+        copy(EXAMPLE_FILE, outputStream);
+
+        assertEquals(EXAMPLE_CONTENT, outputStream.toString());
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testCopy_toOutputStream_withClosedStream() throws Exception {
+        OutputStream outputStream = new FileOutputStream(TARGET_FILE.getName());
+        closeQuietly(outputStream);
+
+        copy(EXAMPLE_FILE, outputStream);
+    }
+
+    @Test
+    public void testGetSimulatorHome() {
+        File file = getSimulatorHome();
+
+        assertNotNull(file);
+    }
+
+    @Test
+    public void testGetFile() {
+        ensureExistingFile(TARGET_FILE);
+
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> optionSpec = parser.accepts("fileName").withRequiredArg().ofType(String.class);
+
+        OptionSet options = initOptionsWithHelp(parser, new String[]{"--fileName", TARGET_FILE.getName()});
+
+        File file = getFile(optionSpec, options, "getFileTest");
+
+        assertEquals(TARGET_FILE, file);
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testGetFile_fileNotFound() {
+        OptionParser parser = new OptionParser();
+        OptionSpec<String> optionSpec = parser.accepts("fileName").withRequiredArg().ofType(String.class);
+
+        OptionSet options = initOptionsWithHelp(parser, new String[]{"--fileName", FILE_NOT_FOUND.getName()});
+
+        getFile(optionSpec, options, "getFileTest");
+    }
+
+    @Test
+    public void testCopyFilesToDirectory() {
+        ensureExistingDirectory(TARGET_FILE);
+
+        copyFilesToDirectory(new File[]{EXAMPLE_FILE}, TARGET_FILE);
+
+        assertTrue(EXAMPLE_FILE.exists());
+        assertTrue(TARGET_FILE.exists());
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testCopyFilesToDirectory_withInaccessibleTarget() {
+        copyFilesToDirectory(new File[]{EXAMPLE_FILE}, INACCESSIBLE_FILE);
     }
 }

@@ -338,11 +338,7 @@ public final class FileUtils {
 
     public static File getSimulatorHome() {
         String home = System.getenv("SIMULATOR_HOME");
-        if (home == null) {
-            return new File(System.getProperty("user.dir"));
-        } else {
-            return new File(home);
-        }
+        return new File((home != null) ? home : System.getProperty("user.dir"));
     }
 
     public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
