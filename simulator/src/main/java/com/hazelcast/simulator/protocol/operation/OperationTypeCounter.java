@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.lang.String.format;
+import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 /**
  * Counts invocations per {@link OperationType} for sent and received operations.
@@ -54,17 +54,19 @@ public final class OperationTypeCounter {
     }
 
     public static void printStatistics(Level level) {
-        LOGGER.log(level, "Operation statistics (sent/received):");
+        StringBuilder sb = new StringBuilder("Operation statistics (sent/received):");
+        sb.append(NEW_LINE);
         long totalSent = 0;
         long totalReceived = 0;
         for (OperationType operationType : OperationType.values()) {
             long sent = SENT_OPERATIONS.get(operationType).get();
             long received = RECEIVED_OPERATIONS.get(operationType).get();
-            LOGGER.log(level, format("%s: %d/%d", operationType, sent, received));
+            sb.append(operationType).append(": ").append(sent).append('/').append(received).append(NEW_LINE);
             totalSent += sent;
             totalReceived += received;
         }
-        LOGGER.log(level, format("TOTAL: %d/%d", totalSent, totalReceived));
+        sb.append("TOTAL: ").append(totalSent).append('/').append(totalReceived);
+        LOGGER.log(level, sb.toString());
     }
 
     // just for testing
