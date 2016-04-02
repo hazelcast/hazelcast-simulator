@@ -17,7 +17,6 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
-import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -53,11 +52,6 @@ import static java.lang.Math.max;
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
-    private static final int MIN_THREAD_POOL_SIZE = 10;
-    private static final int DEFAULT_THREAD_POOL_SIZE = max(MIN_THREAD_POOL_SIZE, Runtime.getRuntime().availableProcessors() * 2);
-
-    private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
-
     private final AgentOperationProcessor processor;
     private final ConcurrentMap<String, ResponseFuture> futureMap;
 
@@ -86,10 +80,10 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     /**
      * Creates an {@link AgentConnector} instance.
      *
-     * @param agent            instance of this Simulator Agent
+     * @param agent                instance of this Simulator Agent
      * @param workerProcessManager manager for WorkerJVM instances
-     * @param port             the port for incoming connections
-     * @param threadPoolSize   size of the Netty thread pool to connect to Worker instances
+     * @param port                 the port for incoming connections
+     * @param threadPoolSize       size of the Netty thread pool to connect to Worker instances
      * @return the {@link AgentConnector} instance
      */
     public static AgentConnector createInstance(Agent agent, WorkerProcessManager workerProcessManager,
@@ -98,7 +92,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
         ConnectionManager connectionManager = new ConnectionManager();
 
-        threadPoolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
+        threadPoolSize = max(getDefaultThreadPoolSize(), threadPoolSize);
 
         return new AgentConnector(futureMap, localAddress, port, agent, workerProcessManager, connectionManager, threadPoolSize);
     }
@@ -125,7 +119,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, clientConnectorManager,
+        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, getClientConnectorManager(),
                 getScheduledExecutor()));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getScheduledExecutor()));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
@@ -156,7 +150,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
                 workerIndex, workerHost, workerPort);
         clientConnector.start();
 
-        clientConnectorManager.addClient(workerIndex, clientConnector);
+        getClientConnectorManager().addClient(workerIndex, clientConnector);
 
         return remoteAddress;
     }
@@ -167,6 +161,6 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      * @param workerIndex the index of the remote Simulator Worker
      */
     public void removeWorker(int workerIndex) {
-        clientConnectorManager.removeClient(workerIndex);
+        getClientConnectorManager().removeClient(workerIndex);
     }
 }

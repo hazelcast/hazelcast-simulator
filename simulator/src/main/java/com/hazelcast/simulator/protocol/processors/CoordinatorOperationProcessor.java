@@ -38,7 +38,7 @@ import static java.lang.String.format;
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Coordinator.
  */
-public class CoordinatorOperationProcessor extends OperationProcessor {
+public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 

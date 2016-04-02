@@ -129,6 +129,12 @@ public class SimulatorAddressTest {
     }
 
     @Test
+    public void testFromString_Communicator() {
+        SimulatorAddress expectedAddress = SimulatorAddress.REMOTE;
+        assertToAndFromStringEquals(expectedAddress);
+    }
+
+    @Test
     public void testFromString_Coordinator() {
         SimulatorAddress expectedAddress = SimulatorAddress.COORDINATOR;
         assertToAndFromStringEquals(expectedAddress);

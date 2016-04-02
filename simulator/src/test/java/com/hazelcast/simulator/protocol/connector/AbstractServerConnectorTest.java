@@ -38,6 +38,8 @@ import static org.mockito.Mockito.when;
 
 public class AbstractServerConnectorTest {
 
+    private static final int DEFAULT_TIMEOUT = 30000;
+
     private static final int PORT = 10000 + new Random().nextInt(1000);
     private static final int THREAD_POOL_SIZE = 3;
     private static final IntegrationTestOperation DEFAULT_OPERATION = new IntegrationTestOperation();
@@ -73,7 +75,13 @@ public class AbstractServerConnectorTest {
         }
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT, expected = SimulatorProtocolException.class)
+    public void testStart_twice() {
+        testServerConnector.start();
+        testServerConnector.start();
+    }
+
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testShutdown() throws Exception {
         shutdownAfterTest = false;
         testServerConnector.start();
@@ -84,7 +92,16 @@ public class AbstractServerConnectorTest {
         verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT, expected = SimulatorProtocolException.class)
+    public void testShutdown_twice() {
+        shutdownAfterTest = false;
+        testServerConnector.start();
+
+        testServerConnector.shutdown();
+        testServerConnector.shutdown();
+    }
+
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testShutdown_withMessageOnQueue() throws Exception {
         shutdownAfterTest = false;
         testServerConnector.start();
@@ -108,7 +125,7 @@ public class AbstractServerConnectorTest {
         assertEquals(SUCCESS, response.getFirstErrorResponseType());
     }
 
-    @Test(expected = SimulatorProtocolException.class)
+    @Test(timeout = DEFAULT_TIMEOUT, expected = SimulatorProtocolException.class)
     public void testWrite_withInterruptedException() {
         testServerConnector.start();
 
@@ -125,21 +142,21 @@ public class AbstractServerConnectorTest {
         testServerConnector.write(COORDINATOR, new IntegrationTestOperation());
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testGetEventLoopGroup() {
         testServerConnector.start();
 
         assertNotNull(testServerConnector.getEventLoopGroup());
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testGetExecutorService() {
         testServerConnector.start();
 
         assertEquals(executorService, testServerConnector.getScheduledExecutor());
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testGetMessageQueueSizeInternal() throws Exception {
         testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
         testServerConnector.submit(COORDINATOR, DEFAULT_OPERATION);
@@ -154,7 +171,7 @@ public class AbstractServerConnectorTest {
         assertEquals(SUCCESS, response.getFirstErrorResponseType());
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testSubmit_withFailureResponse() throws Exception {
         testServerConnector.start();
 
@@ -165,7 +182,7 @@ public class AbstractServerConnectorTest {
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, response.getFirstErrorResponseType());
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testSubmit_withSendFailure() throws Exception {
         when(channelGroup.writeAndFlush(any())).thenThrow(new RuntimeException("expected"));
 

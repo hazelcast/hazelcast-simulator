@@ -8,6 +8,11 @@ import static org.junit.Assert.assertEquals;
 public class AddressLevelTest {
 
     @Test
+    public void testFromInt_REMOTE() {
+        assertEquals(AddressLevel.REMOTE, fromInt(AddressLevel.REMOTE.toInt()));
+    }
+
+    @Test
     public void testFromInt_COORDINATOR() {
         assertEquals(AddressLevel.COORDINATOR, fromInt(AddressLevel.COORDINATOR.toInt()));
     }
@@ -28,12 +33,12 @@ public class AddressLevelTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testFromInt_negative() {
-        fromInt(-1);
+    public void testFromInt_tooLow() {
+        fromInt(AddressLevel.getMinLevel() - 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testFromInt_invalid() {
-        fromInt(4);
+    public void testFromInt_tooHigh() {
+        fromInt(AddressLevel.getMaxLevel() + 1);
     }
 }

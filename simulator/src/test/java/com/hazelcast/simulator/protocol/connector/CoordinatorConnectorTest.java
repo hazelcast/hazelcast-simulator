@@ -13,14 +13,13 @@ import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.utils.TestUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.common.FailureType.NETTY_EXCEPTION;
@@ -36,19 +35,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class CoordinatorConnectorTest {
 
     private static final int DEFAULT_TIMEOUT = 30000;
 
+    private static final int COORDINATOR_PORT = 0;
     private static final SimulatorAddress WORKER_ADDRESS = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
     private static final SimulatorAddress AGENT_ADDRESS = WORKER_ADDRESS.getParent();
 
-    private ExecutorService executorService;
     private CoordinatorConnector coordinatorConnector;
 
     @Before
@@ -59,18 +56,14 @@ public class CoordinatorConnectorTest {
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
 
-        executorService = mock(ExecutorService.class);
-
-        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer,
-                executorService);
+        coordinatorConnector = CoordinatorConnector.createInstance(failureContainer, testPhaseListeners,
+                performanceStatsContainer, COORDINATOR_PORT);
+        coordinatorConnector.start();
     }
 
-    @Test(timeout = DEFAULT_TIMEOUT)
-    public void testShutdown() throws Exception {
+    @After
+    public void tearDown() {
         coordinatorConnector.shutdown();
-
-        verify(executorService).shutdown();
-        verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)

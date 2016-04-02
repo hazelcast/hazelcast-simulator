@@ -51,15 +51,15 @@ class ProtocolUtil {
 
     static final long DEFAULT_TEST_TIMEOUT_MILLIS = 10000;
 
-    static final int AGENT_START_PORT = 10000 + new Random().nextInt(1000);
-    private static final int WORKER_START_PORT = AGENT_START_PORT + 1000;
-
+    private static final Random RANDOM = new Random();
     private static final Logger LOGGER = Logger.getLogger(ProtocolUtil.class);
+
+    private static final int COORDINATOR_START_PORT = 0;
+    private static final int AGENT_START_PORT = 10000 + RANDOM.nextInt(1000);
+    private static final int WORKER_START_PORT = AGENT_START_PORT + 1000;
 
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
     private static final int MIN_ADDRESS_LEVEL_VALUE = MIN_ADDRESS_LEVEL.toInt();
-
-    private static final Random RANDOM = new Random();
 
     private static final ExceptionLogger EXCEPTION_LOGGER = mock(ExceptionLogger.class);
 
@@ -162,21 +162,26 @@ class ProtocolUtil {
     }
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
+        return startCoordinator(agentHost, agentStartPort, numberOfAgents, COORDINATOR_START_PORT);
+    }
+
+    static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents, int coordinatorPort) {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
-        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
-                performanceStatsContainer);
+        CoordinatorConnector coordinatorConnector = CoordinatorConnector.createInstance(failureContainer, testPhaseListeners,
+                performanceStatsContainer, coordinatorPort);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }
 
+        coordinatorConnector.start();
         return coordinatorConnector;
     }
 
     static SimulatorAddress getRandomDestination(int maxAddressIndex) {
-        int addressLevelValue = MIN_ADDRESS_LEVEL_VALUE + RANDOM.nextInt(AddressLevel.values().length - MIN_ADDRESS_LEVEL_VALUE);
+        int addressLevelValue = MIN_ADDRESS_LEVEL_VALUE + RANDOM.nextInt(AddressLevel.getMaxLevel() - MIN_ADDRESS_LEVEL_VALUE);
         AddressLevel addressLevel = AddressLevel.fromInt(addressLevelValue);
 
         int agentIndex = RANDOM.nextInt(maxAddressIndex + 1);
@@ -203,6 +208,10 @@ class ProtocolUtil {
 
     static Response sendFromCoordinator(SimulatorAddress destination, SimulatorOperation operation) {
         return coordinatorConnector.write(destination, operation);
+    }
+
+    static int getAgentStartPort() {
+        return AGENT_START_PORT;
     }
 
     static CoordinatorConnector getCoordinatorConnector() {

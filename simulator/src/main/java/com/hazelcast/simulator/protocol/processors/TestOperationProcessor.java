@@ -46,7 +46,7 @@ import static java.lang.String.format;
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Test.
  */
-public class TestOperationProcessor extends OperationProcessor {
+public class TestOperationProcessor extends AbstractOperationProcessor {
 
     private static final String DASHES = "---------------------------";
     private static final Logger LOGGER = Logger.getLogger(TestOperationProcessor.class);

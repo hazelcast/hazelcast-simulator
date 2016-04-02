@@ -25,6 +25,11 @@ import static java.lang.Integer.parseInt;
  *
  * <pre>
  *                                               +---+
+ * REMOTE                                        + R +
+ *                                               +---+
+ *                                                 |
+ *                                                 v
+ *                                               +---+
  * COORDINATOR           +-----------------------+ C +----------------------+
  *                       |                       +---+                      |
  *                       |                                                  |
@@ -47,9 +52,13 @@ import static java.lang.Integer.parseInt;
 @SuppressWarnings("checkstyle:magicnumber")
 public class SimulatorAddress {
 
+    public static final SimulatorAddress REMOTE = new SimulatorAddress(AddressLevel.REMOTE, 0, 0, 0);
     public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0, 0);
     public static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AddressLevel.AGENT, 0, 0, 0);
     public static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(AddressLevel.WORKER, 0, 0, 0);
+
+    private static final String REMOTE_STRING = "R";
+    private static final String COORDINATOR_STRING = "C";
 
     private final AddressLevel addressLevel;
     private final int agentIndex;
@@ -195,24 +204,29 @@ public class SimulatorAddress {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("C");
-        if (AddressLevel.COORDINATOR.isParentAddressLevel(addressLevel)) {
-            sb.append("_A").append(agentIndex == 0 ? "*" : agentIndex);
+        StringBuilder sb = new StringBuilder();
+        if (AddressLevel.REMOTE == addressLevel) {
+            sb.append(REMOTE_STRING);
+        } else {
+            sb.append(COORDINATOR_STRING);
         }
-        if (AddressLevel.AGENT.isParentAddressLevel(addressLevel)) {
-            sb.append("_W").append(workerIndex == 0 ? "*" : workerIndex);
-        }
-        if (AddressLevel.WORKER.isParentAddressLevel(addressLevel)) {
-            sb.append("_T").append(testIndex == 0 ? "*" : testIndex);
-        }
+        appendAddressLevelString(sb, AddressLevel.COORDINATOR, "_A", agentIndex);
+        appendAddressLevelString(sb, AddressLevel.AGENT, "_W", workerIndex);
+        appendAddressLevelString(sb, AddressLevel.WORKER, "_T", testIndex);
         return sb.toString();
+    }
+
+    private void appendAddressLevelString(StringBuilder sb, AddressLevel parent, String name, int index) {
+        if (parent.isParentAddressLevel(addressLevel)) {
+            sb.append(name).append(index == 0 ? "*" : index);
+        }
     }
 
     public static SimulatorAddress fromString(String sourceString) {
         String[] sections = sourceString.split("_");
         AddressLevel addressLevel = AddressLevel.fromInt(sections.length - 1);
         if (addressLevel == AddressLevel.COORDINATOR) {
-            return COORDINATOR;
+            return REMOTE_STRING.equals(sourceString) ? REMOTE : COORDINATOR;
         }
 
         int agentIndex = getAddressIndex(AddressLevel.COORDINATOR, addressLevel, "A*", sections);

@@ -202,6 +202,11 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
+    public void testGetCoordinatorPort() {
+        assertEquals(0, simulatorProperties.getCoordinatorPort());
+    }
+
+    @Test
     public void testGetAgentThreadPoolSize() {
         assertEquals(0, simulatorProperties.getAgentThreadPoolSize());
     }

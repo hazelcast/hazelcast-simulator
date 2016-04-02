@@ -19,13 +19,16 @@ import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
-import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
+import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
+import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
+import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
@@ -34,71 +37,62 @@ import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.processors.CommunicatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.group.ChannelGroup;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.protocol.connector.ServerConnector.DEFAULT_SHUTDOWN_QUIET_PERIOD;
-import static com.hazelcast.simulator.protocol.connector.ServerConnector.DEFAULT_SHUTDOWN_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
-import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static java.util.Collections.unmodifiableCollection;
 
 /**
  * Connector which connects to remote Simulator Agent instances.
  */
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
-public class CoordinatorConnector implements ClientPipelineConfigurator, FailureListener {
+public class CoordinatorConnector extends AbstractServerConnector implements ClientPipelineConfigurator, FailureListener {
 
-    private static final int EXECUTOR_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
-
-    private final EventLoopGroup group = new NioEventLoopGroup();
-    private final AtomicLong messageIds = new AtomicLong();
-    private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
-    private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
     private final CoordinatorOperationProcessor processor;
-    private final ExecutorService executorService;
-
-    public CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                                PerformanceStatsContainer performanceStatsContainer) {
-        this(failureContainer, testPhaseListeners, performanceStatsContainer,
-                createFixedThreadPool(EXECUTOR_POOL_SIZE, "CoordinatorConnector"));
-    }
+    private final CommunicatorOperationProcessor communicatorOperationProcessor;
+    private final ConnectionManager connectionManager;
 
     CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                         PerformanceStatsContainer performanceStatsContainer,
-                         ExecutorService executorService) {
+                         PerformanceStatsContainer performanceStatsContainer, int port,
+                         ConnectionManager connectionManager, ConcurrentMap<String, ResponseFuture> futureMap) {
+        super(futureMap, COORDINATOR, port, getDefaultThreadPoolSize());
+
         this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
                 performanceStatsContainer);
-        this.executorService = executorService;
+        this.communicatorOperationProcessor = new CommunicatorOperationProcessor(exceptionLogger);
+        this.connectionManager = connectionManager;
     }
 
-    @Override
-    public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress,
-                                        ConcurrentMap<String, ResponseFuture> futureMap) {
-        pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, remoteAddress));
-        pipeline.addLast("responseEncoder", new ResponseEncoder(COORDINATOR));
-        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
-        pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, remoteAddress, futureMap));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor, executorService));
+    /**
+     * Creates a {@link CoordinatorConnector} instance.
+     *
+     * @param failureContainer          {@link FailureContainer} for this connector
+     * @param testPhaseListeners        {@link TestPhaseListeners} for this connector
+     * @param performanceStatsContainer {@link PerformanceStatsContainer} for this connector
+     * @param port                      the port for incoming connections
+     */
+    public static CoordinatorConnector createInstance(FailureContainer failureContainer,
+                                                      TestPhaseListeners testPhaseListeners,
+                                                      PerformanceStatsContainer performanceStatsContainer,
+                                                      int port) {
+        ConnectionManager connectionManager = new ConnectionManager();
+        ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+
+        return new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer,
+                port, connectionManager, futureMap);
     }
 
     @Override
@@ -110,30 +104,40 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
         if (workerAddress == null) {
             return;
         }
-        for (ResponseFuture future : futureMap.values()) {
+        for (ResponseFuture future : getFutureMap().values()) {
             future.unblockOnFailure(workerAddress, COORDINATOR, workerAddress.getAgentIndex());
         }
     }
 
-    /**
-     * Disconnects from all Simulator Agent instances.
-     */
-    public void shutdown() {
-        ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors", true);
-        for (final ClientConnector agent : clientConnectorManager.getClientConnectors()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    agent.shutdown();
-                }
-            });
-        }
-        spawner.awaitCompletion();
+    @Override
+    public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress,
+                                        ConcurrentMap<String, ResponseFuture> futureMap) {
+        pipeline.addLast("responseEncoder", new ResponseEncoder(COORDINATOR));
+        pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, remoteAddress));
+        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
+        pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, remoteAddress, futureMap));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor, getScheduledExecutor()));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
+    }
 
-        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+    @Override
+    void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
+        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
+        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
+        pipeline.addLast("responseEncoder", new ResponseEncoder(COORDINATOR));
+        pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, COORDINATOR));
+        pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, communicatorOperationProcessor,
+                getScheduledExecutor()));
+        pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, REMOTE, getFutureMap(), 0));
+        pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
+    }
 
-        executorService.shutdown();
-        awaitTermination(executorService, 1, TimeUnit.MINUTES);
+    @Override
+    ChannelGroup getChannelGroup() {
+        return connectionManager.getChannels();
     }
 
     /**
@@ -144,11 +148,11 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
      * @param agentPort  the port of the Simulator Agent
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
-        ClientConnector client = new ClientConnector(this, group, futureMap, COORDINATOR, COORDINATOR.getChild(agentIndex),
-                agentIndex, agentHost, agentPort);
+        ClientConnector client = new ClientConnector(this, getEventLoopGroup(), getFutureMap(), COORDINATOR,
+                COORDINATOR.getChild(agentIndex), agentIndex, agentHost, agentPort);
         client.start();
 
-        clientConnectorManager.addClient(agentIndex, client);
+        getClientConnectorManager().addClient(agentIndex, client);
     }
 
     /**
@@ -157,7 +161,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
      * @param agentIndex the index of the remote Simulator Agent
      */
     public void removeAgent(int agentIndex) {
-        clientConnectorManager.removeClient(agentIndex);
+        getClientConnectorManager().removeClient(agentIndex);
     }
 
     /**
@@ -167,19 +171,19 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the response of all addressed Simulator components.
      */
+    @Override
     public Response write(SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = new SimulatorMessage(destination, COORDINATOR, messageIds.incrementAndGet(),
-                getOperationType(operation), toJson(operation));
+        SimulatorMessage message = createSimulatorMessage(COORDINATOR, destination, operation);
 
         int agentAddressIndex = destination.getAgentIndex();
         Response response = new Response(message);
         List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
         if (agentAddressIndex == 0) {
-            for (ClientConnector agent : clientConnectorManager.getClientConnectors()) {
+            for (ClientConnector agent : getClientConnectorManager().getClientConnectors()) {
                 futureList.add(agent.writeAsync(message));
             }
         } else {
-            ClientConnector agent = clientConnectorManager.get(agentAddressIndex);
+            ClientConnector agent = getClientConnectorManager().get(agentAddressIndex);
             if (agent == null) {
                 response.addResponse(COORDINATOR, FAILURE_AGENT_NOT_FOUND);
             } else {
@@ -196,6 +200,10 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
         return response;
     }
 
+    public Response writeToCommunicator(SimulatorOperation operation) {
+        return super.write(REMOTE, operation);
+    }
+
     /**
      * Returns the number of collected exceptions.
      *
@@ -207,16 +215,11 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
 
     // just for testing
     public Collection<ClientConnector> getClientConnectors() {
-        return unmodifiableCollection(clientConnectorManager.getClientConnectors());
+        return unmodifiableCollection(getClientConnectorManager().getClientConnectors());
     }
 
     // just for testing
     void addAgent(int agentIndex, ClientConnector agent) {
-        clientConnectorManager.addClient(agentIndex, agent);
-    }
-
-    // just for testing
-    ConcurrentHashMap<String, ResponseFuture> getFutureMap() {
-        return futureMap;
+        getClientConnectorManager().addClient(agentIndex, agent);
     }
 }
