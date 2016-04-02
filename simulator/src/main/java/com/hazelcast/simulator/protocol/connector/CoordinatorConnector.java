@@ -20,6 +20,7 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
+import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -70,7 +71,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
 
     private final EventLoopGroup group = new NioEventLoopGroup();
     private final AtomicLong messageIds = new AtomicLong();
-    private final ConcurrentMap<Integer, ClientConnector> agents = new ConcurrentHashMap<Integer, ClientConnector>();
+    private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
     private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
@@ -122,7 +123,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
      */
     public void shutdown() {
         ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors", true);
-        for (final ClientConnector agent : agents.values()) {
+        for (final ClientConnector agent : clientConnectorManager.getClientConnectors()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -154,7 +155,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
                 agentIndex, agentHost, agentPort);
         client.start();
 
-        agents.put(agentIndex, client);
+        clientConnectorManager.addClient(agentIndex, client);
     }
 
     /**
@@ -163,10 +164,7 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
      * @param agentIndex the index of the remote Simulator Agent
      */
     public void removeAgent(int agentIndex) {
-        ClientConnector clientConnector = agents.remove(agentIndex);
-        if (clientConnector != null) {
-            clientConnector.shutdown();
-        }
+        clientConnectorManager.removeClient(agentIndex);
     }
 
     /**
@@ -184,11 +182,11 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
         Response response = new Response(message);
         List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
         if (agentAddressIndex == 0) {
-            for (ClientConnector agent : agents.values()) {
+            for (ClientConnector agent : clientConnectorManager.getClientConnectors()) {
                 futureList.add(agent.writeAsync(message));
             }
         } else {
-            ClientConnector agent = agents.get(agentAddressIndex);
+            ClientConnector agent = clientConnectorManager.get(agentAddressIndex);
             if (agent == null) {
                 response.addResponse(COORDINATOR, FAILURE_AGENT_NOT_FOUND);
             } else {
@@ -216,12 +214,12 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
 
     // just for testing
     public Collection<ClientConnector> getClientConnectors() {
-        return unmodifiableCollection(agents.values());
+        return unmodifiableCollection(clientConnectorManager.getClientConnectors());
     }
 
     // just for testing
     void addAgent(int agentIndex, ClientConnector agent) {
-        agents.put(agentIndex, agent);
+        clientConnectorManager.addClient(agentIndex, agent);
     }
 
     // just for testing
