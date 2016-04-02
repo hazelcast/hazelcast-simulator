@@ -83,6 +83,24 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         this.workerJvmManager = workerJvmManager;
     }
 
+    /**
+     * Creates an {@link AgentConnector} instance.
+     *
+     * @param agent            instance of this Simulator Agent
+     * @param workerJvmManager manager for WorkerJVM instances
+     * @param port             the port for incoming connections
+     * @param threadPoolSize   size of the Netty thread pool to connect to Worker instances
+     */
+    public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port, int threadPoolSize) {
+        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+        SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
+        ConnectionManager connectionManager = new ConnectionManager();
+
+        threadPoolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
+
+        return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager, threadPoolSize);
+    }
+
     @Override
     public void configureClientPipeline(ChannelPipeline pipeline, SimulatorAddress remoteAddress,
                                         ConcurrentMap<String, ResponseFuture> futureMap) {
@@ -121,24 +139,6 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     @Override
     public Response write(SimulatorAddress destination, SimulatorOperation operation) {
         return super.write(destination, operation);
-    }
-
-    /**
-     * Creates an {@link AgentConnector} instance.
-     *
-     * @param agent            instance of this Simulator Agent
-     * @param workerJvmManager manager for WorkerJVM instances
-     * @param port             the port for incoming connections
-     * @param threadPoolSize   size of the Netty thread pool to connect to Worker instances
-     */
-    public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port, int threadPoolSize) {
-        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-        SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
-        ConnectionManager connectionManager = new ConnectionManager();
-
-        threadPoolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
-
-        return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager, threadPoolSize);
     }
 
     /**
