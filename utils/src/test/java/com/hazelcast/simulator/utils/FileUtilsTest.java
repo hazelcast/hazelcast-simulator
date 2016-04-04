@@ -11,6 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.List;
 
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -23,6 +26,8 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getFile;
+import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
+import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getText;
@@ -425,6 +430,72 @@ public class FileUtilsTest {
         OptionSet options = initOptionsWithHelp(parser, new String[]{"--fileName", FILE_NOT_FOUND.getName()});
 
         getFile(optionSpec, options, "getFileTest");
+    }
+
+    @Test
+    public void testGetFileAsTextFromWorkingDirOrBaseDir() {
+        String content = getFileAsTextFromWorkingDirOrBaseDir(null, EXAMPLE_FILE.getName(), "desc");
+
+        assertEquals(EXAMPLE_CONTENT, content);
+    }
+
+    @Test
+    public void testGetFileAsTextFromWorkingDirOrBaseDir_withFileFromBaseDir() {
+        String baseDir = System.getProperty("user.dir") + "/dist/src/main/dist";
+        String content = getFileAsTextFromWorkingDirOrBaseDir(new File(baseDir), "hazelcast.xml", "desc");
+
+        assertTrue(content.startsWith("<hazelcast"));
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testGetFileAsTextFromWorkingDirOrBaseDir_withFileNotFound() {
+        getFileAsTextFromWorkingDirOrBaseDir(null, FILE_NOT_FOUND.getName(), "desc");
+    }
+
+    @Test
+    public void testGetFilesFromClassPath() throws Exception {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        URL[] urls = ((URLClassLoader) cl).getURLs();
+
+        String delimiter = "";
+        StringBuilder classPath = new StringBuilder();
+        for (URL url : urls) {
+            classPath.append(delimiter).append(new File(url.toURI()));
+            delimiter = ";";
+        }
+
+        List<File> files = getFilesFromClassPath(classPath.toString());
+
+        assertFalse(files.isEmpty());
+    }
+
+    @Test
+    public void testGetFilesFromClassPath_whenNull_thenReturnEmptyList() {
+        List<File> files = getFilesFromClassPath(null);
+
+        assertTrue(files.isEmpty());
+    }
+
+    @Test
+    public void testGetFilesFromClassPath_withWildcards() {
+        ensureExistingDirectory(TARGET_FILE);
+        ensureExistingFile(TARGET_FILE, "test");
+
+        List<File> files = getFilesFromClassPath(TARGET_FILE.getName() + File.separator + "*");
+
+        assertFalse(files.isEmpty());
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testGetFilesFromClassPath_withWildcards_noDirectory() {
+        ensureExistingFile(TARGET_FILE);
+
+        getFilesFromClassPath(TARGET_FILE.getName() + File.separator + "*");
+    }
+
+    @Test(expected = FileUtilsException.class)
+    public void testGetFilesFromClassPath_withFileNotFound() {
+        getFilesFromClassPath(FILE_NOT_FOUND.getName());
     }
 
     @Test

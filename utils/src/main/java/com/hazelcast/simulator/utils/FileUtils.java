@@ -36,7 +36,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -44,6 +43,7 @@ import java.util.regex.Pattern;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 @SuppressFBWarnings("DM_DEFAULT_ENCODING")
 public final class FileUtils {
@@ -362,10 +362,9 @@ public final class FileUtils {
         return fileAsText(file);
     }
 
-    @SuppressWarnings("unchecked")
     public static List<File> getFilesFromClassPath(String classpath) {
         if (classpath == null) {
-            return Collections.EMPTY_LIST;
+            return emptyList();
         }
 
         List<File> files = new LinkedList<File>();
