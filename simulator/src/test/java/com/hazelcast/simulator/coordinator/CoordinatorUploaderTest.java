@@ -10,12 +10,16 @@ import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.common.JavaProfiler.NONE;
 import static com.hazelcast.simulator.common.JavaProfiler.YOURKIT;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -44,15 +48,33 @@ public class CoordinatorUploaderTest {
 
     private String testSuiteId = "testSuiteId";
 
-    private File notExists = new File("/notExists");
-    private File uploadDirectory = ensureExistingDirectory("upload");
-    private File workerClassPathFile = ensureExistingDirectory("workerClassPath");
-    private String workerClassPath = workerClassPathFile.getAbsolutePath();
+    private File notExists = new File("notExists");
+    private File uploadDirectory;
+    private File workerClassPathFile;
+    private String workerClassPath;
 
     private CoordinatorUploader coordinatorUploader;
 
+    @BeforeClass
+    public static void setupEnvironment() {
+        setDistributionUserDir();
+    }
+
+    @AfterClass
+    public static void resetEnvironment() {
+        resetUserDir();
+    }
+
     @Before
     public void setUp() {
+        uploadDirectory = new File("upload").getAbsoluteFile();
+        ensureExistingDirectory(uploadDirectory);
+
+        workerClassPathFile = new File("workerClassPath").getAbsoluteFile();
+        ensureExistingDirectory(workerClassPathFile);
+
+        workerClassPath = workerClassPathFile.getAbsolutePath();
+
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
 
