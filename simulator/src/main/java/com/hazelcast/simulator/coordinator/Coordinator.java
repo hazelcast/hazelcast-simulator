@@ -93,6 +93,12 @@ public final class Coordinator {
 
     public Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
                        WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters) {
+        this(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters,
+                new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters));
+    }
+
+    Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
+                WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters, ClusterLayout clusterLayout) {
         this.testSuite = testSuite;
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
@@ -104,7 +110,7 @@ public final class Coordinator {
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
 
-        this.clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        this.clusterLayout = clusterLayout;
         this.hazelcastJARs = HazelcastJARs.newInstance(bash, simulatorProperties, clusterLayout.getVersionSpecs());
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
 
@@ -164,7 +170,7 @@ public final class Coordinator {
         echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
     }
 
-    private void run() {
+    void run() {
         try {
             uploadFiles();
 
@@ -197,7 +203,7 @@ public final class Coordinator {
         }
     }
 
-    private void uploadFiles() {
+    void uploadFiles() {
         if (isLocal(simulatorProperties)) {
             return;
         }
