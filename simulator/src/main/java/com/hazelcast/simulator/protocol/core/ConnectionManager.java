@@ -43,7 +43,12 @@ public class ConnectionManager implements ConnectionListener {
         channels.remove(channel);
     }
 
-    public void waitForAtLeastOneChannel() {
+    public ChannelGroup getChannels() {
+        waitForAtLeastOneChannel();
+        return channels;
+    }
+
+    void waitForAtLeastOneChannel() {
         try {
             countDownLatch.await();
         } catch (InterruptedException ignored) {
@@ -51,7 +56,7 @@ public class ConnectionManager implements ConnectionListener {
         }
     }
 
-    public ChannelGroup getChannels() {
-        return channels;
+    int size() {
+        return channels.size();
     }
 }

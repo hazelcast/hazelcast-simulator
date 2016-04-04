@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol.core;
 
 import io.netty.channel.Channel;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.junit.Test;
 
@@ -16,14 +15,13 @@ public class ConnectionManagerTest {
 
     @Test
     public void testConnectAndDisconnect() {
-        ChannelGroup channelGroup = connectionManager.getChannels();
-        assertEquals(0, channelGroup.size());
+        assertEquals(0, connectionManager.size());
 
         connectionManager.connected(channel);
-        assertEquals(1, channelGroup.size());
+        assertEquals(1, connectionManager.size());
 
         connectionManager.disconnected(channel);
-        assertEquals(0, channelGroup.size());
+        assertEquals(0, connectionManager.size());
     }
 
     @Test(timeout = 5000)

@@ -132,7 +132,6 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
 
     @Override
     ChannelGroup getChannelGroup() {
-        connectionManager.waitForAtLeastOneChannel();
         return connectionManager.getChannels();
     }
 
