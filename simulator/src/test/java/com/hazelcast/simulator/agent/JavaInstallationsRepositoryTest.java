@@ -112,6 +112,11 @@ public class JavaInstallationsRepositoryTest {
         repository.load(repositoryFile);
     }
 
+    @Test(expected = JavaInstallationException.class)
+    public void testLoad_invalidFile() {
+        repository.load(new File("\\//?:&|"));
+    }
+
     private void writeToRepositoryFile(String text) {
         writeText(text, repositoryFile);
     }
