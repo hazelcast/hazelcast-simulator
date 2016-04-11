@@ -88,7 +88,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
     /**
      * Returns a set of all defined operations.
      *
-     * @return {@link Set<T>} of all defined operations.
+     * @return {@link Set} of all defined operations.
      */
     public Set<T> getOperations() {
         return operations.keySet();
