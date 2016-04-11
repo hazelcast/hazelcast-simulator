@@ -131,7 +131,8 @@ public class MapReduceTest {
 
         private void mapReduce() throws Exception {
             JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + baseName);
-            Job<Integer, Employee> job = tracker.newJob(KeyValueSource.fromMap(map));
+            KeyValueSource<Integer, Employee> source = KeyValueSource.fromMap(map);
+            Job<Integer, Employee> job = tracker.newJob(source);
 
             ICompletableFuture<Map<Integer, Set<Employee>>> future = job
                     .mapper(new ModIdMapper(2))
