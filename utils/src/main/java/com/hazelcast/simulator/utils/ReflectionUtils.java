@@ -91,6 +91,7 @@ public final class ReflectionUtils {
      * @param clazz     class which contains the field
      * @param fieldName name of the field
      * @param fieldType type of the field
+     * @param <E> type of the field
      * @return the value of the static field
      */
     public static <E> E getStaticFieldValue(Class clazz, String fieldName, Class fieldType) {
