@@ -4,7 +4,7 @@
 
     <groupId>com.hazelcast.simulator</groupId>
     <artifactId>simulator-root</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.7-SNAPSHOT</version>
     <name>Hazelcast Simulator Root</name>
     <description>Hazelcast Simulator: Stress/Performance Testing Environment for Hazelcast</description>
     <url>http://github.com/hazelcast/hazelcast-simulator</url>
@@ -59,7 +59,7 @@
         <hdr-histogram.version>2.1.8</hdr-histogram.version>
         <jfreechart.version>1.0.19</jfreechart.version>
         <jgit.version>3.7.1.201504261725-r</jgit.version>
-        <jopt.version>5.0</jopt.version>
+        <jopt.version>4.9</jopt.version>
         <xstream.version>1.4.9</xstream.version>
 
         <jclouds.version>1.9.2</jclouds.version>
