@@ -48,6 +48,8 @@ public abstract class AbstractMonotonicWorkerWithProbeControl extends AbstractWo
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param probe The built-in {@link Probe}
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep(Probe probe) throws Exception;
 }

@@ -104,6 +104,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     /**
      * Override this method if you need to execute code on each worker before {@link #run()} is called.
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected void beforeRun() throws Exception {
     }
@@ -114,6 +116,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep(O operation) throws Exception;
 
@@ -121,6 +125,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      * Override this method if you need to execute code on each worker after {@link #run()} is called.
      *
      * Won't be called if an error occurs in {@link #beforeRun()} or {@link #timeStep(Enum)}.
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected void afterRun() throws Exception {
     }

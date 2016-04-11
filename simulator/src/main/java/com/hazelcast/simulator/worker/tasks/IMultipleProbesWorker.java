@@ -30,7 +30,7 @@ public interface IMultipleProbesWorker extends IWorker {
      *
      * Is used by the {@link com.hazelcast.simulator.test.TestContainer} and should not be called by the user.
      *
-     * @return {@link Set<Enum>} of all defined operations.
+     * @return {@link Set} of all defined operations.
      */
     Set<? extends Enum> getOperations();
 

@@ -46,6 +46,8 @@ public abstract class AbstractMonotonicWorker extends AbstractWorker {
      * This method is called for each iteration of {@link #run()}.
      *
      * Won't be called if an error occurs in {@link #beforeRun()}.
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep() throws Exception;
 }

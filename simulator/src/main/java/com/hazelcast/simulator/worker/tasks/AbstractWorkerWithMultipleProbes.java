@@ -78,6 +78,8 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extend
      *
      * @param operation The selected operation for this iteration
      * @param probe     The individual {@link Probe} for this operation
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep(O operation, Probe probe) throws Exception;
 }
