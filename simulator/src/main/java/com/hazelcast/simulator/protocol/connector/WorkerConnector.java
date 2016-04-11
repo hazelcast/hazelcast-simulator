@@ -111,6 +111,7 @@ public class WorkerConnector extends AbstractServerConnector {
      * @param type               the {@link WorkerType} of this Simulator Worker
      * @param hazelcastInstance  the {@link HazelcastInstance} for this Simulator Worker
      * @param worker             the {@link Worker} instance of this Simulator Worker
+     * @return the {@link WorkerConnector} instance
      */
     public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
                                                  HazelcastInstance hazelcastInstance, Worker worker) {
@@ -127,6 +128,7 @@ public class WorkerConnector extends AbstractServerConnector {
      * @param hazelcastInstance  the {@link HazelcastInstance} for this Simulator Worker
      * @param worker             the {@link Worker} instance of this Simulator Worker
      * @param useRemoteLogger    determines if the {@link RemoteExceptionLogger} or {@link FileExceptionLogger} should be used
+     * @return the {@link WorkerConnector} instance
      */
     public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
                                                  HazelcastInstance hazelcastInstance, Worker worker, boolean useRemoteLogger) {

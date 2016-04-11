@@ -90,6 +90,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      * @param workerJvmManager manager for WorkerJVM instances
      * @param port             the port for incoming connections
      * @param threadPoolSize   size of the Netty thread pool to connect to Worker instances
+     * @return the {@link AgentConnector} instance
      */
     public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port, int threadPoolSize) {
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
