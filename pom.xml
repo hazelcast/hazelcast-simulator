@@ -92,6 +92,9 @@
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <maven.git-commit-id.plugin.version>2.1.10</maven.git-commit-id.plugin.version>
         <maven.versions.plugin.version>2.2</maven.versions.plugin.version>
+
+        <maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+        <maven.scm.provider.gitexe.version>1.9.4</maven.scm.provider.gitexe.version>
     </properties>
 
     <modules>
@@ -243,6 +246,17 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>${maven.versions.plugin.version}</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven.release.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-gitexe</artifactId>
+                        <version>${maven.scm.provider.gitexe.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
