@@ -399,7 +399,6 @@ public class Provisioner {
         // upload Simulator JARs
         uploadLibraryJar(ip, "simulator-*");
         uploadLibraryJar(ip, "probes-*");
-        uploadLibraryJar(ip, "tests-*");
         uploadLibraryJar(ip, "utils-*");
 
         // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
@@ -421,6 +420,7 @@ public class Provisioner {
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/conf/", "conf");
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/jdk-install/", "jdk-install");
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/tests/", "tests");
+        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/test-lib/", "test-lib/");
         bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
 
         // purge Hazelcast JARs
