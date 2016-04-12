@@ -42,6 +42,8 @@ import static org.mockito.Mockito.when;
 
 public class WorkerJvmFailureMonitorTest {
 
+    private static final int DEFAULT_TIMEOUT = 30000;
+
     private static final int DEFAULT_LAST_SEEN_TIMEOUT_SECONDS = 30;
     private static final int DEFAULT_CHECK_INTERVAL = 30;
     private static final int DEFAULT_SLEEP_TIME = 100;
@@ -106,18 +108,19 @@ public class WorkerJvmFailureMonitorTest {
         verifyNoMoreInteractions(agentConnector);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testRun_shouldContinueAfterExceptionDuringDetection() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenThrow(new IllegalArgumentException("expected exception")).thenReturn(0);
         WorkerJvm exceptionWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
 
-        sleepMillis(DEFAULT_SLEEP_TIME);
+        do {
+            sleepMillis(DEFAULT_SLEEP_TIME);
+        } while (!exceptionWorker.isFinished());
 
         assertThatFailureOperationHasBeenSent(agentConnector, 1);
         assertThatWorkerHasBeenRemoved(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
-        assertTrue(exceptionWorker.isFinished());
     }
 
     @Test
@@ -291,18 +294,19 @@ public class WorkerJvmFailureMonitorTest {
         verifyNoMoreInteractions(agentConnector);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testRun_shouldDetectUnexpectedExit_whenExitValueIsZero() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenReturn(0);
         WorkerJvm exitWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
 
-        sleepMillis(DEFAULT_SLEEP_TIME);
+        do {
+            sleepMillis(DEFAULT_SLEEP_TIME);
+        } while (!exitWorker.isFinished());
 
         assertThatFailureOperationHasBeenSent(agentConnector, 1);
         assertThatWorkerHasBeenRemoved(agentConnector, 1);
         verifyNoMoreInteractions(agentConnector);
-        assertTrue(exitWorker.isFinished());
     }
 
     @Test
