@@ -15,6 +15,9 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
+import java.util.concurrent.TimeUnit;
+
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
@@ -49,5 +52,15 @@ final class BusySpinningMetronome implements Metronome {
 
         // set regular interval for next call
         waitUntil = now + intervalNanos;
+    }
+
+    @Override
+    public long getInterval() {
+        return TimeUnit.NANOSECONDS.toMillis(intervalNanos);
+    }
+
+    @Override
+    public MetronomeType getType() {
+        return BUSY_SPINNING;
     }
 }

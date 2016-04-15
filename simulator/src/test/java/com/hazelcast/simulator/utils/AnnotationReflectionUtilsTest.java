@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -8,6 +9,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.worker.metronome.Metronome;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -17,10 +19,14 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.ALWAYS_FIL
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeIntervalMillis;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -79,6 +85,54 @@ public class AnnotationReflectionUtilsTest {
     public void testIsThroughputProbe_noFieldFound() {
         Field field = getField(AnnotationTestClass.class, "notFound", Probe.class);
         assertFalse(isThroughputProbe(field));
+    }
+
+    @Test
+    public void testGetMetronomeIntervalMillis_withAnnotation() {
+        Field field = getField(AnnotationTestClass.class, "configuredMetronome", Metronome.class);
+        assertEquals(23, getMetronomeIntervalMillis(field, 42));
+    }
+
+    @Test
+    public void testGetMetronomeIntervalMillis_withAnnotation_default() {
+        Field field = getField(AnnotationTestClass.class, "defaultValueMetronome", Metronome.class);
+        assertEquals(42, getMetronomeIntervalMillis(field, 42));
+    }
+
+    @Test
+    public void testGetMetronomeIntervalMillis_noAnnotation() {
+        Field field = getField(AnnotationTestClass.class, "notAnnotatedMetronome", Metronome.class);
+        assertEquals(42, getMetronomeIntervalMillis(field, 42));
+    }
+
+    @Test
+    public void testGetMetronomeIntervalMillis_noFieldFound() {
+        Field field = getField(AnnotationTestClass.class, "notFound", Metronome.class);
+        assertEquals(42, getMetronomeIntervalMillis(field, 42));
+    }
+
+    @Test
+    public void testGetMetronomeType_withAnnotation() {
+        Field field = getField(AnnotationTestClass.class, "configuredMetronome", Metronome.class);
+        assertEquals(BUSY_SPINNING, getMetronomeType(field, SLEEPING));
+    }
+
+    @Test
+    public void testGetMetronomeType_withAnnotation_default() {
+        Field field = getField(AnnotationTestClass.class, "defaultValueMetronome", Metronome.class);
+        assertEquals(SLEEPING, getMetronomeType(field, SLEEPING));
+    }
+
+    @Test
+    public void testGetMetronomeType_noAnnotation() {
+        Field field = getField(AnnotationTestClass.class, "notAnnotatedMetronome", Metronome.class);
+        assertEquals(SLEEPING, getMetronomeType(field, SLEEPING));
+    }
+
+    @Test
+    public void testGetMetronomeType_noFieldFound() {
+        Field field = getField(AnnotationTestClass.class, "notFound", Metronome.class);
+        assertEquals(SLEEPING, getMetronomeType(field, SLEEPING));
     }
 
     @Test
@@ -144,6 +198,14 @@ public class AnnotationReflectionUtilsTest {
         private Probe defaultValueProbe;
 
         private Probe notAnnotatedProbe;
+
+        @InjectMetronome(intervalMillis = 23, type = BUSY_SPINNING)
+        private Metronome configuredMetronome;
+
+        @InjectMetronome
+        private Metronome defaultValueMetronome;
+
+        private Metronome notAnnotatedMetronome;
 
         @Setup
         private void hasArguments(String ignored) {

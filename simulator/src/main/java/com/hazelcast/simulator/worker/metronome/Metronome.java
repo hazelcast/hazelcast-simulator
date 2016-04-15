@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker.metronome;
 
 /**
- * Used to clock a running task or worker with a defined interval.
+ * Used to clock a running task or Worker with a defined interval.
  */
 public interface Metronome {
 
@@ -24,4 +24,15 @@ public interface Metronome {
      * Waits for the defined interval.
      */
     void waitForNext();
+
+    /**
+     * Returns the defined interval.
+     */
+    long getInterval();
+
+    /**
+     * Returns the {@link Metronome} type.
+     */
+    MetronomeType getType();
 }
+

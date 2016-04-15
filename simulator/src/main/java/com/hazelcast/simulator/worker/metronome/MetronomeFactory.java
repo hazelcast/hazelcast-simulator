@@ -60,10 +60,12 @@ public final class MetronomeFactory {
             return EMPTY_METRONOME;
         }
         switch (type) {
+            case BUSY_SPINNING:
+                return new BusySpinningMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
             case SLEEPING:
                 return new SleepingMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
             default:
-                return new BusySpinningMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
+                return EMPTY_METRONOME;
         }
     }
 
@@ -82,10 +84,12 @@ public final class MetronomeFactory {
         }
         long intervalNanos = round((double) TimeUnit.SECONDS.toNanos(1) / frequency);
         switch (type) {
+            case BUSY_SPINNING:
+                return new BusySpinningMetronome(intervalNanos);
             case SLEEPING:
                 return new SleepingMetronome(intervalNanos);
             default:
-                return new BusySpinningMetronome(intervalNanos);
+                return EMPTY_METRONOME;
         }
     }
 }

@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker.metronome;
 
 public enum MetronomeType {
 
+    NOP,
     BUSY_SPINNING,
     SLEEPING
 }

@@ -15,9 +15,21 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
+
 class EmptyMetronome implements Metronome {
 
     @Override
     public void waitForNext() {
+    }
+
+    @Override
+    public long getInterval() {
+        return 0;
+    }
+
+    @Override
+    public MetronomeType getType() {
+        return NOP;
     }
 }

@@ -19,6 +19,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.ProbeImpl;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
+import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -32,6 +33,8 @@ import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.tasks.IMultipleProbesWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.apache.log4j.Logger;
@@ -39,8 +42,8 @@ import org.apache.log4j.Logger;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,15 +51,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeIntervalMillis;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
+import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 import static com.hazelcast.simulator.worker.tasks.IWorker.DEFAULT_WORKER_PROBE_NAME;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 /**
@@ -72,9 +80,19 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
  */
 public class TestContainer {
 
+    static final String THREAD_COUNT_PROPERTY_NAME = "threadCount";
+    static final String METRONOME_INTERVAL_PROPERTY_NAME = "metronomeInterval";
+    static final String METRONOME_TYPE_PROPERTY_NAME = "metronomeType";
+
     private static final int DEFAULT_RUN_WITH_WORKER_THREAD_COUNT = 10;
-    private static final String THREAD_COUNT_PROPERTY_NAME = "threadCount";
-    private static final Set<String> OPTIONAL_TEST_PROPERTIES = Collections.singleton(THREAD_COUNT_PROPERTY_NAME);
+    private static final int DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL = 0;
+    private static final MetronomeType DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE = NOP;
+
+    private static final Set<String> OPTIONAL_TEST_PROPERTIES = new HashSet<String>(asList(
+            THREAD_COUNT_PROPERTY_NAME,
+            METRONOME_INTERVAL_PROPERTY_NAME,
+            METRONOME_TYPE_PROPERTY_NAME
+    ));
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
 
@@ -84,7 +102,10 @@ public class TestContainer {
     private final TestContext testContext;
     private final Object testClassInstance;
     private final Class testClassType;
+
     private final int runWithWorkerThreadCount;
+    private final int runWithWorkerMetronomeInterval;
+    private final MetronomeType runWithWorkerMetronomeType;
 
     private boolean runWithWorker;
     private Object[] setupArguments;
@@ -93,14 +114,22 @@ public class TestContainer {
     private volatile boolean isRunning;
 
     public TestContainer(TestContext testContext, TestCase testCase) {
-        this(testContext, getTestClassInstance(testCase), getThreadCount(testCase));
+        this(testContext, getTestClassInstance(testCase), getThreadCount(testCase),
+                getMetronomeIntervalProperty(testCase), getMetronomeTypeProperty(testCase));
     }
 
     public TestContainer(TestContext testContext, Object testClassInstance) {
-        this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT);
+        this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT,
+                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE);
     }
 
     public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount) {
+        this(testContext, testClassInstance, runWithWorkerThreadCount,
+                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE);
+    }
+
+    public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount,
+                         int runWithWorkerMetronomeInterval, MetronomeType runWithWorkerMetronomeType) {
         if (testContext == null) {
             throw new NullPointerException("testContext cannot be null!");
         }
@@ -111,7 +140,10 @@ public class TestContainer {
         this.testContext = testContext;
         this.testClassInstance = testClassInstance;
         this.testClassType = testClassInstance.getClass();
+
         this.runWithWorkerThreadCount = runWithWorkerThreadCount;
+        this.runWithWorkerMetronomeInterval = runWithWorkerMetronomeInterval;
+        this.runWithWorkerMetronomeType = runWithWorkerMetronomeType;
 
         injectDependencies();
         initTestMethods();
@@ -270,9 +302,13 @@ public class TestContainer {
                     injectMap.put(field, testContext.getTargetInstance());
                 } else if (field.isAnnotationPresent(InjectProbe.class)) {
                     assertFieldType(fieldType, Probe.class, InjectProbe.class);
-                    String probeName = getProbeName(field);
-                    Probe probe = getOrCreateProbe(probeName, isThroughputProbe(field));
+                    Probe probe = getOrCreateProbe(getProbeName(field), isThroughputProbe(field));
                     injectMap.put(field, probe);
+                } else if (field.isAnnotationPresent(InjectMetronome.class)) {
+                    assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
+                    int intervalMillis = getMetronomeIntervalMillis(field, runWithWorkerMetronomeInterval);
+                    MetronomeType type = getMetronomeType(field, runWithWorkerMetronomeType);
+                    injectMap.put(field, withFixedIntervalMs(intervalMillis, type));
                 }
             }
             classType = classType.getSuperclass();
@@ -335,13 +371,23 @@ public class TestContainer {
         } catch (Exception e) {
             throw new IllegalTestException("Could not create instance of " + classname, e);
         }
-        bindProperties(testObject, testCase, TestContainer.OPTIONAL_TEST_PROPERTIES);
+        bindProperties(testObject, testCase, OPTIONAL_TEST_PROPERTIES);
         return testObject;
     }
 
     private static int getThreadCount(TestCase testCase) {
-        String threadCountProperty = getPropertyValue(testCase, THREAD_COUNT_PROPERTY_NAME);
-        return (threadCountProperty == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(threadCountProperty));
+        String propertyValue = getPropertyValue(testCase, THREAD_COUNT_PROPERTY_NAME);
+        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(propertyValue));
+    }
+
+    private static int getMetronomeIntervalProperty(TestCase testCase) {
+        String propertyValue = getPropertyValue(testCase, METRONOME_INTERVAL_PROPERTY_NAME);
+        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL : parseInt(propertyValue));
+    }
+
+    private static MetronomeType getMetronomeTypeProperty(TestCase testCase) {
+        String propertyValue = getPropertyValue(testCase, METRONOME_TYPE_PROPERTY_NAME);
+        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE : MetronomeType.valueOf(propertyValue));
     }
 
     private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {

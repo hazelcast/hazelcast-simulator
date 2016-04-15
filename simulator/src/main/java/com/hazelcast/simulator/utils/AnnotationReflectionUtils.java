@@ -15,7 +15,9 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
+import com.hazelcast.simulator.worker.metronome.MetronomeType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -24,6 +26,7 @@ import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 import static java.lang.String.format;
 
 public final class AnnotationReflectionUtils {
@@ -55,6 +58,30 @@ public final class AnnotationReflectionUtils {
             return probeAnnotation.useForThroughput();
         }
         return false;
+    }
+
+    public static int getMetronomeIntervalMillis(Field field, int defaultValue) {
+        if (field == null) {
+            return defaultValue;
+        }
+
+        InjectMetronome annotation = field.getAnnotation(InjectMetronome.class);
+        if (annotation != null && annotation.intervalMillis() > 0) {
+            return annotation.intervalMillis();
+        }
+        return defaultValue;
+    }
+
+    public static MetronomeType getMetronomeType(Field field, MetronomeType defaultValue) {
+        if (field == null) {
+            return defaultValue;
+        }
+
+        InjectMetronome annotation = field.getAnnotation(InjectMetronome.class);
+        if (annotation != null && annotation.type() != NOP) {
+            return annotation.type();
+        }
+        return defaultValue;
     }
 
     /**

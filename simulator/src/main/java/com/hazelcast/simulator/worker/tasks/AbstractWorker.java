@@ -19,8 +19,10 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
+import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
@@ -48,6 +50,8 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     private TestContext testContext;
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
     private Probe workerProbe;
+    @InjectMetronome
+    private Metronome workerMetronome;
 
     private long iteration;
     private boolean isWorkerStopped;
@@ -68,6 +72,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         try {
             beforeRun();
             while ((!testContext.isStopped() && !isWorkerStopped)) {
+                workerMetronome.waitForNext();
                 doRun();
             }
             afterRun();
@@ -198,5 +203,9 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
 
     Probe getWorkerProbe() {
         return workerProbe;
+    }
+
+    protected Metronome getWorkerMetronome() {
+        return workerMetronome;
     }
 }

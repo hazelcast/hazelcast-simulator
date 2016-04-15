@@ -15,7 +15,10 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
@@ -45,5 +48,15 @@ final class SleepingMetronome implements Metronome {
         }
 
         sleepNanos(intervalNanos);
+    }
+
+    @Override
+    public long getInterval() {
+        return TimeUnit.NANOSECONDS.toMillis(intervalNanos);
+    }
+
+    @Override
+    public MetronomeType getType() {
+        return SLEEPING;
     }
 }
