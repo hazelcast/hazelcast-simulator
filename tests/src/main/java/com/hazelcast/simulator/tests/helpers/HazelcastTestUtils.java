@@ -35,6 +35,7 @@ import com.hazelcast.map.impl.proxy.MapProxyImpl;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.impl.NodeEngineImpl;
+import com.hazelcast.spi.impl.operationservice.InternalOperationService;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -171,7 +172,7 @@ public final class HazelcastTestUtils {
         @Override
         public Long call() throws Exception {
             try {
-                OperationService operationService = HazelcastTestUtils.getOperationService(hz);
+                InternalOperationService operationService = (InternalOperationService) HazelcastTestUtils.getOperationService(hz);
                 return operationService.getExecutedOperationCount();
             } catch (NoSuchMethodError e) {
                 LOGGER.warning(e);

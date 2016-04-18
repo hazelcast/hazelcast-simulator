@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.nio.Packet.HEADER_RESPONSE;
+import static com.hazelcast.nio.Packet.FLAG_RESPONSE;
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
@@ -250,7 +250,7 @@ public class NetworkTest {
             checkPayloadSize(packet);
             checkPayloadContent(packet);
 
-            if (packet.isHeaderSet(HEADER_RESPONSE)) {
+            if (packet.isFlagSet(FLAG_RESPONSE)) {
                 handleResponse(packet);
             } else {
                 handleRequest(packet);
@@ -266,7 +266,7 @@ public class NetworkTest {
                 addHeadTailMarkers(responsePayload);
             }
             Packet response = new Packet(responsePayload, packet.getPartitionId());
-            response.setHeader(HEADER_RESPONSE);
+            response.setFlag(FLAG_RESPONSE);
             packet.getConn().write(response);
         }
 
@@ -312,7 +312,7 @@ public class NetworkTest {
             int foundPayloadSize = payload == null ? 0 : payload.length;
             int expectedPayloadSize;
 
-            if (packet.isHeaderSet(HEADER_RESPONSE) && !returnPayload) {
+            if (packet.isFlagSet(FLAG_RESPONSE) && !returnPayload) {
                 expectedPayloadSize = 0;
             } else {
                 expectedPayloadSize = payloadSize;
