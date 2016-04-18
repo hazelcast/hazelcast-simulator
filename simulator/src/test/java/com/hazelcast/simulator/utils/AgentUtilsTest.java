@@ -12,6 +12,7 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
@@ -21,11 +22,13 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class AgentUtilsTest {
@@ -70,6 +73,38 @@ public class AgentUtilsTest {
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(AgentUtils.class);
+    }
+
+    @Test
+    public void testCheckInstallation_isStatic_whenInstallationIsOkay() {
+        setCloudProvider(PROVIDER_STATIC);
+
+        StringBuilder result = new StringBuilder("Warning: foobar SIM-OK");
+        when(bash.ssh(eq("172.16.16.1"), anyString())).thenReturn(result);
+
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+
+        verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent"));
+        verifyNoMoreInteractions(bash);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testCheckInstallation_isStatic_whenInstallationIsNotOkay() {
+        setCloudProvider(PROVIDER_STATIC);
+
+        StringBuilder result = new StringBuilder("Warning: foobar SIM-NOK");
+        when(bash.ssh(eq("172.16.16.1"), anyString())).thenReturn(result);
+
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+    }
+
+    @Test
+    public void testCheckInstallation_isLocal() {
+        setCloudProvider(PROVIDER_LOCAL);
+
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+
+        verifyZeroInteractions(bash);
     }
 
     @Test

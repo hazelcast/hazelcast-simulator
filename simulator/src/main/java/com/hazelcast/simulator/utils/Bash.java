@@ -33,17 +33,17 @@ public class Bash {
         this.user = simulatorProperties.getUser();
     }
 
-    public void execute(String command) {
-        NativeUtils.execute(command);
+    public StringBuilder execute(String command) {
+        return NativeUtils.execute(command);
     }
 
-    public void executeQuiet(String command) {
-        execute(command + " || true");
+    public StringBuilder executeQuiet(String command) {
+        return execute(command + " || true");
     }
 
-    public void ssh(String ip, String command) {
+    public StringBuilder ssh(String ip, String command) {
         String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
-        execute(sshCommand);
+        return execute(sshCommand);
     }
 
     public void sshQuiet(String ip, String command) {

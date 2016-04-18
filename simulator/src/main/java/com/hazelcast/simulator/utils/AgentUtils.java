@@ -38,29 +38,60 @@ public final class AgentUtils {
     private AgentUtils() {
     }
 
-    public static void startAgents(Logger logger, Bash bash, SimulatorProperties simulatorProperties,
-                                   ComponentRegistry componentRegistry) {
-        logger.info(format("Starting %d Agents...", componentRegistry.agentCount()));
-        ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
-        int agentPort = simulatorProperties.getAgentPort();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new StartRunnable(logger, bash, simulatorProperties, agentData, agentPort));
+    public static void checkInstallation(Bash bash, SimulatorProperties properties, ComponentRegistry registry) {
+        if (isLocal(properties)) {
+            return;
+        }
+        ThreadSpawner spawner = new ThreadSpawner("checkInstallation", true);
+        for (AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new CheckInstallationRunnable(agentData, bash));
         }
         spawner.awaitCompletion();
-        logger.info(format("Successfully started %d Agents", componentRegistry.agentCount()));
     }
 
-    public static void stopAgents(Logger logger, Bash bash, SimulatorProperties simulatorProperties,
-                                  ComponentRegistry componentRegistry) {
-        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(simulatorProperties);
-
-        logger.info(format("Stopping %d Agents...", componentRegistry.agentCount()));
-        ThreadSpawner spawner = new ThreadSpawner("stopAgents", true);
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new StopRunnable(logger, bash, simulatorProperties, agentData, startHarakiriMonitorCommand));
+    public static void startAgents(Logger logger, Bash bash, SimulatorProperties properties, ComponentRegistry registry) {
+        logger.info(format("Starting %d Agents...", registry.agentCount()));
+        ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
+        int agentPort = properties.getAgentPort();
+        for (AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new StartRunnable(logger, bash, properties, agentData, agentPort));
         }
         spawner.awaitCompletion();
-        logger.info(format("Successfully stopped %d Agents", componentRegistry.agentCount()));
+        logger.info(format("Successfully started %d Agents", registry.agentCount()));
+    }
+
+    public static void stopAgents(Logger logger, Bash bash, SimulatorProperties properties, ComponentRegistry registry) {
+        String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
+
+        logger.info(format("Stopping %d Agents...", registry.agentCount()));
+        ThreadSpawner spawner = new ThreadSpawner("stopAgents", true);
+        for (AgentData agentData : registry.getAgents()) {
+            spawner.spawn(new StopRunnable(logger, bash, properties, agentData, startHarakiriMonitorCommand));
+        }
+        spawner.awaitCompletion();
+        logger.info(format("Successfully stopped %d Agents", registry.agentCount()));
+    }
+
+    private static class CheckInstallationRunnable implements Runnable {
+
+        private final AgentData agentData;
+        private final Bash bash;
+
+        CheckInstallationRunnable(AgentData agentData, Bash bash) {
+            this.agentData = agentData;
+            this.bash = bash;
+        }
+
+        @Override
+        public void run() {
+            String ip = agentData.getPublicAddress();
+            String result = bash.ssh(ip, format("[[ -f hazelcast-simulator-%s/bin/agent ]] && echo SIM-OK || echo SIM-NOK",
+                    SIMULATOR_VERSION)).toString().trim();
+            if (result.endsWith("SIM-NOK")) {
+                throw new CommandLineExitException(format(
+                        "Simulator is not installed correctly on %s. Please run provisioner --install to fix this.", ip));
+            }
+        }
     }
 
     private static final class StartRunnable implements Runnable {
@@ -74,23 +105,22 @@ public final class AgentUtils {
         private final String optionalParameters;
         private final String ec2Parameters;
 
-        private StartRunnable(Logger logger, Bash bash, SimulatorProperties simulatorProperties, AgentData agentData,
-                              int agentPort) {
+        private StartRunnable(Logger logger, Bash bash, SimulatorProperties properties, AgentData agentData, int agentPort) {
             this.logger = logger;
             this.bash = bash;
-            this.isLocal = isLocal(simulatorProperties);
+            this.isLocal = isLocal(properties);
 
             this.ip = agentData.getPublicAddress();
             this.mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s",
                     agentData.getAddressIndex(), ip, agentPort);
             this.optionalParameters = format(" --threadPoolSize %d --workerLastSeenTimeoutSeconds %d",
-                    simulatorProperties.getAgentThreadPoolSize(),
-                    simulatorProperties.getWorkerLastSeenTimeoutSeconds());
-            if (isEC2(simulatorProperties)) {
+                    properties.getAgentThreadPoolSize(),
+                    properties.getWorkerLastSeenTimeoutSeconds());
+            if (isEC2(properties)) {
                 this.ec2Parameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
-                        simulatorProperties.getCloudProvider(),
-                        simulatorProperties.getCloudIdentity(),
-                        simulatorProperties.getCloudCredential());
+                        properties.getCloudProvider(),
+                        properties.getCloudIdentity(),
+                        properties.getCloudCredential());
             } else {
                 this.ec2Parameters = "";
             }
@@ -134,11 +164,11 @@ public final class AgentUtils {
         private final String ip;
         private final String startHarakiriMonitorCommand;
 
-        private StopRunnable(Logger logger, Bash bash, SimulatorProperties simulatorProperties, AgentData agentData,
+        private StopRunnable(Logger logger, Bash bash, SimulatorProperties properties, AgentData agentData,
                              String startHarakiriMonitorCommand) {
             this.logger = logger;
             this.bash = bash;
-            this.isLocal = isLocal(simulatorProperties);
+            this.isLocal = isLocal(properties);
 
             this.ip = agentData.getPublicAddress();
             this.startHarakiriMonitorCommand = startHarakiriMonitorCommand;

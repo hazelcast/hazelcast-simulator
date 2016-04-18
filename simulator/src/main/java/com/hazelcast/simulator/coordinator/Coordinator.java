@@ -46,6 +46,7 @@ import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
 import static com.hazelcast.simulator.test.TestPhase.getTestPhaseSyncMap;
+import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
@@ -171,6 +172,8 @@ public final class Coordinator {
     }
 
     void run() {
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+
         try {
             uploadFiles();
 
