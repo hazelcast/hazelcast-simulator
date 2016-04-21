@@ -19,16 +19,17 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.core.IMap;
 import com.hazelcast.instance.BuildInfo;
 import com.hazelcast.instance.BuildInfoProvider;
-import com.hazelcast.simulator.utils.EmptyStatement;
 
 import javax.cache.Cache;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
+import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCURRENCY_LEVEL;
 
 /**
  * Creates {@link Streamer} instances for {@link IMap} and {@link Cache}.
- *
+ * <p>
  * If possible an asynchronous variant is created, otherwise it will be synchronous.
  */
 public final class StreamerFactory {
@@ -44,7 +45,7 @@ public final class StreamerFactory {
             }
         } catch (NoClassDefFoundError e) {
             // it's Hazelcast 3.2 or older -> we have to use sync API
-            EmptyStatement.ignore(e);
+            ignore(e);
         } finally {
             CREATE_ASYNC = new AtomicBoolean(createAsync);
         }
@@ -54,29 +55,23 @@ public final class StreamerFactory {
     }
 
     public static <K, V> Streamer<K, V> getInstance(IMap<K, V> map) {
-        if (CREATE_ASYNC.get()) {
-            return new AsyncMapStreamer<K, V>(map);
-        }
-        return new SyncMapStreamer<K, V>(map);
+        return getInstance(map, DEFAULT_CONCURRENCY_LEVEL);
     }
 
     public static <K, V> Streamer<K, V> getInstance(IMap<K, V> map, int concurrencyLevel) {
         if (CREATE_ASYNC.get()) {
-            return new AsyncMapStreamer<K, V>(concurrencyLevel,map);
+            return new AsyncMapStreamer<K, V>(concurrencyLevel, map);
         }
         return new SyncMapStreamer<K, V>(map);
     }
 
     public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache) {
-        if (CREATE_ASYNC.get() && cache instanceof ICache) {
-            return new AsyncCacheStreamer<K, V>((ICache<K, V>) cache);
-        }
-        return new SyncCacheStreamer<K, V>(cache);
+        return getInstance(cache, DEFAULT_CONCURRENCY_LEVEL);
     }
 
-    public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache ,int concurrencyLevel) {
+    public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache, int concurrencyLevel) {
         if (CREATE_ASYNC.get() && cache instanceof ICache) {
-            return new AsyncCacheStreamer<K, V>(concurrencyLevel,(ICache<K, V>) cache);
+            return new AsyncCacheStreamer<K, V>(concurrencyLevel, (ICache<K, V>) cache);
         }
         return new SyncCacheStreamer<K, V>(cache);
     }

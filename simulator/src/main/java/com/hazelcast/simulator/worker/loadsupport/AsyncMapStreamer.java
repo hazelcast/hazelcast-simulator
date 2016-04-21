@@ -28,12 +28,8 @@ final class AsyncMapStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
 
     private final IMap<K, V> map;
 
-    public AsyncMapStreamer(int concurrencyLevel, IMap<K, V> map) {
+    AsyncMapStreamer(int concurrencyLevel, IMap<K, V> map) {
         super(concurrencyLevel);
-        this.map = map;
-    }
-
-    AsyncMapStreamer(IMap<K, V> map) {
         this.map = map;
     }
 

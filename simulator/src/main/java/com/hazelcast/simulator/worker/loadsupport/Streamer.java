@@ -41,6 +41,11 @@ package com.hazelcast.simulator.worker.loadsupport;
 public interface Streamer<K, V> {
 
     /**
+     * Default concurrency level for asynchronous {@link Streamer} instances.
+     */
+    int DEFAULT_CONCURRENCY_LEVEL = 1000;
+
+    /**
      * Push key/value pair into a storage. It's a non-blocking operation.
      * You have to call {@link #await()} to make sure the entry has been created successfully.
      *

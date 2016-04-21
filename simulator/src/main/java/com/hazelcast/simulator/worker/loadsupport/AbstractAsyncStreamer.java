@@ -32,9 +32,8 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
     private static final ILogger LOGGER = Logger.getLogger(AbstractAsyncStreamer.class);
 
-    private static final int DEFAULT_CONCURRENCY_LEVEL = 1000;
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
-    private static final int MAXIMUM_LOGGING_RATE_MS = 5000;
+    private static final int MAXIMUM_LOGGING_RATE_MILLIS = 5000;
 
     private final int concurrencyLevel;
     private final Semaphore semaphore;
@@ -45,15 +44,11 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
     private final AtomicLong counter = new AtomicLong();
 
-    AbstractAsyncStreamer() {
-        this(DEFAULT_CONCURRENCY_LEVEL);
-    }
-
     AbstractAsyncStreamer(int concurrencyLevel) {
         this.concurrencyLevel = concurrencyLevel;
-        this.semaphore = new Semaphore(DEFAULT_CONCURRENCY_LEVEL);
+        this.semaphore = new Semaphore(concurrencyLevel);
         this.callback = new StreamerExecutionCallback();
-        this.throttlingLogger = ThrottlingLogger.newLogger(LOGGER, MAXIMUM_LOGGING_RATE_MS);
+        this.throttlingLogger = ThrottlingLogger.newLogger(LOGGER, MAXIMUM_LOGGING_RATE_MILLIS);
     }
 
     abstract ICompletableFuture storeAsync(K key, V value);
