@@ -60,9 +60,23 @@ public final class StreamerFactory {
         return new SyncMapStreamer<K, V>(map);
     }
 
+    public static <K, V> Streamer<K, V> getInstance(IMap<K, V> map, int concurrencyLevel) {
+        if (CREATE_ASYNC.get()) {
+            return new AsyncMapStreamer<K, V>(concurrencyLevel,map);
+        }
+        return new SyncMapStreamer<K, V>(map);
+    }
+
     public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache) {
         if (CREATE_ASYNC.get() && cache instanceof ICache) {
             return new AsyncCacheStreamer<K, V>((ICache<K, V>) cache);
+        }
+        return new SyncCacheStreamer<K, V>(cache);
+    }
+
+    public static <K, V> Streamer<K, V> getInstance(Cache<K, V> cache ,int concurrencyLevel) {
+        if (CREATE_ASYNC.get() && cache instanceof ICache) {
+            return new AsyncCacheStreamer<K, V>(concurrencyLevel,(ICache<K, V>) cache);
         }
         return new SyncCacheStreamer<K, V>(cache);
     }

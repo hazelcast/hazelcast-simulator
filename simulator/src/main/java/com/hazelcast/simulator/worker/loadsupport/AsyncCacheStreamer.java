@@ -28,6 +28,11 @@ final class AsyncCacheStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
 
     private final ICache<K, V> cache;
 
+    public AsyncCacheStreamer(int concurrencyLevel, ICache<K, V> cache) {
+        super(concurrencyLevel);
+        this.cache = cache;
+    }
+
     AsyncCacheStreamer(ICache<K, V> cache) {
         this.cache = cache;
     }
