@@ -20,8 +20,8 @@ import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -52,11 +52,7 @@ public class AbstractAsyncWorkerTest {
     @After
     public void tearDown() {
         try {
-            for (int i = 1; i <= THREAD_COUNT; i++) {
-                deleteQuiet(i + ".exception");
-            }
-
-            ExceptionReporter.reset();
+            deleteExceptionLogs(THREAD_COUNT);
         } finally {
             test.executor.shutdown();
         }

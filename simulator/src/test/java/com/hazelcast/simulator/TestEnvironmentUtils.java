@@ -1,6 +1,7 @@
 package com.hazelcast.simulator;
 
 import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -147,5 +148,12 @@ public class TestEnvironmentUtils {
 
     public static File getPrivateKeyFile() {
         return privateKeyFile;
+    }
+
+    public static void deleteExceptionLogs(int number) {
+        for (int i = 1; i <= number; i++) {
+            deleteQuiet(i + ".exception");
+        }
+        ExceptionReporter.reset();
     }
 }

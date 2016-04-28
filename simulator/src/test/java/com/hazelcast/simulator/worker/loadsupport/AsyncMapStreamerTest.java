@@ -4,7 +4,6 @@ import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,8 +14,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -49,8 +48,7 @@ public class AsyncMapStreamerTest {
 
     @After
     public void tearDown() {
-        deleteQuiet("1.exception");
-        ExceptionReporter.reset();
+        deleteExceptionLogs(1);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)

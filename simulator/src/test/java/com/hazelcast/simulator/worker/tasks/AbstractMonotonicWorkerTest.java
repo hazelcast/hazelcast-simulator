@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -42,11 +42,7 @@ public class AbstractMonotonicWorkerTest {
 
     @After
     public void tearDown() {
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            deleteQuiet(i + ".exception");
-        }
-
-        ExceptionReporter.reset();
+        deleteExceptionLogs(THREAD_COUNT);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
