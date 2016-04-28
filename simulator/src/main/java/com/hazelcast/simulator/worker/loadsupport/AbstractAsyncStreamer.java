@@ -45,8 +45,12 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private final AtomicLong counter = new AtomicLong();
 
     AbstractAsyncStreamer(int concurrencyLevel) {
+        this(concurrencyLevel, new Semaphore(concurrencyLevel));
+    }
+
+    AbstractAsyncStreamer(int concurrencyLevel, Semaphore semaphore) {
         this.concurrencyLevel = concurrencyLevel;
-        this.semaphore = new Semaphore(concurrencyLevel);
+        this.semaphore = semaphore;
         this.callback = new StreamerExecutionCallback();
         this.throttlingLogger = ThrottlingLogger.newLogger(LOGGER, MAXIMUM_LOGGING_RATE_MILLIS);
     }

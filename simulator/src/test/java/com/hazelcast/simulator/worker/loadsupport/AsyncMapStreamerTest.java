@@ -3,6 +3,8 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,12 +12,15 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -45,9 +50,10 @@ public class AsyncMapStreamerTest {
     @After
     public void tearDown() {
         deleteQuiet("1.exception");
+        ExceptionReporter.reset();
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testPushEntry() {
         when(map.putAsync(anyInt(), anyString())).thenReturn(future);
 
@@ -133,5 +139,25 @@ public class AsyncMapStreamerTest {
             verify(map).putAsync(1, "foobar");
             verifyNoMoreInteractions(map);
         }
+    }
+
+    @Test(timeout = DEFAULT_TIMEOUT, expected = CommandLineExitException.class)
+    public void testPushEntry_withInterruptedSemaphore() throws Exception {
+        Semaphore semaphore = mock(Semaphore.class);
+        when(semaphore.tryAcquire(anyInt(), anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
+
+        streamer = new AsyncMapStreamer<Integer, String>(1, map, semaphore);
+
+        streamer.pushEntry(1, "test");
+    }
+
+    @Test(timeout = DEFAULT_TIMEOUT, expected = IllegalStateException.class)
+    public void testPushEntry_withSemaphoreTimeout() throws Exception {
+        Semaphore semaphore = mock(Semaphore.class);
+        when(semaphore.tryAcquire(anyInt(), anyLong(), any(TimeUnit.class))).thenReturn(false);
+
+        streamer = new AsyncMapStreamer<Integer, String>(1, map, semaphore);
+
+        streamer.pushEntry(1, "test");
     }
 }

@@ -18,6 +18,8 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Asynchronous implementation of {@link Streamer} for {@link IMap}.
  *
@@ -30,6 +32,11 @@ final class AsyncMapStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
 
     AsyncMapStreamer(int concurrencyLevel, IMap<K, V> map) {
         super(concurrencyLevel);
+        this.map = map;
+    }
+
+    AsyncMapStreamer(int concurrencyLevel, IMap<K, V> map, Semaphore semaphore) {
+        super(concurrencyLevel, semaphore);
         this.map = map;
     }
 

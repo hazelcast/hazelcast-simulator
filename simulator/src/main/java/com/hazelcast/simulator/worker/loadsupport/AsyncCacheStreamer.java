@@ -18,6 +18,8 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.ICompletableFuture;
 
+import java.util.concurrent.Semaphore;
+
 /**
  * Asynchronous implementation of {@link Streamer} for {@link ICache}.
  *
@@ -30,6 +32,11 @@ final class AsyncCacheStreamer<K, V> extends AbstractAsyncStreamer<K, V> {
 
     AsyncCacheStreamer(int concurrencyLevel, ICache<K, V> cache) {
         super(concurrencyLevel);
+        this.cache = cache;
+    }
+
+    AsyncCacheStreamer(int concurrencyLevel, ICache<K, V> cache, Semaphore semaphore) {
+        super(concurrencyLevel, semaphore);
         this.cache = cache;
     }
 

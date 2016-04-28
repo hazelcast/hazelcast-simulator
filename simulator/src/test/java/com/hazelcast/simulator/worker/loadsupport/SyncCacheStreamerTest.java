@@ -16,6 +16,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class SyncCacheStreamerTest {
 
+    private static final int DEFAULT_TIMEOUT = 30000;
+
     @SuppressWarnings("unchecked")
     private final Cache<Integer, String> cache = mock(Cache.class);
 
@@ -27,7 +29,7 @@ public class SyncCacheStreamerTest {
         streamer = StreamerFactory.getInstance(cache);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testPushEntry() {
         streamer.pushEntry(15, "value");
 
@@ -35,7 +37,7 @@ public class SyncCacheStreamerTest {
         verifyNoMoreInteractions(cache);
     }
 
-    @Test(timeout = 1000)
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testPushEntry_withException() {
         doThrow(new IllegalArgumentException()).when(cache).put(anyInt(), anyString());
 

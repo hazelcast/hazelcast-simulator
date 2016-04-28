@@ -15,6 +15,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class SyncMapStreamerTest {
 
+    private static final int DEFAULT_TIMEOUT = 30000;
+
     @SuppressWarnings("unchecked")
     private final IMap<Integer, String> map = mock(IMap.class);
 
@@ -26,7 +28,7 @@ public class SyncMapStreamerTest {
         streamer = StreamerFactory.getInstance(map);
     }
 
-    @Test
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testPushEntry() {
         streamer.pushEntry(15, "value");
 
@@ -34,7 +36,7 @@ public class SyncMapStreamerTest {
         verifyNoMoreInteractions(map);
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = DEFAULT_TIMEOUT)
     public void testPushEntry_withException() {
         doThrow(new IllegalArgumentException()).when(map).set(anyInt(), anyString());
 
