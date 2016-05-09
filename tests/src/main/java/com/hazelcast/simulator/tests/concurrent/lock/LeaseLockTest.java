@@ -39,6 +39,7 @@ public class LeaseLockTest {
     public int lockCount = 500;
     public int maxLeaseTimeMillis = 100;
     public int maxTryTimeMillis = 100;
+    public boolean allowZeroMillisRemainingLeaseLockTime = false;
 
     private HazelcastInstance targetInstance;
 
@@ -49,15 +50,18 @@ public class LeaseLockTest {
 
     @Verify
     public void verify() {
-        sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
-
         for (int i = 0; i < lockCount; i++) {
             ILock lock = targetInstance.getLock(basename + i);
 
             boolean isLocked = lock.isLocked();
             long remainingLeaseTime = lock.getRemainingLeaseTime();
             if (isLocked) {
-                fail(format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime));
+                String message = format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime);
+                if (allowZeroMillisRemainingLeaseLockTime && remainingLeaseTime == 0) {
+                    LOGGER.warning(message);
+                } else {
+                    fail(message);
+                }
             }
             if (remainingLeaseTime > 0) {
                 fail(format("%s has remainingLeaseTime: %d ms", lock, remainingLeaseTime));
@@ -88,6 +92,11 @@ public class LeaseLockTest {
                     LOGGER.info("tryLock() got exception: " + e.getMessage());
                 }
             }
+        }
+
+        @Override
+        protected void afterRun() throws Exception {
+            sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
         }
     }
 }
