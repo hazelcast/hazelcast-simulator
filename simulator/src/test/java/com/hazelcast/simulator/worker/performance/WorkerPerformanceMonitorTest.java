@@ -5,6 +5,7 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
@@ -16,12 +17,12 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.verification.VerificationWithTimeout;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -29,8 +30,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -38,12 +40,13 @@ import static org.mockito.Mockito.when;
 public class WorkerPerformanceMonitorTest {
 
     private static final String TEST_NAME = "WorkerPerformanceMonitorTest";
-    private static final VerificationWithTimeout VERIFY_TIMEOUT = timeout(TimeUnit.SECONDS.toMillis(1));
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
     private ServerConnector serverConnector;
     private WorkerPerformanceMonitor performanceMonitor;
+
+    private boolean shutdownPerformanceMonitor = true;
 
     @Before
     public void setUp() {
@@ -57,7 +60,9 @@ public class WorkerPerformanceMonitorTest {
 
     @After
     public void tearDown() {
-        performanceMonitor.shutdown();
+        if (shutdownPerformanceMonitor) {
+            performanceMonitor.shutdown();
+        }
     }
 
     @AfterClass
@@ -99,6 +104,8 @@ public class WorkerPerformanceMonitorTest {
 
     @Test
     public void test_testWithProbe_running() throws Exception {
+        shutdownPerformanceMonitor = false;
+
         assertTrue(performanceMonitor.start());
         sleepMillis(300);
 
@@ -118,11 +125,14 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
+        performanceMonitor.shutdown();
         verifyServerConnector();
     }
 
     @Test
     public void test_testWithProbe_runningWithDelay() {
+        shutdownPerformanceMonitor = false;
+
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test, 200);
 
@@ -134,6 +144,7 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
+        performanceMonitor.shutdown();
         verifyServerConnector();
     }
 
@@ -157,8 +168,8 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void verifyServerConnector() {
-        verify(serverConnector, VERIFY_TIMEOUT.atLeastOnce()).submit(eq(SimulatorAddress.COORDINATOR),
-                any(PerformanceStateOperation.class));
+        verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
+        verify(serverConnector, atMost(1)).write(eq(COORDINATOR), any(TestHistogramOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 
