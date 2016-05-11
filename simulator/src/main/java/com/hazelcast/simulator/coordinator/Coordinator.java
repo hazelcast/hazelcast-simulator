@@ -173,37 +173,39 @@ public final class Coordinator {
     }
 
     void run() {
-        checkInstallation(bash, simulatorProperties, componentRegistry);
-
         try {
+            checkInstallation(bash, simulatorProperties, componentRegistry);
             uploadFiles();
 
-            startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-            startCoordinatorConnector();
-            startRemoteClient();
-            startWorkers();
-
-            runTestSuite();
-        } catch (CommandLineExitException e) {
-            for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
-                sleepSeconds(1);
-            }
-            throw e;
-        } finally {
             try {
-                failureContainer.logFailureInfo();
+                startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+                startCoordinatorConnector();
+                startRemoteClient();
+                startWorkers();
+
+                runTestSuite();
+            } catch (CommandLineExitException e) {
+                for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
+                    sleepSeconds(1);
+                }
+                throw e;
             } finally {
-                if (coordinatorConnector != null) {
-                    echo("Shutdown of ClientConnector...");
-                    coordinatorConnector.shutdown();
+                try {
+                    failureContainer.logFailureInfo();
+                } finally {
+                    if (coordinatorConnector != null) {
+                        echo("Shutdown of ClientConnector...");
+                        coordinatorConnector.shutdown();
+                    }
+                    stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 }
-                if (hazelcastJARs != null) {
-                    hazelcastJARs.shutdown();
-                }
-                stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-                moveLogFiles();
-                OperationTypeCounter.printStatistics();
             }
+        } finally {
+            if (hazelcastJARs != null) {
+                hazelcastJARs.shutdown();
+            }
+            moveLogFiles();
+            OperationTypeCounter.printStatistics();
         }
     }
 
