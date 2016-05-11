@@ -36,19 +36,13 @@ public final class VersionUtils {
      *
      * @param firstVersionString  a string of ordinal numbers separated by decimal points.
      * @param secondVersionString a string of ordinal numbers separated by decimal points.
-     * @return The result is a negative integer if str1 is _numerically_ less than str2.
-     * The result is a positive integer if str1 is _numerically_ greater than str2.
+     * @return The result is a negative integer if firstVersionString is _numerically_ less than secondVersionString.
+     * The result is a positive integer if firstVersionString is _numerically_ greater than secondVersionString.
      * The result is zero if the strings are _numerically_ equal.
      */
     public static int versionCompare(String firstVersionString, String secondVersionString) {
-        if (firstVersionString.indexOf('-') != -1) {
-            firstVersionString = firstVersionString.substring(0, firstVersionString.indexOf('-'));
-        }
-        if (secondVersionString.indexOf('-') != -1) {
-            secondVersionString = secondVersionString.substring(0, secondVersionString.indexOf('-'));
-        }
-        String[] firstVersion = firstVersionString.split("\\.");
-        String[] secondVersion = secondVersionString.split("\\.");
+        String[] firstVersion = parseVersionString(firstVersionString);
+        String[] secondVersion = parseVersionString(secondVersionString);
 
         int i = 0;
         // set index to first non-equal ordinal or length of shortest version string
@@ -64,5 +58,12 @@ public final class VersionUtils {
             // e.g. "1.2.3" = "1.2.3" or "1.2.3" < "1.2.3.4"
             return Integer.signum(firstVersion.length - secondVersion.length);
         }
+    }
+
+    public static String[] parseVersionString(String versionString) {
+        if (versionString.indexOf('-') != -1) {
+            versionString = versionString.substring(0, versionString.indexOf('-'));
+        }
+        return versionString.split("\\.");
     }
 }

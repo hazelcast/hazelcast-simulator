@@ -17,14 +17,11 @@ package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.IMap;
-import com.hazelcast.instance.BuildInfo;
-import com.hazelcast.instance.BuildInfoProvider;
 
 import javax.cache.Cache;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
-import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
+import static com.hazelcast.simulator.utils.BuildInfoUtils.isMinVersion;
 import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCURRENCY_LEVEL;
 
 /**
@@ -34,22 +31,7 @@ import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCUR
  */
 public final class StreamerFactory {
 
-    private static final AtomicBoolean CREATE_ASYNC;
-
-    static {
-        boolean createAsync = false;
-        try {
-            BuildInfo buildInfo = BuildInfoProvider.getBuildInfo();
-            if (isMinVersion("3.5", buildInfo.getVersion())) {
-                createAsync = true;
-            }
-        } catch (NoClassDefFoundError e) {
-            // it's Hazelcast 3.2 or older -> we have to use sync API
-            ignore(e);
-        } finally {
-            CREATE_ASYNC = new AtomicBoolean(createAsync);
-        }
-    }
+    private static final AtomicBoolean CREATE_ASYNC = new AtomicBoolean(isMinVersion("3.5"));
 
     private StreamerFactory() {
     }
