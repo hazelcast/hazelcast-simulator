@@ -283,12 +283,14 @@ public class WorkerJvmLauncher {
         String hzVersionDirectory = directoryForVersionSpec(workerJvmSettings.getHazelcastVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
-        return CLASSPATH
-                + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
+
+        // we have to reverse the classpath to monkey patch version specific classes
+        return new File(agent.getTestSuiteDir(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
-                + CLASSPATH_SEPARATOR + new File(agent.getTestSuiteDir(), "lib/*").getAbsolutePath();
+                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
+                + CLASSPATH_SEPARATOR + CLASSPATH;
     }
 
     private List<String> getJvmOptions() {
