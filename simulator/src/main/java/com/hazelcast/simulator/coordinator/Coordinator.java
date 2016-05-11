@@ -60,6 +60,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
+import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
 
 public final class Coordinator {
@@ -208,6 +209,9 @@ public final class Coordinator {
 
     void uploadFiles() {
         if (isLocal(simulatorProperties)) {
+            if (!simulatorProperties.getHazelcastVersionSpec().equals(OUT_OF_THE_BOX)) {
+                throw new CommandLineExitException("Local mode doesn't support custom Hazelcast versions!");
+            }
             return;
         }
         CoordinatorUploader uploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs,
