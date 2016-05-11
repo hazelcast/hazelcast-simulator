@@ -15,18 +15,12 @@
  */
 package com.hazelcast.simulator.tests.synthetic;
 
-import com.hazelcast.client.impl.HazelcastClientProxy;
-import com.hazelcast.client.proxy.PartitionServiceProxy;
-import com.hazelcast.client.spi.ClientInvocationService;
-import com.hazelcast.client.spi.ClientPartitionService;
-import com.hazelcast.client.spi.impl.ClientInvocation;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Partition;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.nio.Address;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -51,7 +45,6 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 
 /**
  * The SyntheticTest can be used to test features like back pressure.
@@ -113,10 +106,7 @@ public class SyntheticTest {
         private final List<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
         private final Random random = new Random();
 
-        private final boolean isClient;
         private final OperationService operationService;
-        private final ClientInvocationService clientInvocationService;
-        private final ClientPartitionService clientPartitionService;
 
         private int partitionIndex;
         private long iteration;
@@ -126,36 +116,14 @@ public class SyntheticTest {
                 throw new IllegalArgumentException("SyntheticTest doesn't support clients at the moment");
             }
 
-            isClient = isClient(targetInstance);
-            checkClientKeyLocality();
-
-            if (isClient) {
-                HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
-                PartitionServiceProxy partitionService
-                        = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
-
-                operationService = null;
-                clientInvocationService = hazelcastClientProxy.client.getInvocationService();
-                clientPartitionService = getFieldValue(partitionService, "partitionService");
-            } else {
-                operationService = HazelcastTestUtils.getOperationService(targetInstance);
-                clientInvocationService = null;
-                clientPartitionService = null;
-            }
+            operationService = HazelcastTestUtils.getOperationService(targetInstance);
 
             int[] keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
-            for (int key: keys) {
+            for (int key : keys) {
                 Partition partition = targetInstance.getPartitionService().getPartition(key);
                 partitionSequence.add(partition.getPartitionId());
             }
             Collections.shuffle(partitionSequence);
-        }
-
-        private void checkClientKeyLocality() {
-            if (isClient && keyLocality == KeyLocality.LOCAL) {
-                throw new IllegalStateException("The KeyLocality has been set to LOCAL, but the test is running on a client."
-                        + " This doesn't make sense as no keys are stored on clients.");
-            }
         }
 
         @Override
@@ -194,15 +162,6 @@ public class SyntheticTest {
 
         private ICompletableFuture<Object> invokeOnNextPartition() throws Exception {
             int partitionId = nextPartitionId();
-            if (isClient) {
-                // FIXME: we have to create an invocation instead of a request
-                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
-                request.setLocalPartitionId(partitionId);
-                ClientInvocation invocation = new ClientInvocation(null, null);
-                Address target = clientPartitionService.getPartitionOwner(partitionId);
-                // FIXME: the new invokeOnTarget is void, so we don't get a future here!
-                clientInvocationService.invokeOnTarget(invocation, target);
-            }
             SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
             return operationService.invokeOnPartition(serviceName, operation, partitionId);
         }

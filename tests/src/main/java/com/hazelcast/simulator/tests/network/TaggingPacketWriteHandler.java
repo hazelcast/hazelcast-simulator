@@ -20,7 +20,6 @@ import com.hazelcast.nio.tcp.WriteHandler;
 
 import java.nio.ByteBuffer;
 
-import static com.hazelcast.nio.Packet.HEADER_BIND;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addSequenceId;
 
 /**
@@ -40,7 +39,7 @@ class TaggingPacketWriteHandler implements WriteHandler<Packet> {
 
     @Override
     public boolean onWrite(Packet packet, ByteBuffer dst) throws Exception {
-        if (currentPacket == null && !packet.isHeaderSet(HEADER_BIND) && packet.dataSize() > 100) {
+        if (currentPacket == null && !packet.isFlagSet(Packet.FLAG_BIND) && packet.dataSize() > 100) {
             currentPacket = packet;
             addSequenceId(packet.toByteArray(), sequenceId);
             sequenceId++;
