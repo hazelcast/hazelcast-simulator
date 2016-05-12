@@ -21,6 +21,7 @@ import com.hazelcast.instance.BuildInfoProvider;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -129,10 +130,10 @@ public final class BuildInfoUtils {
 
             Attributes attributes = jar.getManifest().getMainAttributes();
             if (attributes != null) {
-                for (Object attributeKey : attributes.keySet()) {
-                    String key = attributeKey.toString();
+                for (Map.Entry<Object, Object> attributeEntry : attributes.entrySet()) {
+                    String key = attributeEntry.getKey().toString();
                     if (key.equals("Implementation-Version") || key.equals("Bundle-Version")) {
-                        return (String) attributes.get(attributeKey);
+                        return (String) attributeEntry.getValue();
                     }
                 }
             }
