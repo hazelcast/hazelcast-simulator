@@ -19,12 +19,15 @@ import com.hazelcast.instance.BuildInfo;
 import com.hazelcast.instance.BuildInfoProvider;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 import java.util.jar.Attributes;
-import java.util.jar.Attributes.Name;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.VersionUtils.parseVersionString;
 import static java.lang.String.format;
@@ -68,7 +71,7 @@ public final class BuildInfoUtils {
                 }
             }
         } catch (FileUtilsException ignored) {
-            EmptyStatement.ignore(ignored);
+            ignore(ignored);
         }
         return null;
     }
@@ -108,26 +111,37 @@ public final class BuildInfoUtils {
     }
 
     private static String getVersion(File jarFile) {
+        JarFile jar = null;
+        InputStream is = null;
         try {
-            JarFile jar = new JarFile(jarFile);
-            Manifest manifest = jar.getManifest();
+            jar = new JarFile(jarFile);
 
-            String versionNumber = null;
-            Attributes attributes = manifest.getMainAttributes();
+            JarEntry entry = jar.getJarEntry("hazelcast-runtime.properties");
+            if (entry != null) {
+                is = jar.getInputStream(entry);
+                Properties properties = new Properties();
+                properties.load(is);
+                String hazelcastVersion = properties.getProperty("hazelcast.version");
+                if (hazelcastVersion != null) {
+                    return hazelcastVersion;
+                }
+            }
+
+            Attributes attributes = jar.getManifest().getMainAttributes();
             if (attributes != null) {
                 for (Object attributeKey : attributes.keySet()) {
-                    Name key = (Name) attributeKey;
-                    String keyword = key.toString();
-                    if (keyword.equals("Implementation-Version") || keyword.equals("Bundle-Version")) {
-                        versionNumber = (String) attributes.get(key);
-                        break;
+                    String key = attributeKey.toString();
+                    if (key.equals("Implementation-Version") || key.equals("Bundle-Version")) {
+                        return (String) attributes.get(attributeKey);
                     }
                 }
             }
-            jar.close();
-            return versionNumber;
-        } catch (Exception ignored) {
-            return null;
+        } catch (Exception e) {
+            ignore(e);
+        } finally {
+            closeQuietly(is);
+            closeQuietly(jar);
         }
+        return null;
     }
 }

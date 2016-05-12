@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BuildInfoUtilsTest {
 
-    private static final String RESOURCE_PATH = "simulator/src/main/resources/";
+    private static final String RESOURCE_PATH = "simulator/src/test/resources/";
 
     @Test
     public void testConstructor() throws Exception {
@@ -41,7 +41,7 @@ public class BuildInfoUtilsTest {
 
     @Test
     public void testGetHazelcastVersionFromJAR() {
-        assertEquals("2342", getHazelcastVersionFromJAR(RESOURCE_PATH + "build-info.jar"));
+        assertEquals("2342", getHazelcastVersionFromJAR(RESOURCE_PATH + "build-info-with-version-manifest.jar"));
     }
 
     @Test
@@ -70,8 +70,14 @@ public class BuildInfoUtilsTest {
     }
 
     @Test
+    public void testGetHazelcastVersionFromJarOrNull_whenJarContainsHazelcastProperties() {
+        File file = new File(RESOURCE_PATH + "build-info-with-hazelcast-runtime.jar").getAbsoluteFile();
+        assertEquals("42.23", getHazelcastVersionFromJarOrNull(file.getAbsolutePath()));
+    }
+
+    @Test
     public void testGetHazelcastVersionFromJarOrNull() {
-        File file = new File(RESOURCE_PATH + "build-info.jar").getAbsoluteFile();
+        File file = new File(RESOURCE_PATH + "build-info-with-version-manifest.jar").getAbsoluteFile();
         assertEquals("23.42-SNAPSHOT", getHazelcastVersionFromJarOrNull(file.getAbsolutePath()));
     }
 
