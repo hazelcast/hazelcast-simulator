@@ -20,7 +20,7 @@
     </prerequisites>
 
     <properties>
-        <main.basedir>${project.parent.basedir}</main.basedir>
+        <main.basedir>${project.parent.parent.basedir}</main.basedir>
     </properties>
 
     <dependencies>
