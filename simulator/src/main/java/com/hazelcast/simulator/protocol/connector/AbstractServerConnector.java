@@ -50,6 +50,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
@@ -129,12 +130,8 @@ abstract class AbstractServerConnector implements ServerConnector {
         channel.close().syncUninterruptibly();
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
 
-        try {
-            executorService.shutdown();
-            executorService.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            LOGGER.error("Error during shutdown of ExecutorService", e);
-        }
+        executorService.shutdown();
+        awaitTermination(executorService, 1, TimeUnit.MINUTES);
     }
 
     @Override

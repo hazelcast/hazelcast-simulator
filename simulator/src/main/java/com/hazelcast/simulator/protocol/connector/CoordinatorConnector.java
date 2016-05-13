@@ -40,7 +40,6 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,6 +56,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_N
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static java.util.Collections.unmodifiableCollection;
 
@@ -66,7 +66,6 @@ import static java.util.Collections.unmodifiableCollection;
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class CoordinatorConnector implements ClientPipelineConfigurator, FailureListener {
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorConnector.class);
     private static final int EXECUTOR_POOL_SIZE = Runtime.getRuntime().availableProcessors() + 1;
 
     private final EventLoopGroup group = new NioEventLoopGroup();
@@ -135,12 +134,8 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
 
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
 
-        try {
-            executorService.shutdown();
-            executorService.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            LOGGER.error("Error during shutdown of ExecutorService", e);
-        }
+        executorService.shutdown();
+        awaitTermination(executorService, 1, TimeUnit.MINUTES);
     }
 
     /**

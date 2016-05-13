@@ -2,8 +2,13 @@ package com.hazelcast.simulator.utils;
 
 import org.junit.Test;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
@@ -16,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class CommonUtils_MiscTest {
+
+    private static final int DEFAULT_TEST_TIMEOUT = 5000;
 
     @Test
     public void testConstructor() throws Exception {
@@ -69,7 +76,7 @@ public class CommonUtils_MiscTest {
         assertTrue(format("Expected throwable string to contain marker %s, but was %s", marker, actual), actual.contains(marker));
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testJoinThread() {
         Thread thread = new Thread() {
             @Override
@@ -82,9 +89,10 @@ public class CommonUtils_MiscTest {
         joinThread(thread);
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testJoinThread_interrupted() {
         final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicBoolean isInterrupted = new AtomicBoolean();
 
         final Thread thread = new Thread() {
             @Override
@@ -96,10 +104,11 @@ public class CommonUtils_MiscTest {
                 }
             }
         };
-        final Thread joiner = new Thread() {
+        Thread joiner = new Thread() {
             @Override
             public void run() {
                 joinThread(thread);
+                isInterrupted.set(Thread.currentThread().isInterrupted());
             }
         };
 
@@ -107,10 +116,48 @@ public class CommonUtils_MiscTest {
         joiner.start();
 
         joiner.interrupt();
-        assertTrue(joiner.isInterrupted());
         joinThread(joiner);
 
         latch.countDown();
         joinThread(thread);
+
+        assertTrue(isInterrupted.get());
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testAwaitTermination() {
+        ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "CommonUtilsTest");
+        executorService.shutdown();
+
+        awaitTermination(executorService, 5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testAwaitTermination_whenInterrupted_thenRestoreInterruptedFlag() throws Exception {
+        final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "CommonUtilsTest");
+        final AtomicBoolean isInterrupted = new AtomicBoolean();
+
+        executorService.submit(new Callable<Object>() {
+            @Override
+            public Object call() throws Exception {
+                TimeUnit.DAYS.sleep(1);
+                return true;
+            }
+        });
+        executorService.shutdown();
+
+        Thread waiter = new Thread() {
+            @Override
+            public void run() {
+                awaitTermination(executorService, 5, TimeUnit.SECONDS);
+                isInterrupted.set(Thread.currentThread().isInterrupted());
+            }
+        };
+        waiter.start();
+
+        waiter.interrupt();
+        joinThread(waiter);
+
+        assertTrue(isInterrupted.get());
     }
 }

@@ -23,7 +23,6 @@ import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.utils.jars.HazelcastJARs;
-import com.hazelcast.util.EmptyStatement;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -47,6 +46,7 @@ import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
+import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -272,12 +272,8 @@ public class Provisioner {
         echo("Shutting down Provisioner...");
 
         // shutdown thread pool
-        try {
-            executor.shutdown();
-            executor.awaitTermination(EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (Exception ignored) {
-            EmptyStatement.ignore(ignored);
-        }
+        executor.shutdown();
+        awaitTermination(executor, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // shutdown compute service (which holds another thread pool)
         if (computeService != null) {
