@@ -6,7 +6,6 @@
 
     <artifactId>tests-common</artifactId>
     <name>Hazelcast Simulator Tests (Common)</name>
-    <packaging>pom</packaging>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>

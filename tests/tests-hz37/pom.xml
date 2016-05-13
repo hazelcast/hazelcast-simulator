@@ -8,25 +8,21 @@
     <name>Hazelcast Simulator Tests (HZ 3.7)</name>
 
     <parent>
-        <artifactId>tests-common</artifactId>
         <groupId>com.hazelcast.simulator</groupId>
+        <artifactId>simulator-root</artifactId>
         <version>0.8-SNAPSHOT</version>
-        <relativePath>../tests-common/pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <prerequisites>
-        <maven>${maven.version}</maven>
-    </prerequisites>
-
     <properties>
-        <main.basedir>${project.parent.parent.basedir}</main.basedir>
+        <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
             <artifactId>tests-common</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>
