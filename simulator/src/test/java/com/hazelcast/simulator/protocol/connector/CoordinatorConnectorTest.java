@@ -26,6 +26,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNBLOCKED_BY_FA
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
 import static com.hazelcast.simulator.test.FailureType.WORKER_EXIT;
+import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
@@ -77,7 +78,7 @@ public class CoordinatorConnectorTest {
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
-    public void testWrite_withInterruptedException() throws Exception {
+    public void testWrite_withInterruptedException() {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean exceptionThrown = new AtomicBoolean(false);
 
@@ -102,7 +103,7 @@ public class CoordinatorConnectorTest {
         };
         thread.start();
 
-        latch.await();
+        await(latch);
         thread.interrupt();
 
         joinThread(thread);

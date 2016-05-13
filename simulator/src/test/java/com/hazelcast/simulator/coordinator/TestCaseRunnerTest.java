@@ -30,6 +30,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDi
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.singletonList;
@@ -409,11 +410,7 @@ public class TestCaseRunnerTest {
             }
 
             if (finishWorkerLatch != null) {
-                try {
-                    finishWorkerLatch.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                await(finishWorkerLatch);
                 SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
                 FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
                         "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");

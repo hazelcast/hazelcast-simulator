@@ -25,6 +25,7 @@ import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
@@ -45,6 +46,8 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.cluster.ClusterLayout.createSingleInstanceClusterLayout;
+import static com.hazelcast.simulator.utils.CommonUtils.await;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -98,7 +101,7 @@ public class AgentSmokeTest implements FailureListener {
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
+    public static void tearDown() {
         try {
             LOGGER.info("Shutdown of CoordinatorConnector...");
             coordinatorConnector.shutdown();
@@ -251,8 +254,8 @@ public class AgentSmokeTest implements FailureListener {
             latches.get(testPhase).countDown();
         }
 
-        private void await(TestPhase testPhase) throws Exception {
-            latches.get(testPhase).await();
+        private void await(TestPhase testPhase) {
+            CommonUtils.await(latches.get(testPhase));
         }
     }
 
@@ -261,14 +264,14 @@ public class AgentSmokeTest implements FailureListener {
         private final CountDownLatch latch = new CountDownLatch(1);
         private final AgentThread agentThread = new AgentThread();
 
-        private AgentStarter() throws Exception {
+        private AgentStarter() {
             agentThread.start();
-            latch.await();
+            await(latch);
         }
 
-        private void shutdown() throws Exception {
+        private void shutdown() {
             agentThread.shutdown();
-            agentThread.join();
+            joinThread(agentThread);
         }
 
         private class AgentThread extends Thread {
@@ -285,7 +288,7 @@ public class AgentSmokeTest implements FailureListener {
                 latch.countDown();
             }
 
-            private void shutdown() throws Exception {
+            private void shutdown() {
                 agent.shutdown();
             }
         }

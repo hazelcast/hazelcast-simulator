@@ -15,13 +15,14 @@
  */
 package com.hazelcast.simulator.protocol.core;
 
-import com.hazelcast.simulator.utils.EmptyStatement;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.concurrent.CountDownLatch;
+
+import static com.hazelcast.simulator.utils.CommonUtils.await;
 
 /**
  * Manages incoming client connections so we can send messages to them.
@@ -49,11 +50,7 @@ public class ConnectionManager implements ConnectionListener {
     }
 
     void waitForAtLeastOneChannel() {
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException ignored) {
-            EmptyStatement.ignore(ignored);
-        }
+        await(countDownLatch);
     }
 
     int size() {

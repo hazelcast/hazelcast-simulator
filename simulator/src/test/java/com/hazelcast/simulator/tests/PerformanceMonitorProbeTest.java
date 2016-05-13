@@ -3,10 +3,11 @@ package com.hazelcast.simulator.tests;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import java.util.concurrent.CountDownLatch;
+
+import static com.hazelcast.simulator.utils.CommonUtils.await;
 
 public class PerformanceMonitorProbeTest {
 
@@ -14,8 +15,8 @@ public class PerformanceMonitorProbeTest {
     private CountDownLatch stopTestLatch = new CountDownLatch(1);
     private Worker worker = new Worker();
 
-    public void recordValue(long latencyNanos) throws Exception {
-        testStartedLatch.await();
+    public void recordValue(long latencyNanos) {
+        await(testStartedLatch);
         worker.workerProbe.recordValue(latencyNanos);
     }
 
@@ -36,11 +37,7 @@ public class PerformanceMonitorProbeTest {
         @Override
         public void run() {
             testStartedLatch.countDown();
-            try {
-                stopTestLatch.await();
-            } catch (InterruptedException e) {
-                EmptyStatement.ignore(e);
-            }
+            await(stopTestLatch);
         }
 
         @Override

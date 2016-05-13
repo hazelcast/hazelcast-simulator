@@ -41,6 +41,7 @@ import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -235,14 +236,10 @@ final class TestCaseRunner implements TestPhaseListener {
         if (testPhaseSyncMap == null) {
             return;
         }
-        try {
-            CountDownLatch latch = decrementAndGetCountDownLatch(testPhase);
-            latch.await();
-            if (LOG_TEST_PHASE_COMPLETION.putIfAbsent(testPhase, true) == null) {
-                LOGGER.info("Completed TestPhase " + testPhase.desc());
-            }
-        } catch (InterruptedException e) {
-            LOGGER.warn("Interrupted Test while waiting for " + testPhase.desc() + " completion", e);
+        CountDownLatch latch = decrementAndGetCountDownLatch(testPhase);
+        await(latch);
+        if (LOG_TEST_PHASE_COMPLETION.putIfAbsent(testPhase, true) == null) {
+            LOGGER.info("Completed TestPhase " + testPhase.desc());
         }
     }
 

@@ -135,7 +135,7 @@ public class Agent {
         workerJvmFailureMonitor.start();
     }
 
-    void shutdown() throws Exception {
+    void shutdown() {
         ShutdownThread thread = new AgentShutdownThread(false);
         thread.start();
         thread.awaitShutdown();

@@ -22,6 +22,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.await;
+
 public abstract class ShutdownThread extends Thread {
 
     private static final long DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(5);
@@ -57,12 +59,12 @@ public abstract class ShutdownThread extends Thread {
         this.shutdownComplete = shutdownComplete;
     }
 
-    public void awaitShutdown() throws Exception {
-        shutdownComplete.await();
+    public void awaitShutdown() {
+        await(shutdownComplete);
     }
 
-    public boolean awaitShutdownWithTimeout() throws Exception {
-        return shutdownComplete.await(waitForShutdownTimeoutMillis, TimeUnit.MILLISECONDS);
+    public boolean awaitShutdownWithTimeout() {
+        return await(shutdownComplete, waitForShutdownTimeoutMillis, TimeUnit.MILLISECONDS);
     }
 
     @Override

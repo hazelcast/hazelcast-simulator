@@ -42,20 +42,4 @@ public class ConnectionManagerTest {
         connectionManager.waitForAtLeastOneChannel();
         addChannelThread.join();
     }
-
-    @Test(timeout = 5000)
-    public void testWaitForAtLeastOneChannel_interrupted() throws Exception {
-        final Thread currentThread = Thread.currentThread();
-        Thread interruptThread = new Thread() {
-            @Override
-            public void run() {
-                sleepMillis(500);
-                currentThread.interrupt();
-            }
-        };
-        interruptThread.start();
-
-        connectionManager.waitForAtLeastOneChannel();
-        interruptThread.join();
-    }
 }

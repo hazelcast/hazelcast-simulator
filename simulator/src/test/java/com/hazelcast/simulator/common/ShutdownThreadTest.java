@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertFalse;
 
@@ -13,7 +14,7 @@ public class ShutdownThreadTest {
     private CountDownLatch latch = new CountDownLatch(1);
 
     @Test
-    public void testAwaitShutdown() throws Exception {
+    public void testAwaitShutdown() {
         ShutdownThreadImpl thread = new ShutdownThreadImpl();
         thread.start();
 
@@ -23,7 +24,7 @@ public class ShutdownThreadTest {
     }
 
     @Test
-    public void testAwaitShutdownWithTimeout() throws Exception {
+    public void testAwaitShutdownWithTimeout() {
         ShutdownThreadImpl thread = new ShutdownThreadImpl();
         thread.start();
 
@@ -50,11 +51,7 @@ public class ShutdownThreadTest {
 
         @Override
         protected void doRun() {
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            await(latch);
         }
     }
 }
