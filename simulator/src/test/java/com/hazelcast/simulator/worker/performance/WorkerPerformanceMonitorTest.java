@@ -31,8 +31,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -46,8 +46,6 @@ public class WorkerPerformanceMonitorTest {
     private ServerConnector serverConnector;
     private WorkerPerformanceMonitor performanceMonitor;
 
-    private boolean shutdownPerformanceMonitor = true;
-
     @Before
     public void setUp() {
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
@@ -60,9 +58,7 @@ public class WorkerPerformanceMonitorTest {
 
     @After
     public void tearDown() {
-        if (shutdownPerformanceMonitor) {
-            performanceMonitor.shutdown();
-        }
+        performanceMonitor.shutdown();
     }
 
     @AfterClass
@@ -74,18 +70,34 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
+    public void test_start() {
+        assertTrue(performanceMonitor.start());
+    }
+
+    @Test
     public void test_startTwice() {
         assertTrue(performanceMonitor.start());
         assertFalse(performanceMonitor.start());
     }
 
     @Test
-    public void test_noTests() {
+    public void test_shutdownTwice() {
+        assertTrue(performanceMonitor.start());
+
+        assertTrue(performanceMonitor.stop());
+        assertFalse(performanceMonitor.stop());
+    }
+
+    @Test
+    public void test_restartAfterStop() {
+        assertTrue(performanceMonitor.start());
+
+        assertTrue(performanceMonitor.stop());
         assertTrue(performanceMonitor.start());
     }
 
     @Test
-    public void test_testWithoutProbe() {
+    public void test_whenTestWithoutProbe_thenDoNothing() {
         addTest(new SuccessTest());
 
         assertTrue(performanceMonitor.start());
@@ -94,7 +106,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_testWithProbe_notRunning() {
+    public void test_whenTestWithProbeWhichIsNotRunning_thenDoNothing() {
         addTest(new PerformanceMonitorTest());
 
         assertTrue(performanceMonitor.start());
@@ -103,9 +115,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_testWithProbe_running() throws Exception {
-        shutdownPerformanceMonitor = false;
-
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() throws Exception {
         assertTrue(performanceMonitor.start());
         sleepMillis(300);
 
@@ -125,14 +135,12 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
-        performanceMonitor.shutdown();
+        performanceMonitor.stop();
         verifyServerConnector();
     }
 
     @Test
-    public void test_testWithProbe_runningWithDelay() {
-        shutdownPerformanceMonitor = false;
-
+    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() {
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test, 200);
 
@@ -144,12 +152,12 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
-        performanceMonitor.shutdown();
+        performanceMonitor.stop();
         verifyServerConnector();
     }
 
     @Test
-    public void test_testWithProbe_notRunningAnymore() throws Exception {
+    public void test_whenTestWithProbeWhichIsNotRunningAnymore_thenDoNothing() throws Exception {
         addTest(new PerformanceMonitorTest());
         tests.get(TEST_NAME).invoke(TestPhase.RUN);
 
@@ -169,7 +177,7 @@ public class WorkerPerformanceMonitorTest {
 
     private void verifyServerConnector() {
         verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
-        verify(serverConnector, atMost(1)).write(eq(COORDINATOR), any(TestHistogramOperation.class));
+        verify(serverConnector, times(1)).write(eq(COORDINATOR), any(TestHistogramOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 

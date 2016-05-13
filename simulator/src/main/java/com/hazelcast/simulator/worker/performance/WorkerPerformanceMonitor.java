@@ -31,11 +31,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
+import static com.hazelcast.simulator.utils.CommonUtils.await;
+import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
@@ -47,14 +51,16 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  */
 public class WorkerPerformanceMonitor {
 
-    private final AtomicBoolean started = new AtomicBoolean();
+    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
-    private final MonitorThread thread;
+    private final ExecutorService executorService = createFixedThreadPool(1, "WorkerPerformanceMonitor");
+    private final WorkerPerformanceMonitorTask runnable;
+    private final AtomicBoolean started = new AtomicBoolean();
 
     public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers,
                                     int workerPerformanceMonitorInterval, TimeUnit workerPerformanceIntervalTimeUnit) {
         long intervalNanos = workerPerformanceIntervalTimeUnit.toNanos(workerPerformanceMonitorInterval);
-        this.thread = new MonitorThread(serverConnector, testContainers, intervalNanos);
+        this.runnable = new WorkerPerformanceMonitorTask(serverConnector, testContainers, intervalNanos);
     }
 
     public boolean start() {
@@ -62,20 +68,28 @@ public class WorkerPerformanceMonitor {
             return false;
         }
 
-        thread.start();
+        executorService.submit(runnable);
+        return true;
+    }
+
+    public boolean stop() {
+        if (!started.compareAndSet(true, false)) {
+            return false;
+        }
+
+        runnable.stopAndReset();
         return true;
     }
 
     public void shutdown() {
-        thread.sendTestHistograms();
+        stop();
 
-        thread.isRunning = false;
-        thread.interrupt();
-        joinThread(thread);
+        executorService.shutdown();
+        awaitTermination(executorService, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
     /**
-     * Internal thread to monitor the performance of Simulator Tests.
+     * Runnable to monitor the performance of Simulator Tests.
      *
      * Iterates over all {@link TestContainer} to retrieve performance values from all {@link Probe} instances.
      * Sends performance numbers as {@link PerformanceState} to the Coordinator.
@@ -83,11 +97,11 @@ public class WorkerPerformanceMonitor {
      *
      * Holds one {@link PerformanceTracker} instance per Simulator Test.
      */
-    private static final class MonitorThread extends Thread {
+    private static final class WorkerPerformanceMonitorTask implements Runnable {
 
         private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
 
-        private static final Logger LOGGER = Logger.getLogger(MonitorThread.class);
+        private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitorTask.class);
 
         private final File globalThroughputFile = new File("throughput.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -98,11 +112,10 @@ public class WorkerPerformanceMonitor {
         private final long intervalNanos;
 
         private volatile boolean isRunning = true;
+        private volatile CountDownLatch isDone = new CountDownLatch(1);
 
-        private MonitorThread(ServerConnector serverConnector, Collection<TestContainer> testContainers, long intervalNanos) {
-            super("WorkerPerformanceMonitorThread");
-            setDaemon(true);
-
+        private WorkerPerformanceMonitorTask(ServerConnector serverConnector, Collection<TestContainer> testContainers,
+                                             long intervalNanos) {
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = intervalNanos;
@@ -131,6 +144,18 @@ public class WorkerPerformanceMonitor {
                     LOGGER.warn("WorkerPerformanceMonitorThread.run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
                 }
             }
+            isDone.countDown();
+        }
+
+        private void stopAndReset() {
+            isRunning = false;
+            await(isDone);
+
+            sendTestHistograms();
+
+            trackerMap.clear();
+            isRunning = true;
+            isDone = new CountDownLatch(1);
         }
 
         private void sendTestHistograms() {
