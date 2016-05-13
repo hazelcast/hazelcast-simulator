@@ -10,7 +10,7 @@
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
-        <artifactId>tests</artifactId>
+        <artifactId>simulator-root</artifactId>
         <version>0.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -20,7 +20,7 @@
     </prerequisites>
 
     <properties>
-        <main.basedir>${project.parent.parent.basedir}</main.basedir>
+        <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
     <dependencies>
