@@ -181,7 +181,7 @@ public class TestOperationProcessor extends OperationProcessor {
                     // stop performance monitor if all tests have completed their run phase
                     if (TESTS_COMPLETED.incrementAndGet() == TESTS_PENDING.get()) {
                         LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
-                        worker.shutdownPerformanceMonitor();
+                        worker.stopPerformanceMonitor();
                     }
                 }
             }

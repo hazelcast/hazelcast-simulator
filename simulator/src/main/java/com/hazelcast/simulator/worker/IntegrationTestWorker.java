@@ -72,7 +72,7 @@ public final class IntegrationTestWorker implements Worker {
     }
 
     @Override
-    public void shutdownPerformanceMonitor() {
+    public void stopPerformanceMonitor() {
     }
 
     @Override

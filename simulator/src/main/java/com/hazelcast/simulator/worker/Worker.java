@@ -23,7 +23,7 @@ public interface Worker {
 
     boolean startPerformanceMonitor();
 
-    void shutdownPerformanceMonitor();
+    void stopPerformanceMonitor();
 
     WorkerConnector getWorkerConnector();
 

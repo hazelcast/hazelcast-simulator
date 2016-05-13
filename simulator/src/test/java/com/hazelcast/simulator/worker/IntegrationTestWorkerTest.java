@@ -45,7 +45,7 @@ public class IntegrationTestWorkerTest {
 
     @Test
     public void testShutdownPerformanceMonitor() {
-        worker.shutdownPerformanceMonitor();
+        worker.stopPerformanceMonitor();
     }
 
     @Test

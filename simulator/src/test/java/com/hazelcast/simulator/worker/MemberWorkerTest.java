@@ -100,7 +100,7 @@ public class MemberWorkerTest {
         assertMemberWorker();
 
         worker.startPerformanceMonitor();
-        worker.shutdownPerformanceMonitor();
+        worker.stopPerformanceMonitor();
     }
 
     @Test
@@ -110,7 +110,7 @@ public class MemberWorkerTest {
         assertMemberWorker();
 
         worker.startPerformanceMonitor();
-        worker.shutdownPerformanceMonitor();
+        worker.stopPerformanceMonitor();
     }
 
     @Test

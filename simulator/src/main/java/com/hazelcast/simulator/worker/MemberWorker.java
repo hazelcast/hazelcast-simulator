@@ -113,7 +113,7 @@ public final class MemberWorker implements Worker {
     }
 
     @Override
-    public void shutdownPerformanceMonitor() {
+    public void stopPerformanceMonitor() {
         if (workerPerformanceMonitor != null) {
             workerPerformanceMonitor.shutdown();
         }
