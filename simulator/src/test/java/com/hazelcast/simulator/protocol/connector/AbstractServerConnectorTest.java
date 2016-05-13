@@ -85,18 +85,6 @@ public class AbstractServerConnectorTest {
     }
 
     @Test
-    public void testShutdown_withInterruptedException() throws Exception {
-        shutdownAfterTest = false;
-        when(executorService.awaitTermination(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
-        testServerConnector.start();
-
-        testServerConnector.shutdown();
-
-        verify(executorService).shutdown();
-        verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
-    }
-
-    @Test
     public void testShutdown_withMessageOnQueue() throws Exception {
         shutdownAfterTest = false;
         testServerConnector.start();

@@ -68,16 +68,6 @@ public class CoordinatorConnectorTest {
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
-    public void testShutdown_withInterruptedException() throws Exception {
-        when(executorService.awaitTermination(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
-
-        coordinatorConnector.shutdown();
-
-        verify(executorService).shutdown();
-        verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
-    }
-
-    @Test(timeout = DEFAULT_TIMEOUT)
     public void testWrite_withInterruptedException() {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean exceptionThrown = new AtomicBoolean(false);
