@@ -164,6 +164,14 @@ public final class CommonUtils {
         LockSupport.parkNanos(nanos);
     }
 
+    public static void sleepTimeUnit(TimeUnit timeUnit, long timeout) {
+        try {
+            timeUnit.sleep(timeout);
+        } catch (InterruptedException e) {
+            ignore(e);
+        }
+    }
+
     public static void sleepSecondsThrowException(int seconds) {
         try {
             TimeUnit.SECONDS.sleep(seconds);

@@ -13,12 +13,16 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepRandomNanos;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSecondsThrowException;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepTimeUnit;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertTrue;
 
 public class CommonUtils_SleepTest {
 
-    private static final long ONE_SECOND_TO_NANOS = TimeUnit.SECONDS.toNanos(1);
+    private static final long ONE_SECOND_TO_NANOS = SECONDS.toNanos(1);
 
     @Test
     public void testSleepSecondsZero() {
@@ -26,7 +30,7 @@ public class CommonUtils_SleepTest {
         sleepSeconds(0);
         long duration = getElapsedSeconds(started);
 
-        long durationLimit = TimeUnit.SECONDS.toSeconds(3);
+        long durationLimit = SECONDS.toSeconds(3);
         assertTrue(format("Expected sleep duration < %d s, but was %d", durationLimit, duration), duration < durationLimit);
     }
 
@@ -36,7 +40,7 @@ public class CommonUtils_SleepTest {
         sleepSeconds(1);
         long duration = getElapsedSeconds(started);
 
-        long durationLimit = TimeUnit.SECONDS.toSeconds(3);
+        long durationLimit = SECONDS.toSeconds(3);
         assertTrue(format("Expected sleep duration > 0 s, but was %d", duration), duration > 0);
         assertTrue(format("Expected sleep duration < %d s, but was %d", durationLimit, duration), duration < durationLimit);
     }
@@ -57,9 +61,9 @@ public class CommonUtils_SleepTest {
     public void testSleepMillisZero() {
         long started = System.nanoTime();
         sleepMillis(0);
-        long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        long duration = NANOSECONDS.toMillis(System.nanoTime() - started);
 
-        long durationLimit = TimeUnit.SECONDS.toMillis(3);
+        long durationLimit = SECONDS.toMillis(3);
         assertTrue(format("Expected sleep duration < %d ms, but was %d", durationLimit, duration), duration < durationLimit);
     }
 
@@ -67,9 +71,9 @@ public class CommonUtils_SleepTest {
     public void testSleepMillis() {
         long started = System.nanoTime();
         sleepMillis(1);
-        long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        long duration = NANOSECONDS.toMillis(System.nanoTime() - started);
 
-        long durationLimit = TimeUnit.SECONDS.toMillis(3);
+        long durationLimit = SECONDS.toMillis(3);
         assertTrue(format("Expected sleep duration > 0 ms, but was %d", duration), duration > 0);
         assertTrue(format("Expected sleep duration < %d ms, but was %d", durationLimit, duration), duration < durationLimit);
     }
@@ -90,9 +94,9 @@ public class CommonUtils_SleepTest {
     public void testSleepNanosZero() {
         long started = System.nanoTime();
         sleepNanos(0);
-        long duration = TimeUnit.NANOSECONDS.toNanos(System.nanoTime() - started);
+        long duration = NANOSECONDS.toNanos(System.nanoTime() - started);
 
-        long durationLimit = TimeUnit.SECONDS.toNanos(3);
+        long durationLimit = SECONDS.toNanos(3);
         assertTrue(format("Expected sleep duration < %d ns, but was %d", durationLimit, duration), duration < durationLimit);
     }
 
@@ -100,9 +104,9 @@ public class CommonUtils_SleepTest {
     public void testSleepNanos() {
         long started = System.nanoTime();
         sleepNanos(1);
-        long duration = TimeUnit.NANOSECONDS.toNanos(System.nanoTime() - started);
+        long duration = NANOSECONDS.toNanos(System.nanoTime() - started);
 
-        long durationLimit = TimeUnit.SECONDS.toNanos(3);
+        long durationLimit = SECONDS.toNanos(3);
         assertTrue(format("Expected sleep duration > 0 ns, but was %d", duration), duration > 0);
         assertTrue(format("Expected sleep duration < %d ns, but was %d", durationLimit, duration), duration < durationLimit);
     }
@@ -113,6 +117,29 @@ public class CommonUtils_SleepTest {
             @Override
             public void run() {
                 sleepNanos(Long.MAX_VALUE);
+            }
+        };
+        sleeperThread.start();
+        sleeperThread.interrupt();
+    }
+
+    @Test
+    public void testSleepTimeUnit() {
+        long started = System.nanoTime();
+        sleepTimeUnit(MILLISECONDS, 1);
+        long duration = NANOSECONDS.toMillis(System.nanoTime() - started);
+
+        long durationLimit = SECONDS.toMillis(3);
+        assertTrue(format("Expected sleep duration > 0 ms, but was %d", duration), duration > 0);
+        assertTrue(format("Expected sleep duration < %d ms, but was %d", durationLimit, duration), duration < durationLimit);
+    }
+
+    @Test
+    public void testSleepTimeUnitInterrupted() {
+        Thread sleeperThread = new Thread() {
+            @Override
+            public void run() {
+                sleepTimeUnit(TimeUnit.DAYS, Long.MAX_VALUE);
             }
         };
         sleeperThread.start();
