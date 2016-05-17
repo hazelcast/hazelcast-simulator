@@ -1,5 +1,5 @@
 #
-# When invoked from the hazelcast-simulator source root installs the dist/target/hazelcast-simulator*tar.gz
+# When invoked from the hazelcast-simulator source root installs the dist/target/hazelcast-simulator-*.tar.gz
 # to the specified target folder.
 # If there's already the same version installed in the target folder it is backed up.
 #
@@ -7,7 +7,7 @@
 #!/bin/bash
 set -e
 
-echo "Running simulator installer"
+echo "Running Simulator installer"
 
 if [ $# -ne 1 ]; then
     echo "Usage: install.sh <target_folder>"
@@ -23,16 +23,13 @@ if [ ! -d "$target" ]; then
     exit 1
 fi
 
-
 function cleanup {
     echo "Cleaning up"
     rm -rf "$temp"
 }
 trap cleanup EXIT
 
-
 package=$( ls dist/target/*.tar.gz )
-
 if [ ! -f "$package" ]; then
     echo "[ERROR] Could not find tar.gz dist to install!"
     exit 1
