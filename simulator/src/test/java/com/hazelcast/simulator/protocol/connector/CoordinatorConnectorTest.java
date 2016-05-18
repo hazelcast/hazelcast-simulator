@@ -42,10 +42,11 @@ public class CoordinatorConnectorTest {
 
     private static final int DEFAULT_TIMEOUT = 30000;
 
+    private static final SimulatorAddress WORKER_ADDRESS = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
+    private static final SimulatorAddress AGENT_ADDRESS = WORKER_ADDRESS.getParent();
+
     private ExecutorService executorService;
     private CoordinatorConnector coordinatorConnector;
-    public static final SimulatorAddress WORKER_ADDRESS = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-    public static final SimulatorAddress AGENT_ADDRESS = WORKER_ADDRESS.getParent();
 
     @Before
     public void setUp() {
