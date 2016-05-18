@@ -71,7 +71,7 @@ public class CommunicatorConnector implements ClientPipelineConfigurator {
     public CommunicatorConnector(String coordinatorHost, int coordinatorPort) {
         LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
-        client = new ClientConnector(this, group, futureMap, COORDINATOR, COORDINATOR, 1, coordinatorHost, coordinatorPort);
+        client = new ClientConnector(this, group, futureMap, COMMUNICATOR, COORDINATOR, 1, coordinatorHost, coordinatorPort);
         processor = new CommunicatorOperationProcessor(exceptionLogger);
     }
 
