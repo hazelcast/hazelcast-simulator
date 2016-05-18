@@ -61,7 +61,12 @@ public enum ResponseType {
      * Is returned when a {@link ResponseFuture} was unblocked by a
      * {@link com.hazelcast.simulator.protocol.operation.FailureOperation}.
      */
-    UNBLOCKED_BY_FAILURE(7);
+    UNBLOCKED_BY_FAILURE(7),
+
+    /**
+     * Is returned when a {@link ResponseFuture#get()} was interrupted.
+     */
+    INTERRUPTED(8);
 
     private final int ordinal;
 

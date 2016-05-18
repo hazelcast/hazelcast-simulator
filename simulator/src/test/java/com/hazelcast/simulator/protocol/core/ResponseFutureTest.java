@@ -1,21 +1,24 @@
 package com.hazelcast.simulator.protocol.core;
 
-import com.hazelcast.util.EmptyStatement;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.getMessageIdFromFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.getSourceFromFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseType.INTERRUPTED;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -24,7 +27,8 @@ public class ResponseFutureTest {
     private static final Response DEFAULT_RESULT = new Response(1L, COORDINATOR, COORDINATOR, SUCCESS);
     private static final int DEFAULT_TIMEOUT_MS = 500;
 
-    private final ResponseFuture future = createInstance(new ConcurrentHashMap<String, ResponseFuture>(), "key");
+    private final String futureKey = createFutureKey(COORDINATOR, 1, 1);
+    private final ResponseFuture future = createInstance(new ConcurrentHashMap<String, ResponseFuture>(), futureKey);
     private final FutureSetter futureSetter = new FutureSetter(DEFAULT_RESULT, DEFAULT_TIMEOUT_MS);
 
     @Test
@@ -121,6 +125,8 @@ public class ResponseFutureTest {
 
     @Test
     public void testGet_interrupted() throws Exception {
+        final AtomicBoolean success = new AtomicBoolean();
+
         Thread thread = new Thread() {
             @Override
             public void run() {
@@ -128,7 +134,7 @@ public class ResponseFutureTest {
                     future.get();
                     fail("Expected InterruptedException!");
                 } catch (InterruptedException ignored) {
-                    EmptyStatement.ignore(ignored);
+                    success.set(true);
                 }
             }
         };
@@ -136,6 +142,29 @@ public class ResponseFutureTest {
         thread.start();
         thread.interrupt();
         thread.join();
+
+        assertTrue(success.get());
+    }
+
+    @Test
+    public void testGetResponse_interrupted() throws Exception {
+        final AtomicReference<Response> responseReference = new AtomicReference<Response>();
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                Response response = future.getResponse();
+                responseReference.set(response);
+            }
+        };
+
+        thread.start();
+        thread.interrupt();
+        thread.join();
+
+        Response response = responseReference.get();
+        assertNotNull(response);
+        assertEquals(INTERRUPTED, response.getFirstErrorResponseType());
     }
 
     private class FutureSetter extends Thread {

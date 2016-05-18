@@ -23,7 +23,6 @@ import com.hazelcast.simulator.protocol.core.ResponseCodec;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessageCodec;
-import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -108,15 +107,10 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    for (ResponseFuture future : futureList) {
-                        response.addResponse(future.get());
-                    }
-                    ctx.writeAndFlush(response);
-                } catch (InterruptedException e) {
-                    LOGGER.warn("ResponseFuture.get() got interrupted!", e);
-                    throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
+                for (ResponseFuture future : futureList) {
+                    response.addResponse(future.getResponse());
                 }
+                ctx.writeAndFlush(response);
             }
         });
     }

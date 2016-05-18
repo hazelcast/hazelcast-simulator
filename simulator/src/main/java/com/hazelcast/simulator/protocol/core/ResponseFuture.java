@@ -20,6 +20,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.protocol.core.ResponseType.INTERRUPTED;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNBLOCKED_BY_FAILURE;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
@@ -113,6 +114,16 @@ public final class ResponseFuture implements Future<Response> {
         synchronized (this) {
             this.response = response;
             notifyAll();
+        }
+    }
+
+    public Response getResponse() {
+        try {
+            return get();
+        } catch (InterruptedException e) {
+            long messageId = getMessageIdFromFutureKey(key);
+            SimulatorAddress source = getSourceFromFutureKey(key);
+            return new Response(messageId, null, source, INTERRUPTED);
         }
     }
 
