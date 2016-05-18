@@ -19,7 +19,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static org.junit.Assert.assertEquals;
 
-public class CommunicatorOperationProcessorTest {
+public class RemoteControllerOperationProcessorTest {
 
     private CommunicatorOperationProcessor processor;
 

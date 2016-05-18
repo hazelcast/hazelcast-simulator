@@ -39,6 +39,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CommunicatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -67,10 +68,11 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
 
     CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
                          PerformanceStatsContainer performanceStatsContainer, int port,
-                         ConnectionManager connectionManager, ConcurrentMap<String, ResponseFuture> futureMap) {
+                         ConnectionManager connectionManager, ConcurrentMap<String, ResponseFuture> futureMap,
+                         ComponentRegistry componentRegistry) {
         super(futureMap, COORDINATOR, port, getDefaultThreadPoolSize());
 
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, componentRegistry, failureContainer, testPhaseListeners,
                 performanceStatsContainer);
         this.communicatorOperationProcessor = new CommunicatorOperationProcessor(exceptionLogger);
         this.connectionManager = connectionManager;
@@ -79,20 +81,21 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     /**
      * Creates a {@link CoordinatorConnector} instance.
      *
-     * @param failureContainer          {@link FailureContainer} for this connector
-     * @param testPhaseListeners        {@link TestPhaseListeners} for this connector
-     * @param performanceStatsContainer {@link PerformanceStatsContainer} for this connector
-     * @param port                      the port for incoming connections
+     * @param componentRegistry          {@link ComponentRegistry} for this connector
+     * @param failureContainer           {@link FailureContainer} for this connector
+     * @param testPhaseListeners {@link TestPhaseListeners} for this connector
+     * @param performanceStatsContainer  {@link PerformanceStatsContainer} for this connector
+     * @param port                       the port for incoming connections
      */
-    public static CoordinatorConnector createInstance(FailureContainer failureContainer,
+    public static CoordinatorConnector createInstance(ComponentRegistry componentRegistry,
+                                                      FailureContainer failureContainer,
                                                       TestPhaseListeners testPhaseListeners,
-                                                      PerformanceStatsContainer performanceStatsContainer,
-                                                      int port) {
+                                                      PerformanceStatsContainer performanceStatsContainer, int port) {
         ConnectionManager connectionManager = new ConnectionManager();
         ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
         return new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer,
-                port, connectionManager, futureMap);
+                port, connectionManager, futureMap, componentRegistry);
     }
 
     @Override

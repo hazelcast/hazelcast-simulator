@@ -259,8 +259,9 @@ public final class Coordinator {
 
     private void startCoordinatorConnector() {
         try {
-            coordinatorConnector = CoordinatorConnector.createInstance(failureContainer, testPhaseListeners,
-                    performanceStatsContainer, simulatorProperties.getCoordinatorPort());
+            int coordinatorPort = simulatorProperties.getCoordinatorPort();
+            coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureContainer,
+                    testPhaseListeners, performanceStatsContainer, coordinatorPort);
             coordinatorConnector.start();
             failureContainer.addListener(coordinatorConnector);
 

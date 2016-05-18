@@ -14,6 +14,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
+import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
@@ -45,6 +46,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
@@ -91,7 +93,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         outputDirectory = TestUtils.createTmpDirectory();
         failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
 
-        processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
+        processor = new CoordinatorOperationProcessor(exceptionLogger, componentRegistry, failureContainer, testPhaseListeners,
                 performanceStatsContainer);
     }
 
@@ -187,6 +189,14 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(33, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(42, LATENCY_FORMAT_LENGTH)));
+    }
+
+    @Test
+    public void processRemoteController() {
+        RemoteControllerOperation operation = new RemoteControllerOperation(RemoteControllerOperation.Type.INTEGRATION_TEST);
+
+        ResponseType responseType = processor.process(operation, REMOTE);
+        assertEquals(SUCCESS, responseType);
     }
 
     private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {
