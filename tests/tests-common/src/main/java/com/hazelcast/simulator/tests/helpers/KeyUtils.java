@@ -20,7 +20,9 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -29,9 +31,6 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 import static java.lang.String.format;
 
 public final class KeyUtils {
-
-    private static final boolean UNBALANCED = false;
-    private static final boolean BALANCED = true;
 
     private KeyUtils() {
     }
@@ -60,17 +59,11 @@ public final class KeyUtils {
     private static KeyGenerator<Integer> newIntKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount) {
         switch (keyLocality) {
             case LOCAL:
-                return new IntKeyGenerator(hz, keyLocality, keyCount, UNBALANCED);
-            case LOCAL_BALANCED:
-                return new IntKeyGenerator(hz, keyLocality, keyCount, BALANCED);
+                return new BalancedIntKeyGenerator(hz, keyLocality, keyCount);
             case REMOTE:
-                return new IntKeyGenerator(hz, keyLocality, keyCount, UNBALANCED);
-            case REMOTE_BALANCED:
-                return new IntKeyGenerator(hz, keyLocality, keyCount, BALANCED);
+                return new BalancedIntKeyGenerator(hz, keyLocality, keyCount);
             case RANDOM:
-                return new IntKeyGenerator(hz, keyLocality, keyCount, UNBALANCED);
-            case RANDOM_BALANCED:
-                return new IntKeyGenerator(hz, keyLocality, keyCount, BALANCED);
+                return new BalancedIntKeyGenerator(hz, keyLocality, keyCount);
             case SINGLE_PARTITION:
                 return new SinglePartitionIntKeyGenerator();
             default:
@@ -82,17 +75,11 @@ public final class KeyUtils {
             HazelcastInstance hz, KeyLocality keyLocality, int keyCount, int keyLength, String prefix) {
         switch (keyLocality) {
             case LOCAL:
-                return new StringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix, UNBALANCED);
-            case LOCAL_BALANCED:
-                return new StringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix, BALANCED);
+                return new BalancedStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
             case REMOTE:
-                return new StringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix, UNBALANCED);
-            case REMOTE_BALANCED:
-                return new StringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix, BALANCED);
+                return new BalancedStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
             case RANDOM:
-                return new StringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix, UNBALANCED);
-            case RANDOM_BALANCED:
-                return new StringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix, BALANCED);
+                return new BalancedStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
             case SINGLE_PARTITION:
                 return new SinglePartitionStringKeyGenerator(keyLength, prefix);
             default:
@@ -180,7 +167,7 @@ public final class KeyUtils {
      * @return the created array of keys
      */
     public static String[] generateStringKeys(String prefix, int keyCount, KeyLocality keyLocality, HazelcastInstance hz) {
-        int keyLength = (int) (prefix.length() + Math.ceil(Math.log10(keyCount))) + 5;
+        int keyLength = (int) (prefix.length() + Math.ceil(Math.log10(keyCount))) + 2;
         return generateStringKeys(prefix, keyCount, keyLength, keyLocality, hz);
     }
 
@@ -198,6 +185,8 @@ public final class KeyUtils {
      */
     public static String[] generateStringKeys(String prefix, int keyCount, int keyLength, KeyLocality keyLocality,
                                               HazelcastInstance hz) {
+
+
         String[] keys = new String[keyCount];
         KeyGenerator<String> keyGenerator = newStringKeyGenerator(hz, keyLocality, keyCount, keyLength, prefix);
         for (int i = 0; i < keys.length; i++) {
@@ -211,7 +200,7 @@ public final class KeyUtils {
         K next();
     }
 
-    abstract static class AbstractKeyGenerator<K> implements KeyGenerator<K> {
+    abstract static class BalancedKeyGenerator<K> implements KeyGenerator<K> {
 
         protected final Random random = new Random();
         protected final HazelcastInstance hz;
@@ -221,14 +210,12 @@ public final class KeyUtils {
         private final PartitionService partitionService;
         private final int maxKeysPerPartition;
         private final KeyLocality keyLocality;
-        private final boolean balanced;
 
         @SuppressWarnings("unchecked")
-        AbstractKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount, boolean balanced) {
+        BalancedKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount) {
             this.hz = hz;
             this.keyLocality = keyLocality;
             this.keyCount = keyCount;
-            this.balanced = balanced;
 
             this.partitionService = hz.getPartitionService();
 
@@ -258,7 +245,7 @@ public final class KeyUtils {
                     continue;
                 }
 
-                if (balanced && keys.size() == maxKeysPerPartition) {
+                if (keys.size() == maxKeysPerPartition) {
                     continue;
                 }
 
@@ -272,55 +259,49 @@ public final class KeyUtils {
         private Set<Integer> getTargetPartitions() {
             Set<Integer> targetPartitions = new HashSet<Integer>();
             Member localMember = getLocalMember(hz);
+
             switch (keyLocality) {
                 case LOCAL:
-                    getLocalPartitions(targetPartitions, localMember);
-                    break;
-                case LOCAL_BALANCED:
-                    getLocalPartitions(targetPartitions, localMember);
+                    for (Partition partition : partitionService.getPartitions()) {
+                        if (localMember == null || localMember.equals(partition.getOwner())) {
+                            targetPartitions.add(partition.getPartitionId());
+                        }
+                    }
                     break;
                 case REMOTE:
-                    getRemotePartitions(targetPartitions, localMember);
-                    break;
-                case REMOTE_BALANCED:
-                    getRemotePartitions(targetPartitions, localMember);
+                    for (Partition partition : partitionService.getPartitions()) {
+                        if (localMember == null || !localMember.equals(partition.getOwner())) {
+                            targetPartitions.add(partition.getPartitionId());
+                        }
+                    }
                     break;
                 case RANDOM:
-                    getRandomPartitions(targetPartitions);
-                    break;
-                case RANDOM_BALANCED:
-                    getRandomPartitions(targetPartitions);
+                    for (Partition partition : partitionService.getPartitions()) {
+                        targetPartitions.add(partition.getPartitionId());
+                    }
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported keyLocality: " + keyLocality);
             }
 
-            if (targetPartitions.isEmpty()) {
-                throw new IllegalStateException("No partitions found");
-            }
+            verifyHasPartitions(targetPartitions);
 
             return targetPartitions;
         }
 
-        private void getRandomPartitions(Set<Integer> targetPartitions) {
-            for (Partition partition : partitionService.getPartitions()) {
-                targetPartitions.add(partition.getPartitionId());
-            }
-        }
-
-        private void getRemotePartitions(Set<Integer> targetPartitions, Member localMember) {
-            for (Partition partition : partitionService.getPartitions()) {
-                if (localMember == null || !localMember.equals(partition.getOwner())) {
-                    targetPartitions.add(partition.getPartitionId());
+        private void verifyHasPartitions(Set<Integer> targetPartitions) {
+            if (targetPartitions.isEmpty()) {
+                Map<Member, Integer> partitionsPerMember = new HashMap<Member, Integer>();
+                for (Partition partition : partitionService.getPartitions()) {
+                    Member owner = partition.getOwner();
+                    if (owner == null) {
+                        throw new IllegalStateException("Owner is null for partition:" + partition);
+                    }
+                    Integer value = partitionsPerMember.get(owner);
+                    Integer result = value == null ? 1 : value + 1;
+                    partitionsPerMember.put(owner, result);
                 }
-            }
-        }
-
-        private void getLocalPartitions(Set<Integer> targetPartitions, Member localMember) {
-            for (Partition partition : partitionService.getPartitions()) {
-                if (localMember == null || localMember.equals(partition.getOwner())) {
-                    targetPartitions.add(partition.getPartitionId());
-                }
+                throw new IllegalStateException("No partitions found, partitionsPerMember:" + partitionsPerMember);
             }
         }
 
@@ -354,10 +335,10 @@ public final class KeyUtils {
         }
     }
 
-    private static final class IntKeyGenerator extends AbstractKeyGenerator<Integer> {
+    private static final class BalancedIntKeyGenerator extends BalancedKeyGenerator<Integer> {
 
-        private IntKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount, boolean balanced) {
-            super(hz, keyLocality, keyCount, balanced);
+        private BalancedIntKeyGenerator(HazelcastInstance hz, KeyLocality keyLocality, int keyCount) {
+            super(hz, keyLocality, keyCount);
         }
 
         @Override
@@ -366,14 +347,14 @@ public final class KeyUtils {
         }
     }
 
-    private static final class StringKeyGenerator extends AbstractKeyGenerator<String> {
+    private static final class BalancedStringKeyGenerator extends BalancedKeyGenerator<String> {
 
         private final int keyLength;
         private final String prefix;
 
-        private StringKeyGenerator(
-                HazelcastInstance hz, KeyLocality keyLocality, int keyCount, int keyLength, String prefix, boolean balanced) {
-            super(hz, keyLocality, keyCount, balanced);
+        private BalancedStringKeyGenerator(
+                HazelcastInstance hz, KeyLocality keyLocality, int keyCount, int keyLength, String prefix) {
+            super(hz, keyLocality, keyCount);
             this.keyLength = keyLength;
             this.prefix = prefix;
         }
@@ -387,7 +368,6 @@ public final class KeyUtils {
             }
         }
     }
-
 
     private static final class SinglePartitionStringKeyGenerator implements KeyGenerator<String> {
 
