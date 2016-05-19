@@ -17,30 +17,25 @@ package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
 import org.HdrHistogram.Histogram;
-import org.HdrHistogram.Recorder;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Measures the latency distribution of a test.
+ * Measures the throughput only.
  */
-public class ProbeImpl implements Probe {
+public class LightweightProbeImpl implements Probe {
 
-    public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
-    public static final int LATENCY_PRECISION = 4;
-
-    private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
-    private final ThreadLocal<Long> threadLocalStarted = new ThreadLocal<Long>();
+    private final AtomicLong counter = new AtomicLong();
 
     private final boolean isThroughputProbe;
 
-    public ProbeImpl(boolean isThroughputProbe) {
+    public LightweightProbeImpl(boolean isThroughputProbe) {
         this.isThroughputProbe = isThroughputProbe;
     }
 
     @Override
     public boolean isLightweightProbe() {
-        return false;
+        return true;
     }
 
     @Override
@@ -50,46 +45,33 @@ public class ProbeImpl implements Probe {
 
     @Override
     public void started() {
-        long now = System.nanoTime();
-        threadLocalStarted.set(now);
     }
 
     @Override
     public void done() {
-        long now = System.nanoTime();
-
-        Long started = threadLocalStarted.get();
-        if (started == null) {
-            throw new IllegalStateException("You have to call started() before done()");
-        }
-
-        recordValue(now - started);
+        counter.incrementAndGet();
     }
 
     @Override
     public void done(long started) {
-        long now = System.nanoTime();
-
         if (started <= 0) {
             throw new IllegalArgumentException("started has to be a positive number");
         }
-
-        recordValue(now - started);
+        counter.incrementAndGet();
     }
 
     @Override
     public void recordValue(long latencyNanos) {
-        int latencyMicros = (int) TimeUnit.NANOSECONDS.toMicros(latencyNanos);
-        recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : (latencyMicros < 0 ? 0 : latencyMicros));
+        counter.incrementAndGet();
     }
 
     @Override
     public Histogram getIntervalHistogram() {
-        return recorder.getIntervalHistogram();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long getIntervalCountAndReset() {
-        throw new UnsupportedOperationException();
+        return counter.getAndSet(0);
     }
 }

@@ -5,30 +5,30 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.probes.ProbeTestUtils.assertHistogram;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class ProbeImplTest {
+public class LightweightProbeImplTest {
 
-    private ProbeImpl probe = new ProbeImpl(false);
+    private LightweightProbeImpl probe = new LightweightProbeImpl(false);
 
     @Test
     public void testConstructor_throughputProbe() {
-        Probe tmpProbe = new ProbeImpl(true);
+        Probe tmpProbe = new LightweightProbeImpl(true);
         assertTrue(tmpProbe.isThroughputProbe());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
-        Probe tmpProbe = new ProbeImpl(false);
+        Probe tmpProbe = new LightweightProbeImpl(false);
         assertFalse(tmpProbe.isThroughputProbe());
     }
 
     @Test
     public void testIsLightWeightProbe() {
-        assertFalse(probe.isLightweightProbe());
+        assertTrue(probe.isLightweightProbe());
     }
 
     @Test
@@ -40,12 +40,8 @@ public class ProbeImplTest {
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
         probe.done();
 
-        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testDone_withoutStarted() {
-        probe.done();
+        assertEquals(expectedCount, probe.getIntervalCountAndReset());
+        assertEquals(0, probe.getIntervalCountAndReset());
     }
 
     @Test
@@ -57,7 +53,8 @@ public class ProbeImplTest {
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
         probe.done(started);
 
-        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
+        assertEquals(expectedCount, probe.getIntervalCountAndReset());
+        assertEquals(0, probe.getIntervalCountAndReset());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -76,17 +73,17 @@ public class ProbeImplTest {
         long latencyValue = 500;
         long expectedMinValue = 200;
         long expectedMaxValue = 1000;
-        long expectedMeanValue = (long) ((latencyValue + expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
+        assertEquals(expectedCount, probe.getIntervalCountAndReset());
+        assertEquals(0, probe.getIntervalCountAndReset());
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testGetIntervalCountAndReset()  {
-        probe.getIntervalCountAndReset();
+    public void testGetIntervalHistogram()  {
+        probe.getIntervalHistogram();
     }
 }

@@ -20,9 +20,16 @@ import org.HdrHistogram.Histogram;
 public interface Probe {
 
     /**
+     * Defines if this probe is a lightweight probe, which just measures throughput data.
+     *
+     * @return {@code true} if probe is a lightweight probe, {@code false} otherwise
+     */
+    boolean isLightweightProbe();
+
+    /**
      * Defines if a probe should be considered to calculate the throughput of a test.
      *
-     * @return <tt>true</tt> if probe is relevant for throughput, <tt>false</tt> otherwise
+     * @return {@code true} if probe is relevant for throughput, {@code false} otherwise
      */
     boolean isThroughputProbe();
 
@@ -60,6 +67,15 @@ public interface Probe {
      * Resets the latency values and starts accumulating value counts for the next interval.
      *
      * @return a {@link Histogram} containing the latency values accumulated since the last interval histogram was taken
+     * @throws UnsupportedOperationException on lightweight implementations
      */
     Histogram getIntervalHistogram();
+
+    /**
+     * Get the count of entries of the last interval and reset.
+     *
+     * @return a count since the last interval count was taken
+     * @throws UnsupportedOperationException on non-lightweight implementations
+     */
+    long getIntervalCountAndReset();
 }
