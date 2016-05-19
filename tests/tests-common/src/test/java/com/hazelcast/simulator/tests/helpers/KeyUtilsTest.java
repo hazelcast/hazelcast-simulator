@@ -21,6 +21,8 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Partition;
+import com.hazelcast.simulator.tests.concurrent.atomiclong.AtomicLongTest;
+import com.hazelcast.spi.properties.GroupProperty;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -44,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 
 public class KeyUtilsTest {
 
-    private static final int PARTITION_COUNT = 10;
+    private static final int PARTITION_COUNT = 5000;
 
     private static final Logger LOGGER = Logger.getLogger(KeyUtilsTest.class);
 
