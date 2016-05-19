@@ -37,7 +37,7 @@ import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.processors.CommunicatorOperationProcessor;
+import com.hazelcast.simulator.protocol.processors.CoordinatorCommunicatorProcessor;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import io.netty.channel.ChannelPipeline;
@@ -63,7 +63,6 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
     private final CoordinatorOperationProcessor processor;
-    private final CommunicatorOperationProcessor communicatorOperationProcessor;
     private final ConnectionManager connectionManager;
 
     CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
@@ -72,20 +71,21 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
                          ComponentRegistry componentRegistry) {
         super(futureMap, COORDINATOR, port, getDefaultThreadPoolSize());
 
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, componentRegistry, failureContainer, testPhaseListeners,
-                performanceStatsContainer);
-        this.communicatorOperationProcessor = new CommunicatorOperationProcessor(exceptionLogger);
+        CoordinatorCommunicatorProcessor communicatorProcessor = new CoordinatorCommunicatorProcessor(this, componentRegistry);
+
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
+                performanceStatsContainer, communicatorProcessor);
         this.connectionManager = connectionManager;
     }
 
     /**
      * Creates a {@link CoordinatorConnector} instance.
      *
-     * @param componentRegistry          {@link ComponentRegistry} for this connector
-     * @param failureContainer           {@link FailureContainer} for this connector
-     * @param testPhaseListeners {@link TestPhaseListeners} for this connector
-     * @param performanceStatsContainer  {@link PerformanceStatsContainer} for this connector
-     * @param port                       the port for incoming connections
+     * @param componentRegistry         {@link ComponentRegistry} for this connector
+     * @param failureContainer          {@link FailureContainer} for this connector
+     * @param testPhaseListeners        {@link TestPhaseListeners} for this connector
+     * @param performanceStatsContainer {@link PerformanceStatsContainer} for this connector
+     * @param port                      the port for incoming connections
      */
     public static CoordinatorConnector createInstance(ComponentRegistry componentRegistry,
                                                       FailureContainer failureContainer,
@@ -132,7 +132,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, communicatorOperationProcessor,
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor,
                 getScheduledExecutor()));
         pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, REMOTE, getFutureMap(), 0));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));

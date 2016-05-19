@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.utils;
+package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -23,14 +26,19 @@ import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
-public final class CommunicatorUtils {
+public final class CoordinatorCommunicatorProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(CommunicatorUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorCommunicatorProcessor.class);
 
-    private CommunicatorUtils() {
+    private final ServerConnector connector;
+    private final ComponentRegistry componentRegistry;
+
+    public CoordinatorCommunicatorProcessor(ServerConnector connector, ComponentRegistry componentRegistry) {
+        this.connector = connector;
+        this.componentRegistry = componentRegistry;
     }
 
-    public static void execute(RemoteControllerOperation.Type type, ComponentRegistry componentRegistry) {
+    public void process(RemoteControllerOperation.Type type) {
         switch (type) {
             case SHOW_COMPONENTS:
                 StringBuilder sb = new StringBuilder();
@@ -53,10 +61,15 @@ public final class CommunicatorUtils {
                             .append(NEW_LINE);
                 }
 
-                LOGGER.info(sb.toString());
+                logToCommunicator(sb.toString().substring(0, sb.length() - 1));
                 break;
             default:
                 LOGGER.info("This is a NOOP for integration tests");
         }
+    }
+
+    private void logToCommunicator(String message) {
+        LogOperation operation = new LogOperation(message);
+        connector.submit(SimulatorAddress.REMOTE, operation);
     }
 }

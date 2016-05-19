@@ -28,8 +28,6 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.CommunicatorUtils;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -46,20 +44,21 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
     private final LocalExceptionLogger exceptionLogger;
-    private final ComponentRegistry componentRegistry;
     private final FailureContainer failureContainer;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsContainer performanceStatsContainer;
+    private final CoordinatorCommunicatorProcessor communicatorProcessor;
 
-    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, ComponentRegistry componentRegistry,
-                                         FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                                         PerformanceStatsContainer performanceStatsContainer) {
+    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, FailureContainer failureContainer,
+                                         TestPhaseListeners testPhaseListeners,
+                                         PerformanceStatsContainer performanceStatsContainer,
+                                         CoordinatorCommunicatorProcessor communicatorProcessor) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
-        this.componentRegistry = componentRegistry;
         this.failureContainer = failureContainer;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStatsContainer = performanceStatsContainer;
+        this.communicatorProcessor = communicatorProcessor;
     }
 
     @Override
@@ -110,6 +109,6 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processRemote(RemoteControllerOperation operation) {
-        CommunicatorUtils.execute(operation.getType(), componentRegistry);
+        communicatorProcessor.process(operation.getType());
     }
 }

@@ -6,6 +6,7 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
@@ -55,6 +56,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class CoordinatorOperationProcessorTest implements FailureListener {
 
@@ -84,7 +86,10 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     public void setUp() {
         workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
 
+        ServerConnector serverConnector = mock(ServerConnector.class);
         ComponentRegistry componentRegistry = new ComponentRegistry();
+        CoordinatorCommunicatorProcessor communicatorProcessor
+                = new CoordinatorCommunicatorProcessor(serverConnector, componentRegistry);
 
         exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
@@ -93,8 +98,8 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         outputDirectory = TestUtils.createTmpDirectory();
         failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
 
-        processor = new CoordinatorOperationProcessor(exceptionLogger, componentRegistry, failureContainer, testPhaseListeners,
-                performanceStatsContainer);
+        processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
+                performanceStatsContainer, communicatorProcessor);
     }
 
     @After
