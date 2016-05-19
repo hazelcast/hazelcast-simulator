@@ -78,6 +78,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
                 while ((!testContext.isStopped() && !isWorkerStopped)) {
                     timeStep(selector.select());
                     increaseIteration();
+                    workerProbe.recordValue(0);
                 }
             } else {
                 while ((!testContext.isStopped() && !isWorkerStopped)) {
