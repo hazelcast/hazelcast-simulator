@@ -96,6 +96,6 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
         ChaosMonkeyUtils.execute(operation.getType());
     }
 
-    protected abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                                     SimulatorAddress sourceAddress) throws Exception;
+    abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+                                           SimulatorAddress sourceAddress) throws Exception;
 }

@@ -22,7 +22,8 @@ public class RemoteControllerOperation implements SimulatorOperation {
 
     public enum Type {
         INTEGRATION_TEST,
-        SHOW_COMPONENTS
+        RESPONSE,
+        LIST_COMPONENTS
     }
 
     /**
@@ -30,11 +31,25 @@ public class RemoteControllerOperation implements SimulatorOperation {
      */
     private final String type;
 
+    /**
+     * Defines the payload of this operation.
+     */
+    private final String payload;
+
     public RemoteControllerOperation(Type type) {
+        this(type, null);
+    }
+
+    public RemoteControllerOperation(Type type, String payload) {
         this.type = type.name();
+        this.payload = payload;
     }
 
     public Type getType() {
         return Type.valueOf(type);
+    }
+
+    public String getPayload() {
+        return payload;
     }
 }

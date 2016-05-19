@@ -47,18 +47,18 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     private final FailureContainer failureContainer;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsContainer performanceStatsContainer;
-    private final CoordinatorCommunicatorProcessor communicatorProcessor;
+    private final CoordinatorRemoteControllerProcessor remoteControllerProcessor;
 
     public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, FailureContainer failureContainer,
                                          TestPhaseListeners testPhaseListeners,
                                          PerformanceStatsContainer performanceStatsContainer,
-                                         CoordinatorCommunicatorProcessor communicatorProcessor) {
+                                         CoordinatorRemoteControllerProcessor remoteControllerProcessor) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.failureContainer = failureContainer;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStatsContainer = performanceStatsContainer;
-        this.communicatorProcessor = communicatorProcessor;
+        this.remoteControllerProcessor = remoteControllerProcessor;
     }
 
     @Override
@@ -77,7 +77,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 processPerformanceStats((PerformanceStatsOperation) operation, sourceAddress);
                 break;
             case REMOTE_CONTROLLER:
-                processRemote((RemoteControllerOperation) operation);
+                processRemoteController((RemoteControllerOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -108,7 +108,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         performanceStatsContainer.update(sourceAddress, operation.getPerformanceStats());
     }
 
-    private void processRemote(RemoteControllerOperation operation) {
-        communicatorProcessor.process(operation.getType());
+    private void processRemoteController(RemoteControllerOperation operation) {
+        remoteControllerProcessor.process(operation.getType());
     }
 }

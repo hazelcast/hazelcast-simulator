@@ -37,8 +37,8 @@ import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.processors.CoordinatorCommunicatorProcessor;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
+import com.hazelcast.simulator.protocol.processors.CoordinatorRemoteControllerProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
@@ -65,16 +65,20 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     private final CoordinatorOperationProcessor processor;
     private final ConnectionManager connectionManager;
 
-    CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                         PerformanceStatsContainer performanceStatsContainer, int port,
-                         ConnectionManager connectionManager, ConcurrentMap<String, ResponseFuture> futureMap,
-                         ComponentRegistry componentRegistry) {
+    CoordinatorConnector(ComponentRegistry componentRegistry,
+                         FailureContainer failureContainer,
+                         TestPhaseListeners testPhaseListeners,
+                         PerformanceStatsContainer performanceStatsContainer,
+                         int port,
+                         ConnectionManager connectionManager,
+                         ConcurrentMap<String, ResponseFuture> futureMap) {
         super(futureMap, COORDINATOR, port, getDefaultThreadPoolSize());
 
-        CoordinatorCommunicatorProcessor communicatorProcessor = new CoordinatorCommunicatorProcessor(this, componentRegistry);
+        CoordinatorRemoteControllerProcessor remoteControllerProcessor = new CoordinatorRemoteControllerProcessor(this,
+                componentRegistry);
 
         this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStatsContainer, communicatorProcessor);
+                performanceStatsContainer, remoteControllerProcessor);
         this.connectionManager = connectionManager;
     }
 
@@ -90,12 +94,13 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     public static CoordinatorConnector createInstance(ComponentRegistry componentRegistry,
                                                       FailureContainer failureContainer,
                                                       TestPhaseListeners testPhaseListeners,
-                                                      PerformanceStatsContainer performanceStatsContainer, int port) {
+                                                      PerformanceStatsContainer performanceStatsContainer,
+                                                      int port) {
         ConnectionManager connectionManager = new ConnectionManager();
         ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
-        return new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer,
-                port, connectionManager, futureMap, componentRegistry);
+        return new CoordinatorConnector(componentRegistry, failureContainer, testPhaseListeners, performanceStatsContainer,
+                port, connectionManager, futureMap);
     }
 
     @Override
@@ -203,7 +208,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         return response;
     }
 
-    public Response writeToCommunicator(SimulatorOperation operation) {
+    public Response writeToRemoteController(SimulatorOperation operation) {
         return super.write(REMOTE, operation);
     }
 

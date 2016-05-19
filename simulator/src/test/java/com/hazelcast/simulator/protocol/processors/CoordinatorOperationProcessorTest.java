@@ -6,7 +6,7 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
@@ -86,10 +86,10 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     public void setUp() {
         workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
 
-        ServerConnector serverConnector = mock(ServerConnector.class);
+        CoordinatorConnector serverConnector = mock(CoordinatorConnector.class);
         ComponentRegistry componentRegistry = new ComponentRegistry();
-        CoordinatorCommunicatorProcessor communicatorProcessor
-                = new CoordinatorCommunicatorProcessor(serverConnector, componentRegistry);
+        CoordinatorRemoteControllerProcessor remoteControllerProcessor
+                = new CoordinatorRemoteControllerProcessor(serverConnector, componentRegistry);
 
         exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
@@ -99,7 +99,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStatsContainer, communicatorProcessor);
+                performanceStatsContainer, remoteControllerProcessor);
     }
 
     @After

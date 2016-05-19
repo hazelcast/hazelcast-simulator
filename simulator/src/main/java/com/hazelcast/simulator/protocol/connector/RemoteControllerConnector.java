@@ -29,7 +29,7 @@ import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.processors.CommunicatorOperationProcessor;
+import com.hazelcast.simulator.protocol.processors.RemoteControllerOperationProcessor;
 import com.hazelcast.simulator.utils.ExecutorFactory;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
@@ -55,7 +55,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
  * Connector which connects to remote Simulator Coordinator instances.
  */
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
-public class CommunicatorConnector implements ClientPipelineConfigurator {
+public class RemoteControllerConnector implements ClientPipelineConfigurator {
 
     private static final int COORDINATOR_INDEX = 1;
 
@@ -63,16 +63,16 @@ public class CommunicatorConnector implements ClientPipelineConfigurator {
     private final AtomicLong messageIds = new AtomicLong();
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
     private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-    private final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "CommunicatorConnector");
+    private final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "RemoteControllerConnector");
 
     private final ClientConnector client;
-    private final CommunicatorOperationProcessor processor;
+    private final RemoteControllerOperationProcessor processor;
 
-    public CommunicatorConnector(String coordinatorHost, int coordinatorPort) {
+    public RemoteControllerConnector(String coordinatorHost, int coordinatorPort) {
         LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
 
         client = new ClientConnector(this, group, futureMap, REMOTE, COORDINATOR, 1, coordinatorHost, coordinatorPort);
-        processor = new CommunicatorOperationProcessor(exceptionLogger);
+        processor = new RemoteControllerOperationProcessor(exceptionLogger);
     }
 
     @Override
@@ -101,6 +101,15 @@ public class CommunicatorConnector implements ClientPipelineConfigurator {
 
         executorService.shutdown();
         awaitTermination(executorService, 1, TimeUnit.MINUTES);
+    }
+
+    /**
+     * Returns the last response the {@link RemoteControllerOperationProcessor} received.
+     *
+     * @return last response of the {@link RemoteControllerOperationProcessor}
+     */
+    public String getResponse() {
+        return processor.getResponse();
     }
 
     /**

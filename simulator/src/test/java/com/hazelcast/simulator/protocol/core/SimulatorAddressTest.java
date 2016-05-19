@@ -129,7 +129,7 @@ public class SimulatorAddressTest {
     }
 
     @Test
-    public void testFromString_Communicator() {
+    public void testFromString_RemoteController() {
         SimulatorAddress expectedAddress = SimulatorAddress.REMOTE;
         assertToAndFromStringEquals(expectedAddress);
     }

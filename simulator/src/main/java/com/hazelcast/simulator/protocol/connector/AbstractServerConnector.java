@@ -59,6 +59,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static java.lang.Math.max;
+import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -68,7 +69,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 abstract class AbstractServerConnector implements ServerConnector {
 
     private static final int MIN_THREAD_POOL_SIZE = 10;
-    private static final int DEFAULT_THREAD_POOL_SIZE = max(MIN_THREAD_POOL_SIZE, Runtime.getRuntime().availableProcessors() * 2);
+    private static final int DEFAULT_THREAD_POOL_SIZE = max(MIN_THREAD_POOL_SIZE, getRuntime().availableProcessors() * 2);
 
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
