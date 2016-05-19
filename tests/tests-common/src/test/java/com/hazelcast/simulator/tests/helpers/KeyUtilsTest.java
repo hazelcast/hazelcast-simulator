@@ -91,7 +91,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        int[] keys = generateIntKeys(keyCount, KeyLocality.LOCAL, hz);
+        int[] keys = generateIntKeys(keyCount, KeyLocality.LOCAL_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -121,7 +121,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        int[] keys = generateIntKeys(keyCount, KeyLocality.REMOTE, hz);
+        int[] keys = generateIntKeys(keyCount, KeyLocality.REMOTE_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -144,7 +144,7 @@ public class KeyUtilsTest {
     public void testGenerateIntKeys_whenRandom_equalDistributionOverPartitions() {
         int keysPerPartition = 4;
         int keyCount = keysPerPartition * PARTITION_COUNT;
-        int[] keys = generateIntKeys(keyCount, KeyLocality.RANDOM, hz);
+        int[] keys = generateIntKeys(keyCount, KeyLocality.RANDOM_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -199,7 +199,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.LOCAL, hz);
+        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.LOCAL_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -229,7 +229,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.REMOTE, hz);
+        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.REMOTE_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -252,7 +252,7 @@ public class KeyUtilsTest {
     public void testGenerateIntegerKeys_whenRandom_equalDistributionOverPartitions() {
         int keysPerPartition = 4;
         int keyCount = keysPerPartition * PARTITION_COUNT;
-        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.RANDOM, hz);
+        Integer[] keys = generateIntegerKeys(keyCount, KeyLocality.RANDOM_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -363,7 +363,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.LOCAL, hz);
+        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.LOCAL_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -397,7 +397,7 @@ public class KeyUtilsTest {
 
         int keysPerPartition = 4;
         int keyCount = countsPerPartition.size() * keysPerPartition;
-        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.REMOTE, hz);
+        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.REMOTE_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -421,7 +421,7 @@ public class KeyUtilsTest {
     public void testGenerateStringKeys_whenRandom_equalDistributionOverPartitions() {
         int keysPerPartition = 4;
         int keyCount = keysPerPartition * PARTITION_COUNT;
-        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.RANDOM, hz);
+        String[] keys = generateStringKeys("prefix", keyCount, KeyLocality.RANDOM_BALANCED, hz);
 
         assertEquals(keyCount, keys.length);
 
@@ -480,7 +480,7 @@ public class KeyUtilsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testBalancedKeyGenerator_withUnsupportedKeyLocality() {
-        new KeyUtils.BalancedKeyGenerator<Integer>(hz, KeyLocality.SHARED, 0) {
+        new KeyUtils.AbstractKeyGenerator<Integer>(hz, KeyLocality.SHARED, 0, false) {
 
             @Override
             protected Integer generateKey() {
@@ -497,14 +497,14 @@ public class KeyUtilsTest {
         assertEquals(1, generator.next().intValue());
     }
 
-    private static class GenerateSameKeyOnceGenerator extends KeyUtils.BalancedKeyGenerator<Integer> {
+    private static class GenerateSameKeyOnceGenerator extends KeyUtils.AbstractKeyGenerator<Integer> {
 
         private static final Integer[] KEYS = new Integer[]{new Integer(0), new Integer(0), new Integer(1)};
 
         private int keyIndex;
 
         private GenerateSameKeyOnceGenerator(HazelcastInstance hz) {
-            super(hz, KeyLocality.RANDOM, 2);
+            super(hz, KeyLocality.RANDOM, 2, false);
         }
 
         @Override
