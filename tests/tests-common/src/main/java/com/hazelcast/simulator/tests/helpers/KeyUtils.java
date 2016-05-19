@@ -180,7 +180,7 @@ public final class KeyUtils {
      * @return the created array of keys
      */
     public static String[] generateStringKeys(String prefix, int keyCount, KeyLocality keyLocality, HazelcastInstance hz) {
-        int keyLength = (int) (prefix.length() + Math.ceil(Math.log10(keyCount))) + 2;
+        int keyLength = (int) (prefix.length() + Math.ceil(Math.log10(keyCount))) + 5;
         return generateStringKeys(prefix, keyCount, keyLength, keyLocality, hz);
     }
 
