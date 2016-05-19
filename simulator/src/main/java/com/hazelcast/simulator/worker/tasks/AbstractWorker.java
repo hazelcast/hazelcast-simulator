@@ -18,10 +18,12 @@ package com.hazelcast.simulator.worker.tasks;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.LightweightProbeImpl;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
+import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -71,10 +73,19 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     public final void run() {
         try {
             beforeRun();
-            while ((!testContext.isStopped() && !isWorkerStopped)) {
-                workerMetronome.waitForNext();
-                doRun();
+
+            if (workerMetronome.getClass() == EmptyMetronome.class && workerProbe.getClass() == LightweightProbeImpl.class) {
+                while ((!testContext.isStopped() && !isWorkerStopped)) {
+                    timeStep(selector.select());
+                    increaseIteration();
+                }
+            } else {
+                while ((!testContext.isStopped() && !isWorkerStopped)) {
+                    workerMetronome.waitForNext();
+                    doRun();
+                }
             }
+
             afterRun();
         } catch (Exception e) {
             throw rethrow(e);
@@ -121,7 +132,6 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration
-     *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep(O operation) throws Exception;
@@ -193,7 +203,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         return iteration;
     }
 
-    void increaseIteration() {
+    protected void increaseIteration() {
         iteration++;
     }
 

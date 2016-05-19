@@ -17,7 +17,7 @@ package com.hazelcast.simulator.worker.metronome;
 
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 
-class EmptyMetronome implements Metronome {
+public class EmptyMetronome implements Metronome {
 
     @Override
     public void waitForNext() {
