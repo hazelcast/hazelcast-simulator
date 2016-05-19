@@ -28,4 +28,8 @@ public class PerformanceMonitorTest {
     void run() {
         performanceProbe.recordValue(50);
     }
+
+    public Probe getPerformanceProbe() {
+        return performanceProbe;
+    }
 }

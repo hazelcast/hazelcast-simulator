@@ -1,8 +1,10 @@
 
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.PerformanceMonitorTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.Test;
 
@@ -16,13 +18,30 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
 
     @Test
     public void testConstructor_withTestcase() {
-        TestCase testCase = new TestCase("TestContainerNullContextTest");
+        TestCase testCase = new TestCase("TestContainerWithTestcaseTest");
         testCase.setProperty("class", SuccessTest.class.getName());
 
         testContainer = new TestContainer(testContext, testCase);
 
         assertNotNull(testContainer.getTestInstance());
         assertTrue(testContainer.getTestInstance() instanceof SuccessTest);
+    }
+
+    @Test
+    public void testConstructor_withTestcase_withLightweightProbe() {
+        TestCase testCase = new TestCase("TestContainerWithLightweightProbeTest");
+        testCase.setProperty("class", PerformanceMonitorTest.class.getName());
+        testCase.setProperty(TestContainer.LIGHTWEIGHT_PROBE_PROPERTY_NAME, "true");
+
+        testContainer = new TestContainer(testContext, testCase);
+
+        assertNotNull(testContainer.getTestInstance());
+        assertTrue(testContainer.getTestInstance() instanceof PerformanceMonitorTest);
+
+        PerformanceMonitorTest test = (PerformanceMonitorTest) testContainer.getTestInstance();
+        Probe probe = test.getPerformanceProbe();
+        assertNotNull(probe);
+        assertTrue(probe.isLightweightProbe());
     }
 
     @Test

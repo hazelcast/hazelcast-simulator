@@ -191,23 +191,30 @@ public class WorkerPerformanceMonitor {
                     String probeName = entry.getKey();
                     Probe probe = entry.getValue();
 
-                    Histogram intervalHistogram = probe.getIntervalHistogram();
-                    intervalHistograms.put(probeName, intervalHistogram);
+                    if (probe.isLightweightProbe()) {
+                        intervalPercentileLatency = -1;
+                        intervalAvgLatency = -1;
+                        intervalMaxLatency = -1;
+                        intervalOperationalCount += probe.getIntervalCountAndReset();
+                    } else {
+                        Histogram intervalHistogram = probe.getIntervalHistogram();
+                        intervalHistograms.put(probeName, intervalHistogram);
 
-                    long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
-                    if (percentileValue > intervalPercentileLatency) {
-                        intervalPercentileLatency = percentileValue;
-                    }
-                    double avgValue = intervalHistogram.getMean();
-                    if (avgValue > intervalAvgLatency) {
-                        intervalAvgLatency = avgValue;
-                    }
-                    long maxValue = intervalHistogram.getMaxValue();
-                    if (maxValue > intervalMaxLatency) {
-                        intervalMaxLatency = maxValue;
-                    }
-                    if (probe.isThroughputProbe()) {
-                        intervalOperationalCount += intervalHistogram.getTotalCount();
+                        long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+                        if (percentileValue > intervalPercentileLatency) {
+                            intervalPercentileLatency = percentileValue;
+                        }
+                        double avgValue = intervalHistogram.getMean();
+                        if (avgValue > intervalAvgLatency) {
+                            intervalAvgLatency = avgValue;
+                        }
+                        long maxValue = intervalHistogram.getMaxValue();
+                        if (maxValue > intervalMaxLatency) {
+                            intervalMaxLatency = maxValue;
+                        }
+                        if (probe.isThroughputProbe()) {
+                            intervalOperationalCount += intervalHistogram.getTotalCount();
+                        }
                     }
                 }
 

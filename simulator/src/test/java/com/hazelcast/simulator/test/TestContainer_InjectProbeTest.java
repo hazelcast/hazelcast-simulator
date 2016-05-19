@@ -58,6 +58,16 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         assertNull(test.notAnnotatedProbe);
     }
 
+    @Test
+    public void testInjectProbe_withLightweightProbe() {
+        ProbeTest test = new ProbeTest();
+        testContainer = new TestContainer(testContext, test, true);
+
+        assertNotNull(test.throughputProbe);
+        assertTrue(test.throughputProbe.isLightweightProbe());
+        assertTrue(testContainer.hasProbe("throughputProbe"));
+    }
+
     private static class ProbeTest extends BaseTest {
 
         @InjectTestContext

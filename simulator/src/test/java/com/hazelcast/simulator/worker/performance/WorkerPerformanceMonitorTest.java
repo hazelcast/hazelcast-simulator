@@ -12,7 +12,6 @@ import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorTest;
 import com.hazelcast.simulator.tests.SuccessTest;
-import com.hazelcast.simulator.utils.EmptyStatement;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -115,7 +115,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() throws Exception {
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() {
         assertTrue(performanceMonitor.start());
         sleepMillis(300);
 
@@ -137,6 +137,32 @@ public class WorkerPerformanceMonitorTest {
 
         performanceMonitor.stop();
         verifyServerConnector();
+    }
+
+    @Test
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLightweightProbe() {
+        assertTrue(performanceMonitor.start());
+        sleepMillis(300);
+
+        PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
+        addTest(test, 0, true);
+
+        Thread testRunnerThread = new TestRunnerThread();
+        testRunnerThread.start();
+
+        test.recordValue(TimeUnit.MICROSECONDS.toNanos(500));
+        sleepMillis(200);
+
+        test.recordValue(TimeUnit.MICROSECONDS.toNanos(200));
+        test.recordValue(TimeUnit.MICROSECONDS.toNanos(300));
+        sleepMillis(200);
+
+        test.stopTest();
+        joinThread(testRunnerThread);
+
+        performanceMonitor.stop();
+        verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
+        verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
@@ -171,7 +197,11 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void addTest(Object test, int delayMillis) {
-        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test);
+        addTest(test, delayMillis, false);
+    }
+
+    private void addTest(Object test, int delayMillis, boolean isLightweightProbe) {
+        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, isLightweightProbe);
         tests.put(TEST_NAME, testContainer);
     }
 
@@ -221,7 +251,7 @@ public class WorkerPerformanceMonitorTest {
             try {
                 tests.get(TEST_NAME).invoke(TestPhase.RUN);
             } catch (Exception e) {
-                EmptyStatement.ignore(e);
+                ignore(e);
             }
         }
     }
