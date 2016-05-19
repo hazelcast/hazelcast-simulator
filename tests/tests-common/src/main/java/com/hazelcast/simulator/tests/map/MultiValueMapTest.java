@@ -21,6 +21,10 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
+import com.hazelcast.nio.serialization.Portable;
+import com.hazelcast.nio.serialization.PortableFactory;
+import com.hazelcast.nio.serialization.PortableReader;
+import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.probes.Probe;
@@ -33,6 +37,7 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,6 +45,7 @@ import java.util.Collection;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 public class MultiValueMapTest {
@@ -57,10 +63,11 @@ public class MultiValueMapTest {
     public int maxNestedValues = 100;
     public double putProbability = 0.5;
     public boolean useIndex;
+    public boolean usePortable;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private IMap<Integer, SillySequence> map;
+    private IMap<Integer, Object> map;
 
     @Setup
     public void setUp(TestContext testContext) {
@@ -80,7 +87,7 @@ public class MultiValueMapTest {
     }
 
     private void loadInitialData() {
-        Streamer<Integer, SillySequence> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, Object> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             int count = i % maxNestedValues;
             SillySequence sillySequence = new SillySequence(i, count);
@@ -114,20 +121,20 @@ public class MultiValueMapTest {
                     int count = key % maxNestedValues;
                     SillySequence sillySequence = new SillySequence(key, count);
                     started = System.nanoTime();
-                    map.put(key, sillySequence);
+                    map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
                     probe.done(started);
                     break;
                 case QUERY:
                     Predicate predicate = Predicates.equal("payloadField[any]", key);
                     started = System.nanoTime();
-                    Collection<SillySequence> result = null;
+                    Collection<Object> result = null;
                     try {
                         result = map.values(predicate);
                     } finally {
                         probe.done(started);
                     }
                     THROTTLING_LOGGER.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
-                    for (SillySequence resultSillySequence : result) {
+                    for (Object resultSillySequence : result) {
                         assertValidSequence(resultSillySequence);
                     }
                     break;
@@ -136,9 +143,18 @@ public class MultiValueMapTest {
             }
         }
 
-        private void assertValidSequence(SillySequence sillySequence) {
-            Collection<Integer> payload = sillySequence.payloadField;
-            assertEquals(sillySequence.count, payload.size());
+        private void assertValidSequence(Object sillySequenceObject) {
+            Collection<Integer> payload;
+            if (sillySequenceObject instanceof SillySequencePortable) {
+                SillySequencePortable ssp = (SillySequencePortable) sillySequenceObject;
+                payload = asList(ArrayUtils.toObject(ssp.payloadField));
+                assertEquals(ssp.count, payload.size());
+            } else {
+                SillySequence ss = (SillySequence) sillySequenceObject;
+                payload = ss.payloadField;
+                assertEquals(ss.count, payload.size());
+            }
+
 
             Integer lastValue = null;
             for (int i : payload) {
@@ -180,6 +196,54 @@ public class MultiValueMapTest {
         public void readData(ObjectDataInput in) throws IOException {
             count = in.readInt();
             payloadField = in.readObject();
+        }
+
+        public Object getPortable() {
+            SillySequencePortable portable = new SillySequencePortable();
+            portable.count = this.count;
+            portable.payloadField = ArrayUtils.toPrimitive(payloadField.toArray(new Integer[payloadField.size()]));
+            return portable;
+        }
+    }
+
+    private static class SillySequencePortable implements Portable {
+        int count;
+        int[] payloadField;
+
+        @SuppressWarnings("unused")
+        SillySequencePortable() {
+        }
+
+        @Override
+        public int getFactoryId() {
+            return SillySequencePortableFactory.FACTORY_ID;
+        }
+
+        @Override
+        public int getClassId() {
+            return 1;
+        }
+
+        @Override
+        public void writePortable(PortableWriter out) throws IOException {
+            out.writeInt("count", count);
+            out.writeIntArray("payloadField", payloadField);
+        }
+
+        @Override
+        public void readPortable(PortableReader reader) throws IOException {
+            count = reader.readInt("count");
+            payloadField = reader.readIntArray("payloadField");
+        }
+    }
+
+    public static final class SillySequencePortableFactory implements PortableFactory {
+
+        public static final int FACTORY_ID = 5001;
+
+        @Override
+        public Portable create(int i) {
+            return new SillySequencePortable();
         }
     }
 }

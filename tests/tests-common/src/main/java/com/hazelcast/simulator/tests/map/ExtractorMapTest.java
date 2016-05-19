@@ -21,10 +21,15 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
+import com.hazelcast.nio.serialization.Portable;
+import com.hazelcast.nio.serialization.PortableFactory;
+import com.hazelcast.nio.serialization.PortableReader;
+import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
+import com.hazelcast.query.extractor.ValueReader;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -35,6 +40,7 @@ import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,14 +67,16 @@ public class ExtractorMapTest {
     public int indexValuesCount = 5;
     public double putProbability = 0.5;
     public boolean useIndex;
+    public boolean usePortable;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private IMap<Integer, SillySequence> map;
+    private IMap<Integer, Object> map;
 
     @Setup
     public void setUp(TestContext testContext) {
-        map = testContext.getTargetInstance().getMap(basename);
+        String mapName = usePortable ? "Portable " + basename : basename;
+        map = testContext.getTargetInstance().getMap(mapName);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProbability)
@@ -87,10 +95,10 @@ public class ExtractorMapTest {
     }
 
     private void loadInitialData() {
-        Streamer<Integer, SillySequence> streamer = StreamerFactory.getInstance(map);
+        Streamer<Integer, Object> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < keyCount; i++) {
             SillySequence sillySequence = new SillySequence(i, nestedValuesCount);
-            streamer.pushEntry(i, sillySequence);
+            streamer.pushEntry(i, usePortable ? sillySequence.getPortable() : sillySequence);
         }
         streamer.await();
     }
@@ -115,7 +123,7 @@ public class ExtractorMapTest {
                 case PUT:
                     SillySequence sillySequence = new SillySequence(key, nestedValuesCount);
                     started = System.nanoTime();
-                    map.put(key, sillySequence);
+                    map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
                     probe.done(started);
                     break;
                 case QUERY:
@@ -123,7 +131,7 @@ public class ExtractorMapTest {
                     String query = format("payloadFromExtractor[%d]", index);
                     Predicate predicate = Predicates.equal(query, key);
                     started = System.nanoTime();
-                    Collection<SillySequence> result = null;
+                    Collection<Object> result = null;
                     try {
                         result = map.values(predicate);
                     } finally {
@@ -131,7 +139,7 @@ public class ExtractorMapTest {
                     }
                     THROTTLING_LOGGER.info(format("Query 'payloadFromExtractor[%d]= %d' returned %d results.", index, key,
                             result.size()));
-                    for (SillySequence resultSillySequence : result) {
+                    for (Object resultSillySequence : result) {
                         assertValidSequence(key, resultSillySequence);
                     }
                     break;
@@ -144,14 +152,17 @@ public class ExtractorMapTest {
             return abs(randomInt(keyCount)) % indexValuesCount;
         }
 
-        private void assertValidSequence(Integer key, SillySequence sillySequence) {
+        private void assertValidSequence(Integer key, Object sillySequenceObject) {
             int index = key % nestedValuesCount;
-            assertEquals(key, sillySequence.payloadField.get(index));
+            if (sillySequenceObject instanceof SillySequencePortable) {
+                assertEquals(key.intValue(), ((SillySequencePortable) sillySequenceObject).payloadField[index]);
+            } else {
+                assertEquals(key, ((SillySequence) sillySequenceObject).payloadField.get(index));
+            }
         }
     }
 
     private static class SillySequence implements DataSerializable {
-
         int count;
         List<Integer> payloadField;
 
@@ -180,6 +191,44 @@ public class ExtractorMapTest {
             count = in.readInt();
             payloadField = in.readObject();
         }
+
+        public Portable getPortable() {
+            SillySequencePortable portable = new SillySequencePortable();
+            portable.count = this.count;
+            portable.payloadField = ArrayUtils.toPrimitive(payloadField.toArray(new Integer[payloadField.size()]));
+            return portable;
+        }
+    }
+
+    private static class SillySequencePortable implements Portable {
+        int count;
+        int[] payloadField;
+
+        @SuppressWarnings("unused")
+        SillySequencePortable() {
+        }
+
+        @Override
+        public int getFactoryId() {
+            return SillySequencePortableFactory.FACTORY_ID;
+        }
+
+        @Override
+        public int getClassId() {
+            return 1;
+        }
+
+        @Override
+        public void writePortable(PortableWriter out) throws IOException {
+            out.writeInt("count", count);
+            out.writeIntArray("payloadField", payloadField);
+        }
+
+        @Override
+        public void readPortable(PortableReader reader) throws IOException {
+            count = reader.readInt("count");
+            payloadField = reader.readIntArray("payloadField");
+        }
     }
 
     public static final class PayloadExtractor extends ValueExtractor<SillySequence, String> {
@@ -188,4 +237,22 @@ public class ExtractorMapTest {
             valueCollector.addObject(sillySequence.payloadField.get(Integer.parseInt(indexString)));
         }
     }
+
+    public static final class PayloadPortableExtractor extends ValueExtractor<ValueReader, String> {
+        @Override
+        public void extract(ValueReader reader, String indexString, ValueCollector valueCollector) {
+            reader.read("payloadFromExtractor[" + indexString + "]", valueCollector);
+        }
+    }
+
+    public static final class SillySequencePortableFactory implements PortableFactory {
+
+        public static final int FACTORY_ID = 5000;
+
+        @Override
+        public Portable create(int i) {
+            return new SillySequencePortable();
+        }
+    }
+
 }
