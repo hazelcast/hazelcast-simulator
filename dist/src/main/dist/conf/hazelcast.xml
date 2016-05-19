@@ -68,7 +68,16 @@
 
     <map name="ExtractorMapTest*">
         <attributes>
-            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">payloadFromExtractor
+            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadExtractor">
+                payloadFromExtractor
+            </attribute>
+        </attributes>
+    </map>
+
+    <map name="PortableExtractorMapTest*">
+        <attributes>
+            <attribute extractor="com.hazelcast.simulator.tests.map.ExtractorMapTest$PayloadPortableExtractor">
+                payloadFromExtractor
             </attribute>
         </attributes>
     </map>
@@ -95,6 +104,12 @@
             </portable-factory>
             <portable-factory factory-id="10000002">
                 com.hazelcast.simulator.tests.map.helpers.ComplexDomainObjectPortableFactory
+            </portable-factory>
+            <portable-factory factory-id="5000">
+                com.hazelcast.simulator.tests.map.ExtractorMapTest$SillySequencePortableFactory
+            </portable-factory>
+            <portable-factory factory-id="5001">
+                com.hazelcast.simulator.tests.map.MultiValueMapTest$SillySequencePortableFactory
             </portable-factory>
         </portable-factories>
     </serialization>
