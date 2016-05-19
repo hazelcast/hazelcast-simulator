@@ -294,6 +294,11 @@ public final class KeyUtils {
                 default:
                     throw new IllegalArgumentException("Unsupported keyLocality: " + keyLocality);
             }
+
+            if (targetPartitions.isEmpty()) {
+                throw new IllegalStateException("No partitions found");
+            }
+
             return targetPartitions;
         }
 
