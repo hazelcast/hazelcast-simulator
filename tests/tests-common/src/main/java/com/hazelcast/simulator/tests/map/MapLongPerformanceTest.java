@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -27,7 +26,7 @@ import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithProbeControl;
+import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 public class MapLongPerformanceTest {
 
@@ -74,33 +73,22 @@ public class MapLongPerformanceTest {
         return new Worker();
     }
 
-    private class Worker extends AbstractWorkerWithProbeControl<Operation> {
+    private class Worker extends AbstractWorker<Operation> {
 
         public Worker() {
             super(operationSelectorBuilder);
         }
 
         @Override
-        public void timeStep(Operation operation, Probe probe) {
+        public void timeStep(Operation operation) {
             Integer key = randomInt(keyCount);
 
-            long started;
             switch (operation) {
                 case PUT:
-                    started = System.nanoTime();
-                    try {
-                        map.set(key, System.currentTimeMillis());
-                    } finally {
-                        probe.recordValue(System.nanoTime() - started);
-                    }
+                    map.set(key, System.currentTimeMillis());
                     break;
                 case GET:
-                    started = System.nanoTime();
-                    try {
-                        map.get(key);
-                    } finally {
-                        probe.recordValue(System.nanoTime() - started);
-                    }
+                    map.get(key);
                     break;
                 default:
                     throw new UnsupportedOperationException();
