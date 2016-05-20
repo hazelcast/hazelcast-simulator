@@ -17,10 +17,8 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
@@ -35,8 +33,6 @@ public abstract class VeryAbstractWorker implements IWorker {
     private final Random random = new Random();
     @InjectTestContext
     private TestContext testContext;
-    @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
-    private Probe workerProbe;
     @InjectMetronome
     private Metronome workerMetronome;
 
@@ -134,10 +130,6 @@ public abstract class VeryAbstractWorker implements IWorker {
 
     protected void increaseIteration() {
         iteration++;
-    }
-
-    Probe getWorkerProbe() {
-        return workerProbe;
     }
 
     protected Metronome getWorkerMetronome() {

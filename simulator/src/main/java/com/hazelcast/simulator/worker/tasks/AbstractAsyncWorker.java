@@ -18,6 +18,7 @@ package com.hazelcast.simulator.worker.tasks;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
@@ -35,6 +36,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends VeryAbstractWorker implements ExecutionCallback<V> {
 
     private final OperationSelector<O> selector;
+    @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
+    private Probe workerProbe;
 
     public AbstractAsyncWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
         this.selector = operationSelectorBuilder.build();
@@ -44,7 +47,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends VeryAbst
     public final void run() throws Exception {
         final TestContext testContext = getTestContext();
         final Metronome metronome = getWorkerMetronome();
-        final Probe probe = getWorkerProbe();
+        final Probe probe = workerProbe;
         final OperationSelector<O> selector = this.selector;
 
         while ((!testContext.isStopped() && !isWorkerStopped)) {
