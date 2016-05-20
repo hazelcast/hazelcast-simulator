@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.config.MapStoreConfig.InitialLoadMode.LAZY;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
@@ -52,7 +53,14 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
         if (isClient(instance)) {
             return;
         }
+        String expectedMapStoreName = mapStoreImplementation.getName();
         MapStoreConfig mapStoreConfig = instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
+        assertMapStoreConfig(logger, mapName, mapStoreConfig);
+        assertMapStoreClassname(mapName, mapStoreConfig, expectedMapStoreName);
+        assertMapStoreImplementation(mapName, mapStoreImplementation, expectedMapStoreName, mapStoreConfig);
+    }
+
+    private static void assertMapStoreConfig(ILogger logger, String mapName, MapStoreConfig mapStoreConfig) {
         if (mapStoreConfig == null) {
             throw new TestException("There is no MapStore configured for map %s", mapName);
         }
@@ -60,14 +68,33 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
         if (!mapStoreConfig.isEnabled()) {
             throw new TestException("MapStore for map %s needs to be enabled", mapName);
         }
+    }
+
+    private static void assertMapStoreClassname(String mapName, MapStoreConfig mapStoreConfig, String expectedMapStoreName) {
+        String configuredMapStoreClassName = mapStoreConfig.getClassName();
+        if (configuredMapStoreClassName == null) {
+            throw new TestException("MapStore for map %s needs to be configured with class %s, but was null", mapName,
+                    expectedMapStoreName);
+        }
+        if (!expectedMapStoreName.equals(configuredMapStoreClassName)) {
+            throw new TestException("MapStore for map %s needs to be configured with class %s, but was %s", mapName,
+                    expectedMapStoreName, configuredMapStoreClassName);
+        }
+    }
+
+    private static void assertMapStoreImplementation(String mapName, Class<? extends MapStore> mapStoreImplementation,
+                                                     String expectedMapStoreImplementationName, MapStoreConfig mapStoreConfig) {
         Object configuredMapStoreImpl = mapStoreConfig.getImplementation();
         if (configuredMapStoreImpl == null) {
-            throw new TestException("MapStore for map %s needs to be configured with class %s, but was null", mapName,
-                    mapStoreImplementation.getName());
+            if (mapStoreConfig.getInitialLoadMode().equals(LAZY)) {
+                return;
+            }
+            throw new TestException("MapStore for map %s needs to be initialized with class %s, but was null (%s)", mapName,
+                    expectedMapStoreImplementationName, mapStoreConfig);
         }
         if (!configuredMapStoreImpl.getClass().equals(mapStoreImplementation)) {
-            throw new TestException("MapStore for map %s needs to be configured with class %s, but was %s", mapName,
-                    mapStoreImplementation.getName(), configuredMapStoreImpl.getClass().getName());
+            throw new TestException("MapStore for map %s needs to be initialized with class %s, but was %s (%s)", mapName,
+                    expectedMapStoreImplementationName, configuredMapStoreImpl.getClass().getName(), mapStoreConfig);
         }
     }
 
