@@ -16,6 +16,9 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 /**
@@ -26,27 +29,27 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
-public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends AbstractWorker<O> {
+public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends VeryAbstractWorker {
+
+    private final OperationSelector<O> selector;
 
     public AbstractWorkerWithProbeControl(OperationSelectorBuilder<O> operationSelectorBuilder) {
-        super(operationSelectorBuilder);
+        this.selector = operationSelectorBuilder.build();
     }
 
     @Override
-    protected void doRun() throws Exception {
-        timeStep(getRandomOperation(), getWorkerProbe());
+    public final void run() throws Exception {
+        final TestContext testContext = getTestContext();
+        final Metronome metronome = getWorkerMetronome();
+        final Probe probe = getWorkerProbe();
+        final OperationSelector<O> selector = this.selector;
 
-        increaseIteration();
-    }
-
-    /**
-     * Fake implementation of abstract method, should not be used.
-     *
-     * @param operation ignored
-     */
-    @Override
-    protected final void timeStep(O operation) {
-        throw new UnsupportedOperationException();
+        while ((!testContext.isStopped() && !isWorkerStopped)) {
+            metronome.waitForNext();
+            O operation = selector.select();
+            timeStep(operation, probe);
+            increaseIteration();
+        }
     }
 
     /**
@@ -56,7 +59,6 @@ public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends 
      *
      * @param operation The selected operation for this iteration
      * @param probe     The built-in {@link Probe}
-     *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep(O operation, Probe probe) throws Exception;

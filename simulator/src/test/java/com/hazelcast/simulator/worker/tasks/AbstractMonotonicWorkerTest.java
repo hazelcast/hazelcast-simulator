@@ -24,7 +24,6 @@ public class AbstractMonotonicWorkerTest {
 
     private enum Operation {
         STOP_TEST_CONTEXT,
-        CALL_TIMESTEP_WITH_ENUM
     }
 
     private WorkerTest test;
@@ -64,19 +63,6 @@ public class AbstractMonotonicWorkerTest {
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testTimeStep_withOperation_shouldThrowException() throws Exception {
-        test.operation = Operation.CALL_TIMESTEP_WITH_ENUM;
-
-        testContainer.invoke(TestPhase.SETUP);
-        testContainer.invoke(TestPhase.RUN);
-
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            assertTrue(new File(i + ".exception").exists());
-        }
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
-    }
-
     private static class WorkerTest {
 
         private TestContext testContext;
@@ -102,9 +88,6 @@ public class AbstractMonotonicWorkerTest {
                 switch (operation) {
                     case STOP_TEST_CONTEXT:
                         stopTestContext();
-                        break;
-                    case CALL_TIMESTEP_WITH_ENUM:
-                        timeStep(operation);
                         break;
                     default:
                         throw new UnsupportedOperationException("Unsupported operation: " + operation);

@@ -16,6 +16,8 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.worker.metronome.Metronome;
 
 /**
  * Monotonic version of {@link AbstractWorker} which allows full control over the built-in {@link Probe}.
@@ -23,23 +25,19 @@ import com.hazelcast.simulator.probes.Probe;
  * This worker provides no {@link com.hazelcast.simulator.worker.selector.OperationSelector}, but a {@link #timeStep(Probe)}
  * method with the built-in {@link Probe} as parameter. This can be used to make a finer selection of the measured code block.
  */
-public abstract class AbstractMonotonicWorkerWithProbeControl extends AbstractWorker {
+public abstract class AbstractMonotonicWorkerWithProbeControl extends VeryAbstractWorker {
 
     @Override
-    public final void doRun() throws Exception {
-        timeStep(getWorkerProbe());
+    public final void run() throws Exception {
+        final TestContext testContext = getTestContext();
+        final Metronome metronome = getWorkerMetronome();
+        final Probe probe = getWorkerProbe();
 
-        increaseIteration();
-    }
-
-    /**
-     * Fake implementation of abstract method, should not be used.
-     *
-     * @param operation ignored
-     */
-    @Override
-    protected final void timeStep(Enum operation) {
-        throw new UnsupportedOperationException();
+        while ((!testContext.isStopped() && !isWorkerStopped)) {
+            metronome.waitForNext();
+            timeStep(probe);
+            increaseIteration();
+        }
     }
 
     /**
