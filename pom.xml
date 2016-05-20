@@ -99,7 +99,6 @@
     <modules>
         <module>archetype</module>
         <module>dist</module>
-        <module>probes</module>
         <module>simulator</module>
         <module>tests</module>
         <module>utils</module>
