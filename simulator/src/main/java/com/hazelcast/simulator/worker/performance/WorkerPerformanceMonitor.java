@@ -231,17 +231,19 @@ public class WorkerPerformanceMonitor {
                     intervalAvgLatency = -1;
                     intervalMaxLatency = -1;
 
-                    AtomicLong previous = previousProbeValues.get(probe);
-                    if (previous == null) {
-                        previous = new AtomicLong();
-                        previousProbeValues.put(probe, previous);
+                    if (probe.isPartOfTotalThroughput()) {
+                        AtomicLong previous = previousProbeValues.get(probe);
+                        if (previous == null) {
+                            previous = new AtomicLong();
+                            previousProbeValues.put(probe, previous);
+                        }
+
+                        long current = probe.get();
+                        long delta = current - previous.get();
+                        previous.set(current);
+
+                        intervalOperationalCount += delta;
                     }
-
-                    long current = probe.get();
-                    long delta = current - previous.get();
-                    previous.set(current);
-
-                    intervalOperationalCount += delta;
                 }
             }
 
