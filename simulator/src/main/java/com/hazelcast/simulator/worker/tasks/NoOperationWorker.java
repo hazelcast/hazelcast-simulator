@@ -20,10 +20,10 @@ package com.hazelcast.simulator.worker.tasks;
  *
  * Can be used on nodes which should not interact with the cluster.
  */
-public final class NoOperationWorker extends AbstractMonotonicWorker {
+public final class NoOperationWorker extends VeryAbstractWorker {
 
     @Override
-    protected void timeStep() throws Exception {
+    public void run() throws Exception {
         stopTestContext();
     }
 }

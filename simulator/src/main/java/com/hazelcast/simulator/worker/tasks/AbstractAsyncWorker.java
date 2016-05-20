@@ -16,7 +16,11 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.core.ExecutionCallback;
+import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 /**
@@ -28,16 +32,32 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  * @param <V> Type of {@link ExecutionCallback}
  */
-public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends AbstractWorker<O> implements ExecutionCallback<V> {
+public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends VeryAbstractWorker implements ExecutionCallback<V> {
+
+    private final OperationSelector<O> selector;
 
     public AbstractAsyncWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
-        super(operationSelectorBuilder);
+        this.selector = operationSelectorBuilder.build();
     }
 
     @Override
-    public final void doRun() throws Exception {
-        timeStep(getRandomOperation());
+    public final void run() throws Exception {
+        final TestContext testContext = getTestContext();
+        final Metronome metronome = getWorkerMetronome();
+        final Probe probe = getWorkerProbe();
+        final OperationSelector<O> selector = this.selector;
+
+        while ((!testContext.isStopped() && !isWorkerStopped)) {
+            metronome.waitForNext();
+            O select = selector.select();
+            long started = System.nanoTime();
+            timeStep(select);
+            probe.recordValue(System.nanoTime() - started);
+            increaseIteration();
+        }
     }
+
+    protected abstract void timeStep(final O operation) throws Exception;
 
     @Override
     public final void onResponse(V response) {

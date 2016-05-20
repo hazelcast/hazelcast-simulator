@@ -16,6 +16,9 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 import java.util.Map;
@@ -29,16 +32,18 @@ import java.util.Set;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
-public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extends AbstractWorker<O>
+public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
+        extends VeryAbstractWorker
         implements IMultipleProbesWorker {
 
     private final OperationSelectorBuilder<O> operationSelectorBuilder;
+    private final OperationSelector<O> selector;
 
-    private Map<? extends Enum, Probe> probeMap;
+    private Probe[] probes;
 
     public AbstractWorkerWithMultipleProbes(OperationSelectorBuilder<O> operationSelectorBuilder) {
-        super(operationSelectorBuilder);
         this.operationSelectorBuilder = operationSelectorBuilder;
+        this.selector = operationSelectorBuilder.build();
     }
 
     @Override
@@ -48,27 +53,29 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extend
 
     @Override
     public void setProbeMap(Map<? extends Enum, Probe> probeMap) {
-        this.probeMap = probeMap;
+        probes = new Probe[probeMap.size()];
+        for (Map.Entry<? extends Enum, Probe> entry : probeMap.entrySet()) {
+            probes[entry.getKey().ordinal()] = entry.getValue();
+        }
     }
 
     @Override
-    protected void doRun() throws Exception {
-        O operation = getRandomOperation();
-        Probe probe = probeMap.get(operation);
+    public void run() throws Exception {
+        final TestContext testContext = getTestContext();
+        final Metronome metronome = getWorkerMetronome();
+        final OperationSelector<O> selector = this.selector;
+        final Probe[] probes = this.probes;
 
-        timeStep(operation, probe);
+        while ((!testContext.isStopped() && !isWorkerStopped)) {
+            metronome.waitForNext();
+            O op = selector.select();
+            Probe probe =  probes[op.ordinal()];
 
-        increaseIteration();
-    }
-
-    /**
-     * Fake implementation of abstract method, should not be used.
-     *
-     * @param operation ignored
-     */
-    @Override
-    protected final void timeStep(O operation) {
-        throw new UnsupportedOperationException();
+            long started = System.nanoTime();
+            timeStep(op, probe);
+            probe.recordValue(System.nanoTime() - started);
+            increaseIteration();
+        }
     }
 
     /**
@@ -78,7 +85,6 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>> extend
      *
      * @param operation The selected operation for this iteration
      * @param probe     The individual {@link Probe} for this operation
-     *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     protected abstract void timeStep(O operation, Probe probe) throws Exception;

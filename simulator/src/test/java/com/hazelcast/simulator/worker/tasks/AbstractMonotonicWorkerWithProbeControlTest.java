@@ -28,7 +28,6 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
 
     private enum Operation {
         STOP_TEST_CONTEXT,
-        CALL_TIMESTEP_WITH_ENUM,
         USE_MANUAL_PROBE
     }
 
@@ -66,19 +65,6 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testTimeStep_withOperation_shouldThrowException() throws Exception {
-        test.operation = Operation.CALL_TIMESTEP_WITH_ENUM;
-
-        testContainer.invoke(TestPhase.SETUP);
-        testContainer.invoke(TestPhase.RUN);
-
-        for (int i = 1; i <= THREAD_COUNT; i++) {
-            assertTrue(new File(i + ".exception").exists());
-        }
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }
 
@@ -127,9 +113,6 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
                 switch (operation) {
                     case STOP_TEST_CONTEXT:
                         stopTestContext();
-                        break;
-                    case CALL_TIMESTEP_WITH_ENUM:
-                        timeStep(operation);
                         break;
                     case USE_MANUAL_PROBE:
                         long started = System.nanoTime();

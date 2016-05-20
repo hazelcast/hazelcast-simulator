@@ -15,31 +15,31 @@
  */
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.worker.metronome.Metronome;
+
 /**
  * Monotonic version of {@link AbstractWorker}.
  *
  * This worker provides no {@link com.hazelcast.simulator.worker.selector.OperationSelector}, just a simple {@link #timeStep()}
  * method without parameters.
  */
-public abstract class AbstractMonotonicWorker extends AbstractWorker {
+public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
 
     @Override
-    public final void doRun() throws Exception {
-        long started = System.nanoTime();
-        timeStep();
-        getWorkerProbe().recordValue(System.nanoTime() - started);
+    public final void run() throws Exception {
+        final TestContext testContext = getTestContext();
+        final Metronome metronome = getWorkerMetronome();
+        final Probe probe = getWorkerProbe();
 
-        increaseIteration();
-    }
-
-    /**
-     * Fake implementation of abstract method, should not be used.
-     *
-     * @param operation ignored
-     */
-    @Override
-    protected final void timeStep(Enum operation) {
-        throw new UnsupportedOperationException();
+        while ((!testContext.isStopped() && !isWorkerStopped)) {
+            metronome.waitForNext();
+            long started = System.nanoTime();
+            timeStep();
+            probe.recordValue(System.nanoTime() - started);
+            increaseIteration();
+        }
     }
 
     /**
