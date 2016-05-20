@@ -70,7 +70,7 @@ public class HdrProbe implements Probe {
     }
 
     @Override
-    public long getIntervalCountAndReset() {
+    public long get() {
         throw new UnsupportedOperationException();
     }
 }

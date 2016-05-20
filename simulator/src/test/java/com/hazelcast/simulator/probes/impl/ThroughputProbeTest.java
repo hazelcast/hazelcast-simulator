@@ -40,8 +40,7 @@ public class ThroughputProbeTest {
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
         probe.done(started);
 
-        assertEquals(expectedCount, probe.getIntervalCountAndReset());
-        assertEquals(0, probe.getIntervalCountAndReset());
+        assertEquals(expectedCount, probe.get());
     }
 
     @Test
@@ -55,8 +54,7 @@ public class ThroughputProbeTest {
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        assertEquals(expectedCount, probe.getIntervalCountAndReset());
-        assertEquals(0, probe.getIntervalCountAndReset());
+        assertEquals(expectedCount, probe.get());
     }
 
     @Test(expected = UnsupportedOperationException.class)

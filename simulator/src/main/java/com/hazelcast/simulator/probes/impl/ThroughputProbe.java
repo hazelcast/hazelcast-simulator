@@ -58,7 +58,7 @@ public class ThroughputProbe implements Probe {
     }
 
     @Override
-    public long getIntervalCountAndReset() {
-        return counter.getAndSet(0);
+    public long get() {
+        return counter.get();
     }
 }
