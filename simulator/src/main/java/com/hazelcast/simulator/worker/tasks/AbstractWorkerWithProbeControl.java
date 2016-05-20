@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -30,6 +31,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
 public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends VeryAbstractWorker {
+    @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
+    private Probe workerProbe;
 
     private final OperationSelector<O> selector;
 
@@ -41,7 +44,7 @@ public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends 
     public final void run() throws Exception {
         final TestContext testContext = getTestContext();
         final Metronome metronome = getWorkerMetronome();
-        final Probe probe = getWorkerProbe();
+        final Probe probe = workerProbe;
         final OperationSelector<O> selector = this.selector;
 
         while ((!testContext.isStopped() && !isWorkerStopped)) {
