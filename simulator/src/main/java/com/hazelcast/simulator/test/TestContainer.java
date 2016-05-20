@@ -17,8 +17,8 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.LightweightProbeImpl;
-import com.hazelcast.simulator.probes.impl.ProbeImpl;
+import com.hazelcast.simulator.probes.impl.ThroughputProbe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
@@ -351,8 +351,8 @@ public class TestContainer {
         Probe probe = probeMap.get(probeName);
         if (probe == null) {
             probe = (runWithWorkerIsLightweightProbe
-                    ? new LightweightProbeImpl(isThroughputProbe)
-                    : new ProbeImpl(isThroughputProbe));
+                    ? new ThroughputProbe(isThroughputProbe)
+                    : new HdrProbe(isThroughputProbe));
             probeMap.put(probeName, probe);
         }
         return probe;

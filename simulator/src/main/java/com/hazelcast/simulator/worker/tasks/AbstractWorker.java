@@ -18,7 +18,7 @@ package com.hazelcast.simulator.worker.tasks;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.LightweightProbeImpl;
+import com.hazelcast.simulator.probes.impl.ThroughputProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
@@ -74,7 +74,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         try {
             beforeRun();
 
-            if (workerMetronome.getClass() == EmptyMetronome.class && workerProbe.getClass() == LightweightProbeImpl.class) {
+            if (workerMetronome.getClass() == EmptyMetronome.class && workerProbe.getClass() == ThroughputProbe.class) {
                 while ((!testContext.isStopped() && !isWorkerStopped)) {
                     timeStep(selector.select());
                     increaseIteration();

@@ -34,16 +34,6 @@ public interface Probe {
     boolean isThroughputProbe();
 
     /**
-     * Starts a latency measurement in the local thread.
-     */
-    void started();
-
-    /**
-     * Stops a latency measurement in the local thread and records the value.
-     */
-    void done();
-
-    /**
      * Calculates the latency from an external start time and records the value.
      *
      * @param started external start time from {@link System#nanoTime()}.
@@ -52,9 +42,6 @@ public interface Probe {
 
     /**
      * Adds a latency value in nanoseconds to the probe result.
-     *
-     * Can be used if {@link #started()} and {@link #done()} are not directly related, e.g. in asynchronous tests or are collected
-     * from an external source like a C++ client.
      *
      * @param latencyNanos latency value in nanoseconds
      */
