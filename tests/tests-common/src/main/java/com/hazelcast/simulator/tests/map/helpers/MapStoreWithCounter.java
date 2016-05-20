@@ -55,22 +55,25 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
         }
         String expectedMapStoreName = mapStoreImplementation.getName();
         MapStoreConfig mapStoreConfig = instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
-        assertMapStoreConfig(logger, mapName, mapStoreConfig);
-        assertMapStoreClassname(mapName, mapStoreConfig, expectedMapStoreName);
-        assertMapStoreImplementation(mapName, mapStoreImplementation, expectedMapStoreName, mapStoreConfig);
+        assertMapStoreConfig(expectedMapStoreName, mapName, mapStoreConfig, logger);
+        assertMapStoreClassName(expectedMapStoreName, mapName, mapStoreConfig);
+        assertMapStoreImplementation(expectedMapStoreName, mapName, mapStoreConfig, mapStoreImplementation);
     }
 
-    private static void assertMapStoreConfig(ILogger logger, String mapName, MapStoreConfig mapStoreConfig) {
+    private static void assertMapStoreConfig(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig,
+                                             ILogger logger) {
         if (mapStoreConfig == null) {
-            throw new TestException("There is no MapStore configured for map %s", mapName);
+            throw new TestException("MapStore for map %s needs to be configured with class %s, but was not configured at all",
+                    mapName, expectedMapStoreName);
         }
         logger.info(format("MapStore configuration for map %s: %s", mapName, mapStoreConfig));
         if (!mapStoreConfig.isEnabled()) {
-            throw new TestException("MapStore for map %s needs to be enabled", mapName);
+            throw new TestException("MapStore for map %s needs to be configured with class %s, but was not enabled", mapName,
+                    expectedMapStoreName);
         }
     }
 
-    private static void assertMapStoreClassname(String mapName, MapStoreConfig mapStoreConfig, String expectedMapStoreName) {
+    private static void assertMapStoreClassName(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig) {
         String configuredMapStoreClassName = mapStoreConfig.getClassName();
         if (configuredMapStoreClassName == null) {
             throw new TestException("MapStore for map %s needs to be configured with class %s, but was null", mapName,
@@ -82,19 +85,19 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
         }
     }
 
-    private static void assertMapStoreImplementation(String mapName, Class<? extends MapStore> mapStoreImplementation,
-                                                     String expectedMapStoreImplementationName, MapStoreConfig mapStoreConfig) {
+    private static void assertMapStoreImplementation(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig,
+                                                     Class<? extends MapStore> mapStoreImplementation) {
         Object configuredMapStoreImpl = mapStoreConfig.getImplementation();
         if (configuredMapStoreImpl == null) {
             if (mapStoreConfig.getInitialLoadMode().equals(LAZY)) {
                 return;
             }
             throw new TestException("MapStore for map %s needs to be initialized with class %s, but was null (%s)", mapName,
-                    expectedMapStoreImplementationName, mapStoreConfig);
+                    expectedMapStoreName, mapStoreConfig);
         }
         if (!configuredMapStoreImpl.getClass().equals(mapStoreImplementation)) {
             throw new TestException("MapStore for map %s needs to be initialized with class %s, but was %s (%s)", mapName,
-                    expectedMapStoreImplementationName, configuredMapStoreImpl.getClass().getName(), mapStoreConfig);
+                    expectedMapStoreName, configuredMapStoreImpl.getClass().getName(), mapStoreConfig);
         }
     }
 
