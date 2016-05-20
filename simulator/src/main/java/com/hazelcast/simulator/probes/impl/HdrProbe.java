@@ -31,20 +31,20 @@ public class HdrProbe implements Probe {
 
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
 
-    private final boolean isThroughputProbe;
+    private final boolean partOfTotalThroughput;
 
-    public HdrProbe(boolean isThroughputProbe) {
-        this.isThroughputProbe = isThroughputProbe;
+    public HdrProbe(boolean partOfTotalThroughput) {
+        this.partOfTotalThroughput = partOfTotalThroughput;
     }
 
     @Override
-    public boolean isLightweightProbe() {
-        return false;
+    public boolean isMeasuringLatency() {
+        return true;
     }
 
     @Override
-    public boolean isThroughputProbe() {
-        return isThroughputProbe;
+    public boolean isPartOfTotalThroughput() {
+        return partOfTotalThroughput;
     }
 
     @Override

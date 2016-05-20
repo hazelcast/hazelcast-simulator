@@ -48,7 +48,7 @@ public final class AnnotationReflectionUtils {
         return field.getName();
     }
 
-    public static boolean isThroughputProbe(Field field) {
+    public static boolean isPartOfTotalThroughput(Field field) {
         if (field == null) {
             return false;
         }

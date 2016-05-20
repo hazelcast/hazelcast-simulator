@@ -22,7 +22,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeIntervalMillis;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
@@ -66,25 +66,25 @@ public class AnnotationReflectionUtilsTest {
     @Test
     public void testIsThroughputProbe_withAnnotation() {
         Field field = getField(AnnotationTestClass.class, "throughputProbe", Probe.class);
-        assertTrue(isThroughputProbe(field));
+        assertTrue(isPartOfTotalThroughput(field));
     }
 
     @Test
     public void testIsThroughputProbe_withAnnotation_defaultValue() {
         Field field = getField(AnnotationTestClass.class, "defaultValueProbe", Probe.class);
-        assertFalse(isThroughputProbe(field));
+        assertFalse(isPartOfTotalThroughput(field));
     }
 
     @Test
     public void testIsThroughputProbe_noAnnotation() {
         Field field = getField(AnnotationTestClass.class, "notAnnotatedProbe", Probe.class);
-        assertFalse(isThroughputProbe(field));
+        assertFalse(isPartOfTotalThroughput(field));
     }
 
     @Test
     public void testIsThroughputProbe_noFieldFound() {
         Field field = getField(AnnotationTestClass.class, "notFound", Probe.class);
-        assertFalse(isThroughputProbe(field));
+        assertFalse(isPartOfTotalThroughput(field));
     }
 
     @Test

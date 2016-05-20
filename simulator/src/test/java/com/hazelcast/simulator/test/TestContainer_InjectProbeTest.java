@@ -22,7 +22,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         testContainer = createTestContainer(test);
 
         assertNotNull(test.probe);
-        assertFalse(test.probe.isThroughputProbe());
+        assertFalse(test.probe.isPartOfTotalThroughput());
         assertTrue(testContainer.hasProbe("probe"));
 
         testContainer.invoke(TestPhase.RUN);
@@ -46,7 +46,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         testContainer = createTestContainer(test);
 
         assertNotNull(test.throughputProbe);
-        assertTrue(test.throughputProbe.isThroughputProbe());
+        assertTrue(test.throughputProbe.isPartOfTotalThroughput());
         assertTrue(testContainer.hasProbe("throughputProbe"));
     }
 
@@ -64,7 +64,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         testContainer = new TestContainer(testContext, test, true);
 
         assertNotNull(test.throughputProbe);
-        assertTrue(test.throughputProbe.isLightweightProbe());
+        assertFalse(test.throughputProbe.isMeasuringLatency());
         assertTrue(testContainer.hasProbe("throughputProbe"));
     }
 
