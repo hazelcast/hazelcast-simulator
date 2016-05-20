@@ -23,13 +23,13 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Measures the throughput only.
  */
-public class LightweightProbeImpl implements Probe {
+public class ThroughputProbe implements Probe {
 
     private final AtomicLong counter = new AtomicLong();
 
     private final boolean isThroughputProbe;
 
-    public LightweightProbeImpl(boolean isThroughputProbe) {
+    public ThroughputProbe(boolean isThroughputProbe) {
         this.isThroughputProbe = isThroughputProbe;
     }
 
@@ -44,19 +44,7 @@ public class LightweightProbeImpl implements Probe {
     }
 
     @Override
-    public void started() {
-    }
-
-    @Override
-    public void done() {
-        counter.incrementAndGet();
-    }
-
-    @Override
     public void done(long started) {
-        if (started <= 0) {
-            throw new IllegalArgumentException("started has to be a positive number");
-        }
         counter.incrementAndGet();
     }
 

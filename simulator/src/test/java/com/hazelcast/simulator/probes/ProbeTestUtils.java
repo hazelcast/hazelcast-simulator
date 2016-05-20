@@ -8,8 +8,8 @@ import java.io.File;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.probes.impl.ProbeImpl.LATENCY_PRECISION;
-import static com.hazelcast.simulator.probes.impl.ProbeImpl.MAXIMUM_LATENCY;
+import static com.hazelcast.simulator.probes.impl.HdrProbe.LATENCY_PRECISION;
+import static com.hazelcast.simulator.probes.impl.HdrProbe.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;

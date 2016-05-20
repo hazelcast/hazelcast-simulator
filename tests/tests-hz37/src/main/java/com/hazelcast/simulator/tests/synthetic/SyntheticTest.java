@@ -188,7 +188,7 @@ public class SyntheticTest {
 
         @Override
         public void onResponse(Object response) {
-            probe.done();
+            probe.done(0);
         }
 
         @Override

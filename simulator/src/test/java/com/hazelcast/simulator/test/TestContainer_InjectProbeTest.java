@@ -87,8 +87,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
 
         @Run
         public void run() {
-            probe.started();
-            probe.done();
+            probe.done(1);
         }
     }
 

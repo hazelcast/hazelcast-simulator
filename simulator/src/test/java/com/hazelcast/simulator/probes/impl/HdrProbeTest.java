@@ -5,43 +5,30 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.probes.ProbeTestUtils.assertHistogram;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class LightweightProbeImplTest {
+public class HdrProbeTest {
 
-    private LightweightProbeImpl probe = new LightweightProbeImpl(false);
+    private HdrProbe probe = new HdrProbe(false);
 
     @Test
     public void testConstructor_throughputProbe() {
-        Probe tmpProbe = new LightweightProbeImpl(true);
+        Probe tmpProbe = new HdrProbe(true);
         assertTrue(tmpProbe.isThroughputProbe());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
-        Probe tmpProbe = new LightweightProbeImpl(false);
+        Probe tmpProbe = new HdrProbe(false);
         assertFalse(tmpProbe.isThroughputProbe());
     }
 
     @Test
     public void testIsLightWeightProbe() {
-        assertTrue(probe.isLightweightProbe());
-    }
-
-    @Test
-    public void testDone_withStarted() {
-        int expectedCount = 1;
-        long expectedLatency = 150;
-
-        probe.started();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
-        probe.done();
-
-        assertEquals(expectedCount, probe.getIntervalCountAndReset());
-        assertEquals(0, probe.getIntervalCountAndReset());
+        assertFalse(probe.isLightweightProbe());
     }
 
     @Test
@@ -53,8 +40,7 @@ public class LightweightProbeImplTest {
         sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
         probe.done(started);
 
-        assertEquals(expectedCount, probe.getIntervalCountAndReset());
-        assertEquals(0, probe.getIntervalCountAndReset());
+        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -73,17 +59,17 @@ public class LightweightProbeImplTest {
         long latencyValue = 500;
         long expectedMinValue = 200;
         long expectedMaxValue = 1000;
+        long expectedMeanValue = (long) ((latencyValue + expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
-        assertEquals(expectedCount, probe.getIntervalCountAndReset());
-        assertEquals(0, probe.getIntervalCountAndReset());
+        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testGetIntervalHistogram()  {
-        probe.getIntervalHistogram();
+    public void testGetIntervalCountAndReset()  {
+        probe.getIntervalCountAndReset();
     }
 }
