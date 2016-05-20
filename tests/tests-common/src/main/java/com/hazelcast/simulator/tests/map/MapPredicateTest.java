@@ -188,7 +188,7 @@ public class MapPredicateTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             operationCounterList.add(operationCounter);
         }
 

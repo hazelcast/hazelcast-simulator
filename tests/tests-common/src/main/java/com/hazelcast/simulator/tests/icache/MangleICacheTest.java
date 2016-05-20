@@ -227,7 +227,7 @@ public class MangleICacheTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             results.add(counter);
         }
 

@@ -137,7 +137,7 @@ public class ReplicatedMapTimeToLiveTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             results.add(count);
         }
     }

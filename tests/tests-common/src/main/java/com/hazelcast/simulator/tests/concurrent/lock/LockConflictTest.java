@@ -204,7 +204,7 @@ public class LockConflictTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             globalIncrements.add(localIncrements);
             globalCounter.add(localCounter);
         }

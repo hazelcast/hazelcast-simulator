@@ -269,7 +269,7 @@ public class MapEntryListenerTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             eventCounts.add(eventCount);
         }
 

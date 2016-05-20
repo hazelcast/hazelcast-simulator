@@ -265,7 +265,7 @@ public class MapStoreTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             operationCounterList.add(operationCounter);
         }
     }

@@ -165,7 +165,7 @@ abstract class AbstractMapTest {
         protected abstract void mapOperation();
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             operationCounter.addAndGet(localOperationCounter);
             exceptionCounter.addAndGet(localExceptionCounter);
         }

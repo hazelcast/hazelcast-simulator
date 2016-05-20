@@ -171,7 +171,7 @@ public class MapReduceTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             operationCounterList.add(operationCounter);
         }
     }

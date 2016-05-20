@@ -96,7 +96,7 @@ public class MapRaceTest {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         @Override
-        protected void beforeRun() {
+        public void beforeRun() {
             for (int i = 0; i < keyCount; i++) {
                 result.put(i, 0L);
             }
@@ -112,7 +112,7 @@ public class MapRaceTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             resultMap.put(newSecureUuidString(), result);
         }
 

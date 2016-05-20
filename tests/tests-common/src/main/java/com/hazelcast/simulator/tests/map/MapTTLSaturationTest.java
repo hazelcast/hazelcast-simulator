@@ -64,7 +64,7 @@ public class MapTTLSaturationTest {
         private int counter = 1;
 
         @Override
-        protected void beforeRun() {
+        public void beforeRun() {
             logHeapUsage("beforeRun()");
         }
 
@@ -89,7 +89,7 @@ public class MapTTLSaturationTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             logHeapUsage("afterRun()");
         }
     }

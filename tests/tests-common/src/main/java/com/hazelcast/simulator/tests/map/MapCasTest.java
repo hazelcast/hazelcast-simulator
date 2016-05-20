@@ -100,7 +100,8 @@ public class MapCasTest {
     private class Worker extends AbstractMonotonicWorker {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
-        protected void beforeRun() {
+        @Override
+        public void beforeRun() {
             int size = map.size();
             if (size != keyCount) {
                 throw new TestException("Warmup has not run since the map is not filled correctly, found size: %s", size);
@@ -125,7 +126,8 @@ public class MapCasTest {
             }
         }
 
-        protected void afterRun() {
+        @Override
+        public void afterRun() {
             resultsPerWorker.put(newSecureUuidString(), result);
         }
 

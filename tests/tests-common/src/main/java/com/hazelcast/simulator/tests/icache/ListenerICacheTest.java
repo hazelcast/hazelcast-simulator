@@ -198,7 +198,7 @@ public class ListenerICacheTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             results.add(counter);
         }
 

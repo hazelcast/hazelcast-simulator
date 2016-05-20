@@ -198,7 +198,7 @@ public class AsyncAtomicLongTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             totalCounter.addAndGet(increments);
         }
 

@@ -108,7 +108,7 @@ public class MapLockTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             incrementsList.add(increments);
         }
     }

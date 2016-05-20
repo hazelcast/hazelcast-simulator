@@ -139,7 +139,7 @@ public class ExpiryTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             results.add(counter);
 
             // sleep to give time for expiration

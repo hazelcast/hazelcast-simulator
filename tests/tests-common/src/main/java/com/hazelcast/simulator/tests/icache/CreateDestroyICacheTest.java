@@ -145,7 +145,7 @@ public class CreateDestroyICacheTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             counters.add(counter);
         }
     }

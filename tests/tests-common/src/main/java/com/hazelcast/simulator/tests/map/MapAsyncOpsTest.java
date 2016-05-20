@@ -134,7 +134,7 @@ public class MapAsyncOpsTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             results.add(count);
         }
     }

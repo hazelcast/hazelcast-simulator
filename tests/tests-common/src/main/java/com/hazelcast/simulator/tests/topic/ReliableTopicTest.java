@@ -133,7 +133,7 @@ public class ReliableTopicTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             totalMessagesSend.addAndGet(messagesSend);
         }
 
