@@ -19,6 +19,8 @@ package com.hazelcast.simulator.worker.tasks;
  * Interface for workers who are returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotated test
  * methods.
  *
+ * The reason this class is prefixed with I, is that the name 'Worker' can be used in the actual tests.
+ *
  * The {@link com.hazelcast.simulator.test.TestContainer} supports the following injections for your implementation:
  * {@link com.hazelcast.simulator.test.annotations.InjectTestContext}
  * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
