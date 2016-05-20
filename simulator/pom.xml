@@ -118,11 +118,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>utils</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.hdrhistogram</groupId>
             <artifactId>HdrHistogram</artifactId>
             <version>${hdr-histogram.version}</version>
