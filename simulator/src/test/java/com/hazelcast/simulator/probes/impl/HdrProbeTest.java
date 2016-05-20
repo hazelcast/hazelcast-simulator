@@ -69,7 +69,7 @@ public class HdrProbeTest {
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void testGetIntervalCountAndReset()  {
-        probe.getIntervalCountAndReset();
+    public void testGet()  {
+        probe.get();
     }
 }

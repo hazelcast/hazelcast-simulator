@@ -59,10 +59,10 @@ public interface Probe {
     Histogram getIntervalHistogram();
 
     /**
-     * Get the count of entries of the last interval and reset.
+     * Get the number of iterations.
      *
-     * @return a count since the last interval count was taken
+     * @return the number of iterations.
      * @throws UnsupportedOperationException on non-lightweight implementations
      */
-    long getIntervalCountAndReset();
+    long get();
 }

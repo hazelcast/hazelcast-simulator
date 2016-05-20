@@ -35,6 +35,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
@@ -114,6 +115,9 @@ public class WorkerPerformanceMonitor {
         private volatile boolean isRunning = true;
         private volatile CountDownLatch isDone = new CountDownLatch(1);
 
+        private final Map<TestContainer, Map<Probe, AtomicLong>> previousProbeValuesPerContainer = new
+                HashMap<TestContainer, Map<Probe, AtomicLong>>();
+
         private WorkerPerformanceMonitorTask(ServerConnector serverConnector, Collection<TestContainer> testContainers,
                                              long intervalNanos) {
             this.serverConnector = serverConnector;
@@ -177,53 +181,74 @@ public class WorkerPerformanceMonitor {
                 if (!testContainer.isRunning()) {
                     continue;
                 }
+
                 runningTestContainerFound = true;
-
-                Map<String, Probe> probeMap = testContainer.getProbeMap();
-                Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
-
-                long intervalPercentileLatency = Long.MIN_VALUE;
-                double intervalAvgLatency = Long.MIN_VALUE;
-                long intervalMaxLatency = Long.MIN_VALUE;
-                long intervalOperationalCount = 0;
-
-                for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
-                    String probeName = entry.getKey();
-                    Probe probe = entry.getValue();
-
-                    if (probe.isMeasuringLatency()) {
-                        Histogram intervalHistogram = probe.getIntervalHistogram();
-                        intervalHistograms.put(probeName, intervalHistogram);
-
-                        long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
-                        if (percentileValue > intervalPercentileLatency) {
-                            intervalPercentileLatency = percentileValue;
-                        }
-                        double avgValue = intervalHistogram.getMean();
-                        if (avgValue > intervalAvgLatency) {
-                            intervalAvgLatency = avgValue;
-                        }
-                        long maxValue = intervalHistogram.getMaxValue();
-                        if (maxValue > intervalMaxLatency) {
-                            intervalMaxLatency = maxValue;
-                        }
-                        if (probe.isPartOfTotalThroughput()) {
-                            intervalOperationalCount += intervalHistogram.getTotalCount();
-                        }
-                    } else {
-                        intervalPercentileLatency = -1;
-                        intervalAvgLatency = -1;
-                        intervalMaxLatency = -1;
-                        intervalOperationalCount += probe.getIntervalCountAndReset();
-                    }
-                }
-
-                String testId = testContainer.getTestContext().getTestId();
-                PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
-                tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
-                        intervalOperationalCount, currentTimestamp);
+                updatePerformanceStates(currentTimestamp, testContainer);
             }
             return runningTestContainerFound;
+        }
+
+        private void updatePerformanceStates(long currentTimestamp, TestContainer testContainer) {
+            Map<Probe, AtomicLong> previousProbeValues = previousProbeValuesPerContainer.get(testContainer);
+            if (previousProbeValues == null) {
+                previousProbeValues = new HashMap<Probe, AtomicLong>();
+                previousProbeValuesPerContainer.put(testContainer, previousProbeValues);
+            }
+
+            Map<String, Probe> probeMap = testContainer.getProbeMap();
+            Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
+
+            long intervalPercentileLatency = Long.MIN_VALUE;
+            double intervalAvgLatency = Long.MIN_VALUE;
+            long intervalMaxLatency = Long.MIN_VALUE;
+            long intervalOperationalCount = 0;
+
+            for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+                String probeName = entry.getKey();
+                Probe probe = entry.getValue();
+
+                if (probe.isMeasuringLatency()) {
+                    Histogram intervalHistogram = probe.getIntervalHistogram();
+                    intervalHistograms.put(probeName, intervalHistogram);
+
+                    long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+                    if (percentileValue > intervalPercentileLatency) {
+                        intervalPercentileLatency = percentileValue;
+                    }
+                    double avgValue = intervalHistogram.getMean();
+                    if (avgValue > intervalAvgLatency) {
+                        intervalAvgLatency = avgValue;
+                    }
+                    long maxValue = intervalHistogram.getMaxValue();
+                    if (maxValue > intervalMaxLatency) {
+                        intervalMaxLatency = maxValue;
+                    }
+                    if (probe.isPartOfTotalThroughput()) {
+                        intervalOperationalCount += intervalHistogram.getTotalCount();
+                    }
+                } else {
+                    intervalPercentileLatency = -1;
+                    intervalAvgLatency = -1;
+                    intervalMaxLatency = -1;
+
+                    AtomicLong previous = previousProbeValues.get(probe);
+                    if (previous == null) {
+                        previous = new AtomicLong();
+                        previousProbeValues.put(probe, previous);
+                    }
+
+                    long current = probe.get();
+                    long delta = current - previous.get();
+                    previous.set(current);
+
+                    intervalOperationalCount += delta;
+                }
+            }
+
+            String testId = testContainer.getTestContext().getTestId();
+            PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
+            tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
+                    intervalOperationalCount, currentTimestamp);
         }
 
         private PerformanceTracker getOrCreatePerformanceTracker(String testId, TestContainer testContainer) {
