@@ -17,18 +17,18 @@ public class ThroughputProbeTest {
     @Test
     public void testConstructor_throughputProbe() {
         Probe tmpProbe = new ThroughputProbe(true);
-        assertTrue(tmpProbe.isThroughputProbe());
+        assertTrue(tmpProbe.isPartOfTotalThroughput());
     }
 
     @Test
     public void testConstructor_noThroughputProbe() {
         Probe tmpProbe = new ThroughputProbe(false);
-        assertFalse(tmpProbe.isThroughputProbe());
+        assertFalse(tmpProbe.isPartOfTotalThroughput());
     }
 
     @Test
-    public void testIsLightWeightProbe() {
-        assertTrue(probe.isLightweightProbe());
+    public void testIsMeasuringLatency() {
+        assertFalse(probe.isMeasuringLatency());
     }
 
     @Test

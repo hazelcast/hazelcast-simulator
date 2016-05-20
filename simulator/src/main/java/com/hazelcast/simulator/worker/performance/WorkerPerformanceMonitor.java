@@ -191,12 +191,7 @@ public class WorkerPerformanceMonitor {
                     String probeName = entry.getKey();
                     Probe probe = entry.getValue();
 
-                    if (probe.isLightweightProbe()) {
-                        intervalPercentileLatency = -1;
-                        intervalAvgLatency = -1;
-                        intervalMaxLatency = -1;
-                        intervalOperationalCount += probe.getIntervalCountAndReset();
-                    } else {
+                    if (probe.isMeasuringLatency()) {
                         Histogram intervalHistogram = probe.getIntervalHistogram();
                         intervalHistograms.put(probeName, intervalHistogram);
 
@@ -212,9 +207,14 @@ public class WorkerPerformanceMonitor {
                         if (maxValue > intervalMaxLatency) {
                             intervalMaxLatency = maxValue;
                         }
-                        if (probe.isThroughputProbe()) {
+                        if (probe.isPartOfTotalThroughput()) {
                             intervalOperationalCount += intervalHistogram.getTotalCount();
                         }
+                    } else {
+                        intervalPercentileLatency = -1;
+                        intervalAvgLatency = -1;
+                        intervalMaxLatency = -1;
+                        intervalOperationalCount += probe.getIntervalCountAndReset();
                     }
                 }
 

@@ -20,18 +20,18 @@ import org.HdrHistogram.Histogram;
 public interface Probe {
 
     /**
-     * Defines if this probe is a lightweight probe, which just measures throughput data.
+     * Checks if this probe measures latency.
      *
-     * @return {@code true} if probe is a lightweight probe, {@code false} otherwise
+     * @return {@code true} if this probe measures latency, {@code false} otherwise.
      */
-    boolean isLightweightProbe();
+    boolean isMeasuringLatency();
 
     /**
-     * Defines if a probe should be considered to calculate the throughput of a test.
+     * Checks if a probe should be considered to calculate the throughput of a test.
      *
      * @return {@code true} if probe is relevant for throughput, {@code false} otherwise
      */
-    boolean isThroughputProbe();
+    boolean isPartOfTotalThroughput();
 
     /**
      * Calculates the latency from an external start time and records the value.

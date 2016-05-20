@@ -41,7 +41,7 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
         PerformanceMonitorTest test = (PerformanceMonitorTest) testContainer.getTestInstance();
         Probe probe = test.getPerformanceProbe();
         assertNotNull(probe);
-        assertTrue(probe.isLightweightProbe());
+        assertFalse(probe.isMeasuringLatency());
     }
 
     @Test

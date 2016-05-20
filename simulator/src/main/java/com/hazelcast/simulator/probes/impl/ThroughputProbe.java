@@ -26,21 +26,20 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ThroughputProbe implements Probe {
 
     private final AtomicLong counter = new AtomicLong();
+    private final boolean partOfTotalThroughput;
 
-    private final boolean isThroughputProbe;
-
-    public ThroughputProbe(boolean isThroughputProbe) {
-        this.isThroughputProbe = isThroughputProbe;
+    public ThroughputProbe(boolean partOfTotalThroughput) {
+        this.partOfTotalThroughput = partOfTotalThroughput;
     }
 
     @Override
-    public boolean isLightweightProbe() {
-        return true;
+    public boolean isMeasuringLatency() {
+        return false;
     }
 
     @Override
-    public boolean isThroughputProbe() {
-        return isThroughputProbe;
+    public boolean isPartOfTotalThroughput() {
+        return partOfTotalThroughput;
     }
 
     @Override

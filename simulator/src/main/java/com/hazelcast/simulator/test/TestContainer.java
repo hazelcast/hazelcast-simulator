@@ -55,7 +55,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeIntervalMillis;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isThroughputProbe;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
@@ -317,7 +317,7 @@ public class TestContainer {
                     injectMap.put(field, testContext.getTargetInstance());
                 } else if (field.isAnnotationPresent(InjectProbe.class)) {
                     assertFieldType(fieldType, Probe.class, InjectProbe.class);
-                    Probe probe = getOrCreateProbe(getProbeName(field), isThroughputProbe(field));
+                    Probe probe = getOrCreateProbe(getProbeName(field), isPartOfTotalThroughput(field));
                     injectMap.put(field, probe);
                 } else if (field.isAnnotationPresent(InjectMetronome.class)) {
                     assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
@@ -347,12 +347,12 @@ public class TestContainer {
         return operationProbes;
     }
 
-    private Probe getOrCreateProbe(String probeName, boolean isThroughputProbe) {
+    private Probe getOrCreateProbe(String probeName, boolean partOfTotalThroughput) {
         Probe probe = probeMap.get(probeName);
         if (probe == null) {
             probe = (runWithWorkerIsLightweightProbe
-                    ? new ThroughputProbe(isThroughputProbe)
-                    : new HdrProbe(isThroughputProbe));
+                    ? new ThroughputProbe(partOfTotalThroughput)
+                    : new HdrProbe(partOfTotalThroughput));
             probeMap.put(probeName, probe);
         }
         return probe;
