@@ -130,7 +130,7 @@ public class ITopicTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             totalExpectedCounter.addAndGet(count);
         }
 

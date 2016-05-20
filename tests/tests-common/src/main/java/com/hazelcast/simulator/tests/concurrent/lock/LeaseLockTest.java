@@ -95,7 +95,7 @@ public class LeaseLockTest {
         }
 
         @Override
-        protected void afterRun() throws Exception {
+        public void afterRun() throws Exception {
             sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
         }
     }

@@ -139,7 +139,7 @@ public class MapTransactionTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             resultList.add(increments);
         }
     }

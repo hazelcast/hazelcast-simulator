@@ -134,6 +134,14 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
                 }
 
                 @Override
+                public void beforeRun() throws Exception {
+                }
+
+                @Override
+                public void afterRun() throws Exception {
+                }
+
+                @Override
                 public void afterCompletion() {
                 }
             };

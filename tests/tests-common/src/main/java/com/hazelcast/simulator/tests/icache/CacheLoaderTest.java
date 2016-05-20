@@ -133,7 +133,7 @@ public class CacheLoaderTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
             loaderList.add(loader);
         }

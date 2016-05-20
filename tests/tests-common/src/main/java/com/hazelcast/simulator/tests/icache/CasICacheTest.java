@@ -118,7 +118,7 @@ public class CasICacheTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             resultsPerWorker.add(increments);
         }
     }

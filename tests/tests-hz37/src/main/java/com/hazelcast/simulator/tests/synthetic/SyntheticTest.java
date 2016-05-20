@@ -200,6 +200,16 @@ public class SyntheticTest {
         public void afterCompletion() {
             // nothing to do here
         }
+
+        @Override
+        public void beforeRun() throws Exception {
+            // nothing to do here
+        }
+
+        @Override
+        public void afterRun() throws Exception {
+            // nothing to do here
+        }
     }
 
     public static void main(String[] args) throws Exception {

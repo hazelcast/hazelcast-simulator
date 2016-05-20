@@ -156,7 +156,7 @@ public class MapTimeToLiveTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             results.add(count);
         }
     }

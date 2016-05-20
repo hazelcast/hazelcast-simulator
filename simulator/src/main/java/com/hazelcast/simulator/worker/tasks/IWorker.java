@@ -26,13 +26,36 @@ package com.hazelcast.simulator.worker.tasks;
  * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
  * {@link com.hazelcast.simulator.test.annotations.InjectProbe}
  */
-public interface IWorker extends Runnable {
+public interface IWorker {
 
     /**
      * Name for the default {@link com.hazelcast.simulator.probes.Probe} which will be injected to the worker by the
      * {@link com.hazelcast.simulator.test.TestContainer}.
      */
     String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
+
+    /**
+     * Override this method if you need to execute code on each worker before {@link #run()} is called.
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
+     */
+    void beforeRun() throws Exception;
+
+    /**
+     * Runs the actual worker logic.
+     *
+     * @throws Exception
+     */
+    void run() throws Exception;
+
+    /**
+     * Override this method if you need to execute code on each worker after {@link #run()} is called.
+     *
+     * Won't be called if an error occurs in {@link #beforeRun()} or {@link #run()}.
+     *
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
+     */
+    void afterRun() throws Exception;
 
     /**
      * Implement this method if you need to execute code once after all workers have finished their run phase.

@@ -172,7 +172,7 @@ public class MapMaxSizeTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             operationCounterList.add(operationCounter);
         }
     }

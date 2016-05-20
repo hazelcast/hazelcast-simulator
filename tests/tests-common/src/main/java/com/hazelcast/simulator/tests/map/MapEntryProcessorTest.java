@@ -121,7 +121,7 @@ public class MapEntryProcessorTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             // sleep to give time for the last EntryProcessor tasks to complete
             sleepMillis(maxProcessorDelayMs * 2);
             resultsPerWorker.add(localIncrementsAtKey);

@@ -17,8 +17,8 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.ThroughputProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.probes.impl.ThroughputProbe;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
@@ -56,6 +56,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetrono
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
@@ -298,7 +299,7 @@ public class TestContainer {
         isRunning = true;
 
         // spawn workers and wait for completion
-        IWorker worker = spawnWorkerThreads(runWithWorkerThreadCount, runMethod, injectMap, operationProbeMap);
+        IWorker worker = runWorkers(runWithWorkerThreadCount, runMethod, injectMap, operationProbeMap);
 
         // call the afterCompletion() method on a single instance of the worker
         worker.afterCompletion();
@@ -358,22 +359,35 @@ public class TestContainer {
         return probe;
     }
 
-    private IWorker spawnWorkerThreads(int threadCount, Method runMethod, Map<Field, Object> injectMap,
-                                       Map<Enum, Probe> operationProbes) throws Exception {
-        IWorker worker = null;
-
+    private IWorker runWorkers(int threadCount, Method runMethod, Map<Field, Object> injectMap,
+                               Map<Enum, Probe> operationProbes) throws Exception {
+        IWorker firstWorker = null;
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
-            worker = invokeMethod(testClassInstance, runMethod);
+            final IWorker worker = invokeMethod(testClassInstance, runMethod);
+            if (firstWorker == null) {
+                firstWorker = worker;
+            }
+
             injectObjects(injectMap, worker);
             if (operationProbes != null) {
                 ((IMultipleProbesWorker) worker).setProbeMap(operationProbes);
             }
-            spawner.spawn(worker);
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        worker.beforeRun();
+                        worker.run();
+                        worker.afterRun();
+                    } catch (Exception e) {
+                        throw rethrow(e);
+                    }
+                }
+            });
         }
         spawner.awaitCompletion();
-
-        return worker;
+        return firstWorker;
     }
 
     private static Object getTestClassInstance(TestCase testCase) {

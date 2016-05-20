@@ -432,7 +432,7 @@ public class MapComplexPredicateTest {
 
         @Override
         @SuppressWarnings("unchecked")
-        protected void beforeRun() {
+        public void beforeRun() {
             predicate = new SqlPredicate(query.getSql());
         }
 

@@ -154,7 +154,7 @@ public class ReadWriteICacheTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             counters.add(counter);
         }
     }

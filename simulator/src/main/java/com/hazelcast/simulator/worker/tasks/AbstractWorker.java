@@ -30,8 +30,6 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
-
 /**
  * Base implementation of {@link IWorker} which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker}
  * annotated test methods.
@@ -70,26 +68,22 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
     }
 
     @Override
-    public final void run() {
-        try {
-            beforeRun();
+    public void beforeRun() throws Exception {
+    }
 
-            if (workerMetronome.getClass() == EmptyMetronome.class && workerProbe.getClass() == ThroughputProbe.class) {
-                while ((!testContext.isStopped() && !isWorkerStopped)) {
-                    timeStep(selector.select());
-                    increaseIteration();
-                    workerProbe.recordValue(0);
-                }
-            } else {
-                while ((!testContext.isStopped() && !isWorkerStopped)) {
-                    workerMetronome.waitForNext();
-                    doRun();
-                }
+    @Override
+    public final void run() throws Exception {
+        if (workerMetronome.getClass() == EmptyMetronome.class && workerProbe.getClass() == ThroughputProbe.class) {
+            while ((!testContext.isStopped() && !isWorkerStopped)) {
+                timeStep(selector.select());
+                increaseIteration();
+                workerProbe.recordValue(0);
             }
-
-            afterRun();
-        } catch (Exception e) {
-            throw rethrow(e);
+        } else {
+            while ((!testContext.isStopped() && !isWorkerStopped)) {
+                workerMetronome.waitForNext();
+                doRun();
+            }
         }
     }
 
@@ -99,6 +93,20 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         workerProbe.recordValue(System.nanoTime() - started);
 
         increaseIteration();
+    }
+
+    /**
+     * This method is called for each iteration of {@link #run()}.
+     *
+     * Won't be called if an error occurs in {@link #beforeRun()}.
+     *
+     * @param operation The selected operation for this iteration
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
+     */
+    protected abstract void timeStep(O operation) throws Exception;
+
+    @Override
+    public void afterRun() throws Exception {
     }
 
     /**
@@ -119,39 +127,7 @@ public abstract class AbstractWorker<O extends Enum<O>> implements IWorker {
         testContext.stop();
     }
 
-    /**
-     * Override this method if you need to execute code on each worker before {@link #run()} is called.
-     *
-     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
-     */
-    protected void beforeRun() throws Exception {
-    }
 
-    /**
-     * This method is called for each iteration of {@link #run()}.
-     *
-     * Won't be called if an error occurs in {@link #beforeRun()}.
-     *
-     * @param operation The selected operation for this iteration
-     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
-     */
-    protected abstract void timeStep(O operation) throws Exception;
-
-    /**
-     * Override this method if you need to execute code on each worker after {@link #run()} is called.
-     *
-     * Won't be called if an error occurs in {@link #beforeRun()} or {@link #timeStep(Enum)}.
-     *
-     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
-     */
-    protected void afterRun() throws Exception {
-    }
-
-    /**
-     * Override this method if you need to execute code once after all workers have finished their run phase.
-     *
-     * @see IWorker
-     */
     @Override
     public void afterCompletion() throws Exception {
     }

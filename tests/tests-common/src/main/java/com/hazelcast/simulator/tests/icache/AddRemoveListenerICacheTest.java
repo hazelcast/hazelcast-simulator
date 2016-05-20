@@ -149,7 +149,7 @@ public class AddRemoveListenerICacheTest {
         }
 
         @Override
-        protected void afterRun() {
+        public void afterRun() {
             LOGGER.info(basename + ": " + operationCounter);
             results.add(operationCounter);
         }
