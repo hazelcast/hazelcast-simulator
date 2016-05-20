@@ -41,9 +41,9 @@ public final class AnnotationReflectionUtils {
             return null;
         }
 
-        InjectProbe probeAnnotation = field.getAnnotation(InjectProbe.class);
-        if (probeAnnotation != null && !InjectProbe.NULL.equals(probeAnnotation.name())) {
-            return probeAnnotation.name();
+        InjectProbe injectProbe = field.getAnnotation(InjectProbe.class);
+        if (injectProbe != null && !InjectProbe.NULL.equals(injectProbe.name())) {
+            return injectProbe.name();
         }
         return field.getName();
     }
@@ -53,9 +53,9 @@ public final class AnnotationReflectionUtils {
             return false;
         }
 
-        InjectProbe probeAnnotation = field.getAnnotation(InjectProbe.class);
-        if (probeAnnotation != null) {
-            return probeAnnotation.useForThroughput();
+        InjectProbe injectProbe = field.getAnnotation(InjectProbe.class);
+        if (injectProbe != null) {
+            return injectProbe.useForThroughput();
         }
         return false;
     }
@@ -65,9 +65,9 @@ public final class AnnotationReflectionUtils {
             return defaultValue;
         }
 
-        InjectMetronome annotation = field.getAnnotation(InjectMetronome.class);
-        if (annotation != null && annotation.intervalMillis() > 0) {
-            return annotation.intervalMillis();
+        InjectMetronome injectMetronome = field.getAnnotation(InjectMetronome.class);
+        if (injectMetronome != null && injectMetronome.intervalMillis() > 0) {
+            return injectMetronome.intervalMillis();
         }
         return defaultValue;
     }
@@ -77,9 +77,9 @@ public final class AnnotationReflectionUtils {
             return defaultValue;
         }
 
-        InjectMetronome annotation = field.getAnnotation(InjectMetronome.class);
-        if (annotation != null && annotation.type() != NOP) {
-            return annotation.type();
+        InjectMetronome injectMetronome = field.getAnnotation(InjectMetronome.class);
+        if (injectMetronome != null && injectMetronome.type() != NOP) {
+            return injectMetronome.type();
         }
         return defaultValue;
     }

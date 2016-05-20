@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 /**
@@ -27,11 +28,14 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
  */
 public abstract class AbstractMonotonicWorkerWithProbeControl extends VeryAbstractWorker {
 
+    @InjectProbe(name = DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
+    private Probe workerProbe;
+
     @Override
     public final void run() throws Exception {
         final TestContext testContext = getTestContext();
         final Metronome metronome = getWorkerMetronome();
-        final Probe probe = getWorkerProbe();
+        final Probe probe = workerProbe;
 
         while ((!testContext.isStopped() && !isWorkerStopped)) {
             metronome.waitForNext();

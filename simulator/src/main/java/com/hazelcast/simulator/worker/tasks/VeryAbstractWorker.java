@@ -20,13 +20,18 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class VeryAbstractWorker implements IWorker {
+    /**
+     * Name for the default {@link Probe} which will be injected to the worker by the
+     * {@link com.hazelcast.simulator.test.TestContainer}.
+     */
+    public static final String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
 
     protected final ILogger logger = Logger.getLogger(this.getClass());
 
@@ -35,12 +40,10 @@ public abstract class VeryAbstractWorker implements IWorker {
     private final Random random = new Random();
     @InjectTestContext
     private TestContext testContext;
-    @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
-    private Probe workerProbe;
     @InjectMetronome
     private Metronome workerMetronome;
 
-    private long iteration;
+    private final AtomicLong iteration = new AtomicLong();
 
     public VeryAbstractWorker() {
     }
@@ -128,16 +131,12 @@ public abstract class VeryAbstractWorker implements IWorker {
      *
      * @return iteration count
      */
-    protected long getIteration() {
-        return iteration;
+    public long getIteration() {
+        return iteration.get();
     }
 
     protected void increaseIteration() {
-        iteration++;
-    }
-
-    Probe getWorkerProbe() {
-        return workerProbe;
+        iteration.lazySet(iteration.get() + 1);
     }
 
     protected Metronome getWorkerMetronome() {

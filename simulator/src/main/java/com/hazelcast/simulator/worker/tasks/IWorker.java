@@ -29,12 +29,6 @@ package com.hazelcast.simulator.worker.tasks;
 public interface IWorker {
 
     /**
-     * Name for the default {@link com.hazelcast.simulator.probes.Probe} which will be injected to the worker by the
-     * {@link com.hazelcast.simulator.test.TestContainer}.
-     */
-    String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
-
-    /**
      * Override this method if you need to execute code on each worker before {@link #run()} is called.
      *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
@@ -66,4 +60,6 @@ public interface IWorker {
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     void afterCompletion() throws Exception;
+
+    long getIteration();
 }

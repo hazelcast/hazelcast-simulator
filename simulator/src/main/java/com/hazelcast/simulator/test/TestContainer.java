@@ -17,6 +17,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.ProbeType;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.probes.impl.ThroughputProbe;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
@@ -38,6 +39,7 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.tasks.IMultipleProbesWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
+import com.hazelcast.simulator.worker.tasks.WorkerThroughputProbe;
 import org.apache.log4j.Logger;
 
 import java.lang.annotation.Annotation;
@@ -49,6 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.hazelcast.simulator.probes.ProbeType.HDR;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
@@ -56,18 +59,17 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetrono
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
-import static com.hazelcast.simulator.worker.tasks.IWorker.DEFAULT_WORKER_PROBE_NAME;
-import static java.lang.Boolean.parseBoolean;
+import static com.hazelcast.simulator.worker.tasks.VeryAbstractWorker.DEFAULT_WORKER_PROBE_NAME;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.synchronizedSet;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 /**
@@ -86,18 +88,18 @@ public class TestContainer {
     static final String THREAD_COUNT_PROPERTY_NAME = "threadCount";
     static final String METRONOME_INTERVAL_PROPERTY_NAME = "metronomeInterval";
     static final String METRONOME_TYPE_PROPERTY_NAME = "metronomeType";
-    static final String LIGHTWEIGHT_PROBE_PROPERTY_NAME = "lightweightProbe";
+    static final String PROBE_TYPE_PROPERTY_NAME = "probeType";
 
     private static final int DEFAULT_RUN_WITH_WORKER_THREAD_COUNT = 10;
     private static final int DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL = 0;
     private static final MetronomeType DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE = NOP;
-    private static final boolean DEFAULT_IS_LIGHTWEIGHT_PROBE = false;
+    private static final ProbeType DEFAULT_PROBE_TYPE = HDR;
 
     private static final Set<String> OPTIONAL_TEST_PROPERTIES = new HashSet<String>(asList(
             THREAD_COUNT_PROPERTY_NAME,
             METRONOME_INTERVAL_PROPERTY_NAME,
             METRONOME_TYPE_PROPERTY_NAME,
-            LIGHTWEIGHT_PROBE_PROPERTY_NAME
+            PROBE_TYPE_PROPERTY_NAME
     ));
 
     private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
@@ -112,13 +114,14 @@ public class TestContainer {
     private final int runWithWorkerThreadCount;
     private final int runWithWorkerMetronomeInterval;
     private final MetronomeType runWithWorkerMetronomeType;
-    private final boolean runWithWorkerIsLightweightProbe;
+    private final ProbeType probeType;
 
     private boolean runWithWorker;
     private Object[] setupArguments;
 
     private long testStartedTimestamp;
     private volatile boolean isRunning;
+    private final Set<IWorker> workers = synchronizedSet(new HashSet<IWorker>());
 
     public TestContainer(TestContext testContext, TestCase testCase) {
         this(testContext, getTestClassInstance(testCase), getThreadCount(testCase),
@@ -128,23 +131,22 @@ public class TestContainer {
 
     public TestContainer(TestContext testContext, Object testClassInstance) {
         this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT,
-                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, DEFAULT_IS_LIGHTWEIGHT_PROBE);
+                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, DEFAULT_PROBE_TYPE);
     }
 
-    public TestContainer(TestContext testContext, Object testClassInstance, boolean runWithWorkerIsLightweightProbe) {
+    public TestContainer(TestContext testContext, Object testClassInstance, ProbeType probeType) {
         this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT,
-                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE,
-                runWithWorkerIsLightweightProbe);
+                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, probeType);
     }
 
     public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount) {
         this(testContext, testClassInstance, runWithWorkerThreadCount,
-                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, DEFAULT_IS_LIGHTWEIGHT_PROBE);
+                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, DEFAULT_PROBE_TYPE);
     }
 
     public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount,
                          int runWithWorkerMetronomeInterval, MetronomeType runWithWorkerMetronomeType,
-                         boolean runWithWorkerIsLightweightProbe) {
+                         ProbeType probeType) {
         if (testContext == null) {
             throw new NullPointerException("testContext cannot be null!");
         }
@@ -159,7 +161,7 @@ public class TestContainer {
         this.runWithWorkerThreadCount = runWithWorkerThreadCount;
         this.runWithWorkerMetronomeInterval = runWithWorkerMetronomeInterval;
         this.runWithWorkerMetronomeType = runWithWorkerMetronomeType;
-        this.runWithWorkerIsLightweightProbe = runWithWorkerIsLightweightProbe;
+        this.probeType = probeType;
 
         injectDependencies();
         initTestMethods();
@@ -306,9 +308,10 @@ public class TestContainer {
     }
 
     private Map<Field, Object> getInjectMap(Class classType) {
+        Class clazz = classType;
         Map<Field, Object> injectMap = new HashMap<Field, Object>();
         do {
-            for (Field field : classType.getDeclaredFields()) {
+            for (Field field : clazz.getDeclaredFields()) {
                 Class fieldType = field.getType();
                 if (field.isAnnotationPresent(InjectTestContext.class)) {
                     assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
@@ -327,8 +330,8 @@ public class TestContainer {
                     injectMap.put(field, withFixedIntervalMs(intervalMillis, type));
                 }
             }
-            classType = classType.getSuperclass();
-        } while (classType != null);
+            clazz = clazz.getSuperclass();
+        } while (clazz != null);
         return injectMap;
     }
 
@@ -350,12 +353,26 @@ public class TestContainer {
 
     private Probe getOrCreateProbe(String probeName, boolean partOfTotalThroughput) {
         Probe probe = probeMap.get(probeName);
+
         if (probe == null) {
-            probe = (runWithWorkerIsLightweightProbe
-                    ? new ThroughputProbe(partOfTotalThroughput)
-                    : new HdrProbe(partOfTotalThroughput));
+            switch (probeType) {
+                case HDR:
+                    probe = new HdrProbe(partOfTotalThroughput);
+                    break;
+                case LATENCY:
+                    if (probeName.equals(DEFAULT_WORKER_PROBE_NAME)) {
+                        probe = new WorkerThroughputProbe(workers);
+                    } else {
+                        probe = new ThroughputProbe(partOfTotalThroughput);
+                    }
+
+                    break;
+                default:
+                    throw new IllegalArgumentException("unknown probeType:" + probeType);
+            }
             probeMap.put(probeName, probe);
         }
+
         return probe;
     }
 
@@ -365,6 +382,8 @@ public class TestContainer {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
         for (int i = 0; i < threadCount; i++) {
             final IWorker worker = invokeMethod(testClassInstance, runMethod);
+            workers.add(worker);
+
             if (firstWorker == null) {
                 firstWorker = worker;
             }
@@ -373,18 +392,7 @@ public class TestContainer {
             if (operationProbes != null) {
                 ((IMultipleProbesWorker) worker).setProbeMap(operationProbes);
             }
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        worker.beforeRun();
-                        worker.run();
-                        worker.afterRun();
-                    } catch (Exception e) {
-                        throw rethrow(e);
-                    }
-                }
-            });
+            spawner.spawn(new WorkerTask(worker));
         }
         spawner.awaitCompletion();
         return firstWorker;
@@ -408,22 +416,22 @@ public class TestContainer {
 
     private static int getThreadCount(TestCase testCase) {
         String propertyValue = getPropertyValue(testCase, THREAD_COUNT_PROPERTY_NAME);
-        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(propertyValue));
+        return propertyValue == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(propertyValue);
     }
 
     private static int getMetronomeIntervalProperty(TestCase testCase) {
         String propertyValue = getPropertyValue(testCase, METRONOME_INTERVAL_PROPERTY_NAME);
-        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL : parseInt(propertyValue));
+        return propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL : parseInt(propertyValue);
     }
 
     private static MetronomeType getMetronomeTypeProperty(TestCase testCase) {
         String propertyValue = getPropertyValue(testCase, METRONOME_TYPE_PROPERTY_NAME);
-        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE : MetronomeType.valueOf(propertyValue));
+        return propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE : MetronomeType.valueOf(propertyValue);
     }
 
-    private static boolean isLightweightProbe(TestCase testCase) {
-        String propertyValue = getPropertyValue(testCase, LIGHTWEIGHT_PROBE_PROPERTY_NAME);
-        return parseBoolean(propertyValue);
+    private static ProbeType isLightweightProbe(TestCase testCase) {
+        String propertyValue = getPropertyValue(testCase, PROBE_TYPE_PROPERTY_NAME);
+        return propertyValue == null ? DEFAULT_PROBE_TYPE : ProbeType.valueOf(propertyValue);
     }
 
     private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {

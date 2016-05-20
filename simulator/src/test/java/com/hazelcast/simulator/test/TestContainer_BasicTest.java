@@ -31,7 +31,7 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
     public void testConstructor_withTestcase_withLightweightProbe() {
         TestCase testCase = new TestCase("TestContainerWithLightweightProbeTest");
         testCase.setProperty("class", PerformanceMonitorTest.class.getName());
-        testCase.setProperty(TestContainer.LIGHTWEIGHT_PROBE_PROPERTY_NAME, "true");
+        testCase.setProperty(TestContainer.PROBE_TYPE_PROPERTY_NAME, "true");
 
         testContainer = new TestContainer(testContext, testCase);
 
