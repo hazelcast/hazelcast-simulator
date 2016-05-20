@@ -15,11 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
-import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MapStore;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.simulator.test.TestException;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,10 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.config.MapStoreConfig.InitialLoadMode.LAZY;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static java.lang.String.format;
 
 public class MapStoreWithCounter implements MapStore<Object, Object> {
 
@@ -46,59 +39,6 @@ public class MapStoreWithCounter implements MapStore<Object, Object> {
     private final AtomicInteger countLoad = new AtomicInteger(0);
 
     public MapStoreWithCounter() {
-    }
-
-    public static void assertMapStoreConfiguration(ILogger logger, HazelcastInstance instance, String mapName,
-                                                   Class<? extends MapStore> mapStoreImplementation) {
-        if (isClient(instance)) {
-            return;
-        }
-        String expectedMapStoreName = mapStoreImplementation.getName();
-        MapStoreConfig mapStoreConfig = instance.getConfig().getMapConfig(mapName).getMapStoreConfig();
-        assertMapStoreConfig(expectedMapStoreName, mapName, mapStoreConfig, logger);
-        assertMapStoreClassName(expectedMapStoreName, mapName, mapStoreConfig);
-        assertMapStoreImplementation(expectedMapStoreName, mapName, mapStoreConfig, mapStoreImplementation);
-    }
-
-    private static void assertMapStoreConfig(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig,
-                                             ILogger logger) {
-        if (mapStoreConfig == null) {
-            throw new TestException("MapStore for map %s needs to be configured with class %s, but was not configured at all",
-                    mapName, expectedMapStoreName);
-        }
-        logger.info(format("MapStore configuration for map %s: %s", mapName, mapStoreConfig));
-        if (!mapStoreConfig.isEnabled()) {
-            throw new TestException("MapStore for map %s needs to be configured with class %s, but was not enabled", mapName,
-                    expectedMapStoreName);
-        }
-    }
-
-    private static void assertMapStoreClassName(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig) {
-        String configuredMapStoreClassName = mapStoreConfig.getClassName();
-        if (configuredMapStoreClassName == null) {
-            throw new TestException("MapStore for map %s needs to be configured with class %s, but was null", mapName,
-                    expectedMapStoreName);
-        }
-        if (!expectedMapStoreName.equals(configuredMapStoreClassName)) {
-            throw new TestException("MapStore for map %s needs to be configured with class %s, but was %s", mapName,
-                    expectedMapStoreName, configuredMapStoreClassName);
-        }
-    }
-
-    private static void assertMapStoreImplementation(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig,
-                                                     Class<? extends MapStore> mapStoreImplementation) {
-        Object configuredMapStoreImpl = mapStoreConfig.getImplementation();
-        if (configuredMapStoreImpl == null) {
-            if (mapStoreConfig.getInitialLoadMode().equals(LAZY)) {
-                return;
-            }
-            throw new TestException("MapStore for map %s needs to be initialized with class %s, but was null (%s)", mapName,
-                    expectedMapStoreName, mapStoreConfig);
-        }
-        if (!configuredMapStoreImpl.getClass().equals(mapStoreImplementation)) {
-            throw new TestException("MapStore for map %s needs to be initialized with class %s, but was %s (%s)", mapName,
-                    expectedMapStoreName, configuredMapStoreImpl.getClass().getName(), mapStoreConfig);
-        }
     }
 
     public static void setMinMaxDelayMs(int minDelayMs, int maxDelayMs) {

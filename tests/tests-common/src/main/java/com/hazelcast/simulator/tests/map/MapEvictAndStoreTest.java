@@ -30,7 +30,7 @@ import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
-import static com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter.assertMapStoreConfiguration;
+import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.assertMapStoreConfiguration;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
