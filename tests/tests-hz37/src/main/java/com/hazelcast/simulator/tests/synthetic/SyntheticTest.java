@@ -137,6 +137,11 @@ public class SyntheticTest {
             }
         }
 
+        @Override
+        public long getIteration() {
+            return iteration;
+        }
+
         private void timeStep() throws Exception {
             ICompletableFuture<Object> future = invokeOnNextPartition();
             if (syncInvocation) {

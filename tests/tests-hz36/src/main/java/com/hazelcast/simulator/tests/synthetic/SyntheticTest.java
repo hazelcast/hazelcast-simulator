@@ -159,6 +159,11 @@ public class SyntheticTest {
         }
 
         @Override
+        public long getIteration() {
+            return iteration;
+        }
+
+        @Override
         public void run() {
             try {
                 while (!testContext.isStopped()) {

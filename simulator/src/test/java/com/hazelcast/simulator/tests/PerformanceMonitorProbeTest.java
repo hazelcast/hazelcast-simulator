@@ -53,5 +53,10 @@ public class PerformanceMonitorProbeTest {
         @Override
         public void afterCompletion() {
         }
+
+        @Override
+        public long getIteration() {
+            return 0;
+        }
     }
 }

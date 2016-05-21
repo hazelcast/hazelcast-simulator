@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.worker.performance;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.probes.ProbeType;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -140,12 +141,12 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLightweightProbe() {
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLatencyProbe() {
         assertTrue(performanceMonitor.start());
         sleepMillis(300);
 
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
-        addTest(test, 0, true);
+        addTest(test, 0, ProbeType.LATENCY);
 
         Thread testRunnerThread = new TestRunnerThread();
         testRunnerThread.start();
@@ -197,11 +198,11 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void addTest(Object test, int delayMillis) {
-        addTest(test, delayMillis, false);
+        addTest(test, delayMillis, ProbeType.HDR);
     }
 
-    private void addTest(Object test, int delayMillis, boolean isLightweightProbe) {
-        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, isLightweightProbe);
+    private void addTest(Object test, int delayMillis, ProbeType probeType) {
+        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, probeType);
         tests.put(TEST_NAME, testContainer);
     }
 

@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.ProbeType;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -61,7 +62,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
     @Test
     public void testInjectProbe_withLightweightProbe() {
         ProbeTest test = new ProbeTest();
-        testContainer = new TestContainer(testContext, test, true);
+        testContainer = new TestContainer(testContext, test, ProbeType.LATENCY);
 
         assertNotNull(test.throughputProbe);
         assertFalse(test.throughputProbe.isMeasuringLatency());

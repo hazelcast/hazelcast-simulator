@@ -144,6 +144,11 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
                 @Override
                 public void afterCompletion() {
                 }
+
+                @Override
+                public long getIteration() {
+                    return 0;
+                }
             };
         }
     }
