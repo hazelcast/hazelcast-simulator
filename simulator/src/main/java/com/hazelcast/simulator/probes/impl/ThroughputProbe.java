@@ -53,6 +53,11 @@ public class ThroughputProbe implements Probe {
     }
 
     @Override
+    public void inc(long count) {
+        counter.addAndGet(count);
+    }
+
+    @Override
     public Histogram getIntervalHistogram() {
         throw new UnsupportedOperationException();
     }

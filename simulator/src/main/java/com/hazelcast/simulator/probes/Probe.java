@@ -40,6 +40,8 @@ public interface Probe {
      */
     void done(long started);
 
+    void inc(long count);
+
     /**
      * Adds a latency value in nanoseconds to the probe result.
      *

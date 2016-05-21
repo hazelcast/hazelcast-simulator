@@ -48,6 +48,10 @@ public class HdrProbe implements Probe {
     }
 
     @Override
+    public void inc(long count) {
+    }
+
+    @Override
     public void done(long started) {
         long now = System.nanoTime();
 

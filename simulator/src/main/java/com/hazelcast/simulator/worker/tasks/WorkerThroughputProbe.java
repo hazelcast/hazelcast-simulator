@@ -47,6 +47,11 @@ public class WorkerThroughputProbe implements Probe {
     }
 
     @Override
+    public void inc(long count) {
+
+    }
+
+    @Override
     public Histogram getIntervalHistogram() {
         throw new UnsupportedOperationException();
     }
