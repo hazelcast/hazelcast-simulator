@@ -139,12 +139,12 @@ public class AtomicLongOldTest {
 
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-                if (isWrite()) {
-                    increments++;
-                    counter.incrementAndGet();
-                } else {
-                    counter.get();
-                }
+         //       if (isWrite()) {
+         //           increments++;
+         //           counter.incrementAndGet();
+         //       } else {
+               counter.get();
+          //      }
 
                 iteration++;
 //                if (iteration % logFrequency == 0) {
