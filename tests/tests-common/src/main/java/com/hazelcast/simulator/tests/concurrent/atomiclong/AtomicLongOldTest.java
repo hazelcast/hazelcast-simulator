@@ -154,6 +154,7 @@ public class AtomicLongOldTest {
                     probe.inc(performanceUpdateFrequency);
                 }
             }
+            ops2.addAndGet(iteration);
             probe.inc(iteration % performanceUpdateFrequency);
             totalCounter.addAndGet(increments);
         }
