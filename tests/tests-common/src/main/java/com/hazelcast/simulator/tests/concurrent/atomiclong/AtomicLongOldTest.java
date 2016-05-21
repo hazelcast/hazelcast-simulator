@@ -33,6 +33,7 @@ import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static org.junit.Assert.assertEquals;
@@ -55,6 +56,9 @@ public class AtomicLongOldTest {
     private IAtomicLong[] counters;
     private TestContext context;
     private HazelcastInstance targetInstance;
+    private AtomicLong ops2 = new AtomicLong();
+    private long startMs;
+    private long endMs;
 
     @InjectProbe(useForThroughput = true)
     private Probe probe;
@@ -95,17 +99,23 @@ public class AtomicLongOldTest {
         for (IAtomicLong counter : counters) {
             counter.destroy();
         }
+        log.warning("---Operations:"+ops2);
+        log.warning("---Throughput:"+((ops2.get()*1000d)/(endMs-startMs))+" ops/second");
+
+
         totalCounter.destroy();
         log.info(getOperationCountInformation(targetInstance));
     }
 
     @Run
     public void run() {
+        startMs = System.currentTimeMillis();
         ThreadSpawner spawner = new ThreadSpawner(context.getTestId());
         for (int k = 0; k < threadCount; k++) {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
+        endMs = System.currentTimeMillis();
     }
 
     @Verify
