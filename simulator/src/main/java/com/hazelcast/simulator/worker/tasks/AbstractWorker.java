@@ -49,6 +49,9 @@ public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWork
         final TestContext testContext = getTestContext();
         final Metronome metronome = getWorkerMetronome();
         final Probe probe = workerProbe;
+
+        System.out.println(getClass().getName()+" probe:"+probe.getClass());
+
         final OperationSelector<O> selector = this.selector;
 
         if (metronome.getClass() == EmptyMetronome.class && probe.getClass() == ThroughputProbe.class) {
