@@ -17,6 +17,7 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
+import com.hazelcast.core.Partition;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
@@ -45,7 +46,7 @@ public class AtomicLongOldTest {
     //props
     public int countersLength = 1000;
     public int threadCount = 10;
-  //  public int logFrequency = 10000;
+    //  public int logFrequency = 10000;
     public int performanceUpdateFrequency = 1000;
     public String basename = "atomiclong";
     public KeyLocality keyLocality = KeyLocality.RANDOM;
@@ -99,9 +100,24 @@ public class AtomicLongOldTest {
         for (IAtomicLong counter : counters) {
             counter.destroy();
         }
-        log.warning("---Operations:"+ops2);
-        log.warning("---Throughput:"+((ops2.get()*1000d)/(endMs-startMs))+" ops/second");
+        log.warning("---Operations:" + ops2);
+        log.warning("---Throughput:" + ((ops2.get() * 1000d) / (endMs - startMs)) + " ops/second");
 
+        double local = 0;
+        double remote = 0;
+        for (IAtomicLong counter : counters) {
+            Partition partition = targetInstance.getPartitionService().getPartition(counter.getName());
+            if (partition.getOwner().equals(targetInstance.getCluster().getLocalMember())) {
+                local++;
+            }else{
+                remote++;
+            }
+        }
+
+        double localPercentage = (local * 100)/counters.length;
+        double remotePercentage = (remote * 100)/counters.length;
+        log.warning("---localPercentage:" + localPercentage+" %");
+        log.warning("---remotePercentage:" + remotePercentage+" %");
 
         totalCounter.destroy();
         log.info(getOperationCountInformation(targetInstance));
@@ -139,12 +155,12 @@ public class AtomicLongOldTest {
 
             while (!context.isStopped()) {
                 IAtomicLong counter = getRandomCounter();
-         //       if (isWrite()) {
-         //           increments++;
-         //           counter.incrementAndGet();
-         //       } else {
-               counter.get();
-          //      }
+                //       if (isWrite()) {
+                //           increments++;
+                //           counter.incrementAndGet();
+                //       } else {
+                counter.get();
+                //      }
 
                 iteration++;
 //                if (iteration % logFrequency == 0) {
