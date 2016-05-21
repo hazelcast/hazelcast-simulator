@@ -62,7 +62,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
     @Test
     public void testInjectProbe_withLightweightProbe() {
         ProbeTest test = new ProbeTest();
-        testContainer = new TestContainer(testContext, test, ProbeType.LATENCY);
+        testContainer = new TestContainer(testContext, test, ProbeType.THROUGHPUT);
 
         assertNotNull(test.throughputProbe);
         assertFalse(test.throughputProbe.isMeasuringLatency());

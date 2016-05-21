@@ -359,7 +359,7 @@ public class TestContainer {
                 case HDR:
                     probe = new HdrProbe(partOfTotalThroughput);
                     break;
-                case LATENCY:
+                case THROUGHPUT:
                     if (probeName.equals(DEFAULT_WORKER_PROBE_NAME)) {
                         probe = new WorkerThroughputProbe(workers);
                     } else {

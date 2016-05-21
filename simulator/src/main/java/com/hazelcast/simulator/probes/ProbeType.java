@@ -16,5 +16,5 @@
 package com.hazelcast.simulator.probes;
 
 public enum ProbeType {
-    HDR, LATENCY
+    HDR, THROUGHPUT
 }

@@ -146,7 +146,7 @@ public class WorkerPerformanceMonitorTest {
         sleepMillis(300);
 
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
-        addTest(test, 0, ProbeType.LATENCY);
+        addTest(test, 0, ProbeType.THROUGHPUT);
 
         Thread testRunnerThread = new TestRunnerThread();
         testRunnerThread.start();
