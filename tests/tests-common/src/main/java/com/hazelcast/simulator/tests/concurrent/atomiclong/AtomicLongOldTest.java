@@ -116,6 +116,8 @@ public class AtomicLongOldTest {
 
         double localPercentage = (local * 100) / counters.length;
         double remotePercentage = (remote * 100) / counters.length;
+        log.warning("---localPartitionCount:" + local);
+        log.warning("---remotePartitionCount:" + remote);
         log.warning("---localPercentage:" + localPercentage + " %");
         log.warning("---remotePercentage:" + remotePercentage + " %");
         log.warning("---partitionCount:" + targetInstance.getPartitionService().getPartitions().size());
