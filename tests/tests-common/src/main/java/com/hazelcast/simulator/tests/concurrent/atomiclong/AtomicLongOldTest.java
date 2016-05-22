@@ -33,6 +33,8 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -105,22 +107,50 @@ public class AtomicLongOldTest {
 
         double local = 0;
         double remote = 0;
+        Map<Partition, Integer> localCounts = new HashMap<Partition, Integer>();
+        int maxCountPerPartition = 0;
         for (IAtomicLong counter : counters) {
             Partition partition = targetInstance.getPartitionService().getPartition(counter.getName());
             if (partition.getOwner().equals(targetInstance.getCluster().getLocalMember())) {
                 local++;
+                Integer countPerPartition = localCounts.get(partition);
+                Integer newCountPerPartition = countPerPartition == null ? 1 : countPerPartition + 1;
+                localCounts.put(partition, newCountPerPartition);
+
+                if (newCountPerPartition > maxCountPerPartition) {
+                    maxCountPerPartition = newCountPerPartition;
+                }
+
             } else {
                 remote++;
             }
         }
 
+        int imbalanceViolations = 0;
+        int minCountPerPartition = Integer.MAX_VALUE;
+        for (Map.Entry<Partition, Integer> entry : localCounts.entrySet()) {
+            if (entry.getValue() < maxCountPerPartition - 1) {
+                imbalanceViolations++;
+                log.warning("Imbalance max:" + maxCountPerPartition + " actual:" + entry.getValue());
+            }
+
+            if (entry.getValue() < minCountPerPartition) {
+                minCountPerPartition = entry.getValue();
+            }
+        }
+
+
         double localPercentage = (local * 100) / counters.length;
         double remotePercentage = (remote * 100) / counters.length;
-        log.warning("---localPartitionCount:" + local);
-        log.warning("---remotePartitionCount:" + remote);
+        log.warning("---localItemCount:" + local);
+        log.warning("---remoteItemCount:" + remote);
         log.warning("---localPercentage:" + localPercentage + " %");
         log.warning("---remotePercentage:" + remotePercentage + " %");
         log.warning("---partitionCount:" + targetInstance.getPartitionService().getPartitions().size());
+        log.warning("---maxCountPerPartition:" + maxCountPerPartition);
+        log.warning("---minCountPerPartition:" + minCountPerPartition);
+        log.warning("---imbalanceViolations:" + imbalanceViolations);
+
         totalCounter.destroy();
         log.info(getOperationCountInformation(targetInstance));
     }
