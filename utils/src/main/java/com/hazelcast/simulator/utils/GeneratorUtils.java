@@ -19,8 +19,9 @@ import java.util.Random;
 
 public final class GeneratorUtils {
 
+    // Do not use the @ symbol in the keys. This can lead to routing problems.
     private static final String ALPHABET
-            = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()-+,.<>/?]\\:;=";
+            = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!#$%^&*()-+,.<>/?]\\:;=";
     private static final Random RANDOM = new Random();
 
     private GeneratorUtils() {
