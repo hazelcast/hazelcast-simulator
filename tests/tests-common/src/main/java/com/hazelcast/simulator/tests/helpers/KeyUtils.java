@@ -244,16 +244,20 @@ public final class KeyUtils {
 
                 Set<K> keys = keysPerPartition[partition.getPartitionId()];
                 if (keys == null) {
-                    continue;
-                }
-
-                if (keys.contains(key)) {
+                    // we don't care for the given partition
                     continue;
                 }
 
                 if (keys.size() == maxKeysPerPartition) {
+                    // we reached the max number of keys for this partition
                     continue;
                 }
+
+                if (keys.contains(key)) {
+                    // a duplicate key
+                    continue;
+                }
+
 
                 keys.add(key);
                 return key;

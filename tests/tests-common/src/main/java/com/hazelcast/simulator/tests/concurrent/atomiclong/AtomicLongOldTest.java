@@ -39,6 +39,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
 public class AtomicLongOldTest {
@@ -82,8 +83,10 @@ public class AtomicLongOldTest {
 
         totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
+        String[] names = generateStringKeys(basename, countersLength, keyLocality, context.getTargetInstance());
+
         for (int k = 0; k < counters.length; k++) {
-            String key = KeyUtils.generateStringKey(8, keyLocality, targetInstance);
+            String key = names[k];
             counters[k] = targetInstance.getAtomicLong(key);
         }
     }
