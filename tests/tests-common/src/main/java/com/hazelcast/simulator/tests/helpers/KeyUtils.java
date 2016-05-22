@@ -19,6 +19,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -200,6 +202,8 @@ public final class KeyUtils {
         K next();
     }
 
+    private static final ILogger LOGGER = Logger.getLogger(KeyUtils.class);
+
     abstract static class BalancedKeyGenerator<K> implements KeyGenerator<K> {
 
         protected final Random random = new Random();
@@ -221,6 +225,8 @@ public final class KeyUtils {
 
             Set<Integer> targetPartitions = getTargetPartitions();
             this.maxKeysPerPartition = (int) Math.ceil(keyCount / (float) targetPartitions.size());
+
+            LOGGER.warning("keyCount:" + keyCount + " targetPartitions.size:" + targetPartitions.size() + " maxKeysPerPartition:" + maxKeysPerPartition);
 
             int partitionCount = partitionService.getPartitions().size();
             this.keysPerPartition = new Set[partitionCount];
