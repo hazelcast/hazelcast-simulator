@@ -109,16 +109,16 @@ public class AtomicLongOldTest {
             Partition partition = targetInstance.getPartitionService().getPartition(counter.getName());
             if (partition.getOwner().equals(targetInstance.getCluster().getLocalMember())) {
                 local++;
-            }else{
+            } else {
                 remote++;
             }
         }
 
-        double localPercentage = (local * 100)/counters.length;
-        double remotePercentage = (remote * 100)/counters.length;
-        log.warning("---localPercentage:" + localPercentage+" %");
-        log.warning("---remotePercentage:" + remotePercentage+" %");
-
+        double localPercentage = (local * 100) / counters.length;
+        double remotePercentage = (remote * 100) / counters.length;
+        log.warning("---localPercentage:" + localPercentage + " %");
+        log.warning("---remotePercentage:" + remotePercentage + " %");
+        log.warning("---partitionCount:" + targetInstance.getPartitionService().getPartitions().size());
         totalCounter.destroy();
         log.info(getOperationCountInformation(targetInstance));
     }
