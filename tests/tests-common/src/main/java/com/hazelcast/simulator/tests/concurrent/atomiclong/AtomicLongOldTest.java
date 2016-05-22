@@ -18,8 +18,12 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.Partition;
+import com.hazelcast.instance.Node;
+import com.hazelcast.internal.partition.InternalPartition;
+import com.hazelcast.internal.partition.InternalPartitionService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.nio.Address;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -27,10 +31,8 @@ import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.HashMap;
@@ -38,9 +40,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
-import static org.junit.Assert.assertEquals;
 
 public class AtomicLongOldTest {
 
@@ -56,7 +58,7 @@ public class AtomicLongOldTest {
     public int writePercentage = 100;
     public int warmupIterations = 100;
 
-    private IAtomicLong totalCounter;
+    //private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
     private TestContext context;
     private HazelcastInstance targetInstance;
@@ -81,7 +83,7 @@ public class AtomicLongOldTest {
 
         targetInstance = context.getTargetInstance();
 
-        totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
+        // totalCounter = targetInstance.getAtomicLong(context.getTestId() + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
         String[] names = generateStringKeys("", countersLength, keyLocality, context.getTargetInstance());
 
@@ -142,7 +144,6 @@ public class AtomicLongOldTest {
             }
         }
 
-
         double localPercentage = (local * 100) / counters.length;
         double remotePercentage = (remote * 100) / counters.length;
         log.warning("---localItemCount:" + local);
@@ -154,7 +155,22 @@ public class AtomicLongOldTest {
         log.warning("---minCountPerPartition:" + minCountPerPartition);
         log.warning("---imbalanceViolations:" + imbalanceViolations);
 
-        totalCounter.destroy();
+        long partitionOwnerConflicts = 0;
+        Node node = getNode(targetInstance);
+        InternalPartitionService partitionService = node.getPartitionService();
+        for (IAtomicLong counter : counters) {
+            int partitionId = partitionService.getPartitionId(counter.getName());
+            InternalPartition partition = partitionService.getPartition(partitionId);
+            Address address = partition.getReplicaAddress(0);
+            if (!node.getClusterService().getLocalMember().getAddress().equals(address)) {
+                partitionOwnerConflicts++;
+            }
+        }
+
+        log.warning("---partitionOwnerConflicts:" + partitionOwnerConflicts);
+        log.warning("---partitionOwnerConflictsPercentage:" + ((100d * partitionOwnerConflicts) / counters.length)+" %s");
+
+        //totalCounter.destroy();
         log.info(getOperationCountInformation(targetInstance));
     }
 
@@ -168,17 +184,17 @@ public class AtomicLongOldTest {
         spawner.awaitCompletion();
         endMs = System.currentTimeMillis();
     }
-
-    @Verify
-    public void verify() {
-        long expected = totalCounter.get();
-        long actual = 0;
-        for (IAtomicLong counter : counters) {
-            actual += counter.get();
-        }
-
-        assertEquals(expected, actual);
-    }
+//
+//    @Verify
+//    public void verify() {
+//        long expected = totalCounter.get();
+//        long actual = 0;
+//        for (IAtomicLong counter : counters) {
+//            actual += counter.get();
+//        }
+//
+//        assertEquals(expected, actual);
+//    }
 
     private class Worker implements Runnable {
         private final Random random = new Random();
@@ -207,7 +223,7 @@ public class AtomicLongOldTest {
             }
             ops2.addAndGet(iteration);
             probe.inc(iteration % performanceUpdateFrequency);
-            totalCounter.addAndGet(increments);
+            //totalCounter.addAndGet(increments);
         }
 
         private boolean isWrite() {
