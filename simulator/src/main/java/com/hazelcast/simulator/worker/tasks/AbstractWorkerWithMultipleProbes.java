@@ -53,9 +53,13 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
 
     @Override
     public void setProbeMap(Map<? extends Enum, Probe> probeMap) {
-        probes = new Probe[probeMap.size()];
         for (Map.Entry<? extends Enum, Probe> entry : probeMap.entrySet()) {
-            probes[entry.getKey().ordinal()] = entry.getValue();
+            Enum operation = entry.getKey();
+            if (probes == null) {
+                probes = new Probe[operation.getDeclaringClass().getEnumConstants().length];
+            }
+
+            probes[operation.ordinal()] = entry.getValue();
         }
     }
 
@@ -69,7 +73,7 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
         while ((!testContext.isStopped() && !isWorkerStopped)) {
             metronome.waitForNext();
             O op = selector.select();
-            Probe probe =  probes[op.ordinal()];
+            Probe probe = probes[op.ordinal()];
 
             long started = System.nanoTime();
             timeStep(op, probe);

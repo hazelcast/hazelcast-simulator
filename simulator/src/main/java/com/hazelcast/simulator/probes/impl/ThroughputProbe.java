@@ -43,7 +43,7 @@ public class ThroughputProbe implements Probe {
     }
 
     @Override
-    public void done(long started) {
+    public void done(long startedNanos) {
         counter.incrementAndGet();
     }
 
