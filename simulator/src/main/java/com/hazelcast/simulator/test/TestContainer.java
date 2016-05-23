@@ -56,7 +56,6 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetrono
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
@@ -373,18 +372,7 @@ public class TestContainer {
             if (operationProbes != null) {
                 ((IMultipleProbesWorker) worker).setProbeMap(operationProbes);
             }
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        worker.beforeRun();
-                        worker.run();
-                        worker.afterRun();
-                    } catch (Exception e) {
-                        throw rethrow(e);
-                    }
-                }
-            });
+            spawner.spawn(new WorkerTask(worker));
         }
         spawner.awaitCompletion();
         return firstWorker;
@@ -438,4 +426,5 @@ public class TestContainer {
             setFieldValue(worker, entry.getKey(), entry.getValue());
         }
     }
+
 }
