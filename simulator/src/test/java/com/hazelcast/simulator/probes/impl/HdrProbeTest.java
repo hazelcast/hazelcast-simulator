@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.probes.ProbeTestUtils.assertHistogram;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -37,7 +38,7 @@ public class HdrProbeTest {
         long expectedLatency = 150;
 
         long started = System.nanoTime();
-        sleepNanos(TimeUnit.MILLISECONDS.toNanos(expectedLatency));
+        sleepNanos(MILLISECONDS.toNanos(expectedLatency));
         probe.done(started);
 
         assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
@@ -61,9 +62,9 @@ public class HdrProbeTest {
         long expectedMaxValue = 1000;
         long expectedMeanValue = (long) ((latencyValue + expectedMinValue + expectedMaxValue) / (double) expectedCount);
 
-        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(latencyValue));
-        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMinValue));
-        probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
+        probe.recordValue(MILLISECONDS.toNanos(latencyValue));
+        probe.recordValue(MILLISECONDS.toNanos(expectedMinValue));
+        probe.recordValue(MILLISECONDS.toNanos(expectedMaxValue));
 
         assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }

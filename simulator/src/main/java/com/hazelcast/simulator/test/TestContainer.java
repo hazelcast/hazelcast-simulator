@@ -204,7 +204,7 @@ public class TestContainer {
     }
 
     private void injectDependencies() {
-        Map<Field, Object> injectMap = getInjectMap(testClassType);
+        Map<Field, Object> injectMap = createInjectMap(testClassType);
         injectObjects(injectMap, testClassInstance);
     }
 
@@ -291,8 +291,8 @@ public class TestContainer {
         IWorker workerInstance = invokeMethod(testClassInstance, runMethod);
         Class<? extends IWorker> workerClass = workerInstance.getClass();
 
-        Map<Field, Object> injectMap = getInjectMap(workerClass);
-        Map<Enum, Probe> operationProbeMap = getOperationProbeMap(workerClass, workerInstance);
+        Map<Field, Object> injectMap = createInjectMap(workerClass);
+        Map<Enum, Probe> operationProbeMap = createOperationProbeMap(workerClass, workerInstance);
 
         // everything is prepared, we can notify the outside world now
         testStartedTimestamp = System.currentTimeMillis();
@@ -305,7 +305,7 @@ public class TestContainer {
         worker.afterCompletion();
     }
 
-    private Map<Field, Object> getInjectMap(Class classType) {
+    private Map<Field, Object> createInjectMap(Class classType) {
         Map<Field, Object> injectMap = new HashMap<Field, Object>();
         do {
             for (Field field : classType.getDeclaredFields()) {
@@ -332,7 +332,7 @@ public class TestContainer {
         return injectMap;
     }
 
-    private Map<Enum, Probe> getOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
+    private Map<Enum, Probe> createOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
         if (!IMultipleProbesWorker.class.isAssignableFrom(workerClass)) {
             return null;
         }

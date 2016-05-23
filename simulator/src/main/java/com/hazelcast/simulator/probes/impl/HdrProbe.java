@@ -21,6 +21,8 @@ import org.HdrHistogram.Recorder;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 /**
  * Measures the latency distribution of a test.
  */
@@ -48,19 +50,18 @@ public class HdrProbe implements Probe {
     }
 
     @Override
-    public void done(long started) {
-        long now = System.nanoTime();
-
-        if (started <= 0) {
-            throw new IllegalArgumentException("started has to be a positive number");
+    public void done(long startedNanos) {
+        if (startedNanos <= 0) {
+            throw new IllegalArgumentException("startedNanos has to be a positive number");
         }
 
-        recordValue(now - started);
+        long nowNanos = System.nanoTime();
+        recordValue(nowNanos - startedNanos);
     }
 
     @Override
     public void recordValue(long latencyNanos) {
-        int latencyMicros = (int) TimeUnit.NANOSECONDS.toMicros(latencyNanos);
+        int latencyMicros = (int) NANOSECONDS.toMicros(latencyNanos);
         recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : (latencyMicros < 0 ? 0 : latencyMicros));
     }
 

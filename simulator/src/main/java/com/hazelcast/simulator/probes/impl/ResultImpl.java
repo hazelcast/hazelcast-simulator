@@ -31,15 +31,12 @@ public class ResultImpl implements Result {
     private final String testName;
     private final long invocations;
     private final double throughput;
-
-    private final Map<String, Histogram> probeHistogramMap;
+    private final Map<String, Histogram> probeHistogramMap = new HashMap<String, Histogram>();
 
     public ResultImpl(String testName, long invocations, double throughput) {
         this.testName = testName;
         this.invocations = invocations;
         this.throughput = throughput;
-
-        this.probeHistogramMap = new HashMap<String, Histogram>();
     }
 
     @Override
