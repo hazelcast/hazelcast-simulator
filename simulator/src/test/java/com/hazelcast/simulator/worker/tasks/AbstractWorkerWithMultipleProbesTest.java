@@ -13,6 +13,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import org.HdrHistogram.Histogram;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -110,6 +111,7 @@ public class AbstractWorkerWithMultipleProbesTest {
         assertNotNull(test.randomLong);
     }
 
+    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetIteration() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.ITERATION);

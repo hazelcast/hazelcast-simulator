@@ -10,6 +10,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.simulator.worker.tasks.IWorker;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Map;
@@ -148,6 +149,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         }
     }
 
+    @Ignore
     @Test
     public void testRunWithWorker_withAbstractWorkerWithMultipleProbesWorker() throws Exception {
         MultiProbeWorkerTest test = new MultiProbeWorkerTest();
