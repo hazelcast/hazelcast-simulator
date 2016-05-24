@@ -30,6 +30,7 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
+import javax.ws.rs.GET;
 import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
@@ -39,6 +40,7 @@ public class IntByteMapTest {
 
     private enum Operation {
         PUT,
+        SET,
         GET
     }
 
@@ -49,7 +51,8 @@ public class IntByteMapTest {
     public int minSize = 16;
     public int maxSize = 2000;
     public KeyLocality keyLocality = KeyLocality.SHARED;
-    public double putProb = 0.3;
+    public double putProb = 0.1;
+    public double setProb = 0.0;
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
@@ -67,8 +70,8 @@ public class IntByteMapTest {
             throw new IllegalStateException("minSize can't be larger than maxSize");
         }
 
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProb)
+        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
+                .addOperation(Operation.SET, setProb)
                 .addDefaultOperation(Operation.GET);
     }
 
@@ -109,12 +112,18 @@ public class IntByteMapTest {
         protected void timeStep(Operation operation, Probe probe) throws Exception {
             int key = keys[randomInt(keys.length)];
             long started;
-
+            byte[] value;
             switch (operation) {
                 case PUT:
-                    byte[] value = values[getRandom().nextInt(values.length)];
+                    value = values[getRandom().nextInt(values.length)];
                     started = System.nanoTime();
                     map.put(key, value);
+                    probe.done(started);
+                    break;
+                case SET:
+                    value = values[getRandom().nextInt(values.length)];
+                    started = System.nanoTime();
+                    map.set(key, value);
                     probe.done(started);
                     break;
                 case GET:
