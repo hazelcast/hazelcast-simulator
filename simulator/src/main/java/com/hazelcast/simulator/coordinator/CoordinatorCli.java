@@ -59,8 +59,8 @@ final class CoordinatorCli {
     private final OptionParser parser = new OptionParser();
 
     private final OptionSpec<Integer> workerVmStartupDelayMsSpec = parser.accepts("workerVmStartupDelayMs",
-            "Amount of time in milliseconds to wait between starting up the next member. This is useful to prevent" +
-                    "duplicate connection issues.")
+            "Amount of time in milliseconds to wait between starting up the next member. This is useful to prevent"
+                    + "duplicate connection issues.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
