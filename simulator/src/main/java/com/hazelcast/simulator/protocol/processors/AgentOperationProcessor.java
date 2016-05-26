@@ -36,8 +36,9 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -54,10 +55,10 @@ public class AgentOperationProcessor extends OperationProcessor {
 
     private final Agent agent;
     private final WorkerJvmManager workerJvmManager;
-    private final ExecutorService executorService;
+    private final ScheduledExecutorService executorService;
 
     public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
-                                   ExecutorService executorService) {
+                                   ScheduledExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
         this.workerJvmManager = workerJvmManager;
@@ -132,7 +133,8 @@ public class AgentOperationProcessor extends OperationProcessor {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
         for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
             WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvmManager, workerJvmSettings);
-            Future<Boolean> future = executorService.submit(new LaunchWorkerCallable(launcher, workerJvmSettings));
+            LaunchWorkerCallable task = new LaunchWorkerCallable(launcher, workerJvmSettings);
+            Future<Boolean> future = executorService.schedule(task, operation.getDelayMs(), TimeUnit.MILLISECONDS);
             futures.add(future);
         }
         for (Future<Boolean> future : futures) {

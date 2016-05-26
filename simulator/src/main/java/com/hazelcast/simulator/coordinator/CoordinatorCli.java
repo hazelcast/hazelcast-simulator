@@ -58,6 +58,11 @@ final class CoordinatorCli {
 
     private final OptionParser parser = new OptionParser();
 
+    private final OptionSpec<Integer> workerVmStartupDelayMsSpec = parser.accepts("workerVmStartupDelayMs",
+            "Amount of time in milliseconds to wait between starting up the next member. This is useful to prevent" +
+                    "duplicate connection issues.")
+            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
@@ -229,7 +234,8 @@ final class CoordinatorCli {
                 options.valueOf(cli.workerRefreshSpec),
                 options.valueOf(cli.targetTypeSpec),
                 options.valueOf(cli.targetCountSpec),
-                options.valueOf(cli.syncToTestPhaseSpec)
+                options.valueOf(cli.syncToTestPhaseSpec),
+                options.valueOf(cli.workerVmStartupDelayMsSpec)
         );
 
         String memberHzConfig = loadMemberHzConfig(options, cli);
