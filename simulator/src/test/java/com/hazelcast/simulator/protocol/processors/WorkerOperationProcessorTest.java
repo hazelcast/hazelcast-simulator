@@ -79,7 +79,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_unsupportedOperation() throws Exception {
-        SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerJvmSettings>emptyList());
+        SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerJvmSettings>emptyList(),0);
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);

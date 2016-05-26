@@ -72,7 +72,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         super(futureMap, localAddress, port, threadPoolSize);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
-        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, getExecutorService());
+        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, getScheduledExecutor());
 
         this.futureMap = futureMap;
 
@@ -112,7 +112,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("forwardToCoordinatorHandler", new ForwardToCoordinatorHandler(localAddress, connectionManager,
                 workerJvmManager));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, getFutureMap()));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getExecutorService()));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getScheduledExecutor()));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
     }
 
@@ -125,8 +125,8 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, clientConnectorManager,
-                getExecutorService()));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getExecutorService()));
+                getScheduledExecutor()));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getScheduledExecutor()));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
     }

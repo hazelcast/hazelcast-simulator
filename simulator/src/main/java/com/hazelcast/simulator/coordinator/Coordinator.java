@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher.WORKERS_HOME_NAME;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
@@ -62,6 +61,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class Coordinator {
 
@@ -244,10 +244,16 @@ public final class Coordinator {
     }
 
     private void startRemoteClient() {
-        int workerPingIntervalMillis = (int) TimeUnit.SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
+        int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
         int shutdownDelaySeconds = simulatorProperties.getMemberWorkerShutdownDelaySeconds();
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis, shutdownDelaySeconds);
+        remoteClient = new RemoteClient(
+                coordinatorConnector,
+                componentRegistry,
+                workerPingIntervalMillis,
+                shutdownDelaySeconds,
+                coordinatorParameters.getWorkerVmStartupDelayMs()
+        );
         remoteClient.initTestSuite(testSuite);
     }
 

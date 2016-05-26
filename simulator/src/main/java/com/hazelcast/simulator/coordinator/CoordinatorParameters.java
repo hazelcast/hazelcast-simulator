@@ -37,10 +37,12 @@ class CoordinatorParameters {
     private final int targetCount;
 
     private final TestPhase lastTestPhaseToSync;
+    private final int workerVmStartupDelayMs;
 
+    @SuppressWarnings("checkstyle:parameternumber")
     CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean uploadHazelcastJARs,
                           boolean enterpriseEnabled, boolean verifyEnabled, boolean parallel, boolean refreshJvm,
-                          TargetType targetType, int targetCount, TestPhase lastTestPhaseToSync) {
+                          TargetType targetType, int targetCount, TestPhase lastTestPhaseToSync, int workerVmStartupDelayMs) {
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
 
@@ -54,6 +56,11 @@ class CoordinatorParameters {
         this.targetCount = targetCount;
 
         this.lastTestPhaseToSync = lastTestPhaseToSync;
+        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
+    }
+
+    public int getWorkerVmStartupDelayMs() {
+        return workerVmStartupDelayMs;
     }
 
     SimulatorProperties getSimulatorProperties() {

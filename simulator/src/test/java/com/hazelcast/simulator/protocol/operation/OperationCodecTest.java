@@ -72,7 +72,7 @@ public class OperationCodecTest {
 
         WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, workerParameters);
 
-        CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerJvmSettings));
+        CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerJvmSettings),0);
         String json = toJson(operation);
         assertNotNull(json);
         LOGGER.info(json);

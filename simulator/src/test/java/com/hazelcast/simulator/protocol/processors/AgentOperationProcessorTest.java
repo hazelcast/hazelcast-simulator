@@ -27,7 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
@@ -43,7 +43,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -67,7 +67,7 @@ public class AgentOperationProcessorTest {
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
     private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
     private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
-    private final ExecutorService executorService = createFixedThreadPool(3, "AgentOperationProcessorTest");
+    private final ScheduledExecutorService scheduler = createScheduledThreadPool(3, "AgentOperationProcessorTest");
 
     private TestSuite testSuite;
     private File testSuiteDir;
@@ -94,7 +94,7 @@ public class AgentOperationProcessorTest {
         when(agent.getCoordinatorLogger()).thenReturn(coordinatorLogger);
         when(agent.getWorkerJvmFailureMonitor()).thenReturn(failureMonitor);
 
-        processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, executorService);
+        processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, scheduler);
     }
 
     @After
@@ -102,8 +102,8 @@ public class AgentOperationProcessorTest {
         resetUserDir();
         deleteLogs();
 
-        executorService.shutdown();
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
+        scheduler.shutdown();
+        scheduler.awaitTermination(10, TimeUnit.SECONDS);
     }
 
     @Test
@@ -267,7 +267,7 @@ public class AgentOperationProcessorTest {
         when(workerJvmSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
         when(workerJvmSettings.getJvmOptions()).thenReturn("-verbose:gc");
 
-        SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerJvmSettings));
+        SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerJvmSettings), 0);
         return processor.processOperation(getOperationType(operation), operation, COORDINATOR);
     }
 

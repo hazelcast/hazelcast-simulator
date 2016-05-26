@@ -56,13 +56,15 @@ public class RemoteClient {
     private final ComponentRegistry componentRegistry;
     private final WorkerPingThread workerPingThread;
     private final int memberWorkerShutdownDelaySeconds;
+    private final int workerVmStartupDelayMs;
 
     public RemoteClient(CoordinatorConnector coordinatorConnector, ComponentRegistry componentRegistry,
-                        int workerPingIntervalMillis, int memberWorkerShutdownDelaySeconds) {
+                        int workerPingIntervalMillis, int memberWorkerShutdownDelaySeconds, int workerVmStartupDelayMs) {
         this.coordinatorConnector = coordinatorConnector;
         this.componentRegistry = componentRegistry;
         this.workerPingThread = new WorkerPingThread(workerPingIntervalMillis);
         this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
+        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
     }
 
     public void logOnAllAgents(String message) {
@@ -97,6 +99,7 @@ public class RemoteClient {
 
     private void createWorkersByType(ClusterLayout clusterLayout, boolean isMemberType) {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
+        int workerIndex = 0;
         for (AgentWorkerLayout agentWorkerLayout : clusterLayout.getAgentWorkerLayouts()) {
             final List<WorkerJvmSettings> settingsList = new ArrayList<WorkerJvmSettings>();
             for (WorkerJvmSettings workerJvmSettings : agentWorkerLayout.getWorkerJvmSettings()) {
@@ -110,12 +113,15 @@ public class RemoteClient {
             if (workerCount == 0) {
                 continue;
             }
+
             final SimulatorAddress agentAddress = agentWorkerLayout.getSimulatorAddress();
             final String workerType = (isMemberType) ? "member" : "client";
+
+            final int startupDelayMs = workerVmStartupDelayMs * workerIndex;
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    CreateWorkerOperation operation = new CreateWorkerOperation(settingsList);
+                    CreateWorkerOperation operation = new CreateWorkerOperation(settingsList, startupDelayMs);
                     Response response = coordinatorConnector.write(agentAddress, operation);
 
                     ResponseType responseType = response.getFirstErrorResponseType();
@@ -128,6 +134,10 @@ public class RemoteClient {
                     componentRegistry.addWorkers(agentAddress, settingsList);
                 }
             });
+
+            if (isMemberType) {
+                workerIndex++;
+            }
         }
         spawner.awaitCompletion();
     }

@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
@@ -46,7 +46,7 @@ public class AbstractServerConnectorTest {
 
     private SimulatorAddress connectorAddress;
     private ConcurrentMap<String, ResponseFuture> futureMap;
-    private ExecutorService executorService;
+    private ScheduledExecutorService executorService;
     private ChannelGroup channelGroup;
 
     private TestServerConnector testServerConnector;
@@ -57,7 +57,7 @@ public class AbstractServerConnectorTest {
 
         futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         connectorAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-        executorService = mock(ExecutorService.class);
+        executorService = mock(ScheduledExecutorService.class);
         channelGroup = mock(ChannelGroup.class);
 
         testServerConnector = new TestServerConnector(futureMap, connectorAddress, PORT, THREAD_POOL_SIZE, executorService,
@@ -136,7 +136,7 @@ public class AbstractServerConnectorTest {
     public void testGetExecutorService() {
         testServerConnector.start();
 
-        assertEquals(executorService, testServerConnector.getExecutorService());
+        assertEquals(executorService, testServerConnector.getScheduledExecutor());
     }
 
     @Test
@@ -196,7 +196,7 @@ public class AbstractServerConnectorTest {
         private final ChannelGroup channelGroup;
 
         TestServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
-                            int threadPoolSize, ExecutorService executorService, ChannelGroup channelGroup) {
+                            int threadPoolSize, ScheduledExecutorService executorService, ChannelGroup channelGroup) {
             super(futureMap, localAddress, port, threadPoolSize, executorService);
 
             this.channelGroup = channelGroup;

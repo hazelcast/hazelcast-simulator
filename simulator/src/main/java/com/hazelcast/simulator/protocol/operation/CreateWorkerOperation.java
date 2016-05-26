@@ -28,9 +28,15 @@ public class CreateWorkerOperation implements SimulatorOperation {
      * Defines a list of {@link WorkerJvmSettings} to create Simulator Workers.
      */
     private final List<WorkerJvmSettings> settingsList;
+    private int delayMs;
 
-    public CreateWorkerOperation(List<WorkerJvmSettings> settingsList) {
+    public CreateWorkerOperation(List<WorkerJvmSettings> settingsList, int delayMs) {
         this.settingsList = settingsList;
+        this.delayMs = delayMs;
+    }
+
+    public int getDelayMs() {
+        return delayMs;
     }
 
     public List<WorkerJvmSettings> getWorkerJvmSettings() {

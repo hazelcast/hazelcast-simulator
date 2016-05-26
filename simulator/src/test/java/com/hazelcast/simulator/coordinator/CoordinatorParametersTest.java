@@ -17,7 +17,7 @@ public class CoordinatorParametersTest {
         SimulatorProperties properties = mock(SimulatorProperties.class);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(properties, "workerClassPath", false, true, false,
-                true, false, TargetType.PREFER_CLIENT, 5, LOCAL_TEARDOWN);
+                true, false, TargetType.PREFER_CLIENT, 5, LOCAL_TEARDOWN,0);
 
         assertEquals(properties, coordinatorParameters.getSimulatorProperties());
         assertEquals("workerClassPath", coordinatorParameters.getWorkerClassPath());

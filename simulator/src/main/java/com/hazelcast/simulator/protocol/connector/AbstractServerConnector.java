@@ -39,8 +39,8 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -53,7 +53,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static java.lang.String.format;
 
 /**
@@ -75,22 +75,21 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final int port;
 
     private final EventLoopGroup group;
-    private final ExecutorService executorService;
+    private final ScheduledExecutorService executorService;
 
     private Channel channel;
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize) {
-        this(futureMap, localAddress, port, threadPoolSize, createFixedThreadPool(threadPoolSize, "AbstractServerConnector"));
+        this(futureMap, localAddress, port, threadPoolSize, createScheduledThreadPool(threadPoolSize, "AbstractServerConnector"));
     }
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
-                            int threadPoolSize, ExecutorService executorService) {
+                            int threadPoolSize, ScheduledExecutorService executorService) {
         this.futureMap = futureMap;
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
         this.port = port;
-
         this.group = new NioEventLoopGroup(threadPoolSize);
         this.executorService = executorService;
     }
@@ -183,7 +182,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         return group;
     }
 
-    ExecutorService getExecutorService() {
+    ScheduledExecutorService getScheduledExecutor() {
         return executorService;
     }
 
