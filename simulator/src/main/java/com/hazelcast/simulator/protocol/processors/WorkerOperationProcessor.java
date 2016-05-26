@@ -135,7 +135,7 @@ public class WorkerOperationProcessor extends OperationProcessor {
 
     private void processPing(SimulatorAddress sourceAddress) {
         WorkerConnector workerConnector = worker.getWorkerConnector();
-        LOGGER.info(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
+        LOGGER.debug(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
     }
 
     private void processTerminateWorker(TerminateWorkerOperation operation) {
