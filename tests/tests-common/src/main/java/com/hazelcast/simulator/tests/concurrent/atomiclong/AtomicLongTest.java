@@ -31,6 +31,8 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
@@ -56,6 +58,7 @@ public class AtomicLongTest {
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private HazelcastInstance targetInstance;
+    private AtomicLong operationsCounter = new AtomicLong();
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
 
@@ -81,6 +84,8 @@ public class AtomicLongTest {
             counter.destroy();
         }
         totalCounter.destroy();
+
+        LOGGER.info("Operations: " + operationsCounter);
         LOGGER.info(getOperationCountInformation(targetInstance));
         LOGGER.info(getPartitionDistributionInformation(targetInstance));
     }
@@ -143,6 +148,7 @@ public class AtomicLongTest {
         @Override
         public void afterRun() {
             totalCounter.addAndGet(increments);
+            operationsCounter.addAndGet(getIteration());
         }
 
         private IAtomicLong getRandomCounter() {
