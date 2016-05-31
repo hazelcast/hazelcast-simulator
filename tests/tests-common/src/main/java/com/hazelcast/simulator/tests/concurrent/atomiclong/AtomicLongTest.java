@@ -117,7 +117,7 @@ public class AtomicLongTest {
 
     private class Worker extends AbstractWorker<Operation> {
 
-        private int increments;
+        private long increments;
 
         public Worker() {
             super(builder);
