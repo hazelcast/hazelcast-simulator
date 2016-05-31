@@ -165,10 +165,6 @@ public class TestOperationProcessor extends OperationProcessor {
             return;
         }
 
-        if (worker.startPerformanceMonitor()) {
-            LOGGER.info(format("%s Starting performance monitoring %s", DASHES, DASHES));
-        }
-
         LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
         OperationThread operationThread = new OperationThread(TestPhase.RUN) {
             @Override
@@ -177,12 +173,6 @@ public class TestOperationProcessor extends OperationProcessor {
                     testContainer.invoke(TestPhase.RUN);
                 } finally {
                     LOGGER.info(format("%s Completed run of %s %s", DASHES, testId, DASHES));
-
-                    // stop performance monitor if all tests have completed their run phase
-                    if (TESTS_COMPLETED.incrementAndGet() == TESTS_PENDING.get()) {
-                        LOGGER.info(format("%s Stopping performance monitoring %s", DASHES, DASHES));
-                        worker.stopPerformanceMonitor();
-                    }
                 }
             }
         };
@@ -200,6 +190,7 @@ public class TestOperationProcessor extends OperationProcessor {
             LOGGER.info(format("%s Skipping run of %s (%s Worker vs. %s target) %s", DASHES, testId, type, targetType, DASHES));
             return true;
         }
+
         if (!operation.matchesTargetWorkers(testAddress.getParent())) {
             LOGGER.info(format("%s Skipping run of %s (Worker is not on target list) %s", DASHES, testId, DASHES));
             return true;

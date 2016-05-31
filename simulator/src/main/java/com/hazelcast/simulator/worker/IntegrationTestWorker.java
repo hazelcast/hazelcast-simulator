@@ -67,15 +67,6 @@ public final class IntegrationTestWorker implements Worker {
     }
 
     @Override
-    public boolean startPerformanceMonitor() {
-        return true;
-    }
-
-    @Override
-    public void stopPerformanceMonitor() {
-    }
-
-    @Override
     public WorkerConnector getWorkerConnector() {
         return null;
     }

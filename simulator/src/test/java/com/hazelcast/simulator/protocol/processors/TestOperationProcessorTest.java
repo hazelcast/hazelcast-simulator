@@ -206,7 +206,6 @@ public class TestOperationProcessorTest {
         try {
             Worker worker = mock(Worker.class);
             when(worker.getWorkerConnector()).thenReturn(workerConnector);
-            when(worker.startPerformanceMonitor()).thenReturn(true).thenReturn(false);
 
             String testId = testClass.getSimpleName();
             TestCase testCase = new TestCase(testId);

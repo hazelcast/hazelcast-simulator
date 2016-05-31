@@ -26,8 +26,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -57,7 +55,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws InterruptedException {
         performanceMonitor.shutdown();
     }
 
@@ -70,37 +68,27 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_start() {
-        assertTrue(performanceMonitor.start());
+    public void test_shutdownTwice() throws InterruptedException {
+        performanceMonitor.start();
+
+        performanceMonitor.shutdown();
+        performanceMonitor.shutdown();
     }
 
-    @Test
-    public void test_startTwice() {
-        assertTrue(performanceMonitor.start());
-        assertFalse(performanceMonitor.start());
-    }
+    @Test(expected = IllegalThreadStateException.class)
+    public void test_restartAfterStop() throws InterruptedException {
+        performanceMonitor.start();
 
-    @Test
-    public void test_shutdownTwice() {
-        assertTrue(performanceMonitor.start());
+        performanceMonitor.shutdown();
 
-        assertTrue(performanceMonitor.stop());
-        assertFalse(performanceMonitor.stop());
-    }
-
-    @Test
-    public void test_restartAfterStop() {
-        assertTrue(performanceMonitor.start());
-
-        assertTrue(performanceMonitor.stop());
-        assertTrue(performanceMonitor.start());
+        performanceMonitor.start();
     }
 
     @Test
     public void test_whenTestWithoutProbe_thenDoNothing() {
         addTest(new SuccessTest());
 
-        assertTrue(performanceMonitor.start());
+        performanceMonitor.start();
 
         verifyNoMoreInteractions(serverConnector);
     }
@@ -109,14 +97,14 @@ public class WorkerPerformanceMonitorTest {
     public void test_whenTestWithProbeWhichIsNotRunning_thenDoNothing() {
         addTest(new PerformanceMonitorTest());
 
-        assertTrue(performanceMonitor.start());
+        performanceMonitor.start();
 
         verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() {
-        assertTrue(performanceMonitor.start());
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() throws InterruptedException {
+        performanceMonitor.start();
         sleepMillis(300);
 
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
@@ -135,13 +123,13 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
-        performanceMonitor.stop();
+        performanceMonitor.shutdown();
         verifyServerConnector();
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLightweightProbe() {
-        assertTrue(performanceMonitor.start());
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLightweightProbe() throws InterruptedException {
+        performanceMonitor.start();
         sleepMillis(300);
 
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
@@ -160,17 +148,17 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
-        performanceMonitor.stop();
+        performanceMonitor.shutdown();
         verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() {
+    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() throws InterruptedException {
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test, 200);
 
-        assertTrue(performanceMonitor.start());
+        performanceMonitor.start();
 
         Thread testRunnerThread = new TestRunnerThread();
         testRunnerThread.start();
@@ -178,7 +166,7 @@ public class WorkerPerformanceMonitorTest {
         test.stopTest();
         joinThread(testRunnerThread);
 
-        performanceMonitor.stop();
+        performanceMonitor.shutdown();
         verifyServerConnector();
     }
 
@@ -187,7 +175,7 @@ public class WorkerPerformanceMonitorTest {
         addTest(new PerformanceMonitorTest());
         tests.get(TEST_NAME).invoke(TestPhase.RUN);
 
-        assertTrue(performanceMonitor.start());
+        performanceMonitor.start();
 
         verifyNoMoreInteractions(serverConnector);
     }
