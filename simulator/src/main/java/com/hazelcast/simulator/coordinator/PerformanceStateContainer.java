@@ -19,9 +19,14 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.apache.log4j.Logger;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -162,17 +167,28 @@ public class PerformanceStateContainer {
                 formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(totalOperationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));
 
-        for (Map.Entry<SimulatorAddress, PerformanceState> entry : agentPerformanceStateMap.entrySet()) {
-            SimulatorAddress agentAddress = entry.getKey();
-            PerformanceState performanceState = entry.getValue();
+
+        for (SimulatorAddress address : sort(agentPerformanceStateMap.keySet())) {
+            PerformanceState performanceState = agentPerformanceStateMap.get(address);
 
             long operationCount = performanceState.getOperationCount();
             LOGGER.info(format("  Agent %-15s %s%% %s ops %s ops/s",
-                    agentAddress,
+                    address,
                     formatPercentage(operationCount, totalOperationCount),
                     formatLong(operationCount, OPERATION_COUNT_FORMAT_LENGTH),
                     formatDouble(operationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));
         }
+    }
+
+    private List<SimulatorAddress> sort(Set<SimulatorAddress> addresses) {
+        List<SimulatorAddress> list = new LinkedList<SimulatorAddress>(addresses);
+        Collections.sort(list, new Comparator<SimulatorAddress>() {
+            @Override
+            public int compare(SimulatorAddress o1, SimulatorAddress o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
+        return list;
     }
 
     void calculatePerformanceStates(PerformanceState totalPerformanceState,
