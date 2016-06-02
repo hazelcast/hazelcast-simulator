@@ -71,7 +71,6 @@ public class WorkerOperationProcessorTest {
         when(workerConnector.getTest(eq(1))).thenReturn(null).thenReturn(testOperationProcessor);
         when(workerConnector.getTest(eq(2))).thenReturn(null).thenReturn(testOperationProcessor);
 
-        when(worker.startPerformanceMonitor()).thenReturn(true);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
         processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress);

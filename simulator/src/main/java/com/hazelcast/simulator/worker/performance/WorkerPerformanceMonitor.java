@@ -30,20 +30,16 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.utils.CommonUtils.await;
-import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
@@ -52,45 +48,39 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  */
 public class WorkerPerformanceMonitor {
 
-    private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
+    private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
+    private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitor.class);
 
-    private final ExecutorService executorService = createFixedThreadPool(1, "WorkerPerformanceMonitor");
-    private final WorkerPerformanceMonitorTask runnable;
-    private final AtomicBoolean started = new AtomicBoolean();
+    private final WorkerPerformanceMonitorThread thread;
+    private final AtomicBoolean shutdown = new AtomicBoolean();
 
     public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers,
                                     int workerPerformanceMonitorInterval, TimeUnit workerPerformanceIntervalTimeUnit) {
         long intervalNanos = workerPerformanceIntervalTimeUnit.toNanos(workerPerformanceMonitorInterval);
-        this.runnable = new WorkerPerformanceMonitorTask(serverConnector, testContainers, intervalNanos);
+        this.thread = new WorkerPerformanceMonitorThread(serverConnector, testContainers, intervalNanos);
+        thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                LOGGER.fatal(e);
+            }
+        });
     }
 
-    public boolean start() {
-        if (!started.compareAndSet(false, true)) {
-            return false;
+    public void start() {
+        thread.start();
+    }
+
+    public void shutdown() throws InterruptedException {
+        if (!shutdown.compareAndSet(false, true)) {
+            return;
         }
 
-        executorService.submit(runnable);
-        return true;
-    }
-
-    public boolean stop() {
-        if (!started.compareAndSet(true, false)) {
-            return false;
-        }
-
-        runnable.stopAndReset();
-        return true;
-    }
-
-    public void shutdown() {
-        stop();
-
-        executorService.shutdown();
-        awaitTermination(executorService, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        thread.join(MINUTES.toMillis(SHUTDOWN_TIMEOUT_SECONDS));
     }
 
     /**
-     * Runnable to monitor the performance of Simulator Tests.
+     * Thread to monitor the performance of Simulator Tests.
      *
      * Iterates over all {@link TestContainer} to retrieve performance values from all {@link Probe} instances.
      * Sends performance numbers as {@link PerformanceState} to the Coordinator.
@@ -98,28 +88,19 @@ public class WorkerPerformanceMonitor {
      *
      * Holds one {@link PerformanceTracker} instance per Simulator Test.
      */
-    private static final class WorkerPerformanceMonitorTask implements Runnable {
-
-        private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
-
-        private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitorTask.class);
+    private final class WorkerPerformanceMonitorThread extends Thread {
 
         private final File globalThroughputFile = new File("throughput.txt");
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        private final Map<String, PerformanceTracker> trackerMap = new HashMap<String, PerformanceTracker>();
-
+        private final Map<String, MonitoredTest> tests = new ConcurrentHashMap<String, MonitoredTest>();
         private final ServerConnector serverConnector;
         private final Collection<TestContainer> testContainers;
         private final long intervalNanos;
 
-        private volatile boolean isRunning = true;
-        private volatile CountDownLatch isDone = new CountDownLatch(1);
-
-        private final Map<TestContainer, Map<Probe, AtomicLong>> previousProbeValuesPerContainer = new
-                HashMap<TestContainer, Map<Probe, AtomicLong>>();
-
-        private WorkerPerformanceMonitorTask(ServerConnector serverConnector, Collection<TestContainer> testContainers,
-                                             long intervalNanos) {
+        private WorkerPerformanceMonitorThread(ServerConnector serverConnector,
+                                               Collection<TestContainer> testContainers,
+                                               long intervalNanos) {
+            super("WorkerPerformanceMonitor");
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = intervalNanos;
@@ -129,17 +110,24 @@ public class WorkerPerformanceMonitor {
 
         @Override
         public void run() {
-            while (isRunning) {
+            while (!shutdown.get()) {
                 long startedNanos = System.nanoTime();
+
                 long currentTimestamp = System.currentTimeMillis();
 
-                boolean runningTestContainerFound = updatePerformanceStates(currentTimestamp);
+                boolean runningTestFound = refreshTests(currentTimestamp);
+
+                updateTrackers(currentTimestamp);
+
                 sendPerformanceStates();
+
                 writeStatsToFiles(currentTimestamp);
+
+                purgeDeadTests(currentTimestamp);
 
                 long elapsedNanos = System.nanoTime() - startedNanos;
                 if (intervalNanos > elapsedNanos) {
-                    if (runningTestContainerFound) {
+                    if (runningTestFound) {
                         sleepNanos(intervalNanos - elapsedNanos);
                     } else {
                         sleepNanos(WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS - elapsedNanos);
@@ -148,24 +136,13 @@ public class WorkerPerformanceMonitor {
                     LOGGER.warn("WorkerPerformanceMonitorThread.run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
                 }
             }
-            isDone.countDown();
-        }
-
-        private void stopAndReset() {
-            isRunning = false;
-            await(isDone);
-
             sendTestHistograms();
-
-            trackerMap.clear();
-            isRunning = true;
-            isDone = new CountDownLatch(1);
         }
 
         private void sendTestHistograms() {
-            for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
-                String testId = trackerEntry.getKey();
-                PerformanceTracker tracker = trackerEntry.getValue();
+            for (Map.Entry<String, MonitoredTest> entry : tests.entrySet()) {
+                String testId = entry.getKey();
+                PerformanceTracker tracker = entry.getValue().tracker;
 
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms(testId);
                 if (!histograms.isEmpty()) {
@@ -175,26 +152,47 @@ public class WorkerPerformanceMonitor {
             }
         }
 
-        private boolean updatePerformanceStates(long currentTimestamp) {
-            boolean runningTestContainerFound = false;
+        private boolean refreshTests(long currentTimestamp) {
+            boolean runningTestFound = false;
+
             for (TestContainer testContainer : testContainers) {
                 if (!testContainer.isRunning()) {
                     continue;
                 }
 
-                runningTestContainerFound = true;
-                updatePerformanceStates(currentTimestamp, testContainer);
+                String testId = testContainer.getTestContext().getTestId();
+                MonitoredTest test = tests.get(testId);
+                if (test == null) {
+                    test = new MonitoredTest(testContainer);
+                    tests.put(testId, test);
+                }
+
+                // we set the lastSeen timestamp so we can easily purge dead tests.
+                test.lastSeen = currentTimestamp;
+                runningTestFound = true;
             }
-            return runningTestContainerFound;
+
+            return runningTestFound;
         }
 
-        private void updatePerformanceStates(long currentTimestamp, TestContainer testContainer) {
-            Map<Probe, AtomicLong> previousProbeValues = previousProbeValuesPerContainer.get(testContainer);
-            if (previousProbeValues == null) {
-                previousProbeValues = new HashMap<Probe, AtomicLong>();
-                previousProbeValuesPerContainer.put(testContainer, previousProbeValues);
+        private void updateTrackers(long currentTimestamp) {
+            for (MonitoredTest test : tests.values()) {
+                updateTrackers(currentTimestamp, test);
             }
+        }
 
+        // we remove every MonitoredTest that doesn't have the desired timestamp.
+        private void purgeDeadTests(long currentTimestamp) {
+            for (MonitoredTest test : tests.values()) {
+                // purgeDeadTests the testData if it isn't seen in the current run.
+                if (test.lastSeen != currentTimestamp) {
+                    tests.remove(test.testId);
+                }
+            }
+        }
+
+        private void updateTrackers(long currentTimestamp, MonitoredTest test) {
+            TestContainer testContainer = test.testContainer;
             Map<String, Probe> probeMap = testContainer.getProbeMap();
             Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
@@ -232,11 +230,7 @@ public class WorkerPerformanceMonitor {
                     intervalMaxLatency = -1;
 
                     if (probe.isPartOfTotalThroughput()) {
-                        AtomicLong previous = previousProbeValues.get(probe);
-                        if (previous == null) {
-                            previous = new AtomicLong();
-                            previousProbeValues.put(probe, previous);
-                        }
+                        AtomicLong previous = test.getOrCreatePrevious(probe);
 
                         long current = probe.get();
                         long delta = current - previous.get();
@@ -247,38 +241,26 @@ public class WorkerPerformanceMonitor {
                 }
             }
 
-            String testId = testContainer.getTestContext().getTestId();
-            PerformanceTracker tracker = getOrCreatePerformanceTracker(testId, testContainer);
-            tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
+            test.tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
                     intervalOperationalCount, currentTimestamp);
-        }
-
-        private PerformanceTracker getOrCreatePerformanceTracker(String testId, TestContainer testContainer) {
-            PerformanceTracker tracker = trackerMap.get(testId);
-            if (tracker == null) {
-                Set<String> probeNames = testContainer.getProbeMap().keySet();
-                tracker = new PerformanceTracker(testId, probeNames, testContainer.getTestStartedTimestamp());
-                trackerMap.put(testId, tracker);
-            }
-            return tracker;
         }
 
         private void sendPerformanceStates() {
             PerformanceStateOperation operation = new PerformanceStateOperation();
-            for (Map.Entry<String, PerformanceTracker> trackerEntry : trackerMap.entrySet()) {
-                PerformanceTracker tracker = trackerEntry.getValue();
-                if (tracker.isUpdated()) {
-                    String testId = trackerEntry.getKey();
-                    operation.addPerformanceState(testId, tracker.createPerformanceState());
+
+            for (MonitoredTest test : tests.values()) {
+                if (test.tracker.isUpdated()) {
+                    operation.addPerformanceState(test.testId, test.tracker.createPerformanceState());
                 }
             }
+
             if (operation.getPerformanceStates().size() > 0) {
                 serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
             }
         }
 
         private void writeStatsToFiles(long currentTimestamp) {
-            if (trackerMap.isEmpty()) {
+            if (tests.isEmpty()) {
                 return;
             }
 
@@ -288,7 +270,8 @@ public class WorkerPerformanceMonitor {
             double globalIntervalThroughput = 0;
 
             // performance stats per Simulator Test
-            for (PerformanceTracker tracker : trackerMap.values()) {
+            for (MonitoredTest test : tests.values()) {
+                PerformanceTracker tracker = test.tracker;
                 if (tracker.getAndResetIsUpdated()) {
                     tracker.writeStatsToFile(dateString);
 
@@ -300,7 +283,38 @@ public class WorkerPerformanceMonitor {
 
             // global performance stats
             writeThroughputStats(globalThroughputFile, dateString, globalOperationsCount, globalIntervalOperationCount,
-                    globalIntervalThroughput, trackerMap.size(), testContainers.size());
+                    globalIntervalThroughput, tests.size(), testContainers.size());
+        }
+    }
+
+    /**
+     * The Monitored test is wrapper around a {@link TestContainer} where all kinds of {@link WorkerPerformanceMonitor}
+     * specific functionality for a given test can be added.
+     */
+    private class MonitoredTest {
+        final PerformanceTracker tracker;
+        final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
+        final TestContainer testContainer;
+        final String testId;
+        // used to determine if the TestRecord can be deleted.
+        long lastSeen;
+
+        MonitoredTest(TestContainer testContainer) {
+            this.testContainer = testContainer;
+            this.tracker = new PerformanceTracker(
+                    testContainer.getTestContext().getTestId(),
+                    testContainer.getProbeMap().keySet(),
+                    testContainer.getTestStartedTimestamp());
+            this.testId = testContainer.getTestContext().getTestId();
+        }
+
+        AtomicLong getOrCreatePrevious(Probe probe) {
+            AtomicLong previous = previousProbeValues.get(probe);
+            if (previous == null) {
+                previous = new AtomicLong();
+                previousProbeValues.put(probe, previous);
+            }
+            return previous;
         }
     }
 }
