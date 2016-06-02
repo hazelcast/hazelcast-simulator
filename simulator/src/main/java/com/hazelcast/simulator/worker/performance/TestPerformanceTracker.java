@@ -49,6 +49,7 @@ final class TestPerformanceTracker {
 
     private final File throughputFile;
     private final long testStartedTimestamp;
+    private final String testId;
 
     private long lastTimestamp;
 
@@ -67,6 +68,7 @@ final class TestPerformanceTracker {
     private boolean isUpdated;
 
     TestPerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
+        this.testId = testId;
         this.throughputFile = new File("throughput-" + testId + ".txt");
         this.testStartedTimestamp = testStartedTimestamp;
         this.lastTimestamp = testStartedTimestamp;
@@ -138,7 +140,7 @@ final class TestPerformanceTracker {
                 intervalAvgLatency, intervalPercentileLatency, intervalMaxLatency);
     }
 
-    Map<String, String> aggregateIntervalHistograms(String testId) {
+    Map<String, String> aggregateIntervalHistograms() {
         Map<String, String> probeResults = new HashMap<String, String>();
 
         HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testId, "aggregated", 0);
