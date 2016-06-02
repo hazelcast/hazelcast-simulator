@@ -144,7 +144,7 @@ public class PerformanceStateContainer {
         return performanceState;
     }
 
-    void logDetailedPerformanceInfo() {
+    void logDetailedPerformanceInfo(int runningTimeSeconds) {
         PerformanceState totalPerformanceState = new PerformanceState();
         Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
 
@@ -160,7 +160,7 @@ public class PerformanceStateContainer {
         LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                 formatPercentage(1, 1),
                 formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
-                formatDouble(totalPerformanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
+                formatDouble(totalOperationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));
 
         for (Map.Entry<SimulatorAddress, PerformanceState> entry : agentPerformanceStateMap.entrySet()) {
             SimulatorAddress agentAddress = entry.getKey();
@@ -171,7 +171,7 @@ public class PerformanceStateContainer {
                     agentAddress,
                     formatPercentage(operationCount, totalOperationCount),
                     formatLong(operationCount, OPERATION_COUNT_FORMAT_LENGTH),
-                    formatDouble(performanceState.getTotalThroughput(), THROUGHPUT_FORMAT_LENGTH)));
+                    formatDouble(operationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));
         }
     }
 

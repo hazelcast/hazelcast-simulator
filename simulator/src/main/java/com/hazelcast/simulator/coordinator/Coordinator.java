@@ -322,7 +322,7 @@ public final class Coordinator {
                 LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
             }
 
-            performanceStateContainer.logDetailedPerformanceInfo();
+            performanceStateContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
             }

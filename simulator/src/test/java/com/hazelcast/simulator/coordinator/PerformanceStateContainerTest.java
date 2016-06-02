@@ -170,7 +170,7 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testLogDetailedPerformanceInfo() {
-        performanceStateContainer.logDetailedPerformanceInfo();
+        performanceStateContainer.logDetailedPerformanceInfo(1);
 
         String performance = fileAsText(PERFORMANCE_FILE);
         assertEquals("5500" + FormatUtils.NEW_LINE, performance);
@@ -178,7 +178,7 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testLogDetailedPerformanceInfo_onEmptyContainer() {
-        emptyPerformanceStateContainer.logDetailedPerformanceInfo();
+        emptyPerformanceStateContainer.logDetailedPerformanceInfo(1);
 
         assertFalse(PERFORMANCE_FILE.exists());
     }
