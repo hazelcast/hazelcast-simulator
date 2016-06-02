@@ -43,7 +43,7 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeT
  *
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
-final class PerformanceTracker {
+final class TestPerformanceTracker {
 
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
 
@@ -66,7 +66,7 @@ final class PerformanceTracker {
 
     private boolean isUpdated;
 
-    PerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
+    TestPerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
         this.throughputFile = new File("throughput-" + testId + ".txt");
         this.testStartedTimestamp = testStartedTimestamp;
         this.lastTimestamp = testStartedTimestamp;

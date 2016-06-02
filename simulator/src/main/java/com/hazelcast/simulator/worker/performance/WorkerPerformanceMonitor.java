@@ -86,7 +86,7 @@ public class WorkerPerformanceMonitor {
      * Sends performance numbers as {@link PerformanceState} to the Coordinator.
      * Writes performance stats to files.
      *
-     * Holds one {@link PerformanceTracker} instance per Simulator Test.
+     * Holds one {@link TestPerformanceTracker} instance per Simulator Test.
      */
     private final class WorkerPerformanceMonitorThread extends Thread {
 
@@ -142,7 +142,7 @@ public class WorkerPerformanceMonitor {
         private void sendTestHistograms() {
             for (Map.Entry<String, MonitoredTest> entry : tests.entrySet()) {
                 String testId = entry.getKey();
-                PerformanceTracker tracker = entry.getValue().tracker;
+                TestPerformanceTracker tracker = entry.getValue().tracker;
 
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms(testId);
                 if (!histograms.isEmpty()) {
@@ -271,7 +271,7 @@ public class WorkerPerformanceMonitor {
 
             // performance stats per Simulator Test
             for (MonitoredTest test : tests.values()) {
-                PerformanceTracker tracker = test.tracker;
+                TestPerformanceTracker tracker = test.tracker;
                 if (tracker.getAndResetIsUpdated()) {
                     tracker.writeStatsToFile(dateString);
 
@@ -292,7 +292,7 @@ public class WorkerPerformanceMonitor {
      * specific functionality for a given test can be added.
      */
     private class MonitoredTest {
-        final PerformanceTracker tracker;
+        final TestPerformanceTracker tracker;
         final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
         final TestContainer testContainer;
         final String testId;
@@ -301,7 +301,7 @@ public class WorkerPerformanceMonitor {
 
         MonitoredTest(TestContainer testContainer) {
             this.testContainer = testContainer;
-            this.tracker = new PerformanceTracker(
+            this.tracker = new TestPerformanceTracker(
                     testContainer.getTestContext().getTestId(),
                     testContainer.getProbeMap().keySet(),
                     testContainer.getTestStartedTimestamp());
