@@ -99,8 +99,6 @@ public class MemberWorkerTest {
         worker.start();
         assertMemberWorker();
 
-        worker.startPerformanceMonitor();
-        worker.stopPerformanceMonitor();
     }
 
     @Test
@@ -108,9 +106,6 @@ public class MemberWorkerTest {
         worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 0);
         worker.start();
         assertMemberWorker();
-
-        worker.startPerformanceMonitor();
-        worker.stopPerformanceMonitor();
     }
 
     @Test

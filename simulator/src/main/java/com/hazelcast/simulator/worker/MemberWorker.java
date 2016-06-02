@@ -70,7 +70,6 @@ public final class MemberWorker implements Worker {
     MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort, String hzConfigFile,
                  boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds) throws Exception {
         SHUTDOWN_STARTED.set(false);
-
         this.type = type;
         this.publicAddress = publicAddress;
 
@@ -89,6 +88,10 @@ public final class MemberWorker implements Worker {
 
     void start() {
         workerConnector.start();
+
+        if (workerPerformanceMonitor != null) {
+            workerPerformanceMonitor.start();
+        }
     }
 
     @Override
@@ -101,21 +104,6 @@ public final class MemberWorker implements Worker {
     void awaitShutdown() throws Exception {
         if (shutdownThread != null) {
             shutdownThread.awaitShutdown();
-        }
-    }
-
-    @Override
-    public boolean startPerformanceMonitor() {
-        if (workerPerformanceMonitor == null) {
-            return false;
-        }
-        return workerPerformanceMonitor.start();
-    }
-
-    @Override
-    public void stopPerformanceMonitor() {
-        if (workerPerformanceMonitor != null) {
-            workerPerformanceMonitor.stop();
         }
     }
 
@@ -266,8 +254,12 @@ public final class MemberWorker implements Worker {
             }
 
             if (workerPerformanceMonitor != null) {
-                echo("Stopping WorkerPerformanceMonitor");
-                workerPerformanceMonitor.shutdown();
+                echo("Shutting down WorkerPerformanceMonitor");
+                try {
+                    workerPerformanceMonitor.shutdown();
+                } catch (InterruptedException e) {
+                    echo("Failed wait for WorkerPerformanceMonitor shutdown ");
+                }
             }
 
             if (workerConnector != null) {

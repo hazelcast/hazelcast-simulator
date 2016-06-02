@@ -21,10 +21,6 @@ public interface Worker {
 
     void shutdown(boolean shutdownLog4j);
 
-    boolean startPerformanceMonitor();
-
-    void stopPerformanceMonitor();
-
     WorkerConnector getWorkerConnector();
 
     String getPublicIpAddress();

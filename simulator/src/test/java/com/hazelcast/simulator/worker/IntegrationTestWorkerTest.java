@@ -39,16 +39,6 @@ public class IntegrationTestWorkerTest {
     }
 
     @Test
-    public void testStartPerformanceMonitor() {
-        assertTrue(worker.startPerformanceMonitor());
-    }
-
-    @Test
-    public void testShutdownPerformanceMonitor() {
-        worker.stopPerformanceMonitor();
-    }
-
-    @Test
     public void testGetWorkerConnector() {
         assertNull(worker.getWorkerConnector());
     }
