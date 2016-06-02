@@ -104,7 +104,9 @@ public class MapCasTest {
         public void beforeRun() {
             int size = map.size();
             if (size != keyCount) {
-                throw new TestException("Warmup has not run since the map is not filled correctly, found size: %s", size);
+                throw new TestException(
+                        "Warmup has not run since the map is not filled correctly, found size: %s, expected size: %s",
+                        size, keyCount);
             }
             for (int i = 0; i < keyCount; i++) {
                 result.put(i, 0L);
@@ -116,7 +118,7 @@ public class MapCasTest {
             Integer key = randomInt(keyCount);
             long incrementValue = randomInt(100);
 
-            for (;;) {
+            for (; ; ) {
                 Long current = map.get(key);
                 Long update = current + incrementValue;
                 if (map.replace(key, current, update)) {
