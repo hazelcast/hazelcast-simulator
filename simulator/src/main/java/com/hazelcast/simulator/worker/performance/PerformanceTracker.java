@@ -37,7 +37,7 @@ import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeT
 import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
 
 /**
- * Container for performance related values for a single Simulator Test.
+ * Tracks performance related values for a single Simulator Test.
  *
  * Has methods to update the performance values and write them to files.
  *
