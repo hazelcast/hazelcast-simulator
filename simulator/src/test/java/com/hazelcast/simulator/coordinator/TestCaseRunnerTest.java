@@ -222,7 +222,7 @@ public class TestCaseRunnerTest {
         coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
 
-//        verifyRemoteClient(coordinator, true);
+        verifyRemoteClient(coordinator, true);
     }
 
     @Test
@@ -367,7 +367,7 @@ public class TestCaseRunnerTest {
             VerificationMode atLeast = atLeast((sendToTestOnAllWorkersTimes - 1) * numberOfTests);
             VerificationMode atMost = atMost(sendToTestOnAllWorkersTimes * numberOfTests);
             verify(remoteClient, atLeast).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
-//            verify(remoteClient, atMost).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
+            verify(remoteClient, atMost).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
 
             atLeast = atLeast((sendToTestOnFirstWorkerTimes - 1) * numberOfTests);
             atMost = atMost(sendToTestOnFirstWorkerTimes * numberOfTests);
