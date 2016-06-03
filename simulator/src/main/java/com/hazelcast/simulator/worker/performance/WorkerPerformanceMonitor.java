@@ -112,17 +112,12 @@ public class WorkerPerformanceMonitor {
         public void run() {
             while (!shutdown.get()) {
                 long startedNanos = System.nanoTime();
-
                 long currentTimestamp = System.currentTimeMillis();
 
                 boolean runningTestFound = refreshTests(currentTimestamp);
-
                 updateTrackers(currentTimestamp);
-
                 sendPerformanceStates();
-
                 writeStatsToFiles(currentTimestamp);
-
                 purgeDeadTests(currentTimestamp);
 
                 long elapsedNanos = System.nanoTime() - startedNanos;
@@ -167,7 +162,7 @@ public class WorkerPerformanceMonitor {
                     tests.put(testId, test);
                 }
 
-                // we set the lastSeen timestamp so we can easily purge dead tests.
+                // we set the lastSeen timestamp, so we can easily purge dead tests
                 test.lastSeen = currentTimestamp;
                 runningTestFound = true;
             }
@@ -181,10 +176,10 @@ public class WorkerPerformanceMonitor {
             }
         }
 
-        // we remove every MonitoredTest that doesn't have the desired timestamp.
+        // we remove every MonitoredTest that doesn't have the desired timestamp
         private void purgeDeadTests(long currentTimestamp) {
             for (MonitoredTest test : tests.values()) {
-                // purgeDeadTests the testData if it isn't seen in the current run.
+                // purge the testData if it wasn't seen in the current run
                 if (test.lastSeen != currentTimestamp) {
                     tests.remove(test.testId);
                 }
@@ -291,13 +286,15 @@ public class WorkerPerformanceMonitor {
      * The Monitored test is wrapper around a {@link TestContainer} where all kinds of {@link WorkerPerformanceMonitor}
      * specific functionality for a given test can be added.
      */
-    private class MonitoredTest {
-        final TestPerformanceTracker tracker;
-        final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
-        final TestContainer testContainer;
-        final String testId;
-        // used to determine if the TestRecord can be deleted.
-        long lastSeen;
+    private static class MonitoredTest {
+
+        private final TestPerformanceTracker tracker;
+        private final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
+        private final TestContainer testContainer;
+        private final String testId;
+
+        // used to determine if the MonitoredTest can be deleted
+        private long lastSeen;
 
         MonitoredTest(TestContainer testContainer) {
             this.testContainer = testContainer;

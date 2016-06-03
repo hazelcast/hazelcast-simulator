@@ -149,7 +149,7 @@ public class PerformanceStateContainer {
         return performanceState;
     }
 
-    void logDetailedPerformanceInfo(int runningTimeSeconds) {
+    void logDetailedPerformanceInfo(double runningTimeSeconds) {
         PerformanceState totalPerformanceState = new PerformanceState();
         Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
 
