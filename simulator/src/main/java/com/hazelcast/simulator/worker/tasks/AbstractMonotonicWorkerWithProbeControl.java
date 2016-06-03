@@ -37,7 +37,7 @@ public abstract class AbstractMonotonicWorkerWithProbeControl extends VeryAbstra
         final Metronome metronome = getWorkerMetronome();
         final Probe probe = workerProbe;
 
-        while ((!testContext.isStopped() && !isWorkerStopped)) {
+        while (!testContext.isStopped() && !isWorkerStopped()) {
             metronome.waitForNext();
             timeStep(probe);
             increaseIteration();

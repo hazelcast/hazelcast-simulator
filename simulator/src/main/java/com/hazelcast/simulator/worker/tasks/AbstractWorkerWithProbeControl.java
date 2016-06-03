@@ -48,7 +48,7 @@ public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends 
         final OperationSelector<O> selector = operationSelector;
         final Probe probe = workerProbe;
 
-        while ((!testContext.isStopped() && !isWorkerStopped)) {
+        while (!testContext.isStopped() && !isWorkerStopped()) {
             metronome.waitForNext();
             O operation = selector.select();
             timeStep(operation, probe);

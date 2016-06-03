@@ -15,8 +15,6 @@
  */
 package com.hazelcast.simulator.worker.tasks;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
@@ -26,10 +24,6 @@ import java.util.Random;
 
 abstract class VeryAbstractWorker implements IWorker {
 
-    protected final ILogger logger = Logger.getLogger(this.getClass());
-
-    boolean isWorkerStopped;
-
     private final Random random = new Random();
 
     @InjectTestContext
@@ -37,6 +31,7 @@ abstract class VeryAbstractWorker implements IWorker {
     @InjectMetronome
     private Metronome workerMetronome;
 
+    private boolean isWorkerStopped;
     private long iteration;
 
     VeryAbstractWorker() {
@@ -50,11 +45,34 @@ abstract class VeryAbstractWorker implements IWorker {
     public void afterRun() throws Exception {
     }
 
-    public TestContext getTestContext() {
+    @Override
+    public void afterCompletion() throws Exception {
+    }
+
+    /**
+     * Returns the {@link TestContext} for this worker.
+     *
+     * @return the {@link TestContext}
+     */
+    protected final TestContext getTestContext() {
         return testContext;
     }
 
-    public boolean isWorkerStopped() {
+    /**
+     * Returns the {@link Metronome} instance of this worker.
+     *
+     * @return the {@link Metronome} instance
+     */
+    protected final Metronome getWorkerMetronome() {
+        return workerMetronome;
+    }
+
+    /**
+     * Checks if the local worker is stopped, regardless of the {@link TestContext} stopped status.
+     *
+     * @return {@code true} if the local worker is stopped, {@code false} otherwise
+     */
+    protected final boolean isWorkerStopped() {
         return isWorkerStopped;
     }
 
@@ -76,16 +94,12 @@ abstract class VeryAbstractWorker implements IWorker {
         testContext.stop();
     }
 
-    @Override
-    public void afterCompletion() throws Exception {
-    }
-
     /**
      * Returns the test ID from the {@link TestContext}.
      *
      * @return the test ID
      */
-    protected String getTestId() {
+    protected final String getTestId() {
         return testContext.getTestId();
     }
 
@@ -115,7 +129,7 @@ abstract class VeryAbstractWorker implements IWorker {
      *
      * @return the {@link Random} instance of the worker
      */
-    protected Random getRandom() {
+    protected final Random getRandom() {
         return random;
     }
 
@@ -124,15 +138,14 @@ abstract class VeryAbstractWorker implements IWorker {
      *
      * @return iteration count
      */
-    protected long getIteration() {
+    protected final long getIteration() {
         return iteration;
     }
 
-    protected void increaseIteration() {
+    /**
+     * Increases the iteration count of the worker.
+     */
+    protected final void increaseIteration() {
         iteration++;
-    }
-
-    protected Metronome getWorkerMetronome() {
-        return workerMetronome;
     }
 }

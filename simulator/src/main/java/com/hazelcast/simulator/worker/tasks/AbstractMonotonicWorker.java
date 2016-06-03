@@ -37,7 +37,7 @@ public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
         final Metronome metronome = getWorkerMetronome();
         final Probe probe = workerProbe;
 
-        while ((!testContext.isStopped() && !isWorkerStopped)) {
+        while (!testContext.isStopped() && !isWorkerStopped()) {
             metronome.waitForNext();
             long started = System.nanoTime();
             timeStep();

@@ -51,7 +51,7 @@ public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends VeryAbst
         final OperationSelector<O> selector = operationSelector;
         final Probe probe = workerProbe;
 
-        while ((!testContext.isStopped() && !isWorkerStopped)) {
+        while (!testContext.isStopped() && !isWorkerStopped()) {
             metronome.waitForNext();
             O select = selector.select();
             long started = System.nanoTime();

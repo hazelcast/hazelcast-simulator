@@ -47,12 +47,12 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
     }
 
     @Override
-    public Set<? extends Enum> getOperations() {
+    public final Set<? extends Enum> getOperations() {
         return operationSelectorBuilder.getOperations();
     }
 
     @Override
-    public void setProbeMap(Map<? extends Enum, Probe> probeMap) {
+    public final void setProbeMap(Map<? extends Enum, Probe> probeMap) {
         for (Map.Entry<? extends Enum, Probe> entry : probeMap.entrySet()) {
             Enum operation = entry.getKey();
             if (workerProbes == null) {
@@ -64,13 +64,13 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
     }
 
     @Override
-    public void run() throws Exception {
+    public final void run() throws Exception {
         final TestContext testContext = getTestContext();
         final Metronome metronome = getWorkerMetronome();
         final OperationSelector<O> selector = operationSelector;
         final Probe[] probes = workerProbes;
 
-        while ((!testContext.isStopped() && !isWorkerStopped)) {
+        while (!testContext.isStopped() && !isWorkerStopped()) {
             metronome.waitForNext();
             O op = selector.select();
             Probe probe = probes[op.ordinal()];

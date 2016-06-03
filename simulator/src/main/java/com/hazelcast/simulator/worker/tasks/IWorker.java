@@ -44,7 +44,7 @@ public interface IWorker {
     /**
      * Runs the actual worker logic.
      *
-     * @throws Exception
+     * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */
     void run() throws Exception;
 

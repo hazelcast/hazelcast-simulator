@@ -52,13 +52,13 @@ public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWork
         final Probe probe = workerProbe;
 
         if (metronome.getClass() == EmptyMetronome.class && probe.getClass() == ThroughputProbe.class) {
-            while (!testContext.isStopped() && !isWorkerStopped) {
+            while (!testContext.isStopped() && !isWorkerStopped()) {
                 timeStep(selector.select());
                 increaseIteration();
                 probe.recordValue(0);
             }
         } else {
-            while ((!testContext.isStopped() && !isWorkerStopped)) {
+            while (!testContext.isStopped() && !isWorkerStopped()) {
                 metronome.waitForNext();
                 O operation = selector.select();
                 long started = System.nanoTime();
