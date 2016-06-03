@@ -27,6 +27,7 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
  * method with the built-in {@link Probe} as parameter. This can be used to make a finer selection of the measured code block.
  */
 public abstract class AbstractMonotonicWorkerWithProbeControl extends VeryAbstractWorker {
+
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
     private Probe workerProbe;
 

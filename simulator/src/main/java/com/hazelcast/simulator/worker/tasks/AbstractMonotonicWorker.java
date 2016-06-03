@@ -27,6 +27,7 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
  * method without parameters.
  */
 public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
+
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
     private Probe workerProbe;
 

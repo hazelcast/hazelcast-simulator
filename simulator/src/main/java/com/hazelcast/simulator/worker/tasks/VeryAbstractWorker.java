@@ -24,13 +24,14 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.util.Random;
 
-public abstract class VeryAbstractWorker implements IWorker {
+abstract class VeryAbstractWorker implements IWorker {
 
     protected final ILogger logger = Logger.getLogger(this.getClass());
 
     boolean isWorkerStopped;
 
     private final Random random = new Random();
+
     @InjectTestContext
     private TestContext testContext;
     @InjectMetronome
@@ -38,7 +39,7 @@ public abstract class VeryAbstractWorker implements IWorker {
 
     private long iteration;
 
-    public VeryAbstractWorker() {
+    VeryAbstractWorker() {
     }
 
     @Override
@@ -74,7 +75,6 @@ public abstract class VeryAbstractWorker implements IWorker {
     protected final void stopTestContext() {
         testContext.stop();
     }
-
 
     @Override
     public void afterCompletion() throws Exception {

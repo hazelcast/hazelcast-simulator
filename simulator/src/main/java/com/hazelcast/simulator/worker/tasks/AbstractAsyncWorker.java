@@ -35,20 +35,21 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  */
 public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends VeryAbstractWorker implements ExecutionCallback<V> {
 
-    private final OperationSelector<O> selector;
+    private final OperationSelector<O> operationSelector;
+
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
     private Probe workerProbe;
 
     public AbstractAsyncWorker(OperationSelectorBuilder<O> operationSelectorBuilder) {
-        this.selector = operationSelectorBuilder.build();
+        this.operationSelector = operationSelectorBuilder.build();
     }
 
     @Override
     public final void run() throws Exception {
         final TestContext testContext = getTestContext();
         final Metronome metronome = getWorkerMetronome();
+        final OperationSelector<O> selector = operationSelector;
         final Probe probe = workerProbe;
-        final OperationSelector<O> selector = this.selector;
 
         while ((!testContext.isStopped() && !isWorkerStopped)) {
             metronome.waitForNext();
