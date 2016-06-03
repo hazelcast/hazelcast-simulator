@@ -52,7 +52,6 @@ public class TestOperationProcessor extends OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(TestOperationProcessor.class);
 
     private static final AtomicInteger TESTS_PENDING = new AtomicInteger(0);
-    private static final AtomicInteger TESTS_COMPLETED = new AtomicInteger(0);
 
     private final AtomicReference<TestPhase> testPhaseReference = new AtomicReference<TestPhase>(null);
 
