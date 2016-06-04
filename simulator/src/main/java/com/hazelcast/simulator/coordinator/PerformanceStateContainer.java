@@ -219,9 +219,10 @@ public class PerformanceStateContainer {
         if (map != null) {
             return map;
         }
-        ConcurrentMap<String, PerformanceState> candidate = new ConcurrentHashMap<String, PerformanceState>();
-        map = workerLastPerformanceStateMap.putIfAbsent(workerAddress, candidate);
-        return (map == null ? candidate : map);
+
+        map = new ConcurrentHashMap<String, PerformanceState>();
+        ConcurrentMap<String, PerformanceState> found = workerLastPerformanceStateMap.putIfAbsent(workerAddress, map);
+        return found == null ? map : found;
     }
 
     private static final class WorkerPerformanceState {
