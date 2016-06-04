@@ -387,14 +387,14 @@ public class TestCaseRunnerTest {
     private class TestPhaseCompleter extends Thread {
 
         private final ComponentRegistry componentRegistry;
-        private final TestPhaseListenerContainer testPhaseListenerContainer;
+        private final TestPhaseListeners testPhaseListeners;
         private final FailureContainer failureContainer;
 
         private TestPhaseCompleter(Coordinator coordinator) {
             super("TestPhaseCompleter");
 
             this.componentRegistry = coordinator.getComponentRegistry();
-            this.testPhaseListenerContainer = coordinator.getTestPhaseListenerContainer();
+            this.testPhaseListeners = coordinator.getTestPhaseListeners();
             this.failureContainer = coordinator.getFailureContainer();
 
             setDaemon(true);
@@ -405,7 +405,7 @@ public class TestCaseRunnerTest {
             for (TestPhase testPhase : TestPhase.values()) {
                 sleepMillis(100);
                 for (TestData testData : componentRegistry.getTests()) {
-                    testPhaseListenerContainer.updatePhaseCompletion(testData.getTestIndex(), testPhase);
+                    testPhaseListeners.updatePhaseCompletion(testData.getTestIndex(), testPhase);
                 }
             }
 

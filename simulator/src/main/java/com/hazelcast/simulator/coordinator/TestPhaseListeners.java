@@ -24,9 +24,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 
-public class TestPhaseListenerContainer {
+/**
+ * A support class for register listener and their notification.
+ */
+public class TestPhaseListeners {
 
-    private static final Logger LOGGER = Logger.getLogger(TestPhaseListenerContainer.class);
+    private static final Logger LOGGER = Logger.getLogger(TestPhaseListeners.class);
 
     private final ConcurrentMap<Integer, TestPhaseListener> listenerMap = new ConcurrentHashMap<Integer, TestPhaseListener>();
 

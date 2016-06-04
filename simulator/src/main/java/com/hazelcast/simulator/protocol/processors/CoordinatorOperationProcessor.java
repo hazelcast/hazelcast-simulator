@@ -18,7 +18,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
-import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
+import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
@@ -46,18 +46,18 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
 
     private final LocalExceptionLogger exceptionLogger;
     private final FailureContainer failureContainer;
-    private final TestPhaseListenerContainer testPhaseListenerContainer;
+    private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStateContainer performanceStateContainer;
     private final TestHistogramContainer testHistogramContainer;
 
     public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger,
-                                         FailureContainer failureContainer, TestPhaseListenerContainer testPhaseListenerContainer,
+                                         FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
                                          PerformanceStateContainer performanceStateContainer,
                                          TestHistogramContainer testHistogramContainer) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.failureContainer = failureContainer;
-        this.testPhaseListenerContainer = testPhaseListenerContainer;
+        this.testPhaseListeners = testPhaseListeners;
         this.performanceStateContainer = performanceStateContainer;
         this.testHistogramContainer = testHistogramContainer;
     }
@@ -100,7 +100,7 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
         int testIndex = sourceAddress.getTestIndex();
-        testPhaseListenerContainer.updatePhaseCompletion(testIndex, operation.getTestPhase());
+        testPhaseListeners.updatePhaseCompletion(testIndex, operation.getTestPhase());
         return SUCCESS;
     }
 

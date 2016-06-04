@@ -9,7 +9,7 @@ import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
-import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
+import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -69,7 +69,7 @@ public class AgentSmokeTest implements FailureListener {
 
     private static FailureContainer failureContainer;
 
-    private static TestPhaseListenerContainer testPhaseListenerContainer;
+    private static TestPhaseListeners testPhaseListeners;
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
 
@@ -88,12 +88,12 @@ public class AgentSmokeTest implements FailureListener {
 
         agentStarter = new AgentStarter();
 
-        testPhaseListenerContainer = new TestPhaseListenerContainer();
+        testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("agentSmokeTest", null);
 
-        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListenerContainer, performanceStateContainer,
+        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
                 testHistogramContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
@@ -169,7 +169,7 @@ public class AgentSmokeTest implements FailureListener {
             LOGGER.info(format("Created TestSuite for %s with index %d", testId, testIndex));
 
             TestPhaseListenerImpl testPhaseListener = new TestPhaseListenerImpl();
-            testPhaseListenerContainer.addListener(testIndex, testPhaseListener);
+            testPhaseListeners.addListener(testIndex, testPhaseListener);
 
             LOGGER.info("Creating workers...");
             createWorkers();

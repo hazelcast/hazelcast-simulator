@@ -7,35 +7,35 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestPhaseListenerContainerTest {
+public class TestPhaseListenersTest {
 
-    private TestPhaseListenerContainer testPhaseListenerContainer;
+    private TestPhaseListeners testPhaseListeners;
 
     @Before
     public void setUp() {
-        testPhaseListenerContainer = new TestPhaseListenerContainer();
+        testPhaseListeners = new TestPhaseListeners();
     }
 
     @Test
     public void testGetListeners() {
-        assertTrue(testPhaseListenerContainer.getListeners().isEmpty());
+        assertTrue(testPhaseListeners.getListeners().isEmpty());
     }
 
     @Test
     public void testAddListener() {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
 
-        testPhaseListenerContainer.addListener(1, listener);
+        testPhaseListeners.addListener(1, listener);
 
-        assertTrue(testPhaseListenerContainer.getListeners().contains(listener));
+        assertTrue(testPhaseListeners.getListeners().contains(listener));
     }
 
     @Test
     public void testUpdatePhaseCompletion() {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
-        testPhaseListenerContainer.addListener(1, listener);
+        testPhaseListeners.addListener(1, listener);
 
-        testPhaseListenerContainer.updatePhaseCompletion(1, TestPhase.GLOBAL_WARMUP);
+        testPhaseListeners.updatePhaseCompletion(1, TestPhase.GLOBAL_WARMUP);
 
         assertEquals(TestPhase.GLOBAL_WARMUP, listener.lastTestPhase);
     }
@@ -43,9 +43,9 @@ public class TestPhaseListenerContainerTest {
     @Test
     public void testUpdatePhaseCompletion_listenerNotFound() {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
-        testPhaseListenerContainer.addListener(1, listener);
+        testPhaseListeners.addListener(1, listener);
 
-        testPhaseListenerContainer.updatePhaseCompletion(2, TestPhase.GLOBAL_WARMUP);
+        testPhaseListeners.updatePhaseCompletion(2, TestPhase.GLOBAL_WARMUP);
 
         assertEquals(null, listener.lastTestPhase);
     }

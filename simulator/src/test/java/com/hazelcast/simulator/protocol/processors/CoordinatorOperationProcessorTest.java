@@ -5,7 +5,7 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
-import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
+import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
@@ -64,7 +64,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private SimulatorAddress workerAddress;
 
     private LocalExceptionLogger exceptionLogger;
-    private TestPhaseListenerContainer testPhaseListenerContainer;
+    private TestPhaseListeners testPhaseListeners;
     private PerformanceStateContainer performanceStateContainer;
     private TestHistogramContainer testHistogramContainer;
     private FailureContainer failureContainer;
@@ -88,12 +88,12 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
         exceptionLogger = new LocalExceptionLogger();
-        testPhaseListenerContainer = new TestPhaseListenerContainer();
+        testPhaseListeners = new TestPhaseListeners();
         performanceStateContainer = new PerformanceStateContainer();
         testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", componentRegistry);
 
-        processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListenerContainer,
+        processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
                 performanceStateContainer, testHistogramContainer);
     }
 
@@ -149,7 +149,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         PhaseCompletedOperation operation = new PhaseCompletedOperation(TestPhase.LOCAL_TEARDOWN);
 
-        testPhaseListenerContainer.addListener(1, new TestPhaseListener() {
+        testPhaseListeners.addListener(1, new TestPhaseListener() {
             @Override
             public void completed(TestPhase testPhase) {
                 if (testPhase.equals(TestPhase.LOCAL_TEARDOWN)) {

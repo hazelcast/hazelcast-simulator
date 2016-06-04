@@ -19,7 +19,7 @@ import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
-import com.hazelcast.simulator.coordinator.TestPhaseListenerContainer;
+import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -77,17 +77,17 @@ public class CoordinatorConnector implements ClientPipelineConfigurator, Failure
     private final CoordinatorOperationProcessor processor;
     private final ExecutorService executorService;
 
-    public CoordinatorConnector(FailureContainer failureContainer, TestPhaseListenerContainer testPhaseListenerContainer,
+    public CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
                                 PerformanceStateContainer performanceStateContainer,
                                 TestHistogramContainer testHistogramContainer) {
-        this(failureContainer, testPhaseListenerContainer, performanceStateContainer, testHistogramContainer,
+        this(failureContainer, testPhaseListeners, performanceStateContainer, testHistogramContainer,
                 createFixedThreadPool(EXECUTOR_POOL_SIZE, "CoordinatorConnector"));
     }
 
-    CoordinatorConnector(FailureContainer failureContainer, TestPhaseListenerContainer testPhaseListenerContainer,
+    CoordinatorConnector(FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
                          PerformanceStateContainer performanceStateContainer, TestHistogramContainer testHistogramContainer,
                          ExecutorService executorService) {
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListenerContainer,
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
                 performanceStateContainer, testHistogramContainer);
         this.executorService = executorService;
     }

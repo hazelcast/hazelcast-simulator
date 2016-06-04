@@ -71,7 +71,7 @@ public final class Coordinator {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    private final TestPhaseListenerContainer testPhaseListenerContainer = new TestPhaseListenerContainer();
+    private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
     private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
 
@@ -157,8 +157,8 @@ public final class Coordinator {
     }
 
     // just for testing
-    TestPhaseListenerContainer getTestPhaseListenerContainer() {
-        return testPhaseListenerContainer;
+    TestPhaseListeners getTestPhaseListeners() {
+        return testPhaseListeners;
     }
 
     private void logConfiguration() {
@@ -224,7 +224,7 @@ public final class Coordinator {
 
     private void startCoordinatorConnector() {
         try {
-            coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListenerContainer,
+            coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
                     performanceStateContainer, testHistogramContainer);
             failureContainer.addListener(coordinatorConnector);
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
@@ -300,7 +300,7 @@ public final class Coordinator {
                 TestCase testCase = testData.getTestCase();
                 echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
                 TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncMap);
-                testPhaseListenerContainer.addListener(testIndex, runner);
+                testPhaseListeners.addListener(testIndex, runner);
             }
 
             echoTestSuiteStart(testCount, isParallel);
@@ -346,7 +346,7 @@ public final class Coordinator {
 
     private void runParallel() {
         ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
-        for (final TestPhaseListener testCaseRunner : testPhaseListenerContainer.getListeners()) {
+        for (final TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -363,7 +363,7 @@ public final class Coordinator {
 
     private void runSequential(int testCount) {
         int testIndex = 0;
-        for (TestPhaseListener testCaseRunner : testPhaseListenerContainer.getListeners()) {
+        for (TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
             ((TestCaseRunner) testCaseRunner).run();
             boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
