@@ -62,12 +62,8 @@ public class PerformanceStateContainer {
             = new ConcurrentHashMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>>();
 
     // holds a queue per test with pending PerformanceState messages. The key is the testId.
-    private final ConcurrentMap<String, Queue<WorkerPerformanceState>> pendingQueueMap
+    private final ConcurrentMap<String, Queue<WorkerPerformanceState>> pendingQueueByTestMap
             = new ConcurrentHashMap<String, Queue<WorkerPerformanceState>>();
-
-    public void init(String testCaseId) {
-        pendingQueueMap.put(testCaseId, new ConcurrentLinkedQueue<WorkerPerformanceState>());
-    }
 
     public void update(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
         for (Map.Entry<String, PerformanceState> entry : performanceStates.entrySet()) {
@@ -77,10 +73,14 @@ public class PerformanceStateContainer {
             ConcurrentMap<String, PerformanceState> lastPerformanceStateMap = getOrCreateLastPerformanceStateMap(workerAddress);
             lastPerformanceStateMap.put(testCaseId, performanceState);
 
-            Queue<WorkerPerformanceState> pendingQueue = pendingQueueMap.get(testCaseId);
-            if (pendingQueue != null) {
-                pendingQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
+            Queue<WorkerPerformanceState> pendingQueue = pendingQueueByTestMap.get(testCaseId);
+            if (pendingQueue == null) {
+                Queue<WorkerPerformanceState> newQueue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
+                Queue<WorkerPerformanceState> foundQueue = pendingQueueByTestMap.putIfAbsent(testCaseId, newQueue);
+                pendingQueue = foundQueue == null ? newQueue : foundQueue;
             }
+
+            pendingQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
         }
     }
 
@@ -114,7 +114,7 @@ public class PerformanceStateContainer {
 
     PerformanceState get(String testCaseId) {
         // return if no queue of WorkerPerformanceState can be found (unknown testCaseId)
-        Queue<WorkerPerformanceState> pendingQueue = pendingQueueMap.get(testCaseId);
+        Queue<WorkerPerformanceState> pendingQueue = pendingQueueByTestMap.get(testCaseId);
         if (pendingQueue == null) {
             return new PerformanceState();
         }

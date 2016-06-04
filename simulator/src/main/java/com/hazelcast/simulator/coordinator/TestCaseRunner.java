@@ -124,7 +124,6 @@ final class TestCaseRunner implements TestPhaseListener {
 
     void run() {
         try {
-            initPerformanceMonitor();
             createTest();
             runPhase(SETUP);
 
@@ -145,12 +144,6 @@ final class TestCaseRunner implements TestPhaseListener {
             runPhase(LOCAL_TEARDOWN);
         } catch (Exception e) {
             throw rethrow(e);
-        }
-    }
-
-    private void initPerformanceMonitor() {
-        if (monitorPerformance) {
-            performanceStateContainer.init(testCaseId);
         }
     }
 
