@@ -10,3 +10,4 @@ target/
 simulator-git.properties
 *.csv
 vtune/
+agent.pid

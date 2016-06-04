@@ -3,11 +3,10 @@ package com.hazelcast.simulator.probes.impl;
 import com.hazelcast.simulator.probes.Probe;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.hazelcast.simulator.probes.ProbeTestUtils.assertHistogram;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +28,7 @@ public class HdrProbeTest {
 
     @Test
     public void testIsMeasuringLatency() {
-        assertTrue(probe.isMeasuringLatency());
+        assertTrue(probe instanceof HdrProbe);
     }
 
     @Test
@@ -69,8 +68,12 @@ public class HdrProbeTest {
         assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testGet()  {
-        probe.get();
+        probe.recordValue(1);
+        probe.recordValue(2);
+        probe.recordValue(3);
+
+        assertEquals(3, probe.get());
     }
 }

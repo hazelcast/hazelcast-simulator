@@ -27,11 +27,6 @@ public class ThroughputProbeTest {
     }
 
     @Test
-    public void testIsMeasuringLatency() {
-        assertFalse(probe.isMeasuringLatency());
-    }
-
-    @Test
     public void testDone_withExternalStarted() {
         int expectedCount = 1;
         long expectedLatency = 150;
@@ -55,10 +50,5 @@ public class ThroughputProbeTest {
         probe.recordValue(TimeUnit.MILLISECONDS.toNanos(expectedMaxValue));
 
         assertEquals(expectedCount, probe.get());
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testGetIntervalHistogram()  {
-        probe.getIntervalHistogram();
     }
 }

@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -76,7 +77,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertNotNull(test.probe);
-        Histogram intervalHistogram = test.probe.getIntervalHistogram();
+        Histogram intervalHistogram = ((HdrProbe)test.probe).getIntervalHistogram();
         assertEquals(THREAD_COUNT * ITERATION_COUNT, intervalHistogram.getTotalCount());
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }

@@ -40,11 +40,6 @@ public class HdrProbe implements Probe {
     }
 
     @Override
-    public boolean isMeasuringLatency() {
-        return true;
-    }
-
-    @Override
     public boolean isPartOfTotalThroughput() {
         return partOfTotalThroughput;
     }
@@ -65,13 +60,12 @@ public class HdrProbe implements Probe {
         recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : (latencyMicros < 0 ? 0 : latencyMicros));
     }
 
-    @Override
     public Histogram getIntervalHistogram() {
         return recorder.getIntervalHistogram();
     }
 
     @Override
     public long get() {
-        throw new UnsupportedOperationException();
+        return getIntervalHistogram().getTotalCount();
     }
 }

@@ -2,6 +2,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.tests.PerformanceMonitorTest;
@@ -41,7 +42,7 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
         PerformanceMonitorTest test = (PerformanceMonitorTest) testContainer.getTestInstance();
         Probe probe = test.getPerformanceProbe();
         assertNotNull(probe);
-        assertFalse(probe.isMeasuringLatency());
+        assertFalse(probe instanceof HdrProbe);
     }
 
     @Test

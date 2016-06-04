@@ -166,7 +166,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
 
         long totalCount = 0;
         for (Probe probe : probeMap.values()) {
-            totalCount += probe.getIntervalHistogram().getTotalCount();
+            totalCount += probe.get();
         }
         assertEquals(THREAD_COUNT * ITERATION_COUNT, totalCount);
     }

@@ -15,16 +15,7 @@
  */
 package com.hazelcast.simulator.probes;
 
-import org.HdrHistogram.Histogram;
-
 public interface Probe {
-
-    /**
-     * Checks if this probe measures latency.
-     *
-     * @return {@code true} if this probe measures latency, {@code false} otherwise.
-     */
-    boolean isMeasuringLatency();
 
     /**
      * Checks if a probe should be considered to calculate the throughput of a test.
@@ -46,17 +37,6 @@ public interface Probe {
      * @param latencyNanos latency value in nanoseconds
      */
     void recordValue(long latencyNanos);
-
-    /**
-     * Get an interval {@link Histogram}, which will include a stable, consistent view of all latency values accumulated since the
-     * last interval histogram was taken.
-     *
-     * Resets the latency values and starts accumulating value counts for the next interval.
-     *
-     * @return a {@link Histogram} containing the latency values accumulated since the last interval histogram was taken
-     * @throws UnsupportedOperationException on lightweight implementations
-     */
-    Histogram getIntervalHistogram();
 
     /**
      * Get the number of iterations.

@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
-import org.HdrHistogram.Histogram;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,11 +32,6 @@ public class ThroughputProbe implements Probe {
     }
 
     @Override
-    public boolean isMeasuringLatency() {
-        return false;
-    }
-
-    @Override
     public boolean isPartOfTotalThroughput() {
         return partOfTotalThroughput;
     }
@@ -50,11 +44,6 @@ public class ThroughputProbe implements Probe {
     @Override
     public void recordValue(long latencyNanos) {
         counter.incrementAndGet();
-    }
-
-    @Override
-    public Histogram getIntervalHistogram() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

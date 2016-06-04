@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.worker.performance;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
@@ -200,8 +201,9 @@ public class WorkerPerformanceMonitor {
                 String probeName = entry.getKey();
                 Probe probe = entry.getValue();
 
-                if (probe.isMeasuringLatency()) {
-                    Histogram intervalHistogram = probe.getIntervalHistogram();
+                if (probe instanceof HdrProbe) {
+                    HdrProbe hdrProbe = (HdrProbe) probe;
+                    Histogram intervalHistogram = hdrProbe.getIntervalHistogram();
                     intervalHistograms.put(probeName, intervalHistogram);
 
                     long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
