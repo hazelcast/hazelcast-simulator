@@ -69,8 +69,8 @@ public class PerformanceStateContainer {
 
     public void init(String testCaseId) {
         Queue<WorkerPerformanceState> queue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
-        AtomicReference<Queue<WorkerPerformanceState>> reference = new AtomicReference<Queue<WorkerPerformanceState>>(queue);
-        testPerformanceStateQueueRefs.put(testCaseId, reference);
+        AtomicReference<Queue<WorkerPerformanceState>> queueReference = new AtomicReference<Queue<WorkerPerformanceState>>(queue);
+        testPerformanceStateQueueRefs.put(testCaseId, queueReference);
     }
 
     public void update(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
@@ -81,9 +81,9 @@ public class PerformanceStateContainer {
             ConcurrentMap<String, PerformanceState> lastPerformanceStateMap = getOrCreateLastPerformanceStateMap(workerAddress);
             lastPerformanceStateMap.put(testCaseId, performanceState);
 
-            AtomicReference<Queue<WorkerPerformanceState>> atomicReference = testPerformanceStateQueueRefs.get(testCaseId);
-            if (atomicReference != null) {
-                Queue<WorkerPerformanceState> performanceStateQueue = atomicReference.get();
+            AtomicReference<Queue<WorkerPerformanceState>> queueReference = testPerformanceStateQueueRefs.get(testCaseId);
+            if (queueReference != null) {
+                Queue<WorkerPerformanceState> performanceStateQueue = queueReference.get();
                 if (performanceStateQueue != null) {
                     performanceStateQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
                 }
