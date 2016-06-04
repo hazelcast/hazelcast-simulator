@@ -37,7 +37,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class CoordinatorUploaderTest {
+public class UploaderTest {
 
     private ComponentRegistry componentRegistry = new ComponentRegistry();
     private ClusterLayout clusterLayout;
@@ -53,7 +53,7 @@ public class CoordinatorUploaderTest {
     private File workerClassPathFile;
     private String workerClassPath;
 
-    private CoordinatorUploader coordinatorUploader;
+    private Uploader uploader;
 
     @BeforeClass
     public static void setupEnvironment() {
@@ -85,7 +85,7 @@ public class CoordinatorUploaderTest {
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
-        coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 workerClassPath, YOURKIT, testSuiteId);
     }
 
@@ -97,12 +97,12 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testRun() {
-        coordinatorUploader.run();
+        uploader.run();
     }
 
     @Test
     public void testUploadHazelcastJARs() {
-        coordinatorUploader.uploadHazelcastJARs();
+        uploader.uploadHazelcastJARs();
 
         verify(hazelcastJARs, times(1)).prepare(false);
         verify(hazelcastJARs, times(2)).upload(contains("192.168.0."), anyString(), eq(singleton(OUT_OF_THE_BOX)));
@@ -131,10 +131,10 @@ public class CoordinatorUploaderTest {
         ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(xml, converter, 0, 0, 0, 2);
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
-        coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 workerClassPath, YOURKIT, testSuiteId);
 
-        coordinatorUploader.uploadHazelcastJARs();
+        uploader.uploadHazelcastJARs();
 
         HashSet<String> versionSpecs = new HashSet<String>(2);
         versionSpecs.add("maven=3.5.1");
@@ -149,17 +149,17 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadHazelcastJARs_isNull() {
-        coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, null, true, false, workerClassPath,
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, null, true, false, workerClassPath,
                 YOURKIT, testSuiteId);
 
-        coordinatorUploader.uploadHazelcastJARs();
+        uploader.uploadHazelcastJARs();
 
         verifyNoMoreInteractions(bash);
     }
 
     @Test
     public void testUploadUploadDirectory() {
-        coordinatorUploader.uploadUploadDirectory();
+        uploader.uploadUploadDirectory();
 
         verify(bash, times(2)).ssh(contains("192.168.0."), anyString());
         verify(bash, times(2)).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
@@ -170,7 +170,7 @@ public class CoordinatorUploaderTest {
     public void testUploadUploadDirectory_uploadDirectoryNotExists() {
         deleteQuiet(uploadDirectory);
 
-        coordinatorUploader.uploadUploadDirectory();
+        uploader.uploadUploadDirectory();
 
         verifyNoMoreInteractions(bash);
     }
@@ -180,12 +180,12 @@ public class CoordinatorUploaderTest {
         TestException exception = new TestException("expected");
         doThrow(exception).when(bash).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
 
-        coordinatorUploader.uploadUploadDirectory();
+        uploader.uploadUploadDirectory();
     }
 
     @Test
     public void testUploadWorkerClassPath() {
-        coordinatorUploader.uploadWorkerClassPath();
+        uploader.uploadWorkerClassPath();
 
         verify(bash, times(2)).ssh(contains("192.168.0."), anyString());
         verify(bash, times(2)).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
@@ -194,25 +194,25 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadWorkerClassPath_workerClassPathIsNull() {
-        coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false, null,
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false, null,
                 YOURKIT, testSuiteId);
 
-        coordinatorUploader.uploadWorkerClassPath();
+        uploader.uploadWorkerClassPath();
 
         verifyNoMoreInteractions(bash);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testUploadWorkerClassPath_workerClassPathNotExists() {
-        coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 notExists.getAbsolutePath(), YOURKIT, testSuiteId);
 
-        coordinatorUploader.uploadWorkerClassPath();
+        uploader.uploadWorkerClassPath();
     }
 
     @Test
     public void testUploadYourKit() {
-        coordinatorUploader.uploadYourKit();
+        uploader.uploadYourKit();
 
         verify(bash, times(2)).ssh(contains("192.168.0."), anyString());
         verify(bash, times(2)).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
@@ -221,10 +221,10 @@ public class CoordinatorUploaderTest {
 
     @Test
     public void testUploadYourKit_noYourKitProfiler() {
-        coordinatorUploader = new CoordinatorUploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 workerClassPath, NONE, testSuiteId);
 
-        coordinatorUploader.uploadYourKit();
+        uploader.uploadYourKit();
 
         verifyNoMoreInteractions(bash);
     }

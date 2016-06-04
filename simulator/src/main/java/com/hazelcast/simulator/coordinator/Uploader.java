@@ -38,12 +38,15 @@ import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static java.lang.String.format;
 
-class CoordinatorUploader {
+/**
+ * Responsible for uploading files to the agent machines.
+ */
+class Uploader {
 
     private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
     private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorUploader.class);
+    private static final Logger LOGGER = Logger.getLogger(Uploader.class);
 
     private final String simulatorHome = getSimulatorHome().getAbsolutePath();
 
@@ -59,9 +62,9 @@ class CoordinatorUploader {
     private final JavaProfiler javaProfiler;
     private final String testSuiteId;
 
-    CoordinatorUploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
-                        HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
-                        String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
+    Uploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
+             HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
+             String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
         this.bash = bash;
         this.componentRegistry = componentRegistry;
         this.clusterLayout = clusterLayout;
