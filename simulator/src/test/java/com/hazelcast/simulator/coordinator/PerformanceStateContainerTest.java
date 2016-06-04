@@ -45,22 +45,6 @@ public class PerformanceStateContainerTest {
         worker1 = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
         worker2 = new SimulatorAddress(AddressLevel.WORKER, 2, 1, 0);
 
-        Map<String, PerformanceState> performanceStates1a = new HashMap<String, PerformanceState>();
-        performanceStates1a.put(TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
-        performanceStates1a.put(TEST_CASE_ID_2, new PerformanceState(1500, 900, 800, 2300.0d, 2000, 2700));
-
-        Map<String, PerformanceState> performanceStates1b = new HashMap<String, PerformanceState>();
-        performanceStates1b.put(TEST_CASE_ID_1, new PerformanceState(1500, 150, 550, 1600.0d, 1700, 2400));
-        performanceStates1b.put(TEST_CASE_ID_2, new PerformanceState(2000, 950, 850, 2400.0d, 2100, 2800));
-
-        Map<String, PerformanceState> performanceStates2 = new HashMap<String, PerformanceState>();
-        performanceStates2.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300, 2200.0d, 2400, 2800));
-        performanceStates2.put(TEST_CASE_ID_2, new PerformanceState(1200, 700, 600, 2700.0d, 2600, 2900));
-
-        performanceStateContainer.update(worker1, performanceStates1a);
-        performanceStateContainer.update(worker1, performanceStates1b);
-        performanceStateContainer.update(worker2, performanceStates2);
-
         agentAddress1 = worker1.getParent();
         agentAddress2 = worker2.getParent();
     }
@@ -72,6 +56,8 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testFormatPerformanceNumbers() {
+        update(worker1, TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
+
         String performance = performanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ops"));
     }
@@ -102,53 +88,27 @@ public class PerformanceStateContainerTest {
         assertFalse(performance.contains("µs"));
     }
 
-    @Test
-    public void testGet() {
-        PerformanceState performanceState = performanceStateContainer.get(TEST_CASE_ID_1);
-
-        assertFalse(performanceState.isEmpty());
-        assertEquals(2300, performanceState.getOperationCount());
-        assertEquals(300.0, performanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(850.0, performanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2400, performanceState.getIntervalPercentileLatency());
-        assertEquals(2200.0d, performanceState.getIntervalAvgLatency(), 0.001);
-        assertEquals(2800, performanceState.getIntervalMaxLatency());
+    private void update(SimulatorAddress address, String testId, PerformanceState performanceState) {
+        Map<String, PerformanceState> performanceStateMap = new HashMap<String, PerformanceState>();
+        performanceStateMap.put(testId, performanceState);
+        performanceStateContainer.update(address, performanceStateMap);
     }
 
     @Test
-    public void testGet_fullCycle() {
+    public void testGet() {
+        update(worker1, TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
+        update(worker1, TEST_CASE_ID_1, new PerformanceState(1500, 150, 550, 1600.0d, 1700, 2400));
+        update(worker2, TEST_CASE_ID_1, new PerformanceState(800, 100, 300, 2200.0d, 2400, 2800));
+
         PerformanceState performanceState = performanceStateContainer.get(TEST_CASE_ID_1);
-        performanceStateContainer.get(TEST_CASE_ID_2);
 
         assertFalse(performanceState.isEmpty());
         assertEquals(2300, performanceState.getOperationCount());
         assertEquals(300.0, performanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(850.0, performanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2200.0d, performanceState.getIntervalAvgLatency(), 0.001);
         assertEquals(2400, performanceState.getIntervalPercentileLatency());
+        assertEquals(2200.0d, performanceState.getIntervalAvgLatency(), 0.001);
         assertEquals(2800, performanceState.getIntervalMaxLatency());
-
-        Map<String, PerformanceState> performanceStates1 = new HashMap<String, PerformanceState>();
-        performanceStates1.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300, 2200.0d, 2400, 2800));
-        performanceStates1.put(TEST_CASE_ID_2, new PerformanceState(1200, 700, 600, 2700.0d, 2600, 2900));
-
-        Map<String, PerformanceState> performanceStates2 = new HashMap<String, PerformanceState>();
-        performanceStates2.put(TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
-        performanceStates2.put(TEST_CASE_ID_2, new PerformanceState(1500, 900, 800, 2300.0d, 2000, 2700));
-
-        performanceStateContainer.update(worker1, performanceStates1);
-        performanceStateContainer.update(worker2, performanceStates2);
-
-        performanceStateContainer.get(TEST_CASE_ID_1);
-        performanceState = performanceStateContainer.get(TEST_CASE_ID_2);
-
-        assertFalse(performanceState.isEmpty());
-        assertEquals(2700, performanceState.getOperationCount());
-        assertEquals(1600.0, performanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(1400.0, performanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2700.0d, performanceState.getIntervalAvgLatency(), 0.001);
-        assertEquals(2600, performanceState.getIntervalPercentileLatency());
-        assertEquals(2900, performanceState.getIntervalMaxLatency());
     }
 
     @Test
@@ -167,10 +127,12 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testLogDetailedPerformanceInfo() {
+        update(worker1, TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
+
         performanceStateContainer.logDetailedPerformanceInfo(1);
 
         String performance = fileAsText(PERFORMANCE_FILE);
-        assertEquals("5500" + FormatUtils.NEW_LINE, performance);
+        assertEquals("1000" + FormatUtils.NEW_LINE, performance);
     }
 
     @Test
@@ -182,6 +144,15 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testCalculatePerformanceStates() {
+        update(worker1, TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
+        update(worker1, TEST_CASE_ID_2, new PerformanceState(1500, 900, 800, 2300.0d, 2000, 2700));
+
+        update(worker1, TEST_CASE_ID_1, new PerformanceState(1500, 150, 550, 1600.0d, 1700, 2400));
+        update(worker1, TEST_CASE_ID_2, new PerformanceState(2000, 950, 850, 2400.0d, 2100, 2800));
+
+        update(worker2, TEST_CASE_ID_1, new PerformanceState(800, 100, 300, 2200.0d, 2400, 2800));
+        update(worker2, TEST_CASE_ID_2,  new PerformanceState(1200, 700, 600, 2700.0d, 2600, 2900));
+
         PerformanceState totalPerformanceState = new PerformanceState();
         Map<SimulatorAddress, PerformanceState> agentPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
 
