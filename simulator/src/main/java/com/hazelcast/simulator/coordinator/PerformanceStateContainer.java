@@ -73,7 +73,7 @@ public class PerformanceStateContainer {
         testPerformanceStateQueueRefs.put(testCaseId, reference);
     }
 
-    public void updatePerformanceState(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
+    public void update(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
         for (Map.Entry<String, PerformanceState> entry : performanceStates.entrySet()) {
             String testCaseId = entry.getKey();
             PerformanceState performanceState = entry.getValue();

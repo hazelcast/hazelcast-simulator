@@ -105,7 +105,7 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     }
 
     private void processPerformanceState(PerformanceStateOperation operation, SimulatorAddress sourceAddress) {
-        performanceStateContainer.updatePerformanceState(sourceAddress, operation.getPerformanceStates());
+        performanceStateContainer.update(sourceAddress, operation.getPerformanceStates());
     }
 
     private void processTestHistogram(TestHistogramOperation operation, SimulatorAddress sourceAddress) {

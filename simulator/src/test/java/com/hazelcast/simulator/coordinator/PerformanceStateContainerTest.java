@@ -60,9 +60,9 @@ public class PerformanceStateContainerTest {
         performanceStateContainer.init(TEST_CASE_ID_1);
         performanceStateContainer.init(TEST_CASE_ID_2);
 
-        performanceStateContainer.updatePerformanceState(worker1, performanceStates1a);
-        performanceStateContainer.updatePerformanceState(worker1, performanceStates1b);
-        performanceStateContainer.updatePerformanceState(worker2, performanceStates2);
+        performanceStateContainer.update(worker1, performanceStates1a);
+        performanceStateContainer.update(worker1, performanceStates1b);
+        performanceStateContainer.update(worker2, performanceStates2);
 
         agentAddress1 = worker1.getParent();
         agentAddress2 = worker2.getParent();
@@ -98,7 +98,7 @@ public class PerformanceStateContainerTest {
         Map<String, PerformanceState> performanceStates = new HashMap<String, PerformanceState>();
         performanceStates.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300, TimeUnit.SECONDS.toMicros(3), 2400, 2500));
 
-        performanceStateContainer.updatePerformanceState(worker, performanceStates);
+        performanceStateContainer.update(worker, performanceStates);
 
         String performance = performanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ms"));
@@ -139,8 +139,8 @@ public class PerformanceStateContainerTest {
         performanceStates2.put(TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
         performanceStates2.put(TEST_CASE_ID_2, new PerformanceState(1500, 900, 800, 2300.0d, 2000, 2700));
 
-        performanceStateContainer.updatePerformanceState(worker1, performanceStates1);
-        performanceStateContainer.updatePerformanceState(worker2, performanceStates2);
+        performanceStateContainer.update(worker1, performanceStates1);
+        performanceStateContainer.update(worker2, performanceStates2);
 
         performanceStateContainer.get(TEST_CASE_ID_1);
         performanceState = performanceStateContainer.get(TEST_CASE_ID_2);
