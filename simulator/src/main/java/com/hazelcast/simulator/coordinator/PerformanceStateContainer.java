@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -62,15 +61,12 @@ public class PerformanceStateContainer {
     private final ConcurrentMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>> workerLastPerformanceStateMap
             = new ConcurrentHashMap<SimulatorAddress, ConcurrentMap<String, PerformanceState>>();
 
-    // holds an AtomicReference per testCaseId with a queue of WorkerPerformanceState instances over time
-    // will be swapped with a new queue when read
-    private final ConcurrentMap<String, AtomicReference<Queue<WorkerPerformanceState>>> testPerformanceStateQueueRefs
-            = new ConcurrentHashMap<String, AtomicReference<Queue<WorkerPerformanceState>>>();
+    // holds a queue per test with pending PerformanceState messages. The key is the testId.
+    private final ConcurrentMap<String, Queue<WorkerPerformanceState>> pendingQueueMap
+            = new ConcurrentHashMap<String, Queue<WorkerPerformanceState>>();
 
     public void init(String testCaseId) {
-        Queue<WorkerPerformanceState> queue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
-        AtomicReference<Queue<WorkerPerformanceState>> queueReference = new AtomicReference<Queue<WorkerPerformanceState>>(queue);
-        testPerformanceStateQueueRefs.put(testCaseId, queueReference);
+        pendingQueueMap.put(testCaseId, new ConcurrentLinkedQueue<WorkerPerformanceState>());
     }
 
     public void update(SimulatorAddress workerAddress, Map<String, PerformanceState> performanceStates) {
@@ -81,12 +77,9 @@ public class PerformanceStateContainer {
             ConcurrentMap<String, PerformanceState> lastPerformanceStateMap = getOrCreateLastPerformanceStateMap(workerAddress);
             lastPerformanceStateMap.put(testCaseId, performanceState);
 
-            AtomicReference<Queue<WorkerPerformanceState>> queueReference = testPerformanceStateQueueRefs.get(testCaseId);
-            if (queueReference != null) {
-                Queue<WorkerPerformanceState> performanceStateQueue = queueReference.get();
-                if (performanceStateQueue != null) {
-                    performanceStateQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
-                }
+            Queue<WorkerPerformanceState> pendingQueue = pendingQueueMap.get(testCaseId);
+            if (pendingQueue != null) {
+                pendingQueue.add(new WorkerPerformanceState(workerAddress, performanceState));
             }
         }
     }
@@ -121,22 +114,25 @@ public class PerformanceStateContainer {
 
     PerformanceState get(String testCaseId) {
         // return if no queue of WorkerPerformanceState can be found (unknown testCaseId)
-        AtomicReference<Queue<WorkerPerformanceState>> queueReference = testPerformanceStateQueueRefs.get(testCaseId);
-        if (queueReference == null) {
+        Queue<WorkerPerformanceState> pendingQueue = pendingQueueMap.get(testCaseId);
+        if (pendingQueue == null) {
             return new PerformanceState();
         }
 
-        // swap queue of WorkerPerformanceState for this testCaseId
-        Queue<WorkerPerformanceState> oldQueue = queueReference.getAndSet(new ConcurrentLinkedQueue<WorkerPerformanceState>());
-
         // aggregate the PerformanceState instances per Worker by maximum values (since from same Worker)
         Map<SimulatorAddress, PerformanceState> workerPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
-        for (WorkerPerformanceState workerPerformanceState : oldQueue) {
-            PerformanceState candidate = workerPerformanceStateMap.get(workerPerformanceState.simulatorAddress);
+        for (; ; ) {
+            WorkerPerformanceState pending = pendingQueue.poll();
+            if (pending == null) {
+                // we have drained the queue of pending work, so we are ready
+                break;
+            }
+
+            PerformanceState candidate = workerPerformanceStateMap.get(pending.simulatorAddress);
             if (candidate == null) {
-                workerPerformanceStateMap.put(workerPerformanceState.simulatorAddress, workerPerformanceState.performanceState);
+                workerPerformanceStateMap.put(pending.simulatorAddress, pending.performanceState);
             } else {
-                candidate.add(workerPerformanceState.performanceState, false);
+                candidate.add(pending.performanceState, false);
             }
         }
 
