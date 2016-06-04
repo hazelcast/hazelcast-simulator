@@ -18,7 +18,7 @@ package com.hazelcast.simulator.worker.performance;
 import static java.lang.Math.max;
 
 /**
- * Container to transfer performance states from a Simulator Worker to the Coordinator.
+ * Container to transfer performance statistics for some time window.
  *
  * Has methods to combine {@link PerformanceState} instances by adding or setting maximum values.
  */
