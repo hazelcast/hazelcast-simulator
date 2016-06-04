@@ -91,7 +91,7 @@ public class PerformanceStateContainer {
         }
     }
 
-    public String getPerformanceNumbers(String testCaseId) {
+    public String formatPerformanceNumbers(String testCaseId) {
         PerformanceState performanceState = getPerformanceStateForTestCase(testCaseId);
         if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
             return "";

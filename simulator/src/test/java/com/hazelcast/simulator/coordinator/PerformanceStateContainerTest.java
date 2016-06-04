@@ -75,19 +75,19 @@ public class PerformanceStateContainerTest {
 
     @Test
     public void testGetPerformanceNumbers() {
-        String performance = performanceStateContainer.getPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = performanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ops"));
     }
 
     @Test
     public void testGetPerformanceNumbers_testCaseNotFound() {
-        String performance = performanceStateContainer.getPerformanceNumbers("notFound");
+        String performance = performanceStateContainer.formatPerformanceNumbers("notFound");
         assertFalse(performance.contains("ops"));
     }
 
     @Test
     public void testGetPerformanceNumbers_onEmptyContainer() {
-        String performance = emptyPerformanceStateContainer.getPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = emptyPerformanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertFalse(performance.contains("ops"));
     }
 
@@ -100,7 +100,7 @@ public class PerformanceStateContainerTest {
 
         performanceStateContainer.updatePerformanceState(worker, performanceStates);
 
-        String performance = performanceStateContainer.getPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = performanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ms"));
         assertFalse(performance.contains("µs"));
     }

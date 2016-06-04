@@ -313,7 +313,7 @@ final class TestCaseRunner implements TestPhaseListener {
         private void logProgress(int elapsed, int sleepSeconds) {
             String msg = format("Running %s (%s%%)", secondsToHuman(elapsed), formatPercentage(elapsed, sleepSeconds));
             if (monitorPerformance && elapsed % logPerformanceIntervalSeconds == 0) {
-                msg += performanceStateContainer.getPerformanceNumbers(testCaseId);
+                msg += performanceStateContainer.formatPerformanceNumbers(testCaseId);
             }
 
             LOGGER.info(prefix + msg);

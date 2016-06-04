@@ -184,7 +184,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);
 
-        String performanceNumbers = performanceStateContainer.getPerformanceNumbers("testId");
+        String performanceNumbers = performanceStateContainer.formatPerformanceNumbers("testId");
         assertTrue(performanceNumbers.contains(formatLong(1000, OPERATION_COUNT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatDouble(50, THROUGHPUT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
