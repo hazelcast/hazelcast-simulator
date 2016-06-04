@@ -74,25 +74,25 @@ public class PerformanceStateContainerTest {
     }
 
     @Test
-    public void testGetPerformanceNumbers() {
+    public void testFormatPerformanceNumbers() {
         String performance = performanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ops"));
     }
 
     @Test
-    public void testGetPerformanceNumbers_testCaseNotFound() {
+    public void testFormatPerformanceNumbers_testCaseNotFound() {
         String performance = performanceStateContainer.formatPerformanceNumbers("notFound");
         assertFalse(performance.contains("ops"));
     }
 
     @Test
-    public void testGetPerformanceNumbers_onEmptyContainer() {
+    public void testFormatPerformanceNumbers_onEmptyContainer() {
         String performance = emptyPerformanceStateContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertFalse(performance.contains("ops"));
     }
 
     @Test
-    public void testGetPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
+    public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
         SimulatorAddress worker = new SimulatorAddress(AddressLevel.WORKER, 3, 1, 0);
 
         Map<String, PerformanceState> performanceStates = new HashMap<String, PerformanceState>();
@@ -106,8 +106,8 @@ public class PerformanceStateContainerTest {
     }
 
     @Test
-    public void testGetPerformanceStateForTestCase() {
-        PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase(TEST_CASE_ID_1);
+    public void testGet() {
+        PerformanceState performanceState = performanceStateContainer.get(TEST_CASE_ID_1);
 
         assertFalse(performanceState.isEmpty());
         assertEquals(2300, performanceState.getOperationCount());
@@ -119,9 +119,9 @@ public class PerformanceStateContainerTest {
     }
 
     @Test
-    public void testGetPerformanceStateForTestCase_fullCycle() {
-        PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase(TEST_CASE_ID_1);
-        performanceStateContainer.getPerformanceStateForTestCase(TEST_CASE_ID_2);
+    public void testGet_fullCycle() {
+        PerformanceState performanceState = performanceStateContainer.get(TEST_CASE_ID_1);
+        performanceStateContainer.get(TEST_CASE_ID_2);
 
         assertFalse(performanceState.isEmpty());
         assertEquals(2300, performanceState.getOperationCount());
@@ -142,8 +142,8 @@ public class PerformanceStateContainerTest {
         performanceStateContainer.updatePerformanceState(worker1, performanceStates1);
         performanceStateContainer.updatePerformanceState(worker2, performanceStates2);
 
-        performanceStateContainer.getPerformanceStateForTestCase(TEST_CASE_ID_1);
-        performanceState = performanceStateContainer.getPerformanceStateForTestCase(TEST_CASE_ID_2);
+        performanceStateContainer.get(TEST_CASE_ID_1);
+        performanceState = performanceStateContainer.get(TEST_CASE_ID_2);
 
         assertFalse(performanceState.isEmpty());
         assertEquals(2700, performanceState.getOperationCount());
@@ -155,15 +155,15 @@ public class PerformanceStateContainerTest {
     }
 
     @Test
-    public void testGetPerformanceStateForTestCase_testCaseNotFound() {
-        PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase("notFound");
+    public void testGet_testCaseNotFound() {
+        PerformanceState performanceState = performanceStateContainer.get("notFound");
 
         assertTrue(performanceState.isEmpty());
     }
 
     @Test
-    public void testGetPerformanceStateForTestCase_onEmptyContainer() {
-        PerformanceState performanceState = emptyPerformanceStateContainer.getPerformanceStateForTestCase(TEST_CASE_ID_1);
+    public void testGet_onEmptyContainer() {
+        PerformanceState performanceState = emptyPerformanceStateContainer.get(TEST_CASE_ID_1);
 
         assertTrue(performanceState.isEmpty());
     }

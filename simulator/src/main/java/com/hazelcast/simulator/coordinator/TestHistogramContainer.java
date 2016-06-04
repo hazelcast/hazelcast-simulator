@@ -63,7 +63,7 @@ public class TestHistogramContainer {
     }
 
     void createProbeResults(String testSuiteId, String testCaseId) {
-        PerformanceState performanceState = performanceStateContainer.getPerformanceStateForTestCase(testCaseId);
+        PerformanceState performanceState = performanceStateContainer.get(testCaseId);
         Result result = aggregateHistogramsForTestCase(testCaseId, performanceState);
         if (!result.isEmpty()) {
             String fileName = "probes-" + testSuiteId + '_' + testCaseId + ".xml";

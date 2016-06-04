@@ -37,7 +37,7 @@ public class TestHistogramContainerTest {
         PerformanceState performanceState = new PerformanceState();
 
         PerformanceStateContainer performanceStateContainer = mock(PerformanceStateContainer.class);
-        when(performanceStateContainer.getPerformanceStateForTestCase("testId")).thenReturn(performanceState);
+        when(performanceStateContainer.get("testId")).thenReturn(performanceState);
 
         testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
     }

@@ -92,7 +92,7 @@ public class PerformanceStateContainer {
     }
 
     public String formatPerformanceNumbers(String testCaseId) {
-        PerformanceState performanceState = getPerformanceStateForTestCase(testCaseId);
+        PerformanceState performanceState = get(testCaseId);
         if (performanceState.isEmpty() || performanceState.getOperationCount() < 1) {
             return "";
         }
@@ -119,20 +119,20 @@ public class PerformanceStateContainer {
         );
     }
 
-    PerformanceState getPerformanceStateForTestCase(String testCaseId) {
+    PerformanceState get(String testCaseId) {
         // return if no queue of WorkerPerformanceState can be found (unknown testCaseId)
-        AtomicReference<Queue<WorkerPerformanceState>> atomicReference = testPerformanceStateQueueRefs.get(testCaseId);
-        if (atomicReference == null) {
+        AtomicReference<Queue<WorkerPerformanceState>> queueReference = testPerformanceStateQueueRefs.get(testCaseId);
+        if (queueReference == null) {
             return new PerformanceState();
         }
 
         // swap queue of WorkerPerformanceState for this testCaseId
         ConcurrentLinkedQueue<WorkerPerformanceState> newQueue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
-        Queue<WorkerPerformanceState> performanceStateQueue = atomicReference.getAndSet(newQueue);
+        Queue<WorkerPerformanceState> oldQueue = queueReference.getAndSet(newQueue);
 
         // aggregate the PerformanceState instances per Worker by maximum values (since from same Worker)
         Map<SimulatorAddress, PerformanceState> workerPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
-        for (WorkerPerformanceState workerPerformanceState : performanceStateQueue) {
+        for (WorkerPerformanceState workerPerformanceState : oldQueue) {
             PerformanceState candidate = workerPerformanceStateMap.get(workerPerformanceState.simulatorAddress);
             if (candidate == null) {
                 workerPerformanceStateMap.put(workerPerformanceState.simulatorAddress, workerPerformanceState.performanceState);
