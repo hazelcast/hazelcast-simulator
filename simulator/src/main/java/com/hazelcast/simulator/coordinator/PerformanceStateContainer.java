@@ -127,8 +127,7 @@ public class PerformanceStateContainer {
         }
 
         // swap queue of WorkerPerformanceState for this testCaseId
-        ConcurrentLinkedQueue<WorkerPerformanceState> newQueue = new ConcurrentLinkedQueue<WorkerPerformanceState>();
-        Queue<WorkerPerformanceState> oldQueue = queueReference.getAndSet(newQueue);
+        Queue<WorkerPerformanceState> oldQueue = queueReference.getAndSet(new ConcurrentLinkedQueue<WorkerPerformanceState>());
 
         // aggregate the PerformanceState instances per Worker by maximum values (since from same Worker)
         Map<SimulatorAddress, PerformanceState> workerPerformanceStateMap = new HashMap<SimulatorAddress, PerformanceState>();
