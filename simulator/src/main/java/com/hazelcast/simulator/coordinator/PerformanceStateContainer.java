@@ -141,11 +141,11 @@ public class PerformanceStateContainer {
         }
 
         // aggregate the PerformanceState instances from all Workers by adding values (since from different Workers)
-        PerformanceState performanceState = new PerformanceState();
+        PerformanceState result = new PerformanceState();
         for (PerformanceState workerPerformanceState : workerPerformanceStateMap.values()) {
-            performanceState.add(workerPerformanceState);
+            result.add(workerPerformanceState);
         }
-        return performanceState;
+        return result;
     }
 
     void logDetailedPerformanceInfo(double runningTimeSeconds) {
