@@ -87,6 +87,10 @@ public class MockIOService implements IOService {
     }
 
     @Override
+    public void onDisconnect(Address endpoint, Throwable cause) {
+    }
+
+    @Override
     public boolean isActive() {
         return true;
     }
@@ -250,10 +254,6 @@ public class MockIOService implements IOService {
     @Override
     public int getBalancerIntervalSeconds() {
         return 0;
-    }
-
-    @Override
-    public void onDisconnect(Address endpoint) {
     }
 
     @Override
