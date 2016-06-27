@@ -140,7 +140,7 @@ final class CoordinatorCli {
             format("Defines the last TestPhase which is synchronized between all parallel running tests."
                     + " Use --syncToTestPhase %s to synchronize all test phases."
                     + " List of defined test phases: %s", TestPhase.getLastTestPhase(), TestPhase.getIdsAsString()))
-            .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.SETUP);
+            .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
             "Member Worker JVM options (quotes can be used).")
