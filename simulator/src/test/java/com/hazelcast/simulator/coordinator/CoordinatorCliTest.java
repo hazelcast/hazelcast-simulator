@@ -268,7 +268,7 @@ public class CoordinatorCliTest {
     public void testInit_syncToTestPhase_default() {
         Coordinator coordinator = createCoordinator();
 
-        assertEquals(TestPhase.SETUP, coordinator.getCoordinatorParameters().getLastTestPhaseToSync());
+        assertEquals(TestPhase.getLastTestPhase(), coordinator.getCoordinatorParameters().getLastTestPhaseToSync());
     }
 
     @Test
