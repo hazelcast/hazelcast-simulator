@@ -35,9 +35,9 @@ public class WorkerJvmSettings {
 
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
-    private final int workerPerformanceMonitorIntervalSeconds;
+    private final int performanceMonitorIntervalSeconds;
 
-    private final String javaCmd;
+    private final String workerScript;
 
     public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this(workerIndex, workerType, workerParameters, workerParameters.getHazelcastVersionSpec(),
@@ -57,12 +57,12 @@ public class WorkerJvmSettings {
 
         this.autoCreateHzInstance = workerParameters.isAutoCreateHzInstance();
         this.workerStartupTimeout = workerParameters.getWorkerStartupTimeout();
-        this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(workerParameters);
+        this.performanceMonitorIntervalSeconds = initPerformanceMonitorIntervalSeconds(workerParameters);
 
-        this.javaCmd = workerParameters.getJavaCmd();
+        this.workerScript = workerParameters.getWorkerScript();
     }
 
-    private int initWorkerPerformanceMonitorIntervalSeconds(WorkerParameters workerParameters) {
+    private int initPerformanceMonitorIntervalSeconds(WorkerParameters workerParameters) {
         if (workerParameters.isMonitorPerformance()) {
             return workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
         }
@@ -101,12 +101,12 @@ public class WorkerJvmSettings {
         return workerStartupTimeout;
     }
 
-    public int getWorkerPerformanceMonitorIntervalSeconds() {
-        return workerPerformanceMonitorIntervalSeconds;
+    public int getPerformanceMonitorIntervalSeconds() {
+        return performanceMonitorIntervalSeconds;
     }
 
-    public String getJavaCmd() {
-        return javaCmd;
+    public String getWorkerScript() {
+        return workerScript;
     }
 
     @Override
@@ -119,8 +119,8 @@ public class WorkerJvmSettings {
                 + ", log4jConfig='" + log4jConfig + '\''
                 + ", autoCreateHzInstance=" + autoCreateHzInstance
                 + ", workerStartupTimeout=" + workerStartupTimeout
-                + ", workerPerformanceMonitorIntervalSeconds=" + workerPerformanceMonitorIntervalSeconds
-                + ", javaCmd='" + javaCmd + '\''
+                + ", performanceMonitorIntervalSeconds=" + performanceMonitorIntervalSeconds
+                + ", workerScript='" + workerScript + '\''
                 + '}';
     }
 }

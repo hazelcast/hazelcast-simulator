@@ -47,7 +47,7 @@ public class WorkerParametersTest {
     @Test
     public void testConstructor() {
         WorkerParameters workerParameters = new WorkerParameters(properties, true, 2342, "memberJvmOptions", "clientJvmOptions",
-                memberConfig, clientConfig, "log4jConfig", false);
+                memberConfig, clientConfig, "log4jConfig", "worker.sh", false);
 
         assertTrue(workerParameters.isAutoCreateHzInstance());
         assertEquals(2342, workerParameters.getWorkerStartupTimeout());
@@ -62,12 +62,12 @@ public class WorkerParametersTest {
         assertEquals("log4jConfig", workerParameters.getLog4jConfig());
         assertFalse(workerParameters.isMonitorPerformance());
 
-        assertEquals("java", workerParameters.getJavaCmd());
+        assertEquals("worker.sh", workerParameters.getWorkerScript());
     }
 
     @Test
     public void testGetRunPhaseLogIntervalSeconds_noPerformanceMonitor() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, "worker.sh", false);
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(5);
         assertEquals(5, intervalSeconds);
@@ -75,7 +75,7 @@ public class WorkerParametersTest {
 
     @Test
     public void testGetRunPhaseLogIntervalSeconds_withPerformanceMonitor_overPerformanceMonitorInterval() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, "worker.sh", true);
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(5000);
         assertEquals(1234, intervalSeconds);
@@ -83,7 +83,7 @@ public class WorkerParametersTest {
 
     @Test
     public void testGetRunPhaseLogIntervalSeconds_withPerformanceMonitor_belowPerformanceMonitorInterval() {
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, true);
+        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, "worker.sh", true);
 
         int intervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(30);
         assertEquals(30, intervalSeconds);

@@ -24,8 +24,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,11 +36,9 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 
 public class WorkerJvmLauncher {
 
@@ -107,19 +103,19 @@ public class WorkerJvmLauncher {
 
         WorkerJvm workerJvm = new WorkerJvm(workerAddress, workerId, workerHome);
 
-        generateWorkerStartScript(type, workerJvm);
+        generateWorkerStartScript(workerJvm);
 
         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash", "worker.sh"})
-                .directory(workerHome)
-                .redirectErrorStream(true);
+                .directory(workerHome);
 
         Map<String, String> environment = processBuilder.environment();
         String javaHome = getJavaHome();
-        String path = javaHome + File.pathSeparator + "bin:" + environment.get("PATH");
+        String path = javaHome + "/bin:" + environment.get("PATH");
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
 
         Process process = processBuilder.start();
+
         workerJvm.setProcess(process);
         copyResourcesToWorkerId(workerId);
         workerJvmManager.add(workerAddress, workerJvm);
@@ -159,18 +155,30 @@ public class WorkerJvmLauncher {
         return javaHome;
     }
 
-    private void generateWorkerStartScript(WorkerType type, WorkerJvm workerJvm) {
-        String[] args = buildArgs(workerJvm, type);
+    private void generateWorkerStartScript(WorkerJvm workerJvm) {
         File startScript = new File(workerJvm.getWorkerHome(), "worker.sh");
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("#!/bin/bash").append(NEW_LINE);
-        for (String arg : args) {
-            sb.append(arg).append(' ');
-        }
-        sb.append("> worker.out 2> worker.err").append(NEW_LINE);
+        String script = workerJvmSettings.getWorkerScript();
+        script = replaceAll(script, "CLASSPATH", getClasspath());
+        script = replaceAll(script, "JVM_OPTIONS", workerJvmSettings.getJvmOptions());
+        script = replaceAll(script, "LOG4J_FILE", log4jFile.getAbsolutePath());
+        script = replaceAll(script, "SIMULATOR_HOME", getSimulatorHome());
+        script = replaceAll(script, "WORKER_ID", workerJvm.getId());
+        script = replaceAll(script, "WORKER_TYPE", workerJvmSettings.getWorkerType());
+        script = replaceAll(script, "PUBLIC_ADDRESS", agent.getPublicAddress());
+        script = replaceAll(script, "AGENT_INDEX", agent.getAddressIndex());
+        script = replaceAll(script, "WORKER_INDEX", workerJvmSettings.getWorkerIndex());
+        script = replaceAll(script, "WORKER_PORT", agent.getPort() + workerJvmSettings.getWorkerIndex());
+        script = replaceAll(script, "AUTO_CREATE_HZ_INSTANCE", workerJvmSettings.isAutoCreateHzInstance());
+        script = replaceAll(script, "WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                workerJvmSettings.getPerformanceMonitorIntervalSeconds());
+        script = replaceAll(script, "HZ_CONFIG_FILE", hzConfigFile.getAbsolutePath());
 
-        writeText(sb.toString(), startScript);
+        writeText(script, startScript);
+    }
+
+    private String replaceAll(String script, String variable, Object value) {
+        return script.replaceAll("@" + variable, "" + value);
     }
 
     private void copyResourcesToWorkerId(String workerId) {
@@ -212,39 +220,6 @@ public class WorkerJvmLauncher {
         return address;
     }
 
-    private String[] buildArgs(WorkerJvm workerJvm, WorkerType type) {
-        List<String> args = new LinkedList<String>();
-
-        int workerIndex = workerJvmSettings.getWorkerIndex();
-        int workerPort = agent.getPort() + workerIndex;
-
-        args.add(workerJvmSettings.getJavaCmd());
-
-        args.add("-classpath");
-        args.add(getClasspath());
-        args.addAll(getJvmOptions());
-        args.add("-XX:OnOutOfMemoryError=\"touch worker.oome\"");
-        args.add("-Dhazelcast.logging.type=log4j");
-        args.add("-Dlog4j.configuration=file:" + log4jFile.getAbsolutePath());
-
-        args.add("-DSIMULATOR_HOME=" + getSimulatorHome());
-        args.add("-DworkerId=" + workerJvm.getId());
-        args.add("-DworkerType=" + type);
-        args.add("-DpublicAddress=" + agent.getPublicAddress());
-        args.add("-DagentIndex=" + agent.getAddressIndex());
-        args.add("-DworkerIndex=" + workerIndex);
-        args.add("-DworkerPort=" + workerPort);
-        args.add("-DautoCreateHzInstance=" + workerJvmSettings.isAutoCreateHzInstance());
-        args.add("-DworkerPerformanceMonitorIntervalSeconds=" + workerJvmSettings.getWorkerPerformanceMonitorIntervalSeconds());
-        args.add("-DhzConfigFile=" + hzConfigFile.getAbsolutePath());
-
-        // add class name to start correct worker type
-        args.add(type.getClassName());
-
-        return args.toArray(new String[args.size()]);
-    }
-
-
     private String getClasspath() {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
         String hzVersionDirectory = directoryForVersionSpec(workerJvmSettings.getHazelcastVersionSpec());
@@ -258,15 +233,5 @@ public class WorkerJvmLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + CLASSPATH_SEPARATOR + CLASSPATH;
-    }
-
-    private List<String> getJvmOptions() {
-        String workerVmOptions = workerJvmSettings.getJvmOptions();
-
-        String[] vmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            vmOptionsArray = workerVmOptions.split("\\s+");
-        }
-        return asList(vmOptionsArray);
     }
 }
