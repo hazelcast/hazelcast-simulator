@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.cluster;
 
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.AgentData;
@@ -43,7 +42,6 @@ public class ClusterLayoutTest {
         when(componentRegistry.getAgents()).thenReturn(agents);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
         when(workerParameters.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.OUT_OF_THE_BOX);
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);

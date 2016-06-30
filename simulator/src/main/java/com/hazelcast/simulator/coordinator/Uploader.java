@@ -17,7 +17,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.cluster.ClusterLayout;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.Bash;
@@ -59,12 +58,11 @@ class Uploader {
     private final boolean isEnterpriseEnabled;
 
     private final String workerClassPath;
-    private final JavaProfiler javaProfiler;
     private final String testSuiteId;
 
     Uploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
              HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
-             String workerClassPath, JavaProfiler javaProfiler, String testSuiteId) {
+             String workerClassPath, String testSuiteId) {
         this.bash = bash;
         this.componentRegistry = componentRegistry;
         this.clusterLayout = clusterLayout;
@@ -74,7 +72,6 @@ class Uploader {
         this.isEnterpriseEnabled = isEnterpriseEnabled;
 
         this.workerClassPath = workerClassPath;
-        this.javaProfiler = javaProfiler;
         this.testSuiteId = testSuiteId;
     }
 
@@ -89,7 +86,6 @@ class Uploader {
         }
         uploadUploadDirectory();
         uploadWorkerClassPath();
-        uploadYourKit();
         long elapsed = getElapsedSeconds(started);
 
         LOGGER.info(HORIZONTAL_RULER);
@@ -150,30 +146,6 @@ class Uploader {
         } catch (Exception e) {
             throw new CommandLineExitException(format("Could not upload workerClasspath '%s' to agents", workerClassPath), e);
         }
-    }
-
-    void uploadYourKit() {
-        if (javaProfiler != JavaProfiler.YOURKIT) {
-            return;
-        }
-
-        // TODO: only upload the requested YourKit library (32 or 64 bit)
-        LOGGER.info("Uploading YourKit dependencies...");
-        ThreadSpawner spawner = new ThreadSpawner("uploadYourKit", true);
-        long started = System.nanoTime();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            final String ip = agentData.getPublicAddress();
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/yourkit", SIMULATOR_VERSION));
-                    bash.uploadToRemoteSimulatorDir(ip, simulatorHome + "/yourkit/", "yourkit");
-                    logAgentDone(ip);
-                }
-            });
-        }
-        spawner.awaitCompletion();
-        LOGGER.info(format("Finished upload of YourKit to Agents (%d seconds)", getElapsedSeconds(started)));
     }
 
     private long uploadSourcePathToTargetPath(String name, String sourcePath, final String targetPath) {

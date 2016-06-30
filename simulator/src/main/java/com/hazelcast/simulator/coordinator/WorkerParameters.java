@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -45,9 +44,7 @@ public class WorkerParameters {
     private final boolean monitorPerformance;
     private final int workerPerformanceMonitorIntervalSeconds;
 
-    private final JavaProfiler profiler;
-    private final String profilerSettings;
-    private final String numaCtl;
+    private final String javaCmd;
 
     public WorkerParameters(SimulatorProperties properties, boolean autoCreateHzInstance, int workerStartupTimeout,
                             String memberJvmOptions, String clientJvmOptions, String memberHzConfig, String clientHzConfig,
@@ -67,9 +64,7 @@ public class WorkerParameters {
         this.monitorPerformance = monitorPerformance;
         this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(properties);
 
-        this.profiler = initProfiler(properties);
-        this.profilerSettings = initProfilerSettings(properties);
-        this.numaCtl = properties.get("NUMA_CONTROL", "none");
+        this.javaCmd = properties.get("JAVA_CMD", "java");
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
@@ -78,28 +73,6 @@ public class WorkerParameters {
             return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
         }
         return Integer.parseInt(intervalSeconds);
-    }
-
-    private JavaProfiler initProfiler(SimulatorProperties properties) {
-        String profilerName = properties.get("PROFILER");
-        if (profilerName == null || profilerName.isEmpty()) {
-            return JavaProfiler.NONE;
-        }
-        return JavaProfiler.valueOf(profilerName.toUpperCase());
-    }
-
-    private String initProfilerSettings(SimulatorProperties properties) {
-        switch (profiler) {
-            case YOURKIT:
-            case FLIGHTRECORDER:
-                return properties.get(profiler.name() + "_SETTINGS");
-            case HPROF:
-            case PERF:
-            case VTUNE:
-                return properties.get(profiler.name() + "_SETTINGS", "");
-            default:
-                return "";
-        }
     }
 
     public boolean isAutoCreateHzInstance() {
@@ -149,16 +122,8 @@ public class WorkerParameters {
         return min(workerPerformanceMonitorIntervalSeconds, runPhaseLogIntervalSeconds);
     }
 
-    public JavaProfiler getProfiler() {
-        return profiler;
-    }
-
-    public String getProfilerSettings() {
-        return profilerSettings;
-    }
-
-    public String getNumaCtl() {
-        return numaCtl;
+    public String getJavaCmd() {
+        return javaCmd;
     }
 
     public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,

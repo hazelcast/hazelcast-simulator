@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.agent.workerjvm;
 
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.worker.WorkerType;
 
@@ -38,9 +37,7 @@ public class WorkerJvmSettings {
     private final int workerStartupTimeout;
     private final int workerPerformanceMonitorIntervalSeconds;
 
-    private final String profiler;
-    private final String profilerSettings;
-    private final String numaCtl;
+    private final String javaCmd;
 
     public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this(workerIndex, workerType, workerParameters, workerParameters.getHazelcastVersionSpec(),
@@ -62,9 +59,7 @@ public class WorkerJvmSettings {
         this.workerStartupTimeout = workerParameters.getWorkerStartupTimeout();
         this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(workerParameters);
 
-        this.profiler = workerParameters.getProfiler().name();
-        this.profilerSettings = workerParameters.getProfilerSettings();
-        this.numaCtl = workerParameters.getNumaCtl();
+        this.javaCmd = workerParameters.getJavaCmd();
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds(WorkerParameters workerParameters) {
@@ -110,16 +105,8 @@ public class WorkerJvmSettings {
         return workerPerformanceMonitorIntervalSeconds;
     }
 
-    public JavaProfiler getProfiler() {
-        return JavaProfiler.valueOf(profiler);
-    }
-
-    public String getProfilerSettings() {
-        return profilerSettings;
-    }
-
-    public String getNumaCtl() {
-        return numaCtl;
+    public String getJavaCmd() {
+        return javaCmd;
     }
 
     @Override
@@ -133,9 +120,7 @@ public class WorkerJvmSettings {
                 + ", autoCreateHzInstance=" + autoCreateHzInstance
                 + ", workerStartupTimeout=" + workerStartupTimeout
                 + ", workerPerformanceMonitorIntervalSeconds=" + workerPerformanceMonitorIntervalSeconds
-                + ", profiler='" + profiler + '\''
-                + ", profilerSettings='" + profilerSettings + '\''
-                + ", numaCtl='" + numaCtl + '\''
+                + ", javaCmd='" + javaCmd + '\''
                 + '}';
     }
 }

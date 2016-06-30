@@ -218,8 +218,7 @@ public class WorkerJvmLauncher {
         int workerIndex = workerJvmSettings.getWorkerIndex();
         int workerPort = agent.getPort() + workerIndex;
 
-        addNumaCtlSettings(args);
-        addProfilerSettings(workerJvm, args);
+        args.add(workerJvmSettings.getJavaCmd());
 
         args.add("-classpath");
         args.add(getClasspath());
@@ -245,38 +244,6 @@ public class WorkerJvmLauncher {
         return args.toArray(new String[args.size()]);
     }
 
-    private void addNumaCtlSettings(List<String> args) {
-        String numaCtl = workerJvmSettings.getNumaCtl();
-        if (!"none".equals(numaCtl)) {
-            args.add(numaCtl);
-        }
-    }
-
-    private void addProfilerSettings(WorkerJvm workerJvm, List<String> args) {
-        String javaExecutable = "java";
-        switch (workerJvmSettings.getProfiler()) {
-            case YOURKIT:
-                args.add(javaExecutable);
-                String agentSetting = workerJvmSettings.getProfilerSettings()
-                        .replace("${SIMULATOR_HOME}", getSimulatorHome().getAbsolutePath())
-                        .replace("${WORKER_HOME}", workerJvm.getWorkerHome().getAbsolutePath());
-                args.add(agentSetting);
-                break;
-            case FLIGHTRECORDER:
-            case HPROF:
-                args.add(javaExecutable);
-                args.add(workerJvmSettings.getProfilerSettings());
-                break;
-            case PERF:
-            case VTUNE:
-                // perf and vtune command always need to be in front of the java command
-                args.add(workerJvmSettings.getProfilerSettings());
-                args.add(javaExecutable);
-                break;
-            default:
-                args.add(javaExecutable);
-        }
-    }
 
     private String getClasspath() {
         String simulatorHome = getSimulatorHome().getAbsolutePath();

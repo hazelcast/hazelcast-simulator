@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.cluster;
 
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
@@ -39,8 +38,6 @@ public class ClusterUtilsTest {
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
-
-        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
 
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");

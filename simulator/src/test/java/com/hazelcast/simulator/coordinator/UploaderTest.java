@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
@@ -20,8 +19,6 @@ import java.util.HashSet;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.common.JavaProfiler.NONE;
-import static com.hazelcast.simulator.common.JavaProfiler.YOURKIT;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -79,14 +76,13 @@ public class UploaderTest {
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
 
         when(workerParameters.getHazelcastVersionSpec()).thenReturn(OUT_OF_THE_BOX);
-        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
 
         ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(null, null, 2, 0, 0, 2);
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
         uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
-                workerClassPath, YOURKIT, testSuiteId);
+                workerClassPath, testSuiteId);
     }
 
     @After
@@ -132,7 +128,7 @@ public class UploaderTest {
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
-                workerClassPath, YOURKIT, testSuiteId);
+                workerClassPath, testSuiteId);
 
         uploader.uploadHazelcastJARs();
 
@@ -149,8 +145,7 @@ public class UploaderTest {
 
     @Test
     public void testUploadHazelcastJARs_isNull() {
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, null, true, false, workerClassPath,
-                YOURKIT, testSuiteId);
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, null, true, false, workerClassPath, testSuiteId);
 
         uploader.uploadHazelcastJARs();
 
@@ -194,8 +189,7 @@ public class UploaderTest {
 
     @Test
     public void testUploadWorkerClassPath_workerClassPathIsNull() {
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false, null,
-                YOURKIT, testSuiteId);
+        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false, null, testSuiteId);
 
         uploader.uploadWorkerClassPath();
 
@@ -205,27 +199,8 @@ public class UploaderTest {
     @Test(expected = CommandLineExitException.class)
     public void testUploadWorkerClassPath_workerClassPathNotExists() {
         uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
-                notExists.getAbsolutePath(), YOURKIT, testSuiteId);
+                notExists.getAbsolutePath(), testSuiteId);
 
         uploader.uploadWorkerClassPath();
-    }
-
-    @Test
-    public void testUploadYourKit() {
-        uploader.uploadYourKit();
-
-        verify(bash, times(2)).ssh(contains("192.168.0."), anyString());
-        verify(bash, times(2)).uploadToRemoteSimulatorDir(contains("192.168.0."), anyString(), anyString());
-        verifyNoMoreInteractions(bash);
-    }
-
-    @Test
-    public void testUploadYourKit_noYourKitProfiler() {
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
-                workerClassPath, NONE, testSuiteId);
-
-        uploader.uploadYourKit();
-
-        verifyNoMoreInteractions(bash);
     }
 }

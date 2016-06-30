@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.cluster.ClusterLayout;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -72,8 +71,6 @@ public class RemoteClientTest {
         testSuite.addTest(testCase);
 
         componentRegistry.addTests(testSuite);
-
-        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
     }
 
     @Test

@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -37,8 +36,7 @@ public class WorkerParametersTest {
         properties = mock(SimulatorProperties.class);
         when(properties.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.OUT_OF_THE_BOX);
         when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");
-        when(properties.get("PROFILER")).thenReturn(JavaProfiler.NONE.name());
-        when(properties.get(eq("NUMA_CONTROL"), anyString())).thenReturn("none");
+        when(properties.get(eq("JAVA_CMD"), anyString())).thenReturn("java");
 
         componentRegistry = getComponentRegistryMock();
 
@@ -64,43 +62,7 @@ public class WorkerParametersTest {
         assertEquals("log4jConfig", workerParameters.getLog4jConfig());
         assertFalse(workerParameters.isMonitorPerformance());
 
-        assertEquals(JavaProfiler.NONE, workerParameters.getProfiler());
-        assertEquals("", workerParameters.getProfilerSettings());
-        assertEquals("none", workerParameters.getNumaCtl());
-    }
-
-    @Test
-    public void testConstructor_emptyProfiler() {
-        properties = mock(SimulatorProperties.class);
-        when(properties.get("PROFILER")).thenReturn("");
-
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
-
-        assertEquals(JavaProfiler.NONE, workerParameters.getProfiler());
-    }
-
-    @Test
-    public void testConstructor_withYourKitProfiler() {
-        properties = mock(SimulatorProperties.class);
-        when(properties.get("PROFILER")).thenReturn(JavaProfiler.YOURKIT.name());
-        when(properties.get("YOURKIT_SETTINGS")).thenReturn("yourKitSettings");
-
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
-
-        assertEquals(JavaProfiler.YOURKIT, workerParameters.getProfiler());
-        assertEquals("yourKitSettings", workerParameters.getProfilerSettings());
-    }
-
-    @Test
-    public void testConstructor_withVtuneProfiler() {
-        properties = mock(SimulatorProperties.class);
-        when(properties.get("PROFILER")).thenReturn(JavaProfiler.VTUNE.name());
-        when(properties.get("VTUNE_SETTINGS", "")).thenReturn("vtuneSettings");
-
-        WorkerParameters workerParameters = new WorkerParameters(properties, false, 0, null, null, null, null, null, false);
-
-        assertEquals(JavaProfiler.VTUNE, workerParameters.getProfiler());
-        assertEquals("vtuneSettings", workerParameters.getProfilerSettings());
+        assertEquals("java", workerParameters.getJavaCmd());
     }
 
     @Test
