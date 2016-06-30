@@ -67,6 +67,7 @@ public class OperationCodecTest {
                         + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />",
                 "",
                 "",
+                "",
                 false
         );
 
@@ -85,6 +86,6 @@ public class OperationCodecTest {
         assertEquals(workerJvmSettings.getJvmOptions(), decodedSettings.getJvmOptions());
         assertEquals(workerJvmSettings.isAutoCreateHzInstance(), decodedSettings.isAutoCreateHzInstance());
         assertEquals(workerJvmSettings.getWorkerStartupTimeout(), decodedSettings.getWorkerStartupTimeout());
-        assertEquals(workerJvmSettings.getJavaCmd(), decodedSettings.getJavaCmd());
+        assertEquals(workerJvmSettings.getWorkerScript(), decodedSettings.getWorkerScript());
     }
 }
