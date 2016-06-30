@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.AgentsFile;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
@@ -306,7 +305,6 @@ public class TestCaseRunnerTest {
         when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
-        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
 
         Coordinator coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters,
                 clusterLayoutParameters);

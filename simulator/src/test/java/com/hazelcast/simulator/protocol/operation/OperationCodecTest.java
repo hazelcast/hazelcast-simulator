@@ -85,8 +85,6 @@ public class OperationCodecTest {
         assertEquals(workerJvmSettings.getJvmOptions(), decodedSettings.getJvmOptions());
         assertEquals(workerJvmSettings.isAutoCreateHzInstance(), decodedSettings.isAutoCreateHzInstance());
         assertEquals(workerJvmSettings.getWorkerStartupTimeout(), decodedSettings.getWorkerStartupTimeout());
-        assertEquals(workerJvmSettings.getProfiler(), decodedSettings.getProfiler());
-        assertEquals(workerJvmSettings.getProfilerSettings(), decodedSettings.getProfilerSettings());
-        assertEquals(workerJvmSettings.getNumaCtl(), decodedSettings.getNumaCtl());
+        assertEquals(workerJvmSettings.getJavaCmd(), decodedSettings.getJavaCmd());
     }
 }

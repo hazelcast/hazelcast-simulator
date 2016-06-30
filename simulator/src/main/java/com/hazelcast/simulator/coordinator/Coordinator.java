@@ -218,7 +218,7 @@ public final class Coordinator {
         }
         Uploader uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs,
                 coordinatorParameters.isUploadHazelcastJARs(), coordinatorParameters.isEnterpriseEnabled(),
-                coordinatorParameters.getWorkerClassPath(), workerParameters.getProfiler(), testSuite.getId());
+                coordinatorParameters.getWorkerClassPath(), testSuite.getId());
         uploader.run();
     }
 

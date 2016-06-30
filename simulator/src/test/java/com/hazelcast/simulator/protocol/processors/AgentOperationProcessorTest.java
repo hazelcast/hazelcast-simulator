@@ -6,7 +6,6 @@ import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
 import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
 import com.hazelcast.simulator.common.CoordinatorLogger;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
@@ -33,11 +32,6 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.common.JavaProfiler.FLIGHTRECORDER;
-import static com.hazelcast.simulator.common.JavaProfiler.HPROF;
-import static com.hazelcast.simulator.common.JavaProfiler.PERF;
-import static com.hazelcast.simulator.common.JavaProfiler.VTUNE;
-import static com.hazelcast.simulator.common.JavaProfiler.YOURKIT;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -162,73 +156,6 @@ public class AgentOperationProcessorTest {
         assertWorkerLifecycle();
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withProfilerYourKit() throws Exception {
-        String profilerSettings = "-agentpath:${SIMULATOR_HOME}/yourkit/linux-x86-64/libyjpagent.so=dir=${WORKER_HOME}"
-                + ",sampling,snapshot_name_format=test";
-
-        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT, YOURKIT, profilerSettings);
-        if (responseType == SUCCESS) {
-            assertWorkerLifecycle();
-            assertThatFileExistsInWorkerHomes("test-shutdown.snapshot");
-        } else {
-            System.err.println("YourKit is not running on this system!");
-        }
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withProfilerFlightRecorder() throws Exception {
-        String profilerSettings = "-XX:+UnlockCommercialFeatures -XX:+FlightRecorder"
-                + " -XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=test.jfr";
-
-        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT, FLIGHTRECORDER, profilerSettings);
-        if (responseType == SUCCESS) {
-            assertWorkerLifecycle();
-            assertThatFileExistsInWorkerHomes("test.jfr");
-        } else {
-            System.err.println("Flight Recorder is not running on this system!");
-        }
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withProfilerHPROF() throws Exception {
-        String profilerSettings = "-agentlib:hprof=cpu=samples,depth=10";
-
-        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT, HPROF, profilerSettings);
-        if (responseType == SUCCESS) {
-            assertWorkerLifecycle();
-            assertThatFileExistsInWorkerHomes("java.hprof.txt");
-        } else {
-            System.err.println("HPROF is not running on this system!");
-        }
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withProfilerPerf() throws Exception {
-        String profilerSettings = "perf record -o perf.data --quiet";
-
-        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT, PERF, profilerSettings);
-        if (responseType == SUCCESS) {
-            assertWorkerLifecycle();
-            assertThatFileExistsInWorkerHomes("perf.data");
-        } else {
-            System.err.println("PERF is not running on this system!");
-        }
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withProfilerVTune() throws Exception {
-        String profilerSettings = "/opt/intel/vtune_amplifier_xe/bin64/amplxe-cl -collect hotspots -report-output test.vtune";
-
-        ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT, VTUNE, profilerSettings);
-        if (responseType == SUCCESS) {
-            assertWorkerLifecycle();
-            assertThatFileExistsInWorkerHomes("test.vtune");
-        } else {
-            System.err.println("VTune is not running on this system!");
-        }
-    }
-
     @Test
     public void testStartTimeoutDetectionOperation() throws Exception {
         SimulatorOperation operation = new StartTimeoutDetectionOperation();
@@ -250,19 +177,12 @@ public class AgentOperationProcessorTest {
     }
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
-        return testCreateWorkerOperation(withStartupException, startupTimeout, JavaProfiler.NONE, null);
-    }
-
-    private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout, JavaProfiler javaProfiler,
-                                                   String profilerSettings) throws Exception {
         WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
         when(workerJvmSettings.getWorkerType()).thenReturn(WorkerType.INTEGRATION_TEST);
         when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
         when(workerJvmSettings.getHazelcastConfig()).thenReturn("");
         when(workerJvmSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        when(workerJvmSettings.getProfiler()).thenReturn(javaProfiler);
-        when(workerJvmSettings.getProfilerSettings()).thenReturn(profilerSettings);
-        when(workerJvmSettings.getNumaCtl()).thenReturn(withStartupException ? null : "none");
+        when(workerJvmSettings.getJavaCmd()).thenReturn(withStartupException ? null : "java");
         when(workerJvmSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
         when(workerJvmSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
         when(workerJvmSettings.getJvmOptions()).thenReturn("-verbose:gc");

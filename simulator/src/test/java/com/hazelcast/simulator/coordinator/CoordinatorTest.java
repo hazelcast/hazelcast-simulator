@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.cluster.ClusterLayout;
-import com.hazelcast.simulator.common.JavaProfiler;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestSuite;
@@ -37,7 +36,6 @@ public class CoordinatorTest {
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(properties);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getProfiler()).thenReturn(JavaProfiler.NONE);
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
 
