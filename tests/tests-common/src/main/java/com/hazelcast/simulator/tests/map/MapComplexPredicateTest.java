@@ -16,14 +16,13 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.ComplexDomainObject;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.logging.Level.INFO;
 
 @SuppressWarnings({"checkstyle:linelength", "checkstyle:trailingcomment"})
-public class MapComplexPredicateTest {
+public class MapComplexPredicateTest extends AbstractTest {
 
     public enum QUERY_TYPE {
 
@@ -290,9 +289,6 @@ public class MapComplexPredicateTest {
         }
     }
 
-    private static final ILogger LOGGER = Logger.getLogger(MapComplexPredicateTest.class);
-    private static final ThrottlingLogger THROTTLING_LOGGER = ThrottlingLogger.newLogger(LOGGER, 5000);
-
     public String basename = MapComplexPredicateTest.class.getSimpleName();
     public int mapSize = 1000000;
     public QUERY_TYPE query = QUERY_TYPE.QUERY1;
@@ -300,6 +296,7 @@ public class MapComplexPredicateTest {
 
     private Random random = new Random();
     private IMap<String, ComplexDomainObject> map;
+    private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
 
     @Setup
     public void setUp(TestContext testContext) {
@@ -443,7 +440,7 @@ public class MapComplexPredicateTest {
             long durationNanos = System.nanoTime() - startTime;
             long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
 
-            THROTTLING_LOGGER.log(INFO, "Query Evaluation Took " + durationMillis + "ms. Size of the result size: " + entries.size());
+            throttlingLogger.log(INFO, "Query Evaluation Took " + durationMillis + "ms. Size of the result size: " + entries.size());
         }
     }
 }

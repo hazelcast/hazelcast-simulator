@@ -19,12 +19,11 @@ import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapMaxSizeOperationCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -39,11 +38,11 @@ import static org.junit.Assert.assertTrue;
 /**
  * This tests runs {@link IMap#put(Object, Object)} and {@link IMap#get(Object)} operations on a map, which is configured with
  * {@link com.hazelcast.config.MaxSizeConfig.MaxSizePolicy#PER_NODE}.
- *
+ * <p>
  * With some probability distribution we are doing put, putAsync, get and verification operations on the map.
  * We verify during the test and at the end that the map has not exceeded its max configured size.
  */
-public class MapMaxSizeTest {
+public class MapMaxSizeTest extends AbstractTest {
 
     private enum MapOperation {
         PUT,
@@ -55,8 +54,6 @@ public class MapMaxSizeTest {
         PUT_SYNC,
         PUT_ASYNC
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(MapMaxSizeTest.class);
 
     // properties
     public String basename = MapMaxSizeTest.class.getSimpleName();
@@ -100,7 +97,7 @@ public class MapMaxSizeTest {
             assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
             assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
-            LOGGER.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
+            logger.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
         }
     }
 
@@ -110,7 +107,7 @@ public class MapMaxSizeTest {
         for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        LOGGER.info(format("Operation counters from %s: %s", basename, total));
+        logger.info(format("Operation counters from %s: %s", basename, total));
 
         assertMapMaxSize();
     }

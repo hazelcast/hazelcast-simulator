@@ -19,13 +19,12 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
@@ -42,9 +41,7 @@ import static org.junit.Assert.assertEquals;
  * increments to each key.  In the end we verify that for each key value pair the a value in the map matches the increments
  * done on that key,
  */
-public class MapTransactionGetForUpdateTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapTransactionGetForUpdateTest.class);
+public class MapTransactionGetForUpdateTest extends AbstractTest {
 
     // properties
     public String basename = MapTransactionGetForUpdateTest.class.getSimpleName();
@@ -117,7 +114,7 @@ public class MapTransactionGetForUpdateTest {
                 } catch (Exception commitFailedException) {
                     if (context != null) {
                         try {
-                            LOGGER.warning(basename + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
+                            logger.warning(basename + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
                             if (rethrowAllException) {
                                 throw rethrow(commitFailedException);
                             }
@@ -125,7 +122,7 @@ public class MapTransactionGetForUpdateTest {
                             context.rollbackTransaction();
                             count.rolled++;
                         } catch (Exception rollBackFailedException) {
-                            LOGGER.warning(basename + ": rollback failed key=" + key + " inc=" + increment,
+                            logger.warning(basename + ": rollback failed key=" + key + " inc=" + increment,
                                     rollBackFailedException);
                             count.failedRollbacks++;
 
@@ -148,7 +145,7 @@ public class MapTransactionGetForUpdateTest {
         for (TxnCounter c : counts) {
             total.add(c);
         }
-        LOGGER.info(basename + ": " + total + " from " + counts.size() + " workers");
+        logger.info(basename + ": " + total + " from " + counts.size() + " workers");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "res");
         long[] expected = new long[keyCount];
@@ -164,7 +161,7 @@ public class MapTransactionGetForUpdateTest {
         for (int i = 0; i < keyCount; i++) {
             if (expected[i] != map.get(i)) {
                 failures++;
-                LOGGER.info(basename + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
+                logger.info(basename + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
             }
         }
 

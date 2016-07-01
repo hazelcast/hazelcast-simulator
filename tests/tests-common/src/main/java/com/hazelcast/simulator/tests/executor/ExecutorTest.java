@@ -19,14 +19,13 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
@@ -40,9 +39,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static org.junit.Assert.assertEquals;
 
-public class ExecutorTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ExecutorTest.class);
+public class ExecutorTest extends AbstractTest {
 
     // properties
     public String basename = ExecutorTest.class.getSimpleName();
@@ -78,7 +75,7 @@ public class ExecutorTest {
         for (IExecutorService executor : executors) {
             executor.shutdownNow();
             if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                LOGGER.severe("Time out while waiting for shutdown of executor: " + executor.getName());
+                logger.severe("Time out while waiting for shutdown of executor: " + executor.getName());
             }
             executor.destroy();
         }
@@ -128,7 +125,7 @@ public class ExecutorTest {
                 }
 
                 if (iteration % 10000 == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At iteration: " + iteration);
+                    logger.info(Thread.currentThread().getName() + " At iteration: " + iteration);
                 }
             }
             expectedExecutedCounter.addAndGet(iteration);

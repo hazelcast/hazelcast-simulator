@@ -18,12 +18,11 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheReadWriteCounter;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheWriter;
@@ -43,9 +42,7 @@ import static org.junit.Assert.assertNotNull;
  * A large delay and high concurrent calls to loadAll could overflow some internal queues.
  * We verify that the cache contains all keys and that the keys have been loaded through a loader instance.
  */
-public class ReadWriteICacheTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ReadWriteICacheTest.class);
+public class ReadWriteICacheTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -101,8 +98,8 @@ public class ReadWriteICacheTest {
         RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
         RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
 
-        LOGGER.info(basename + ": " + loader);
-        LOGGER.info(basename + ": " + writer);
+        logger.info(basename + ": " + loader);
+        logger.info(basename + ": " + writer);
     }
 
     @Verify(global = true)
@@ -111,7 +108,7 @@ public class ReadWriteICacheTest {
         for (ICacheReadWriteCounter counter : counters) {
             total.add(counter);
         }
-        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
     @RunWithWorker

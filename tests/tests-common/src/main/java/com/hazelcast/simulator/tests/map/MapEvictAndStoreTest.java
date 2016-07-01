@@ -20,12 +20,11 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
@@ -37,9 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * This test checks for duplicate store entries when eviction happens and MapStore is slow (see Hazelcast issue #4448).
  */
-public class MapEvictAndStoreTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapEvictAndStoreTest.class);
+public class MapEvictAndStoreTest extends AbstractTest {
 
     // properties
     public String basename = MapEvictAndStoreTest.class.getSimpleName();
@@ -54,7 +51,7 @@ public class MapEvictAndStoreTest {
         map = targetInstance.getMap(basename);
         keyCounter = targetInstance.getAtomicLong(basename);
 
-        assertMapStoreConfiguration(LOGGER, targetInstance, basename, MapStoreWithCounterPerKey.class);
+        assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounterPerKey.class);
     }
 
     @Verify(global = false)
@@ -64,20 +61,20 @@ public class MapEvictAndStoreTest {
         }
 
         MapConfig mapConfig = targetInstance.getConfig().getMapConfig(basename);
-        LOGGER.info(basename + ": MapConfig: " + mapConfig);
+        logger.info(basename + ": MapConfig: " + mapConfig);
 
         MapStoreConfig mapStoreConfig = mapConfig.getMapStoreConfig();
-        LOGGER.info(basename + ": MapStoreConfig: " + mapStoreConfig);
+        logger.info(basename + ": MapStoreConfig: " + mapStoreConfig);
 
         int sleepSeconds = mapConfig.getTimeToLiveSeconds() * 2 + mapStoreConfig.getWriteDelaySeconds() * 2;
-        LOGGER.info("Sleeping for " + sleepSeconds + " seconds to wait for delay and TTL values.");
+        logger.info("Sleeping for " + sleepSeconds + " seconds to wait for delay and TTL values.");
         sleepSeconds(sleepSeconds);
 
         MapStoreWithCounterPerKey mapStore = (MapStoreWithCounterPerKey) mapStoreConfig.getImplementation();
-        LOGGER.info(basename + ": map size = " + map.size());
-        LOGGER.info(basename + ": map store = " + mapStore);
+        logger.info(basename + ": map size = " + map.size());
+        logger.info(basename + ": map store = " + mapStore);
 
-        LOGGER.info(basename + ": Checking if some keys where stored more than once");
+        logger.info(basename + ": Checking if some keys where stored more than once");
         for (Object key : mapStore.keySet()) {
             assertEquals("There were multiple calls to MapStore.store", 1, mapStore.valueOf(key));
         }

@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -32,14 +30,12 @@ import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import static org.junit.Assert.assertEquals;
 
-public class ExampleTest {
+public class ExampleTest extends AbstractTest {
 
     private enum Operation {
         PUT,
         GET
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(ExampleTest.class);
 
     // properties
     public int maxKeys = 1000;
@@ -51,11 +47,11 @@ public class ExampleTest {
 
     @Setup
     public void setUp(TestContext testContext) {
-        LOGGER.info("======== SETUP =========");
+        logger.info("======== SETUP =========");
         HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap("exampleMap");
 
-        LOGGER.info("Map name is: " + map.getName());
+        logger.info("Map name is: " + map.getName());
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)
@@ -64,21 +60,21 @@ public class ExampleTest {
 
     @Teardown
     public void tearDown() {
-        LOGGER.info("======== TEAR DOWN =========");
+        logger.info("======== TEAR DOWN =========");
         map.destroy();
-        LOGGER.info("======== THE END =========");
+        logger.info("======== THE END =========");
     }
 
     @Warmup
     public void warmup() {
-        LOGGER.info("======== WARMUP =========");
-        LOGGER.info("Map size is: " + map.size());
+        logger.info("======== WARMUP =========");
+        logger.info("Map size is: " + map.size());
     }
 
     @Verify
     public void verify() {
-        LOGGER.info("======== VERIFYING =========");
-        LOGGER.info("Map size is: " + map.size());
+        logger.info("======== VERIFYING =========");
+        logger.info("Map size is: " + map.size());
 
         for (int i = 0; i < maxKeys; i++) {
             String actualValue = map.get(i);

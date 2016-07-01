@@ -18,8 +18,6 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -27,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -38,9 +37,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartit
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
-public class AtomicLongTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(AtomicLongTest.class);
+public class AtomicLongTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -85,9 +82,9 @@ public class AtomicLongTest {
         }
         totalCounter.destroy();
 
-        LOGGER.info("Operations: " + operationsCounter);
-        LOGGER.info(getOperationCountInformation(targetInstance));
-        LOGGER.info(getPartitionDistributionInformation(targetInstance));
+        logger.info("Operations: " + operationsCounter);
+        logger.info(getOperationCountInformation(targetInstance));
+        logger.info(getPartitionDistributionInformation(targetInstance));
     }
 
     @Warmup

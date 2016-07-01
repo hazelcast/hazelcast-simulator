@@ -17,13 +17,12 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.SortedMap;
@@ -33,13 +32,11 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 
 /**
  * Test for {@link IMap#putAll(java.util.Map)} which creates the input values on the fly during the RUN phase.
- *
+ * <p>
  * You can configure the {@link #batchSize} to determine the number of inserted values per operation.
  * You can configure the {@link #keyRange} to determine the key range for inserted values.
  */
-public class MapPutAllOnTheFlyTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapPutAllOnTheFlyTest.class);
+public class MapPutAllOnTheFlyTest extends AbstractTest {
 
     // properties
     public String basename = MapPutAllOnTheFlyTest.class.getSimpleName();
@@ -58,7 +55,7 @@ public class MapPutAllOnTheFlyTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @RunWithWorker

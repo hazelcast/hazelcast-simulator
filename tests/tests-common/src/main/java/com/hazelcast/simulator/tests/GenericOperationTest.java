@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -45,9 +43,7 @@ import java.util.concurrent.locks.LockSupport;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationService;
 
-public class GenericOperationTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(GenericOperationTest.class);
+public class GenericOperationTest extends AbstractTest {
 
     private enum PrioritySelector {
         PRIORITY,
@@ -89,7 +85,7 @@ public class GenericOperationTest {
 
     @Teardown
     public void tearDown() {
-        LOGGER.info(getOperationCountInformation(instance));
+        logger.info(getOperationCountInformation(instance));
     }
 
     @RunWithWorker

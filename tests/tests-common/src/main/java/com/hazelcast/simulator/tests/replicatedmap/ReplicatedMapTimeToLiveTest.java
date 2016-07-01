@@ -18,13 +18,12 @@ package com.hazelcast.simulator.tests.replicatedmap;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ReplicatedMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.metronome.Metronome;
@@ -40,9 +39,7 @@ import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static org.junit.Assert.assertEquals;
 
-public class ReplicatedMapTimeToLiveTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ReplicatedMapTimeToLiveTest.class);
+public class ReplicatedMapTimeToLiveTest extends AbstractTest {
 
     private enum Operation {
         PUT_TTL,
@@ -82,13 +79,13 @@ public class ReplicatedMapTimeToLiveTest {
         for (MapOperationCounter counter : results) {
             total.add(counter);
         }
-        LOGGER.info(basename + ": " + total + " total of " + results.size());
+        logger.info(basename + ": " + total + " total of " + results.size());
 
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
 
-                LOGGER.info(basename + ": " + "assert map Size = " + map.size());
+                logger.info(basename + ": " + "assert map Size = " + map.size());
                 assertEquals(basename + ": Replicated Map should be empty, some TTL events are not processed", 0, map.size());
             }
         });

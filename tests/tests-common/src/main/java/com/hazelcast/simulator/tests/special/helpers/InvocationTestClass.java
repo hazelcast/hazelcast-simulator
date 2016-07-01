@@ -36,7 +36,7 @@ public class InvocationTestClass {
                 + "}" + NEW_LINE;
     }
 
-    @SuppressFBWarnings({"VO_VOLATILE_INCREMENT" })
+    @SuppressFBWarnings({"VO_VOLATILE_INCREMENT"})
     public void shouldBeCalled() {
         invokeCounter++;
     }

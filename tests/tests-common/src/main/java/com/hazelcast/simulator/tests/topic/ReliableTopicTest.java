@@ -20,8 +20,6 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializableFactory;
@@ -31,6 +29,7 @@ import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
@@ -49,9 +48,7 @@ import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class ReliableTopicTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ReliableTopicTest.class);
+public class ReliableTopicTest extends AbstractTest {
 
     // properties
     public String basename = ReliableTopicTest.class.getSimpleName();
@@ -228,7 +225,7 @@ public class ReliableTopicTest {
             values.put(threadId, actualValue);
 
             if (received.getAndIncrement() % 100000 == 0) {
-                LOGGER.info(toString() + " is at " + message.getMessageObject().toString());
+                logger.info(toString() + " is at " + message.getMessageObject().toString());
             }
         }
 

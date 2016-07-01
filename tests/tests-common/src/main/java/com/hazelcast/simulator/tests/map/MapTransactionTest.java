@@ -19,13 +19,12 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
@@ -42,9 +41,7 @@ import static org.junit.Assert.assertEquals;
  * we concurrently increment the value of a random key.  We keep track of all increments to each key and verify
  * the value in the map for each key is equal to the total increments done on each key.
  */
-public class MapTransactionTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapTransactionTest.class);
+public class MapTransactionTest extends AbstractTest {
 
     // properties
     public String basename = getClass().getSimpleName();
@@ -80,7 +77,7 @@ public class MapTransactionTest {
     public void verify() {
         long[] total = new long[keyCount];
 
-        LOGGER.info(basename + ": collected increments from " + resultList.size() + " worker threads");
+        logger.info(basename + ": collected increments from " + resultList.size() + " worker threads");
 
         for (long[] increments : resultList) {
             for (int i = 0; i < increments.length; i++) {
@@ -92,7 +89,7 @@ public class MapTransactionTest {
         for (int i = 0; i < keyCount; i++) {
             if (total[i] != map.get(i)) {
                 failures++;
-                LOGGER.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
+                logger.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
             }
         }
 
@@ -134,7 +131,7 @@ public class MapTransactionTest {
                 if (reThrowTransactionException) {
                     throw rethrow(e);
                 }
-                LOGGER.warning(basename + ": caught TransactionException ", e);
+                logger.warning(basename + ": caught TransactionException ", e);
             }
         }
 

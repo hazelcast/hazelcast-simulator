@@ -36,10 +36,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the cas method {@link Cache#replace(Object, Object, Object)} for optimistic concurrency control.
- *
+ * <p>
  * With a collection of predefined keys we concurrently increment the value.
  * We protect ourselves against lost updates using the cas method {@link Cache#replace(Object, Object, Object)}.
- *
+ * <p>
  * Locally we keep track of all increments. We verify if the sum of these local increments matches the global increment.
  */
 public class CasICacheTest {

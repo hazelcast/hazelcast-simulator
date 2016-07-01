@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 public class TxnCounter implements Serializable {
 
-    public long committed ;
+    public long committed;
     public long rolled;
     public long failedRollbacks;
 

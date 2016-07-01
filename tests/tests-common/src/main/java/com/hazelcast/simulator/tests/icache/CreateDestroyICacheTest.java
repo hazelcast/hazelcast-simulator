@@ -17,12 +17,11 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheCreateDestroyCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -36,9 +35,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  * In this test we are concurrently creating, deleting, destroying and putting to a cache.
  * However this test is a sub set of {@link MangleICacheTest}, so could be deleted.
  */
-public class CreateDestroyICacheTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(CreateDestroyICacheTest.class);
+public class CreateDestroyICacheTest extends AbstractTest {
 
     private enum Operation {
         CREATE_CACHE,
@@ -78,7 +75,7 @@ public class CreateDestroyICacheTest {
         for (ICacheCreateDestroyCounter counter : counters) {
             total.add(counter);
         }
-        LOGGER.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 
     @RunWithWorker

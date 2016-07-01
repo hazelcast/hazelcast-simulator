@@ -18,13 +18,12 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
@@ -39,9 +38,7 @@ import static org.junit.Assert.assertFalse;
  * We are using tryLock() with a configurable time out: tryLockTimeOutMs.
  * We verify that the total value of accounts is the same at the end of the test.
  */
-public class TryLockTimeOutTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(TryLockTimeOutTest.class);
+public class TryLockTimeOutTest extends AbstractTest {
 
     public String basename = TryLockTimeOutTest.class.getSimpleName();
     public int threadCount = 3;
@@ -66,7 +63,7 @@ public class TryLockTimeOutTest {
             accounts.add(initialAccountValue);
         }
         totalInitialValue = initialAccountValue * maxAccounts;
-        LOGGER.info("totalInitialValue=" + totalInitialValue);
+        logger.info("totalInitialValue=" + totalInitialValue);
     }
 
     @Verify(global = true)
@@ -82,7 +79,7 @@ public class TryLockTimeOutTest {
         for (long value : accounts) {
             totalValue += value;
         }
-        LOGGER.info(": totalValue=" + totalValue);
+        logger.info(": totalValue=" + totalValue);
         assertEquals(basename + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
 
         Counter total = new Counter();
@@ -90,7 +87,7 @@ public class TryLockTimeOutTest {
         for (Counter count : totals) {
             total.add(count);
         }
-        LOGGER.info("total count " + total);
+        logger.info("total count " + total);
     }
 
     @Run
@@ -123,7 +120,7 @@ public class TryLockTimeOutTest {
                         }
                     }
                 } catch (InterruptedException e) {
-                    LOGGER.severe("outerLock " + e.getMessage(), e);
+                    logger.severe("outerLock " + e.getMessage(), e);
                     counter.interruptedException++;
                 }
             }
@@ -148,7 +145,7 @@ public class TryLockTimeOutTest {
                     }
                 }
             } catch (InterruptedException e) {
-                LOGGER.severe("innerLock " + e.getMessage(), e);
+                logger.severe("innerLock " + e.getMessage(), e);
                 counter.interruptedException++;
             }
         }

@@ -18,13 +18,12 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyIncrementPair;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
@@ -38,9 +37,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 // TODO: We need to deal with exception logging; they are logged but not visible to Simulator
-public class LockConflictTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(LockConflictTest.class);
+public class LockConflictTest extends AbstractTest {
 
     // properties
     public String basename = LockConflictTest.class.getSimpleName();
@@ -77,7 +74,7 @@ public class LockConflictTest {
         for (LockCounter counter : globalCounter) {
             total.add(counter);
         }
-        LOGGER.info(basename + ": " + total + " from " + globalCounter.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + globalCounter.size() + " worker threads");
 
         long[] expected = new long[keyCount];
         for (long[] increments : globalIncrements) {
@@ -90,7 +87,7 @@ public class LockConflictTest {
         for (int key = 0; key < keyCount; key++) {
             if (expected[key] != list.get(key)) {
                 failures++;
-                LOGGER.info(basename + ": key=" + key + " expected " + expected[key] + " != " + "actual " + list.get(key));
+                logger.info(basename + ": key=" + key + " expected " + expected[key] + " != " + "actual " + list.get(key));
             }
         }
         assertEquals(basename + ": " + failures + " key=>values have been incremented unexpected", 0, failures);
@@ -133,13 +130,13 @@ public class LockConflictTest {
                             localCounter.locked++;
                         }
                     } catch (Exception e) {
-                        LOGGER.severe(basename + ": trying lock=" + keyIncrementPair.key, e);
+                        logger.severe(basename + ": trying lock=" + keyIncrementPair.key, e);
                         if (throwException) {
                             throw rethrow(e);
                         }
                     }
                 } catch (Exception e) {
-                    LOGGER.severe(basename + ": getting lock for locking=" + keyIncrementPair.key, e);
+                    logger.severe(basename + ": getting lock for locking=" + keyIncrementPair.key, e);
                     if (throwException) {
                         throw rethrow(e);
                     }
@@ -157,7 +154,7 @@ public class LockConflictTest {
                     localIncrements[keyIncrementPair.key] += keyIncrementPair.increment;
                     localCounter.increased++;
                 } catch (Exception e) {
-                    LOGGER.severe(basename + ": updating account=" + keyIncrementPair, e);
+                    logger.severe(basename + ": updating account=" + keyIncrementPair, e);
                     if (throwException) {
                         throw rethrow(e);
                     }
@@ -178,13 +175,13 @@ public class LockConflictTest {
                             localCounter.unlocked++;
                             iterator.remove();
                         } catch (Exception e) {
-                            LOGGER.severe(basename + ": unlocking lock =" + keyIncrementPair.key, e);
+                            logger.severe(basename + ": unlocking lock =" + keyIncrementPair.key, e);
                             if (throwException) {
                                 throw rethrow(e);
                             }
                         }
                     } catch (Exception e) {
-                        LOGGER.severe(basename + ": getting lock for unlocking=" + keyIncrementPair.key, e);
+                        logger.severe(basename + ": getting lock for unlocking=" + keyIncrementPair.key, e);
                         if (throwException) {
                             throw rethrow(e);
                         }
@@ -193,7 +190,7 @@ public class LockConflictTest {
                 sleepSeconds(1);
 
                 if (++unlockAttempts > 5) {
-                    LOGGER.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
+                    logger.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
                     break;
                 }
             }

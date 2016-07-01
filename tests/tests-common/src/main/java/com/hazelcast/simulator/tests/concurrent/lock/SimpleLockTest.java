@@ -18,13 +18,12 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -34,11 +33,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class SimpleLockTest {
+public class SimpleLockTest extends AbstractTest {
 
     private static final int INITIAL_VALUE = 1000;
-
-    private static final ILogger LOGGER = Logger.getLogger(SimpleLockTest.class);
 
     public String basename = SimpleLockTest.class.getSimpleName();
     public int maxAccounts = 7;
@@ -110,7 +107,7 @@ public class SimpleLockTest {
             ILock lock = targetInstance.getLock(basename + i);
             IAtomicLong account = targetInstance.getAtomicLong(basename + i);
 
-            LOGGER.info(format("%s %d", account, account.get()));
+            logger.info(format("%s %d", account, account.get()));
 
             assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
             assertTrue(basename + ": Amount is < 0 ", account.get() >= 0);

@@ -18,12 +18,11 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.CacheUtils;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
@@ -48,11 +47,9 @@ import static org.junit.Assert.assertEquals;
  * We compare those to the number of events we have generated using different cache operations.
  * We verify that no unexpected events have been received.
  */
-public class ListenerICacheTest {
+public class ListenerICacheTest extends AbstractTest {
 
     private static final int PAUSE_FOR_LAST_EVENTS_SECONDS = 10;
-
-    private static final ILogger LOGGER = Logger.getLogger(ListenerICacheTest.class);
 
     private enum Operation {
         PUT,
@@ -113,8 +110,8 @@ public class ListenerICacheTest {
 
     @Verify(global = false)
     public void localVerify() {
-        LOGGER.info(basename + " Listener " + listener);
-        LOGGER.info(basename + " Filter " + filter);
+        logger.info(basename + " Listener " + listener);
+        logger.info(basename + " Filter " + filter);
     }
 
     @Verify
@@ -123,13 +120,13 @@ public class ListenerICacheTest {
         for (Counter counter : results) {
             totalCounter.add(counter);
         }
-        LOGGER.info(basename + " " + totalCounter + " from " + results.size() + " Worker threads");
+        logger.info(basename + " " + totalCounter + " from " + results.size() + " Worker threads");
 
         ICacheEntryListener totalEvents = new ICacheEntryListener();
         for (ICacheEntryListener entryListener : listeners) {
             totalEvents.add(entryListener);
         }
-        LOGGER.info(basename + " totalEvents: " + totalEvents);
+        logger.info(basename + " totalEvents: " + totalEvents);
         assertEquals(basename + " unexpected events found", 0, totalEvents.getUnexpected());
     }
 

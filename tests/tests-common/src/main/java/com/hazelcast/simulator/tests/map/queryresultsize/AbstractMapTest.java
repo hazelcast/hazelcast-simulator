@@ -18,9 +18,8 @@ package com.hazelcast.simulator.tests.map.queryresultsize;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
@@ -38,9 +37,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-abstract class AbstractMapTest {
-
-    protected static final ILogger LOGGER = Logger.getLogger(AbstractMapTest.class);
+abstract class AbstractMapTest extends AbstractTest {
 
     HazelcastInstance hazelcastInstance;
     IMap<Object, Integer> map;
@@ -70,14 +67,14 @@ abstract class AbstractMapTest {
             minResultSizeLimit = getStaticFieldValue(queryResultSizeLimiterClazz, "MINIMUM_MAX_RESULT_LIMIT", int.class);
             resultLimitFactor = getStaticFieldValue(queryResultSizeLimiterClazz, "MAX_RESULT_LIMIT_FACTOR", float.class);
         } catch (Exception e) {
-            LOGGER.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
+            logger.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
 
         int clusterSize = hazelcastInstance.getCluster().getMembers().size();
         this.globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
         this.localKeyCount = (int) Math.ceil(globalKeyCount / (double) clusterSize);
 
-        LOGGER.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
+        logger.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
                 basename, globalKeyCount, localKeyCount, clusterSize));
     }
 
@@ -112,7 +109,7 @@ abstract class AbstractMapTest {
         }
         streamer.await();
 
-        logPartitionStatistics(LOGGER, basename, map, true);
+        logPartitionStatistics(logger, basename, map, true);
     }
 
     protected void baseVerify(boolean expectedExceptions) {
@@ -120,7 +117,7 @@ abstract class AbstractMapTest {
         long ops = operationCounter.get();
         long exceptions = exceptionCounter.get();
 
-        LOGGER.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
+        logger.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
 
         assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
         assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);

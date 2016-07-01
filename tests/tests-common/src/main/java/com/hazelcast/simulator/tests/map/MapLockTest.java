@@ -18,13 +18,12 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static java.lang.String.format;
@@ -32,14 +31,12 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Test for the {@link IMap#lock(Object)} method.
- *
+ * <p>
  * We use {@link IMap#lock(Object)} to control concurrent access to map key/value pairs. There are a total of {@link #keyCount}
  * keys stored in a map which are initialized to zero, we concurrently increment the value of a random key. We keep track of all
  * increments to each key and verify the value in the map for each key is equal to the total increments done on each key.
  */
-public class MapLockTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapLockTest.class);
+public class MapLockTest extends AbstractTest {
 
     // properties
     public String basename = MapLockTest.class.getSimpleName();
@@ -72,7 +69,7 @@ public class MapLockTest {
                 expected[i] += increments[i];
             }
         }
-        LOGGER.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
+        logger.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
 
         int failures = 0;
         for (int i = 0; i < keyCount; i++) {

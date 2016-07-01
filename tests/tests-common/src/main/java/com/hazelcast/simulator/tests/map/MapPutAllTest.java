@@ -17,14 +17,13 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.GenericTypes;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -38,12 +37,10 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 
 /**
  * Test for {@link IMap#putAll(Map)} which uses a set of prepared maps with input values during the RUN phase.
- *
+ * <p>
  * You can configure the {@link #keyType} and {@link #valueType} for the used maps.
  */
-public class MapPutAllTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapPutAllTest.class);
+public class MapPutAllTest extends AbstractTest {
 
     // properties
     public String basename = MapPutAllTest.class.getSimpleName();
@@ -79,7 +76,7 @@ public class MapPutAllTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
 
         if (valueType == GenericTypes.INTEGER) {
             valueSize = Integer.MAX_VALUE;

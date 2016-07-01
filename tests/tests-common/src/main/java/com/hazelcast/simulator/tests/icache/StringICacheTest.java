@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -25,6 +23,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -40,9 +39,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
-public class StringICacheTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(StringICacheTest.class);
+public class StringICacheTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -76,7 +73,7 @@ public class StringICacheTest {
         cache = cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                                .addDefaultOperation(Operation.GET);
+                .addDefaultOperation(Operation.GET);
     }
 
     @Teardown
@@ -86,7 +83,7 @@ public class StringICacheTest {
 
     @Warmup(global = false)
     public void warmup() {
-        waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
+        waitClusterSize(logger, hazelcastInstance, minNumberOfMembers);
 
         keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
         values = generateStrings(valueCount, valueLength);

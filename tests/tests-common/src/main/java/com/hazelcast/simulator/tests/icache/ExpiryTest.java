@@ -18,12 +18,11 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -44,7 +43,7 @@ import static org.junit.Assert.assertFalse;
  * The expiryDuration can be configured.
  * We verify that the cache is empty and items have expired.
  */
-public class ExpiryTest {
+public class ExpiryTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -52,8 +51,6 @@ public class ExpiryTest {
         GET,
         GET_ASYNC
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(ExpiryTest.class);
 
     public String basename = ExpiryTest.class.getSimpleName();
     public int expiryDuration = 500;
@@ -89,7 +86,7 @@ public class ExpiryTest {
         for (Counter counter : results) {
             totalCounter.add(counter);
         }
-        LOGGER.info(basename + " " + totalCounter + " from " + results.size() + " worker Threads");
+        logger.info(basename + " " + totalCounter + " from " + results.size() + " worker Threads");
 
         for (int i = 0; i < keyCount; i++) {
             assertFalse(basename + " ICache should not contain key " + i, cache.containsKey(i));
@@ -143,7 +140,7 @@ public class ExpiryTest {
             results.add(counter);
 
             // sleep to give time for expiration
-            sleepDurationTwice(LOGGER, expiryPolicy.getExpiryForCreation());
+            sleepDurationTwice(logger, expiryPolicy.getExpiryForCreation());
         }
     }
 

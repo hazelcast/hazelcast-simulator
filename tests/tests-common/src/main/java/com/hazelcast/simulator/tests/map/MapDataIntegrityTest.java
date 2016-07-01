@@ -22,12 +22,11 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -39,9 +38,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class MapDataIntegrityTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapDataIntegrityTest.class);
+public class MapDataIntegrityTest extends AbstractTest {
 
     // properties
     public String basename = MapDataIntegrityTest.class.getSimpleName();
@@ -84,7 +81,7 @@ public class MapDataIntegrityTest {
                     sleepSeconds(1);
                 }
             }
-            LOGGER.info(format("%s: %d partitions", basename, partitionSet.size()));
+            logger.info(format("%s: %d partitions", basename, partitionSet.size()));
 
             Member localMember = targetInstance.getCluster().getLocalMember();
             for (int i = 0; i < totalIntegrityKeys; i++) {
@@ -93,29 +90,29 @@ public class MapDataIntegrityTest {
                     integrityMap.put(i, value);
                 }
             }
-            LOGGER.info(format("%s: integrityMap=%s size=%d", basename, integrityMap.getName(), integrityMap.size()));
+            logger.info(format("%s: integrityMap=%s size=%d", basename, integrityMap.getName(), integrityMap.size()));
 
             Config config = targetInstance.getConfig();
             MapConfig mapConfig = config.getMapConfig(integrityMap.getName());
-            LOGGER.info(format("%s: %s", basename, mapConfig));
+            logger.info(format("%s: %s", basename, mapConfig));
         }
     }
 
     @Verify(global = false)
     public void verify() {
         if (isMemberNode(targetInstance)) {
-            LOGGER.info(format("%s: cluster size=%d", basename, targetInstance.getCluster().getMembers().size()));
+            logger.info(format("%s: cluster size=%d", basename, targetInstance.getCluster().getMembers().size()));
         }
 
-        LOGGER.info(format("%s: integrityMap=%s size=%d", basename, integrityMap.getName(), integrityMap.size()));
+        logger.info(format("%s: integrityMap=%s size=%d", basename, integrityMap.getName(), integrityMap.size()));
         int totalErrorCount = 0;
         int totalNullValueCount = 0;
         for (MapIntegrityThread integrityThread : integrityThreads) {
             totalErrorCount += integrityThread.sizeErrorCount;
             totalNullValueCount += integrityThread.nullValueCount;
         }
-        LOGGER.info(format("%s: total integrityMapSizeErrorCount=%d", basename, totalErrorCount));
-        LOGGER.info(format("%s: total integrityMapNullValueCount=%d", basename, totalNullValueCount));
+        logger.info(format("%s: total integrityMapSizeErrorCount=%d", basename, totalErrorCount));
+        logger.info(format("%s: total integrityMapNullValueCount=%d", basename, totalNullValueCount));
 
         assertEquals(format("%s: (verify) integrityMap=%s map size", basename, integrityMap.getName()),
                 totalIntegrityKeys, integrityMap.size());
