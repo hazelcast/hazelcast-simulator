@@ -15,11 +15,9 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -51,14 +49,12 @@ public class MapTransactionTest extends AbstractTest {
     public int durability = 1;
     public boolean getForUpdate = true;
 
-    private HazelcastInstance targetInstance;
     private IMap<Integer, Long> map;
     private IList<long[]> resultList;
     private TransactionOptions transactionOptions;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getMap(basename);
         resultList = targetInstance.getList(basename + "results");
 

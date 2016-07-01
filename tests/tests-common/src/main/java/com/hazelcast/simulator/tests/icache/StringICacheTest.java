@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -60,16 +58,13 @@ public class StringICacheTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance hazelcastInstance;
     private Cache<String, String> cache;
     private String[] keys;
     private String[] values;
 
     @Setup
-    public void setup(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+    public void setup() {
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
@@ -81,11 +76,11 @@ public class StringICacheTest extends AbstractTest {
         cache.close();
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
-        waitClusterSize(logger, hazelcastInstance, minNumberOfMembers);
+        waitClusterSize(logger, targetInstance, minNumberOfMembers);
 
-        keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
+        keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
         values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();

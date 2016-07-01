@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -63,13 +61,11 @@ public class MapPutAllTest extends AbstractTest {
     // if we want to use putAll() or put() in a loop (this is a nice setting to see what kind of speedup or slowdown to expect)
     public boolean usePutAll = true;
 
-    private HazelcastInstance targetInstance;
     private IMap<Object, Object> map;
     private Map<Object, Object>[] inputMaps;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
     }
 
@@ -83,7 +79,7 @@ public class MapPutAllTest extends AbstractTest {
         }
     }
 
-    @Warmup(global = false)
+    @Warmup
     @SuppressWarnings("unchecked")
     public void warmup() {
         Object[] keys = keyType.generateKeys(targetInstance, keyLocality, keyCount, keySize);

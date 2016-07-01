@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -67,13 +65,11 @@ public class MangleICacheTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance hazelcastInstance;
     private IList<ICacheOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-        results = hazelcastInstance.getList(basename);
+    public void setup() {
+        results = targetInstance.getList(basename);
 
         operationSelectorBuilder.addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManagerProb)
                 .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerCloseProb)
@@ -84,8 +80,8 @@ public class MangleICacheTest extends AbstractTest {
                 .addOperation(Operation.CLOSE_CACHE, closeCacheProb);
     }
 
-    @Verify(global = true)
-    public void verify() {
+    @Verify
+    public void globalVerify() {
         ICacheOperationCounter total = new ICacheOperationCounter();
         for (ICacheOperationCounter counter : results) {
             total.add(counter);
@@ -234,7 +230,7 @@ public class MangleICacheTest extends AbstractTest {
                 currentCachingProvider = cacheManager.getCachingProvider();
                 cacheManager.close();
             }
-            cacheManager = CacheUtils.createCacheManager(hazelcastInstance, currentCachingProvider);
+            cacheManager = CacheUtils.createCacheManager(targetInstance, currentCachingProvider);
         }
 
         private Cache<Integer, Integer> getCacheIfExists(int cacheNumber) {

@@ -15,13 +15,11 @@
  */
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -60,12 +58,9 @@ public class GenericOperationTest extends AbstractTest {
     private final OperationSelectorBuilder<PrioritySelector> operationSelectorBuilder
             = new OperationSelectorBuilder<PrioritySelector>();
 
-    private HazelcastInstance instance;
-
     @Setup
-    public void setUp(TestContext testContext) {
-        instance = testContext.getTargetInstance();
-        operationService = getOperationService(instance);
+    public void setUp() {
+        operationService = getOperationService(targetInstance);
 
         operationSelectorBuilder
                 .addOperation(PrioritySelector.PRIORITY, priorityProb)
@@ -74,7 +69,7 @@ public class GenericOperationTest extends AbstractTest {
 
     @Warmup
     public void warmup() {
-        Set<Member> memberSet = instance.getCluster().getMembers();
+        Set<Member> memberSet = targetInstance.getCluster().getMembers();
         memberAddresses = new Address[memberSet.size()];
 
         int i = 0;
@@ -85,7 +80,7 @@ public class GenericOperationTest extends AbstractTest {
 
     @Teardown
     public void tearDown() {
-        logger.info(getOperationCountInformation(instance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @RunWithWorker

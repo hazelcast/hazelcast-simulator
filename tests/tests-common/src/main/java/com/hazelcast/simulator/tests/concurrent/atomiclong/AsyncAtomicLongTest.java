@@ -17,10 +17,8 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.AsyncAtomicLong;
 import com.hazelcast.core.DistributedObject;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -70,12 +68,9 @@ public class AsyncAtomicLongTest extends AbstractTest {
 
     private IAtomicLong totalCounter;
     private AsyncAtomicLong[] counters;
-    private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
         if (isMemberNode(targetInstance)) {
             counters = new AsyncAtomicLong[countersLength];

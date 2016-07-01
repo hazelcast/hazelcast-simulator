@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.jmx;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -47,13 +45,10 @@ public class PartitionServiceMBeanTest extends AbstractTest {
 
     private MBeanServer mBeanServer;
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-    private HazelcastInstance targetInstance;
     private ObjectName name;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
-        targetInstance = testContext.getTargetInstance();
-
+    public void setUp() throws Exception {
         this.mBeanServer = ManagementFactory.getPlatformMBeanServer();
         this.name = new ObjectName("com.hazelcast:instance=" + targetInstance.getName()
                 + ",name=" + targetInstance.getName() + ",type=HazelcastInstance.PartitionServiceMBean");

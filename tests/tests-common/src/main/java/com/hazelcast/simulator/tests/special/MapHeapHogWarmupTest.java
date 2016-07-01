@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.special;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -49,14 +47,12 @@ public class MapHeapHogWarmupTest extends AbstractTest {
     public int ttlHours = 24;
     public double approxHeapUsageFactor = 0.9;
 
-    private HazelcastInstance targetInstance;
     private IMap<Long, Long> map;
 
     private long maxEntriesPerThread;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
 
         // calculate how many entries we have to insert per member and thread

@@ -16,9 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -67,9 +65,8 @@ public class ReadWriteICacheTest extends AbstractTest {
     private Cache<Integer, Integer> cache;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        counters = hazelcastInstance.getList(basename + "counters");
+    public void setup() {
+        counters = targetInstance.getList(basename + "counters");
 
         RecordingCacheLoader<Integer> loader = new RecordingCacheLoader<Integer>();
         loader.loadDelayMs = getDelayMs;
@@ -84,7 +81,7 @@ public class ReadWriteICacheTest extends AbstractTest {
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(loader));
         config.setCacheWriterFactory(FactoryBuilder.factoryOf(writer));
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
 

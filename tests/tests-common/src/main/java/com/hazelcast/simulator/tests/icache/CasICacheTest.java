@@ -15,15 +15,14 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -42,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  * <p>
  * Locally we keep track of all increments. We verify if the sum of these local increments matches the global increment.
  */
-public class CasICacheTest {
+public class CasICacheTest extends AbstractTest {
 
     public String basename = CasICacheTest.class.getSimpleName();
     public int keyCount = 1000;
@@ -51,11 +50,10 @@ public class CasICacheTest {
     private Cache<Integer, Long> cache;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        resultsPerWorker = hazelcastInstance.getList(basename);
+    public void setup() {
+        resultsPerWorker = targetInstance.getList(basename);
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(basename);
     }
 

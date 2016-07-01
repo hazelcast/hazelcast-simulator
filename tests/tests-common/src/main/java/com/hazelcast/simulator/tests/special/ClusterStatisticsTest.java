@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.special;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -36,20 +34,18 @@ public class ClusterStatisticsTest extends AbstractTest {
     public String basename = ClusterStatisticsTest.class.getSimpleName();
     public int isClusterSafeRetries = 10;
 
-    private HazelcastInstance hazelcastInstance;
     private PartitionService partitionService;
     private IMap<Object, Integer> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        this.hazelcastInstance = testContext.getTargetInstance();
-        this.partitionService = hazelcastInstance.getPartitionService();
-        this.map = hazelcastInstance.getMap(basename);
+    public void setUp() {
+        this.partitionService = targetInstance.getPartitionService();
+        this.map = targetInstance.getMap(basename);
     }
 
     @Warmup
     public void warmup() {
-        if (!isMemberNode(hazelcastInstance)) {
+        if (!isMemberNode(targetInstance)) {
             return;
         }
 
@@ -60,7 +56,7 @@ public class ClusterStatisticsTest extends AbstractTest {
         }
         logger.info(basename + ": isClusterSafe() " + partitionService.isClusterSafe());
         logger.info(basename + ": isLocalMemberSafe() " + partitionService.isLocalMemberSafe());
-        logger.info(basename + ": getCluster().getMembers().size() " + hazelcastInstance.getCluster().getMembers().size());
+        logger.info(basename + ": getCluster().getMembers().size() " + targetInstance.getCluster().getMembers().size());
 
         logPartitionStatistics(logger, basename, map, false);
     }

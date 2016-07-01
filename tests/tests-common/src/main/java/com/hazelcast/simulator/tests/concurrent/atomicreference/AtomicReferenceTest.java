@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.concurrent.atomicreference;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicReference;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -52,14 +50,11 @@ public class AtomicReferenceTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance targetInstance;
     private IAtomicReference<Object>[] counters;
     private Object[] values;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         values = new Object[valueCount];
         Random random = new Random();
         for (int i = 0; i < valueCount; i++) {

@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.syntheticmap;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -55,16 +53,13 @@ public class StringStringSyntheticMapTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance hazelcastInstance;
     private SyntheticMap<String, String> map;
 
     private String[] keys;
     private String[] values;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + basename);
 
         operationSelectorBuilder
@@ -75,13 +70,13 @@ public class StringStringSyntheticMapTest extends AbstractTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        logger.info(getOperationCountInformation(hazelcastInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
-        waitClusterSize(logger, hazelcastInstance, minNumberOfMembers);
-        keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
+        waitClusterSize(logger, targetInstance, minNumberOfMembers);
+        keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
         values = generateStrings(valueCount, valueLength);
 
         Random random = new Random();

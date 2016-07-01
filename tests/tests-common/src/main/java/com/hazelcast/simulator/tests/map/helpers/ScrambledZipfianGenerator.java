@@ -24,7 +24,7 @@ import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
  * to draw from, either by specifying an itemCount (so that the sequence is of items from 0 to itemCount - 1) or by specifying a
  * min and a max (so that the sequence is of items from min to max inclusive). After you construct the instance, you can change
  * the number of items by calling {@link #nextInt()} or {@link #nextLong()}.
- *
+ * <p>
  * Unlike @ZipfianGenerator, this class scatters the "popular" items across the item space. Use this, instead of
  * {@link ZipfianGenerator}, if you don't want the head of the distribution (the popular items) clustered together.
  */

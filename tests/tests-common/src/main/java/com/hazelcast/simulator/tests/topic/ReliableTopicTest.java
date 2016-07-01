@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.topic;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
@@ -24,7 +23,6 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -59,14 +57,11 @@ public class ReliableTopicTest extends AbstractTest {
     private AtomicLong failures = new AtomicLong();
     private IAtomicLong totalMessagesSend;
     private ITopic<MessageEntity>[] topics;
-    private TestContext testContext;
     private List<MessageListenerImpl> listeners;
 
     @Setup
     @SuppressWarnings("unchecked")
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setup() {
         totalMessagesSend = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();

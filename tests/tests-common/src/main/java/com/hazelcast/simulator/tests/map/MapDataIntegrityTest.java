@@ -17,12 +17,10 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.MapConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -50,9 +48,6 @@ public class MapDataIntegrityTest extends AbstractTest {
     public boolean mapLoad = true;
     public boolean doRunAsserts = true;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
-
     private IMap<Integer, byte[]> integrityMap;
     private IMap<Integer, byte[]> stressMap;
 
@@ -60,10 +55,7 @@ public class MapDataIntegrityTest extends AbstractTest {
     private byte[] value;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         integrityMap = targetInstance.getMap(basename + "Integrity");
         stressMap = targetInstance.getMap(basename + "Stress");
 

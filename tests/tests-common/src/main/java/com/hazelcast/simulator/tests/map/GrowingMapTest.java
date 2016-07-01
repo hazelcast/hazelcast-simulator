@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.IdGenerator;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -45,17 +43,13 @@ public class GrowingMapTest extends AbstractTest {
     public boolean removeOnStop = true;
     public boolean readValidation = true;
 
-    private TestContext testContext;
     private IdGenerator idGenerator;
     private IMap<Long, Long> map;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        idGenerator = hazelcastInstance.getIdGenerator(basename + ":IdGenerator");
-        map = hazelcastInstance.getMap(basename);
+    public void setup() {
+        idGenerator = targetInstance.getIdGenerator(basename + ":IdGenerator");
+        map = targetInstance.getMap(basename);
     }
 
     @Run

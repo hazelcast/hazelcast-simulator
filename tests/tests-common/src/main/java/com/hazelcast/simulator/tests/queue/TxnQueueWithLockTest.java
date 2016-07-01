@@ -15,15 +15,12 @@
  */
 package com.hazelcast.simulator.tests.queue;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
@@ -39,15 +36,6 @@ public class TxnQueueWithLockTest extends AbstractTest {
 
     public String basename = TxnQueueWithLockTest.class.getSimpleName();
     public int threadCount = 5;
-
-    private HazelcastInstance instance = null;
-    private TestContext testContext = null;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        this.instance = testContext.getTargetInstance();
-    }
 
     @Run
     public void run() {
@@ -65,17 +53,17 @@ public class TxnQueueWithLockTest extends AbstractTest {
         public void run() {
             while (!testContext.isStopped()) {
                 try {
-                    ILock firstLock = instance.getLock(basename + "l1");
+                    ILock firstLock = targetInstance.getLock(basename + "l1");
                     firstLock.lock();
 
-                    TransactionContext ctx = instance.newTransactionContext();
+                    TransactionContext ctx = targetInstance.newTransactionContext();
                     try {
                         ctx.beginTransaction();
 
                         TransactionalQueue<Integer> queue = ctx.getQueue(basename + 'q');
                         queue.offer(1);
 
-                        ILock secondLock = instance.getLock(basename + "l2");
+                        ILock secondLock = targetInstance.getLock(basename + "l2");
                         secondLock.lock();
                         secondLock.unlock();
 
@@ -101,18 +89,18 @@ public class TxnQueueWithLockTest extends AbstractTest {
                     logger.severe(basename + ": outer Exception" + counter, e);
                 }
             }
-            IList<TxnCounter> results = instance.getList(basename + "results");
+            IList<TxnCounter> results = targetInstance.getList(basename + "results");
             results.add(counter);
         }
     }
 
     @Verify(global = true)
     public void verify() {
-        IQueue queue = instance.getQueue(basename + 'q');
-        ILock firstLock = instance.getLock(basename + "l1");
-        ILock secondLock = instance.getLock(basename + "l2");
+        IQueue queue = targetInstance.getQueue(basename + 'q');
+        ILock firstLock = targetInstance.getLock(basename + "l1");
+        ILock secondLock = targetInstance.getLock(basename + "l2");
 
-        IList<TxnCounter> results = instance.getList(basename + "results");
+        IList<TxnCounter> results = targetInstance.getList(basename + "results");
 
         TxnCounter total = new TxnCounter();
         for (TxnCounter counter : results) {

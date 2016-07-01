@@ -16,9 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -68,10 +66,9 @@ public class ExpiryTest extends AbstractTest {
     private IList<Counter> results;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        cache = getCache(hazelcastInstance, basename);
-        results = hazelcastInstance.getList(basename);
+    public void setup() {
+        cache = getCache(targetInstance, basename);
+        results = targetInstance.getList(basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)

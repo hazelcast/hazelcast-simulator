@@ -29,7 +29,6 @@ import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.extractor.ValueReader;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -70,7 +69,7 @@ public class ExtractorMapTest extends AbstractTest {
     private IMap<Integer, Object> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
+    public void setUp() {
         String mapName = usePortable ? "Portable " + basename : basename;
         map = testContext.getTargetInstance().getMap(mapName);
 

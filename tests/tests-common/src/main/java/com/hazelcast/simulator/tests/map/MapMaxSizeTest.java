@@ -16,10 +16,8 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.config.MaxSizeConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -70,14 +68,12 @@ public class MapMaxSizeTest extends AbstractTest {
     private final OperationSelectorBuilder<MapPutOperation> mapPutOperationSelectorBuilder
             = new OperationSelectorBuilder<MapPutOperation>();
 
-    private HazelcastInstance targetInstance;
     private IMap<Object, Object> map;
     private IList<MapMaxSizeOperationCounter> operationCounterList;
     private int maxSizePerNode;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
 

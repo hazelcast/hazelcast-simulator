@@ -16,10 +16,8 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -95,13 +93,11 @@ public class MapStoreTest extends AbstractTest {
     private int putTTlKeyDomain;
     private int putTTlKeyRange;
 
-    private HazelcastInstance targetInstance;
     private IMap<Integer, Integer> map;
     private IList<MapOperationCounter> operationCounterList;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setup() {
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
 
@@ -128,7 +124,7 @@ public class MapStoreTest extends AbstractTest {
         assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounter.class);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter operationCounter : operationCounterList) {
@@ -192,31 +188,25 @@ public class MapStoreTest extends AbstractTest {
                 case LOAD_ALL:
                     map.loadAll(true);
                     break;
-
                 case PUT:
                     putOperation(key);
                     break;
-
                 case GET:
                     map.get(key);
                     operationCounter.getCount.incrementAndGet();
                     break;
-
                 case GET_ASYNC:
                     map.getAsync(key);
                     operationCounter.getAsyncCount.incrementAndGet();
                     break;
-
                 case DELETE:
                     map.delete(key);
                     operationCounter.deleteCount.incrementAndGet();
                     break;
-
                 case DESTROY:
                     map.destroy();
                     operationCounter.destroyCount.incrementAndGet();
                     break;
-
                 default:
                     throw new UnsupportedOperationException();
             }
@@ -230,24 +220,20 @@ public class MapStoreTest extends AbstractTest {
                     map.put(key, value);
                     operationCounter.putCount.incrementAndGet();
                     break;
-
                 case PUT_ASYNC:
                     map.putAsync(key, value);
                     operationCounter.putAsyncCount.incrementAndGet();
                     break;
-
                 case PUT_TTL:
                     int delayKey = putTTlKeyDomain + randomInt(putTTlKeyRange);
                     int delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
                     map.putTransient(delayKey, value, delayMs, TimeUnit.MILLISECONDS);
                     operationCounter.putTransientCount.incrementAndGet();
                     break;
-
                 case PUT_IF_ABSENT:
                     map.putIfAbsent(key, value);
                     operationCounter.putIfAbsentCount.incrementAndGet();
                     break;
-
                 case REPLACE:
                     Integer orig = map.get(key);
                     if (orig != null) {
@@ -255,7 +241,6 @@ public class MapStoreTest extends AbstractTest {
                         operationCounter.replaceCount.incrementAndGet();
                     }
                     break;
-
                 default:
                     throw new UnsupportedOperationException();
             }

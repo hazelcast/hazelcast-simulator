@@ -15,17 +15,16 @@
  */
 package com.hazelcast.simulator.tests.topic;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
@@ -43,7 +42,7 @@ import static org.junit.Assert.assertEquals;
  * This test is inherently unreliable because the {@link ITopic} relies on the event system which is unreliable.
  * When messages are published with a too high rate, eventually the event system will drop incoming events.
  */
-public class ITopicTest {
+public class ITopicTest extends AbstractTest {
 
     // properties
     public String basename = ITopicTest.class.getSimpleName();
@@ -61,9 +60,7 @@ public class ITopicTest {
     private List<TopicListener> listeners;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         totalExpectedCounter = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");
         totalFoundCounter = targetInstance.getAtomicLong(basename + ":TotalFoundCounter");
 

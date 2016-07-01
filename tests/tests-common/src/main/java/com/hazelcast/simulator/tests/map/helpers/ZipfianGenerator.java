@@ -27,17 +27,17 @@ import static java.lang.String.format;
  * to draw from, either by specifying an itemCount (so that the sequence is of items from 0 to itemCount - 1) or by specifying a
  * min and a max (so that the sequence is of items from min to max inclusive). After you construct the instance, you can change
  * the number of items by calling {@link #nextInt()} or {@link #nextLong()}.
- *
+ * <p>
  * Note that the popular items will be clustered together, e.g. item 0 is the most popular, item 1 the second most popular, and so
  * on (or min is the most popular, min + 1 the next most popular, etc.) If you don't want this clustering, and instead want the
  * popular items scattered throughout the item space, then use {@link ScrambledZipfianGenerator} instead.
- *
+ * <p>
  * Be aware: initializing this generator may take a long time if there are lots of items to choose from (e.g. over a minute for
  * 100 million objects). This is because certain mathematical values need to be computed to properly generate a zipfian skew, and
  * one of those values (zeta) is a sum sequence from 1 to n, where n is the itemCount. Note that if you increase the number of
  * items in the set, we can compute a new zeta incrementally, so it should be fast unless you have added millions of items.
  * However, if you decrease the number of items, we recompute zeta from scratch, so this can take a long time.
- *
+ * <p>
  * The algorithm used here is from "Quickly Generating Billion-Record Synthetic Databases", Jim Gray et al, SIGMOD 1994.
  */
 @SuppressWarnings("unused")

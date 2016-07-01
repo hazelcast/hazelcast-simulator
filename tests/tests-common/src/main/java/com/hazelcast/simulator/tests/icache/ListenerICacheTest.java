@@ -16,9 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -84,12 +82,11 @@ public class ListenerICacheTest extends AbstractTest {
     private ICacheEntryEventFilter<Integer, Long> filter;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        results = hazelcastInstance.getList(basename);
-        listeners = hazelcastInstance.getList(basename + "listeners");
+    public void setup() {
+        results = targetInstance.getList(basename);
+        listeners = targetInstance.getList(basename + "listeners");
 
-        cache = CacheUtils.getCache(hazelcastInstance, basename);
+        cache = CacheUtils.getCache(targetInstance, basename);
         listener = new ICacheEntryListener<Integer, Long>();
         filter = new ICacheEntryEventFilter<Integer, Long>();
 

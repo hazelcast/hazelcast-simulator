@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.external;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.tests.AbstractTest;
@@ -40,14 +38,12 @@ public class ExternalClientStarterTest extends AbstractTest {
     private final SimulatorProperties properties = new SimulatorProperties();
     private final Bash bash = new Bash(properties);
 
-    private HazelcastInstance hazelcastInstance;
     private String ipAddress;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-        if (isClient(hazelcastInstance)) {
-            hazelcastInstance.getAtomicLong("externalClientsStarted").addAndGet(processCount);
+    public void setUp() {
+        if (isClient(targetInstance)) {
+            targetInstance.getAtomicLong("externalClientsStarted").addAndGet(processCount);
         }
         ipAddress = testContext.getPublicIpAddress();
 
@@ -57,7 +53,7 @@ public class ExternalClientStarterTest extends AbstractTest {
 
     @Run
     public void run() {
-        if (isMemberNode(hazelcastInstance)) {
+        if (isMemberNode(targetInstance)) {
             return;
         }
 

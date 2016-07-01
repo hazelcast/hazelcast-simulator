@@ -15,11 +15,9 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -61,13 +59,11 @@ public class MapTransactionReadWriteTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance targetInstance;
     private IMap<Integer, Integer> map;
     private int[] keys;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getMap(basename);
 
         builder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);

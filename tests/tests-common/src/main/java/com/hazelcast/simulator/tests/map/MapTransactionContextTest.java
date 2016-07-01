@@ -15,11 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionContext;
@@ -36,13 +33,6 @@ public class MapTransactionContextTest extends AbstractTest {
     public int range = 1000;
     public boolean failOnException = true;
 
-    private HazelcastInstance hz;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        hz = testContext.getTargetInstance();
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -58,7 +48,7 @@ public class MapTransactionContextTest extends AbstractTest {
                     .setTransactionType(transactionType)
                     .setDurability(durability);
 
-            TransactionContext transactionContext = hz.newTransactionContext(transactionOptions);
+            TransactionContext transactionContext = targetInstance.newTransactionContext(transactionOptions);
 
             transactionContext.beginTransaction();
 

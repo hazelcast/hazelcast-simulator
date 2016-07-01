@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.replicatedmap;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ReplicatedMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -64,8 +62,7 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getReplicatedMap(basename);
         results = targetInstance.getList(basename + "report");
 
