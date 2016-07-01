@@ -33,7 +33,7 @@ MAIN=
 case "@WORKER_TYPE" in
     CLIENT )        MAIN=com.hazelcast.simulator.worker.ClientWorker;;
     MEMBER )        MAIN=com.hazelcast.simulator.worker.MemberWorker;;
-    INTEGRATION )   MAIN=com.hazelcast.simulator.worker.IntegrationTestWorker;;
+    INTEGRATION_TEST )   MAIN=com.hazelcast.simulator.worker.IntegrationTestWorker;;
 esac
 
 java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}

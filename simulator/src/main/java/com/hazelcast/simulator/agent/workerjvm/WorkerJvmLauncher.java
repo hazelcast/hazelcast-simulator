@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +39,6 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 
 public class WorkerJvmLauncher {
 
@@ -112,7 +110,7 @@ public class WorkerJvmLauncher {
 
         Map<String, String> environment = processBuilder.environment();
         String javaHome = getJavaHome();
-        String path = javaHome + File.pathSeparator + "bin:" + environment.get("PATH");
+        String path = javaHome + "/bin:" + environment.get("PATH");
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
 
@@ -235,15 +233,5 @@ public class WorkerJvmLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + CLASSPATH_SEPARATOR + CLASSPATH;
-    }
-
-    private List<String> getJvmOptions() {
-        String workerVmOptions = workerJvmSettings.getJvmOptions();
-
-        String[] vmOptionsArray = new String[]{};
-        if (workerVmOptions != null && !workerVmOptions.trim().isEmpty()) {
-            vmOptionsArray = workerVmOptions.split("\\s+");
-        }
-        return asList(vmOptionsArray);
     }
 }

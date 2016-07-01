@@ -62,7 +62,7 @@ public class WorkerParametersTest {
         assertEquals("log4jConfig", workerParameters.getLog4jConfig());
         assertFalse(workerParameters.isMonitorPerformance());
 
-        assertEquals("java", workerParameters.getWorkerScript());
+        assertEquals("worker.sh", workerParameters.getWorkerScript());
     }
 
     @Test
