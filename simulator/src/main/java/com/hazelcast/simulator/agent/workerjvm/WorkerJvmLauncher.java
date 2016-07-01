@@ -94,6 +94,8 @@ public class WorkerJvmLauncher {
         String workerId = "worker-" + workerAddress + '-' + agent.getPublicAddress() + '-' + type.toLowerCase();
         File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
 
+        copyResourcesToWorkerDirectory(workerId);
+
         String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
         hzConfigFile = ensureExistingFile(workerHome, hzConfigFileName + ".xml");
         writeText(workerJvmSettings.getHazelcastConfig(), hzConfigFile);
@@ -117,7 +119,6 @@ public class WorkerJvmLauncher {
         Process process = processBuilder.start();
 
         workerJvm.setProcess(process);
-        copyResourcesToWorkerId(workerId);
         workerJvmManager.add(workerAddress, workerJvm);
 
         return workerJvm;
@@ -181,7 +182,7 @@ public class WorkerJvmLauncher {
         return script.replaceAll("@" + variable, "" + value);
     }
 
-    private void copyResourcesToWorkerId(String workerId) {
+    private void copyResourcesToWorkerDirectory(String workerId) {
         File workersDir = new File(getSimulatorHome(), WORKERS_HOME_NAME);
         String testSuiteId = agent.getTestSuite().getId();
         File uploadDirectory = new File(workersDir, testSuiteId + "/upload/").getAbsoluteFile();
