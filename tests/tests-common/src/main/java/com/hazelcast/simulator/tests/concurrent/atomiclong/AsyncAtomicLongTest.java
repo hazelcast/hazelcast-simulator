@@ -20,14 +20,13 @@ import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.metronome.Metronome;
@@ -49,9 +48,7 @@ import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static org.junit.Assert.assertEquals;
 
-public class AsyncAtomicLongTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(AsyncAtomicLongTest.class);
+public class AsyncAtomicLongTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -101,7 +98,7 @@ public class AsyncAtomicLongTest {
             }
         }
         totalCounter.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @Verify

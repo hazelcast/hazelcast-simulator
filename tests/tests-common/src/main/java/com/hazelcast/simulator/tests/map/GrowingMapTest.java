@@ -18,8 +18,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.IdGenerator;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
@@ -27,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Random;
@@ -34,9 +33,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class GrowingMapTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(GrowingMapTest.class);
+public class GrowingMapTest extends AbstractTest {
 
     // properties
     public String basename = GrowingMapTest.class.getSimpleName();
@@ -117,11 +114,11 @@ public class GrowingMapTest {
 
                 insertIteration++;
                 if (insertIteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
+                    logger.info(Thread.currentThread().getName() + " At insert iteration: " + insertIteration);
                 }
             }
 
-            LOGGER.info(Thread.currentThread().getName() + " Inserted " + insertIteration + " key/value pairs");
+            logger.info(Thread.currentThread().getName() + " Inserted " + insertIteration + " key/value pairs");
             return insertIteration;
         }
 
@@ -138,7 +135,7 @@ public class GrowingMapTest {
 
                 readIteration++;
                 if (readIteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
+                    logger.info(Thread.currentThread().getName() + " At read iteration: " + readIteration);
                 }
             }
         }
@@ -160,7 +157,7 @@ public class GrowingMapTest {
 
                 deleteIteration++;
                 if (deleteIteration % logFrequency == 0) {
-                    LOGGER.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
+                    logger.info(Thread.currentThread().getName() + " At delete iteration: " + deleteIteration);
                 }
             }
         }

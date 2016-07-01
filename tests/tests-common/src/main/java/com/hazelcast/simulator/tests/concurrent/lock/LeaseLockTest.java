@@ -17,12 +17,11 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ILock;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.concurrent.TimeUnit;
@@ -31,9 +30,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 import static org.junit.Assert.fail;
 
-public class LeaseLockTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(LeaseLockTest.class);
+public class LeaseLockTest extends AbstractTest {
 
     public String basename = LeaseLockTest.class.getSimpleName();
     public int lockCount = 500;
@@ -58,7 +55,7 @@ public class LeaseLockTest {
             if (isLocked) {
                 String message = format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime);
                 if (allowZeroMillisRemainingLeaseLockTime && remainingLeaseTime == 0) {
-                    LOGGER.warning(message);
+                    logger.warning(message);
                 } else {
                     fail(message);
                 }
@@ -89,7 +86,7 @@ public class LeaseLockTest {
                 try {
                     lock.tryLock(tryTime, TimeUnit.MILLISECONDS, leaseTime, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
-                    LOGGER.info("tryLock() got exception: " + e.getMessage());
+                    logger.info("tryLock() got exception: " + e.getMessage());
                 }
             }
         }

@@ -19,8 +19,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.mapreduce.Collator;
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;
@@ -36,6 +34,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.MapReduceOperationCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -48,15 +47,13 @@ import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 
-public class MapReduceTest {
+public class MapReduceTest extends AbstractTest {
 
     private enum Operation {
         MAP_REDUCE,
         GET_MAP_ENTRY,
         MODIFY_MAP_ENTRY
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(MapReduceTest.class);
 
     // properties
     public String baseName = MapReduceTest.class.getSimpleName();
@@ -97,7 +94,7 @@ public class MapReduceTest {
         for (MapReduceOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        LOGGER.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
+        logger.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 
     @RunWithWorker

@@ -37,10 +37,10 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 
 /**
  * Demonstrates the effect of batching.
- *
+ * <p>
  * It uses async methods to invoke operation and wait for future to complete every {@code batchSize} invocations.
  * Hence setting {@link #batchSize} to 1 is effectively the same as using sync operations.
- *
+ * <p>
  * Setting {@link #batchSize} to values greater than 1 causes the batch-effect to kick-in, pipe-lines are utilized better
  * and overall throughput goes up.
  */

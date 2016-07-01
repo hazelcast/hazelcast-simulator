@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.query.TruePredicate;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -26,6 +24,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -39,9 +38,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * A test that verifies the IMap.keySet() or IMap.keySet(true-predicate) behavior.
  */
-public class AllKeySetTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(AllKeySetTest.class);
+public class AllKeySetTest extends AbstractTest {
 
     // properties
     public String basename = AllKeySetTest.class.getSimpleName();
@@ -66,7 +63,7 @@ public class AllKeySetTest {
     @Teardown
     public void teardown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = true)

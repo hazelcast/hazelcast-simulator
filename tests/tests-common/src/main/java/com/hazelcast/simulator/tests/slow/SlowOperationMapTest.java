@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests.slow;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -27,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -51,14 +50,12 @@ import static org.junit.Assert.fail;
 
 /**
  * This test invokes slowed down map operations on a Hazelcast instance to provoke slow operation logs.
- *
+ * <p>
  * In the verification phase we check for the correct number of slow operation logs (one per operation type).
  *
  * @since Hazelcast 3.5
  */
-public class SlowOperationMapTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(SlowOperationMapTest.class);
+public class SlowOperationMapTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -138,7 +135,7 @@ public class SlowOperationMapTest {
         int expected = (int) (Math.min(putCount, 1) + Math.min(getCount, 1));
         long operationCount = putCount + getCount;
 
-        LOGGER.info(format("Expecting %d slow operation logs after completing %d operations (%d put, %d get).",
+        logger.info(format("Expecting %d slow operation logs after completing %d operations (%d put, %d get).",
                 expected, operationCount, putCount, getCount));
 
         assertNotNull("Could not retrieve slow operation logs", slowOperationLogs);

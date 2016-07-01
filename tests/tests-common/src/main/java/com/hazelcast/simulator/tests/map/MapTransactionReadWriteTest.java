@@ -18,8 +18,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -27,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -41,14 +40,12 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
-public class MapTransactionReadWriteTest {
+public class MapTransactionReadWriteTest extends AbstractTest {
 
     enum Operation {
         PUT,
         GET
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(MapTransactionReadWriteTest.class);
 
     // properties
     public String basename = MapTransactionReadWriteTest.class.getSimpleName();
@@ -79,12 +76,12 @@ public class MapTransactionReadWriteTest {
     @Teardown
     public void teardown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     public void warmup() {
-        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
+        waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
 
         Random random = new Random();

@@ -17,14 +17,13 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.DataSerializableEmployee;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -38,9 +37,8 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 
-public class SqlPredicateTest {
+public class SqlPredicateTest extends AbstractTest {
 
-    private static final ILogger LOGGER = Logger.getLogger(SqlPredicateTest.class);
     private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
 
     // properties
@@ -65,7 +63,7 @@ public class SqlPredicateTest {
     @Teardown
     public void teardown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = true)
@@ -78,8 +76,8 @@ public class SqlPredicateTest {
             streamer.pushEntry(key, value);
         }
         streamer.await();
-        LOGGER.info("Map size is: " + map.size());
-        LOGGER.info("Map localKeySet size is: " + map.localKeySet().size());
+        logger.info("Map size is: " + map.size());
+        logger.info("Map localKeySet size is: " + map.localKeySet().size());
     }
 
     @RunWithWorker

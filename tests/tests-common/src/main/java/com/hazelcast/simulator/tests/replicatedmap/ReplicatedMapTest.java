@@ -17,8 +17,6 @@ package com.hazelcast.simulator.tests.replicatedmap;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ReplicatedMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -26,6 +24,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -35,9 +34,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 
-public class ReplicatedMapTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ReplicatedMapTest.class);
+public class ReplicatedMapTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -76,7 +73,7 @@ public class ReplicatedMapTest {
     @Teardown
     public void tearDown() throws Exception {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup

@@ -18,8 +18,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.query.EntryObject;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.Predicate;
@@ -31,6 +29,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.PredicateOperationCounter;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
@@ -51,12 +50,12 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * In this test we are using different predicate methods to execute a query on a map of {@link Employee} objects.
- *
+ * <p>
  * This test also concurrently updates and modifies the employee objects in the map while the predicate queries are executing. The
  * test may also destroy the map while while predicate are executing. We verify the result of every query to ensure that the
  * objects returned fit the requirements of the query.
  */
-public class MapPredicateTest {
+public class MapPredicateTest extends AbstractTest {
 
     private enum Operation {
         PREDICATE_BUILDER,
@@ -65,8 +64,6 @@ public class MapPredicateTest {
         UPDATE_EMPLOYEE,
         DESTROY_MAP
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(MapPredicateTest.class);
 
     public String basename = MapPredicateTest.class.getSimpleName();
     public int keyCount = 100;
@@ -120,7 +117,7 @@ public class MapPredicateTest {
         for (PredicateOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        LOGGER.info(format("Operation counters from %s: %s", basename, total));
+        logger.info(format("Operation counters from %s: %s", basename, total));
     }
 
     @RunWithWorker
@@ -177,7 +174,7 @@ public class MapPredicateTest {
                 double avg = spendTimeMs / (double) iterationsLastMinute;
                 double perf = (iterationsLastMinute * 1000d) / (double) spendTimeMs;
 
-                LOGGER.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
+                logger.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
                         iterationsLastMinute, minLastMinute, maxLastMinute, avg, perf));
 
                 maxLastMinute = Long.MIN_VALUE;

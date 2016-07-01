@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.syntheticmap;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -25,6 +23,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
@@ -36,9 +35,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClust
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
-public class StringStringSyntheticMapTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(StringStringSyntheticMapTest.class);
+public class StringStringSyntheticMapTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -78,12 +75,12 @@ public class StringStringSyntheticMapTest {
     @Teardown
     public void tearDown() {
         map.destroy();
-        LOGGER.info(getOperationCountInformation(hazelcastInstance));
+        logger.info(getOperationCountInformation(hazelcastInstance));
     }
 
     @Warmup(global = false)
     public void warmup() {
-        waitClusterSize(LOGGER, hazelcastInstance, minNumberOfMembers);
+        waitClusterSize(logger, hazelcastInstance, minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, hazelcastInstance);
         values = generateStrings(valueCount, valueLength);
 

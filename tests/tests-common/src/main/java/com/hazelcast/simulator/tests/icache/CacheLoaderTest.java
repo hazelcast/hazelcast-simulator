@@ -17,13 +17,12 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
@@ -41,17 +40,15 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * This tests concurrent load all calls to {@link javax.cache.integration.CacheLoader}.
- *
+ * <p>
  * We can configure a delay in {@link javax.cache.integration.CacheLoader#loadAll(Iterable)} or to wait for completion.
- *
+ * <p>
  * A large delay and high concurrent calls to {@link javax.cache.integration.CacheLoader#loadAll(Iterable)} could overflow some
  * internal queues. The same can happen if {@link #waitForLoadAllFutureCompletion} is false.
- *
+ * <p>
  * We verify that the cache contains all keys and that the keys have been loaded through a the cache instance.
  */
-public class CacheLoaderTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(CacheLoaderTest.class);
+public class CacheLoaderTest extends AbstractTest {
 
     public String basename = CacheLoaderTest.class.getSimpleName();
     public int keyCount = 10;
@@ -91,7 +88,7 @@ public class CacheLoaderTest {
     @Verify(global = false)
     public void verify() {
         RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
-        LOGGER.info(basename + ": " + loader);
+        logger.info(basename + ": " + loader);
     }
 
     @Verify(global = true)

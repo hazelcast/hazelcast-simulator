@@ -19,13 +19,12 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyIncrementPair;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -41,16 +40,14 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Testing transaction context with multi keys.
- *
+ * <p>
  * A number of map keys (maxKeysPerTxn) are chosen at random to take part in the transaction. As maxKeysPerTxn increases as a
  * proportion of keyCount, more conflict will occur between the transactions, less transactions will be committed successfully and
  * more transactions are rolled back.
  */
-public class MapTransactionContextConflictTest {
+public class MapTransactionContextConflictTest extends AbstractTest {
 
     private static final int MAX_INCREMENT = 999;
-
-    private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextConflictTest.class);
 
     public String basename = MapTransactionContextConflictTest.class.getSimpleName();
     public int threadCount = 3;
@@ -123,7 +120,7 @@ public class MapTransactionContextConflictTest {
                         localIncrements[p.key] += p.increment;
                     }
                 } catch (TransactionException commitException) {
-                    LOGGER.warning(basename + ": commit failed. tried key increments=" + putIncrements, commitException);
+                    logger.warning(basename + ": commit failed. tried key increments=" + putIncrements, commitException);
                     if (throwCommitException) {
                         throw rethrow(commitException);
                     }
@@ -132,7 +129,7 @@ public class MapTransactionContextConflictTest {
                         context.rollbackTransaction();
                         count.rolled++;
                     } catch (TransactionException rollBackException) {
-                        LOGGER.warning(basename + ": rollback failed " + rollBackException.getMessage(), rollBackException);
+                        logger.warning(basename + ": rollback failed " + rollBackException.getMessage(), rollBackException);
                         count.failedRollbacks++;
 
                         if (throwRollBackException) {
@@ -153,7 +150,7 @@ public class MapTransactionContextConflictTest {
         for (TxnCounter c : counts) {
             total.add(c);
         }
-        LOGGER.info(basename + ": " + total + " from " + counts.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + counts.size() + " worker threads");
 
         IList<long[]> allIncrements = targetInstance.getList(basename + "inc");
         long[] expected = new long[keyCount];
@@ -168,7 +165,7 @@ public class MapTransactionContextConflictTest {
         for (int i = 0; i < keyCount; i++) {
             if (expected[i] != map.get(i)) {
                 failures++;
-                LOGGER.info(basename + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
+                logger.info(basename + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
             }
         }
         assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);

@@ -30,7 +30,6 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
-import javax.ws.rs.GET;
 import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;

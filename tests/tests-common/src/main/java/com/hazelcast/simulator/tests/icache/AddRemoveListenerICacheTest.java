@@ -17,14 +17,13 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheListenerOperationCounter;
@@ -40,12 +39,12 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 
 /**
  * In this test we concurrently add remove cache listeners while putting and getting from the cache.
- *
+ * <p>
  * This test is out side of normal usage, however has found problems where put operations hang.
  * This type of test could uncover memory leaks in the process of adding and removing listeners.
  * The max size of the cache used in this test is keyCount int key/value pairs.
  */
-public class AddRemoveListenerICacheTest {
+public class AddRemoveListenerICacheTest extends AbstractTest {
 
     private enum Operation {
         REGISTER,
@@ -53,8 +52,6 @@ public class AddRemoveListenerICacheTest {
         PUT,
         GET
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(AddRemoveListenerICacheTest.class);
 
     public String basename = AddRemoveListenerICacheTest.class.getSimpleName();
     public int keyCount = 1000;
@@ -104,7 +101,7 @@ public class AddRemoveListenerICacheTest {
         for (ICacheListenerOperationCounter i : results) {
             total.add(i);
         }
-        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
     }
 
     @RunWithWorker
@@ -150,7 +147,7 @@ public class AddRemoveListenerICacheTest {
 
         @Override
         public void afterRun() {
-            LOGGER.info(basename + ": " + operationCounter);
+            logger.info(basename + ": " + operationCounter);
             results.add(operationCounter);
         }
     }

@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
@@ -32,6 +30,7 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -48,10 +47,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
-public class MultiValueMapTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MultiValueMapTest.class);
-    private static final ThrottlingLogger THROTTLING_LOGGER = ThrottlingLogger.newLogger(LOGGER, 5000);
+public class MultiValueMapTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -65,8 +61,8 @@ public class MultiValueMapTest {
     public boolean useIndex;
     public boolean usePortable;
 
+    private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-
     private IMap<Integer, Object> map;
 
     @Setup
@@ -133,7 +129,7 @@ public class MultiValueMapTest {
                     } finally {
                         probe.done(started);
                     }
-                    THROTTLING_LOGGER.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
+                    throttlingLogger.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
                     for (Object resultSillySequence : result) {
                         assertValidSequence(resultSillySequence);
                     }

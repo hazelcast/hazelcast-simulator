@@ -32,13 +32,13 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 /**
  * Test to exercising PagingPredicate.
  * It's intended to be used for benchmarking purposes, it doesn't validate correctness of results.
- *
+ * <p>
  * It has 2 working modes:
  * <ol>
- *    <li>Sequential Mode - where workers are paging in a sequential orders. Ie. Page1, Page2, PageN, PageN+1, etc</li>
- *    <li>Random Mode - where workers are selecting arbitrary pages</li>
+ * <li>Sequential Mode - where workers are paging in a sequential orders. Ie. Page1, Page2, PageN, PageN+1, etc</li>
+ * <li>Random Mode - where workers are selecting arbitrary pages</li>
  * </ol>
- *
+ * <p>
  * Implementation note: There is a small code duplication in worker implementations - it could be eliminated by
  * introducing a common superclass, but I believe it would just make things more complicated.
  */

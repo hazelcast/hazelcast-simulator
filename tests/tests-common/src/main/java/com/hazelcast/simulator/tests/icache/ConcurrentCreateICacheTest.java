@@ -18,12 +18,11 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
@@ -37,9 +36,7 @@ import static org.junit.Assert.assertEquals;
  * in the setup phase of this test. We count the number of {@link CacheException} thrown when creating the cache
  * from multi members and clients, and at verification we assert that no exceptions where thrown.
  */
-public class ConcurrentCreateICacheTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ConcurrentCreateICacheTest.class);
+public class ConcurrentCreateICacheTest extends AbstractTest {
 
     // properties
     public String baseName = ConcurrentCreateICacheTest.class.getSimpleName();
@@ -60,19 +57,19 @@ public class ConcurrentCreateICacheTest {
             cacheManager.createCache(baseName, config);
             counter.create++;
         } catch (CacheException e) {
-            LOGGER.severe(baseName + ": createCache exception " + e, e);
+            logger.severe(baseName + ": createCache exception " + e, e);
             counter.createException++;
         }
         counterList.add(counter);
     }
 
-    @Verify(global = true)
-    public void verify() {
+    @Verify
+    public void globalVerify() {
         Counter total = new Counter();
         for (Counter counter : counterList) {
             total.add(counter);
         }
-        LOGGER.info(baseName + ": " + total + " from " + counterList.size() + " worker threads");
+        logger.info(baseName + ": " + total + " from " + counterList.size() + " worker threads");
 
         assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
     }

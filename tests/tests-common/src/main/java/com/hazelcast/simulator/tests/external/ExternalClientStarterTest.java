@@ -16,12 +16,11 @@
 package com.hazelcast.simulator.tests.external;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.Bash;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
@@ -30,9 +29,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 
-public class ExternalClientStarterTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ExternalClientStarterTest.class);
+public class ExternalClientStarterTest extends AbstractTest {
 
     // properties
     public String binaryName = "binaryName";
@@ -72,7 +69,7 @@ public class ExternalClientStarterTest {
 
             String tmpLogFileName = logFileName + '_' + i;
 
-            LOGGER.info(format("Starting external client: %s %s &>> %s.log", binaryName, tmpArguments, tmpLogFileName));
+            logger.info(format("Starting external client: %s %s &>> %s.log", binaryName, tmpArguments, tmpLogFileName));
             bash.execute(format("../upload/%s %s &>> %s.log &", binaryName, tmpArguments, tmpLogFileName));
         }
     }

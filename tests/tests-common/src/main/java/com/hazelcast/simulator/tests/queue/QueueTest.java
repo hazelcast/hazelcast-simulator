@@ -17,14 +17,13 @@ package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IQueue;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Queue;
@@ -35,9 +34,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.RANDOM;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
-public class QueueTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(QueueTest.class);
+public class QueueTest extends AbstractTest {
 
     // properties
     public String basename = QueueTest.class.getSimpleName();
@@ -113,7 +110,7 @@ public class QueueTest {
             fromQueue = queues[fromIndex];
             toQueue = queues[toIndex];
 
-            LOGGER.info(String.format(
+            logger.info(String.format(
                     "%s fromQueue[%d] %s: %d, toQueue[%d] %s: %d",
                     Thread.currentThread().getName(),
                     fromIndex, fromQueue.getName(), fromQueue.size(),
@@ -132,7 +129,7 @@ public class QueueTest {
 
                     iteration++;
                     if (logFrequency > 0 && iteration % logFrequency == 0) {
-                        LOGGER.info(String.format(
+                        logger.info(String.format(
                                 "%s iteration: %d, fromQueue size: %d, toQueue size: %d",
                                 Thread.currentThread().getName(), iteration, fromQueue.size(), toQueue.size()
                         ));

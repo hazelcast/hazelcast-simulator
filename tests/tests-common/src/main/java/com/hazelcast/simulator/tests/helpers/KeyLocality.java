@@ -29,37 +29,37 @@ public enum KeyLocality {
 
     /**
      * Generates random generated local keys (keys that point to locally owned partitions).
-     *
+     * <p>
      * The keys will be perfectly balanced over the partitions.
      */
     LOCAL,
 
     /**
      * Generates random generated remote keys.
-     *
+     * <p>
      * Each worker will generate it own random set of keys, so it is very unlikely they are going to be shared.
-     *
+     * <p>
      * The keys will be perfectly balanced over remote partitions.
      */
     REMOTE,
 
     /**
      * Generates random generated keys.
-     *
+     * <p>
      * Each worker will generate it own random set of keys, so it is very unlikely they are going to be shared. Also becase
      * each worker generates its own keys, the total size of key domain is 'load-generating-worker * keycount'.
-     *
+     * <p>
      * If you want to pound the same keys by all members, use {@link #SHARED}.
-     *
+     * <p>
      * The keys will be perfectly balanced over the partitions.
      */
     RANDOM,
 
     /**
      * Generates random generated keys (same sequence on all Workers).
-     *
+     * <p>
      * In doubt, this is the keyLocality you want to use. All keys will be shared by all members.
-     *
+     * <p>
      * Since all keys are shared, the total size of the key domain is equal to the keyCount configured on the member.
      */
     SHARED,

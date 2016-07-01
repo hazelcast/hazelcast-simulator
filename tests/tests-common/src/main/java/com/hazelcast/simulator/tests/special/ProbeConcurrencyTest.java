@@ -15,22 +15,19 @@
  */
 package com.hazelcast.simulator.tests.special;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
 /**
  * This test is to debug and check probe results from a very controlled test case.
- *
+ * <p>
  * By adjusting the threadCount and maxOperations the invocation count of probes are absolutely predictable.
  */
-public class ProbeConcurrencyTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ProbeConcurrencyTest.class);
+public class ProbeConcurrencyTest extends AbstractTest {
 
     // properties
     public String basename = ProbeConcurrencyTest.class.getSimpleName();
@@ -39,7 +36,7 @@ public class ProbeConcurrencyTest {
 
     @Setup
     public void setUp(TestContext testContext) {
-        LOGGER.info("ThreadCount: " + threadCount + " max operations: " + maxOperations);
+        logger.info("ThreadCount: " + threadCount + " max operations: " + maxOperations);
     }
 
     @RunWithWorker

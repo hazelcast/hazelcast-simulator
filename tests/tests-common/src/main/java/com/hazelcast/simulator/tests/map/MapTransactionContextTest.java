@@ -17,11 +17,10 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionOptions;
@@ -29,9 +28,7 @@ import com.hazelcast.transaction.TransactionOptions.TransactionType;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 
-public class MapTransactionContextTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapTransactionContextTest.class);
+public class MapTransactionContextTest extends AbstractTest {
 
     // properties
     public TransactionType transactionType = TransactionType.TWO_PHASE;
@@ -78,7 +75,7 @@ public class MapTransactionContextTest {
 
                 transactionContext.commitTransaction();
             } catch (Exception e) {
-                LOGGER.severe("----------------------tx exception -------------------------", e);
+                logger.severe("----------------------tx exception -------------------------", e);
 
                 if (failOnException) {
                     throw rethrow(e);

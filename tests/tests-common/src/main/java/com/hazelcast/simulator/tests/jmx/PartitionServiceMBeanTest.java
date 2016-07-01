@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.jmx;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
@@ -25,6 +23,7 @@ import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
@@ -35,9 +34,7 @@ import java.lang.management.ManagementFactory;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 
-public class PartitionServiceMBeanTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(PartitionServiceMBeanTest.class);
+public class PartitionServiceMBeanTest extends AbstractTest {
 
     private enum Operation {
         IS_LOCAL_MEMBER_SAFE,
@@ -67,12 +64,12 @@ public class PartitionServiceMBeanTest {
 
     @Teardown
     public void tearDown() {
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @Warmup(global = false)
     public void warmup() {
-        waitClusterSize(LOGGER, targetInstance, minNumberOfMembers);
+        waitClusterSize(logger, targetInstance, minNumberOfMembers);
     }
 
     @RunWithWorker

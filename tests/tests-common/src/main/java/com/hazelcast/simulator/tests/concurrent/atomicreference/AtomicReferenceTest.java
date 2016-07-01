@@ -17,13 +17,12 @@ package com.hazelcast.simulator.tests.concurrent.atomicreference;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicReference;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -35,9 +34,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
-public class AtomicReferenceTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(AtomicReferenceTest.class);
+public class AtomicReferenceTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -95,7 +92,7 @@ public class AtomicReferenceTest {
         for (IAtomicReference counter : counters) {
             counter.destroy();
         }
-        LOGGER.info(getOperationCountInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
     @RunWithWorker

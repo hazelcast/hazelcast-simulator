@@ -18,14 +18,13 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.simulator.tests.map.helpers.EventCount;
 import com.hazelcast.simulator.tests.map.helpers.ScrambledZipfianGenerator;
@@ -41,12 +40,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * This test is using a map to generate map entry events. We use an {@link com.hazelcast.core.EntryListener} implementation to
  * count the received events. We are generating and counting add, remove, update and evict events.
- *
+ * <p>
  * As currently the event system of Hazelcast is on a "best effort" basis, it is possible that the number of generated events will
  * not equal the number of events received. In the future the Hazelcast event system could change. For now we can say the number
  * of events received can not be greater than the number of events generated.
  */
-public class MapEntryListenerTest {
+public class MapEntryListenerTest extends AbstractTest {
 
     private enum MapOperation {
         PUT,
@@ -62,7 +61,6 @@ public class MapEntryListenerTest {
     }
 
     private static final int SLEEP_CATCH_EVENTS_MILLIS = 8000;
-    private static final ILogger LOGGER = Logger.getLogger(MapEntryListenerTest.class);
 
     // properties
     public String basename = MapEntryListenerTest.class.getSimpleName();
@@ -152,7 +150,7 @@ public class MapEntryListenerTest {
         }
         total.waitWhileListenerEventsIncrease(listener, 10);
 
-        LOGGER.info(format("Event counter for %s (actual / expected)"
+        logger.info(format("Event counter for %s (actual / expected)"
                         + "%n add: %d / %d"
                         + "%n update: %d / %d"
                         + "%n remove: %d / %d"

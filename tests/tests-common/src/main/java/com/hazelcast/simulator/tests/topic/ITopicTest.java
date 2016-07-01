@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Creates a number of {@link ITopic} and a number of listeners per topic. Each member publishes messages to every topic.
- *
+ * <p>
  * This test is inherently unreliable because the {@link ITopic} relies on the event system which is unreliable.
  * When messages are published with a too high rate, eventually the event system will drop incoming events.
  */

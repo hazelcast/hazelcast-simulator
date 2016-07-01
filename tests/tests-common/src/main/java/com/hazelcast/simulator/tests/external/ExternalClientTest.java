@@ -17,13 +17,12 @@ package com.hazelcast.simulator.tests.external;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.util.EmptyStatement;
 
 import java.util.concurrent.ExecutionException;
@@ -35,9 +34,7 @@ import static com.hazelcast.simulator.tests.external.ExternalClientUtils.setCoun
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static java.lang.String.format;
 
-public class ExternalClientTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ExternalClientTest.class);
+public class ExternalClientTest extends AbstractTest {
 
     // properties
     public String basename = "externalClientsRunning";
@@ -67,9 +64,9 @@ public class ExternalClientTest {
         // determine one instance per cluster
         if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) == null) {
             isExternalResultsCollectorInstance = true;
-            LOGGER.info("This instance will collect all probe results from external clients");
+            logger.info("This instance will collect all probe results from external clients");
         } else {
-            LOGGER.info("This instance will not collect probe results");
+            logger.info("This instance will not collect probe results");
         }
     }
 
@@ -89,23 +86,23 @@ public class ExternalClientTest {
             long clientsRunningCount = clientsRunning.getCount();
             if (clientsRunningCount > 0) {
                 long responseReceivedCount = waitForClientsCount - clientsRunningCount;
-                LOGGER.info(format("Got response from %d/%d clients, waiting...", responseReceivedCount, waitForClientsCount));
+                logger.info(format("Got response from %d/%d clients, waiting...", responseReceivedCount, waitForClientsCount));
             } else {
-                LOGGER.info(format("Got response from all %d clients, stopping now!", waitForClientsCount));
+                logger.info(format("Got response from all %d clients, stopping now!", waitForClientsCount));
                 break;
             }
         }
 
         // just a single instance will collect the results from all external clients
         if (!isExternalResultsCollectorInstance) {
-            LOGGER.info("Stopping non result collecting ExternalClientTest");
+            logger.info("Stopping non result collecting ExternalClientTest");
             return;
         }
 
         // get probe results
-        LOGGER.info("Collecting results from external clients...");
+        logger.info("Collecting results from external clients...");
         getThroughputResults(hazelcastInstance, expectedResultSize);
         getLatencyResults(hazelcastInstance, externalClientProbe, expectedResultSize);
-        LOGGER.info("Result collecting ExternalClientTest done!");
+        logger.info("Result collecting ExternalClientTest done!");
     }
 }

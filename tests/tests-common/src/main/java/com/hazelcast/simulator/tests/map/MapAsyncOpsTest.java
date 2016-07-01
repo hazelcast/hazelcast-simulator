@@ -18,13 +18,12 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -33,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
-public class MapAsyncOpsTest {
+public class MapAsyncOpsTest extends AbstractTest {
 
     private enum Operation {
         PUT_ASYNC,
@@ -42,8 +41,6 @@ public class MapAsyncOpsTest {
         REMOVE_ASYNC,
         DESTROY
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(MapAsyncOpsTest.class);
 
     // properties
     public String basename = MapAsyncOpsTest.class.getSimpleName();
@@ -69,10 +66,10 @@ public class MapAsyncOpsTest {
         results = targetInstance.getList(basename + "report");
 
         operationSelectorBuilder.addOperation(Operation.PUT_ASYNC, putAsyncProb)
-                                .addOperation(Operation.PUT_ASYNC_TTL, putAsyncTTLProb)
-                                .addOperation(Operation.GET_ASYNC, getAsyncProb)
-                                .addOperation(Operation.REMOVE_ASYNC, removeAsyncProb)
-                                .addOperation(Operation.DESTROY, destroyProb);
+                .addOperation(Operation.PUT_ASYNC_TTL, putAsyncTTLProb)
+                .addOperation(Operation.GET_ASYNC, getAsyncProb)
+                .addOperation(Operation.REMOVE_ASYNC, removeAsyncProb)
+                .addOperation(Operation.DESTROY, destroyProb);
     }
 
     @Verify(global = true)
@@ -81,14 +78,14 @@ public class MapAsyncOpsTest {
         for (MapOperationCounter mapOperationsCount : results) {
             totalMapOperationsCount.add(mapOperationsCount);
         }
-        LOGGER.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
+        logger.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
     }
 
     @Verify(global = false)
     public void verify() {
         sleepSeconds(maxTTLExpirySeconds * 2);
 
-        LOGGER.info(basename + ": map size  =" + map.size());
+        logger.info(basename + ": map size  =" + map.size());
     }
 
     @RunWithWorker

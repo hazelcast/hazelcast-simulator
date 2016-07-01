@@ -18,14 +18,13 @@ package com.hazelcast.simulator.tests.queue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
@@ -34,9 +33,7 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static org.junit.Assert.assertEquals;
 
-public class ProducerConsumerTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ProducerConsumerTest.class);
+public class ProducerConsumerTest extends AbstractTest {
 
     // properties
     public String basename = ProducerConsumerTest.class.getSimpleName();
@@ -104,7 +101,7 @@ public class ProducerConsumerTest {
 
                     iteration++;
                     if (iteration % 10 == 0) {
-                        LOGGER.info(String.format(
+                        logger.info(String.format(
                                 "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
                                 Thread.currentThread().getName(), id, iteration,
                                 produced.get(), workQueue.size(), consumed.get()
@@ -136,7 +133,7 @@ public class ProducerConsumerTest {
 
                     iteration++;
                     if (iteration % 20 == 0) {
-                        LOGGER.info(String.format(
+                        logger.info(String.format(
                                 "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
                                 Thread.currentThread().getName(), id, iteration,
                                 produced.get(), workQueue.size(), consumed.get()

@@ -17,18 +17,15 @@ package com.hazelcast.simulator.tests.external;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.AbstractTest;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
-public class ExternalClientResponseTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(ExternalClientResponseTest.class);
+public class ExternalClientResponseTest extends AbstractTest {
 
     // properties
     public String basename = "externalClientsFinished";
@@ -51,6 +48,6 @@ public class ExternalClientResponseTest {
 
         sleepSeconds(delaySeconds);
         clientsFinished.countDown();
-        LOGGER.info("Client response sent!");
+        logger.info("Client response sent!");
     }
 }

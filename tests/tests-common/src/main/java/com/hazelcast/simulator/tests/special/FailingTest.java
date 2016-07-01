@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
@@ -27,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 
@@ -41,7 +40,7 @@ import static org.junit.Assert.fail;
 /**
  * A test that causes a failure. This is useful for testing the simulator framework and for demonstration purposes.
  */
-public class FailingTest {
+public class FailingTest extends AbstractTest {
 
     public enum Failure {
         EXCEPTION,
@@ -63,8 +62,6 @@ public class FailingTest {
         MEMBER,
         CLIENT
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(FailingTest.class);
 
     // properties
     public TestPhase testPhase = TestPhase.RUN;
@@ -177,7 +174,7 @@ public class FailingTest {
                 break;
             }
         }
-        LOGGER.severe("We should never reach this code! List size: " + list.size());
+        logger.severe("We should never reach this code! List size: " + list.size());
     }
 
     private static boolean matchingType(Type type, TestContext testContext) {

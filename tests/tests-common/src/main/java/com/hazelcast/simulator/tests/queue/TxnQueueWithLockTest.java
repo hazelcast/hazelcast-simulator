@@ -20,13 +20,12 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
@@ -36,9 +35,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * This simulator test simulates the issue #2287
  */
-public class TxnQueueWithLockTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(TxnQueueWithLockTest.class);
+public class TxnQueueWithLockTest extends AbstractTest {
 
     public String basename = TxnQueueWithLockTest.class.getSimpleName();
     public int threadCount = 5;
@@ -92,16 +89,16 @@ public class TxnQueueWithLockTest {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
-                            LOGGER.severe(basename + ": Exception in txn " + counter, txnException);
+                            logger.severe(basename + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
                             counter.failedRollbacks++;
-                            LOGGER.severe(basename + ": Exception in roll " + counter, rollException);
+                            logger.severe(basename + ": Exception in roll " + counter, rollException);
                         }
                     } finally {
                         firstLock.unlock();
                     }
                 } catch (Exception e) {
-                    LOGGER.severe(basename + ": outer Exception" + counter, e);
+                    logger.severe(basename + ": outer Exception" + counter, e);
                 }
             }
             IList<TxnCounter> results = instance.getList(basename + "results");
@@ -122,7 +119,7 @@ public class TxnQueueWithLockTest {
             total.add(counter);
         }
 
-        LOGGER.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
+        logger.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
         assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
         assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
         // TODO: check if this assert can be re-enabled: assertEquals(total.committed - total.rolled, queue.size())

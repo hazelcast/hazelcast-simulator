@@ -19,12 +19,11 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -48,15 +47,13 @@ import static org.junit.Assert.fail;
  * of the cache size. The test also logs the global max size of the ICache observed from all test
  * participants, providing no assertion errors were throw.
  */
-public class EvictionICacheTest {
+public class EvictionICacheTest extends AbstractTest {
 
     enum Operation {
         PUT,
         PUT_ASYNC,
         PUT_ALL,
     }
-
-    private static final ILogger LOGGER = Logger.getLogger(EvictionICacheTest.class);
 
     public String basename = EvictionICacheTest.class.getSimpleName();
     public int threadCount = 3;
@@ -95,7 +92,7 @@ public class EvictionICacheTest {
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
-        LOGGER.info(basename + ": " + cache.getName() + " config=" + config);
+        logger.info(basename + ": " + cache.getName() + " config=" + config);
 
         configuredMaxSize = config.getEvictionConfig().getSize();
 
@@ -175,7 +172,7 @@ public class EvictionICacheTest {
                 observedMaxSize = m;
             }
         }
-        LOGGER.info(basename + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
+        logger.info(basename + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
                 + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
 
         IList<Counter> counters = hazelcastInstance.getList(basename + "counter");
@@ -183,8 +180,8 @@ public class EvictionICacheTest {
         for (Counter c : counters) {
             total.add(c);
         }
-        LOGGER.info(basename + ": " + total);
-        LOGGER.info(basename + ": putAllMap size=" + putAllMap.size());
+        logger.info(basename + ": " + total);
+        logger.info(basename + ": putAllMap size=" + putAllMap.size());
     }
 
     private static class Counter implements Serializable {

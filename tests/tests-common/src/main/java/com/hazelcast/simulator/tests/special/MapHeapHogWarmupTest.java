@@ -17,13 +17,12 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.concurrent.TimeUnit;
@@ -36,13 +35,12 @@ import static java.lang.String.format;
 
 /**
  * Fills up the cluster to a defined heap usage factor during warmup phase.
- *
+ * <p>
  * This tests intentionally has an empty run phase.
  */
-public class MapHeapHogWarmupTest {
+public class MapHeapHogWarmupTest extends AbstractTest {
 
     private static final long APPROX_ENTRY_BYTES_SIZE = 238;
-    private static final ILogger LOGGER = Logger.getLogger(MapHeapHogWarmupTest.class);
 
     // properties
     public String basename = MapHeapHogWarmupTest.class.getSimpleName();
@@ -92,7 +90,7 @@ public class MapHeapHogWarmupTest {
 
         StringBuilder sb = new StringBuilder(basename).append(": After warmup phase the map size is ").append(map.size());
         addMemoryStatistics(sb);
-        LOGGER.info(sb.toString());
+        logger.info(sb.toString());
     }
 
     @Verify
@@ -103,7 +101,7 @@ public class MapHeapHogWarmupTest {
 
         StringBuilder sb = new StringBuilder(basename).append(": In local verify phase the map size is ").append(map.size());
         addMemoryStatistics(sb);
-        LOGGER.info(sb.toString());
+        logger.info(sb.toString());
     }
 
     @Run
@@ -133,7 +131,7 @@ public class MapHeapHogWarmupTest {
                 if (isLogger && key % logFrequency == 0) {
                     sb.append(basename).append(": In warmup phase the map size is ").append(map.size());
                     addMemoryStatistics(sb);
-                    LOGGER.info(sb.toString());
+                    logger.info(sb.toString());
                     sb.setLength(0);
                 }
             }
