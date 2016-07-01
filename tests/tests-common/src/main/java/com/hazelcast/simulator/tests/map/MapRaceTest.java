@@ -15,15 +15,14 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
@@ -37,19 +36,16 @@ import static org.junit.Assert.assertEquals;
  * <p>
  * This test is expected to fail.
  */
-public class MapRaceTest {
+public class MapRaceTest extends AbstractTest {
 
     // properties
-    public String basename = MapRaceTest.class.getSimpleName();
     public int keyCount = 1000;
 
     private IMap<Integer, Long> map;
     private IMap<String, Map<Integer, Long>> resultMap;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setUp() {
         map = targetInstance.getMap(basename);
         resultMap = targetInstance.getMap(basename + ":ResultMap");
     }

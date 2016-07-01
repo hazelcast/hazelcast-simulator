@@ -45,7 +45,6 @@ public class StringICacheTest extends AbstractTest {
     }
 
     // properties
-    public String basename = StringICacheTest.class.getSimpleName();
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;

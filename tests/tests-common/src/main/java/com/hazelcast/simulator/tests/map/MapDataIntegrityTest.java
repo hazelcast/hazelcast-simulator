@@ -39,7 +39,6 @@ import static org.junit.Assert.assertNotNull;
 public class MapDataIntegrityTest extends AbstractTest {
 
     // properties
-    public String basename = MapDataIntegrityTest.class.getSimpleName();
     public int mapIntegrityThreadCount = 8;
     public int stressThreadCount = 8;
     public int totalIntegrityKeys = 10000;

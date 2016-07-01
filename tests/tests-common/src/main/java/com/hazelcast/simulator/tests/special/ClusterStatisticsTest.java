@@ -31,7 +31,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 public class ClusterStatisticsTest extends AbstractTest {
 
     // properties
-    public String basename = ClusterStatisticsTest.class.getSimpleName();
     public int isClusterSafeRetries = 10;
 
     private PartitionService partitionService;

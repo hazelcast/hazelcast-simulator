@@ -50,7 +50,6 @@ public class ExpiryTest extends AbstractTest {
         GET_ASYNC
     }
 
-    public String basename = ExpiryTest.class.getSimpleName();
     public int expiryDuration = 500;
     public int keyCount = 1000;
 

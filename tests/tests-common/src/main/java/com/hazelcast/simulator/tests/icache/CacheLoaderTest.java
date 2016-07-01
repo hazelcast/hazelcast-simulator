@@ -48,7 +48,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class CacheLoaderTest extends AbstractTest {
 
-    public String basename = CacheLoaderTest.class.getSimpleName();
     public int keyCount = 10;
     public int loadAllDelayMs = 0;
     public boolean waitForLoadAllFutureCompletion = true;

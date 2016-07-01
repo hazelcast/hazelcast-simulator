@@ -51,7 +51,6 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
         GET
     }
 
-    public String basename = AddRemoveListenerICacheTest.class.getSimpleName();
     public int keyCount = 1000;
     public boolean syncEvents = true;
 

@@ -65,7 +65,6 @@ public class MapStoreTest extends AbstractTest {
         REPLACE
     }
 
-    public String basename = MapStoreTest.class.getSimpleName();
     public int keyCount = 10;
 
     public double loadAllProb = 0.1;

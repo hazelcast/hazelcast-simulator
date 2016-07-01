@@ -18,7 +18,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -289,18 +288,16 @@ public class MapComplexPredicateTest extends AbstractTest {
         }
     }
 
-    public String basename = MapComplexPredicateTest.class.getSimpleName();
     public int mapSize = 1000000;
     public QUERY_TYPE query = QUERY_TYPE.QUERY1;
-
 
     private Random random = new Random();
     private IMap<String, ComplexDomainObject> map;
     private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
 
     @Setup
-    public void setUp(TestContext testContext) {
-        map = testContext.getTargetInstance().getMap(basename);
+    public void setUp() {
+        map = targetInstance.getMap(basename);
     }
 
     @Warmup(global = true)

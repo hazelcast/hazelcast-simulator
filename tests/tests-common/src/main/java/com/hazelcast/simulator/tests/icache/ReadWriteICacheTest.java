@@ -48,7 +48,6 @@ public class ReadWriteICacheTest extends AbstractTest {
         REMOVE
     }
 
-    public String basename = ReadWriteICacheTest.class.getSimpleName();
     public int keyCount = 10;
     public double putProb = 0.4;
     public double getProb = 0.4;

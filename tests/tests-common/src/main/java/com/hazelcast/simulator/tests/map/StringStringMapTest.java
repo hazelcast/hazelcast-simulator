@@ -45,7 +45,6 @@ public class StringStringMapTest extends AbstractTest {
     }
 
     // properties
-    public String basename = StringStringMapTest.class.getSimpleName();
     public int keyCount = 10000;
     public int valueCount = 10000;
     public int keyLength = 10;

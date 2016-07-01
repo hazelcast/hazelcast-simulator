@@ -70,13 +70,10 @@ public class FailingTest extends AbstractTest {
     public Type type = Type.ALL;
     public boolean throwError = false;
 
-    private TestContext testContext;
     private boolean isSelected;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
-        this.testContext = testContext;
-
+    public void setUp() throws Exception {
         if (matchingType(type, testContext)) {
             isSelected = isSelected(selection, testContext);
         }

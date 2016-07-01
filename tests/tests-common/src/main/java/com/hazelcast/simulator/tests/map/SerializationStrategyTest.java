@@ -18,7 +18,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -60,7 +59,6 @@ public class SerializationStrategyTest extends AbstractTest {
 
 
     // properties
-    public String basename = SerializationStrategyTest.class.getSimpleName();
     public Strategy strategy = Strategy.PORTABLE;
 
     public int itemCount = 1000000;
@@ -75,9 +73,9 @@ public class SerializationStrategyTest extends AbstractTest {
     private Set<String> uniqueStrings;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        map = testContext.getTargetInstance().getMap(basename);
-        uniqueStrings = testContext.getTargetInstance().getSet(basename);
+    public void setUp() {
+        map = targetInstance.getMap(basename);
+        uniqueStrings = targetInstance.getSet(basename);
 
         operationSelectorBuilder.addOperation(Operation.GET_BY_STRING_INDEX, getByStringIndexProb)
                 .addOperation(Operation.GET_BY_INT_INDEX, getByIntIndexProb)

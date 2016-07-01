@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -46,9 +44,8 @@ public class ExampleTest extends AbstractTest {
     private IMap<Integer, String> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
+    public void setUp() {
         logger.info("======== SETUP =========");
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap("exampleMap");
 
         logger.info("Map name is: " + map.getName());

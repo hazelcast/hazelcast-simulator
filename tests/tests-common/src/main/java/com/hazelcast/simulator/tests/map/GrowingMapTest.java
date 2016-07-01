@@ -34,7 +34,6 @@ import static org.junit.Assert.assertTrue;
 public class GrowingMapTest extends AbstractTest {
 
     // properties
-    public String basename = GrowingMapTest.class.getSimpleName();
     public int threadCount = 10;
     public int growCount = 10000;
     public boolean usePut = true;

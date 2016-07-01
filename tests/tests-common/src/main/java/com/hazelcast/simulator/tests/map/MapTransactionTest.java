@@ -42,7 +42,6 @@ import static org.junit.Assert.assertEquals;
 public class MapTransactionTest extends AbstractTest {
 
     // properties
-    public String basename = getClass().getSimpleName();
     public int keyCount = 1000;
     public boolean reThrowTransactionException = false;
     public TransactionType transactionType = TransactionType.TWO_PHASE;

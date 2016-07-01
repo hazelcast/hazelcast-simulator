@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.EntryObject;
@@ -24,7 +23,6 @@ import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -65,7 +63,6 @@ public class MapPredicateTest extends AbstractTest {
         DESTROY_MAP
     }
 
-    public String basename = MapPredicateTest.class.getSimpleName();
     public int keyCount = 100;
     public int pageSize = 5;
 
@@ -83,8 +80,7 @@ public class MapPredicateTest extends AbstractTest {
     private String baseAssertMessage;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
         operationCounterList = targetInstance.getList(basename + "OperationCounter");
 
@@ -111,7 +107,7 @@ public class MapPredicateTest extends AbstractTest {
         streamer.await();
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         PredicateOperationCounter total = new PredicateOperationCounter();
         for (PredicateOperationCounter operationCounter : operationCounterList) {

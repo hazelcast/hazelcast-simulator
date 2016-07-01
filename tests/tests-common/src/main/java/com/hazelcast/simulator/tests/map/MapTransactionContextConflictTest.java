@@ -46,7 +46,6 @@ public class MapTransactionContextConflictTest extends AbstractTest {
 
     private static final int MAX_INCREMENT = 999;
 
-    public String basename = MapTransactionContextConflictTest.class.getSimpleName();
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;

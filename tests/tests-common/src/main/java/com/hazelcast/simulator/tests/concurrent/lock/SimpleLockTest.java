@@ -34,7 +34,6 @@ public class SimpleLockTest extends AbstractTest {
 
     private static final int INITIAL_VALUE = 1000;
 
-    public String basename = SimpleLockTest.class.getSimpleName();
     public int maxAccounts = 7;
     public int threadCount = 10;
 

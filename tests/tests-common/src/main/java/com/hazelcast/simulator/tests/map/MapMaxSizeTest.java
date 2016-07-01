@@ -54,7 +54,6 @@ public class MapMaxSizeTest extends AbstractTest {
     }
 
     // properties
-    public String basename = MapMaxSizeTest.class.getSimpleName();
     public int keyCount = Integer.MAX_VALUE;
 
     public double putProb = 0.5;

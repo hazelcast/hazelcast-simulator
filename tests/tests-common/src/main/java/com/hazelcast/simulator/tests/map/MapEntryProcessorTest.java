@@ -15,18 +15,17 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorkerWithProbeControl;
@@ -36,10 +35,9 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
-public class MapEntryProcessorTest {
+public class MapEntryProcessorTest extends AbstractTest {
 
     // properties
-    public String basename = MapEntryProcessorTest.class.getSimpleName();
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;
@@ -50,14 +48,13 @@ public class MapEntryProcessorTest {
     private int[] keys;
 
     @Setup
-    public void setUp(TestContext testContext) {
+    public void setUp() {
         if (minProcessorDelayMs > maxProcessorDelayMs) {
             throw new IllegalArgumentException("minProcessorDelayMs has to be >= maxProcessorDelayMs. "
                     + "Current settings: minProcessorDelayMs = " + minProcessorDelayMs
                     + " maxProcessorDelayMs = " + maxProcessorDelayMs);
         }
 
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
         map = targetInstance.getMap(basename);
         resultsPerWorker = targetInstance.getList(basename + ":ResultMap");
         keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);

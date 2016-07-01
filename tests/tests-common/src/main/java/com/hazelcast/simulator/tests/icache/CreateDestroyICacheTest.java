@@ -42,7 +42,6 @@ public class CreateDestroyICacheTest extends AbstractTest {
         DESTROY_CACHE
     }
 
-    public String basename = CreateDestroyICacheTest.class.getSimpleName();
     public int keyCount = 100000;
     public double createCacheProb = 0.4;
     public double putCacheProb = 0.2;

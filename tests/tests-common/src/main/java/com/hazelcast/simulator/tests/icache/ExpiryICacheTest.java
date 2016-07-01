@@ -37,7 +37,6 @@ public class ExpiryICacheTest extends AbstractTest {
 
     // default keyCount entries of int, is upper bound to approx 8MB possible max, if all put inside expiryPolicy time
     public int keyCount = 1000000;
-    public String basename = ExpiryICacheTest.class.getSimpleName();
 
     private final ExpiryPolicy expiryPolicy = new CreatedExpiryPolicy(Duration.ONE_MINUTE);
 

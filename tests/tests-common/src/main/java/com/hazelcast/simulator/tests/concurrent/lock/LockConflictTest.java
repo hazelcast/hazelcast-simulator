@@ -38,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 public class LockConflictTest extends AbstractTest {
 
     // properties
-    public String basename = LockConflictTest.class.getSimpleName();
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
     public int tryLockTimeOutMs = 10;

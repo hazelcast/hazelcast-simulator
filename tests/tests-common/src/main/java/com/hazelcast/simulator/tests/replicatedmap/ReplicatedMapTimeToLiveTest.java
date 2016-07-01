@@ -45,7 +45,6 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
     }
 
     // properties
-    public String basename = ReplicatedMapTimeToLiveTest.class.getSimpleName();
     public int keyCount = 100000;
 
     public double putTTLProb = 0.7;

@@ -41,7 +41,6 @@ import static org.junit.Assert.assertEquals;
 public class ExecutorTest extends AbstractTest {
 
     // properties
-    public String basename = ExecutorTest.class.getSimpleName();
     public int executorCount = 1;
     public int threadCount = 5;
     // the number of outstanding submits, before doing get. A count of 1 means that you wait for every task to complete,

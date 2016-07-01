@@ -39,7 +39,6 @@ import static org.junit.Assert.assertEquals;
 public class AllKeySetTest extends AbstractTest {
 
     // properties
-    public String basename = AllKeySetTest.class.getSimpleName();
     // the number of map entries
     public int entryCount = 1000000;
     // the size of the key (in chars, since key is string)

@@ -59,7 +59,6 @@ public class ListenerICacheTest extends AbstractTest {
         REPLACE
     }
 
-    public String basename = ListenerICacheTest.class.getSimpleName();
     public int keyCount = 1000;
     public int maxExpiryDurationMs = 500;
     public boolean syncEvents = true;

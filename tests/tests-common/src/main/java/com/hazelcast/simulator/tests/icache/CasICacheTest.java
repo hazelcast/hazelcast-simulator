@@ -43,7 +43,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class CasICacheTest extends AbstractTest {
 
-    public String basename = CasICacheTest.class.getSimpleName();
     public int keyCount = 1000;
 
     private IList<long[]> resultsPerWorker;

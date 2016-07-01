@@ -45,7 +45,6 @@ import static org.junit.Assert.assertEquals;
 public class ITopicTest extends AbstractTest {
 
     // properties
-    public String basename = ITopicTest.class.getSimpleName();
     public int topicCount = 1000;
     public int listenersPerTopic = 1;
     public int maxProcessingDelayNanos = 0;

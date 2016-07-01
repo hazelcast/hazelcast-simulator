@@ -37,7 +37,6 @@ import static org.junit.Assert.assertFalse;
  */
 public class TryLockTimeOutTest extends AbstractTest {
 
-    public String basename = TryLockTimeOutTest.class.getSimpleName();
     public int threadCount = 3;
     public int maxAccounts = 100;
     public int tryLockTimeOutMs = 1;

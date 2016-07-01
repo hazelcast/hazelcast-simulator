@@ -51,7 +51,6 @@ public class MangleICacheTest extends AbstractTest {
         PUT
     }
 
-    public String basename = MangleICacheTest.class.getSimpleName();
     public int maxCaches = 100;
 
     public int keyCount = 100000;

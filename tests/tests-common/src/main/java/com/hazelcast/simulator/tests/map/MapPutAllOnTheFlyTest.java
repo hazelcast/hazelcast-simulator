@@ -37,7 +37,6 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 public class MapPutAllOnTheFlyTest extends AbstractTest {
 
     // properties
-    public String basename = MapPutAllOnTheFlyTest.class.getSimpleName();
     public int batchSize = 10;
     public int keyRange = 1000000;
 
