@@ -15,15 +15,14 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -35,7 +34,7 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 
-public class IntByteMapTest {
+public class IntByteMapTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -44,7 +43,6 @@ public class IntByteMapTest {
     }
 
     // properties
-    public String basename = IntByteMapTest.class.getSimpleName();
     public int keyCount = 1000;
     public int valueCount = 1000;
     public int minSize = 16;
@@ -60,10 +58,9 @@ public class IntByteMapTest {
     private byte[][] values;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance instance = testContext.getTargetInstance();
-        map = instance.getMap(basename);
-        keys = generateIntKeys(keyCount, keyLocality, instance);
+    public void setUp() {
+        map = targetInstance.getMap(basename);
+        keys = generateIntKeys(keyCount, keyLocality, targetInstance);
 
         if (minSize > maxSize) {
             throw new IllegalStateException("minSize can't be larger than maxSize");

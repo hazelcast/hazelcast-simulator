@@ -43,7 +43,6 @@ public class AtomicLongTest extends AbstractTest {
     }
 
     // properties
-    public String basename = AtomicLongTest.class.getSimpleName();
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int countersLength = 1000;
     public int warmupIterations = 100;

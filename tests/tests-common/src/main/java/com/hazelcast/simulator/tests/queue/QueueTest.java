@@ -35,7 +35,6 @@ import static org.junit.Assert.assertEquals;
 public class QueueTest extends AbstractTest {
 
     // properties
-    public String basename = QueueTest.class.getSimpleName();
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;

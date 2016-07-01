@@ -53,7 +53,6 @@ public class EvictionICacheTest extends AbstractTest {
         PUT_ALL,
     }
 
-    public String basename = EvictionICacheTest.class.getSimpleName();
     public int threadCount = 3;
     public int partitionCount;
 

@@ -29,7 +29,6 @@ import static org.junit.Assert.fail;
 
 public class LeaseLockTest extends AbstractTest {
 
-    public String basename = LeaseLockTest.class.getSimpleName();
     public int lockCount = 500;
     public int maxLeaseTimeMillis = 100;
     public int maxTryTimeMillis = 100;

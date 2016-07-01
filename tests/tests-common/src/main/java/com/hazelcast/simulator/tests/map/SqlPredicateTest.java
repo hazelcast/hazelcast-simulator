@@ -40,7 +40,6 @@ public class SqlPredicateTest extends AbstractTest {
     private static final String[] NAMES = {"aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"};
 
     // properties
-    public String basename = SqlPredicateTest.class.getSimpleName();
     public int keyCount = 10000;
     public int keyLength = 10;
     public String sql = "age = 30 AND active = true";

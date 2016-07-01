@@ -15,16 +15,15 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.io.Externalizable;
@@ -42,7 +41,7 @@ import java.io.Serializable;
  * - kryo
  * - fast-serialization
  */
-public class MapSerializationTest {
+public class MapSerializationTest extends AbstractTest {
 
     private enum Serializer {
         SERIALIZABLE,
@@ -52,16 +51,14 @@ public class MapSerializationTest {
     }
 
     // properties
-    public String basename = MapSerializationTest.class.getSimpleName();
     public int keyCount = 1000000;
     public Serializer serializer = Serializer.SERIALIZABLE;
 
     private IMap<Integer, Object> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        map = hazelcastInstance.getMap(basename);
+    public void setUp() {
+        map = targetInstance.getMap(basename);
     }
 
     @Teardown

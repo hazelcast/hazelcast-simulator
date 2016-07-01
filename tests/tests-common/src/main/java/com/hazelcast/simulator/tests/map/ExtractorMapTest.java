@@ -56,7 +56,6 @@ public class ExtractorMapTest extends AbstractTest {
         QUERY,
     }
 
-    public String basename = ExtractorMapTest.class.getSimpleName();
     public int keyCount = 100000;
     public int nestedValuesCount = 100;
     public int indexValuesCount = 5;

@@ -51,7 +51,6 @@ public class MapTimeToLiveTest extends AbstractTest {
     }
 
     // properties
-    public String basename = MapTimeToLiveTest.class.getSimpleName();
     public int keyCount = 10;
 
     public double putTTLProb = 0.4;

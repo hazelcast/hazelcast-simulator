@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.special;
 
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.tests.AbstractTest;
@@ -30,12 +29,11 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 public class ProbeConcurrencyTest extends AbstractTest {
 
     // properties
-    public String basename = ProbeConcurrencyTest.class.getSimpleName();
     public int threadCount = 0;
     public int maxOperations = 0;
 
     @Setup
-    public void setUp(TestContext testContext) {
+    public void setUp() {
         logger.info("ThreadCount: " + threadCount + " max operations: " + maxOperations);
     }
 

@@ -34,7 +34,6 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest extends AbstractTest {
 
-    public String basename = TxnQueueWithLockTest.class.getSimpleName();
     public int threadCount = 5;
 
     @Run

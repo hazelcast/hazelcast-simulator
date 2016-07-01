@@ -36,9 +36,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class MapEvictAndStoreTest extends AbstractTest {
 
-    // properties
-    public String basename = MapEvictAndStoreTest.class.getSimpleName();
-
     private IMap<Long, String> map;
     private IAtomicLong keyCounter;
 

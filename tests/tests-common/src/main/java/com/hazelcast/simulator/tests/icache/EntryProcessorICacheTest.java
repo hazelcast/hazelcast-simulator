@@ -42,7 +42,6 @@ import static org.junit.Assert.assertEquals;
 public class EntryProcessorICacheTest extends AbstractTest {
 
     // properties
-    public String basename = EntryProcessorICacheTest.class.getSimpleName();
     public int keyCount = 1000;
     public int minProcessorDelayMs = 0;
     public int maxProcessorDelayMs = 0;

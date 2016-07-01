@@ -35,7 +35,6 @@ import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 public class MapTTLSaturationTest extends AbstractTest {
 
     // properties
-    public String basename = MapTTLSaturationTest.class.getSimpleName();
     public double maxHeapUsagePercentage = 80;
 
     private IMap<Long, Long> map;

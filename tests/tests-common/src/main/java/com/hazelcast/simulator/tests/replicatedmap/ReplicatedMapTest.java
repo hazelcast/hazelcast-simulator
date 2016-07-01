@@ -41,7 +41,6 @@ public class ReplicatedMapTest extends AbstractTest {
     }
 
     // properties
-    public String basename = ReplicatedMapTest.class.getSimpleName();
     public int keyCount = 10000;
     public int valueCount = 1;
     public int valueLength = 10;
@@ -59,7 +58,7 @@ public class ReplicatedMapTest extends AbstractTest {
 
     @Setup
     public void setUp() throws Exception {
-        map = testContext.getTargetInstance().getReplicatedMap(basename + "-" + testContext.getTestId());
+        map = targetInstance.getReplicatedMap(basename + "-" + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
                 .addOperation(Operation.GET, getProb)

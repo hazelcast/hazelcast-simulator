@@ -41,7 +41,6 @@ public class MapHeapHogWarmupTest extends AbstractTest {
     private static final long APPROX_ENTRY_BYTES_SIZE = 238;
 
     // properties
-    public String basename = MapHeapHogWarmupTest.class.getSimpleName();
     public int threadCount = 10;
     public int logFrequency = 50000;
     public int ttlHours = 24;

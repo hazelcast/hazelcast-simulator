@@ -26,7 +26,6 @@ import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -54,7 +53,6 @@ public class MultiValueMapTest extends AbstractTest {
         QUERY,
     }
 
-    public String basename = MultiValueMapTest.class.getSimpleName();
     public int keyCount = 100000;
     public int maxNestedValues = 100;
     public double putProbability = 0.5;
@@ -66,8 +64,8 @@ public class MultiValueMapTest extends AbstractTest {
     private IMap<Integer, Object> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        map = testContext.getTargetInstance().getMap(basename);
+    public void setUp() {
+        map = targetInstance.getMap(basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProbability)

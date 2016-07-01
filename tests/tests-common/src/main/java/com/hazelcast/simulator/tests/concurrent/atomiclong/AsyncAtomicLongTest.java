@@ -54,7 +54,6 @@ public class AsyncAtomicLongTest extends AbstractTest {
     }
 
     // properties
-    public String basename = AsyncAtomicLongTest.class.getSimpleName();
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int countersLength = 1000;
     public MetronomeType metronomeType = MetronomeType.SLEEPING;

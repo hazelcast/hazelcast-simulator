@@ -52,7 +52,6 @@ public class BatchingICacheTest extends AbstractTest {
 
     // properties
     public int keyCount = 1000000;
-    public String basename = BatchingICacheTest.class.getSimpleName();
     public double writeProb = 0.1;
     public int batchSize = 1;
 

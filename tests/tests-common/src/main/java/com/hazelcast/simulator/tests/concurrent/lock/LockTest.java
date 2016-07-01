@@ -35,7 +35,6 @@ import static org.junit.Assert.assertTrue;
 public class LockTest extends AbstractTest {
 
     // properties
-    public String basename = LockTest.class.getSimpleName();
     public int lockCount = 500;
     public int initialAmount = 1000;
     public int amount = 50;

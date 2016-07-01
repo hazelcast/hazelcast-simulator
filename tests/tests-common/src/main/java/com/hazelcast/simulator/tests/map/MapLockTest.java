@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -39,16 +37,13 @@ import static org.junit.Assert.assertEquals;
 public class MapLockTest extends AbstractTest {
 
     // properties
-    public String basename = MapLockTest.class.getSimpleName();
     public int keyCount = 1000;
 
     private IMap<Integer, Long> map;
     private IList<long[]> incrementsList;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setUp() {
         map = targetInstance.getMap(basename);
         incrementsList = targetInstance.getList(basename);
     }
@@ -60,8 +55,8 @@ public class MapLockTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void verify() {
+    @Verify
+    public void globalVerify() {
         long[] expected = new long[keyCount];
 
         for (long[] increments : incrementsList) {

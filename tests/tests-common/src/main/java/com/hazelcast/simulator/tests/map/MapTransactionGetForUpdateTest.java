@@ -41,7 +41,6 @@ import static org.junit.Assert.assertEquals;
 public class MapTransactionGetForUpdateTest extends AbstractTest {
 
     // properties
-    public String basename = MapTransactionGetForUpdateTest.class.getSimpleName();
     public int threadCount = 40;
     public int keyCount = 100;
     public boolean rethrowAllException = false;

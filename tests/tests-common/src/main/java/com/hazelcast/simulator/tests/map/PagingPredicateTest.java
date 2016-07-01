@@ -15,14 +15,13 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -42,9 +41,8 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
  * Implementation note: There is a small code duplication in worker implementations - it could be eliminated by
  * introducing a common superclass, but I believe it would just make things more complicated.
  */
-public class PagingPredicateTest {
+public class PagingPredicateTest extends AbstractTest {
 
-    public String basename = PagingPredicateTest.class.getSimpleName();
     // this is rather high number, make sure you have enough heap space, e.g. with JVM option -Xmx20g
     public int keyCount = 10000000;
     public boolean useIndex;
@@ -58,8 +56,7 @@ public class PagingPredicateTest {
     private SqlPredicate innerPredicate;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
         innerPredicate = new SqlPredicate(innerPredicateQuery);
     }

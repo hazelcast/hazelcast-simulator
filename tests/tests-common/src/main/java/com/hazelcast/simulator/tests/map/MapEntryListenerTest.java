@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -63,7 +61,6 @@ public class MapEntryListenerTest extends AbstractTest {
     private static final int SLEEP_CATCH_EVENTS_MILLIS = 8000;
 
     // properties
-    public String basename = MapEntryListenerTest.class.getSimpleName();
     public int valueLength = 100;
     public int keyCount = 1000;
     public int valueCount = 1000;
@@ -92,9 +89,7 @@ public class MapEntryListenerTest extends AbstractTest {
     private IMap<Integer, String> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setUp() {
         values = generateStrings(valueCount, valueLength);
         listener = new EntryListenerImpl<Integer, String>(minEntryListenerDelayMs, maxEntryListenerDelayMs);
 

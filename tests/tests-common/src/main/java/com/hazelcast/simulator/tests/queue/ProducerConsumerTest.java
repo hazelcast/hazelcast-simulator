@@ -34,7 +34,6 @@ import static org.junit.Assert.assertEquals;
 public class ProducerConsumerTest extends AbstractTest {
 
     // properties
-    public String basename = ProducerConsumerTest.class.getSimpleName();
     public int producerCount = 4;
     public int consumerCount = 4;
     public int maxIntervalMillis = 1000;

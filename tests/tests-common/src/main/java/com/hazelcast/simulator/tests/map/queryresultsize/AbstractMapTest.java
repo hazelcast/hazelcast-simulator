@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map.queryresultsize;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
@@ -39,11 +37,9 @@ import static org.junit.Assert.assertTrue;
 
 abstract class AbstractMapTest extends AbstractTest {
 
-    HazelcastInstance hazelcastInstance;
     IMap<Object, Integer> map;
     IAtomicLong operationCounter;
     IAtomicLong exceptionCounter;
-    String basename;
 
     long globalKeyCount;
     int localKeyCount;
@@ -52,13 +48,10 @@ abstract class AbstractMapTest extends AbstractTest {
         HazelcastTestUtils.failOnVersionMismatch("3.5", basename + ": This tests needs Hazelcast %s or newer");
     }
 
-    void baseSetup(TestContext testContext, String basename) {
-        this.hazelcastInstance = testContext.getTargetInstance();
-
-        this.map = hazelcastInstance.getMap(basename);
-        this.operationCounter = hazelcastInstance.getAtomicLong(basename + "Ops");
-        this.exceptionCounter = hazelcastInstance.getAtomicLong(basename + "Exceptions");
-        this.basename = basename;
+    void baseSetup() {
+        this.map = targetInstance.getMap(basename);
+        this.operationCounter = targetInstance.getAtomicLong(basename + "Ops");
+        this.exceptionCounter = targetInstance.getAtomicLong(basename + "Exceptions");
 
         Integer minResultSizeLimit = 100000;
         Float resultLimitFactor = 1.15f;
@@ -70,7 +63,7 @@ abstract class AbstractMapTest extends AbstractTest {
             logger.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
         }
 
-        int clusterSize = hazelcastInstance.getCluster().getMembers().size();
+        int clusterSize = targetInstance.getCluster().getMembers().size();
         this.globalKeyCount = getGlobalKeyCount(minResultSizeLimit, resultLimitFactor);
         this.localKeyCount = (int) Math.ceil(globalKeyCount / (double) clusterSize);
 
@@ -90,18 +83,18 @@ abstract class AbstractMapTest extends AbstractTest {
     abstract long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor);
 
     void baseWarmup(String keyType) {
-        if (!isMemberNode(hazelcastInstance)) {
+        if (!isMemberNode(targetInstance)) {
             return;
         }
 
         int value = 0;
         Streamer<Object, Integer> streamer = StreamerFactory.getInstance(map);
         if ("String".equals(keyType)) {
-            for (String key : generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, hazelcastInstance)) {
+            for (String key : generateStringKeys(localKeyCount, 10, KeyLocality.LOCAL, targetInstance)) {
                 streamer.pushEntry(key, value++);
             }
         } else if ("Integer".equals(keyType)) {
-            for (int key : generateIntKeys(localKeyCount, KeyLocality.LOCAL, hazelcastInstance)) {
+            for (int key : generateIntKeys(localKeyCount, KeyLocality.LOCAL, targetInstance)) {
                 streamer.pushEntry(key, value++);
             }
         } else {

@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.slow;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.MapInterceptor;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -63,7 +61,6 @@ public class SlowOperationMapTest extends AbstractTest {
     }
 
     // properties
-    public String basename = SlowOperationMapTest.class.getSimpleName();
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 100;
@@ -81,19 +78,18 @@ public class SlowOperationMapTest extends AbstractTest {
     private Object slowOperationDetector;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        isClient = isClient(hazelcastInstance);
-        keys = generateIntKeys(keyCount, KeyLocality.LOCAL, hazelcastInstance);
-        map = hazelcastInstance.getMap(basename);
+    public void setUp() {
+        isClient = isClient(targetInstance);
+        keys = generateIntKeys(keyCount, KeyLocality.LOCAL, targetInstance);
+        map = targetInstance.getMap(basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)
                 .addDefaultOperation(Operation.GET);
 
         // try to find the slowOperationDetector instance (since Hazelcast 3.5)
-        if (isMemberNode(hazelcastInstance)) {
-            slowOperationDetector = getFieldValue(getOperationService(hazelcastInstance), "slowOperationDetector");
+        if (isMemberNode(targetInstance)) {
+            slowOperationDetector = getFieldValue(getOperationService(targetInstance), "slowOperationDetector");
             if (slowOperationDetector == null) {
                 fail(basename + ": This test needs Hazelcast 3.5 or newer");
             }

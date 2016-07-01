@@ -30,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 
 public class SplitClusterDataTest extends AbstractTest {
 
-    public String basename = SplitClusterDataTest.class.getSimpleName();
     public int maxItems = 10000;
     public int clusterSize = -1;
     public int splitClusterSize = -1;

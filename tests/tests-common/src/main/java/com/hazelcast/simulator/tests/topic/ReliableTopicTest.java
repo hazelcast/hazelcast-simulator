@@ -49,7 +49,6 @@ import static org.junit.Assert.assertEquals;
 public class ReliableTopicTest extends AbstractTest {
 
     // properties
-    public String basename = ReliableTopicTest.class.getSimpleName();
     public int topicCount = 10;
     public int listenersPerTopic = 2;
     public KeyLocality keyLocality = KeyLocality.SHARED;

@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.map.queryresultsize;
 
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -41,14 +40,13 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 public class MapLatencyTest extends AbstractMapTest {
 
     // properties
-    public String basename = MapLatencyTest.class.getSimpleName();
     public String keyType = "String";
     public String operationType = "values";
     public int keyCount = -1;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        baseSetup(testContext, basename);
+    public void setUp() {
+        baseSetup();
     }
 
     @Override
@@ -64,7 +62,7 @@ public class MapLatencyTest extends AbstractMapTest {
         baseWarmup(keyType);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         baseVerify(false);
     }

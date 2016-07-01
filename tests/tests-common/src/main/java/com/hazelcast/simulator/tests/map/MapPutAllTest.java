@@ -31,7 +31,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+import static com.hazelcast.simulator.tests.helpers.GenericTypes.STRING;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 
 /**
  * Test for {@link IMap#putAll(Map)} which uses a set of prepared maps with input values during the RUN phase.
@@ -41,11 +43,9 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 public class MapPutAllTest extends AbstractTest {
 
     // properties
-    public String basename = MapPutAllTest.class.getSimpleName();
-
-    public KeyLocality keyLocality = KeyLocality.SHARED;
-    public GenericTypes keyType = GenericTypes.STRING;
-    public GenericTypes valueType = GenericTypes.STRING;
+    public KeyLocality keyLocality = SHARED;
+    public GenericTypes keyType = STRING;
+    public GenericTypes valueType = STRING;
     public int keyCount = 1000000;
     public int itemCount = 10000;
 

@@ -15,20 +15,19 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-public class MapLongPerformanceTest {
+public class MapLongPerformanceTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -36,7 +35,6 @@ public class MapLongPerformanceTest {
     }
 
     // properties
-    public String basename = MapLongPerformanceTest.class.getSimpleName();
     public int keyCount = 1000000;
     public double writeProb = 0.1;
 
@@ -45,9 +43,8 @@ public class MapLongPerformanceTest {
     private IMap<Integer, Long> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        map = hazelcastInstance.getMap(basename);
+    public void setUp() {
+        map = targetInstance.getMap(basename);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, writeProb)

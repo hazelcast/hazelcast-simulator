@@ -43,7 +43,6 @@ public class PerformanceICacheTest extends AbstractTest {
     }
 
     // properties
-    public String basename = PerformanceICacheTest.class.getSimpleName();
     public int keyCount = 1000000;
     public double putProb = 0.1;
 

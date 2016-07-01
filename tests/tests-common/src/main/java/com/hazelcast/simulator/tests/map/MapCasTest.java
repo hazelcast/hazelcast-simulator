@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -25,6 +23,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
@@ -41,18 +40,16 @@ import static org.junit.Assert.assertEquals;
  * <p>
  * Locally we keep track of all increments, and if the sum of these local increments matches the global increment, we are done.
  */
-public class MapCasTest {
+public class MapCasTest extends AbstractTest {
 
     // properties
     public int keyCount = 1000;
-    public String basename = MapCasTest.class.getSimpleName();
 
     private IMap<Integer, Long> map;
     private IMap<String, Map<Integer, Long>> resultsPerWorker;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
         resultsPerWorker = targetInstance.getMap(basename + ":ResultMap");
     }

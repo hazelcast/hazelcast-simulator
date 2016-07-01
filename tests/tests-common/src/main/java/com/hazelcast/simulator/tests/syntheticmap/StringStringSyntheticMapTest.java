@@ -41,7 +41,6 @@ public class StringStringSyntheticMapTest extends AbstractTest {
     }
 
     // properties
-    public String basename = StringStringSyntheticMapTest.class.getSimpleName();
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;

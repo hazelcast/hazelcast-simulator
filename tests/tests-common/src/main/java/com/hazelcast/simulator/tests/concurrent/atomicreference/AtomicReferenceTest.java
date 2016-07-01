@@ -40,7 +40,6 @@ public class AtomicReferenceTest extends AbstractTest {
     }
 
     // properties
-    public String basename = AtomicReferenceTest.class.getSimpleName();
     public int countersLength = 1000;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int valueCount = 1000;
