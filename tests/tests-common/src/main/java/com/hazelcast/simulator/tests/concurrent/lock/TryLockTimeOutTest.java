@@ -15,12 +15,9 @@
  */
 package com.hazelcast.simulator.tests.concurrent.lock;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
@@ -47,18 +44,10 @@ public class TryLockTimeOutTest extends AbstractTest {
     public long initialAccountValue = 1000;
 
     private long totalInitialValue;
-    private TestContext testContext;
-    private HazelcastInstance hazelcastInstance;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        hazelcastInstance = testContext.getTargetInstance();
-    }
 
     @Warmup(global = true)
     public void warmup() {
-        IList<Long> accounts = hazelcastInstance.getList(basename);
+        IList<Long> accounts = targetInstance.getList(basename);
         for (int i = 0; i < maxAccounts; i++) {
             accounts.add(initialAccountValue);
         }
@@ -70,12 +59,12 @@ public class TryLockTimeOutTest extends AbstractTest {
     public void verify() {
 
         for (int i = 0; i < maxAccounts; i++) {
-            ILock lock = hazelcastInstance.getLock(basename + i);
+            ILock lock = targetInstance.getLock(basename + i);
             assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
         }
 
         long totalValue = 0;
-        IList<Long> accounts = hazelcastInstance.getList(basename);
+        IList<Long> accounts = targetInstance.getList(basename);
         for (long value : accounts) {
             totalValue += value;
         }
@@ -83,7 +72,7 @@ public class TryLockTimeOutTest extends AbstractTest {
         assertEquals(basename + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
 
         Counter total = new Counter();
-        IList<Counter> totals = hazelcastInstance.getList(basename + "count");
+        IList<Counter> totals = targetInstance.getList(basename + "count");
         for (Counter count : totals) {
             total.add(count);
         }
@@ -110,7 +99,7 @@ public class TryLockTimeOutTest extends AbstractTest {
                 int key1 = random.nextInt(maxAccounts);
                 int key2 = random.nextInt(maxAccounts);
 
-                ILock outerLock = hazelcastInstance.getLock(basename + key1);
+                ILock outerLock = targetInstance.getLock(basename + key1);
                 try {
                     if (outerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                         try {
@@ -124,15 +113,15 @@ public class TryLockTimeOutTest extends AbstractTest {
                     counter.interruptedException++;
                 }
             }
-            hazelcastInstance.getList(basename + "count").add(counter);
+            targetInstance.getList(basename + "count").add(counter);
         }
 
         private void innerLockOperation(int key1, int key2) {
-            ILock innerLock = hazelcastInstance.getLock(basename + key2);
+            ILock innerLock = targetInstance.getLock(basename + key2);
             try {
                 if (innerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                     try {
-                        IList<Long> accounts = hazelcastInstance.getList(basename);
+                        IList<Long> accounts = targetInstance.getList(basename);
                         int delta = random.nextInt(100);
 
                         if (accounts.get(key1) >= delta) {

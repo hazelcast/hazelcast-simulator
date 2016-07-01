@@ -15,13 +15,10 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
@@ -51,15 +48,6 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
     public boolean rethrowRollBackException = false;
     public TransactionOptions.TransactionType transactionType = TransactionOptions.TransactionType.TWO_PHASE;
     public int durability = 1;
-
-    private HazelcastInstance targetInstance;
-    private TestContext testContext;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
-    }
 
     @Warmup(global = true)
     public void warmup() {

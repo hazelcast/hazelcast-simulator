@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.concurrent.lock;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -26,6 +24,7 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static java.lang.String.format;
@@ -33,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class LockTest {
+public class LockTest extends AbstractTest {
 
     // properties
     public String basename = LockTest.class.getSimpleName();
@@ -42,12 +41,9 @@ public class LockTest {
     public int amount = 50;
 
     private IAtomicLong lockCounter;
-    private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         lockCounter = targetInstance.getAtomicLong(basename + ":LockCounter");
     }
 

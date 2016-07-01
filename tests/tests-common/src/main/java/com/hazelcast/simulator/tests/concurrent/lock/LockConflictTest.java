@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.concurrent.lock;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -46,19 +44,16 @@ public class LockConflictTest extends AbstractTest {
     public int tryLockTimeOutMs = 10;
     public boolean throwException = false;
 
-    private HazelcastInstance hazelcastInstance;
     private IList<Long> list;
-
     private IList<long[]> globalIncrements;
     private IList<LockCounter> globalCounter;
 
     @Setup
-    public void setup(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-        list = hazelcastInstance.getList(basename);
+    public void setup() {
+        list = targetInstance.getList(basename);
 
-        globalIncrements = hazelcastInstance.getList(basename + "res");
-        globalCounter = hazelcastInstance.getList(basename + "report");
+        globalIncrements = targetInstance.getList(basename + "res");
+        globalCounter = targetInstance.getList(basename + "report");
     }
 
     @Warmup(global = true)
@@ -197,7 +192,7 @@ public class LockConflictTest extends AbstractTest {
         }
 
         private ILock getLock(KeyIncrementPair keyIncrementPair) {
-            return hazelcastInstance.getLock(basename + 'l' + keyIncrementPair.key);
+            return targetInstance.getLock(basename + 'l' + keyIncrementPair.key);
         }
 
         @Override

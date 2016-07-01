@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.queue;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -44,13 +42,9 @@ public class ProducerConsumerTest extends AbstractTest {
     private IAtomicLong produced;
     private IQueue<Work> workQueue;
     private IAtomicLong consumed;
-    private TestContext testContext;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         produced = targetInstance.getAtomicLong(basename + ":Produced");
         consumed = targetInstance.getAtomicLong(basename + ":Consumed");
         workQueue = targetInstance.getQueue(basename + ":WorkQueue");

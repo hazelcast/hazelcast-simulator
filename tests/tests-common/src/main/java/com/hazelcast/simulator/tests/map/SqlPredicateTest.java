@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -52,11 +50,9 @@ public class SqlPredicateTest extends AbstractTest {
     public double maxSalary = 1000.0;
 
     private IMap<String, DataSerializableEmployee> map;
-    private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.targetInstance = testContext.getTargetInstance();
+    public void setup() {
         this.map = targetInstance.getMap(basename);
     }
 

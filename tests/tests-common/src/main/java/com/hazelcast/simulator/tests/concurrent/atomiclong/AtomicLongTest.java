@@ -16,9 +16,7 @@
 package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.DistributedObject;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -54,15 +52,12 @@ public class AtomicLongTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance targetInstance;
     private AtomicLong operationsCounter = new AtomicLong();
     private IAtomicLong totalCounter;
     private IAtomicLong[] counters;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
 

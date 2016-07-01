@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.queue;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IQueue;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -44,16 +42,11 @@ public class QueueTest extends AbstractTest {
     public int logFrequency = 200;
 
     private final AtomicLong totalCounter = new AtomicLong(0);
-
-    private TestContext testContext;
     private IQueue<Long>[] queues;
 
     @Setup
     @SuppressWarnings("unchecked")
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         queues = new IQueue[queueLength];
 
         // the KeyLocality has to be RANDOM here, since we need different queues on each Worker

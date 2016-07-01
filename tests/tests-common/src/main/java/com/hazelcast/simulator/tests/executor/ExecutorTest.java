@@ -19,7 +19,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -52,13 +51,9 @@ public class ExecutorTest extends AbstractTest {
     private IExecutorService[] executors;
     private IAtomicLong executedCounter;
     private IAtomicLong expectedExecutedCounter;
-    private TestContext testContext;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
-
+    public void setup() {
         executors = new IExecutorService[executorCount];
         for (int i = 0; i < executors.length; i++) {
             executors[i] = targetInstance.getExecutorService(basename + '-' + i);

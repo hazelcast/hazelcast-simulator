@@ -20,7 +20,6 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -42,8 +41,8 @@ public class MapTTLSaturationTest extends AbstractTest {
     private IMap<Long, Long> map;
 
     @Setup
-    public void setup(TestContext testContext) {
-        map = testContext.getTargetInstance().getMap(basename);
+    public void setup() {
+        map = targetInstance.getMap(basename);
     }
 
     @Verify(global = false)

@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -62,9 +60,8 @@ public class CacheLoaderTest extends AbstractTest {
     private Cache<Integer, Integer> cache;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        loaderList = hazelcastInstance.getList(basename + "loaders");
+    public void setup() {
+        loaderList = targetInstance.getList(basename + "loaders");
 
         config = new MutableConfiguration<Integer, Integer>();
         config.setReadThrough(true);
@@ -73,7 +70,7 @@ public class CacheLoaderTest extends AbstractTest {
         recordingCacheLoader.loadAllDelayMs = loadAllDelayMs;
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(recordingCacheLoader));
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cacheManager.createCache(basename, config);
         cache = cacheManager.getCache(basename);
     }

@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.replicatedmap;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -55,14 +53,12 @@ public class ReplicatedMapTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance targetInstance;
     private ReplicatedMap<Integer, String> map;
 
     private String[] values;
 
     @Setup
-    public void setUp(TestContext testContext) throws Exception {
-        targetInstance = testContext.getTargetInstance();
+    public void setUp() throws Exception {
         map = testContext.getTargetInstance().getReplicatedMap(basename + "-" + testContext.getTestId());
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)

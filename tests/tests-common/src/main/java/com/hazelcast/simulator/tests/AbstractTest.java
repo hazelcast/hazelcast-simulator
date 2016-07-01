@@ -15,8 +15,12 @@
  */
 package com.hazelcast.simulator.tests;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
+import com.hazelcast.simulator.test.annotations.InjectTestContext;
 
 /**
  * An Abstract Test that provides basic behavior so it doesn't need to be repeated for every test.
@@ -27,4 +31,9 @@ public abstract class AbstractTest {
 
     protected final ILogger logger = Logger.getLogger(getClass());
 
+    @InjectHazelcastInstance
+    protected HazelcastInstance targetInstance;
+
+    @InjectTestContext
+    protected TestContext testContext;
 }

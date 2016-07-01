@@ -17,9 +17,7 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -66,8 +64,6 @@ public class EvictionICacheTest extends AbstractTest {
     public double putAsyncProb = 0.1;
     public double putAllProb = 0.1;
 
-    private TestContext testContext;
-    private HazelcastInstance hazelcastInstance;
     private byte[] value;
     private ICache<Object, Object> cache;
     private int configuredMaxSize;
@@ -79,16 +75,14 @@ public class EvictionICacheTest extends AbstractTest {
     private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        hazelcastInstance = this.testContext.getTargetInstance();
-        partitionCount = hazelcastInstance.getPartitionService().getPartitions().size();
+    public void setup() {
+        partitionCount = targetInstance.getPartitionService().getPartitions().size();
 
         value = new byte[valueSize];
         Random random = new Random();
         random.nextBytes(value);
 
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
@@ -158,14 +152,14 @@ public class EvictionICacheTest extends AbstractTest {
 
         @Override
         public void afterRun() throws Exception {
-            hazelcastInstance.getList(basename + "max").add(max);
-            hazelcastInstance.getList(basename + "counter").add(counter);
+            targetInstance.getList(basename + "max").add(max);
+            targetInstance.getList(basename + "counter").add(counter);
         }
     }
 
     @Verify
     public void globalVerify() {
-        IList<Integer> results = hazelcastInstance.getList(basename + "max");
+        IList<Integer> results = targetInstance.getList(basename + "max");
         int observedMaxSize = 0;
         for (int m : results) {
             if (observedMaxSize < m) {
@@ -175,7 +169,7 @@ public class EvictionICacheTest extends AbstractTest {
         logger.info(basename + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
                 + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
 
-        IList<Counter> counters = hazelcastInstance.getList(basename + "counter");
+        IList<Counter> counters = targetInstance.getList(basename + "counter");
         Counter total = new Counter();
         for (Counter c : counters) {
             total.add(c);

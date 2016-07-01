@@ -16,14 +16,13 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -44,7 +43,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  * Setting {@link #batchSize} to values greater than 1 causes the batch-effect to kick-in, pipe-lines are utilized better
  * and overall throughput goes up.
  */
-public class BatchingICacheTest {
+public class BatchingICacheTest extends AbstractTest {
 
     private enum Operation {
         PUT,
@@ -62,12 +61,9 @@ public class BatchingICacheTest {
     private ICache<Object, Object> cache;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+    public void setup() {
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cache = (ICache<Object, Object>) cacheManager.getCache(basename);
-
         operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);
     }
 

@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.TruePredicate;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -53,11 +51,9 @@ public class AllEntrySetTest extends AbstractTest {
     public boolean usePredicate = false;
 
     private IMap<String, String> map;
-    private HazelcastInstance targetInstance;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.targetInstance = testContext.getTargetInstance();
+    public void setup() {
         this.map = targetInstance.getMap(basename);
     }
 

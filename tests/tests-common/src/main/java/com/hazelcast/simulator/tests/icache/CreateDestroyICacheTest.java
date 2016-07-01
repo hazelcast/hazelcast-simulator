@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -57,11 +55,10 @@ public class CreateDestroyICacheTest extends AbstractTest {
     private CacheManager cacheManager;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        counters = hazelcastInstance.getList(basename);
+    public void setup() {
+        counters = targetInstance.getList(basename);
 
-        cacheManager = createCacheManager(hazelcastInstance);
+        cacheManager = createCacheManager(targetInstance);
 
         builder.addOperation(Operation.CREATE_CACHE, createCacheProb)
                 .addOperation(Operation.PUT_CACHE, putCacheProb)
@@ -69,8 +66,8 @@ public class CreateDestroyICacheTest extends AbstractTest {
                 .addOperation(Operation.DESTROY_CACHE, destroyCacheProb);
     }
 
-    @Verify(global = true)
-    public void verify() {
+    @Verify
+    public void globalVerify() {
         ICacheCreateDestroyCounter total = new ICacheCreateDestroyCounter();
         for (ICacheCreateDestroyCounter counter : counters) {
             total.add(counter);

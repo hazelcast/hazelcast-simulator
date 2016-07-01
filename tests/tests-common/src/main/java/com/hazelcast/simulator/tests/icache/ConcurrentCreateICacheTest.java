@@ -16,9 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.config.CacheConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -44,16 +42,15 @@ public class ConcurrentCreateICacheTest extends AbstractTest {
     private IList<Counter> counterList;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        counterList = hazelcastInstance.getList(baseName);
+    public void setup() {
+        counterList = targetInstance.getList(baseName);
 
         CacheConfig config = new CacheConfig();
         config.setName(baseName);
 
         Counter counter = new Counter();
         try {
-            CacheManager cacheManager = createCacheManager(hazelcastInstance);
+            CacheManager cacheManager = createCacheManager(targetInstance);
             cacheManager.createCache(baseName, config);
             counter.create++;
         } catch (CacheException e) {

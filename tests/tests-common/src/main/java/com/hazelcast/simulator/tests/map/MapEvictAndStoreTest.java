@@ -17,10 +17,8 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -41,13 +39,11 @@ public class MapEvictAndStoreTest extends AbstractTest {
     // properties
     public String basename = MapEvictAndStoreTest.class.getSimpleName();
 
-    private HazelcastInstance targetInstance;
     private IMap<Long, String> map;
     private IAtomicLong keyCounter;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getMap(basename);
         keyCounter = targetInstance.getAtomicLong(basename);
 

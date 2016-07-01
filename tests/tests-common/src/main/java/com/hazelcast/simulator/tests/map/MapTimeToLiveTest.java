@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -71,8 +69,7 @@ public class MapTimeToLiveTest extends AbstractTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getMap(basename);
         results = targetInstance.getList(basename + "report");
 
@@ -83,7 +80,7 @@ public class MapTimeToLiveTest extends AbstractTest {
                 .addOperation(Operation.DESTROY, destroyProb);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter counter : results) {

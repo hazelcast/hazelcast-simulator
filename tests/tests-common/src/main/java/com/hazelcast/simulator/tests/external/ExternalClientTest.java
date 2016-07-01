@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.tests.external;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -45,24 +43,21 @@ public class ExternalClientTest extends AbstractTest {
     @InjectProbe
     private Probe externalClientProbe;
 
-    private HazelcastInstance hazelcastInstance;
     private boolean isExternalResultsCollectorInstance;
     private ICountDownLatch clientsRunning;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        hazelcastInstance = testContext.getTargetInstance();
-
-        if (isMemberNode(hazelcastInstance)) {
+    public void setUp() {
+        if (isMemberNode(targetInstance)) {
             return;
         }
 
         // init ICountDownLatch with waitForClientsCount
-        clientsRunning = hazelcastInstance.getCountDownLatch(basename);
+        clientsRunning = targetInstance.getCountDownLatch(basename);
         setCountDownLatch(clientsRunning, waitForClientsCount);
 
         // determine one instance per cluster
-        if (hazelcastInstance.getMap(basename).putIfAbsent(basename, true) == null) {
+        if (targetInstance.getMap(basename).putIfAbsent(basename, true) == null) {
             isExternalResultsCollectorInstance = true;
             logger.info("This instance will collect all probe results from external clients");
         } else {
@@ -72,7 +67,7 @@ public class ExternalClientTest extends AbstractTest {
 
     @Run
     public void run() throws ExecutionException, InterruptedException {
-        if (isMemberNode(hazelcastInstance)) {
+        if (isMemberNode(targetInstance)) {
             return;
         }
 
@@ -101,8 +96,8 @@ public class ExternalClientTest extends AbstractTest {
 
         // get probe results
         logger.info("Collecting results from external clients...");
-        getThroughputResults(hazelcastInstance, expectedResultSize);
-        getLatencyResults(hazelcastInstance, externalClientProbe, expectedResultSize);
+        getThroughputResults(targetInstance, expectedResultSize);
+        getLatencyResults(targetInstance, externalClientProbe, expectedResultSize);
         logger.info("Result collecting ExternalClientTest done!");
     }
 }

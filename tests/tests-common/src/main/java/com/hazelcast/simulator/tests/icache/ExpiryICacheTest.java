@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -46,9 +44,8 @@ public class ExpiryICacheTest extends AbstractTest {
     private ICache<Integer, Integer> cache;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-        cache = getCache(hazelcastInstance, basename);
+    public void setup() {
+        cache = getCache(targetInstance, basename);
     }
 
     @RunWithWorker

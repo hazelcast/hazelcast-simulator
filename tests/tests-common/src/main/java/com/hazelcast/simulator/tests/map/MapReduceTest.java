@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
@@ -29,7 +28,6 @@ import com.hazelcast.mapreduce.KeyValueSource;
 import com.hazelcast.mapreduce.Mapper;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -65,14 +63,11 @@ public class MapReduceTest extends AbstractTest {
 
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
-    private HazelcastInstance targetInstance;
     private IMap<Integer, Employee> map;
     private IList<MapReduceOperationCounter> operationCounterList;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-
+    public void setUp() {
         map = targetInstance.getMap(baseName);
         operationCounterList = targetInstance.getList(baseName + "OperationCounter");
 

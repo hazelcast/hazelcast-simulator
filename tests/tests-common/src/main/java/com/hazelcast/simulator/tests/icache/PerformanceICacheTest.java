@@ -15,13 +15,12 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -35,7 +34,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 /**
  * A performance test for the cache. The key is integer and value is a integer
  */
-public class PerformanceICacheTest {
+public class PerformanceICacheTest extends AbstractTest {
 
 
     private enum Operation {
@@ -53,10 +52,8 @@ public class PerformanceICacheTest {
     private Cache<Object, Object> cache;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance hazelcastInstance = testContext.getTargetInstance();
-
-        CacheManager cacheManager = createCacheManager(hazelcastInstance);
+    public void setup() {
+        CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)

@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -37,14 +35,10 @@ public class SplitClusterDataTest extends AbstractTest {
     public int clusterSize = -1;
     public int splitClusterSize = -1;
 
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
     private IMap<Object, Object> map;
 
     @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getMap(basename);
 
         if (clusterSize == -1 || splitClusterSize == -1) {

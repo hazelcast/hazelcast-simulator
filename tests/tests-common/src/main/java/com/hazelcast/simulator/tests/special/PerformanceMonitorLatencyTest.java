@@ -16,10 +16,9 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.tests.AbstractTest;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,19 +27,12 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 /**
  * Used to verify the latency measurement with a superficial constant latency value.
  */
-public class PerformanceMonitorLatencyTest {
+public class PerformanceMonitorLatencyTest extends AbstractTest {
 
     private static final long LATENCY_NANOS = TimeUnit.MICROSECONDS.toNanos(20);
 
     @InjectProbe(useForThroughput = true)
     Probe probe;
-
-    private TestContext testContext;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-    }
 
     @Run
     public void run() {

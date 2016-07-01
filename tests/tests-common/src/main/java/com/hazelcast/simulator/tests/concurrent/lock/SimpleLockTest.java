@@ -15,12 +15,9 @@
  */
 package com.hazelcast.simulator.tests.concurrent.lock;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
@@ -42,14 +39,6 @@ public class SimpleLockTest extends AbstractTest {
     public int threadCount = 10;
 
     private int totalValue = 0;
-    private TestContext testContext;
-    private HazelcastInstance targetInstance;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        this.testContext = testContext;
-        targetInstance = testContext.getTargetInstance();
-    }
 
     @Warmup(global = true)
     public void warmup() {

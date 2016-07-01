@@ -15,11 +15,8 @@
  */
 package com.hazelcast.simulator.tests.concurrent.lock;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -37,13 +34,6 @@ public class LeaseLockTest extends AbstractTest {
     public int maxLeaseTimeMillis = 100;
     public int maxTryTimeMillis = 100;
     public boolean allowZeroMillisRemainingLeaseLockTime = false;
-
-    private HazelcastInstance targetInstance;
-
-    @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
-    }
 
     @Verify
     public void verify() {

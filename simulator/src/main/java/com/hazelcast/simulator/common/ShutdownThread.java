@@ -44,12 +44,12 @@ public abstract class ShutdownThread extends Thread {
     }
 
     ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
-                             long waitForShutdownTimeoutMillis) {
+                   long waitForShutdownTimeoutMillis) {
         this(name, shutdownStarted, shutdownLog4j, waitForShutdownTimeoutMillis, new CountDownLatch(1));
     }
 
     private ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
-                             long waitForShutdownTimeoutMillis, CountDownLatch shutdownComplete) {
+                           long waitForShutdownTimeoutMillis, CountDownLatch shutdownComplete) {
         super(name);
         setDaemon(false);
 
