@@ -182,7 +182,7 @@ public class AgentOperationProcessorTest {
         when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
         when(workerJvmSettings.getHazelcastConfig()).thenReturn("");
         when(workerJvmSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        when(workerJvmSettings.getJavaCmd()).thenReturn(withStartupException ? null : "java");
+        when(workerJvmSettings.getWorkerScript()).thenReturn(withStartupException ? null : "java");
         when(workerJvmSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
         when(workerJvmSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
         when(workerJvmSettings.getJvmOptions()).thenReturn("-verbose:gc");

@@ -77,13 +77,22 @@ public final class AgentWorkerLayout {
     }
 
     void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
-        workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters,
-                workerConfiguration.getHzVersion(), workerConfiguration.getJvmOptions(),
-                workerConfiguration.getHzConfig()));
+        workerJvmSettingsList.add(
+                new WorkerJvmSettings(
+                        currentWorkerIndex.incrementAndGet(),
+                        type,
+                        parameters,
+                        workerConfiguration.getHzVersion(),
+                        workerConfiguration.getJvmOptions(),
+                        workerConfiguration.getHzConfig()));
     }
 
     void addWorker(WorkerType type, WorkerParameters parameters) {
-        workerJvmSettingsList.add(new WorkerJvmSettings(currentWorkerIndex.incrementAndGet(), type, parameters));
+        workerJvmSettingsList.add(
+                new WorkerJvmSettings(
+                        currentWorkerIndex.incrementAndGet(),
+                        type,
+                        parameters));
     }
 
     int getCount(WorkerType type) {

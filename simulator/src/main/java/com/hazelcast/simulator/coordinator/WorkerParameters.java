@@ -44,11 +44,18 @@ public class WorkerParameters {
     private final boolean monitorPerformance;
     private final int workerPerformanceMonitorIntervalSeconds;
 
-    private final String javaCmd;
+    private final String workerScript;
 
-    public WorkerParameters(SimulatorProperties properties, boolean autoCreateHzInstance, int workerStartupTimeout,
-                            String memberJvmOptions, String clientJvmOptions, String memberHzConfig, String clientHzConfig,
-                            String log4jConfig, boolean monitorPerformance) {
+    public WorkerParameters(SimulatorProperties properties,
+                            boolean autoCreateHzInstance,
+                            int workerStartupTimeout,
+                            String memberJvmOptions,
+                            String clientJvmOptions,
+                            String memberHzConfig,
+                            String clientHzConfig,
+                            String log4jConfig,
+                            String workerScript,
+                            boolean monitorPerformance) {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
 
@@ -63,8 +70,7 @@ public class WorkerParameters {
 
         this.monitorPerformance = monitorPerformance;
         this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(properties);
-
-        this.javaCmd = properties.get("JAVA_CMD", "java");
+        this.workerScript = workerScript;
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
@@ -122,8 +128,8 @@ public class WorkerParameters {
         return min(workerPerformanceMonitorIntervalSeconds, runPhaseLogIntervalSeconds);
     }
 
-    public String getJavaCmd() {
-        return javaCmd;
+    public String getWorkerScript() {
+        return workerScript;
     }
 
     public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,

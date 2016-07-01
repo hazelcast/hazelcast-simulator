@@ -161,6 +161,12 @@ final class CoordinatorCli {
                     PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
             .withRequiredArg().ofType(String.class);
 
+    private final OptionSpec<String> workerScriptFileSpec = parser.accepts("workerScript",
+            "The worker startup shell script. If no file is explicitly configured,"
+                    + " first the 'worker.sh' in the working directory is loaded."
+                    + " If that doesn't exist then SIMULATOR_HOME/conf/worker.sh is loaded.")
+            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultConfigurationFile("worker.sh"));
+
     private final OptionSpec<String> memberHzConfigFileSpec = parser.accepts("hzFile",
             "The Hazelcast XML configuration file for the Worker. If no file is explicitly configured,"
                     + " first the 'hazelcast.xml' in the working directory is loaded."
@@ -252,6 +258,7 @@ final class CoordinatorCli {
                 initMemberHzConfig(memberHzConfig, componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
                 initClientHzConfig(clientHzConfig, componentRegistry, defaultHzPort, licenseKey),
                 loadLog4jConfig(),
+                loadWorkerScript(options, cli),
                 options.has(cli.monitorPerformanceSpec)
         );
 
@@ -330,6 +337,12 @@ final class CoordinatorCli {
     private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
         File file = getFile(cli.memberHzConfigFileSpec, options, "Hazelcast member configuration for Worker");
         LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
+        return fileAsText(file);
+    }
+
+    private static String loadWorkerScript(OptionSet options, CoordinatorCli cli) {
+        File file = getFile(cli.workerScriptFileSpec, options, "Hazelcast worker.sh");
+        LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
