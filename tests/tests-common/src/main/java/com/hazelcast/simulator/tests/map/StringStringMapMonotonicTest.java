@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -151,10 +150,5 @@ public class StringStringMapMonotonicTest extends AbstractTest {
         private String randomValue() {
             return values[randomInt(values.length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        StringStringMapMonotonicTest test = new StringStringMapMonotonicTest();
-        new TestRunner<StringStringMapMonotonicTest>(test).run();
     }
 }

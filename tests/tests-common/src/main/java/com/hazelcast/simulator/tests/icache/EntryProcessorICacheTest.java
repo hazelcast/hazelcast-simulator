@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -154,10 +153,5 @@ public class EntryProcessorICacheTest extends AbstractTest {
             entry.setValue(newValue);
             return null;
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        EntryProcessorICacheTest test = new EntryProcessorICacheTest();
-        new TestRunner<EntryProcessorICacheTest>(test).run();
     }
 }

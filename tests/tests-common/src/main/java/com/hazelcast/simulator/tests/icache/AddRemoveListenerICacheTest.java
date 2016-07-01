@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -146,9 +145,5 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
             logger.info(basename + ": " + operationCounter);
             results.add(operationCounter);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        new TestRunner<AddRemoveListenerICacheTest>(new AddRemoveListenerICacheTest()).run();
     }
 }

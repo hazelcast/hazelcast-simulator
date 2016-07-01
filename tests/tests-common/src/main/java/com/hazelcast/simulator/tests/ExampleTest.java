@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -113,10 +112,5 @@ public class ExampleTest extends AbstractTest {
                     throw new UnsupportedOperationException("Unknown operation: " + operation);
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        ExampleTest test = new ExampleTest();
-        new TestRunner<ExampleTest>(test).run();
     }
 }

@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -79,9 +78,5 @@ public class ExpiryICacheTest extends AbstractTest {
                 assertEquals(basename + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
             }
         });
-    }
-
-    public static void main(String[] args) throws Exception {
-        new TestRunner<ExpiryICacheTest>(new ExpiryICacheTest()).run();
     }
 }

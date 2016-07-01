@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -140,10 +139,5 @@ public class ProducerConsumerTest extends AbstractTest {
     }
 
     static class Work implements Serializable {
-    }
-
-    public static void main(String[] args) throws Exception {
-        ProducerConsumerTest test = new ProducerConsumerTest();
-        new TestRunner<ProducerConsumerTest>(test).run();
     }
 }

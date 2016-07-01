@@ -16,19 +16,13 @@
 package com.hazelcast.simulator.tests.synthetic;
 
 import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Partition;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
-import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.KeyUtils;
@@ -48,28 +42,26 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 
 /**
  * The SyntheticTest can be used to test features like back pressure.
- *
+ * <p>
  * It can be configured with:
  * - sync invocation
  * - async invocation
  * - number of sync backups
  * - number of async backups
  * - delay of back pressing.
- *
+ * <p>
  * This test doesn't make use of any normal data-structures like an {@link com.hazelcast.core.IMap}, but uses the SPI directly to
  * execute operations and backups. This gives a lot of control on the behavior.
- *
+ * <p>
  * If for example we want to test back pressure on async backups, just set the asyncBackupCount to a value larger than 0 and if
  * you want to simulate a slow down, also set the backupDelayNanos. If this is set to a high value, on the backup you will get a
  * pileup of back up commands which eventually can lead to an OOME.
- *
+ * <p>
  * Another interesting scenario to test is a normal async invocation of a readonly operation (so no async/sync-backups) and see if
  * the system can be flooded with too many request. Normal sync operations don't cause that many problems because there is a
  * natural balance between the number of threads and the number of pending invocations.
  */
-public class SyntheticTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(SyntheticTest.class);
+public class SyntheticTest extends AbstractTest {
 
     // properties
     public boolean syncInvocation = true;
@@ -82,17 +74,13 @@ public class SyntheticTest {
     public int syncFrequency = 1;
     public String serviceName;
 
-    @InjectTestContext
-    private TestContext testContext;
-    @InjectHazelcastInstance
-    private HazelcastInstance targetInstance;
     @InjectProbe(useForThroughput = true)
     private Probe probe;
 
     @Teardown
     public void teardown() {
-        LOGGER.info(getOperationCountInformation(targetInstance));
-        LOGGER.info(getPartitionDistributionInformation(targetInstance));
+        logger.info(getOperationCountInformation(targetInstance));
+        logger.info(getPartitionDistributionInformation(targetInstance));
     }
 
     @RunWithWorker
@@ -212,8 +200,4 @@ public class SyntheticTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        SyntheticTest test = new SyntheticTest();
-        new TestRunner<SyntheticTest>(test).withDuration(10).run();
-    }
 }

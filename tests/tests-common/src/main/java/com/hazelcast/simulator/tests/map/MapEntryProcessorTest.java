@@ -19,7 +19,6 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -150,10 +149,5 @@ public class MapEntryProcessorTest extends AbstractTest {
             entry.setValue(newValue);
             return null;
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        MapEntryProcessorTest test = new MapEntryProcessorTest();
-        new TestRunner<MapEntryProcessorTest>(test).run();
     }
 }

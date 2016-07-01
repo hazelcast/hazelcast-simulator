@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.jmx;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -96,10 +95,5 @@ public class PartitionServiceMBeanTest extends AbstractTest {
                     throw new UnsupportedOperationException();
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        PartitionServiceMBeanTest test = new PartitionServiceMBeanTest();
-        new TestRunner<PartitionServiceMBeanTest>(test).run();
     }
 }

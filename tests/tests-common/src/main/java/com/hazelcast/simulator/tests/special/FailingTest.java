@@ -19,7 +19,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -202,10 +201,5 @@ public class FailingTest extends AbstractTest {
 
     private static IMap<String, Boolean> getMap(TestContext testContext) {
         return testContext.getTargetInstance().getMap("failureSelection" + testContext.getTestId());
-    }
-
-    public static void main(String[] args) throws Exception {
-        FailingTest test = new FailingTest();
-        new TestRunner<FailingTest>(test).run();
     }
 }

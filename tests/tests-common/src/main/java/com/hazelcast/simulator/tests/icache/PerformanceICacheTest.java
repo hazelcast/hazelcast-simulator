@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -100,10 +99,5 @@ public class PerformanceICacheTest extends AbstractTest {
                     throw new UnsupportedOperationException();
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        PerformanceICacheTest test = new PerformanceICacheTest();
-        new TestRunner<PerformanceICacheTest>(test).run();
     }
 }

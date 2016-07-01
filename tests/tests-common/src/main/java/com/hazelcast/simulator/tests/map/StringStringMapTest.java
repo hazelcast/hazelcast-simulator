@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -63,7 +62,7 @@ public class StringStringMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-         map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(basename);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
                 .addOperation(Operation.SET, setProb)
@@ -141,10 +140,5 @@ public class StringStringMapTest extends AbstractTest {
         private String randomValue() {
             return values[randomInt(values.length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        StringStringMapTest test = new StringStringMapTest();
-        new TestRunner<StringStringMapTest>(test).run();
     }
 }

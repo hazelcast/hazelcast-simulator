@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -148,8 +147,4 @@ public class AtomicLongTest extends AbstractTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        AtomicLongTest test = new AtomicLongTest();
-        new TestRunner<AtomicLongTest>(test).withDuration(10).run();
-    }
 }
