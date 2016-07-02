@@ -15,26 +15,25 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which sleeps on a fixed interval.
- *
+ * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
- *
+ * <p>
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
-final class SleepingMetronome implements Metronome {
+public final class SleepingMetronome implements Metronome {
 
     private final long intervalNanos;
 
     private boolean isFirstSleep = true;
 
-    SleepingMetronome(long intervalNanos) {
+    public SleepingMetronome(long intervalNanos) {
         this.intervalNanos = intervalNanos;
     }
 
@@ -52,7 +51,7 @@ final class SleepingMetronome implements Metronome {
 
     @Override
     public long getInterval() {
-        return TimeUnit.NANOSECONDS.toMillis(intervalNanos);
+        return NANOSECONDS.toMillis(intervalNanos);
     }
 
     @Override

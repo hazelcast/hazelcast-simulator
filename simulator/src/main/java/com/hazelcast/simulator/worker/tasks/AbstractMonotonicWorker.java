@@ -43,6 +43,7 @@ public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
             timeStep();
             probe.recordValue(System.nanoTime() - started);
             increaseIteration();
+            iterations.lazySet(getIteration());
         }
     }
 

@@ -17,7 +17,7 @@ import java.lang.reflect.Method;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.ALWAYS_FILTER;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethod;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeIntervalMillis;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
@@ -137,7 +137,7 @@ public class AnnotationReflectionUtilsTest {
 
     @Test
     public void testGetAtMostOneVoidMethodSkipArgsCheck() {
-        Method method = getAtMostOneVoidMethodSkipArgsCheck(AnnotationTestClass.class, Warmup.class);
+        Method method = getAtMostOneVoidMethod(AnnotationTestClass.class, Warmup.class);
         assertEquals("voidMethod", method.getName());
     }
 

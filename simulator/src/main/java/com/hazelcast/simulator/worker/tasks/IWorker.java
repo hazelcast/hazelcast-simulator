@@ -35,6 +35,15 @@ public interface IWorker {
     String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
 
     /**
+     * Returns the current iteration.
+     *
+     * This method is thread-safe.
+     *
+     * @return
+     */
+    long iteration();
+
+    /**
      * Override this method if you need to execute code on each worker before {@link #run()} is called.
      *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
