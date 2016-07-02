@@ -17,12 +17,9 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
-import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Set;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
 import static java.lang.String.format;
@@ -37,65 +34,40 @@ public final class PropertyBindingSupport {
 
     private static final String NULL_LITERAL = "null";
 
-    private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
-
     private PropertyBindingSupport() {
     }
 
     /**
-     * Binds all the properties contained in the testCase object onto the test instance.
-     *
-     * @param testInstance       Instance of the test class
-     * @param testCase           TestCase which contains the properties
-     * @param optionalProperties Set of optional properties which will not cause a failure if not found
-     */
-    public static void bindProperties(Object testInstance, TestCase testCase, Set<String> optionalProperties) {
-        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
-            String property = entry.getKey();
-            String value = entry.getValue();
-
-            // we ignore the class property
-            if ("class".equals(property)) {
-                continue;
-            }
-
-            bindProperty(testInstance, property, value, optionalProperties);
-        }
-    }
-
-    /**
      * Binds a single property contained in the {@link TestCase} instance onto the object instance.
-     *
+     * <p>
      * There will be no warning if the property is not defined in the {@link TestCase}.
      * There will be no exception if the property will not be found in the object instance, just a warning.
      *
      * @param instance     Instance were the property should be injected
      * @param testCase     TestCase which contains
      * @param propertyName Name of the property which should be injected
+     * @return true if a matching property was found in the testCase, false otherwise.
+     * @throws RuntimeException if there was an error binding
      */
-    public static void bindOptionalProperty(Object instance, TestCase testCase, String propertyName) {
-        String propertyValue = getPropertyValue(testCase, propertyName);
-        if (propertyValue == null) {
-            return;
+    public static boolean bind(Object instance, TestCase testCase, String propertyName) {
+        String value = getValue(testCase, propertyName);
+        if (value == null) {
+            return false;
         }
 
-        try {
-            bindProperty(instance, propertyName, propertyValue);
-        } catch (Exception e) {
-            LOGGER.warn("Optional property could not be bound", e);
-        }
+        return bind0(instance, propertyName, value);
     }
 
     /**
      * Returns a single property contained in the {@link TestCase} instance.
-     *
+     * <p>
      * There will be no warning if the property is not defined in the {@link TestCase}.
      *
      * @param testCase     TestCase which contains
      * @param propertyName Name of the property which should be injected
      * @return Value of the property if found, {@code null} otherwise
      */
-    public static String getPropertyValue(TestCase testCase, String propertyName) {
+    private static String getValue(TestCase testCase, String propertyName) {
         if (testCase == null) {
             return null;
         }
@@ -107,11 +79,8 @@ public final class PropertyBindingSupport {
         return propertyValue;
     }
 
-    static void bindProperty(Object object, String property, String value) {
-        bindProperty(object, property, value, null);
-    }
 
-    private static void bindProperty(Object object, String property, String value, Set<String> optionalProperties) {
+    static boolean bind0(Object object, String property, String value) {
         value = value.trim();
 
         String[] path = property.split("\\.");
@@ -120,24 +89,19 @@ public final class PropertyBindingSupport {
 
         Field field = findPropertyField(object.getClass(), path[path.length - 1]);
         if (field == null) {
-            if (optionalProperties != null && optionalProperties.contains(property)) {
-                // the property is optional so we just ignore that we couldn't bind it
-                return;
-            }
-            throw new BindException(format("Property [%s.%s] does not exist", object.getClass().getName(), property));
+            return false;
+        }
+
+        if (isProbeField(field)) {
+            return false;
         }
 
         try {
-            if (isProbeField(field) || setValue(object, value, field)) {
-                return;
-            }
+            return setValue(object, value, field);
         } catch (Exception e) {
             throw new BindException(format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
                     value, object.getClass().getName(), property, field.getType()), e);
         }
-
-        throw new BindException(format("Unhandled type [%s] for field [%s.%s]",
-                field.getType(), object.getClass().getName(), field.getName()));
     }
 
     private static Object findPropertyObjectInPath(Object object, String property, String[] path) {

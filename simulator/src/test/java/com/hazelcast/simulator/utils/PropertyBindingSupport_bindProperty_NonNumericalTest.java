@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind0;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -14,85 +14,85 @@ public class PropertyBindingSupport_bindProperty_NonNumericalTest {
 
     @Test
     public void bindProperty_boolean() {
-        bindProperty(bindPropertyTestClass, "booleanField", "true");
+        bind0(bindPropertyTestClass, "booleanField", "true");
         assertEquals(true, bindPropertyTestClass.booleanField);
 
-        bindProperty(bindPropertyTestClass, "booleanField", "false");
+        bind0(bindPropertyTestClass, "booleanField", "false");
         assertEquals(false, bindPropertyTestClass.booleanField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_boolean_invalid() {
-        bindProperty(bindPropertyTestClass, "booleanField", "invalid");
+        bind0(bindPropertyTestClass, "booleanField", "invalid");
     }
 
     @Test
     public void bindProperty_Boolean() {
-        bindProperty(bindPropertyTestClass, "booleanObjectField", "null");
+        bind0(bindPropertyTestClass, "booleanObjectField", "null");
         assertNull(bindPropertyTestClass.booleanObjectField);
 
-        bindProperty(bindPropertyTestClass, "booleanObjectField", "true");
+        bind0(bindPropertyTestClass, "booleanObjectField", "true");
         assertEquals(Boolean.TRUE, bindPropertyTestClass.booleanObjectField);
 
-        bindProperty(bindPropertyTestClass, "booleanObjectField", "false");
+        bind0(bindPropertyTestClass, "booleanObjectField", "false");
         assertEquals(Boolean.FALSE, bindPropertyTestClass.booleanObjectField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Boolean_invalid() {
-        bindProperty(bindPropertyTestClass, "booleanObjectField", "invalid");
+        bind0(bindPropertyTestClass, "booleanObjectField", "invalid");
     }
 
     @Test
     public void bindProperty_class() {
-        bindProperty(bindPropertyTestClass, "clazz", "null");
+        bind0(bindPropertyTestClass, "clazz", "null");
         assertNull(bindPropertyTestClass.clazz);
 
-        bindProperty(bindPropertyTestClass, "clazz", ArrayList.class.getName());
+        bind0(bindPropertyTestClass, "clazz", ArrayList.class.getName());
         assertEquals(ArrayList.class.getName(), bindPropertyTestClass.clazz.getName());
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_class_notFound() {
-        bindProperty(bindPropertyTestClass, "clazz", "com.hazelnuts.simulator.utils.NotFound");
+        bind0(bindPropertyTestClass, "clazz", "com.hazelnuts.simulator.utils.NotFound");
     }
 
     @Test
     public void bindProperty_string() {
-        bindProperty(bindPropertyTestClass, "stringField", "null");
+        bind0(bindPropertyTestClass, "stringField", "null");
         assertNull(bindPropertyTestClass.stringField);
 
-        bindProperty(bindPropertyTestClass, "stringField", "foo");
+        bind0(bindPropertyTestClass, "stringField", "foo");
         assertEquals("foo", bindPropertyTestClass.stringField);
     }
 
     @Test
     public void bindProperty_enum_nullValue() {
-        bindProperty(bindPropertyTestClass, "enumField", "null");
+        bind0(bindPropertyTestClass, "enumField", "null");
         assertNull(bindPropertyTestClass.enumField);
     }
 
     @Test
     public void bindProperty_enum() {
-        bindProperty(bindPropertyTestClass, "enumField", BindPropertyTestClass.BindPropertyEnum.HOURS.name());
+        bind0(bindPropertyTestClass, "enumField", BindPropertyTestClass.BindPropertyEnum.HOURS.name());
         assertEquals(bindPropertyTestClass.enumField, BindPropertyTestClass.BindPropertyEnum.HOURS);
     }
 
     @Test
     public void bindProperty_enum_caseInsensitive() {
-        bindProperty(bindPropertyTestClass, "enumField", "dAyS");
+        bind0(bindPropertyTestClass, "enumField", "dAyS");
         assertEquals(bindPropertyTestClass.enumField, BindPropertyTestClass.BindPropertyEnum.DAYS);
     }
 
     @Test
     public void bindProperty_enum_privateEnumClass() {
-        bindProperty(bindPropertyTestClass, "privateEnumField", BindPropertyTestClass.PrivateBindPropertyEnum.PRIVATE.name());
+        bind0(bindPropertyTestClass, "privateEnumField", BindPropertyTestClass.PrivateBindPropertyEnum.PRIVATE.name());
         assertEquals(bindPropertyTestClass.privateEnumField, BindPropertyTestClass.PrivateBindPropertyEnum.PRIVATE);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_enum_fieldNotFound() {
-        bindProperty(bindPropertyTestClass, "enumField", "notExist");
+        bind0(bindPropertyTestClass, "enumField", "notExist");
     }
 
     @SuppressWarnings("unused")

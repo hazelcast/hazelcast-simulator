@@ -214,26 +214,36 @@ public class WorkerPerformanceMonitor {
                     long maxValue = intervalHistogram.getMaxValue();
                     if (maxValue > intervalMaxLatency) {
                         intervalMaxLatency = maxValue;
-                    }
-                    if (probe.isPartOfTotalThroughput()) {
-                        intervalOperationalCount += intervalHistogram.getTotalCount();
-                    }
+//                    }
+//                    if (probe.isPartOfTotalThroughput()) {
+//                        intervalOperationalCount += intervalHistogram.getTotalCount();
+//                    }
                 } else {
-                    intervalPercentileLatency = -1;
-                    intervalAvgLatency = -1;
-                    intervalMaxLatency = -1;
-
-                    if (probe.isPartOfTotalThroughput()) {
-                        AtomicLong previous = test.getOrCreatePrevious(probe);
-
-                        long current = probe.get();
-                        long delta = current - previous.get();
-                        previous.set(current);
-
-                        intervalOperationalCount += delta;
+//                    intervalPercentileLatency = -1;
+//                    intervalAvgLatency = -1;
+//                    intervalMaxLatency = -1;
+//
+//                    if (probe.isPartOfTotalThroughput()) {
+//                        AtomicLong previous = test.getOrCreatePrevious(probe);
+//
+//                        long current = probe.get();
+//                        long delta = current - previous.get();
+//                        previous.set(current);
+//
+//                        intervalOperationalCount += delta;
                     }
                 }
             }
+
+            intervalPercentileLatency = -1;
+            intervalAvgLatency = -1;
+            intervalMaxLatency = -1;
+
+            long currentIterations = testContainer.iteration();
+            long previousIterations = test.iterationPrevious;
+            test.iterationPrevious = currentIterations;
+
+            intervalOperationalCount = currentIterations - previousIterations;
 
             test.tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
                     intervalOperationalCount, currentTimestamp);
@@ -293,6 +303,7 @@ public class WorkerPerformanceMonitor {
      */
     private static class MonitoredTest {
 
+        private long iterationPrevious;
         private final TestPerformanceTracker tracker;
         private final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
         private final TestContainer testContainer;

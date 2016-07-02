@@ -91,7 +91,7 @@ public final class AnnotationReflectionUtils {
      * @param annotationType Type of the annotation
      * @return the found method or <tt>null</tt> if no method was found
      */
-    public static Method getAtMostOneVoidMethodSkipArgsCheck(Class classType, Class<? extends Annotation> annotationType) {
+    public static Method getAtMostOneVoidMethod(Class classType, Class<? extends Annotation> annotationType) {
         return getAtMostOneMethod(classType, annotationType, ALWAYS_FILTER, null, true);
     }
 
@@ -188,6 +188,19 @@ public final class AnnotationReflectionUtils {
 
         return null;
     }
+
+    public static List<Method> findAllMethods(
+            Class classType,
+            Class<? extends Annotation> annotation) {
+        List<Method> methods = new LinkedList<Method>();
+        do {
+            findMethod(classType, annotation, new AnnotationFilter.AlwaysFilter(), methods);
+            classType = classType.getSuperclass();
+        } while (classType != null);
+
+        return methods;
+    }
+
 
     @SuppressWarnings("unchecked")
     private static void findMethod(Class searchClass, Class<? extends Annotation> annotation, AnnotationFilter filter,
