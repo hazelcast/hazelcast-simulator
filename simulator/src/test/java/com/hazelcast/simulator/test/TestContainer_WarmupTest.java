@@ -34,12 +34,12 @@ public class TestContainer_WarmupTest extends AbstractTestContainerTest {
         private boolean globalWarmupCalled;
 
         @Warmup
-        void localTeardown() {
+        public void localTeardown() {
             localWarmupCalled = true;
         }
 
         @Warmup(global = true)
-        void globalTeardown() {
+        public void globalTeardown() {
             globalWarmupCalled = true;
         }
     }

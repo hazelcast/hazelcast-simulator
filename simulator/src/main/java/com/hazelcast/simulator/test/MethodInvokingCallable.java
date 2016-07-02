@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test.annotations;
+package com.hazelcast.simulator.test;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
 
-/**
- * Can be placed on top of a method to generate a {@link com.hazelcast.simulator.worker.tasks.IWorker} instance. The
- * simulator will then take care of starting a thread for each of these works.
- *
- * This annotation should not be used any longer. Please upgrade to the {@link TimeStep} approach.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface RunWithWorker {
+public class MethodInvokingCallable implements Callable {
+    private final Object instance;
+    private final Method method;
+    private final Object[] args;
+
+    public MethodInvokingCallable(Object instance, Method method, Object... args) {
+        this.instance = instance;
+        this.method = method;
+        this.args = args;
+    }
+
+    @Override
+    public Object call() throws Exception {
+        return method.invoke(instance, args);
+    }
 }

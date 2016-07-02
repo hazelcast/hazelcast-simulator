@@ -24,7 +24,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
 
         assertNotNull(test.probe);
         assertFalse(test.probe.isPartOfTotalThroughput());
-        assertTrue(testContainer.hasProbe("probe"));
+        assertTrue(testContainer.getProbeMap().containsKey("probe"));
 
         testContainer.invoke(TestPhase.RUN);
         Map<String, Probe> probeMap = testContainer.getProbeMap();
@@ -38,7 +38,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         testContainer = createTestContainer(test);
 
         assertNotNull(test.namedProbe);
-        assertTrue(testContainer.hasProbe("explicitProbeName"));
+        assertTrue(testContainer.getProbeMap().containsKey("explicitProbeName"));
     }
 
     @Test
@@ -48,7 +48,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
 
         assertNotNull(test.throughputProbe);
         assertTrue(test.throughputProbe.isPartOfTotalThroughput());
-        assertTrue(testContainer.hasProbe("throughputProbe"));
+        assertTrue(testContainer.getProbeMap().containsKey("throughputProbe"));
     }
 
     @Test
@@ -59,17 +59,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         assertNull(test.notAnnotatedProbe);
     }
 
-    @Test
-    public void testInjectProbe_withLightweightProbe() {
-        ProbeTest test = new ProbeTest();
-        testContainer = new TestContainer(testContext, test, true);
-
-        assertNotNull(test.throughputProbe);
-        assertFalse(test.throughputProbe instanceof HdrProbe);
-        assertTrue(testContainer.hasProbe("throughputProbe"));
-    }
-
-    private static class ProbeTest extends BaseTest {
+    public static class ProbeTest  {
 
         @InjectTestContext
         private TestContext context;
@@ -109,13 +99,13 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         DuplicateProbeNameTest test = new DuplicateProbeNameTest();
         testContainer = createTestContainer(test);
 
-        assertTrue(testContainer.hasProbe("sameProbeName"));
+        assertTrue(testContainer.getProbeMap().containsKey("sameProbeName"));
         assertEquals(test.sameProbeName, test.explicitSameProbeName);
         assertEquals(test.sameProbeName, test.anotherExplicitSameProbeName);
         assertEquals(test.explicitSameProbeName, test.anotherExplicitSameProbeName);
     }
 
-    private static class DuplicateProbeNameTest extends BaseTest {
+    public static class DuplicateProbeNameTest extends BaseTest {
 
         @InjectProbe
         private Probe sameProbeName;

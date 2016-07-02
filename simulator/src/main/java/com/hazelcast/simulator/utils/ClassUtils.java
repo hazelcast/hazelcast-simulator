@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test.annotations;
+package com.hazelcast.simulator.utils;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public final class ClassUtils {
 
-/**
- * Can be placed on top of a method to generate a {@link com.hazelcast.simulator.worker.tasks.IWorker} instance. The
- * simulator will then take care of starting a thread for each of these works.
- *
- * This annotation should not be used any longer. Please upgrade to the {@link TimeStep} approach.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface RunWithWorker {
+    private ClassUtils() {
+    }
+
+    /**
+     * Returns the name of the class. If the class is an inner class, the '$' is replaced by a '.'.
+     *
+     * @param clazz the Class
+     * @return the name of the class.
+     */
+    public static String getClassName(Class clazz) {
+        return clazz == null ? null : clazz.getName().replace('$', '.');
+    }
 }

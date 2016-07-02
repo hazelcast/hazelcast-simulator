@@ -13,20 +13,20 @@ abstract class AbstractTestContainerTest {
     TestContainer testContainer;
 
     <T> TestContainer createTestContainer(T test) {
-        return new TestContainer(testContext, test);
+        return new TestContainer(testContext, test, new TestCase("foo"));
     }
 
-    static class BaseTest {
+    public static class BaseTest {
 
         boolean runCalled;
 
         @Run
-        void run() {
+        public void run() {
             runCalled = true;
         }
     }
 
-    static class BaseSetupTest extends BaseTest {
+    public static class BaseSetupTest extends BaseTest {
 
         TestContext context;
         boolean setupCalled;

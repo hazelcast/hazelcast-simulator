@@ -2,6 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -13,8 +14,6 @@ import org.HdrHistogram.Histogram;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static org.junit.Assert.assertEquals;
@@ -40,7 +39,8 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerWithProbeControlTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test,
+                new TestCase("foo").setProperty("threadCount", THREAD_COUNT));
 
         ExceptionReporter.reset();
     }
@@ -66,7 +66,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT , test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -77,12 +77,12 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertNotNull(test.probe);
-        Histogram intervalHistogram = ((HdrProbe)test.probe).getIntervalHistogram();
+        Histogram intervalHistogram = ((HdrProbe) test.probe).getIntervalHistogram();
         assertEquals(THREAD_COUNT * ITERATION_COUNT, intervalHistogram.getTotalCount());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
-    private static class WorkerTest {
+    public static class WorkerTest {
 
         private TestContext testContext;
 

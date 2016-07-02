@@ -35,17 +35,17 @@ public class FailingTest {
     }
 
     @Warmup
-    void warmup() {
+    public void warmup() {
         sleepSeconds(1);
     }
 
     @Verify
-    void verify() {
+    public void verify() {
         fail("Expected exception in verify method");
     }
 
     @Run
-    void run() {
+    public void run() {
         if (!context.isStopped()) {
             sleepSeconds(1);
 

@@ -1,11 +1,8 @@
 
 package com.hazelcast.simulator.test;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.tests.PerformanceMonitorTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.Test;
 
@@ -29,26 +26,9 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
     }
 
     @Test
-    public void testConstructor_withTestcase_withLightweightProbe() {
-        TestCase testCase = new TestCase("TestContainerWithLightweightProbeTest");
-        testCase.setProperty("class", PerformanceMonitorTest.class.getName());
-        testCase.setProperty(TestContainer.LIGHTWEIGHT_PROBE_PROPERTY_NAME, "true");
-
-        testContainer = new TestContainer(testContext, testCase);
-
-        assertNotNull(testContainer.getTestInstance());
-        assertTrue(testContainer.getTestInstance() instanceof PerformanceMonitorTest);
-
-        PerformanceMonitorTest test = (PerformanceMonitorTest) testContainer.getTestInstance();
-        Probe probe = test.getPerformanceProbe();
-        assertNotNull(probe);
-        assertFalse(probe instanceof HdrProbe);
-    }
-
-    @Test
     public void testConstructor_withTestClassInstance() {
         SuccessTest test = new SuccessTest();
-        testContainer = new TestContainer(testContext, test);
+        testContainer = new TestContainer(testContext, test, new TestCase("foo"));
 
         assertEquals(test, testContainer.getTestInstance());
         assertTrue(testContainer.getTestInstance() instanceof SuccessTest);
@@ -60,26 +40,6 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
         testCase.setProperty("class", SuccessTest.class.getName());
 
         new TestContainer(null, testCase);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testConstructor_withNullTestContext_withTestClassInstance() {
-        new TestContainer(null, new BaseTest());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testConstructor_withNullTestContext_withTestClassInstance_withThreadCount() {
-        new TestContainer(null, new BaseTest(), 3);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testConstructor_withNullTestClassInstance() {
-        new TestContainer(testContext, null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testConstructor_withNullTestClassInstance_withThreadCount() {
-        new TestContainer(testContext, null, 3);
     }
 
     @Test
@@ -153,7 +113,7 @@ public class TestContainer_BasicTest extends AbstractTestContainerTest {
         private boolean childRunCalled;
 
         @Run
-        void run() {
+        public void run() {
             this.childRunCalled = true;
         }
     }

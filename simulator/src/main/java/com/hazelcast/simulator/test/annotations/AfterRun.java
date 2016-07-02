@@ -13,30 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test;
+package com.hazelcast.simulator.test.annotations;
 
-import com.hazelcast.simulator.worker.tasks.IWorker;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 
 /**
- * A task that executes all lifecycles of a Worker.
+ * Is run after a thread executing {@link TimeStep}, completes. So for every load generating thread, there will be 1 call
+ * to the {@link @AfterRun} method.
+ *
+ * If the test has no {@link TimeStep} methods, methods with {@link AfterRun} are ignored.
  */
-class WorkerTask implements Runnable {
-    private final IWorker worker;
-
-    public WorkerTask(IWorker worker) {
-        this.worker = worker;
-    }
-
-    @Override
-    public void run() {
-        try {
-            worker.beforeRun();
-            worker.run();
-            worker.afterRun();
-        } catch (Exception e) {
-            throw rethrow(e);
-        }
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface AfterRun {
 }

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -43,7 +44,9 @@ public class AbstractWorkerTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        TestCase testCase = new TestCase("foo")
+                .setProperty("threadCount", "" + THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test, testCase);
 
         ExceptionReporter.reset();
     }
@@ -71,7 +74,7 @@ public class AbstractWorkerTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(i + ".exception").exists());
         }
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -82,7 +85,7 @@ public class AbstractWorkerTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertFalse(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -93,7 +96,7 @@ public class AbstractWorkerTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -116,10 +119,10 @@ public class AbstractWorkerTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertEquals(ITERATION_COUNT, test.testIteration);
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
-    private static class WorkerTest {
+    public static class WorkerTest {
 
         private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
