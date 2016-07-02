@@ -6,8 +6,8 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.test.TestContainer.METRONOME_INTERVAL_PROPERTY_NAME;
-import static com.hazelcast.simulator.test.TestContainer.METRONOME_TYPE_PROPERTY_NAME;
+import static com.hazelcast.simulator.test.DependencyInjector.METRONOME_INTERVAL_PROPERTY_NAME;
+import static com.hazelcast.simulator.test.DependencyInjector.METRONOME_TYPE_PROPERTY_NAME;
 import static com.hazelcast.simulator.test.TestContainer.THREAD_COUNT_PROPERTY_NAME;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;

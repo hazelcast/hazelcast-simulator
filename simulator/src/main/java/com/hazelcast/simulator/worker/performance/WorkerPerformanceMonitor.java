@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.worker.performance;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
@@ -37,7 +36,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
-import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -194,46 +192,56 @@ public class WorkerPerformanceMonitor {
             long intervalMaxLatency = Long.MIN_VALUE;
             long intervalOperationalCount = 0;
 
-            for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
-                String probeName = entry.getKey();
-                Probe probe = entry.getValue();
+//            for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+//                String probeName = entry.getKey();
+//                Probe probe = entry.getValue();
+//
+//                if (probe instanceof HdrProbe) {
+//                    HdrProbe hdrProbe = (HdrProbe) probe;
+//                    Histogram intervalHistogram = hdrProbe.getIntervalHistogram();
+//                    intervalHistograms.put(probeName, intervalHistogram);
+//
+//                    long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+//                    if (percentileValue > intervalPercentileLatency) {
+//                        intervalPercentileLatency = percentileValue;
+//                    }
+//                    double avgValue = intervalHistogram.getMean();
+//                    if (avgValue > intervalAvgLatency) {
+//                        intervalAvgLatency = avgValue;
+//                    }
+//                    long maxValue = intervalHistogram.getMaxValue();
+//                    if (maxValue > intervalMaxLatency) {
+//                        intervalMaxLatency = maxValue;
+//                    }
+//                    if (probe.isPartOfTotalThroughput()) {
+//                        intervalOperationalCount += intervalHistogram.getTotalCount();
+//                    }
+//                } else {
+//                    intervalPercentileLatency = -1;
+//                    intervalAvgLatency = -1;
+//                    intervalMaxLatency = -1;
+//
+//                    if (probe.isPartOfTotalThroughput()) {
+//                        AtomicLong previous = test.getOrCreatePrevious(probe);
+//
+//                        long current = probe.get();
+//                        long delta = current - previous.get();
+//                        previous.set(current);
+//
+//                        intervalOperationalCount += delta;
+//                    }
+//                }
+//            }
 
-                if (probe instanceof HdrProbe) {
-                    HdrProbe hdrProbe = (HdrProbe) probe;
-                    Histogram intervalHistogram = hdrProbe.getIntervalHistogram();
-                    intervalHistograms.put(probeName, intervalHistogram);
+            intervalPercentileLatency = -1;
+            intervalAvgLatency = -1;
+            intervalMaxLatency = -1;
 
-                    long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
-                    if (percentileValue > intervalPercentileLatency) {
-                        intervalPercentileLatency = percentileValue;
-                    }
-                    double avgValue = intervalHistogram.getMean();
-                    if (avgValue > intervalAvgLatency) {
-                        intervalAvgLatency = avgValue;
-                    }
-                    long maxValue = intervalHistogram.getMaxValue();
-                    if (maxValue > intervalMaxLatency) {
-                        intervalMaxLatency = maxValue;
-                    }
-                    if (probe.isPartOfTotalThroughput()) {
-                        intervalOperationalCount += intervalHistogram.getTotalCount();
-                    }
-                } else {
-                    intervalPercentileLatency = -1;
-                    intervalAvgLatency = -1;
-                    intervalMaxLatency = -1;
+            long currentIterations = testContainer.iteration();
+            long previousIterations = test.iterationPrevious;
+            test.iterationPrevious = currentIterations;
 
-                    if (probe.isPartOfTotalThroughput()) {
-                        AtomicLong previous = test.getOrCreatePrevious(probe);
-
-                        long current = probe.get();
-                        long delta = current - previous.get();
-                        previous.set(current);
-
-                        intervalOperationalCount += delta;
-                    }
-                }
-            }
+            intervalOperationalCount = currentIterations - previousIterations;
 
             test.tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
                     intervalOperationalCount, currentTimestamp);
@@ -293,6 +301,7 @@ public class WorkerPerformanceMonitor {
      */
     private static class MonitoredTest {
 
+        private long iterationPrevious;
         private final TestPerformanceTracker tracker;
         private final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
         private final TestContainer testContainer;

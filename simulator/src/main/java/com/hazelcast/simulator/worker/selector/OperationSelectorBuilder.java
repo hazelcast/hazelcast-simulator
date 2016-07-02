@@ -24,10 +24,10 @@ import static java.lang.String.format;
 
 /**
  * Builder class to create an {@link OperationSelector} instance. Each operation is represented as an enum item and is registered
- * with its probability (0.0 to 1.0) via the {@link #addOperation(Enum, double)} method.
+ * with its prob (0.0 to 1.0) via the {@link #addOperation(Enum, double)} method.
  *
  * The total sum of probabilities has to be exactly 1.0. You can use {@link #addDefaultOperation(Enum)} to add a default operation
- * which automatically consumes the remaining probability. The probability precision is {@value #PROBABILITY_PRECISION}.
+ * which automatically consumes the remaining prob. The prob precision is {@value #PROBABILITY_PRECISION}.
  *
  * This builder class is not thread-safe. The created {@link OperationSelector} does not give any thread-safety guarantees. It is
  * strongly recommended to construct a new instance for each thread, at least to prevent contention on the random generator. Just
@@ -50,7 +50,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
      * Register a new operation for selection.
      *
      * @param operation   operation to be selected
-     * @param probability probability of this operation. It must be a non-negative number between 0.0 and 1.0
+     * @param probability prob of this operation. It must be a non-negative number between 0.0 and 1.0
      * @return this instance to allow method-chaining
      */
     public OperationSelectorBuilder<T> addOperation(T operation, double probability) {
@@ -75,7 +75,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
      * Register an operation to be returned when no operation registered via {@link #addOperation(Enum, double)} has been
      * selected.
      * <p>
-     * All remaining probability will be consumed by this method.
+     * All remaining prob will be consumed by this method.
      *
      * @param operation operation to be selected if no other operation is configured
      * @return this instance to allow method-chaining
@@ -115,7 +115,7 @@ public class OperationSelectorBuilder<T extends Enum<T>> {
         }
         double probabilityDecimalPlaces = probability - Math.floor(probability);
         if (probabilityDecimalPlaces > 0.0 && probabilityDecimalPlaces < PROBABILITY_INTERVAL) {
-            throw new IllegalArgumentException(format("Maximum probability precision is %f, but was %f",
+            throw new IllegalArgumentException(format("Maximum prob precision is %f, but was %f",
                     PROBABILITY_INTERVAL, probability));
         }
     }

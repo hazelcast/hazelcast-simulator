@@ -59,19 +59,6 @@ public class GrowingMapTest extends AbstractTest {
         spawner.awaitCompletion();
     }
 
-    @Teardown
-    public void teardown() {
-        map.destroy();
-    }
-
-    @Verify
-    public void verify() {
-        if (removeOnStop) {
-            assertEquals("Map should be empty, but has size: ", 0, map.size());
-            assertTrue("Map should be empty, but has size: ", map.isEmpty());
-        }
-    }
-
     private class Worker implements Runnable {
         private final Random random = new Random();
 
@@ -154,4 +141,18 @@ public class GrowingMapTest extends AbstractTest {
             }
         }
     }
+
+    @Verify
+    public void verify() {
+        if (removeOnStop) {
+            assertEquals("Map should be empty, but has size: ", 0, map.size());
+            assertTrue("Map should be empty, but has size: ", map.isEmpty());
+        }
+    }
+
+    @Teardown
+    public void teardown() {
+        map.destroy();
+    }
+
 }

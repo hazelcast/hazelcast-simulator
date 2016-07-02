@@ -16,12 +16,11 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -54,20 +53,9 @@ public class SplitClusterDataTest extends AbstractTest {
         }
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        spawner.spawn(new Worker());
-        spawner.awaitCompletion();
-    }
-
-    private class Worker implements Runnable {
-        @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                sleepSeconds(1);
-            }
-        }
+    @TimeStep
+    public void timeStep(){
+        sleepSeconds(1);
     }
 
     @Verify(global = false)

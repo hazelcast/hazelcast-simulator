@@ -15,25 +15,24 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
- *
+ * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
- *
+ * <p>
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
-final class BusySpinningMetronome implements Metronome {
+public final class BusySpinningMetronome implements Metronome {
 
     private final long intervalNanos;
 
     private long waitUntil;
 
-    BusySpinningMetronome(long intervalNanos) {
+    public BusySpinningMetronome(long intervalNanos) {
         this.intervalNanos = intervalNanos;
     }
 
@@ -56,7 +55,7 @@ final class BusySpinningMetronome implements Metronome {
 
     @Override
     public long getInterval() {
-        return TimeUnit.NANOSECONDS.toMillis(intervalNanos);
+        return NANOSECONDS.toMillis(intervalNanos);
     }
 
     @Override

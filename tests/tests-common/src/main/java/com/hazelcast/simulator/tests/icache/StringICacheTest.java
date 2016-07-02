@@ -15,17 +15,15 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -38,23 +36,13 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringICacheTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    // if we use the putAndGet (so returning a value) or the put (which returns void)
-    public boolean useGetAndPut = true;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
-    public double putProb = 0.1;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private Cache<String, String> cache;
     private String[] keys;
@@ -64,9 +52,6 @@ public class StringICacheTest extends AbstractTest {
     public void setup() {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(name);
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
     }
 
     @Warmup
@@ -85,42 +70,22 @@ public class StringICacheTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(ThreadContext context) {
+        cache.put(context.randomKey(), context.randomValue());
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep(prob = 0.9)
+    public void get(ThreadContext context) {
+        cache.get(context.randomKey());
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
+    @TimeStep(prob = 0)
+    public void getAndPut(ThreadContext context) {
+        cache.getAndPut(context.randomKey(), context.randomValue());
+    }
 
-        @Override
-        public void timeStep(Operation operation, Probe probe) {
-            String key = randomKey();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    String value = randomValue();
-                    started = System.nanoTime();
-                    if (useGetAndPut) {
-                        cache.getAndPut(key, value);
-                    } else {
-                        cache.put(key, value);
-                    }
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    cache.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    public class ThreadContext extends BaseThreadContext {
 
         private String randomValue() {
             return values[randomInt(values.length)];

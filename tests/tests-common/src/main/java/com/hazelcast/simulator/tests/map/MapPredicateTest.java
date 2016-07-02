@@ -161,7 +161,7 @@ public class MapPredicateTest extends AbstractTest {
                 double avg = spendTimeMs / (double) iterationsLastMinute;
                 double perf = (iterationsLastMinute * 1000d) / (double) spendTimeMs;
 
-                logger.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
+                logger.info(format("last minute: iteration=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
                         iterationsLastMinute, minLastMinute, maxLastMinute, avg, perf));
 
                 maxLastMinute = Long.MIN_VALUE;

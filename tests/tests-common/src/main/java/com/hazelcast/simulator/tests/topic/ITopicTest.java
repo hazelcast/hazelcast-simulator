@@ -19,13 +19,14 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -76,60 +77,17 @@ public class ITopicTest extends AbstractTest {
         }
     }
 
-
-
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @Teardown
+    public void teardown() {
+        for (ITopic topic : topics) {
+            topic.destroy();
+        }
+        totalExpectedCounter.destroy();
+        totalFoundCounter.destroy();
     }
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        private long count;
-
-        @Override
-        public void timeStep() {
-            sleepRandomNanos(getRandom(), maxPublicationDelayNanos);
-
-            long msg = nextMessage();
-            count += msg;
-
-            ITopic<Long> topic = getRandomTopic();
-            topic.publish(msg);
-        }
-
-        @Override
-        public void afterRun() {
-            totalExpectedCounter.addAndGet(count);
-        }
-
-        @SuppressWarnings("unchecked")
-        private ITopic<Long> getRandomTopic() {
-            int index = randomInt(topics.length);
-            return (ITopic<Long>) topics[index];
-        }
-
-        private long nextMessage() {
-            long msg = getRandom().nextLong() % 1000;
-            return (msg < 0) ? -msg : msg;
-        }
-    }
-
-    private class TopicListener implements MessageListener<Long> {
-
-        private final Random random = new Random();
-
-        private volatile long count;
-
-        @Override
-        public void onMessage(Message<Long> message) {
-            sleepRandomNanos(random, maxProcessingDelayNanos);
-            count += message.getMessageObject();
-        }
-    }
-
-    @Verify(global = true)
-    public void verify() {
+    @Verify
+    public void globalVerify() {
         if (maxVerificationTimeSeconds < 0) {
             return;
         }
@@ -147,12 +105,48 @@ public class ITopicTest extends AbstractTest {
         }, maxVerificationTimeSeconds);
     }
 
-    @Teardown
-    public void teardown() {
-        for (ITopic topic : topics) {
-            topic.destroy();
+    @TimeStep
+    public void timestep(ThreadContext context) {
+        sleepRandomNanos(context.getRandom(), maxPublicationDelayNanos);
+
+        long msg = context.nextMessage();
+        context.count += msg;
+
+        ITopic<Long> topic = context.randomTopic();
+        topic.publish(msg);
+    }
+
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        totalExpectedCounter.addAndGet(context.count);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
+
+        private long count;
+
+        @SuppressWarnings("unchecked")
+        private ITopic<Long> randomTopic() {
+            int index = randomInt(topics.length);
+            return (ITopic<Long>) topics[index];
         }
-        totalExpectedCounter.destroy();
-        totalFoundCounter.destroy();
+
+        private long nextMessage() {
+            long msg = randomLong() % 1000;//what is the point of getting a long when doing a mod?
+            return (msg < 0) ? -msg : msg;
+        }
+    }
+
+    private class TopicListener implements MessageListener<Long> {
+
+        private final Random random = new Random();
+
+        private volatile long count;
+
+        @Override
+        public void onMessage(Message<Long> message) {
+            sleepRandomNanos(random, maxProcessingDelayNanos);
+            count += message.getMessageObject();
+        }
     }
 }

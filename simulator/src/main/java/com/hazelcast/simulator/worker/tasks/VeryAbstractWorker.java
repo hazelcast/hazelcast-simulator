@@ -21,8 +21,11 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 abstract class VeryAbstractWorker implements IWorker {
+
+    protected final AtomicLong iterations = new AtomicLong();
 
     private final Random random = new Random();
 
@@ -33,6 +36,11 @@ abstract class VeryAbstractWorker implements IWorker {
 
     private boolean isWorkerStopped;
     private long iteration;
+
+    @Override
+    public long iteration() {
+        return iterations.get();
+    }
 
     VeryAbstractWorker() {
     }

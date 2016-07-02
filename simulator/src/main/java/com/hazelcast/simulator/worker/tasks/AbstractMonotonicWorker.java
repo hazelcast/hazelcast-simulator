@@ -38,11 +38,14 @@ public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
         final Probe probe = workerProbe;
 
         while (!testContext.isStopped() && !isWorkerStopped()) {
-            metronome.waitForNext();
+            if (metronome != null) {
+                metronome.waitForNext();
+            }
             long started = System.nanoTime();
             timeStep();
             probe.recordValue(System.nanoTime() - started);
             increaseIteration();
+            iterations.lazySet(getIteration());
         }
     }
 

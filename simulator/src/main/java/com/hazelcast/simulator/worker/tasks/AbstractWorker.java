@@ -33,6 +33,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
+@Deprecated
 public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWorker {
 
     private final OperationSelector<O> operationSelector;
@@ -56,6 +57,7 @@ public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWork
                 timeStep(selector.select());
                 increaseIteration();
                 probe.recordValue(0);
+                iterations.lazySet(getIteration());
             }
         } else {
             while (!testContext.isStopped() && !isWorkerStopped()) {
@@ -65,6 +67,7 @@ public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWork
                 timeStep(operation);
                 probe.recordValue(System.nanoTime() - started);
                 increaseIteration();
+                iterations.lazySet(getIteration());
             }
         }
     }

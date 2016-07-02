@@ -55,12 +55,18 @@ public class TestCase {
         return properties.get(name);
     }
 
-    public void setProperty(String name, String value) {
+    public TestCase setProperty(String name, String value) {
         if ("basename".equals(name)) {
             LOGGER.warn("Property 'basename' is deprecated, use 'name' instead. Property has been automatically upgraded.");
             name = "name";
         }
         properties.put(name, value.trim());
+        return this;
+    }
+
+    public TestCase setProperty(String name, Object value) {
+        setProperty(name, value.toString());
+        return this;
     }
 
     public Map<String, String> getProperties() {

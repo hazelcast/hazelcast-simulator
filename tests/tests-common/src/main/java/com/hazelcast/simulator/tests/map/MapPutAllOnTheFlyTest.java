@@ -16,16 +16,14 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 
 /**
  * Test for {@link IMap#putAll(java.util.Map)} which creates the input values on the fly during the RUN phase.
@@ -46,29 +44,20 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        protected void timeStep() throws Exception {
-            SortedMap<Integer, Integer> values = new TreeMap<Integer, Integer>();
-            for (int i = 0; i < batchSize; i++) {
-                int key = randomInt(keyRange);
-
-                values.put(key, key);
-            }
-
-            map.putAll(values);
-        }
-    }
-
     @Teardown
     public void tearDown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
+    }
+
+    @TimeStep
+    public void timeStep(BaseThreadContext context) {
+        SortedMap<Integer, Integer> values = new TreeMap<Integer, Integer>();
+        for (int i = 0; i < batchSize; i++) {
+            int key = context.randomInt(keyRange);
+
+            values.put(key, key);
+        }
+
+        map.putAll(values);
     }
 }

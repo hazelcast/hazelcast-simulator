@@ -16,58 +16,45 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
 public class IntIntMapTest extends AbstractTest {
-
-    private enum Operation {
-        PUT,
-        GET
-    }
 
     // properties
     public int keyCount = 10000;
     public int valueCount = 10000;
     public int keyLength = 10;
     public int valueLength = 10;
-    public KeyLocality keyLocality = KeyLocality.SHARED;
-    public int minNumberOfMembers = 0;
-
-    public double putProb = 0.1;
-    public boolean useSet = false;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+    public KeyLocality keyLocality = SHARED;
 
     private IMap<Integer, Integer> map;
-
     private int[] keys;
 
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
-    @Warmup(global = false)
-    public void warmup() {
-        waitClusterSize(logger, targetInstance, minNumberOfMembers);
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+    }
+
+    @Warmup
+    public void warmUp() {
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
         Streamer<Integer, Integer> streamer = StreamerFactory.getInstance(map);
         Random random = new Random();
@@ -78,42 +65,22 @@ public class IntIntMapTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void get(ThreadContext context) {
+        map.get(context.randomKey());
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep
+    public void put(ThreadContext context) {
+        map.put(context.randomKey(), context.randomValue());
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
+    @TimeStep
+    public void set(ThreadContext context) {
+        map.set(context.randomKey(), context.randomValue());
+    }
 
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = randomKey();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    int value = randomValue();
-                    started = System.nanoTime();
-                    if (useSet) {
-                        map.set(key, value);
-                    } else {
-                        map.put(key, value);
-                    }
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    public class ThreadContext extends BaseThreadContext {
 
         private int randomKey() {
             return keys[randomInt(keys.length)];
@@ -122,11 +89,5 @@ public class IntIntMapTest extends AbstractTest {
         private int randomValue() {
             return randomInt(Integer.MAX_VALUE);
         }
-    }
-
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

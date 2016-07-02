@@ -18,8 +18,9 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.domain.DomainObject;
@@ -27,8 +28,6 @@ import com.hazelcast.simulator.tests.map.domain.DomainObjectFactory;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 
@@ -44,12 +43,6 @@ import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 public class SerializationStrategyTest extends AbstractTest {
 
-    private enum Operation {
-        GET_BY_KEY,
-        GET_BY_INT_INDEX,
-        GET_BY_STRING_INDEX
-    }
-
     public enum Strategy {
         PORTABLE,
         SERIALIZABLE,
@@ -57,17 +50,12 @@ public class SerializationStrategyTest extends AbstractTest {
         IDENTIFIED_DATA_SERIALIZABLE
     }
 
-
     // properties
     public Strategy strategy = Strategy.PORTABLE;
 
     public int itemCount = 1000000;
     public int recordsPerUnique = 10000;
 
-    public double getByStringIndexProb = 1;
-    public double getByIntIndexProb = 0;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
     private IMap<String, DomainObject> map;
     private Set<String> uniqueStrings;
@@ -76,10 +64,6 @@ public class SerializationStrategyTest extends AbstractTest {
     public void setUp() {
         map = targetInstance.getMap(name);
         uniqueStrings = targetInstance.getSet(name);
-
-        operationSelectorBuilder.addOperation(Operation.GET_BY_STRING_INDEX, getByStringIndexProb)
-                .addOperation(Operation.GET_BY_INT_INDEX, getByIntIndexProb)
-                .addDefaultOperation(Operation.GET_BY_KEY);
     }
 
     @Warmup(global = true)
@@ -117,44 +101,33 @@ public class SerializationStrategyTest extends AbstractTest {
         return o;
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 1)
+    public void getByKey() {
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0)
+    public void getByIntIndex() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @TimeStep
+    public void getByStringIndex(ThreadContext context) {
+        String string = context.getUniqueString();
+        Predicate predicate = Predicates.equal("stringVal", string);
+        Set<Map.Entry<String, DomainObject>> entries = map.entrySet(predicate);
+        throttlingLogger.log(Level.INFO, "GetByStringIndex: " + entries.size() + " entries");
+    }
+
+    public class ThreadContext extends BaseThreadContext {
 
         private String[] localUniqueStrings;
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        public void beforeRun() throws Exception {
+        private ThreadContext() {
             localUniqueStrings = uniqueStrings.toArray(new String[uniqueStrings.size()]);
-            super.beforeRun();
         }
 
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            switch (operation) {
-                case GET_BY_KEY:
-                    throw new UnsupportedOperationException("Not implemented yet");
-                case GET_BY_INT_INDEX:
-                    throw new UnsupportedOperationException("Not implemented yet");
-                case GET_BY_STRING_INDEX:
-                    String string = getUniqueString();
-                    Predicate predicate = Predicates.equal("stringVal", string);
-                    Set<Map.Entry<String, DomainObject>> entries = map.entrySet(predicate);
-                    throttlingLogger.log(Level.INFO, "GetByStringIndex: " + entries.size() + " entries");
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown Operation: " + operation);
-            }
-        }
-
-        public String getUniqueString() {
+        String getUniqueString() {
             int i = randomInt(localUniqueStrings.length);
             return localUniqueStrings[i];
         }

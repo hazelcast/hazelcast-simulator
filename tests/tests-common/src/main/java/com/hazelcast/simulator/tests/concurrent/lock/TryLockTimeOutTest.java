@@ -134,9 +134,8 @@ public class TryLockTimeOutTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void verify() {
-
+    @Verify
+    public void globalVerify() {
         for (int i = 0; i < maxAccounts; i++) {
             ILock lock = targetInstance.getLock(name + i);
             assertFalse(name + ": Lock should be unlocked", lock.isLocked());

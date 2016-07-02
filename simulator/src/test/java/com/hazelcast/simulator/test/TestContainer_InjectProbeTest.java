@@ -62,7 +62,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
     @Test
     public void testInjectProbe_withLightweightProbe() {
         ProbeTest test = new ProbeTest();
-        testContainer = new TestContainer(testContext, test, true);
+     //   testContainer = new TestContainer(testContext, test, true);
 
         assertNotNull(test.throughputProbe);
         assertFalse(test.throughputProbe instanceof HdrProbe);

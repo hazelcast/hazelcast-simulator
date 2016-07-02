@@ -41,6 +41,11 @@ public class PerformanceMonitorProbeTest {
         }
 
         @Override
+        public long iteration() {
+            return 0;
+        }
+
+        @Override
         public void beforeRun() throws Exception {
 
         }

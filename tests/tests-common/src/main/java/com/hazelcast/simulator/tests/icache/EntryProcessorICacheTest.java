@@ -16,15 +16,16 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -65,66 +66,25 @@ public class EntryProcessorICacheTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void timeStep(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        long increment = context.randomInt(100);
+
+        int delayMs = 0;
+        if (maxProcessorDelayMs != 0) {
+            delayMs = minProcessorDelayMs + context.randomInt(maxProcessorDelayMs);
+        }
+
+        cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
+        context.increment(key, increment);
     }
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
-
-        public Worker() {
-            for (int i = 0; i < keyCount; i++) {
-                result.put(i, 0L);
-            }
-        }
-
-        @Override
-        public void timeStep() {
-            int key = randomInt(keyCount);
-            long increment = randomInt(100);
-
-            int delayMs = 0;
-            if (maxProcessorDelayMs != 0) {
-                delayMs = minProcessorDelayMs + randomInt(maxProcessorDelayMs);
-            }
-
-            cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
-            increment(key, increment);
-        }
-
-        @Override
-        public void afterRun() {
-            // sleep to give time for the last EntryProcessor tasks to complete
-            sleepMillis(maxProcessorDelayMs * 2);
-            resultsPerWorker.add(result);
-        }
-
-        private void increment(int key, long increment) {
-            result.put(key, result.get(key) + increment);
-        }
-    }
-
-    private static final class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object>, Serializable {
-
-        private final long increment;
-        private final int delayMs;
-
-        private IncrementEntryProcessor(long increment, int delayMs) {
-            this.increment = increment;
-            this.delayMs = delayMs;
-        }
-
-        @Override
-        public Object process(MutableEntry<Integer, Long> entry, Object... arguments) {
-            if (delayMs > 0) {
-                sleepMillis(delayMs);
-            }
-            long newValue = entry.getValue() + increment;
-            entry.setValue(newValue);
-            return null;
-        }
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        // sleep to give time for the last EntryProcessor tasks to complete
+        sleepMillis(maxProcessorDelayMs * 2);
+        resultsPerWorker.add(context.result);
     }
 
     @Verify
@@ -153,5 +113,41 @@ public class EntryProcessorICacheTest extends AbstractTest {
     public void teardown() {
         cache.close();
         resultsPerWorker.destroy();
+    }
+
+    public class ThreadContext extends BaseThreadContext {
+
+        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
+
+        public ThreadContext() {
+            for (int i = 0; i < keyCount; i++) {
+                result.put(i, 0L);
+            }
+        }
+
+        private void increment(int key, long increment) {
+            result.put(key, result.get(key) + increment);
+        }
+    }
+
+    private static final class IncrementEntryProcessor implements EntryProcessor<Integer, Long, Object>, Serializable {
+
+        private final long increment;
+        private final int delayMs;
+
+        private IncrementEntryProcessor(long increment, int delayMs) {
+            this.increment = increment;
+            this.delayMs = delayMs;
+        }
+
+        @Override
+        public Object process(MutableEntry<Integer, Long> entry, Object... arguments) {
+            if (delayMs > 0) {
+                sleepMillis(delayMs);
+            }
+            long newValue = entry.getValue() + increment;
+            entry.setValue(newValue);
+            return null;
+        }
     }
 }
