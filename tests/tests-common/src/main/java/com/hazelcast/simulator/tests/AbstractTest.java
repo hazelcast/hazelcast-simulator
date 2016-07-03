@@ -31,7 +31,7 @@ public abstract class AbstractTest {
 
     protected final ILogger logger = Logger.getLogger(getClass());
 
-    protected String basename = getClass().getSimpleName();
+    public String basename = getClass().getSimpleName();
 
     @InjectHazelcastInstance
     protected HazelcastInstance targetInstance;
