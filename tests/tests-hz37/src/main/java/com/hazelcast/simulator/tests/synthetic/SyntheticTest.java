@@ -77,12 +77,6 @@ public class SyntheticTest extends AbstractTest {
     @InjectProbe(useForThroughput = true)
     private Probe probe;
 
-    @Teardown
-    public void teardown() {
-        logger.info(getOperationCountInformation(targetInstance));
-        logger.info(getPartitionDistributionInformation(targetInstance));
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -200,4 +194,9 @@ public class SyntheticTest extends AbstractTest {
         }
     }
 
+    @Teardown
+    public void teardown() {
+        logger.info(getOperationCountInformation(targetInstance));
+        logger.info(getPartitionDistributionInformation(targetInstance));
+    }
 }
