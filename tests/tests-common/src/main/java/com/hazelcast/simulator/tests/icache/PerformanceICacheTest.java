@@ -58,11 +58,6 @@ public class PerformanceICacheTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void teardown() {
-        cache.close();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Streamer<Object, Object> streamer = StreamerFactory.getInstance(cache);
@@ -100,4 +95,11 @@ public class PerformanceICacheTest extends AbstractTest {
             }
         }
     }
+
+    @Teardown
+    public void teardown() {
+        cache.close();
+    }
+
+
 }

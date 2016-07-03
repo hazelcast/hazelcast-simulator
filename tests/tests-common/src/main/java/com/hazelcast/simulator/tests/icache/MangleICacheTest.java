@@ -79,15 +79,6 @@ public class MangleICacheTest extends AbstractTest {
                 .addOperation(Operation.CLOSE_CACHE, closeCacheProb);
     }
 
-    @Verify
-    public void globalVerify() {
-        ICacheOperationCounter total = new ICacheOperationCounter();
-        for (ICacheOperationCounter counter : results) {
-            total.add(counter);
-        }
-        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -247,4 +238,15 @@ public class MangleICacheTest extends AbstractTest {
             return null;
         }
     }
+
+    @Verify
+    public void globalVerify() {
+        ICacheOperationCounter total = new ICacheOperationCounter();
+        for (ICacheOperationCounter counter : results) {
+            total.add(counter);
+        }
+        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
+    }
+
+
 }

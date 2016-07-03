@@ -76,21 +76,6 @@ public class ExpiryTest extends AbstractTest {
                 .addOperation(Operation.GET_ASYNC, getAsyncProb);
     }
 
-    @Verify
-    public void globalVerify() {
-        Counter totalCounter = new Counter();
-        for (Counter counter : results) {
-            totalCounter.add(counter);
-        }
-        logger.info(basename + " " + totalCounter + " from " + results.size() + " worker Threads");
-
-        for (int i = 0; i < keyCount; i++) {
-            assertFalse(basename + " ICache should not contain key " + i, cache.containsKey(i));
-        }
-        assertFalse(basename + " ICache iterator should not have elements", cache.iterator().hasNext());
-        assertEquals(basename + " ICache size should be 0", 0, cache.size());
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -163,4 +148,20 @@ public class ExpiryTest extends AbstractTest {
                     + '}';
         }
     }
+
+    @Verify
+    public void globalVerify() {
+        Counter totalCounter = new Counter();
+        for (Counter counter : results) {
+            totalCounter.add(counter);
+        }
+        logger.info(basename + " " + totalCounter + " from " + results.size() + " worker Threads");
+
+        for (int i = 0; i < keyCount; i++) {
+            assertFalse(basename + " ICache should not contain key " + i, cache.containsKey(i));
+        }
+        assertFalse(basename + " ICache iterator should not have elements", cache.iterator().hasNext());
+        assertEquals(basename + " ICache size should be 0", 0, cache.size());
+    }
+
 }

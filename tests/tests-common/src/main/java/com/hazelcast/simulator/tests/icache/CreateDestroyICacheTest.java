@@ -65,15 +65,6 @@ public class CreateDestroyICacheTest extends AbstractTest {
                 .addOperation(Operation.DESTROY_CACHE, destroyCacheProb);
     }
 
-    @Verify
-    public void globalVerify() {
-        ICacheCreateDestroyCounter total = new ICacheCreateDestroyCounter();
-        for (ICacheCreateDestroyCounter counter : counters) {
-            total.add(counter);
-        }
-        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
-    }
-
     @RunWithWorker
     public Worker run() {
         return new Worker();
@@ -141,5 +132,14 @@ public class CreateDestroyICacheTest extends AbstractTest {
         public void afterRun() {
             counters.add(counter);
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        ICacheCreateDestroyCounter total = new ICacheCreateDestroyCounter();
+        for (ICacheCreateDestroyCounter counter : counters) {
+            total.add(counter);
+        }
+        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 }

@@ -69,11 +69,6 @@ public class StringICacheTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void teardown() {
-        cache.close();
-    }
-
     @Warmup
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -135,5 +130,10 @@ public class StringICacheTest extends AbstractTest {
             int length = keys.length;
             return keys[randomInt(length)];
         }
+    }
+
+    @Teardown
+    public void teardown() {
+        cache.close();
     }
 }

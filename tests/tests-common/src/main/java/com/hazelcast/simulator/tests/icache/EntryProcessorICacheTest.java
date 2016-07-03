@@ -56,12 +56,6 @@ public class EntryProcessorICacheTest extends AbstractTest {
         cache = cacheManager.getCache(basename);
     }
 
-    @Teardown
-    public void teardown() {
-        cache.close();
-        resultsPerWorker.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
@@ -69,28 +63,6 @@ public class EntryProcessorICacheTest extends AbstractTest {
             streamer.pushEntry(i, 0L);
         }
         streamer.await();
-    }
-
-    @Verify
-    public void verify() {
-        long[] amount = new long[keyCount];
-
-        for (Map<Integer, Long> map : resultsPerWorker) {
-            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
-                amount[entry.getKey()] += entry.getValue();
-            }
-        }
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            long expected = amount[i];
-            long found = cache.get(i);
-            if (expected != found) {
-                failures++;
-            }
-        }
-
-        assertEquals("Failures have been found", 0, failures);
     }
 
     @RunWithWorker
@@ -153,5 +125,33 @@ public class EntryProcessorICacheTest extends AbstractTest {
             entry.setValue(newValue);
             return null;
         }
+    }
+
+    @Verify
+    public void verify() {
+        long[] amount = new long[keyCount];
+
+        for (Map<Integer, Long> map : resultsPerWorker) {
+            for (Map.Entry<Integer, Long> entry : map.entrySet()) {
+                amount[entry.getKey()] += entry.getValue();
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = cache.get(i);
+            if (expected != found) {
+                failures++;
+            }
+        }
+
+        assertEquals("Failures have been found", 0, failures);
+    }
+
+    @Teardown
+    public void teardown() {
+        cache.close();
+        resultsPerWorker.destroy();
     }
 }

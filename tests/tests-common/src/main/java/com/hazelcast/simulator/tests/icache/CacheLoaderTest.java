@@ -81,6 +81,30 @@ public class CacheLoaderTest extends AbstractTest {
         }
     }
 
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    private class Worker extends AbstractMonotonicWorker {
+
+        @Override
+        public void timeStep() throws Exception {
+            CompletionListenerFuture loaded = new CompletionListenerFuture();
+            cache.loadAll(keySet, true, loaded);
+
+            if (waitForLoadAllFutureCompletion) {
+                loaded.get();
+            }
+        }
+
+        @Override
+        public void afterRun() {
+            RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
+            loaderList.add(loader);
+        }
+    }
+
     @Verify(global = false)
     public void verify() {
         RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
@@ -108,27 +132,4 @@ public class CacheLoaderTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        public void timeStep() throws Exception {
-            CompletionListenerFuture loaded = new CompletionListenerFuture();
-            cache.loadAll(keySet, true, loaded);
-
-            if (waitForLoadAllFutureCompletion) {
-                loaded.get();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
-            loaderList.add(loader);
-        }
-    }
 }

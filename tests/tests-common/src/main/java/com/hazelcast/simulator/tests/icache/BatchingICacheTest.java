@@ -65,11 +65,6 @@ public class BatchingICacheTest extends AbstractTest {
         operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void teardown() {
-        cache.close();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Streamer<Object, Object> streamer = StreamerFactory.getInstance(cache);
@@ -122,5 +117,10 @@ public class BatchingICacheTest extends AbstractTest {
                 futureList.clear();
             }
         }
+    }
+
+    @Teardown
+    public void teardown() {
+        cache.close();
     }
 }

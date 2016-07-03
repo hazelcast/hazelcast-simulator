@@ -104,28 +104,6 @@ public class ListenerICacheTest extends AbstractTest {
                 .addOperation(Operation.REPLACE, replace);
     }
 
-    @Verify(global = false)
-    public void localVerify() {
-        logger.info(basename + " Listener " + listener);
-        logger.info(basename + " Filter " + filter);
-    }
-
-    @Verify
-    public void globalVerify() {
-        Counter totalCounter = new Counter();
-        for (Counter counter : results) {
-            totalCounter.add(counter);
-        }
-        logger.info(basename + " " + totalCounter + " from " + results.size() + " Worker threads");
-
-        ICacheEntryListener totalEvents = new ICacheEntryListener();
-        for (ICacheEntryListener entryListener : listeners) {
-            totalEvents.add(entryListener);
-        }
-        logger.info(basename + " totalEvents: " + totalEvents);
-        assertEquals(basename + " unexpected events found", 0, totalEvents.getUnexpected());
-    }
-
     @RunWithWorker
     public Worker run() {
         return new Worker();
@@ -201,6 +179,28 @@ public class ListenerICacheTest extends AbstractTest {
 
             sleepSeconds(PAUSE_FOR_LAST_EVENTS_SECONDS);
         }
+    }
+
+    @Verify(global = false)
+    public void localVerify() {
+        logger.info(basename + " Listener " + listener);
+        logger.info(basename + " Filter " + filter);
+    }
+
+    @Verify
+    public void globalVerify() {
+        Counter totalCounter = new Counter();
+        for (Counter counter : results) {
+            totalCounter.add(counter);
+        }
+        logger.info(basename + " " + totalCounter + " from " + results.size() + " Worker threads");
+
+        ICacheEntryListener totalEvents = new ICacheEntryListener();
+        for (ICacheEntryListener entryListener : listeners) {
+            totalEvents.add(entryListener);
+        }
+        logger.info(basename + " totalEvents: " + totalEvents);
+        assertEquals(basename + " unexpected events found", 0, totalEvents.getUnexpected());
     }
 
     private static class Counter implements Serializable {

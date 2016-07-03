@@ -55,12 +55,6 @@ public class CasICacheTest extends AbstractTest {
         cache = cacheManager.getCache(basename);
     }
 
-    @Teardown
-    public void teardown() {
-        cache.close();
-        resultsPerWorker.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
@@ -68,26 +62,6 @@ public class CasICacheTest extends AbstractTest {
             streamer.pushEntry(i, 0L);
         }
         streamer.await();
-    }
-
-    @Verify
-    public void verify() {
-        long[] amount = new long[keyCount];
-        for (long[] increments : resultsPerWorker) {
-            for (int i = 0; i < keyCount; i++) {
-                amount[i] += increments[i];
-            }
-        }
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            long expected = amount[i];
-            long found = cache.get(i);
-            if (expected != found) {
-                failures++;
-            }
-        }
-        assertEquals(failures + " key=>values have been incremented unExpected", 0, failures);
     }
 
     @RunWithWorker
@@ -117,5 +91,31 @@ public class CasICacheTest extends AbstractTest {
         public void afterRun() {
             resultsPerWorker.add(increments);
         }
+    }
+
+    @Verify
+    public void verify() {
+        long[] amount = new long[keyCount];
+        for (long[] increments : resultsPerWorker) {
+            for (int i = 0; i < keyCount; i++) {
+                amount[i] += increments[i];
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = cache.get(i);
+            if (expected != found) {
+                failures++;
+            }
+        }
+        assertEquals(failures + " key=>values have been incremented unExpected", 0, failures);
+    }
+
+    @Teardown
+    public void teardown() {
+        cache.close();
+        resultsPerWorker.destroy();
     }
 }

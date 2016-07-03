@@ -90,15 +90,6 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
                 false, syncEvents);
     }
 
-    @Verify(global = true)
-    public void globalVerify() {
-        ICacheListenerOperationCounter total = new ICacheListenerOperationCounter();
-        for (ICacheListenerOperationCounter i : results) {
-            total.add(i);
-        }
-        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -146,4 +137,14 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
             results.add(operationCounter);
         }
     }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        ICacheListenerOperationCounter total = new ICacheListenerOperationCounter();
+        for (ICacheListenerOperationCounter i : results) {
+            total.add(i);
+        }
+        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
+    }
+
 }

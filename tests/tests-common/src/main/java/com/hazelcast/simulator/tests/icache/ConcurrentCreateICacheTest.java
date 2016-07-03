@@ -60,17 +60,6 @@ public class ConcurrentCreateICacheTest extends AbstractTest {
         counterList.add(counter);
     }
 
-    @Verify
-    public void globalVerify() {
-        Counter total = new Counter();
-        for (Counter counter : counterList) {
-            total.add(counter);
-        }
-        logger.info(baseName + ": " + total + " from " + counterList.size() + " worker threads");
-
-        assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
-    }
-
     @Run
     public void run() {
     }
@@ -92,5 +81,16 @@ public class ConcurrentCreateICacheTest extends AbstractTest {
                     + ", createException=" + createException
                     + '}';
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        Counter total = new Counter();
+        for (Counter counter : counterList) {
+            total.add(counter);
+        }
+        logger.info(baseName + ": " + total + " from " + counterList.size() + " worker threads");
+
+        assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
     }
 }

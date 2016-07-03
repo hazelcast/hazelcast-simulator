@@ -89,24 +89,6 @@ public class ReadWriteICacheTest extends AbstractTest {
                 .addOperation(Operation.REMOVE, removeProb);
     }
 
-    @Verify(global = false)
-    public void verify() {
-        RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
-        RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
-
-        logger.info(basename + ": " + loader);
-        logger.info(basename + ": " + writer);
-    }
-
-    @Verify(global = true)
-    public void globalVerify() {
-        ICacheReadWriteCounter total = new ICacheReadWriteCounter();
-        for (ICacheReadWriteCounter counter : counters) {
-            total.add(counter);
-        }
-        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
-    }
-
     @RunWithWorker
     public Worker run() {
         return new Worker();
@@ -150,5 +132,23 @@ public class ReadWriteICacheTest extends AbstractTest {
         public void afterRun() {
             counters.add(counter);
         }
+    }
+
+    @Verify(global = false)
+    public void verify() {
+        RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
+        RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
+
+        logger.info(basename + ": " + loader);
+        logger.info(basename + ": " + writer);
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        ICacheReadWriteCounter total = new ICacheReadWriteCounter();
+        for (ICacheReadWriteCounter counter : counters) {
+            total.add(counter);
+        }
+        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
     }
 }
