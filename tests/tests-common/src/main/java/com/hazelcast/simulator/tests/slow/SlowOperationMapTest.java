@@ -95,11 +95,6 @@ public class SlowOperationMapTest extends AbstractTest {
         }
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-    }
-
     @Warmup
     public void localWarmup() {
         if (isClient) {
@@ -226,4 +221,10 @@ public class SlowOperationMapTest extends AbstractTest {
             sleepRecursion(recursionDepth - 1, sleepSeconds);
         }
     }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+    }
+
 }

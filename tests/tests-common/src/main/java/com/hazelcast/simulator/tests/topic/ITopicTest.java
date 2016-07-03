@@ -76,33 +76,7 @@ public class ITopicTest extends AbstractTest {
         }
     }
 
-    @Teardown
-    public void teardown() {
-        for (ITopic topic : topics) {
-            topic.destroy();
-        }
-        totalExpectedCounter.destroy();
-        totalFoundCounter.destroy();
-    }
 
-    @Verify(global = true)
-    public void verify() {
-        if (maxVerificationTimeSeconds < 0) {
-            return;
-        }
-
-        final long expectedCount = totalExpectedCounter.get();
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                long actualCount = 0;
-                for (TopicListener topicListener : listeners) {
-                    actualCount += topicListener.count;
-                }
-                assertEquals("published messages don't match received messages", expectedCount, actualCount);
-            }
-        }, maxVerificationTimeSeconds);
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -152,5 +126,33 @@ public class ITopicTest extends AbstractTest {
             sleepRandomNanos(random, maxProcessingDelayNanos);
             count += message.getMessageObject();
         }
+    }
+
+    @Verify(global = true)
+    public void verify() {
+        if (maxVerificationTimeSeconds < 0) {
+            return;
+        }
+
+        final long expectedCount = totalExpectedCounter.get();
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                long actualCount = 0;
+                for (TopicListener topicListener : listeners) {
+                    actualCount += topicListener.count;
+                }
+                assertEquals("published messages don't match received messages", expectedCount, actualCount);
+            }
+        }, maxVerificationTimeSeconds);
+    }
+
+    @Teardown
+    public void teardown() {
+        for (ITopic topic : topics) {
+            topic.destroy();
+        }
+        totalExpectedCounter.destroy();
+        totalFoundCounter.destroy();
     }
 }

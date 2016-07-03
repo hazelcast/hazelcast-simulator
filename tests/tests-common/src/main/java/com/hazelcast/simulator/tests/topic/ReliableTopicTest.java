@@ -80,22 +80,6 @@ public class ReliableTopicTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void verify() {
-        final long expectedCount = listenersPerTopic * totalMessagesSend.get();
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                long actualCount = 0;
-                for (MessageListenerImpl topicListener : listeners) {
-                    actualCount += topicListener.received.get();
-                }
-                assertEquals("published messages don't match received messages", expectedCount, actualCount);
-            }
-        });
-        assertEquals("Failures found", 0, failures.get());
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -229,5 +213,22 @@ public class ReliableTopicTest extends AbstractTest {
                     + "id=" + id
                     + '}';
         }
+    }
+
+
+    @Verify(global = true)
+    public void verify() {
+        final long expectedCount = listenersPerTopic * totalMessagesSend.get();
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                long actualCount = 0;
+                for (MessageListenerImpl topicListener : listeners) {
+                    actualCount += topicListener.received.get();
+                }
+                assertEquals("published messages don't match received messages", expectedCount, actualCount);
+            }
+        });
+        assertEquals("Failures found", 0, failures.get());
     }
 }

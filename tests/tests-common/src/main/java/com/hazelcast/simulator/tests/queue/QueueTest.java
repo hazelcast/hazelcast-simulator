@@ -60,26 +60,6 @@ public class QueueTest extends AbstractTest {
         }
     }
 
-    @Teardown
-    public void teardown() {
-        for (IQueue queue : queues) {
-            queue.destroy();
-        }
-    }
-
-    @Verify
-    public void verify() {
-        long expected = totalCounter.get();
-        long actual = 0;
-        for (Queue<Long> queue : queues) {
-            for (Long queueCounter : queue) {
-                actual += queueCounter;
-            }
-        }
-
-        assertEquals(expected, actual);
-    }
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(basename);
@@ -132,6 +112,26 @@ public class QueueTest extends AbstractTest {
             } catch (InterruptedException e) {
                 throw rethrow(e);
             }
+        }
+    }
+
+    @Verify
+    public void verify() {
+        long expected = totalCounter.get();
+        long actual = 0;
+        for (Queue<Long> queue : queues) {
+            for (Long queueCounter : queue) {
+                actual += queueCounter;
+            }
+        }
+
+        assertEquals(expected, actual);
+    }
+
+    @Teardown
+    public void teardown() {
+        for (IQueue queue : queues) {
+            queue.destroy();
         }
     }
 }

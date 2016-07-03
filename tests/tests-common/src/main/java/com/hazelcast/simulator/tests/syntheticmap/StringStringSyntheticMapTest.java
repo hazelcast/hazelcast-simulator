@@ -64,13 +64,6 @@ public class StringStringSyntheticMapTest extends AbstractTest {
                 .addOperation(Operation.PUT, putProb)
                 .addDefaultOperation(Operation.GET);
     }
-
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -125,4 +118,13 @@ public class StringStringSyntheticMapTest extends AbstractTest {
             return values[randomInt(values.length)];
         }
     }
+
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
+    }
+
+
 }

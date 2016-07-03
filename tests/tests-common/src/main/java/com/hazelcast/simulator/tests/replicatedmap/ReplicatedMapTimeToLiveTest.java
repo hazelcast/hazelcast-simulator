@@ -68,23 +68,7 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
                 .addOperation(Operation.GET, getProb);
     }
 
-    @Verify(global = false)
-    public void localVerify() {
-        MapOperationCounter total = new MapOperationCounter();
-        for (MapOperationCounter counter : results) {
-            total.add(counter);
-        }
-        logger.info(basename + ": " + total + " total of " + results.size());
 
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-
-                logger.info(basename + ": " + "assert map Size = " + map.size());
-                assertEquals(basename + ": Replicated Map should be empty, some TTL events are not processed", 0, map.size());
-            }
-        });
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -132,5 +116,23 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
         public void afterRun() {
             results.add(count);
         }
+    }
+
+    @Verify(global = false)
+    public void localVerify() {
+        MapOperationCounter total = new MapOperationCounter();
+        for (MapOperationCounter counter : results) {
+            total.add(counter);
+        }
+        logger.info(basename + ": " + total + " total of " + results.size());
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+
+                logger.info(basename + ": " + "assert map Size = " + map.size());
+                assertEquals(basename + ": Replicated Map should be empty, some TTL events are not processed", 0, map.size());
+            }
+        });
     }
 }

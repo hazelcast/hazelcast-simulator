@@ -96,16 +96,6 @@ public class MapMaxSizeTest extends AbstractTest {
         }
     }
 
-    @Verify
-    public void globalVerify() {
-        MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
-        for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
-            total.add(operationCounter);
-        }
-        logger.info(format("Operation counters from %s: %s", basename, total));
-
-        assertMapMaxSize();
-    }
 
     private void assertMapMaxSize() {
         if (isMemberNode(targetInstance)) {
@@ -167,5 +157,16 @@ public class MapMaxSizeTest extends AbstractTest {
         public void afterRun() {
             operationCounterList.add(operationCounter);
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
+        for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(format("Operation counters from %s: %s", basename, total));
+
+        assertMapMaxSize();
     }
 }

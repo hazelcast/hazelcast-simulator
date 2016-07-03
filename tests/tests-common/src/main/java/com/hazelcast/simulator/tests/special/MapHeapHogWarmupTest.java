@@ -88,16 +88,6 @@ public class MapHeapHogWarmupTest extends AbstractTest {
         logger.info(sb.toString());
     }
 
-    @Verify
-    public void verify() {
-        if (isClient(targetInstance)) {
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder(basename).append(": In local verify phase the map size is ").append(map.size());
-        addMemoryStatistics(sb);
-        logger.info(sb.toString());
-    }
 
     @Run
     public void run() {
@@ -149,5 +139,16 @@ public class MapHeapHogWarmupTest extends AbstractTest {
                 .append(" (").append(used).append(')')
                 .append(NEW_LINE).append("max = ").append(humanReadableByteCount(max, true)).append(" (").append(max).append(')')
                 .append(NEW_LINE).append(format("usedOfMax = %.2f%%", usedOfMax));
+    }
+
+    @Verify
+    public void verify() {
+        if (isClient(targetInstance)) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder(basename).append(": In local verify phase the map size is ").append(map.size());
+        addMemoryStatistics(sb);
+        logger.info(sb.toString());
     }
 }

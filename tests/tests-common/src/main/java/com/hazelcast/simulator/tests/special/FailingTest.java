@@ -80,15 +80,6 @@ public class FailingTest extends AbstractTest {
         createFailure(TestPhase.SETUP);
     }
 
-    @Teardown
-    public void localTearDown() throws Exception {
-        createFailure(TestPhase.LOCAL_TEARDOWN);
-    }
-
-    @Teardown(global = true)
-    public void globalTearDown() throws Exception {
-        createFailure(TestPhase.GLOBAL_TEARDOWN);
-    }
 
     @Warmup
     public void localWarmup() throws Exception {
@@ -98,6 +89,11 @@ public class FailingTest extends AbstractTest {
     @Warmup(global = true)
     public void globalWarmup() throws Exception {
         createFailure(TestPhase.GLOBAL_WARMUP);
+    }
+
+    @Run
+    public void run() throws Exception {
+        createFailure(TestPhase.RUN);
     }
 
     @Verify(global = false)
@@ -110,10 +106,16 @@ public class FailingTest extends AbstractTest {
         createFailure(TestPhase.GLOBAL_VERIFY);
     }
 
-    @Run
-    public void run() throws Exception {
-        createFailure(TestPhase.RUN);
+    @Teardown
+    public void localTearDown() throws Exception {
+        createFailure(TestPhase.LOCAL_TEARDOWN);
     }
+
+    @Teardown(global = true)
+    public void globalTearDown() throws Exception {
+        createFailure(TestPhase.GLOBAL_TEARDOWN);
+    }
+
 
     private void createFailure(TestPhase currentTestPhase) throws Exception {
         if (!isSelected || testPhase != currentTestPhase) {

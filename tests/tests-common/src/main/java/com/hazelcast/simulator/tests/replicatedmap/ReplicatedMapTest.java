@@ -64,12 +64,6 @@ public class ReplicatedMapTest extends AbstractTest {
                 .addDefaultOperation(Operation.REMOVE);
     }
 
-    @Teardown
-    public void tearDown() throws Exception {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup
     public void warmup() throws InterruptedException {
         values = generateStrings(valueCount, valueLength);
@@ -120,4 +114,11 @@ public class ReplicatedMapTest extends AbstractTest {
             return values[randomInt(values.length)];
         }
     }
+
+    @Teardown
+    public void tearDown() throws Exception {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
+    }
+
 }

@@ -49,11 +49,6 @@ public class PutAsyncAndThenTest extends AbstractTest {
         keys = generateStringKeys(basename, keyCount, keyLocality, testContext.getTargetInstance());
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -84,4 +79,10 @@ public class PutAsyncAndThenTest extends AbstractTest {
             ExceptionReporter.report(basename, throwable);
         }
     }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+    }
+
 }

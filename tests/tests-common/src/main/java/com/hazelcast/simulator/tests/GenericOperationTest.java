@@ -77,11 +77,6 @@ public class GenericOperationTest extends AbstractTest {
         }
     }
 
-    @Teardown
-    public void tearDown() {
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -165,5 +160,11 @@ public class GenericOperationTest extends AbstractTest {
             super(delayNanos);
         }
     }
+
+    @Teardown
+    public void tearDown() {
+        logger.info(getOperationCountInformation(targetInstance));
+    }
+
 
 }

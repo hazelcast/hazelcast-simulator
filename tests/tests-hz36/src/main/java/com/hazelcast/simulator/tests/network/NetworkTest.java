@@ -133,11 +133,6 @@ public class NetworkTest extends AbstractTest {
         networkCreateLock = targetInstance.getLock("connectionCreateLock");
     }
 
-    @Teardown
-    public void teardown() {
-        connectionManager.shutdown();
-    }
-
     @Warmup
     public void warmup() throws Exception {
         networkCreateLock.lock();
@@ -316,4 +311,11 @@ public class NetworkTest extends AbstractTest {
             }
         }
     }
+
+    @Teardown
+    public void teardown() {
+        connectionManager.shutdown();
+    }
+
+
 }

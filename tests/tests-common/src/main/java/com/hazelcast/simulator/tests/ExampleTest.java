@@ -54,32 +54,12 @@ public class ExampleTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void tearDown() {
-        logger.info("======== TEAR DOWN =========");
-        map.destroy();
-        logger.info("======== THE END =========");
-    }
-
     @Warmup
     public void warmup() {
         logger.info("======== WARMUP =========");
         logger.info("Map size is: " + map.size());
     }
 
-    @Verify
-    public void verify() {
-        logger.info("======== VERIFYING =========");
-        logger.info("Map size is: " + map.size());
-
-        for (int i = 0; i < maxKeys; i++) {
-            String actualValue = map.get(i);
-            if (actualValue != null) {
-                String expectedValue = "value" + i;
-                assertEquals(expectedValue, actualValue);
-            }
-        }
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -113,4 +93,28 @@ public class ExampleTest extends AbstractTest {
             }
         }
     }
+
+
+
+    @Verify
+    public void verify() {
+        logger.info("======== VERIFYING =========");
+        logger.info("Map size is: " + map.size());
+
+        for (int i = 0; i < maxKeys; i++) {
+            String actualValue = map.get(i);
+            if (actualValue != null) {
+                String expectedValue = "value" + i;
+                assertEquals(expectedValue, actualValue);
+            }
+        }
+    }
+
+    @Teardown
+    public void tearDown() {
+        logger.info("======== TEAR DOWN =========");
+        map.destroy();
+        logger.info("======== THE END =========");
+    }
+
 }

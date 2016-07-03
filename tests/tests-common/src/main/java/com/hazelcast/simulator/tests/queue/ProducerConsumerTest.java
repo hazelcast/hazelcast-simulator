@@ -48,13 +48,6 @@ public class ProducerConsumerTest extends AbstractTest {
         workQueue = targetInstance.getQueue(basename + ":WorkQueue");
     }
 
-    @Teardown
-    public void teardown() {
-        produced.destroy();
-        workQueue.destroy();
-        consumed.destroy();
-    }
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(basename);
@@ -72,6 +65,13 @@ public class ProducerConsumerTest extends AbstractTest {
         long expected = workQueue.size() + consumed.get();
         long actual = produced.get();
         assertEquals(expected, actual);
+    }
+
+    @Teardown
+    public void teardown() {
+        produced.destroy();
+        workQueue.destroy();
+        consumed.destroy();
     }
 
     private class Producer implements Runnable {
