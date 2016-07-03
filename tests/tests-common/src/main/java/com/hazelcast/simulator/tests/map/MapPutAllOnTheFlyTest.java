@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -71,10 +70,5 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
 
             map.putAll(values);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        MapPutAllOnTheFlyTest test = new MapPutAllOnTheFlyTest();
-        new TestRunner<MapPutAllOnTheFlyTest>(test).withDuration(10).run();
     }
 }

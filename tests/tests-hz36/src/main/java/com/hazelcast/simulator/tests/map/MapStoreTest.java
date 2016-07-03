@@ -16,16 +16,12 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.config.MapStoreConfig;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.simulator.utils.AssertTask;
@@ -44,12 +40,12 @@ import static org.junit.Assert.assertNull;
 
 /**
  * This test operates on a map which has a {@link com.hazelcast.core.MapStore} configured.
- *
+ * <p>
  * We use map operations such as loadAll, put, get, delete or destroy with some probability distribution to trigger
  * {@link com.hazelcast.core.MapStore} methods. We verify that the the key/value pairs in the map are also "persisted"
  * into the {@link com.hazelcast.core.MapStore}.
  */
-public class MapStoreTest {
+public class MapStoreTest extends AbstractTest {
 
     private enum MapOperation {
         LOAD_ALL,
@@ -68,9 +64,6 @@ public class MapStoreTest {
         REPLACE
     }
 
-    private static final ILogger LOGGER = Logger.getLogger(MapStoreTest.class);
-
-    public String basename = MapStoreTest.class.getSimpleName();
     public int keyCount = 10;
 
     public double loadAllProb = 0.1;
@@ -98,13 +91,11 @@ public class MapStoreTest {
     private int putTTlKeyDomain;
     private int putTTlKeyRange;
 
-    private HazelcastInstance targetInstance;
     private IMap<Integer, Integer> map;
     private IList<MapOperationCounter> operationCounterList;
 
     @Setup
-    public void setup(TestContext testContext) {
-        targetInstance = testContext.getTargetInstance();
+    public void setup() {
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
 
@@ -128,16 +119,16 @@ public class MapStoreTest {
                 .addOperation(MapPutOperation.PUT_IF_ABSENT, putUsingPutIfAbsent)
                 .addOperation(MapPutOperation.REPLACE, putUsingReplaceProb);
 
-        assertMapStoreConfiguration(LOGGER, targetInstance, basename, MapStoreWithCounter.class);
+        assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounter.class);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        LOGGER.info(basename + ": " + total + " from " + operationCounterList.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 
     @Verify(global = false)
@@ -150,13 +141,13 @@ public class MapStoreTest {
         int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
 
         int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
-        LOGGER.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
+        logger.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
         sleepMillis(sleepMs);
 
         final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
 
-        LOGGER.info(basename + ": map size = " + map.size());
-        LOGGER.info(basename + ": map store = " + mapStore);
+        logger.info(basename + ": map size = " + map.size());
+        logger.info(basename + ": map store = " + mapStore);
 
         assertTrueEventually(new AssertTask() {
             @Override
@@ -268,9 +259,5 @@ public class MapStoreTest {
         public void afterRun() {
             operationCounterList.add(operationCounter);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        new TestRunner<MapStoreTest>(new MapStoreTest()).withDuration(10).run();
     }
 }

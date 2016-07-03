@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.concurrent.atomicreference;
 
 import com.hazelcast.core.IAtomicReference;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -119,10 +118,5 @@ public class AtomicReferenceTest extends AbstractTest {
         private IAtomicReference<Object> getRandomCounter() {
             return counters[randomInt(counters.length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        AtomicReferenceTest test = new AtomicReferenceTest();
-        new TestRunner<AtomicReferenceTest>(test).withDuration(10).run();
     }
 }

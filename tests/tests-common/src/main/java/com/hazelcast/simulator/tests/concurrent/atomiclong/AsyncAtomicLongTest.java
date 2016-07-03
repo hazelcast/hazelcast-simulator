@@ -19,7 +19,6 @@ import com.hazelcast.core.AsyncAtomicLong;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -199,8 +198,4 @@ public class AsyncAtomicLongTest extends AbstractTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        AsyncAtomicLongTest test = new AsyncAtomicLongTest();
-        new TestRunner<AsyncAtomicLongTest>(test).withDuration(10).run();
-    }
 }

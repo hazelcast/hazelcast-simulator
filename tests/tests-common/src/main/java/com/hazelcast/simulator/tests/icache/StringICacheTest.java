@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -136,10 +135,5 @@ public class StringICacheTest extends AbstractTest {
             int length = keys.length;
             return keys[randomInt(length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        StringICacheTest test = new StringICacheTest();
-        new TestRunner<StringICacheTest>(test).run();
     }
 }

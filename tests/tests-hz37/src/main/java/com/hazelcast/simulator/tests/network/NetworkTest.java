@@ -15,14 +15,11 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.Member;
 import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.instance.Node;
 import com.hazelcast.internal.metrics.MetricsRegistry;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
@@ -32,12 +29,12 @@ import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.nio.tcp.nonblocking.SelectorMode;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
@@ -58,11 +55,9 @@ import static com.hazelcast.simulator.tests.network.PayloadUtils.readLong;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 @SuppressWarnings("checkstyle:npathcomplexity")
-public class NetworkTest {
+public class NetworkTest extends AbstractTest {
 
     private static final int PORT_OFFSET = 1000;
-
-    private static final ILogger LOGGER = Logger.getLogger(NetworkTest.class);
 
     public int payloadSize = 0;
     public long requestTimeout = 60;
@@ -78,7 +73,6 @@ public class NetworkTest {
     public boolean returnPayload = true;
 
     private final AtomicInteger workerIdGenerator = new AtomicInteger();
-    private HazelcastInstance hz;
     private ILock networkCreateLock;
     private TcpIpConnectionManager connectionManager;
     private RequestPacketHandler packetHandler;
@@ -90,10 +84,8 @@ public class NetworkTest {
     }
 
     @Setup
-    public void setup(TestContext testContext) throws Exception {
-        hz = testContext.getTargetInstance();
-
-        Node node = HazelcastTestUtils.getNode(hz);
+    public void setup() throws Exception {
+        Node node = HazelcastTestUtils.getNode(targetInstance);
         if (node == null) {
             throw new IllegalStateException("node is null");
         }
@@ -106,7 +98,7 @@ public class NetworkTest {
 
         Address thisAddress = node.getThisAddress();
         Address newThisAddress = new Address(thisAddress.getHost(), thisAddress.getPort() + PORT_OFFSET);
-        LOGGER.info("ThisAddress: " + newThisAddress);
+        logger.info("ThisAddress: " + newThisAddress);
         MockIOService ioService = new MockIOService(newThisAddress, loggingService);
         ioService.inputThreadCount = inputThreadCount;
         ioService.outputThreadCount = outputThreadCount;
@@ -138,7 +130,7 @@ public class NetworkTest {
         connectionManager = new TcpIpConnectionManager(
                 ioService, ioService.serverSocketChannel, loggingService, metricsRegistry, threadingModel);
         connectionManager.start();
-        networkCreateLock = hz.getLock("connectionCreateLock");
+        networkCreateLock = targetInstance.getLock("connectionCreateLock");
     }
 
     @Teardown
@@ -150,8 +142,8 @@ public class NetworkTest {
     public void warmup() throws Exception {
         networkCreateLock.lock();
         try {
-            LOGGER.info("Starting connections: " + (hz.getCluster().getMembers().size() - 1));
-            for (Member member : hz.getCluster().getMembers()) {
+            logger.info("Starting connections: " + (targetInstance.getCluster().getMembers().size() - 1));
+            for (Member member : targetInstance.getCluster().getMembers()) {
 
                 if (member.localMember()) {
                     continue;
@@ -160,7 +152,7 @@ public class NetworkTest {
                 Address memberAddress = member.getAddress();
                 Address targetAddress = new Address(memberAddress.getHost(), memberAddress.getPort() + PORT_OFFSET);
 
-                LOGGER.info("Connecting to: " + targetAddress);
+                logger.info("Connecting to: " + targetAddress);
                 connectionManager.getOrConnect(targetAddress);
                 Connection connection;
                 for (; ; ) {
@@ -169,16 +161,16 @@ public class NetworkTest {
                         break;
                     }
 
-                    LOGGER.info("Waiting for connection to: " + targetAddress);
+                    logger.info("Waiting for connection to: " + targetAddress);
                     sleepMillis(100);
                 }
 
                 connections.add(connection);
 
-                LOGGER.info("Successfully created connection to: " + targetAddress);
+                logger.info("Successfully created connection to: " + targetAddress);
             }
 
-            LOGGER.info("Successfully started all connections");
+            logger.info("Successfully started all connections");
         } finally {
             networkCreateLock.unlock();
         }

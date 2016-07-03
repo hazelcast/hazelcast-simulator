@@ -16,14 +16,13 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.ExecutionCallback;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
@@ -33,10 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 
-public class PutAsyncAndThenTest {
+public class PutAsyncAndThenTest extends AbstractTest {
 
     // properties
-    public String basename = PutAsyncAndThenTest.class.getSimpleName();
     public int keyCount = 1000;
     public int maxConcurrentCallsPerWorker = 1000;
     public long acquireTimeoutMs = 2 * 60 * 1000;
@@ -46,8 +44,7 @@ public class PutAsyncAndThenTest {
     private String[] keys;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setUp() {
         map = targetInstance.getMap(basename);
         keys = generateStringKeys(basename, keyCount, keyLocality, testContext.getTargetInstance());
     }

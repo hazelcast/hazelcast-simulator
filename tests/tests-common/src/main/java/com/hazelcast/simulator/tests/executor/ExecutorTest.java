@@ -19,7 +19,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -147,10 +146,5 @@ public class ExecutorTest extends AbstractTest {
         public void setHazelcastInstance(HazelcastInstance hz) {
             this.hz = hz;
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        ExecutorTest test = new ExecutorTest();
-        new TestRunner<ExecutorTest>(test).run();
     }
 }

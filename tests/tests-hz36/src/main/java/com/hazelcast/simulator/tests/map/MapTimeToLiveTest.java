@@ -15,16 +15,12 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -39,13 +35,11 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * In this test we are using map put methods with an expire time.
- *
+ * <p>
  * We put keys at random into the map using sync and async methods with some probability distribution.
  * In the end we verify that the map is empty and all key value pairs have expired out of the map.
  */
-public class MapTimeToLiveTest {
-
-    private static final ILogger LOGGER = Logger.getLogger(MapTimeToLiveTest.class);
+public class MapTimeToLiveTest extends AbstractTest {
 
     private enum Operation {
         PUT_TTL,
@@ -56,7 +50,6 @@ public class MapTimeToLiveTest {
     }
 
     // properties
-    public String basename = MapTimeToLiveTest.class.getSimpleName();
     public int keyCount = 10;
 
     public double putTTLProb = 0.4;
@@ -74,8 +67,7 @@ public class MapTimeToLiveTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setup(TestContext testContext) {
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setup() {
         map = targetInstance.getMap(basename);
         results = targetInstance.getList(basename + "report");
 
@@ -86,13 +78,13 @@ public class MapTimeToLiveTest {
                 .addOperation(Operation.DESTROY, destroyProb);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter counter : results) {
             total.add(counter);
         }
-        LOGGER.info(basename + ": " + total + " total of " + results.size());
+        logger.info(basename + ": " + total + " total of " + results.size());
 
         assertTrueEventually(new AssertTask() {
             @Override
@@ -161,7 +153,4 @@ public class MapTimeToLiveTest {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        new TestRunner<MapTimeToLiveTest>(new MapTimeToLiveTest()).run();
-    }
 }

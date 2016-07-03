@@ -19,7 +19,6 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
@@ -93,8 +92,8 @@ public class TxnQueueWithLockTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void verify() {
+    @Verify
+    public void globalVerify() {
         IQueue queue = targetInstance.getQueue(basename + 'q');
         ILock firstLock = targetInstance.getLock(basename + "l1");
         ILock secondLock = targetInstance.getLock(basename + "l2");
@@ -110,10 +109,5 @@ public class TxnQueueWithLockTest extends AbstractTest {
         assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
         assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
         // TODO: check if this assert can be re-enabled: assertEquals(total.committed - total.rolled, queue.size())
-    }
-
-    public static void main(String[] args) throws Exception {
-        TxnQueueWithLockTest test = new TxnQueueWithLockTest();
-        new TestRunner<TxnQueueWithLockTest>(test).run();
     }
 }

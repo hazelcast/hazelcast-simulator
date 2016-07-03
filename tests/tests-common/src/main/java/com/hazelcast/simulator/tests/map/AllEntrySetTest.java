@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.TruePredicate;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -91,10 +90,5 @@ public class AllEntrySetTest extends AbstractTest {
 
             assertEquals(entryCount, result.size());
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        AllEntrySetTest test = new AllEntrySetTest();
-        new TestRunner<AllEntrySetTest>(test).withDuration(10).run();
     }
 }

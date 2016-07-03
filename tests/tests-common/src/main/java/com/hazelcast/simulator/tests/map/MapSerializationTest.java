@@ -19,7 +19,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -92,11 +91,6 @@ public class MapSerializationTest extends AbstractTest {
                     throw new IllegalStateException("Unrecognized serializer: " + serializer);
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        MapSerializationTest test = new MapSerializationTest();
-        new TestRunner<MapSerializationTest>(test).run();
     }
 
     private static class ExternalizableValue implements Externalizable {

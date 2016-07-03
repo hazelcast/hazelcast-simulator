@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -152,9 +151,5 @@ public class MapTimeToLiveTest extends AbstractTest {
         public void afterRun() {
             results.add(count);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        new TestRunner<MapTimeToLiveTest>(new MapTimeToLiveTest()).run();
     }
 }

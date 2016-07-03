@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.syntheticmap;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -125,10 +124,5 @@ public class StringStringSyntheticMapTest extends AbstractTest {
         private String randomValue() {
             return values[randomInt(values.length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        StringStringSyntheticMapTest test = new StringStringSyntheticMapTest();
-        new TestRunner<StringStringSyntheticMapTest>(test).run();
     }
 }

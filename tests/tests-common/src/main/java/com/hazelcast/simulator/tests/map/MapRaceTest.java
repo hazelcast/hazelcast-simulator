@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -115,10 +114,5 @@ public class MapRaceTest extends AbstractTest {
         private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {
             map.put(key, map.get(key) + increment);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        MapRaceTest test = new MapRaceTest();
-        new TestRunner<MapRaceTest>(test).run();
     }
 }

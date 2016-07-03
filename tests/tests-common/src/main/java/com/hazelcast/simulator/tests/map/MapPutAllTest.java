@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -120,10 +119,5 @@ public class MapPutAllTest extends AbstractTest {
         private Map<Object, Object> randomMap() {
             return inputMaps[randomInt(inputMaps.length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        MapPutAllTest test = new MapPutAllTest();
-        new TestRunner<MapPutAllTest>(test).withDuration(10).run();
     }
 }

@@ -19,7 +19,6 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -153,10 +152,5 @@ public class ITopicTest extends AbstractTest {
             sleepRandomNanos(random, maxProcessingDelayNanos);
             count += message.getMessageObject();
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        ITopicTest test = new ITopicTest();
-        new TestRunner<ITopicTest>(test).withDuration(10).run();
     }
 }

@@ -15,12 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.MapConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -108,12 +103,5 @@ public class MapTTLSaturationTest extends AbstractTest {
         long total = Runtime.getRuntime().totalMemory();
         long max = Runtime.getRuntime().maxMemory();
         return (100d * total) / max;
-    }
-
-    public static void main(String[] args) throws Exception {
-        Config config = new Config();
-        config.addMapConfig(new MapConfig("mapttlsaturation*").setBackupCount(0).setStatisticsEnabled(false));
-        HazelcastInstance hz = Hazelcast.newHazelcastInstance(config);
-        new TestRunner<MapTTLSaturationTest>(new MapTTLSaturationTest()).withHazelcastInstance(hz).withDuration(6000).run();
     }
 }

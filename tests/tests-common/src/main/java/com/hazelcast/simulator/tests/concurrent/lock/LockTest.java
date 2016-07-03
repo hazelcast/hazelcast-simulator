@@ -18,7 +18,6 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -136,10 +135,5 @@ public class LockTest extends AbstractTest {
 
     private String getAccountId(long key) {
         return basename + '-' + key;
-    }
-
-    public static void main(String[] args) throws Exception {
-        LockTest test = new LockTest();
-        new TestRunner<LockTest>(test).withDuration(10).run();
     }
 }

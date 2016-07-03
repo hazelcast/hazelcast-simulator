@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.tests.map.queryresultsize;
 
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -70,7 +69,7 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
         baseWarmup(keyType);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         baseVerify(true);
     }
@@ -78,9 +77,5 @@ public class MapResultSizeLimitTest extends AbstractMapTest {
     @RunWithWorker
     public IWorker run() {
         return baseRunWithWorker(operationType);
-    }
-
-    public static void main(String[] args) throws Exception {
-        new TestRunner<MapResultSizeLimitTest>(new MapResultSizeLimitTest()).run();
     }
 }

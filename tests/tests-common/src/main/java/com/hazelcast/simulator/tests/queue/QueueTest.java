@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.IQueue;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -134,10 +133,5 @@ public class QueueTest extends AbstractTest {
                 throw rethrow(e);
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        QueueTest test = new QueueTest();
-        new TestRunner<QueueTest>(test).run();
     }
 }

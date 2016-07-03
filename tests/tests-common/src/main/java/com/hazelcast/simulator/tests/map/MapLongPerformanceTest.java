@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -91,10 +90,5 @@ public class MapLongPerformanceTest extends AbstractTest {
                     throw new UnsupportedOperationException();
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        MapLongPerformanceTest test = new MapLongPerformanceTest();
-        new TestRunner<MapLongPerformanceTest>(test).run();
     }
 }

@@ -18,7 +18,6 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.IdGenerator;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -154,10 +153,5 @@ public class GrowingMapTest extends AbstractTest {
                 }
             }
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        GrowingMapTest test = new GrowingMapTest();
-        new TestRunner<GrowingMapTest>(test).withDuration(30).run();
     }
 }

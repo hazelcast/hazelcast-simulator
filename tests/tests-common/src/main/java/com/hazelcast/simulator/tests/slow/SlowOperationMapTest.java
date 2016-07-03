@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.slow;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.MapInterceptor;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -226,10 +225,5 @@ public class SlowOperationMapTest extends AbstractTest {
             }
             sleepRecursion(recursionDepth - 1, sleepSeconds);
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        SlowOperationMapTest test = new SlowOperationMapTest();
-        new TestRunner<SlowOperationMapTest>(test).run();
     }
 }

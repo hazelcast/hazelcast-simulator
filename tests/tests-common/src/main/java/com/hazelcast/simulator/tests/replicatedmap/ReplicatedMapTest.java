@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.replicatedmap;
 
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestRunner;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -120,10 +119,5 @@ public class ReplicatedMapTest extends AbstractTest {
         private String randomValue() {
             return values[randomInt(values.length)];
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        ReplicatedMapTest test = new ReplicatedMapTest();
-        new TestRunner<ReplicatedMapTest>(test).run();
     }
 }

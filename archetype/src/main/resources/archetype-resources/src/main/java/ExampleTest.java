@@ -121,9 +121,4 @@ public class ExampleTest {
             }
         }
     }
-
-    public static void main(String[] args) throws Exception {
-        ExampleTest test = new ExampleTest();
-        new TestRunner<ExampleTest>(test).run();
-    }
 }
