@@ -83,46 +83,6 @@ public class AsyncAtomicLongTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void teardown() {
-        if (isMemberNode(targetInstance)) {
-            for (IAtomicLong counter : counters) {
-                counter.destroy();
-            }
-        }
-        totalCounter.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
-    @Verify
-    public void verify() {
-        if (isClient(targetInstance)) {
-            return;
-        }
-
-        final String serviceName = totalCounter.getServiceName();
-        final long expected = totalCounter.get();
-
-        // since the operations are asynchronous, we have no idea when they complete
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                // hack to prevent overloading the system with get calls, else it is done many times a second
-                sleepSeconds(10);
-
-                long actual = 0;
-                for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
-                    String key = distributedObject.getName();
-                    if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename)) {
-                        actual += targetInstance.getAtomicLong(key).get();
-                    }
-                }
-
-                assertEquals(expected, actual);
-            }
-        }, assertEventuallySeconds);
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -196,6 +156,46 @@ public class AsyncAtomicLongTest extends AbstractTest {
             int index = randomInt(counters.length);
             return counters[index];
         }
+    }
+
+    @Verify
+    public void verify() {
+        if (isClient(targetInstance)) {
+            return;
+        }
+
+        final String serviceName = totalCounter.getServiceName();
+        final long expected = totalCounter.get();
+
+        // since the operations are asynchronous, we have no idea when they complete
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                // hack to prevent overloading the system with get calls, else it is done many times a second
+                sleepSeconds(10);
+
+                long actual = 0;
+                for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
+                    String key = distributedObject.getName();
+                    if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename)) {
+                        actual += targetInstance.getAtomicLong(key).get();
+                    }
+                }
+
+                assertEquals(expected, actual);
+            }
+        }, assertEventuallySeconds);
+    }
+
+    @Teardown
+    public void teardown() {
+        if (isMemberNode(targetInstance)) {
+            for (IAtomicLong counter : counters) {
+                counter.destroy();
+            }
+        }
+        totalCounter.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
     }
 
 }

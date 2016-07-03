@@ -68,18 +68,6 @@ public class AtomicLongTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void teardown() {
-        for (IAtomicLong counter : counters) {
-            counter.destroy();
-        }
-        totalCounter.destroy();
-
-        logger.info("Operations: " + operationsCounter);
-        logger.info(getOperationCountInformation(targetInstance));
-        logger.info(getPartitionDistributionInformation(targetInstance));
-    }
-
     @Warmup
     public void warmup() {
         for (int i = 0; i < warmupIterations; i++) {
@@ -87,22 +75,6 @@ public class AtomicLongTest extends AbstractTest {
                 counter.get();
             }
         }
-    }
-
-    @Verify
-    public void verify() {
-        String serviceName = totalCounter.getServiceName();
-        String totalName = totalCounter.getName();
-
-        long actual = 0;
-        for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
-            String key = distributedObject.getName();
-            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename) && !key.equals(totalName)) {
-                actual += targetInstance.getAtomicLong(key).get();
-            }
-        }
-
-        assertEquals(totalCounter.get(), actual);
     }
 
     @RunWithWorker
@@ -146,5 +118,34 @@ public class AtomicLongTest extends AbstractTest {
             return counters[index];
         }
     }
+
+    @Verify
+    public void verify() {
+        String serviceName = totalCounter.getServiceName();
+        String totalName = totalCounter.getName();
+
+        long actual = 0;
+        for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
+            String key = distributedObject.getName();
+            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename) && !key.equals(totalName)) {
+                actual += targetInstance.getAtomicLong(key).get();
+            }
+        }
+
+        assertEquals(totalCounter.get(), actual);
+    }
+
+    @Teardown
+    public void teardown() {
+        for (IAtomicLong counter : counters) {
+            counter.destroy();
+        }
+        totalCounter.destroy();
+
+        logger.info("Operations: " + operationsCounter);
+        logger.info(getOperationCountInformation(targetInstance));
+        logger.info(getPartitionDistributionInformation(targetInstance));
+    }
+
 
 }

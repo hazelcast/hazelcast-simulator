@@ -29,9 +29,9 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
  */
 public abstract class AbstractTest {
 
-    protected final ILogger logger = Logger.getLogger(getClass());
-
     public String basename = getClass().getSimpleName();
+
+    protected final ILogger logger = Logger.getLogger(getClass());
 
     @InjectHazelcastInstance
     protected HazelcastInstance targetInstance;
