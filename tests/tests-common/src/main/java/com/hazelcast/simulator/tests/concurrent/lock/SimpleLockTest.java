@@ -48,6 +48,15 @@ public class SimpleLockTest extends AbstractTest {
         totalValue = INITIAL_VALUE * maxAccounts;
     }
 
+    @Run
+    public void run() {
+        ThreadSpawner spawner = new ThreadSpawner(basename);
+        for (int i = 0; i < threadCount; i++) {
+            spawner.spawn(new Worker());
+        }
+        spawner.awaitCompletion();
+    }
+
     private class Worker implements Runnable {
         private final Random random = new Random();
 
@@ -104,12 +113,4 @@ public class SimpleLockTest extends AbstractTest {
         assertEquals(basename + " totals not adding up ", totalValue, value);
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
 }

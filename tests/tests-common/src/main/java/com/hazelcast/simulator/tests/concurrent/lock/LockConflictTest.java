@@ -62,31 +62,6 @@ public class LockConflictTest extends AbstractTest {
         }
     }
 
-    @Verify(global = false)
-    public void verify() {
-        LockCounter total = new LockCounter();
-        for (LockCounter counter : globalCounter) {
-            total.add(counter);
-        }
-        logger.info(basename + ": " + total + " from " + globalCounter.size() + " worker threads");
-
-        long[] expected = new long[keyCount];
-        for (long[] increments : globalIncrements) {
-            for (int i = 0; i < increments.length; i++) {
-                expected[i] += increments[i];
-            }
-        }
-
-        int failures = 0;
-        for (int key = 0; key < keyCount; key++) {
-            if (expected[key] != list.get(key)) {
-                failures++;
-                logger.info(basename + ": key=" + key + " expected " + expected[key] + " != " + "actual " + list.get(key));
-            }
-        }
-        assertEquals(basename + ": " + failures + " key=>values have been incremented unexpected", 0, failures);
-    }
-
     @RunWithWorker
     public Worker run() {
         return new Worker();
@@ -199,5 +174,30 @@ public class LockConflictTest extends AbstractTest {
             globalIncrements.add(localIncrements);
             globalCounter.add(localCounter);
         }
+    }
+
+    @Verify(global = false)
+    public void verify() {
+        LockCounter total = new LockCounter();
+        for (LockCounter counter : globalCounter) {
+            total.add(counter);
+        }
+        logger.info(basename + ": " + total + " from " + globalCounter.size() + " worker threads");
+
+        long[] expected = new long[keyCount];
+        for (long[] increments : globalIncrements) {
+            for (int i = 0; i < increments.length; i++) {
+                expected[i] += increments[i];
+            }
+        }
+
+        int failures = 0;
+        for (int key = 0; key < keyCount; key++) {
+            if (expected[key] != list.get(key)) {
+                failures++;
+                logger.info(basename + ": key=" + key + " expected " + expected[key] + " != " + "actual " + list.get(key));
+            }
+        }
+        assertEquals(basename + ": " + failures + " key=>values have been incremented unexpected", 0, failures);
     }
 }

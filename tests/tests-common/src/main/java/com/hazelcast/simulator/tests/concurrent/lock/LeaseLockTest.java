@@ -34,27 +34,6 @@ public class LeaseLockTest extends AbstractTest {
     public int maxTryTimeMillis = 100;
     public boolean allowZeroMillisRemainingLeaseLockTime = false;
 
-    @Verify
-    public void verify() {
-        for (int i = 0; i < lockCount; i++) {
-            ILock lock = targetInstance.getLock(basename + i);
-
-            boolean isLocked = lock.isLocked();
-            long remainingLeaseTime = lock.getRemainingLeaseTime();
-            if (isLocked) {
-                String message = format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime);
-                if (allowZeroMillisRemainingLeaseLockTime && remainingLeaseTime == 0) {
-                    logger.warning(message);
-                } else {
-                    fail(message);
-                }
-            }
-            if (remainingLeaseTime > 0) {
-                fail(format("%s has remainingLeaseTime: %d ms", lock, remainingLeaseTime));
-            }
-        }
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -83,6 +62,27 @@ public class LeaseLockTest extends AbstractTest {
         @Override
         public void afterRun() throws Exception {
             sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
+        }
+    }
+
+    @Verify
+    public void verify() {
+        for (int i = 0; i < lockCount; i++) {
+            ILock lock = targetInstance.getLock(basename + i);
+
+            boolean isLocked = lock.isLocked();
+            long remainingLeaseTime = lock.getRemainingLeaseTime();
+            if (isLocked) {
+                String message = format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime);
+                if (allowZeroMillisRemainingLeaseLockTime && remainingLeaseTime == 0) {
+                    logger.warning(message);
+                } else {
+                    fail(message);
+                }
+            }
+            if (remainingLeaseTime > 0) {
+                fail(format("%s has remainingLeaseTime: %d ms", lock, remainingLeaseTime));
+            }
         }
     }
 }

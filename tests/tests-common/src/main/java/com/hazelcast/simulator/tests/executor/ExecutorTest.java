@@ -61,19 +61,6 @@ public class ExecutorTest extends AbstractTest {
         expectedExecutedCounter = targetInstance.getAtomicLong(basename + ":ExpectedExecutedCounter");
     }
 
-    @Teardown(global = true)
-    public void teardown() throws Exception {
-        executedCounter.destroy();
-        expectedExecutedCounter.destroy();
-        for (IExecutorService executor : executors) {
-            executor.shutdownNow();
-            if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                logger.severe("Time out while waiting for shutdown of executor: " + executor.getName());
-            }
-            executor.destroy();
-        }
-    }
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(basename);
@@ -81,13 +68,6 @@ public class ExecutorTest extends AbstractTest {
             spawner.spawn(new Worker());
         }
         spawner.awaitCompletion();
-    }
-
-    @Verify
-    public void verify() {
-        long actual = executedCounter.get();
-        long expected = expectedExecutedCounter.get();
-        assertEquals(expected, actual);
     }
 
     private class Worker implements Runnable {
@@ -147,4 +127,25 @@ public class ExecutorTest extends AbstractTest {
             this.hz = hz;
         }
     }
+
+    @Verify
+    public void verify() {
+        long actual = executedCounter.get();
+        long expected = expectedExecutedCounter.get();
+        assertEquals(expected, actual);
+    }
+
+    @Teardown(global = true)
+    public void teardown() throws Exception {
+        executedCounter.destroy();
+        expectedExecutedCounter.destroy();
+        for (IExecutorService executor : executors) {
+            executor.shutdownNow();
+            if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
+                logger.severe("Time out while waiting for shutdown of executor: " + executor.getName());
+            }
+            executor.destroy();
+        }
+    }
+
 }

@@ -80,14 +80,6 @@ public class AtomicReferenceTest extends AbstractTest {
         return (IAtomicReference<Object>[]) new IAtomicReference[countersLength];
     }
 
-    @Teardown
-    public void teardown() {
-        for (IAtomicReference counter : counters) {
-            counter.destroy();
-        }
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -118,5 +110,13 @@ public class AtomicReferenceTest extends AbstractTest {
         private IAtomicReference<Object> getRandomCounter() {
             return counters[randomInt(counters.length)];
         }
+    }
+
+    @Teardown
+    public void teardown() {
+        for (IAtomicReference counter : counters) {
+            counter.destroy();
+        }
+        logger.info(getOperationCountInformation(targetInstance));
     }
 }

@@ -54,30 +54,6 @@ public class TryLockTimeOutTest extends AbstractTest {
         logger.info("totalInitialValue=" + totalInitialValue);
     }
 
-    @Verify(global = true)
-    public void verify() {
-
-        for (int i = 0; i < maxAccounts; i++) {
-            ILock lock = targetInstance.getLock(basename + i);
-            assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
-        }
-
-        long totalValue = 0;
-        IList<Long> accounts = targetInstance.getList(basename);
-        for (long value : accounts) {
-            totalValue += value;
-        }
-        logger.info(": totalValue=" + totalValue);
-        assertEquals(basename + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
-
-        Counter total = new Counter();
-        IList<Counter> totals = targetInstance.getList(basename + "count");
-        for (Counter count : totals) {
-            total.add(count);
-        }
-        logger.info("total count " + total);
-    }
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(basename);
@@ -156,5 +132,29 @@ public class TryLockTimeOutTest extends AbstractTest {
                     + ", transfers=" + transfers
                     + '}';
         }
+    }
+
+    @Verify(global = true)
+    public void verify() {
+
+        for (int i = 0; i < maxAccounts; i++) {
+            ILock lock = targetInstance.getLock(basename + i);
+            assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
+        }
+
+        long totalValue = 0;
+        IList<Long> accounts = targetInstance.getList(basename);
+        for (long value : accounts) {
+            totalValue += value;
+        }
+        logger.info(": totalValue=" + totalValue);
+        assertEquals(basename + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
+
+        Counter total = new Counter();
+        IList<Counter> totals = targetInstance.getList(basename + "count");
+        for (Counter count : totals) {
+            total.add(count);
+        }
+        logger.info("total count " + total);
     }
 }

@@ -45,16 +45,6 @@ public class LockTest extends AbstractTest {
         lockCounter = targetInstance.getAtomicLong(basename + ":LockCounter");
     }
 
-    @Teardown
-    public void teardown() {
-        lockCounter.destroy();
-
-        for (long i = 0; i < lockCounter.get(); i++) {
-            targetInstance.getLock(getLockId(i)).destroy();
-            targetInstance.getAtomicLong(getAccountId(i)).destroy();
-        }
-    }
-
     @Warmup(global = true)
     public void warmup() {
         for (int i = 0; i < lockCount; i++) {
@@ -63,22 +53,6 @@ public class LockTest extends AbstractTest {
             IAtomicLong account = targetInstance.getAtomicLong(getAccountId(key));
             account.set(initialAmount);
         }
-    }
-
-    @Verify
-    public void verify() {
-        long actual = 0;
-        for (long i = 0; i < lockCounter.get(); i++) {
-            ILock lock = targetInstance.getLock(getLockId(i));
-            assertFalse("Lock should be unlocked", lock.isLocked());
-
-            long accountAmount = targetInstance.getAtomicLong(getAccountId(i)).get();
-            assertTrue("Amount on account can't be smaller than 0", accountAmount >= 0);
-            actual += accountAmount;
-        }
-
-        long expected = initialAmount * lockCounter.get();
-        assertEquals(format("%s: Money was lost or created (%d)", basename, expected - actual), expected, actual);
     }
 
     @RunWithWorker
@@ -135,5 +109,31 @@ public class LockTest extends AbstractTest {
 
     private String getAccountId(long key) {
         return basename + '-' + key;
+    }
+
+    @Verify
+    public void verify() {
+        long actual = 0;
+        for (long i = 0; i < lockCounter.get(); i++) {
+            ILock lock = targetInstance.getLock(getLockId(i));
+            assertFalse("Lock should be unlocked", lock.isLocked());
+
+            long accountAmount = targetInstance.getAtomicLong(getAccountId(i)).get();
+            assertTrue("Amount on account can't be smaller than 0", accountAmount >= 0);
+            actual += accountAmount;
+        }
+
+        long expected = initialAmount * lockCounter.get();
+        assertEquals(format("%s: Money was lost or created (%d)", basename, expected - actual), expected, actual);
+    }
+
+    @Teardown
+    public void teardown() {
+        lockCounter.destroy();
+
+        for (long i = 0; i < lockCounter.get(); i++) {
+            targetInstance.getLock(getLockId(i)).destroy();
+            targetInstance.getAtomicLong(getAccountId(i)).destroy();
+        }
     }
 }
