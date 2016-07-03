@@ -65,12 +65,6 @@ public class IntIntMapTest extends AbstractTest {
         operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -128,5 +122,11 @@ public class IntIntMapTest extends AbstractTest {
         private int randomValue() {
             return randomInt(Integer.MAX_VALUE);
         }
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
     }
 }

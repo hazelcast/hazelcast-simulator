@@ -68,16 +68,6 @@ public class MapPutAllTest extends AbstractTest {
         map = targetInstance.getMap(basename);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-
-        if (valueType == GenericTypes.INTEGER) {
-            valueSize = Integer.MAX_VALUE;
-        }
-    }
-
     @Warmup
     @SuppressWarnings("unchecked")
     public void warmup() {
@@ -118,6 +108,16 @@ public class MapPutAllTest extends AbstractTest {
 
         private Map<Object, Object> randomMap() {
             return inputMaps[randomInt(inputMaps.length)];
+        }
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
+
+        if (valueType == GenericTypes.INTEGER) {
+            valueSize = Integer.MAX_VALUE;
         }
     }
 }

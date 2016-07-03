@@ -122,47 +122,6 @@ public class MapStoreTest extends AbstractTest {
         assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounter.class);
     }
 
-    @Verify
-    public void globalVerify() {
-        MapOperationCounter total = new MapOperationCounter();
-        for (MapOperationCounter operationCounter : operationCounterList) {
-            total.add(operationCounter);
-        }
-        logger.info(basename + ": " + total + " from " + operationCounterList.size() + " worker threads");
-    }
-
-    @Verify(global = false)
-    public void verify() {
-        if (isClient(targetInstance)) {
-            return;
-        }
-
-        MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
-        int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
-
-        int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
-        logger.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
-        sleepMillis(sleepMs);
-
-        final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
-
-        logger.info(basename + ": map size = " + map.size());
-        logger.info(basename + ": map store = " + mapStore);
-
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                for (Integer key : map.localKeySet()) {
-                    assertEquals(map.get(key), mapStore.get(key));
-                }
-                assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
-
-                for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
-                    assertNull(basename + ": TTL key should not be in the map", map.get(key));
-                }
-            }
-        });
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -248,5 +207,47 @@ public class MapStoreTest extends AbstractTest {
         public void afterRun() {
             operationCounterList.add(operationCounter);
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        MapOperationCounter total = new MapOperationCounter();
+        for (MapOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(basename + ": " + total + " from " + operationCounterList.size() + " worker threads");
+    }
+
+    @Verify(global = false)
+    public void verify() {
+        if (isClient(targetInstance)) {
+            return;
+        }
+
+        MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
+        int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
+
+        int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
+        logger.info("Sleeping for " + TimeUnit.MILLISECONDS.toSeconds(sleepMs) + " seconds to wait for delay and TTL values.");
+        sleepMillis(sleepMs);
+
+        final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
+
+        logger.info(basename + ": map size = " + map.size());
+        logger.info(basename + ": map store = " + mapStore);
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                for (Integer key : map.localKeySet()) {
+                    assertEquals(map.get(key), mapStore.get(key));
+                }
+                assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
+
+                for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
+                    assertNull(basename + ": TTL key should not be in the map", map.get(key));
+                }
+            }
+        });
     }
 }

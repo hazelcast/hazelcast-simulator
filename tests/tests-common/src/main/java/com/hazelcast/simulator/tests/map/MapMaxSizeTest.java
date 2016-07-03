@@ -96,26 +96,6 @@ public class MapMaxSizeTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void globalVerify() {
-        MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
-        for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
-            total.add(operationCounter);
-        }
-        logger.info(format("Operation counters from %s: %s", basename, total));
-
-        assertMapMaxSize();
-    }
-
-    private void assertMapMaxSize() {
-        if (isMemberNode(targetInstance)) {
-            int mapSize = map.size();
-            int clusterSize = targetInstance.getCluster().getMembers().size();
-            assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
-                    mapSize <= clusterSize * maxSizePerNode);
-        }
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -166,6 +146,26 @@ public class MapMaxSizeTest extends AbstractTest {
         @Override
         public void afterRun() {
             operationCounterList.add(operationCounter);
+        }
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
+        for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(format("Operation counters from %s: %s", basename, total));
+
+        assertMapMaxSize();
+    }
+
+    private void assertMapMaxSize() {
+        if (isMemberNode(targetInstance)) {
+            int mapSize = map.size();
+            int clusterSize = targetInstance.getCluster().getMembers().size();
+            assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
+                    mapSize <= clusterSize * maxSizePerNode);
         }
     }
 }

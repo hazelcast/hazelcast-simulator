@@ -46,12 +46,6 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
         map = targetInstance.getMap(basename);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -70,5 +64,11 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
 
             map.putAll(values);
         }
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
     }
 }

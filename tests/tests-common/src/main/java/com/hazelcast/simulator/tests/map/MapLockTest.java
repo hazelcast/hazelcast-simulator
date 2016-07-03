@@ -55,27 +55,6 @@ public class MapLockTest extends AbstractTest {
         }
     }
 
-    @Verify
-    public void globalVerify() {
-        long[] expected = new long[keyCount];
-
-        for (long[] increments : incrementsList) {
-            for (int i = 0; i < keyCount; i++) {
-                expected[i] += increments[i];
-            }
-        }
-        logger.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            if (expected[i] != map.get(i)) {
-                failures++;
-            }
-        }
-        assertEquals(format("%s: %d keys have been incremented unexpectedly out of %d keys", basename, failures, keyCount), 0,
-                failures);
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -103,5 +82,26 @@ public class MapLockTest extends AbstractTest {
         public void afterRun() {
             incrementsList.add(increments);
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        long[] expected = new long[keyCount];
+
+        for (long[] increments : incrementsList) {
+            for (int i = 0; i < keyCount; i++) {
+                expected[i] += increments[i];
+            }
+        }
+        logger.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            if (expected[i] != map.get(i)) {
+                failures++;
+            }
+        }
+        assertEquals(format("%s: %d keys have been incremented unexpectedly out of %d keys", basename, failures, keyCount), 0,
+                failures);
     }
 }

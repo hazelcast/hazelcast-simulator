@@ -67,22 +67,6 @@ public class MapAsyncOpsTest extends AbstractTest {
                 .addOperation(Operation.DESTROY, destroyProb);
     }
 
-    @Verify(global = true)
-    public void globalVerify() {
-        MapOperationCounter totalMapOperationsCount = new MapOperationCounter();
-        for (MapOperationCounter mapOperationsCount : results) {
-            totalMapOperationsCount.add(mapOperationsCount);
-        }
-        logger.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
-    }
-
-    @Verify(global = false)
-    public void verify() {
-        sleepSeconds(maxTTLExpirySeconds * 2);
-
-        logger.info(basename + ": map size  =" + map.size());
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -129,5 +113,21 @@ public class MapAsyncOpsTest extends AbstractTest {
         public void afterRun() {
             results.add(count);
         }
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        MapOperationCounter totalMapOperationsCount = new MapOperationCounter();
+        for (MapOperationCounter mapOperationsCount : results) {
+            totalMapOperationsCount.add(mapOperationsCount);
+        }
+        logger.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
+    }
+
+    @Verify(global = false)
+    public void verify() {
+        sleepSeconds(maxTTLExpirySeconds * 2);
+
+        logger.info(basename + ": map size  =" + map.size());
     }
 }

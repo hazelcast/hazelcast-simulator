@@ -60,11 +60,6 @@ public class MapSerializationTest extends AbstractTest {
         map = targetInstance.getMap(basename);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -157,5 +152,10 @@ public class MapSerializationTest extends AbstractTest {
         public void readData(ObjectDataInput in) throws IOException {
             value = in.readInt();
         }
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
     }
 }

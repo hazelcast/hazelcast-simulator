@@ -67,12 +67,6 @@ public class MapTransactionReadWriteTest extends AbstractTest {
         builder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void teardown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -146,5 +140,11 @@ public class MapTransactionReadWriteTest extends AbstractTest {
         private int randomValue() {
             return randomInt(Integer.MAX_VALUE);
         }
+    }
+
+    @Teardown
+    public void teardown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
     }
 }

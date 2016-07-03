@@ -56,11 +56,6 @@ public class PartitionServiceMBeanTest extends AbstractTest {
                 .addDefaultOperation(Operation.IS_CLUSTER_SAFE);
     }
 
-    @Teardown
-    public void tearDown() {
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -95,5 +90,10 @@ public class PartitionServiceMBeanTest extends AbstractTest {
                     throw new UnsupportedOperationException();
             }
         }
+    }
+
+    @Teardown
+    public void tearDown() {
+        logger.info(getOperationCountInformation(targetInstance));
     }
 }

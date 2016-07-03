@@ -55,12 +55,6 @@ public class SqlPredicateTest extends AbstractTest {
         this.map = targetInstance.getMap(basename);
     }
 
-    @Teardown
-    public void teardown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Random random = new Random();
@@ -99,4 +93,11 @@ public class SqlPredicateTest extends AbstractTest {
         double salary = random.nextDouble() * maxSalary;
         return new DataSerializableEmployee(id, name, age, active, salary);
     }
+
+    @Teardown
+    public void teardown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
+    }
+
 }

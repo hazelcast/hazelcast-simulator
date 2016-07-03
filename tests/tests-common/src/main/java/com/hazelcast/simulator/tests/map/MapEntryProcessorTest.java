@@ -59,12 +59,6 @@ public class MapEntryProcessorTest extends AbstractTest {
         keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        resultsPerWorker.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         for (int i = 0; i < keyCount; i++) {
@@ -72,27 +66,6 @@ public class MapEntryProcessorTest extends AbstractTest {
         }
     }
 
-    @Verify
-    public void verify() {
-        long[] expectedValueForKey = new long[keyCount];
-
-        for (long[] incrementsAtKey : resultsPerWorker) {
-            for (int i = 0; i < incrementsAtKey.length; i++) {
-                expectedValueForKey[i] += incrementsAtKey[i];
-            }
-        }
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            long expected = expectedValueForKey[i];
-            long found = map.get(i);
-            if (expected != found) {
-                failures++;
-            }
-        }
-
-        assertEquals(0, failures);
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -149,5 +122,33 @@ public class MapEntryProcessorTest extends AbstractTest {
             entry.setValue(newValue);
             return null;
         }
+    }
+
+    @Verify
+    public void verify() {
+        long[] expectedValueForKey = new long[keyCount];
+
+        for (long[] incrementsAtKey : resultsPerWorker) {
+            for (int i = 0; i < incrementsAtKey.length; i++) {
+                expectedValueForKey[i] += incrementsAtKey[i];
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            long expected = expectedValueForKey[i];
+            long found = map.get(i);
+            if (expected != found) {
+                failures++;
+            }
+        }
+
+        assertEquals(0, failures);
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        resultsPerWorker.destroy();
     }
 }

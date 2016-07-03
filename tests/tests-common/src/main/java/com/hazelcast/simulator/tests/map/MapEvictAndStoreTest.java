@@ -47,6 +47,20 @@ public class MapEvictAndStoreTest extends AbstractTest {
         assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounterPerKey.class);
     }
 
+    @RunWithWorker
+    public Worker createWorker() {
+        return new Worker();
+    }
+
+    public class Worker extends AbstractMonotonicWorker {
+
+        @Override
+        public void timeStep() {
+            long key = keyCounter.incrementAndGet();
+            map.put(key, "test value");
+        }
+    }
+
     @Verify(global = false)
     public void verify() {
         if (isClient(targetInstance)) {
@@ -73,17 +87,4 @@ public class MapEvictAndStoreTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    public class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        public void timeStep() {
-            long key = keyCounter.incrementAndGet();
-            map.put(key, "test value");
-        }
-    }
 }

@@ -111,10 +111,6 @@ public class MapEntryListenerTest extends AbstractTest {
                 .addDefaultOperation(MapPutOperation.PUT);
     }
 
-    @Teardown(global = true)
-    public void tearDown() {
-        map.destroy();
-    }
 
     @Warmup(global = true)
     public void globalWarmup() {
@@ -126,40 +122,6 @@ public class MapEntryListenerTest extends AbstractTest {
         }
 
         eventCounts.add(initCounter);
-    }
-
-    @Verify(global = true)
-    public void globalVerify() {
-        for (int i = 0; i < listeners.size() - 1; i++) {
-            EntryListenerImpl a = listeners.get(i);
-            EntryListenerImpl b = listeners.get(i + 1);
-            assertEquals(basename + ": not same amount of event in all listeners", a, b);
-        }
-    }
-
-    @Verify(global = false)
-    public void verify() {
-        EventCount total = new EventCount();
-        for (EventCount eventCount : eventCounts) {
-            total.add(eventCount);
-        }
-        total.waitWhileListenerEventsIncrease(listener, 10);
-
-        logger.info(format("Event counter for %s (actual / expected)"
-                        + "%n add: %d / %d"
-                        + "%n update: %d / %d"
-                        + "%n remove: %d / %d"
-                        + "%n evict: %d / %d"
-                        + "%n mapSize: %d / %d",
-                basename,
-                listener.addCount.get(), total.addCount.get(),
-                listener.updateCount.get(), total.updateCount.get(),
-                listener.removeCount.get(), total.removeCount.get(),
-                listener.evictCount.get(), total.evictCount.get(),
-                total.calculateMapSize(listener), total.calculateMapSize()
-        ));
-
-        total.assertEventsEquals(listener);
     }
 
     @RunWithWorker
@@ -274,4 +236,44 @@ public class MapEntryListenerTest extends AbstractTest {
             listeners.add(listener);
         }
     }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        for (int i = 0; i < listeners.size() - 1; i++) {
+            EntryListenerImpl a = listeners.get(i);
+            EntryListenerImpl b = listeners.get(i + 1);
+            assertEquals(basename + ": not same amount of event in all listeners", a, b);
+        }
+    }
+
+    @Verify(global = false)
+    public void verify() {
+        EventCount total = new EventCount();
+        for (EventCount eventCount : eventCounts) {
+            total.add(eventCount);
+        }
+        total.waitWhileListenerEventsIncrease(listener, 10);
+
+        logger.info(format("Event counter for %s (actual / expected)"
+                        + "%n add: %d / %d"
+                        + "%n update: %d / %d"
+                        + "%n remove: %d / %d"
+                        + "%n evict: %d / %d"
+                        + "%n mapSize: %d / %d",
+                basename,
+                listener.addCount.get(), total.addCount.get(),
+                listener.updateCount.get(), total.updateCount.get(),
+                listener.removeCount.get(), total.removeCount.get(),
+                listener.evictCount.get(), total.evictCount.get(),
+                total.calculateMapSize(listener), total.calculateMapSize()
+        ));
+
+        total.assertEventsEquals(listener);
+    }
+
+    @Teardown(global = true)
+    public void tearDown() {
+        map.destroy();
+    }
+
 }

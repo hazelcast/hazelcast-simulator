@@ -89,28 +89,6 @@ public class MapDataIntegrityTest extends AbstractTest {
         }
     }
 
-    @Verify(global = false)
-    public void verify() {
-        if (isMemberNode(targetInstance)) {
-            logger.info(format("%s: cluster size=%d", basename, targetInstance.getCluster().getMembers().size()));
-        }
-
-        logger.info(format("%s: integrityMap=%s size=%d", basename, integrityMap.getName(), integrityMap.size()));
-        int totalErrorCount = 0;
-        int totalNullValueCount = 0;
-        for (MapIntegrityThread integrityThread : integrityThreads) {
-            totalErrorCount += integrityThread.sizeErrorCount;
-            totalNullValueCount += integrityThread.nullValueCount;
-        }
-        logger.info(format("%s: total integrityMapSizeErrorCount=%d", basename, totalErrorCount));
-        logger.info(format("%s: total integrityMapNullValueCount=%d", basename, totalNullValueCount));
-
-        assertEquals(format("%s: (verify) integrityMap=%s map size", basename, integrityMap.getName()),
-                totalIntegrityKeys, integrityMap.size());
-        assertEquals(format("%s: (verify) integrityMapSizeErrorCount=", basename), 0, totalErrorCount);
-        assertEquals(format("%s: (verify) integrityMapNullValueCount=", basename), 0, totalNullValueCount);
-    }
-
     @Run
     public void run() {
         ThreadSpawner spawner = new ThreadSpawner(basename);
@@ -160,5 +138,27 @@ public class MapDataIntegrityTest extends AbstractTest {
                 stressMap.put(key, value);
             }
         }
+    }
+
+    @Verify(global = false)
+    public void verify() {
+        if (isMemberNode(targetInstance)) {
+            logger.info(format("%s: cluster size=%d", basename, targetInstance.getCluster().getMembers().size()));
+        }
+
+        logger.info(format("%s: integrityMap=%s size=%d", basename, integrityMap.getName(), integrityMap.size()));
+        int totalErrorCount = 0;
+        int totalNullValueCount = 0;
+        for (MapIntegrityThread integrityThread : integrityThreads) {
+            totalErrorCount += integrityThread.sizeErrorCount;
+            totalNullValueCount += integrityThread.nullValueCount;
+        }
+        logger.info(format("%s: total integrityMapSizeErrorCount=%d", basename, totalErrorCount));
+        logger.info(format("%s: total integrityMapNullValueCount=%d", basename, totalNullValueCount));
+
+        assertEquals(format("%s: (verify) integrityMap=%s map size", basename, integrityMap.getName()),
+                totalIntegrityKeys, integrityMap.size());
+        assertEquals(format("%s: (verify) integrityMapSizeErrorCount=", basename), 0, totalErrorCount);
+        assertEquals(format("%s: (verify) integrityMapNullValueCount=", basename), 0, totalNullValueCount);
     }
 }

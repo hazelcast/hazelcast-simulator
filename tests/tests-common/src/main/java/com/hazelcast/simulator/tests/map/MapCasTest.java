@@ -53,39 +53,11 @@ public class MapCasTest extends AbstractTest {
         resultsPerWorker = targetInstance.getMap(basename + ":ResultMap");
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        resultsPerWorker.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
         }
-    }
-
-    @Verify
-    public void verify() {
-        long[] amount = new long[keyCount];
-
-        for (Map<Integer, Long> workerResult : resultsPerWorker.values()) {
-            for (Map.Entry<Integer, Long> entry : workerResult.entrySet()) {
-                amount[entry.getKey()] += entry.getValue();
-            }
-        }
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            long expected = amount[i];
-            long found = map.get(i);
-            if (expected != found) {
-                failures++;
-            }
-        }
-
-        assertEquals("There should not be any data races", 0, failures);
     }
 
     @RunWithWorker
@@ -132,5 +104,33 @@ public class MapCasTest extends AbstractTest {
         private void increment(int key, long increment) {
             result.put(key, result.get(key) + increment);
         }
+    }
+
+    @Verify
+    public void verify() {
+        long[] amount = new long[keyCount];
+
+        for (Map<Integer, Long> workerResult : resultsPerWorker.values()) {
+            for (Map.Entry<Integer, Long> entry : workerResult.entrySet()) {
+                amount[entry.getKey()] += entry.getValue();
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            long expected = amount[i];
+            long found = map.get(i);
+            if (expected != found) {
+                failures++;
+            }
+        }
+
+        assertEquals("There should not be any data races", 0, failures);
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        resultsPerWorker.destroy();
     }
 }

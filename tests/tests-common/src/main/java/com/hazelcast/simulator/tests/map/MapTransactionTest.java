@@ -68,30 +68,6 @@ public class MapTransactionTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void verify() {
-        long[] total = new long[keyCount];
-
-        logger.info(basename + ": collected increments from " + resultList.size() + " worker threads");
-
-        for (long[] increments : resultList) {
-            for (int i = 0; i < increments.length; i++) {
-                total[i] += increments[i];
-            }
-        }
-
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            if (total[i] != map.get(i)) {
-                failures++;
-                logger.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
-            }
-        }
-
-        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys",
-                0, failures);
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -134,5 +110,29 @@ public class MapTransactionTest extends AbstractTest {
         public void afterRun() {
             resultList.add(increments);
         }
+    }
+
+    @Verify(global = true)
+    public void verify() {
+        long[] total = new long[keyCount];
+
+        logger.info(basename + ": collected increments from " + resultList.size() + " worker threads");
+
+        for (long[] increments : resultList) {
+            for (int i = 0; i < increments.length; i++) {
+                total[i] += increments[i];
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            if (total[i] != map.get(i)) {
+                failures++;
+                logger.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
+            }
+        }
+
+        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys",
+                0, failures);
     }
 }

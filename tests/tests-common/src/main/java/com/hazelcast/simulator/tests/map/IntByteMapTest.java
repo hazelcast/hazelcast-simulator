@@ -70,11 +70,6 @@ public class IntByteMapTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-    }
-
     @Warmup(global = false)
     public void warmup() {
         Random random = new Random();
@@ -131,4 +126,11 @@ public class IntByteMapTest extends AbstractTest {
             }
         }
     }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+    }
+
+
 }

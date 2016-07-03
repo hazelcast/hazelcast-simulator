@@ -83,15 +83,6 @@ public class MapReduceTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
-    public void globalVerify() {
-        MapReduceOperationCounter total = new MapReduceOperationCounter();
-        for (MapReduceOperationCounter operationCounter : operationCounterList) {
-            total.add(operationCounter);
-        }
-        logger.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -277,5 +268,14 @@ public class MapReduceTest extends AbstractTest {
             }
             return result;
         }
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        MapReduceOperationCounter total = new MapReduceOperationCounter();
+        for (MapReduceOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 }

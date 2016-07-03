@@ -69,12 +69,6 @@ public class StringStringMapTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -141,4 +135,12 @@ public class StringStringMapTest extends AbstractTest {
             return values[randomInt(values.length)];
         }
     }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
+    }
+
+
 }

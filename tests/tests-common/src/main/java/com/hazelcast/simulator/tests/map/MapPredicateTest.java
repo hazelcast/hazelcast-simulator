@@ -107,15 +107,6 @@ public class MapPredicateTest extends AbstractTest {
         streamer.await();
     }
 
-    @Verify
-    public void globalVerify() {
-        PredicateOperationCounter total = new PredicateOperationCounter();
-        for (PredicateOperationCounter operationCounter : operationCounterList) {
-            total.add(operationCounter);
-        }
-        logger.info(format("Operation counters from %s: %s", basename, total));
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -278,5 +269,14 @@ public class MapPredicateTest extends AbstractTest {
 
             return Double.compare(employee1Salary, employee2Salary);
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        PredicateOperationCounter total = new PredicateOperationCounter();
+        for (PredicateOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(format("Operation counters from %s: %s", basename, total));
     }
 }

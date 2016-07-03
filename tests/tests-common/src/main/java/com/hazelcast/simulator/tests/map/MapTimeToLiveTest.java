@@ -78,22 +78,6 @@ public class MapTimeToLiveTest extends AbstractTest {
                 .addOperation(Operation.DESTROY, destroyProb);
     }
 
-    @Verify
-    public void globalVerify() {
-        MapOperationCounter total = new MapOperationCounter();
-        for (MapOperationCounter counter : results) {
-            total.add(counter);
-        }
-        logger.info(basename + ": " + total + " total of " + results.size());
-
-        assertTrueEventually(new AssertTask() {
-            @Override
-            public void run() throws Exception {
-                assertEquals(basename + ": Map should be empty, some TTL events are not processed", 0, map.size());
-            }
-        });
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -151,5 +135,21 @@ public class MapTimeToLiveTest extends AbstractTest {
         public void afterRun() {
             results.add(count);
         }
+    }
+
+    @Verify
+    public void globalVerify() {
+        MapOperationCounter total = new MapOperationCounter();
+        for (MapOperationCounter counter : results) {
+            total.add(counter);
+        }
+        logger.info(basename + ": " + total + " total of " + results.size());
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertEquals(basename + ": Map should be empty, some TTL events are not processed", 0, map.size());
+            }
+        });
     }
 }

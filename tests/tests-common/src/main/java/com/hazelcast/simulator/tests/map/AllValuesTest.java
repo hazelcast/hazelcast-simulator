@@ -54,12 +54,6 @@ public class AllValuesTest extends AbstractTest {
         this.map = targetInstance.getMap(basename);
     }
 
-    @Teardown
-    public void teardown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Streamer<String, String> streamer = StreamerFactory.getInstance(map);
@@ -89,5 +83,11 @@ public class AllValuesTest extends AbstractTest {
 
             assertEquals(entryCount, result.size());
         }
+    }
+
+    @Teardown
+    public void teardown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
     }
 }

@@ -50,11 +50,6 @@ public class MapLongPerformanceTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(map);
@@ -90,5 +85,10 @@ public class MapLongPerformanceTest extends AbstractTest {
                     throw new UnsupportedOperationException();
             }
         }
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
     }
 }

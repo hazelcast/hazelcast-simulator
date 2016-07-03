@@ -39,11 +39,6 @@ public class MapTTLSaturationTest extends AbstractTest {
         map = targetInstance.getMap(basename);
     }
 
-    @Verify(global = false)
-    public void localVerify() {
-        logHeapUsage("localVerify()");
-    }
-
     @RunWithWorker
     public Worker createWorker() {
         return new Worker();
@@ -103,5 +98,11 @@ public class MapTTLSaturationTest extends AbstractTest {
         long total = Runtime.getRuntime().totalMemory();
         long max = Runtime.getRuntime().maxMemory();
         return (100d * total) / max;
+    }
+
+
+    @Verify(global = false)
+    public void localVerify() {
+        logHeapUsage("localVerify()");
     }
 }

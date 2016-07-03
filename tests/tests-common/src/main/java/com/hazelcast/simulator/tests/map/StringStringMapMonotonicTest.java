@@ -74,12 +74,6 @@ public class StringStringMapMonotonicTest extends AbstractTest {
                 .addDefaultOperation(Operation.GET);
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
-    }
-
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -151,4 +145,12 @@ public class StringStringMapMonotonicTest extends AbstractTest {
             return values[randomInt(values.length)];
         }
     }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        logger.info(getOperationCountInformation(targetInstance));
+    }
+
+
 }

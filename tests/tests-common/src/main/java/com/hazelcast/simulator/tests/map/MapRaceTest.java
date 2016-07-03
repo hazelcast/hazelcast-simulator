@@ -49,12 +49,6 @@ public class MapRaceTest extends AbstractTest {
         resultMap = targetInstance.getMap(basename + ":ResultMap");
     }
 
-    @Teardown
-    public void tearDown() {
-        map.destroy();
-        resultMap.destroy();
-    }
-
     @Warmup(global = true)
     public void warmup() {
         for (int i = 0; i < keyCount; i++) {
@@ -62,25 +56,7 @@ public class MapRaceTest extends AbstractTest {
         }
     }
 
-    @Verify
-    public void verify() {
-        long[] expected = new long[keyCount];
-        for (Map<Integer, Long> result : resultMap.values()) {
-            for (Map.Entry<Integer, Long> increments : result.entrySet()) {
-                expected[increments.getKey()] += increments.getValue();
-            }
-        }
 
-        int failures = 0;
-        for (int i = 0; i < keyCount; i++) {
-            long actual = map.get(i);
-            if (expected[i] != actual) {
-                failures++;
-            }
-        }
-
-        assertEquals("There should not be any data races", 0, failures);
-    }
 
     @RunWithWorker
     public Worker createWorker() {
@@ -114,5 +90,31 @@ public class MapRaceTest extends AbstractTest {
         private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {
             map.put(key, map.get(key) + increment);
         }
+    }
+
+    @Verify
+    public void verify() {
+        long[] expected = new long[keyCount];
+        for (Map<Integer, Long> result : resultMap.values()) {
+            for (Map.Entry<Integer, Long> increments : result.entrySet()) {
+                expected[increments.getKey()] += increments.getValue();
+            }
+        }
+
+        int failures = 0;
+        for (int i = 0; i < keyCount; i++) {
+            long actual = map.get(i);
+            if (expected[i] != actual) {
+                failures++;
+            }
+        }
+
+        assertEquals("There should not be any data races", 0, failures);
+    }
+
+    @Teardown
+    public void tearDown() {
+        map.destroy();
+        resultMap.destroy();
     }
 }
