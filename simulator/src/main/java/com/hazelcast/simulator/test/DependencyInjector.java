@@ -22,6 +22,7 @@ import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
+import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
@@ -74,16 +75,17 @@ public class DependencyInjector {
 
         inject(this);
 
-        this.metronomeClass = getMetronomeClass();
+        this.metronomeClass = loadMetronomeClass();
     }
 
-    public void ensureAllPropertiesUsed(){
-        if(!unusedProperties.isEmpty()){
-            throw new IllegalTestException("The following properties have not been used: "+ unusedProperties);
+    public void ensureAllPropertiesUsed() {
+        if (!unusedProperties.isEmpty()) {
+        //    StringBuffer stringBuffer = new
+            throw new BindException("The following properties have not been used: " + unusedProperties);
         }
     }
 
-    public Class getMetromeClass() {
+    public Class getMetronomeClass() {
         return metronomeClass;
     }
 
@@ -139,7 +141,7 @@ public class DependencyInjector {
 
     }
 
-    private Class<? extends Metronome> getMetronomeClass() {
+    private Class<? extends Metronome> loadMetronomeClass() {
         if (metronomeIntervalUs == 0) {
             return null;
         }

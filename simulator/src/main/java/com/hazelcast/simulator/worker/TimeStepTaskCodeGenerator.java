@@ -54,6 +54,7 @@ import java.util.Map;
  * - what should happen when no probe-class is defined, but the user has a probe method.
  * - detecting that timestep method only has probe/context args
  * - rename worker
+ * - compile error
  *
  * <p>
  * done:

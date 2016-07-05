@@ -56,7 +56,7 @@ public class TimeStepRunStrategy extends RunStrategy {
 
         this.timestepTaskClass = codeGenerator.compile(
                 timeStepModel,
-                testContainer.getDependencyInjector().getMetromeClass(),
+                testContainer.getDependencyInjector().getMetronomeClass(),
                 null);
 
         this.spawner = new ThreadSpawner(testContext.getTestId());
