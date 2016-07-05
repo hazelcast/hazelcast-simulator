@@ -46,7 +46,7 @@ public class PutAsyncAndThenTest extends AbstractTest {
     @Setup
     public void setUp() {
         map = targetInstance.getMap(basename);
-        keys = generateStringKeys(basename, keyCount, keyLocality, testContext.getTargetInstance());
+        keys = generateStringKeys(basename, keyCount, keyLocality, targetInstance);
     }
 
     @RunWithWorker

@@ -73,7 +73,7 @@ public class AsyncAtomicLongTest extends AbstractTest {
         if (isMemberNode(targetInstance)) {
             counters = new AsyncAtomicLong[countersLength];
 
-            String[] names = generateStringKeys(basename, countersLength, keyLocality, testContext.getTargetInstance());
+            String[] names = generateStringKeys(basename, countersLength, keyLocality, targetInstance);
             for (int i = 0; i < countersLength; i++) {
                 counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(names[i]);
             }
