@@ -80,8 +80,14 @@ public class DependencyInjector {
 
     public void ensureAllPropertiesUsed() {
         if (!unusedProperties.isEmpty()) {
-        //    StringBuffer stringBuffer = new
-            throw new BindException("The following properties have not been used: " + unusedProperties);
+            StringBuilder sb = new StringBuilder("The following properties have not been found:");
+            for (String unusedProperty : unusedProperties) {
+                sb.append(" ")
+                        .append(testCase.getClassname())
+                        .append(".")
+                        .append(unusedProperty);
+            }
+            throw new BindException(sb.toString());
         }
     }
 
