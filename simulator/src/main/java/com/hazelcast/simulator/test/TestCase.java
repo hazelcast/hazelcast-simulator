@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.lang.Character.isJavaIdentifierPart;
+import static java.lang.Character.isJavaIdentifierStart;
 
 public class TestCase {
     private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);

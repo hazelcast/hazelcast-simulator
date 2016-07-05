@@ -30,7 +30,6 @@ import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
 import com.hazelcast.simulator.worker.tasks.IMultipleProbesWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
-import org.apache.log4j.Logger;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -53,7 +52,6 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 public class DependencyInjector {
 
-    private static final Logger LOGGER = Logger.getLogger(DependencyInjector.class);
     public int metronomeIntervalUs;
     public MetronomeType metronomeType = SLEEPING;
 
@@ -74,7 +72,7 @@ public class DependencyInjector {
         this.metronomeClass = loadMetronomeClass();
     }
 
-    public void ensureAllPropertiesUsed() {
+    public void ensureNoUnusedProperties() {
         if (!unusedProperties.isEmpty()) {
             throw new BindException(format("Properties %s have not been found on '%s'"
                     , unusedProperties, testCase.getClassname()));

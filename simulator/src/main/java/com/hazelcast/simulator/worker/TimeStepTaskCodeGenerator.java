@@ -19,6 +19,7 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.IllegalTestException;
+import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
@@ -45,6 +46,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * todo:
@@ -54,11 +56,16 @@ import java.util.Map;
  * - what should happen when no probe-class is defined, but the user has a probe method.
  * - detecting that timestep method only has probe/context args
  * - rename worker
- * - compile error
  * - isWorkerStopped
- *
+ * - better id for the timesteptask. Needs to be the same on all members.
+ * <p>
+ * <p>
  * <p>
  * done:
+ * - location of the timesteptask class file
+ * - timesteptask needs to have unique name.
+ * - class file should be written of the test
+ * - compile error of generated code exception
  * - property binding merge into DependencyInjector.
  * - keep track of property usage. If property not used, then throw an error.
  * - after completion & after run?
@@ -78,6 +85,8 @@ import java.util.Map;
  */
 public class TimeStepTaskCodeGenerator {
 
+    private final static AtomicLong ID_GENERATOR = new AtomicLong();
+
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
     public Class compile(
@@ -85,9 +94,9 @@ public class TimeStepTaskCodeGenerator {
             Class<? extends Metronome> metronomeClass,
             Class<? extends Probe> probeClass) {
 
-        JavaFileObject file = createJavaFileObject(metronomeClass, timeStepModel, probeClass);
-
-        return compile(file);
+        String id = "" + ID_GENERATOR.incrementAndGet();
+        JavaFileObject file = createJavaFileObject(id, metronomeClass, timeStepModel, probeClass);
+        return compile(file, id);
     }
 
     public static void main(String[] args) throws Exception {
@@ -97,7 +106,7 @@ public class TimeStepTaskCodeGenerator {
         Class clazz = codeGenerator.compile(timeStepModel, BusySpinningMetronome.class, HdrProbe.class);
     }
 
-    private Class compile(JavaFileObject file) {
+    private Class compile(JavaFileObject file, String testId) {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 
         JavaCompiler.CompilationTask task = compiler.getTask(
@@ -109,24 +118,22 @@ public class TimeStepTaskCodeGenerator {
                 Arrays.asList(file));
 
         boolean success = task.call();
+
         if (!success) {
+            StringBuilder sb = new StringBuilder();
             for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-                System.out.println(diagnostic.getCode());
-                System.out.println(diagnostic.getKind());
-                System.out.println(diagnostic.getPosition());
-                System.out.println(diagnostic.getStartPosition());
-                System.out.println(diagnostic.getEndPosition());
-                System.out.println(diagnostic.getSource());
-                System.out.println(diagnostic.getMessage(null));
+                sb.append("Error on line")
+                        .append(diagnostic.getLineNumber())
+                        .append(" in ")
+                        .append(diagnostic)
+                        .append('\n');
             }
-            throw new IllegalTestException("");
+            throw new IllegalTestException(sb.toString());
         }
 
         try {
             URLClassLoader classLoader = new URLClassLoader(new URL[]{new File("./").toURI().toURL()});
-
-            Class clazz = classLoader.loadClass("GeneratedTimeStepTask");
-            return clazz;
+            return (Class) classLoader.loadClass("GeneratedTimeStepTask_" + testId);
         } catch (ClassNotFoundException e) {
             throw new IllegalTestException(e.getMessage(), e);
         } catch (MalformedURLException e) {
@@ -135,9 +142,11 @@ public class TimeStepTaskCodeGenerator {
     }
 
     private JavaFileObject createJavaFileObject(
+            String testId,
             Class<? extends Metronome> metronomeClass,
             TimeStepModel timeStepModel,
             Class<? extends Probe> probeClass) {
+
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_24);
             cfg.setClassForTemplateLoading(this.getClass(), "/");
@@ -154,14 +163,18 @@ public class TimeStepTaskCodeGenerator {
             root.put("Probe", Probe.class);
             root.put("threadContextClass", getClassName(timeStepModel.getThreadContextClass()));
             root.put("hasProbe", new HasProbeMethod());
+            root.put("id", testId);
 
             Template temp = cfg.getTemplate("generatedtimesteptask.ftl");
             StringWriter out = new StringWriter();
             temp.process(root, out);
 
-            System.out.println(out.toString());
+            String javaCode = out.toString();
 
-            return new JavaSourceFromString("GeneratedTimeStepTask", out.toString());
+            File javaFile = new File("GeneratedTimeStepTask_" + testId + ".java");
+            FileUtils.writeText(javaCode, javaFile);
+
+            return new JavaSourceFromString("GeneratedTimeStepTask_" + testId, javaCode);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

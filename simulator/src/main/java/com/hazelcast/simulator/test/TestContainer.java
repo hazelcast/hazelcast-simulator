@@ -97,7 +97,7 @@ public class TestContainer {
 
         registerTestPhaseTasks();
 
-        dependencyInjector.ensureAllPropertiesUsed();
+        dependencyInjector.ensureNoUnusedProperties();
     }
 
     public DependencyInjector getDependencyInjector() {
@@ -110,6 +110,10 @@ public class TestContainer {
 
     public TestContext getTestContext() {
         return testContext;
+    }
+
+    public TestCase getTestCase() {
+        return testCase;
     }
 
     public long getTestStartedTimestamp() {

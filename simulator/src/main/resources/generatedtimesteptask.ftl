@@ -7,11 +7,11 @@ import com.hazelcast.simulator.probes.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
-public class GeneratedTimeStepTask extends TimeStepTask {
+public class GeneratedTimeStepTask_${id} extends TimeStepTask {
 
 <#if metronomeClass??>
 </#if>
-    public GeneratedTimeStepTask(Object testInstance, TimeStepModel model) {
+    public GeneratedTimeStepTask_${id}(Object testInstance, TimeStepModel model) {
         super(testInstance, model);
     }
 

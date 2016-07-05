@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 
-public class TimeStepTask implements Runnable {
+public abstract class TimeStepTask implements Runnable {
     @InjectTestContext
     protected TestContext testContext;
     @InjectMetronome
@@ -121,24 +121,7 @@ public class TimeStepTask implements Runnable {
         }
     }
 
-    protected void timeStepLoop() throws Exception {
-        while (!testContext.isStopped()) {
-            for (Method timeStepMethod : timeStepModel.getTimeStepMethods()) {
-                workerProbe.done(1);
-                int argCount = timeStepMethod.getParameterTypes().length;
-                switch (argCount) {
-                    case 0:
-                        timeStepMethod.invoke(testInstance);
-                        break;
-                    case 1:
-                        timeStepMethod.invoke(testInstance, threadContext);
-                        break;
-                    default:
-                        throw new RuntimeException();
-                }
-            }
-        }
-    }
+    protected abstract void timeStepLoop() throws Exception;
 
     private void afterRun() throws Exception {
         for (Method afterRunMethod : timeStepModel.getAfterRunMethods()) {
