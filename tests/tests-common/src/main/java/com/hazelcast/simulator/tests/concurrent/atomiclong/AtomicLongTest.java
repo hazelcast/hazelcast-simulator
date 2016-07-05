@@ -59,7 +59,7 @@ public class AtomicLongTest extends AbstractTest {
         totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
 
-        String[] names = generateStringKeys(basename, countersLength, keyLocality, testContext.getTargetInstance());
+        String[] names = generateStringKeys(basename, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < countersLength; i++) {
             counters[i] = targetInstance.getAtomicLong(names[i]);
         }

@@ -70,7 +70,7 @@ public class ExtractorMapTest extends AbstractTest {
     @Setup
     public void setUp() {
         String mapName = usePortable ? "Portable " + basename : basename;
-        map = testContext.getTargetInstance().getMap(mapName);
+        map = targetInstance.getMap(mapName);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProbability)

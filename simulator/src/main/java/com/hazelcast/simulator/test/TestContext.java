@@ -24,6 +24,11 @@ public interface TestContext {
      */
     String LOCALHOST = "127.0.0.1";
 
+    /**
+     *
+     * @return
+     * @deprecated since 0.8. Use {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}.
+     */
     HazelcastInstance getTargetInstance();
 
     String getTestId();

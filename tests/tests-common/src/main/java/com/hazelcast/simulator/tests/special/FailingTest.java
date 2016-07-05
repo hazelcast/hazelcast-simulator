@@ -73,7 +73,7 @@ public class FailingTest extends AbstractTest {
 
     @Setup
     public void setUp() throws Exception {
-        if (matchingType(type, testContext)) {
+        if (matchingType(type)) {
             isSelected = isSelected(selection, testContext);
         }
 
@@ -175,20 +175,20 @@ public class FailingTest extends AbstractTest {
         logger.severe("We should never reach this code! List size: " + list.size());
     }
 
-    private static boolean matchingType(Type type, TestContext testContext) {
+    private boolean matchingType(Type type) {
         if (type == Type.ALL) {
             return true;
         }
-        if (type == Type.MEMBER && isMemberNode(testContext.getTargetInstance())) {
+        if (type == Type.MEMBER && isMemberNode(targetInstance)) {
             return true;
         }
-        if (type == Type.CLIENT && isClient(testContext.getTargetInstance())) {
+        if (type == Type.CLIENT && isClient(targetInstance)) {
             return true;
         }
         return false;
     }
 
-    private static boolean isSelected(Selection selection, TestContext testContext) {
+    private boolean isSelected(Selection selection, TestContext testContext) {
         switch (selection) {
             case ALL:
                 return true;
@@ -201,7 +201,7 @@ public class FailingTest extends AbstractTest {
         }
     }
 
-    private static IMap<String, Boolean> getMap(TestContext testContext) {
-        return testContext.getTargetInstance().getMap("failureSelection" + testContext.getTestId());
+    private IMap<String, Boolean> getMap(TestContext testContext) {
+        return targetInstance.getMap("failureSelection" + testContext.getTestId());
     }
 }
