@@ -35,13 +35,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static com.hazelcast.simulator.worker.tasks.IWorker.DEFAULT_WORKER_PROBE_NAME;
@@ -51,7 +53,6 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 public class DependencyInjector {
 
     private static final Logger LOGGER = Logger.getLogger(DependencyInjector.class);
-
 
     static final String METRONOME_INTERVAL_PROPERTY_NAME = "metronomeIntervalUs";
     static final String METRONOME_TYPE_PROPERTY_NAME = "metronomeType";
@@ -63,18 +64,23 @@ public class DependencyInjector {
     private final TestContext testContext;
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final TestCase testCase;
+    private final Set<String> unusedProperties = new HashSet<String>();
 
     public DependencyInjector(TestContext testContext, TestCase testCase) {
         this.testCase = testCase;
         this.testContext = testContext;
+        this.unusedProperties.addAll(testCase.getProperties().keySet());
+        unusedProperties.remove("class");
 
         inject(this);
 
         this.metronomeClass = getMetronomeClass();
+    }
 
-        LOGGER.info("metronomeIntervalUs:" + metronomeIntervalUs);
-        LOGGER.info("metronomeType:" + metronomeType);
-        LOGGER.info("metronomeClass:" + metronomeClass);
+    public void ensureAllPropertiesUsed(){
+        if(!unusedProperties.isEmpty()){
+            throw new IllegalTestException("The following properties have not been used: "+ unusedProperties);
+        }
     }
 
     public Class getMetromeClass() {
@@ -112,7 +118,10 @@ public class DependencyInjector {
             Metronome metronome = newMetronome(field);
             setFieldValue(object, field, metronome);
         } else {
-            bindOptionalProperty(object, testCase, field.getName());
+            String propertyName = field.getName();
+            if (bind(object, testCase, propertyName)) {
+                unusedProperties.remove(propertyName);
+            }
         }
     }
 

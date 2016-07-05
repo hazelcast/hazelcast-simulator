@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.test.DependencyInjector.METRONOME_INTERVAL_PROPERTY_NAME;
 import static com.hazelcast.simulator.test.DependencyInjector.METRONOME_TYPE_PROPERTY_NAME;
-import static com.hazelcast.simulator.test.TestContainer.THREAD_COUNT_PROPERTY_NAME;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
@@ -23,7 +22,7 @@ public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest
     public void testConstructor_withTestcase() throws Exception {
         TestCase testCase = new TestCase("TestContainerMetronomeTest");
         testCase.setProperty("class", MetronomeTest.class.getName());
-        testCase.setProperty(THREAD_COUNT_PROPERTY_NAME, "1");
+        testCase.setProperty("threadCount", "1");
         testCase.setProperty(METRONOME_INTERVAL_PROPERTY_NAME, "100");
         testCase.setProperty(METRONOME_TYPE_PROPERTY_NAME, SLEEPING.name());
 

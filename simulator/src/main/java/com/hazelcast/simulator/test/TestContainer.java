@@ -36,15 +36,11 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
-import static com.hazelcast.simulator.test.DependencyInjector.METRONOME_INTERVAL_PROPERTY_NAME;
-import static com.hazelcast.simulator.test.DependencyInjector.METRONOME_TYPE_PROPERTY_NAME;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
@@ -57,9 +53,8 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.findAllMet
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethod;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 
 /**
  * Container for test class instances.
@@ -74,48 +69,35 @@ import static java.util.Arrays.asList;
  */
 public class TestContainer {
 
-    static final String THREAD_COUNT_PROPERTY_NAME = "threadCount";
-    static final String LIGHTWEIGHT_PROBE_PROPERTY_NAME = "lightweightProbe";
-
-    private static final int DEFAULT_RUN_WITH_WORKER_THREAD_COUNT = 10;
-
-    private static final Set<String> OPTIONAL_TEST_PROPERTIES = new HashSet<String>(asList(
-            THREAD_COUNT_PROPERTY_NAME,
-            METRONOME_INTERVAL_PROPERTY_NAME,
-            METRONOME_TYPE_PROPERTY_NAME,
-            LIGHTWEIGHT_PROBE_PROPERTY_NAME
-    ));
-
     private final TestContext testContext;
+    private final TestCase testCase;
     private final Object testInstance;
+    private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
+    private final DependencyInjector dependencyInjector;
     private final Class testInstanceClass;
 
-    private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
-
-    private final DependencyInjector dependencyInjector;
-
     public TestContainer(TestContext testContext, TestCase testCase) {
-        this(testContext, newTestInstance(testCase), testCase);
+        this(testContext, null, testCase);
     }
 
-    public TestContainer(TestContext testContext, Object testInstance, TestCase testCase) {
-        if (testContext == null) {
-            throw new NullPointerException("testContext cannot be null!");
-        }
-        if (testCase == null) {
-            throw new NullPointerException("testCase cannot be null!");
-        }
-        if (testInstance == null) {
-            throw new NullPointerException("testInstance cannot be null!");
-        }
-
-        this.testContext = testContext;
-        this.testInstance = testInstance;
-        this.testInstanceClass = testInstance.getClass();
+    public TestContainer(TestContext testContext, Object givenTestInstance, TestCase testCase) {
+        this.testContext = checkNotNull(testContext, "testContext can't null!");
+        this.testCase = checkNotNull(testCase, "testCase can't be null!");
         this.dependencyInjector = new DependencyInjector(testContext, testCase);
 
+        dependencyInjector.inject(this);
+
+        if (givenTestInstance == null) {
+            this.testInstance = newTestInstance();
+        } else {
+            this.testInstance = givenTestInstance;
+        }
+        this.testInstanceClass = testInstance.getClass();
         dependencyInjector.inject(testInstance);
+
         registerTestPhaseTasks();
+
+        dependencyInjector.ensureAllPropertiesUsed();
     }
 
     public DependencyInjector getDependencyInjector() {
@@ -243,30 +225,13 @@ public class TestContainer {
         }
     }
 
-    private static Object newTestInstance(TestCase testCase) {
-        if (testCase == null) {
-            throw new NullPointerException();
-        }
-        String className = testCase.getClassname();
-        Object testObject;
+    private Object newTestInstance() {
+        String testInstanceClassName = testCase.getClassname();
         try {
-            ClassLoader classLoader = TestContainer.class.getClassLoader();
-            testObject = classLoader.loadClass(className).newInstance();
+            Class testInstanceClass = TestContainer.class.getClassLoader().loadClass(testInstanceClassName);
+            return testInstanceClass.newInstance();
         } catch (Exception e) {
-            throw new IllegalTestException("Could not create instance of " + className, e);
+            throw new IllegalTestException("Could not create instance of " + testInstanceClassName, e);
         }
-        bindProperties(testObject, testCase, OPTIONAL_TEST_PROPERTIES);
-        return testObject;
     }
-//
-//    private static int getThreadCount(TestCase testCase) {
-//        String propertyValue = getPropertyValue(testCase, THREAD_COUNT_PROPERTY_NAME);
-//        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(propertyValue));
-//    }
-//
-//    private static boolean isLightweightProbe(TestCase testCase) {
-//        String propertyValue = getPropertyValue(testCase, LIGHTWEIGHT_PROBE_PROPERTY_NAME);
-//        return parseBoolean(propertyValue);
-//    }
-
 }

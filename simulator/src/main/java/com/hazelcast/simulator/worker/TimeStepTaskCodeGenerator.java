@@ -57,6 +57,8 @@ import java.util.Map;
  *
  * <p>
  * done:
+ * - property binding merge into DependencyInjector.
+ * - keep track of property usage. If property not used, then throw an error.
  * - after completion & after run?
  * - split class hierarchies (no need to use IWorker) for the new worker
  * - configure interval in us for metronome
