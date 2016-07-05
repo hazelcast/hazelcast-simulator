@@ -54,10 +54,6 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 public class DependencyInjector {
 
     private static final Logger LOGGER = Logger.getLogger(DependencyInjector.class);
-
-    static final String METRONOME_INTERVAL_PROPERTY_NAME = "metronomeIntervalUs";
-    static final String METRONOME_TYPE_PROPERTY_NAME = "metronomeType";
-
     public int metronomeIntervalUs;
     public MetronomeType metronomeType = SLEEPING;
 

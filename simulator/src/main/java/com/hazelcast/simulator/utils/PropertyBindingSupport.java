@@ -17,7 +17,6 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestCase;
-import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -34,8 +33,6 @@ import static java.lang.reflect.Modifier.isStatic;
 public final class PropertyBindingSupport {
 
     private static final String NULL_LITERAL = "null";
-
-    private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
     private PropertyBindingSupport() {
     }
@@ -95,7 +92,7 @@ public final class PropertyBindingSupport {
             return false;
         }
 
-        if(isProbeField(field)){
+        if (isProbeField(field)) {
             return false;
         }
 

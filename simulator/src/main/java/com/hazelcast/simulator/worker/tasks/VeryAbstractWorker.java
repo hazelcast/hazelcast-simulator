@@ -27,22 +27,20 @@ abstract class VeryAbstractWorker implements IWorker {
 
     protected final AtomicLong iterations = new AtomicLong();
 
-    private final Random random = new Random();
-
     @InjectTestContext
     private TestContext testContext;
     @InjectMetronome
     private Metronome workerMetronome;
-
+    private final Random random = new Random();
     private boolean isWorkerStopped;
     private long iteration;
+
+    VeryAbstractWorker() {
+    }
 
     @Override
     public long iteration() {
         return iterations.get();
-    }
-
-    VeryAbstractWorker() {
     }
 
     @Override

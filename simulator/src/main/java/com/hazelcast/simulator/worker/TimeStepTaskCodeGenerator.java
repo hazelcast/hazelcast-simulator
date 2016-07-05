@@ -55,6 +55,7 @@ import java.util.Map;
  * - detecting that timestep method only has probe/context args
  * - rename worker
  * - compile error
+ * - isWorkerStopped
  *
  * <p>
  * done:

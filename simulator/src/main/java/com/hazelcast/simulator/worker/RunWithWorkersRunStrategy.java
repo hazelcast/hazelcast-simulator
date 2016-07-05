@@ -18,21 +18,13 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
-import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * A {@link RunStrategy} for tests with a method annotated with {@link com.hazelcast.simulator.test.annotations.RunWithWorker}.
