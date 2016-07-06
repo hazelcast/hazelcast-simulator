@@ -32,8 +32,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
@@ -50,8 +48,6 @@ public class PerformanceStateContainer {
     public static final int OPERATION_COUNT_FORMAT_LENGTH = 14;
     public static final int THROUGHPUT_FORMAT_LENGTH = 12;
     public static final int LATENCY_FORMAT_LENGTH = 10;
-
-    static final String PERFORMANCE_FILE_NAME = "performance.txt";
 
     private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = TimeUnit.SECONDS.toMicros(1);
 
@@ -156,7 +152,6 @@ public class PerformanceStateContainer {
             return;
         }
 
-        appendText(totalOperationCount + NEW_LINE, PERFORMANCE_FILE_NAME);
         LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
                 formatPercentage(1, 1),
                 formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
