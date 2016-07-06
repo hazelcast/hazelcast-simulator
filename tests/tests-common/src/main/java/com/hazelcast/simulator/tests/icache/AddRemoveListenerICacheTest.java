@@ -56,16 +56,15 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        results = targetInstance.getList(name);
+        results = targetInstance.getList(basename);
 
         cacheManager = createCacheManager(targetInstance);
-        cacheManager.getCache(name);
+        cacheManager.getCache(basename);
+    }
 
-  }
-
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
-        cache = cacheManager.getCache(name);
+        cache = cacheManager.getCache(basename);
 
         listenerConfiguration = new MutableCacheEntryListenerConfiguration<Integer, Long>(
                 FactoryBuilder.factoryOf(listener),
@@ -96,14 +95,14 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.25)
-    public void get(ThreadContext context){
+    public void get(ThreadContext context) {
         cache.get(context.randomInt(keyCount));
         context.operationCounter.put++;
     }
 
     @AfterRun
     public void afterRun(ThreadContext context) {
-        logger.info(name + ": " + context.operationCounter);
+        logger.info(basename + ": " + context.operationCounter);
         results.add(context.operationCounter);
     }
 
@@ -117,7 +116,7 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
         for (ICacheListenerOperationCounter i : results) {
             total.add(i);
         }
-        logger.info(name + ": " + total + " from " + results.size() + " worker threads");
+        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
     }
 
 }

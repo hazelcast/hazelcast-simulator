@@ -54,7 +54,7 @@ public class SplitClusterDataTest extends AbstractTest {
     }
 
     @TimeStep
-    public void timeStep(){
+    public void timeStep() {
         sleepSeconds(1);
     }
 

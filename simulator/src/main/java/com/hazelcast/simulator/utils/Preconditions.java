@@ -15,7 +15,10 @@
  */
 package com.hazelcast.simulator.utils;
 
-public class Preconditions {
+public final class Preconditions {
+
+    private Preconditions() {
+    }
 
     /**
      * Tests if an argument is not null.
@@ -30,8 +33,5 @@ public class Preconditions {
             throw new NullPointerException(errorMessage);
         }
         return argument;
-    }
-
-    private Preconditions() {
     }
 }

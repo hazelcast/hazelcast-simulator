@@ -55,7 +55,7 @@ public class MapCasTest extends AbstractTest {
         resultsPerWorker = targetInstance.getMap(name + ":ResultMap");
     }
 
-     @Warmup(global = true)
+    @Warmup(global = true)
     public void warmup() {
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
@@ -66,8 +66,8 @@ public class MapCasTest extends AbstractTest {
     public void beforeRun(ThreadContext context) {
         int size = map.size();
         if (size != keyCount) {
-            throw new TestException("Warmup has not run since the map is not filled correctly, " +
-                    "found size: %s, expected size: %s", size, keyCount);
+            throw new TestException("Warmup has not run since the map is not filled correctly, "
+                    + "found size: %s, expected size: %s", size, keyCount);
         }
         for (int i = 0; i < keyCount; i++) {
             context.result.put(i, 0L);

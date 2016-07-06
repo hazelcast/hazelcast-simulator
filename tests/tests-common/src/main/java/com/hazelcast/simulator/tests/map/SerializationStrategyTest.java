@@ -101,7 +101,7 @@ public class SerializationStrategyTest extends AbstractTest {
         return o;
     }
 
-    @TimeStep(prob = 1)
+    @TimeStep(prob = 0)
     public void getByKey() {
         throw new UnsupportedOperationException("Not implemented yet");
     }
@@ -111,7 +111,7 @@ public class SerializationStrategyTest extends AbstractTest {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    @TimeStep
+    @TimeStep(prob = 1)
     public void getByStringIndex(ThreadContext context) {
         String string = context.getUniqueString();
         Predicate predicate = Predicates.equal("stringVal", string);
@@ -119,7 +119,7 @@ public class SerializationStrategyTest extends AbstractTest {
         throttlingLogger.log(Level.INFO, "GetByStringIndex: " + entries.size() + " entries");
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public final class ThreadContext extends BaseThreadContext {
 
         private String[] localUniqueStrings;
 
@@ -127,7 +127,7 @@ public class SerializationStrategyTest extends AbstractTest {
             localUniqueStrings = uniqueStrings.toArray(new String[uniqueStrings.size()]);
         }
 
-        String getUniqueString() {
+        private String getUniqueString() {
             int i = randomInt(localUniqueStrings.length);
             return localUniqueStrings[i];
         }

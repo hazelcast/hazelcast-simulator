@@ -39,7 +39,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
@@ -48,10 +47,13 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static com.hazelcast.simulator.worker.tasks.IWorker.DEFAULT_WORKER_PROBE_NAME;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class DependencyInjector {
 
+    // properties
     public int metronomeIntervalUs;
     public MetronomeType metronomeType = SLEEPING;
 
@@ -74,7 +76,7 @@ public class DependencyInjector {
 
     public void ensureNoUnusedProperties() {
         if (!unusedProperties.isEmpty()) {
-            throw new BindException(format("Properties %s have not been found on '%s'"
+            throw new BindException(format("Unused properties %s have not been found on '%s'"
                     , unusedProperties, testCase.getClassname()));
         }
     }
@@ -125,14 +127,14 @@ public class DependencyInjector {
         if (metronomeClass == null) {
             return new EmptyMetronome();
         }
+
         try {
             Constructor<? extends Metronome> constructor = metronomeClass.getConstructor(Long.TYPE);
-            return constructor.newInstance(TimeUnit.MICROSECONDS.toNanos(metronomeIntervalUs));
+            return constructor.newInstance(MICROSECONDS.toNanos(metronomeIntervalUs));
         } catch (Exception e) {
-            throw new IllegalTestException("Failed to bind on " + InjectMetronome.class.getSimpleName()
-                    + " field '" + field + "'", e);
+            throw new IllegalTestException("Failed to bind " + InjectMetronome.class.getSimpleName()
+                    + " on field '" + field + "'", e);
         }
-
     }
 
     private Class<? extends Metronome> loadMetronomeClass() {

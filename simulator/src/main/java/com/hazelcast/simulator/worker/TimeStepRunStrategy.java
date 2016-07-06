@@ -29,12 +29,14 @@ import static java.lang.String.format;
  * A {@link RunStrategy} used for tests containing methods with {@link com.hazelcast.simulator.test.annotations.TimeStep}
  * annotation.
  */
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class TimeStepRunStrategy extends RunStrategy {
 
+    public static final int DEFAULT_THREAD_COUNT = 10;
     private static final Logger LOGGER = Logger.getLogger(TimeStepRunStrategy.class);
 
     // properties
-    public int threadCount = 10;
+    public int threadCount = DEFAULT_THREAD_COUNT;
 
     private final TestContainer testContainer;
     private final TestContext testContext;

@@ -132,7 +132,8 @@ public class ITopicTest extends AbstractTest {
         }
 
         private long nextMessage() {
-            long msg = randomLong() % 1000;//what is the point of getting a long when doing a mod?
+            //what is the point of getting a long when doing a mod?
+            long msg = randomLong() % 1000;
             return (msg < 0) ? -msg : msg;
         }
     }

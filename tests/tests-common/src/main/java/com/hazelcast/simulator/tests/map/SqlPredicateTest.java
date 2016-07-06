@@ -17,23 +17,20 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.DataSerializableEmployee;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 
 public class SqlPredicateTest extends AbstractTest {
 
@@ -43,8 +40,6 @@ public class SqlPredicateTest extends AbstractTest {
     public int keyCount = 10000;
     public int keyLength = 10;
     public String sql = "age = 30 AND active = true";
-    public MetronomeType metronomeType = MetronomeType.SLEEPING;
-    public int intervalMs = 0;
     public int maxAge = 75;
     public double maxSalary = 1000.0;
 
@@ -69,22 +64,6 @@ public class SqlPredicateTest extends AbstractTest {
         logger.info("Map localKeySet size is: " + map.localKeySet().size());
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractMonotonicWorker {
-        private SqlPredicate sqlPredicate = new SqlPredicate(sql);
-        private Metronome metronome = withFixedIntervalMs(intervalMs, metronomeType);
-
-        @Override
-        protected void timeStep() throws Exception {
-            metronome.waitForNext();
-            map.values(sqlPredicate);
-        }
-    }
-
     private DataSerializableEmployee generateRandomEmployee(Random random) {
         int id = random.nextInt();
         String name = NAMES[random.nextInt(NAMES.length)];
@@ -94,10 +73,18 @@ public class SqlPredicateTest extends AbstractTest {
         return new DataSerializableEmployee(id, name, age, active, salary);
     }
 
+    @TimeStep
+    public void timeStep(ThreadContext context) {
+        map.values(context.sqlPredicate);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
+        private SqlPredicate sqlPredicate = new SqlPredicate(sql);
+    }
+
     @Teardown
     public void teardown() {
         map.destroy();
         logger.info(getOperationCountInformation(targetInstance));
     }
-
 }

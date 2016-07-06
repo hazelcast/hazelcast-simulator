@@ -85,9 +85,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TimeStepTaskCodeGenerator {
 
-    private final static AtomicLong ID_GENERATOR = new AtomicLong();
+    private static final AtomicLong ID_GENERATOR = new AtomicLong();
 
-    private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
     public Class compile(
             TimeStepModel timeStepModel,
@@ -230,7 +230,7 @@ public class TimeStepTaskCodeGenerator {
         public Object exec(List list) throws TemplateModelException {
             if (list.size() != 1) {
                 throw new TemplateModelException("Wrong arguments for method 'hasProbe'. "
-                        + "Method has two required parameters: Method");
+                        + "Method has 1 required parameters: Method");
             }
 
             Object arg1 = ((WrapperTemplateModel) list.get(0)).getWrappedObject();

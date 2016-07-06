@@ -19,6 +19,9 @@ import java.util.Random;
 
 /**
  * Implementations of this class should be public. This is required for the generated worker class to work optimally.
+ *
+ * Why is this class called BaseThreadContext and not ThreadContext? In most cases a test needs to subclass this
+ * BaseThreadContext; and in this case they can use the prettier name 'ThreadContext'.
  */
 public class BaseThreadContext {
 

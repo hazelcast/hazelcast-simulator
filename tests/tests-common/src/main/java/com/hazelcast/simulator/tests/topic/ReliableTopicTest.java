@@ -107,7 +107,7 @@ public class ReliableTopicTest extends AbstractTest {
     }
 
     @After
-    public void afterRun(ThreadContext context){
+    public void afterRun(ThreadContext context) {
         totalMessagesSend.addAndGet(context.messagesSend);
     }
 
