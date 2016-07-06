@@ -6,7 +6,7 @@ target/
 .settings/
 .patch
 .DS_Store
-
+*.class
 simulator-git.properties
 *.csv
 vtune/
