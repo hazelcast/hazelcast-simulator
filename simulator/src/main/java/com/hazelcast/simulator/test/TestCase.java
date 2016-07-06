@@ -29,13 +29,13 @@ public class TestCase {
     private final Map<String, String> properties = new HashMap<String, String>();
 
     public TestCase(String id) {
-        this(id, null);
+        this(id, Collections.EMPTY_MAP);
     }
 
     public TestCase(String id, Map<String, String> properties) {
         this.id = id;
-        if (properties != null) {
-            this.properties.putAll(properties);
+        for (Map.Entry<String, String> entry : properties.entrySet()) {
+            setProperty(entry.getKey(), entry.getValue());
         }
     }
 
@@ -52,7 +52,7 @@ public class TestCase {
     }
 
     public void setProperty(String name, String value) {
-        properties.put(name, value);
+        properties.put(name, value.trim());
     }
 
     public Map<String, String> getProperties() {
@@ -62,7 +62,7 @@ public class TestCase {
     public void override(Map<String, String> propertiesOverride) {
         for (String key : properties.keySet()) {
             if (propertiesOverride.containsKey(key)) {
-                properties.put(key, propertiesOverride.get(key));
+                setProperty(key, propertiesOverride.get(key));
             }
         }
     }
