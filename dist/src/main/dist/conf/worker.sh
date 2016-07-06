@@ -122,6 +122,10 @@ java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 #/opt/intel/vtune_amplifier_xe/bin64/amplxe-cl -collect hotspots java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
 
+
+#########################################################################
+# NUMA Control
+#########################################################################
 #
 # NUMA Control. It allows to start member with a specific numactl settings.
 # numactl binary has to be available on PATH
