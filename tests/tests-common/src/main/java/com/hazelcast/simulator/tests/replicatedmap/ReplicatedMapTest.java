@@ -16,40 +16,21 @@
 package com.hazelcast.simulator.tests.replicatedmap;
 
 import com.hazelcast.core.ReplicatedMap;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
-import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 
 public class ReplicatedMapTest extends AbstractTest {
-
-    private enum Operation {
-        PUT,
-        REMOVE,
-        GET
-    }
 
     // properties
     public int keyCount = 10000;
     public int valueCount = 1;
     public int valueLength = 10;
-    public MetronomeType metronomeType = MetronomeType.SLEEPING;
-    public int intervalMs = 20;
-
-    public double putProb = 0.45;
-    public double getProb = 0.45;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private ReplicatedMap<Integer, String> map;
 
@@ -57,11 +38,7 @@ public class ReplicatedMapTest extends AbstractTest {
 
     @Setup
     public void setUp() throws Exception {
-        map = targetInstance.getReplicatedMap(name + "-" + testContext.getTestId());
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                .addOperation(Operation.GET, getProb)
-                .addDefaultOperation(Operation.REMOVE);
+        map = targetInstance.getReplicatedMap(basename + "-" + testContext.getTestId());
     }
 
     @Warmup
@@ -69,47 +46,26 @@ public class ReplicatedMapTest extends AbstractTest {
         values = generateStrings(valueCount, valueLength);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.45)
+    public void put(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        String value = context.randomValue();
+        map.put(key, value);
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep(prob = 0.45)
+    public void get(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        map.get(key);
+    }
 
-        private final Metronome metronome = withFixedIntervalMs(intervalMs, metronomeType);
+    @TimeStep(prob = 0.1)
+    public void remove(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        map.remove(key);
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) {
-            metronome.waitForNext();
-            int key = randomInt(keyCount);
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    String value = randomValue();
-                    started = System.nanoTime();
-                    map.put(key, value);
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                case REMOVE:
-                    started = System.nanoTime();
-                    map.remove(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
+    public class ThreadContext extends BaseThreadContext {
         private String randomValue() {
             return values[randomInt(values.length)];
         }
@@ -118,7 +74,5 @@ public class ReplicatedMapTest extends AbstractTest {
     @Teardown
     public void tearDown() throws Exception {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
-
 }

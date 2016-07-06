@@ -25,16 +25,14 @@ import com.hazelcast.nio.serialization.PortableReader;
 import com.hazelcast.nio.serialization.PortableWriter;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
@@ -48,28 +46,17 @@ import static org.junit.Assert.assertEquals;
 
 public class MultiValueMapTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        QUERY,
-    }
-
     public int keyCount = 100000;
     public int maxNestedValues = 100;
-    public double putProbability = 0.5;
     public boolean useIndex;
     public boolean usePortable;
 
     private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private IMap<Integer, Object> map;
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(name);
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProbability)
-                .addDefaultOperation(Operation.QUERY);
+        map = targetInstance.getMap(basename);
     }
 
     @Warmup(global = true)
@@ -90,51 +77,30 @@ public class MultiValueMapTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker(operationSelectorBuilder);
+    @TimeStep(prob = 0.5)
+    public void put(ThreadContext context) {
+        int key = context.getRandomKey();
+        int count = key % maxNestedValues;
+        SillySequence sillySequence = new SillySequence(key, count);
+        map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep(prob = 0.5)
+    public void query(ThreadContext context) {
+        int key = context.getRandomKey();
+        Predicate predicate = Predicates.equal("payloadField[any]", key);
+        Collection<Object> result = map.values(predicate);
 
-        public Worker(OperationSelectorBuilder<Operation> operationSelectorBuilder) {
-            super(operationSelectorBuilder);
+        throttlingLogger.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
+        for (Object resultSillySequence : result) {
+            context.assertValidSequence(resultSillySequence);
         }
+    }
+
+    public class ThreadContext extends BaseThreadContext {
 
         private int getRandomKey() {
             return abs(randomInt(keyCount));
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = getRandomKey();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    int count = key % maxNestedValues;
-                    SillySequence sillySequence = new SillySequence(key, count);
-                    started = System.nanoTime();
-                    map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
-                    probe.done(started);
-                    break;
-                case QUERY:
-                    Predicate predicate = Predicates.equal("payloadField[any]", key);
-                    started = System.nanoTime();
-                    Collection<Object> result = null;
-                    try {
-                        result = map.values(predicate);
-                    } finally {
-                        probe.done(started);
-                    }
-                    throttlingLogger.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
-                    for (Object resultSillySequence : result) {
-                        assertValidSequence(resultSillySequence);
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported operation: " + operation);
-            }
         }
 
         private void assertValidSequence(Object sillySequenceObject) {

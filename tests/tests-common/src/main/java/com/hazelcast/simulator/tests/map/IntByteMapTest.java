@@ -16,41 +16,30 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import java.util.Random;
 
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 
 public class IntByteMapTest extends AbstractTest {
-
-    private enum Operation {
-        PUT,
-        SET,
-        GET
-    }
 
     // properties
     public int keyCount = 1000;
     public int valueCount = 1000;
     public int minSize = 16;
     public int maxSize = 2000;
-    public KeyLocality keyLocality = KeyLocality.SHARED;
-    public double putProb = 0.1;
-    public double setProb = 0.0;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
+    public KeyLocality keyLocality = SHARED;
 
     private IMap<Integer, Object> map;
     private int[] keys;
@@ -64,13 +53,9 @@ public class IntByteMapTest extends AbstractTest {
         if (minSize > maxSize) {
             throw new IllegalStateException("minSize can't be larger than maxSize");
         }
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                .addOperation(Operation.SET, setProb)
-                .addDefaultOperation(Operation.GET);
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
         Random random = new Random();
         values = new byte[valueCount][];
@@ -87,50 +72,28 @@ public class IntByteMapTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(BaseThreadContext context) {
+        int key = keys[context.randomInt(keys.length)];
+        byte[] value = values[context.getRandom().nextInt(values.length)];
+        map.put(key, value);
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep(prob = 0)
+    public void set(BaseThreadContext context) {
+        int key = keys[context.randomInt(keys.length)];
+        byte[] value = values[context.getRandom().nextInt(values.length)];
+        map.set(key, value);
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = keys[randomInt(keys.length)];
-            long started;
-            byte[] value;
-            switch (operation) {
-                case PUT:
-                    value = values[getRandom().nextInt(values.length)];
-                    started = System.nanoTime();
-                    map.put(key, value);
-                    probe.done(started);
-                    break;
-                case SET:
-                    value = values[getRandom().nextInt(values.length)];
-                    started = System.nanoTime();
-                    map.set(key, value);
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    @TimeStep(prob = 0.9)
+    public void get(BaseThreadContext context) {
+        int key = keys[context.randomInt(keys.length)];
+        map.get(key);
     }
 
     @Teardown
     public void tearDown() {
         map.destroy();
     }
-
-
 }
