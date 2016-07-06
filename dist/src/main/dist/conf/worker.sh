@@ -39,23 +39,27 @@ esac
 
 java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
-#
-# The settings for YourKit agent.
+#########################################################################
+# Yourkit
+#########################################################################
 #
 # When YourKit is enabled, a snapshot is created an put in the worker home directory. So when the artifacts are downloaded, the
 # snapshots are included and can be loaded with your YourKit GUI.
 #
 # To upload the libyjpagent, create a 'upload' directory in the working directory and place the libypagent.so there. Then
 # it will be automatically uploaded to all workers.
-
+#
 # For more information about the YourKit setting, see:
 #   http://www.yourkit.com/docs/java/help/agent.jsp
 #   http://www.yourkit.com/docs/java/help/startup_options.jsp
 #
 #java -agentpath:$(pwd)/libyjpagent.so=dir=$(pwd),sampling -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
-#
-# The settings for the HProf profiler which is part of the JDK.
+
+
+#########################################################################
+# HProf
+#########################################################################
 #
 # By default a 'java.hprof.txt' is created in the worker directory. Which can be downloaded with the
 # 'provisioner --download' command after the test has run.
@@ -65,8 +69,11 @@ java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 #
 #java -agentlib:hprof=cpu=samples,depth=10 -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
-#
-# The settings for the 'perf' profiler; available for Linux.
+
+
+#########################################################################
+# Linux Perf
+#########################################################################
 #
 # https://perf.wiki.kernel.org/index.php/Tutorial#Sampling_with_perf_record
 #
@@ -94,8 +101,11 @@ java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 #
 #perf record -o perf.data --quiet java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
-#
-# The configuration for the 'Intel VTune' profiler.
+
+
+#########################################################################
+# VTune
+#########################################################################
 #
 # It requires Intel VTune to be installed on the system.
 #
@@ -120,3 +130,11 @@ java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 #numactl -m 0 -N 0 java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
 
+
+#########################################################################
+# DStat
+#########################################################################
+#
+# dstat -m --all --noheaders --nocolor --output dstat.csv 5 > /dev/null &
+# java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# kill $(jobs -p)
