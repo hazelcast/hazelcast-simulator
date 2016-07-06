@@ -56,7 +56,9 @@ public class DependencyInjector {
     // properties
     public int metronomeIntervalUs;
     public MetronomeType metronomeType = SLEEPING;
+    public boolean measureLatency = true;
 
+    private final Class<? extends Probe> probeClass;
     private final Class<? extends Metronome> metronomeClass;
     private final TestContext testContext;
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
@@ -72,6 +74,7 @@ public class DependencyInjector {
         inject(this);
 
         this.metronomeClass = loadMetronomeClass();
+        this.probeClass = loadProbeClass();
     }
 
     public void ensureNoUnusedProperties() {
@@ -79,10 +82,6 @@ public class DependencyInjector {
             throw new BindException(format("Unused properties %s have not been found on '%s'"
                     , unusedProperties, testCase.getClassname()));
         }
-    }
-
-    public Class getMetronomeClass() {
-        return metronomeClass;
     }
 
     public Map<String, Probe> getProbeMap() {
@@ -123,6 +122,17 @@ public class DependencyInjector {
         }
     }
 
+    private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {
+        if (!expectedFieldType.equals(fieldType)) {
+            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
+                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
+        }
+    }
+
+    public Class<? extends Metronome> getMetronomeClass() {
+        return metronomeClass;
+    }
+
     private Metronome newMetronome(Field field) {
         if (metronomeClass == null) {
             return new EmptyMetronome();
@@ -154,11 +164,12 @@ public class DependencyInjector {
         }
     }
 
-    private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {
-        if (!expectedFieldType.equals(fieldType)) {
-            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
-                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
-        }
+    public Class<? extends Probe> getProbeClass() {
+        return probeClass;
+    }
+
+    private Class<? extends Probe> loadProbeClass() {
+        return measureLatency ? HdrProbe.class : null;
     }
 
     private Probe getOrCreateProbe(String probeName, boolean partOfTotalThroughput) {

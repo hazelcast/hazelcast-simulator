@@ -85,7 +85,7 @@ public class LockConflictTest extends AbstractTest {
         private List<KeyIncrementPair> getPotentialLocks() {
             List<KeyIncrementPair> potentialLocks = new ArrayList<KeyIncrementPair>();
             for (int i = 0; i < maxKeysPerTxn; i++) {
-                potentialLocks.add(new KeyIncrementPair(getRandom(), keyCount, 999));
+                potentialLocks.add(new KeyIncrementPair(random, keyCount, 999));
             }
             return potentialLocks;
         }

@@ -25,11 +25,7 @@ import java.util.Random;
  */
 public class BaseThreadContext {
 
-    private final Random random = new Random();
-
-    public Random getRandom() {
-        return random;
-    }
+    public final Random random = new Random();
 
     public long randomLong() {
         return random.nextLong();

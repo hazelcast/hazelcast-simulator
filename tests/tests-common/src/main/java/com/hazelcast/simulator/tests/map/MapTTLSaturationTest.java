@@ -16,11 +16,13 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,47 +38,41 @@ public class MapTTLSaturationTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(name);
+        map = targetInstance.getMap(basename);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun() {
+        logHeapUsage("beforeRun()");
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @TimeStep
+    public void timeStep(ThreadContext context) throws Exception {
+        double usedPercentage = heapUsedPercentage();
+        if (usedPercentage >= maxHeapUsagePercentage) {
+            logger.info(basename + " heap used: " + usedPercentage + " %, map size: " + map.size());
 
-        private int counter = 1;
-
-        @Override
-        public void beforeRun() {
-            logHeapUsage("beforeRun()");
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            double usedPercentage = heapUsedPercentage();
-            if (usedPercentage >= maxHeapUsagePercentage) {
-                logger.info(name + " heap used: " + usedPercentage + " %, map size: " + map.size());
-
-                sleepSeconds(10);
-            } else {
-                for (int i = 0; i < 1000; i++) {
-                    counter++;
-                    if (counter % 100000 == 0) {
-                        logger.info(name + " at: " + counter + ", heap used: " + usedPercentage
-                                + " %, map size: " + map.size());
-                    }
-                    long key = getRandom().nextLong();
-                    map.put(key, 0L, 24, TimeUnit.HOURS);
+            sleepSeconds(10);
+        } else {
+            for (int i = 0; i < 1000; i++) {
+                context.counter++;
+                if (context.counter % 100000 == 0) {
+                    logger.info(basename + " at: " + context.counter + ", heap used: " + usedPercentage
+                            + " %, map size: " + map.size());
                 }
+                long key = context.random.nextLong();
+                map.put(key, 0L, 24, TimeUnit.HOURS);
             }
         }
+    }
 
-        @Override
-        public void afterRun() {
-            logHeapUsage("afterRun()");
-        }
+    @AfterRun
+    public void afterRun() {
+        logHeapUsage("afterRun()");
+    }
+
+    public class ThreadContext extends BaseThreadContext {
+        private int counter = 1;
     }
 
     private void logHeapUsage(String header) {
@@ -86,12 +82,12 @@ public class MapTTLSaturationTest extends AbstractTest {
         long max = Runtime.getRuntime().maxMemory();
         double usedOfMax = 100.0 * ((double) used / (double) max);
 
-        logger.info(name + ' ' + header);
-        logger.info(name + " map size: " + map.size());
-        logger.info(name + " free: " + humanReadableByteCount(free, true) + " = " + free);
-        logger.info(name + " used: " + humanReadableByteCount(used, true) + " = " + used);
-        logger.info(name + " max: " + humanReadableByteCount(max, true) + " = " + max);
-        logger.info(name + " usedOfMax: " + usedOfMax + '%');
+        logger.info(basename + ' ' + header);
+        logger.info(basename + " map size: " + map.size());
+        logger.info(basename + " free: " + humanReadableByteCount(free, true) + " = " + free);
+        logger.info(basename + " used: " + humanReadableByteCount(used, true) + " = " + used);
+        logger.info(basename + " max: " + humanReadableByteCount(max, true) + " = " + max);
+        logger.info(basename + " usedOfMax: " + usedOfMax + '%');
     }
 
     private static double heapUsedPercentage() {
@@ -99,7 +95,6 @@ public class MapTTLSaturationTest extends AbstractTest {
         long max = Runtime.getRuntime().maxMemory();
         return (100d * total) / max;
     }
-
 
     @Verify(global = false)
     public void localVerify() {

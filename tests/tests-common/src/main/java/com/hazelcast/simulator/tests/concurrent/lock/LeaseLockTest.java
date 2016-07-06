@@ -42,7 +42,7 @@ public class LeaseLockTest extends AbstractTest {
         int leaseTime = 1 + context.randomInt(maxLeaseTimeMillis);
         int tryTime = 1 + context.randomInt(maxTryTimeMillis);
 
-        if (context.getRandom().nextBoolean()) {
+        if (context.randomBoolean()) {
             lock.lock(leaseTime, MILLISECONDS);
         } else {
             try {

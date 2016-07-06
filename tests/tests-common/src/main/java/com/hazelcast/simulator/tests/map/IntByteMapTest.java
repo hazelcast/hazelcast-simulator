@@ -75,14 +75,14 @@ public class IntByteMapTest extends AbstractTest {
     @TimeStep(prob = 0.1)
     public void put(BaseThreadContext context) {
         int key = keys[context.randomInt(keys.length)];
-        byte[] value = values[context.getRandom().nextInt(values.length)];
+        byte[] value = values[context.randomInt(values.length)];
         map.put(key, value);
     }
 
     @TimeStep(prob = 0)
     public void set(BaseThreadContext context) {
         int key = keys[context.randomInt(keys.length)];
-        byte[] value = values[context.getRandom().nextInt(values.length)];
+        byte[] value = values[context.randomInt(values.length)];
         map.set(key, value);
     }
 

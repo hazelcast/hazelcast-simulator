@@ -107,7 +107,7 @@ public class ITopicTest extends AbstractTest {
 
     @TimeStep
     public void timestep(ThreadContext context) {
-        sleepRandomNanos(context.getRandom(), maxPublicationDelayNanos);
+        sleepRandomNanos(context.random, maxPublicationDelayNanos);
 
         long msg = context.nextMessage();
         context.count += msg;

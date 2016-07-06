@@ -71,7 +71,7 @@ public class MapTransactionContextTest extends AbstractTest {
     public class ThreadContext extends BaseThreadContext {
 
         private int nextRandom(int min, int max) {
-            return getRandom().nextInt(max - min) + min;
+            return random.nextInt(max - min) + min;
         }
     }
 }

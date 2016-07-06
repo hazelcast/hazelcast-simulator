@@ -93,7 +93,7 @@ public class LockTest extends AbstractTest {
     public class ThreadContext extends BaseThreadContext {
 
         private long getRandomAccountKey() {
-            long key = getRandom().nextLong() % lockCounter.get();
+            long key = randomLong() % lockCounter.get();
             return (key < 0) ? -key : key;
         }
     }
