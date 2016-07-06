@@ -2,19 +2,14 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.utils.FormatUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -25,8 +20,6 @@ public class PerformanceStateContainerTest {
 
     private static final String TEST_CASE_ID_1 = "testCase1";
     private static final String TEST_CASE_ID_2 = "testCase2";
-
-    private static final File PERFORMANCE_FILE = new File(PerformanceStateContainer.PERFORMANCE_FILE_NAME);
 
     private PerformanceStateContainer emptyPerformanceStateContainer;
     private PerformanceStateContainer performanceStateContainer;
@@ -47,11 +40,6 @@ public class PerformanceStateContainerTest {
 
         agentAddress1 = worker1.getParent();
         agentAddress2 = worker2.getParent();
-    }
-
-    @After
-    public void tearDown() {
-        deleteQuiet(PERFORMANCE_FILE);
     }
 
     @Test
@@ -123,23 +111,6 @@ public class PerformanceStateContainerTest {
         PerformanceState performanceState = emptyPerformanceStateContainer.get(TEST_CASE_ID_1);
 
         assertTrue(performanceState.isEmpty());
-    }
-
-    @Test
-    public void testLogDetailedPerformanceInfo() {
-        update(worker1, TEST_CASE_ID_1, new PerformanceState(1000, 200, 500, 1900.0d, 1800, 2500));
-
-        performanceStateContainer.logDetailedPerformanceInfo(1);
-
-        String performance = fileAsText(PERFORMANCE_FILE);
-        assertEquals("1000" + FormatUtils.NEW_LINE, performance);
-    }
-
-    @Test
-    public void testLogDetailedPerformanceInfo_onEmptyContainer() {
-        emptyPerformanceStateContainer.logDetailedPerformanceInfo(1);
-
-        assertFalse(PERFORMANCE_FILE.exists());
     }
 
     @Test
