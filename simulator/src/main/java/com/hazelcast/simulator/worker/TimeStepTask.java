@@ -49,7 +49,7 @@ public abstract class TimeStepTask implements Runnable {
         this.testInstance = testInstance;
         this.timeStepModel = timeStepModel;
         this.threadContext = initThreadContext();
-        this.timeStepProbabilities = timeStepModel.newTimeStepProbabilityArray();
+        this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
     }
 
     public void setWorkerProbe(Probe workerProbe) {

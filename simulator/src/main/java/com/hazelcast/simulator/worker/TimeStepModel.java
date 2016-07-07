@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.DependencyInjector;
 import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -44,14 +45,18 @@ public class TimeStepModel {
     private final List<Method> afterRunMethods;
     private final List<Method> timeStepMethods;
     private final Map<Method, Double> probabilities;
+    private final byte[] timeStepProbabilityArray;
+    private final DependencyInjector dependencyInjector;
 
-    public TimeStepModel(Class testClass) {
+    public TimeStepModel(Class testClass, DependencyInjector dependencyInjector) {
+        this.dependencyInjector = dependencyInjector;
         this.testClass = testClass;
         this.beforeRunMethods = loadBeforeRunMethods();
         this.afterRunMethods = loadAfterRunMethods();
         this.timeStepMethods = loadTimeStepMethods();
         this.threadContextClass = loadThreadContextClass();
-        this.probabilities = loadProbabilitiesFromAnnotations();
+        this.probabilities = loadProbabilities();
+        this.timeStepProbabilityArray = newTimeStepProbabilityArray();
     }
 
     private List<Method> loadBeforeRunMethods() {
@@ -121,13 +126,24 @@ public class TimeStepModel {
         }
     }
 
-    private Map<Method, Double> loadProbabilitiesFromAnnotations() {
+    private Map<Method, Double> loadProbabilities() {
         Map<Method, Double> probabilities = new HashMap<Method, Double>();
 
         double totalProbability = 0;
         for (Method method : timeStepMethods) {
-            TimeStep timeStep = method.getAnnotation(TimeStep.class);
-            double probability = timeStep.prob();
+
+            double probability;
+            String x = dependencyInjector.loadProperty(method.getName() + "Prob");
+            if (x == null) {
+                // nothing was specified. So lets use what is on the annotation
+                TimeStep timeStep = method.getAnnotation(TimeStep.class);
+                probability = timeStep.prob();
+            } else {
+                // the user has explicitly configured a probability
+                //todo: exception handling.
+                probability = Double.parseDouble(x);
+            }
+
             if (probability > 1) {
                 throw new IllegalTestException("TimeStep method '" + method + "' "
                         + "can't have a probability larger than 1, found " + probability);
@@ -155,7 +171,11 @@ public class TimeStepModel {
         return probabilities;
     }
 
-    public byte[] newTimeStepProbabilityArray() {
+    public byte[] getTimeStepProbabilityArray() {
+        return timeStepProbabilityArray;
+    }
+
+    private byte[] newTimeStepProbabilityArray() {
         int arraySize = (int) PROBABILITY_LENGTH;
         byte[] result = new byte[arraySize];
         int index = 0;
@@ -199,8 +219,8 @@ public class TimeStepModel {
     public List<Method> getActiveTimeStepMethods() {
         List<Method> result = new ArrayList<Method>();
         for (Method method : timeStepMethods) {
-            TimeStep timeStep = method.getAnnotation(TimeStep.class);
-            if (timeStep.prob() > 0) {
+            double probability = probabilities.get(method);
+            if (probability > 0) {
                 result.add(method);
             }
         }

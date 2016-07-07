@@ -99,6 +99,14 @@ public class DependencyInjector {
         return probeMap;
     }
 
+    public String loadProperty(String propertyName){
+        String value = testCase.getProperty(propertyName);
+        if(value!=null){
+            unusedProperties.remove(propertyName);
+        }
+        return value;
+    }
+
     public void inject(Object object) {
         Class classType = object.getClass();
         do {

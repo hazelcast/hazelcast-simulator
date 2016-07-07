@@ -17,10 +17,8 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.utils.FileUtils;
-import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
 import freemarker.template.Configuration;
@@ -59,11 +57,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * - better id for the timesteptask. Needs to be the same on all members.
  * - timestep probability binding
  * - verification: max number of timestep methods bound to 128
- *
+ * - metronome class should be injectable
+ * <p>
  * <p>
  * <p>
  * <p>
  * done:
+ * - using the prob from the properties.
  * - a unused timestep method is removed from code generation
  * - the timestep methods now all get equal chance to run. Which is not valid
  * - basic validation of timestep probability on the annotations
@@ -102,13 +102,6 @@ public class TimeStepTaskCodeGenerator {
         String id = "" + ID_GENERATOR.incrementAndGet();
         JavaFileObject file = createJavaFileObject(id, metronomeClass, timeStepModel, probeClass);
         return compile(file, id);
-    }
-
-    public static void main(String[] args) throws Exception {
-        TimeStepTaskCodeGenerator codeGenerator = new TimeStepTaskCodeGenerator();
-        DummyTest testInstance = new DummyTest();
-        TimeStepModel timeStepModel = new TimeStepModel(testInstance.getClass());
-        Class clazz = codeGenerator.compile(timeStepModel, BusySpinningMetronome.class, HdrProbe.class);
     }
 
     private Class compile(JavaFileObject file, String testId) {

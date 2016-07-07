@@ -161,6 +161,8 @@ public class TestContainer {
 
             registerTask(Teardown.class, new TeardownFilter(false), LOCAL_TEARDOWN);
             registerTask(Teardown.class, new TeardownFilter(true), GLOBAL_TEARDOWN);
+        } catch (IllegalTestException e) {
+            throw e;
         } catch (Exception e) {
             throw new IllegalTestException("Error during search for annotated test methods in" + testInstanceClass.getName(), e);
         }

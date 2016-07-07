@@ -22,7 +22,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 public class DummyTest {
 
     @TimeStep(prob = 0.1)
-    public void get(BaseThreadContext ctx, Probe probe) {
+    public void get(BaseThreadContext ctx) {
     }
 
     @TimeStep(prob = 0.9)
