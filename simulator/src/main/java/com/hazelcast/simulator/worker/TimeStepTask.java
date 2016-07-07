@@ -78,16 +78,12 @@ public abstract class TimeStepTask implements Runnable {
             constructor = workerContextClazz.getDeclaredConstructor();
             args = new Object[0];
         } catch (NoSuchMethodException ignore) {
-            //todo: remove
-            ignore.printStackTrace();
         }
 
         try {
             constructor = workerContextClazz.getDeclaredConstructor(testInstance.getClass());
             args = new Object[]{testInstance};
         } catch (NoSuchMethodException ignore) {
-            //todo: remove
-            ignore.printStackTrace();
         }
 
         if (constructor == null) {

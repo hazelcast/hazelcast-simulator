@@ -96,6 +96,7 @@ public class DependencyInjector {
     }
 
     public Map<String, Probe> getProbeMap() {
+        System.out.println("probeMap.size:"+probeMap.size());
         return probeMap;
     }
 
