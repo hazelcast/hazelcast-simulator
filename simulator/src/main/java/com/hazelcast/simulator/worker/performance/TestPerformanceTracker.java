@@ -196,6 +196,6 @@ final class TestPerformanceTracker {
     }
 
     private static File getLatencyFile(String testId, String probeName) {
-        return new File("latency-" + testId + '-' + probeName + ".txt");
+        return new File(testId + '-' + probeName + ".hgrm");
     }
 }
