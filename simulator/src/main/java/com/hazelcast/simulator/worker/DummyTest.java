@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 

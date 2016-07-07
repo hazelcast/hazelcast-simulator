@@ -55,14 +55,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * - rename worker
  * - isWorkerStopped
  * - better id for the timesteptask. Needs to be the same on all members.
- * - timestep probability binding
- * - verification: max number of timestep methods bound to 128
- * - metronome class should be injectable
  * <p>
  * <p>
  * <p>
  * <p>
  * done:
+ * - verification: max number of timestep methods bound to 128
+ * - timestep probability binding
  * - using the prob from the properties.
  * - a unused timestep method is removed from code generation
  * - the timestep methods now all get equal chance to run. Which is not valid

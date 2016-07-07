@@ -75,10 +75,16 @@ public class TimeStepModel {
 
     private List<Method> loadTimeStepMethods() {
         List<Method> methods = findAllMethods(testClass, TimeStep.class);
+
+        // there is a bound on the max number of timestep methods so they fit into a byte
+        // we can easily increase the number to 256 in the future.
+        if (methods.size() > Byte.MAX_VALUE) {
+            throw new IllegalTestException(testClass.getName() + " has more than 127 TimeStep methods, found:" + methods.size());
+        }
+
         validateUniqueMethodNames(methods);
         validateModifiers(methods);
         validateTimeStepArguments(methods);
-        //todo: validate max number of timestep methods
         return methods;
     }
 
