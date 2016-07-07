@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -33,6 +34,7 @@ import com.hazelcast.simulator.worker.RunWithWorkersRunStrategy;
 import com.hazelcast.simulator.worker.TimeStepRunStrategy;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -137,8 +139,34 @@ public class TestContainer {
 
     public void invoke(TestPhase testPhase) throws Exception {
         Callable task = taskPerPhaseMap.get(testPhase);
-        if (task != null) {
+        if (task == null) {
+            return;
+        }
+
+        try {
             task.call();
+        }finally {
+            if(testPhase == RUN){
+                saveHdrProbes();
+            }
+        }
+    }
+
+    private void saveHdrProbes() {
+        for (Map.Entry<String, Probe> entry : getProbeMap().entrySet()) {
+            Probe probe = entry.getValue();
+            if (probe instanceof HdrProbe) {
+                HdrProbe hdrProbe = ((HdrProbe) probe);
+                //todo:
+                try {
+                    hdrProbe.saveToFile(testCase.getId(),
+                            entry.getKey(),
+                            getTestStartedTimestamp(),
+                            System.currentTimeMillis() - getTestStartedTimestamp());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

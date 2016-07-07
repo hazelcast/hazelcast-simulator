@@ -16,10 +16,14 @@
 package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.TestException;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogWriter;
 import org.HdrHistogram.Recorder;
 
-import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -68,5 +72,16 @@ public class HdrProbe implements Probe {
     @Override
     public long get() {
         return getIntervalHistogram().getTotalCount();
+    }
+
+    public void saveToFile(String testId, String probeName, long starttime, long baseTime) throws IOException {
+        File latencyFile =new File("peter-" + testId + '-' + probeName + ".hgrm");
+        HistogramLogWriter writer = new HistogramLogWriter(latencyFile);
+        writer.outputStartTime(starttime);
+        writer.setBaseTime(baseTime);
+        writer.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
+        writer.outputLogFormatVersion();
+        writer.outputLegend();
+        writer.outputIntervalHistogram(recorder.getIntervalHistogram());
     }
 }
