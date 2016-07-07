@@ -18,7 +18,7 @@ public class GeneratedTimeStepTask_${id} extends TimeStepTask {
     @Override
     public void timeStepLoop() throws Exception {
 <#if timeStepMethods?size gt 1>
-        final Random operationRandom = new Random();
+        final Random random = new Random();
 </#if>
         final AtomicLong iterations = this.iterations;
         final TestContextImpl testContext = (TestContextImpl)this.testContext;
@@ -33,6 +33,10 @@ public class GeneratedTimeStepTask_${id} extends TimeStepTask {
 </#if>
 <#if threadContextClass??>
         final ${threadContextClass} threadContext = (${threadContextClass})this.threadContext;
+</#if>
+
+<#if timeStepMethods?size gt 1>
+        final byte[] probs  = this.timeStepProbabilities;
 </#if>
 
 <#if probeClass??>
@@ -53,7 +57,8 @@ public class GeneratedTimeStepTask_${id} extends TimeStepTask {
             ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
     </#if>
 <#else>
-            switch(operationRandom.nextInt(${timeStepMethods?size})){
+
+            switch(probs[random.nextInt(probs.length)]){
     <#list timeStepMethods as method>
                 case ${method?counter-1}:
         <#if hasProbe(method) || !probeClass??>

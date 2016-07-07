@@ -50,6 +50,17 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
+
+/**
+ * Responsible for injecting:
+ * <ol>
+ *     <li>values in public fields</li>
+ *     <li>TestContext in fields annotated with {@link InjectTestContext}</li>
+ *     <li>HazelcastInstance in fields annotated with @{@link InjectHazelcastInstance}</li>
+ *     <li>Metronome instance in fields annotated with {@link InjectMetronome}</li>
+ *     <li>Probe instance in fields annotated with {@link InjectProbe}</li>
+ * </ol>
+ */
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class DependencyInjector {
 

@@ -51,17 +51,21 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * todo:
  * - determining the right probe class
- * - the timestep methods now all get equal chance to run. Which is not valid
  * - loading the right probe instance per timestep method.
  * - what should happen when no probe-class is defined, but the user has a probe method.
- * - detecting that timestep method only has probe/context args
+ * - verification: detecting that timestep method only has probe/context args
  * - rename worker
  * - isWorkerStopped
  * - better id for the timesteptask. Needs to be the same on all members.
+ * - timestep probability binding
+ *
  * <p>
  * <p>
  * <p>
  * done:
+ * - a unused timestep method is removed from code generation
+ * - the timestep methods now all get equal chance to run. Which is not valid
+ * - basic validation of timestep probability on the annotations
  * - location of the timesteptask class file
  * - timesteptask needs to have unique name.
  * - class file should be written of the test
@@ -157,7 +161,7 @@ public class TimeStepTaskCodeGenerator {
             Map<String, Object> root = new HashMap<String, Object>();
             root.put("testInstanceClass", getClassName(timeStepModel.getTestClass()));
             root.put("metronomeClass", getClassName(metronomeClass));
-            root.put("timeStepMethods", timeStepModel.getTimeStepMethods());
+            root.put("timeStepMethods", timeStepModel.getActiveTimeStepMethods());
             root.put("probeClass", getClassName(probeClass));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
             root.put("Probe", Probe.class);

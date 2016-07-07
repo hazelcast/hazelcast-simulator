@@ -25,6 +25,7 @@ import java.util.Random;
  */
 public class BaseThreadContext {
 
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     public final Random random = new Random();
 
     public long randomLong() {

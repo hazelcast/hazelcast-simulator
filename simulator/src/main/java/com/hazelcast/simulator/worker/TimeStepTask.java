@@ -43,11 +43,13 @@ public abstract class TimeStepTask implements Runnable {
     protected final Object testInstance;
     protected final AtomicLong iterations = new AtomicLong();
     protected final TimeStepModel timeStepModel;
+    protected final byte[] timeStepProbabilities;
 
     public TimeStepTask(Object testInstance, TimeStepModel timeStepModel) {
         this.testInstance = testInstance;
         this.timeStepModel = timeStepModel;
         this.threadContext = initThreadContext();
+        this.timeStepProbabilities = timeStepModel.newTimeStepProbabilityArray();
     }
 
     public void setWorkerProbe(Probe workerProbe) {

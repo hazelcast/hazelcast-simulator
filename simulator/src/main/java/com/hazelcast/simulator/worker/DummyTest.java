@@ -17,21 +17,16 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadContext;
-import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
 public class DummyTest {
 
-    @TimeStep(prob = 0)
+    @TimeStep(prob = 0.1)
     public void get(BaseThreadContext ctx, Probe probe) {
     }
 
-    @TimeStep(prob = 0)
+    @TimeStep(prob = 0.9)
     public void put(BaseThreadContext ctx) {
     }
 
-    @AfterRun
-    public void afterRun() {
-
-    }
 }

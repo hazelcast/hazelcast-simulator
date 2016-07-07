@@ -22,8 +22,11 @@ import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.findAllMethods;
@@ -31,11 +34,16 @@ import static java.lang.reflect.Modifier.isPublic;
 
 public class TimeStepModel {
 
+    static final int PROBABILITY_PRECISION = 3;
+    static final double PROBABILITY_LENGTH = Math.pow(10, PROBABILITY_PRECISION);
+    static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
+
     private final Class testClass;
     private final Class threadContextClass;
     private final List<Method> beforeRunMethods;
     private final List<Method> afterRunMethods;
     private final List<Method> timeStepMethods;
+    private final Map<Method, Double> probabilities;
 
     public TimeStepModel(Class testClass) {
         this.testClass = testClass;
@@ -43,6 +51,7 @@ public class TimeStepModel {
         this.afterRunMethods = loadAfterRunMethods();
         this.timeStepMethods = loadTimeStepMethods();
         this.threadContextClass = loadThreadContextClass();
+        this.probabilities = loadProbabilitiesFromAnnotations();
     }
 
     private List<Method> loadBeforeRunMethods() {
@@ -59,12 +68,12 @@ public class TimeStepModel {
         return methods;
     }
 
-
     private List<Method> loadTimeStepMethods() {
         List<Method> methods = findAllMethods(testClass, TimeStep.class);
         validateUniqueMethodNames(methods);
         validateModifiers(methods);
         validateTimeStepArguments(methods);
+        //todo: validate max number of timestep methods
         return methods;
     }
 
@@ -112,6 +121,61 @@ public class TimeStepModel {
         }
     }
 
+    private Map<Method, Double> loadProbabilitiesFromAnnotations() {
+        Map<Method, Double> probabilities = new HashMap<Method, Double>();
+
+        double totalProbability = 0;
+        for (Method method : timeStepMethods) {
+            TimeStep timeStep = method.getAnnotation(TimeStep.class);
+            double probability = timeStep.prob();
+            if (probability > 1) {
+                throw new IllegalTestException("TimeStep method '" + method + "' "
+                        + "can't have a probability larger than 1, found " + probability);
+            }
+
+            if (probability < 0) {
+                throw new IllegalTestException("TimeStep method '" + method + "' "
+                        + "can't have a probability smaller than 0, found " + probability);
+            }
+
+            totalProbability += probability;
+
+            if (totalProbability > 1) {
+                throw new IllegalTestException("TimeStep method '" + method + "' with probability "
+                        + probability + " exceeds the total probability of 1");
+            }
+            probabilities.put(method, probability);
+        }
+
+        if (totalProbability < 1) {
+            throw new IllegalTestException("The total probability of timeStep methods in test " + testClass.getName()
+                    + " is smaller than 1. Found " + totalProbability);
+        }
+
+        return probabilities;
+    }
+
+    public byte[] newTimeStepProbabilityArray() {
+        int arraySize = (int) PROBABILITY_LENGTH;
+        byte[] result = new byte[arraySize];
+        int index = 0;
+
+        List<Method> activeTimeStepMethods = getActiveTimeStepMethods();
+
+        for (int k = 0; k < activeTimeStepMethods.size(); k++) {
+            Method method = activeTimeStepMethods.get(k);
+            double probability = probabilities.get(method);
+            for (int i = 0; i < Math.round(probability * arraySize); i++) {
+                if (index < arraySize) {
+                    result[index] = (byte) k;
+                    index++;
+                }
+            }
+        }
+
+        return result;
+    }
+
     public Class getTestClass() {
         return testClass;
     }
@@ -130,6 +194,17 @@ public class TimeStepModel {
 
     public List<Method> getTimeStepMethods() {
         return timeStepMethods;
+    }
+
+    public List<Method> getActiveTimeStepMethods() {
+        List<Method> result = new ArrayList<Method>();
+        for (Method method : timeStepMethods) {
+            TimeStep timeStep = method.getAnnotation(TimeStep.class);
+            if (timeStep.prob() > 0) {
+                result.add(method);
+            }
+        }
+        return result;
     }
 
     public Class loadThreadContextClass() {
