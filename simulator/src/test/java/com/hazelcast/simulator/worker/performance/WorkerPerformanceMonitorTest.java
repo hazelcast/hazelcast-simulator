@@ -63,8 +63,8 @@ public class WorkerPerformanceMonitorTest {
     public static void cleanUp() {
         deleteQuiet("throughput.txt");
         deleteQuiet("throughput-" + TEST_NAME + ".txt");
-        deleteQuiet(TEST_NAME + "-workerProbe.hgrm");
-        deleteQuiet(TEST_NAME + "-aggregated.hgrm");
+        deleteQuiet(TEST_NAME + "-workerProbe.hdr");
+        deleteQuiet(TEST_NAME + "-aggregated.hdr");
     }
 
     @Test
