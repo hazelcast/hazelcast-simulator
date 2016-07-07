@@ -37,7 +37,7 @@ public abstract class TimeStepTask implements Runnable {
     @InjectMetronome
     protected Metronome metronome;
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)
-    protected Probe workerProbe;
+    protected Probe probe;
 
     protected final Object threadContext;
     protected final Object testInstance;
@@ -51,11 +51,6 @@ public abstract class TimeStepTask implements Runnable {
         this.threadContext = initThreadContext();
         this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
     }
-
-    public void setWorkerProbe(Probe workerProbe) {
-        this.workerProbe = workerProbe;
-    }
-
     public long iteration() {
         return iterations.get();
     }

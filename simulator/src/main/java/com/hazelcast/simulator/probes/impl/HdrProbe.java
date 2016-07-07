@@ -22,13 +22,14 @@ import org.HdrHistogram.Recorder;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Measures the latency distribution of a test.
  */
 public class HdrProbe implements Probe {
 
-    public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
+    public static final long MAXIMUM_LATENCY = SECONDS.toMicros(60);
     public static final int LATENCY_PRECISION = 4;
 
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);

@@ -28,7 +28,7 @@ public class GeneratedTimeStepTask_${id} extends TimeStepTask {
 </#if>
 <#if probeClass??>
     <#list timeStepMethods as method>
-        final ${probeClass} ${method.name}Probe = (${probeClass})this.workerProbe;
+        final ${probeClass} ${method.name}Probe = (${probeClass})this.probe;
     </#list>
 </#if>
 <#if threadContextClass??>

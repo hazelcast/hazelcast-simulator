@@ -55,6 +55,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * - rename worker
  * - isWorkerStopped
  * - better id for the timesteptask. Needs to be the same on all members.
+ * - check the way the probes are being written. Who's responsibility should this be? Afaik the test container on shutdown.
+ * - probe files are not correctly written to disk
  * <p>
  * <p>
  * <p>
