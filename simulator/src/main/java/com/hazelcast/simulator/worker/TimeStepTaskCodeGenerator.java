@@ -58,6 +58,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * - isWorkerStopped
  * - better id for the timesteptask. Needs to be the same on all members.
  * - timestep probability binding
+ * - verification: max number of timestep methods bound to 128
  *
  * <p>
  * <p>

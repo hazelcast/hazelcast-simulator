@@ -76,7 +76,6 @@ public class GeneratedTimeStepTask_${id} extends TimeStepTask {
             iterations.lazySet(iteration);
         }
     }
-
 <#macro timestepMethodCall m>
     <@compress single_line=true>
        testInstance.${m.getName()}(
@@ -87,7 +86,6 @@ public class GeneratedTimeStepTask_${id} extends TimeStepTask {
     )
     </@compress>
 </#macro>
-
 <#macro timestepMethodArg a m>
     <#if isAssignableFrom(a, Probe)>
         ${m.name}Probe

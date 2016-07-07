@@ -64,12 +64,12 @@ public class AtomicLongTest extends AbstractTest {
         }
     }
 
-    @TimeStep(prob = 0)
+    @TimeStep(prob = 0.9)
     public void get(ThreadContext context) {
         context.randomCounter().get();
     }
 
-    @TimeStep(prob = 1)
+    @TimeStep(prob = 0.1)
     public void increment(ThreadContext context) {
         context.randomCounter().incrementAndGet();
         context.increments++;
