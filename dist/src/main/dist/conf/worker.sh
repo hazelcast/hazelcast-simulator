@@ -147,7 +147,9 @@ java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
 
 #########################################################################
-# Open Onload
+# OpenOnload
 #########################################################################
+#
+# The network stack for Solarflare networkd adapters (new lab).
 #
 # onload --profile=latency java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
