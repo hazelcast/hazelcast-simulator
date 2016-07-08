@@ -30,6 +30,7 @@ import static java.lang.String.format;
  * A {@link RunStrategy} for tests with a method annotated with {@link com.hazelcast.simulator.test.annotations.RunWithWorker}.
  */
 @SuppressWarnings("checkstyle:visibilitymodifier")
+@Deprecated
 public class RunWithWorkersRunStrategy extends RunStrategy {
     public static final int DEFAULT_THREAD_COUNT = 10;
     private static final Logger LOGGER = Logger.getLogger(RunWithWorkersRunStrategy.class);

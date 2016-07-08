@@ -23,6 +23,7 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Deprecated
 abstract class VeryAbstractWorker implements IWorker {
 
     protected final AtomicLong iterations = new AtomicLong();

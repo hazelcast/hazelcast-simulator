@@ -35,6 +35,7 @@ import static java.lang.String.format;
  *
  * @param <T> enum of operations
  */
+@Deprecated
 public class OperationSelectorBuilder<T extends Enum<T>> {
 
     static final int PROBABILITY_PRECISION = 3;

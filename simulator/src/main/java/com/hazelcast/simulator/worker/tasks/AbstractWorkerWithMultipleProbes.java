@@ -35,6 +35,7 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
+@Deprecated
 public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
         extends VeryAbstractWorker
         implements DependencyInjectorAware {

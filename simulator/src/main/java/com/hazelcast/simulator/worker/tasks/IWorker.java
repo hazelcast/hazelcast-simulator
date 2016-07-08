@@ -26,6 +26,7 @@ package com.hazelcast.simulator.worker.tasks;
  * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
  * {@link com.hazelcast.simulator.test.annotations.InjectProbe}
  */
+@Deprecated
 public interface IWorker {
 
     /**

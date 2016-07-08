@@ -50,9 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * todo:
  * - verification: detecting that timestep method only has probe/context args
  * - better id for the timesteprunner. Needs to be the same on all members.
- * <p>
- * <p>
- * <p>
+ * - make sure all workers correctly set iteration.
  * <p>
  * done:
  * - old workers need to get probe

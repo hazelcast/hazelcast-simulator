@@ -28,6 +28,7 @@ import java.util.Random;
  *
  * @param <T> enum of operations
  */
+@Deprecated
 public class OperationSelector<T extends Enum<T>> {
 
     private final Random random = new Random();

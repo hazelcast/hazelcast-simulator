@@ -20,6 +20,7 @@ package com.hazelcast.simulator.worker.tasks;
  *
  * Can be used on nodes which should not interact with the cluster.
  */
+@Deprecated
 public final class NoOperationWorker extends VeryAbstractWorker {
 
     @Override

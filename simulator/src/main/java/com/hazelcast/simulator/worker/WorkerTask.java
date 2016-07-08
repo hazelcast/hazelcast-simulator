@@ -22,6 +22,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 /**
  * A task that executes all lifecycles of a Worker.
  */
+@Deprecated
 class WorkerTask implements Runnable {
     private final IWorker worker;
 
