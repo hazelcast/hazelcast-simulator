@@ -32,24 +32,22 @@ import java.util.zip.Deflater;
 
 import static com.hazelcast.simulator.probes.impl.HdrProbe.LATENCY_PRECISION;
 import static com.hazelcast.simulator.probes.impl.HdrProbe.MAXIMUM_LATENCY;
-import static com.hazelcast.simulator.worker.performance.PerformanceUtils.ONE_SECOND_IN_MILLIS;
-import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
-import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Tracks performance related values for a single Simulator Test.
- *
+ * <p>
  * Has methods to update the performance values and write them to files.
- *
+ * <p>
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
 final class TestPerformanceTracker {
+    static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
 
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
-
-    private final File throughputFile;
     private final long testStartedTimestamp;
     private final String testId;
+    private final PerformanceStatsWriter performanceStatsWriter;
 
     private long lastTimestamp;
 
@@ -69,11 +67,9 @@ final class TestPerformanceTracker {
 
     TestPerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
         this.testId = testId;
-        this.throughputFile = new File("throughput-" + testId + ".txt");
         this.testStartedTimestamp = testStartedTimestamp;
         this.lastTimestamp = testStartedTimestamp;
-
-        writeThroughputHeader(throughputFile, false);
+        this.performanceStatsWriter = new PerformanceStatsWriter(new File("performance-" + testId + ".csv"));
 
         for (String probeName : probeNames) {
             histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
@@ -123,8 +119,15 @@ final class TestPerformanceTracker {
         this.isUpdated = true;
     }
 
-    void writeStatsToFile(String timestamp) {
-        writeThroughputStats(throughputFile, timestamp, totalOperationCount, intervalOperationCount, intervalThroughput, 0, 0);
+    void writeStatsToFile(long epochTime, String timestamp) {
+        performanceStatsWriter.write(
+                epochTime,
+                timestamp,
+                totalOperationCount,
+                intervalOperationCount,
+                intervalThroughput,
+                0,
+                0);
 
         for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
             String probeName = histogramEntry.getKey();

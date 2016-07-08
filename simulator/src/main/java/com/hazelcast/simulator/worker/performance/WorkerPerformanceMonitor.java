@@ -38,8 +38,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
-import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputHeader;
-import static com.hazelcast.simulator.worker.performance.PerformanceUtils.writeThroughputStats;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -82,16 +80,16 @@ public class WorkerPerformanceMonitor {
 
     /**
      * Thread to monitor the performance of Simulator Tests.
-     *
+     * <p>
      * Iterates over all {@link TestContainer} to retrieve performance values from all {@link Probe} instances.
      * Sends performance numbers as {@link PerformanceState} to the Coordinator.
      * Writes performance stats to files.
-     *
+     * <p>
      * Holds one {@link TestPerformanceTracker} instance per Simulator Test.
      */
     private final class WorkerPerformanceMonitorThread extends Thread {
 
-        private final File globalThroughputFile = new File("throughput.txt");
+        private final PerformanceStatsWriter globalPerformanceStatsWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final Map<String, MonitoredTest> tests = new ConcurrentHashMap<String, MonitoredTest>();
         private final ServerConnector serverConnector;
@@ -105,8 +103,7 @@ public class WorkerPerformanceMonitor {
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = intervalNanos;
-
-            writeThroughputHeader(globalThroughputFile, true);
+            this.globalPerformanceStatsWriter = new PerformanceStatsWriter(new File("performance.csv"));
         }
 
         @Override
@@ -270,7 +267,7 @@ public class WorkerPerformanceMonitor {
             for (MonitoredTest test : tests.values()) {
                 TestPerformanceTracker tracker = test.tracker;
                 if (tracker.getAndResetIsUpdated()) {
-                    tracker.writeStatsToFile(dateString);
+                    tracker.writeStatsToFile(currentTimestamp, dateString);
 
                     globalIntervalOperationCount += tracker.getIntervalOperationCount();
                     globalOperationsCount += tracker.getTotalOperationCount();
@@ -279,8 +276,14 @@ public class WorkerPerformanceMonitor {
             }
 
             // global performance stats
-            writeThroughputStats(globalThroughputFile, dateString, globalOperationsCount, globalIntervalOperationCount,
-                    globalIntervalThroughput, tests.size(), testContainers.size());
+            globalPerformanceStatsWriter.write(
+                    currentTimestamp,
+                    dateString,
+                    globalOperationsCount,
+                    globalIntervalOperationCount,
+                    globalIntervalThroughput,
+                    tests.size(),
+                    testContainers.size());
         }
     }
 
