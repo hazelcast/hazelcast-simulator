@@ -33,6 +33,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
+import com.hazelcast.simulator.utils.Preconditions;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.MetronomeType;
@@ -56,6 +57,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetrono
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
@@ -144,15 +146,8 @@ public class TestContainer {
     public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount,
                          int runWithWorkerMetronomeInterval, MetronomeType runWithWorkerMetronomeType,
                          boolean runWithWorkerIsLightweightProbe) {
-        if (testContext == null) {
-            throw new NullPointerException("testContext cannot be null!");
-        }
-        if (testClassInstance == null) {
-            throw new NullPointerException("testClassInstance cannot be null!");
-        }
-
-        this.testContext = testContext;
-        this.testClassInstance = testClassInstance;
+        this.testContext = Preconditions.checkNotNull(testContext, "testContext can't be null");
+        this.testClassInstance = Preconditions.checkNotNull(testClassInstance, "testClassInstance can't be null");
         this.testClassType = testClassInstance.getClass();
 
         this.runWithWorkerThreadCount = runWithWorkerThreadCount;
@@ -379,9 +374,7 @@ public class TestContainer {
     }
 
     private static Object getTestClassInstance(TestCase testCase) {
-        if (testCase == null) {
-            throw new NullPointerException();
-        }
+        checkNotNull(testCase, "testCase can't be null");
         String classname = testCase.getClassname();
         Object testObject;
         try {

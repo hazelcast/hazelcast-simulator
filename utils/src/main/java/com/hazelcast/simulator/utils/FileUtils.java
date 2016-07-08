@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
@@ -91,13 +92,8 @@ public final class FileUtils {
     }
 
     public static void writeText(String text, File file) {
-        if (text == null) {
-            throw new NullPointerException("text can't be null");
-        }
-
-        if (file == null) {
-            throw new NullPointerException("file can't be null");
-        }
+        checkNotNull(text, "Text can't be null");
+        checkNotNull(file, "File can't be null");
 
         FileOutputStream stream = null;
         OutputStreamWriter streamWriter = null;
@@ -125,12 +121,8 @@ public final class FileUtils {
     }
 
     public static void appendText(String text, File file) {
-        if (text == null) {
-            throw new NullPointerException("Text can't be null");
-        }
-        if (file == null) {
-            throw new NullPointerException("File can't be null");
-        }
+        checkNotNull(text, "Text can't be null");
+        checkNotNull(file, "File can't be null");
 
         FileOutputStream stream = null;
         OutputStreamWriter streamWriter = null;

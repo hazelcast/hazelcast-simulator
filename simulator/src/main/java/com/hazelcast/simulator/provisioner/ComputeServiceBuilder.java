@@ -18,6 +18,7 @@ package com.hazelcast.simulator.provisioner;
 import com.google.inject.AbstractModule;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.Preconditions;
 import org.apache.log4j.Logger;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -50,10 +51,7 @@ class ComputeServiceBuilder {
     private final SimulatorProperties properties;
 
     ComputeServiceBuilder(SimulatorProperties properties) {
-        if (properties == null) {
-            throw new NullPointerException("properties can't be null");
-        }
-        this.properties = properties;
+        this.properties = Preconditions.checkNotNull(properties, "properties can't be null");
     }
 
     ComputeService build() {

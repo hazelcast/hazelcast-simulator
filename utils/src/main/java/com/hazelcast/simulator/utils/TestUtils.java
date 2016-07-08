@@ -18,11 +18,12 @@ package com.hazelcast.simulator.utils;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 
 public final class TestUtils {
@@ -72,7 +73,7 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     *
+     * <p>
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
      *
@@ -81,14 +82,12 @@ public final class TestUtils {
      * @throws NullPointerException if task is null.
      */
     public static void assertTrueEventually(AssertTask task, long timeoutSeconds) {
-        if (task == null) {
-            throw new NullPointerException("task can't be null");
-        }
+        checkNotNull(task, "task can't be null");
 
         AssertionError error;
 
         // the total timeout in ms.
-        long timeoutMs = TimeUnit.SECONDS.toMillis(timeoutSeconds);
+        long timeoutMs = SECONDS.toMillis(timeoutSeconds);
 
         // the time in ms when the assertTrue is going to expire.
         long expirationMs = System.currentTimeMillis() + timeoutMs;
@@ -118,10 +117,10 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     *
+     * <p>
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
-     *
+     * <p>
      * Uses the default timeout of {@link #ASSERT_TRUE_EVENTUALLY_TIMEOUT} milliseconds.
      *
      * @param task AssertTask to execute

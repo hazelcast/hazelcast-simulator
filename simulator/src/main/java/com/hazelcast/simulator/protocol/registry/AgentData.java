@@ -21,6 +21,8 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
+
 /**
  * Contains the metadata of a Simulator Agent.
  *
@@ -47,17 +49,10 @@ public class AgentData {
         if (addressIndex <= 0) {
             throw new IllegalArgumentException("addressIndex must be a positive number");
         }
-        if (publicAddress == null) {
-            throw new NullPointerException("publicAddress can't be null");
-        }
-        if (privateAddress == null) {
-            throw new NullPointerException("privateAddress can't be null");
-        }
-
         this.addressIndex = addressIndex;
         this.address = new SimulatorAddress(AddressLevel.AGENT, addressIndex, 0, 0);
-        this.publicAddress = publicAddress;
-        this.privateAddress = privateAddress;
+        this.publicAddress = checkNotNull(publicAddress, "publicAddress can't be null");
+        this.privateAddress = checkNotNull(privateAddress, "privateAddress can't be null");
     }
 
     public int getAddressIndex() {

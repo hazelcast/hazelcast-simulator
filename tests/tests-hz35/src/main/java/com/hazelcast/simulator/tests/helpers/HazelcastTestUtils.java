@@ -47,6 +47,7 @@ import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
@@ -197,10 +198,7 @@ public final class HazelcastTestUtils {
     }
 
     public static OperationService getOperationService(HazelcastInstance hz) {
-        Node node = getNode(hz);
-        if (node == null) {
-            throw new NullPointerException("node is null in Hazelcast instance " + hz);
-        }
+        Node node = checkNotNull(getNode(hz), "node is null in Hazelcast instance " + hz);
         NodeEngineImpl nodeEngine = node.getNodeEngine();
         try {
             return nodeEngine.getOperationService();

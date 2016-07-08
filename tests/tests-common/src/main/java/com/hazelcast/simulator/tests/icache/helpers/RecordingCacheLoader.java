@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable {
 
@@ -34,9 +35,7 @@ public class RecordingCacheLoader<K> implements CacheLoader<K, K>, Serializable 
 
     @Override
     public K load(final K key) {
-        if (key == null) {
-            throw new NullPointerException("load null key!");
-        }
+        checkNotNull(key, "load null key!");
         if (loadDelayMs > 0) {
             sleepMillis(loadDelayMs);
         }

@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 public final class ReflectionUtils {
@@ -70,9 +71,7 @@ public final class ReflectionUtils {
     }
 
     public static <E> E getFieldValue(Object instance, String fieldName) {
-        if (instance == null) {
-            throw new NullPointerException("Object to retrieve field from can't be null");
-        }
+        checkNotNull(instance, "Object to retrieve field from can't be null");
 
         Field field;
         Class<?> clazz = instance.getClass();
@@ -91,7 +90,7 @@ public final class ReflectionUtils {
      * @param clazz     class which contains the field
      * @param fieldName name of the field
      * @param fieldType type of the field
-     * @param <E> type of the field
+     * @param <E>       type of the field
      * @return the value of the static field
      */
     public static <E> E getStaticFieldValue(Class clazz, String fieldName, Class fieldType) {
