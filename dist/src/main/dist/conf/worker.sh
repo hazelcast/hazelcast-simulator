@@ -1,11 +1,13 @@
 #!/bin/bash
-
 #
 # Script to start up a Simulator Worker. To customize the behavior of the worker, including Java configuration,
 # copy this file into the 'work dir' of simulator. See the end of this file for examples for different profilers.
 #
 # External variables have a @ symbol in front to distinguish them from regular bash variables.
 #
+
+# Automatic exit on script failure.
+set -e
 
 # redirecting output/error to the right logfiles.
 exec > worker.out
