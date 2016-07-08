@@ -62,7 +62,7 @@ public class MemberWorkerTest {
         } finally {
             deleteLogs();
 
-            deleteQuiet("throughput.txt");
+            deleteQuiet("performance.csv");
             deleteQuiet("worker.address");
 
             deleteQuiet(MEMBER_CONFIG_FILE);

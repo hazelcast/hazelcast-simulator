@@ -61,8 +61,8 @@ public class WorkerPerformanceMonitorTest {
 
     @AfterClass
     public static void cleanUp() {
-        deleteQuiet("throughput.txt");
-        deleteQuiet("throughput-" + TEST_NAME + ".txt");
+        deleteQuiet("performance.csv");
+        deleteQuiet("performance-" + TEST_NAME + ".csv");
         deleteQuiet(TEST_NAME + "-workerProbe.hdr");
         deleteQuiet(TEST_NAME + "-aggregated.hdr");
     }
