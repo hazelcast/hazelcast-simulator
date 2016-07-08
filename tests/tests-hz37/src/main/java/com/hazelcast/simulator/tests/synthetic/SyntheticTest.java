@@ -109,6 +109,11 @@ public class SyntheticTest extends AbstractTest {
         }
 
         @Override
+        public long iteration() {
+            return 0;
+        }
+
+        @Override
         public void run() {
             try {
                 while (!testContext.isStopped()) {

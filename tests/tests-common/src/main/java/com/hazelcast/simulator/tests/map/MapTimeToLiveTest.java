@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * In this test we are using map put methods with an expire time.
  * <p>
- * We put keys at random into the map using sync and async methods with some probability distribution.
+ * We put keys at random into the map using sync and async methods with some prob distribution.
  * In the end we verify that the map is empty and all key value pairs have expired out of the map.
  */
 public class MapTimeToLiveTest extends AbstractTest {

@@ -189,8 +189,8 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void addTest(Object test, int delayMillis, boolean isLightweightProbe) {
-        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, isLightweightProbe);
-        tests.put(TEST_NAME, testContainer);
+       // TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, isLightweightProbe);
+        //tests.put(TEST_NAME, testContainer);
     }
 
     private void verifyServerConnector() {

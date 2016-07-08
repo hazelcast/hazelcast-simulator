@@ -41,7 +41,7 @@ import static org.junit.Assert.assertNull;
 /**
  * This test operates on a map which has a {@link com.hazelcast.core.MapStore} configured.
  * <p>
- * We use map operations such as loadAll, put, get, delete or destroy with some probability distribution to trigger
+ * We use map operations such as loadAll, put, get, delete or destroy with some prob distribution to trigger
  * {@link com.hazelcast.core.MapStore} methods. We verify that the the key/value pairs in the map are also "persisted"
  * into the {@link com.hazelcast.core.MapStore}.
  */

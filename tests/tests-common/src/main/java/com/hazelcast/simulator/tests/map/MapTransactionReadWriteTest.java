@@ -17,45 +17,33 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
 public class MapTransactionReadWriteTest extends AbstractTest {
-
-    enum Operation {
-        PUT,
-        GET
-    }
 
     // properties
     public int keyLength = 10;
     public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
-    public KeyLocality keyLocality = KeyLocality.SHARED;
+    public KeyLocality keyLocality = SHARED;
     public int minNumberOfMembers = 0;
-
-    public double putProb = 0.1;
-    public boolean useSet = false;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Integer> map;
     private int[] keys;
@@ -63,11 +51,9 @@ public class MapTransactionReadWriteTest extends AbstractTest {
     @Setup
     public void setup() {
         map = targetInstance.getMap(name);
-
-        builder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
@@ -81,57 +67,48 @@ public class MapTransactionReadWriteTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(ThreadContext context) {
+        final int key = context.randomKey();
+        final int value = context.randomValue();
+        targetInstance.executeTransaction(new TransactionalTask<Object>() {
+            @Override
+            public Object execute(TransactionalTaskContext transactionalTaskContext) {
+                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+                txMap.put(key, value);
+                return null;
+            }
+        });
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
-
-        public Worker() {
-            super(builder);
-        }
-
-        @Override
-        public void timeStep(Operation operation, Probe probe) {
-            final int key = randomKey();
-            final int value = randomValue();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    started = System.nanoTime();
-                    targetInstance.executeTransaction(new TransactionalTask<Object>() {
-                        @Override
-                        public Object execute(TransactionalTaskContext transactionalTaskContext) {
-                            TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
-                            if (useSet) {
-                                txMap.set(key, value);
-                            } else {
-                                txMap.put(key, value);
-                            }
-                            return null;
-                        }
-                    });
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    targetInstance.executeTransaction(new TransactionalTask<Object>() {
-                        @Override
-                        public Object execute(TransactionalTaskContext transactionalTaskContext) {
-                            TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
-                            txMap.put(key, value);
-                            return null;
-                        }
-                    });
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
+    @TimeStep(prob = 0)
+    public void set(ThreadContext context) {
+        final int key = context.randomKey();
+        final int value = context.randomValue();
+        targetInstance.executeTransaction(new TransactionalTask<Object>() {
+            @Override
+            public Object execute(TransactionalTaskContext transactionalTaskContext) {
+                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+                txMap.set(key, value);
+                return null;
             }
-        }
+        });
+    }
 
+    @TimeStep(prob = 0.9)
+    public void get(ThreadContext context) {
+        final int key = context.randomKey();
+        targetInstance.executeTransaction(new TransactionalTask<Object>() {
+            @Override
+            public Object execute(TransactionalTaskContext transactionalTaskContext) {
+                TransactionalMap<Integer, Integer> txMap = transactionalTaskContext.getMap(map.getName());
+                txMap.get(key);
+                return null;
+            }
+        });
+    }
+
+    public class ThreadContext extends BaseThreadContext {
         private int randomKey() {
             int length = keys.length;
             return keys[randomInt(length)];
@@ -145,6 +122,5 @@ public class MapTransactionReadWriteTest extends AbstractTest {
     @Teardown
     public void teardown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

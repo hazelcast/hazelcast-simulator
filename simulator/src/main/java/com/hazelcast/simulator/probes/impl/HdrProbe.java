@@ -17,18 +17,22 @@ package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogProcessor;
+import org.HdrHistogram.HistogramLogWriter;
 import org.HdrHistogram.Recorder;
 
-import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.io.IOException;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Measures the latency distribution of a test.
  */
 public class HdrProbe implements Probe {
 
-    public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
+    public static final long MAXIMUM_LATENCY = SECONDS.toMicros(60);
     public static final int LATENCY_PRECISION = 4;
 
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
@@ -67,5 +71,23 @@ public class HdrProbe implements Probe {
     @Override
     public long get() {
         return getIntervalHistogram().getTotalCount();
+    }
+
+    public void saveToFile(String testId, String probeName, long starttime, long baseTime) throws IOException, InterruptedException {
+        File latencyFile = new File(testId + '-' + probeName + ".hdr");
+//        HistogramLogWriter writer = new HistogramLogWriter(latencyFile);
+//        writer.outputStartTime(starttime);
+//        writer.setBaseTime(baseTime);
+//        writer.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
+//        writer.outputLogFormatVersion();
+//        writer.outputLegend();
+//        writer.outputIntervalHistogram(recorder.getIntervalHistogram());
+
+        //HistogramLogProcessor -i READ.hdr -o uncorrected -outputValueUnitRatio 1000
+
+        HistogramLogProcessor histogramLogWriter = new HistogramLogProcessor(
+                new String[]{"-i", latencyFile.getName(), "-o", "peter", "-outputValueUnitRatio", "1000"});
+        histogramLogWriter.start();
+        histogramLogWriter.join();
     }
 }

@@ -233,6 +233,11 @@ public class SyntheticTest extends AbstractTest {
         public void afterRun() throws Exception {
             // nothing to do here
         }
+
+        @Override
+        public long iteration() {
+            return 0;
+        }
     }
 
     @Teardown

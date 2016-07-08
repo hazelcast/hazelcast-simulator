@@ -19,12 +19,11 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
 import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.assertMapStoreConfiguration;
@@ -47,18 +46,10 @@ public class MapEvictAndStoreTest extends AbstractTest {
         assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounterPerKey.class);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    public class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        public void timeStep() {
-            long key = keyCounter.incrementAndGet();
-            map.put(key, "test value");
-        }
+    @TimeStep
+    public void timeStep() {
+        long key = keyCounter.incrementAndGet();
+        map.put(key, "test value");
     }
 
     @Verify(global = false)

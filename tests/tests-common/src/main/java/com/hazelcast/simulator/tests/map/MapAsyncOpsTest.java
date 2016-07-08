@@ -17,13 +17,13 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.concurrent.TimeUnit;
 
@@ -31,25 +31,10 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 public class MapAsyncOpsTest extends AbstractTest {
 
-    private enum Operation {
-        PUT_ASYNC,
-        PUT_ASYNC_TTL,
-        GET_ASYNC,
-        REMOVE_ASYNC,
-        DESTROY
-    }
-
     // properties
     public int keyCount = 10;
     public int maxTTLExpirySeconds = 3;
 
-    public double putAsyncProb = 0.2;
-    public double putAsyncTTLProb = 0.2;
-    public double getAsyncProb = 0.2;
-    public double removeAsyncProb = 0.2;
-    public double destroyProb = 0.2;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private final MapOperationCounter count = new MapOperationCounter();
 
     private IMap<Integer, Object> map;
@@ -59,63 +44,51 @@ public class MapAsyncOpsTest extends AbstractTest {
     public void setUp() {
         map = targetInstance.getMap(name);
         results = targetInstance.getList(name + "report");
-
-        operationSelectorBuilder.addOperation(Operation.PUT_ASYNC, putAsyncProb)
-                .addOperation(Operation.PUT_ASYNC_TTL, putAsyncTTLProb)
-                .addOperation(Operation.GET_ASYNC, getAsyncProb)
-                .addOperation(Operation.REMOVE_ASYNC, removeAsyncProb)
-                .addOperation(Operation.DESTROY, destroyProb);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.2)
+    public void putAsync(BaseThreadContext context) {
+        int key = context.randomInt(keyCount);
+        Object value = context.randomInt();
+        map.putAsync(key, value);
+        count.putAsyncCount.incrementAndGet();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            int key = randomInt(keyCount);
-            switch (operation) {
-                case PUT_ASYNC:
-                    Object value = randomInt();
-                    map.putAsync(key, value);
-                    count.putAsyncCount.incrementAndGet();
-                    break;
-                case PUT_ASYNC_TTL:
-                    value = randomInt();
-                    int delay = 1 + randomInt(maxTTLExpirySeconds);
-                    map.putAsync(key, value, delay, TimeUnit.SECONDS);
-                    count.putAsyncTTLCount.incrementAndGet();
-                    break;
-                case GET_ASYNC:
-                    map.getAsync(key);
-                    count.getAsyncCount.incrementAndGet();
-                    break;
-                case REMOVE_ASYNC:
-                    map.removeAsync(key);
-                    count.removeAsyncCount.incrementAndGet();
-                    break;
-                case DESTROY:
-                    map.destroy();
-                    count.destroyCount.incrementAndGet();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            results.add(count);
-        }
+    @TimeStep(prob = 0.2)
+    public void putAsyncTTL(BaseThreadContext context) {
+        int key = context.randomInt(keyCount);
+        int value = context.randomInt();
+        int delay = 1 + context.randomInt(maxTTLExpirySeconds);
+        map.putAsync(key, value, delay, TimeUnit.SECONDS);
+        count.putAsyncTTLCount.incrementAndGet();
     }
 
-    @Verify(global = true)
+    @TimeStep(prob = 0.2)
+    public void getAsync(BaseThreadContext context) {
+        int key = context.randomInt(keyCount);
+        map.getAsync(key);
+        count.getAsyncCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0.2)
+    public void removeAsync(BaseThreadContext context) {
+        int key = context.randomInt(keyCount);
+        map.removeAsync(key);
+        count.removeAsyncCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0.2)
+    public void destroy() {
+        map.destroy();
+        count.destroyCount.incrementAndGet();
+    }
+
+    @AfterRun
+    public void afterRun() {
+        results.add(count);
+    }
+
+    @Verify
     public void globalVerify() {
         MapOperationCounter totalMapOperationsCount = new MapOperationCounter();
         for (MapOperationCounter mapOperationsCount : results) {

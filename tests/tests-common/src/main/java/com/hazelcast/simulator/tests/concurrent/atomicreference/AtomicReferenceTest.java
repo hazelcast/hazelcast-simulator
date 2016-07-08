@@ -16,37 +16,28 @@
 package com.hazelcast.simulator.tests.concurrent.atomicreference;
 
 import com.hazelcast.core.IAtomicReference;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
 public class AtomicReferenceTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int countersLength = 1000;
-    public KeyLocality keyLocality = KeyLocality.SHARED;
+    public KeyLocality keyLocality = SHARED;
     public int valueCount = 1000;
     public int valueLength = 512;
     public boolean useStringValue = true;
-    public double putProb = 1.0;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IAtomicReference<Object>[] counters;
     private Object[] values;
@@ -63,51 +54,28 @@ public class AtomicReferenceTest extends AbstractTest {
             }
         }
 
-        counters = getCounters();
+        counters = new IAtomicReference[countersLength];
         String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < counters.length; i++) {
             IAtomicReference<Object> atomicReference = targetInstance.getAtomicReference(names[i]);
             atomicReference.set(values[random.nextInt(values.length)]);
             counters[i] = atomicReference;
         }
-
-        builder.addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
     }
 
-    @SuppressWarnings("unchecked")
-    private IAtomicReference<Object>[] getCounters() {
-        return (IAtomicReference<Object>[]) new IAtomicReference[countersLength];
+    @TimeStep(prob = 1)
+    public void put(ThreadContext context) {
+        Object value = values[context.randomInt(values.length)];
+        context.randomReference().set(value);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0)
+    public void get(ThreadContext context) {
+        context.randomReference().get();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
-
-        public Worker() {
-            super(builder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            IAtomicReference<Object> counter = getRandomCounter();
-            switch (operation) {
-                case PUT:
-                    Object value = values[randomInt(values.length)];
-                    counter.set(value);
-                    break;
-                case GET:
-                    counter.get();
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown operation: " + operation);
-            }
-        }
-
-        private IAtomicReference<Object> getRandomCounter() {
+    public class ThreadContext extends BaseThreadContext {
+        private IAtomicReference<Object> randomReference() {
             return counters[randomInt(counters.length)];
         }
     }
@@ -117,6 +85,7 @@ public class AtomicReferenceTest extends AbstractTest {
         for (IAtomicReference counter : counters) {
             counter.destroy();
         }
-        logger.info(getOperationCountInformation(targetInstance));
     }
+
+
 }

@@ -17,14 +17,14 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -55,50 +55,45 @@ public class LockTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
+    @TimeStep
+    public void timeStep(ThreadContext context) {
+        long key1 = context.getRandomAccountKey();
+        long key2 = context.getRandomAccountKey();
+        int randomAmount = context.randomInt(amount);
 
-    private class Worker extends AbstractMonotonicWorker {
+        ILock lock1 = targetInstance.getLock(getLockId(key1));
+        ILock lock2 = targetInstance.getLock(getLockId(key2));
+        IAtomicLong account1 = targetInstance.getAtomicLong(getAccountId(key1));
+        IAtomicLong account2 = targetInstance.getAtomicLong(getAccountId(key2));
 
-        @Override
-        public void timeStep() {
-            long key1 = getRandomAccountKey();
-            long key2 = getRandomAccountKey();
-            int randomAmount = randomInt(amount);
-
-            ILock lock1 = targetInstance.getLock(getLockId(key1));
-            ILock lock2 = targetInstance.getLock(getLockId(key2));
-            IAtomicLong account1 = targetInstance.getAtomicLong(getAccountId(key1));
-            IAtomicLong account2 = targetInstance.getAtomicLong(getAccountId(key2));
-
-            if (!lock1.tryLock()) {
+        if (!lock1.tryLock()) {
+            return;
+        }
+        try {
+            if (!lock2.tryLock()) {
                 return;
             }
             try {
-                if (!lock2.tryLock()) {
+                if (account1.get() < 0 || account2.get() < 0) {
+                    throw new TestException("Amount on account can't be smaller than 0");
+                }
+                if (account1.get() < randomAmount) {
                     return;
                 }
-                try {
-                    if (account1.get() < 0 || account2.get() < 0) {
-                        throw new TestException("Amount on account can't be smaller than 0");
-                    }
-                    if (account1.get() < randomAmount) {
-                        return;
-                    }
-                    account1.set(account1.get() - randomAmount);
-                    account2.set(account2.get() + randomAmount);
-                } finally {
-                    lock2.unlock();
-                }
+                account1.set(account1.get() - randomAmount);
+                account2.set(account2.get() + randomAmount);
             } finally {
-                lock1.unlock();
+                lock2.unlock();
             }
+        } finally {
+            lock1.unlock();
         }
+    }
+
+    public class ThreadContext extends BaseThreadContext {
 
         private long getRandomAccountKey() {
-            long key = getRandom().nextLong() % lockCounter.get();
+            long key = randomLong() % lockCounter.get();
             return (key < 0) ? -key : key;
         }
     }

@@ -13,30 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test;
+package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.worker.tasks.IWorker;
+import java.util.concurrent.Callable;
 
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+public abstract class RunStrategy implements Callable {
 
-/**
- * A task that executes all lifecycles of a Worker.
- */
-class WorkerTask implements Runnable {
-    private final IWorker worker;
+    private volatile boolean running;
+    private volatile long startedTimeStamp;
 
-    public WorkerTask(IWorker worker) {
-        this.worker = worker;
+    public abstract long iterations();
+
+    public final boolean isRunning() {
+        return running;
     }
 
-    @Override
-    public void run() {
-        try {
-            worker.beforeRun();
-            worker.run();
-            worker.afterRun();
-        } catch (Exception e) {
-            throw rethrow(e);
-        }
+    protected final void onRunStarted() {
+        running = true;
+        startedTimeStamp = System.currentTimeMillis();
+    }
+
+    protected final void onRunCompleted() {
+        running = false;
+    }
+
+    public final long getStartedTimestamp() {
+        return startedTimeStamp;
     }
 }

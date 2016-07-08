@@ -17,15 +17,15 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheReadWriteCounter;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheWriter;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -42,22 +42,10 @@ import static org.junit.Assert.assertNotNull;
  */
 public class ReadWriteICacheTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET,
-        REMOVE
-    }
-
     public int keyCount = 10;
-    public double putProb = 0.4;
-    public double getProb = 0.4;
-    public double removeProb = 0.2;
-
     public int putDelayMs = 0;
     public int getDelayMs = 0;
     public int removeDelayMs = 0;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IList<ICacheReadWriteCounter> counters;
     private CacheConfig<Integer, Integer> config;
@@ -83,55 +71,34 @@ public class ReadWriteICacheTest extends AbstractTest {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cacheManager.createCache(name, config);
         cache = cacheManager.getCache(name);
-
-        builder.addOperation(Operation.PUT, putProb)
-                .addOperation(Operation.GET, getProb)
-                .addOperation(Operation.REMOVE, removeProb);
     }
 
-    @RunWithWorker
-    public Worker run() {
-        return new Worker();
+    @TimeStep(prob = 0.4)
+    public void put(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        cache.put(key, key);
+        context.counter.put++;
+
     }
 
-    private final class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0.4)
+    public void get(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        Object o = cache.get(key);
+        assertNotNull(o);
+        context.counter.get++;
+    }
 
-        private final ICacheReadWriteCounter counter = new ICacheReadWriteCounter();
+    @TimeStep(prob = 0.2)
+    public void remove(ThreadContext context) {
+        int key = context.randomInt(keyCount);
+        cache.remove(key);
+        context.counter.remove++;
+    }
 
-        private Worker() {
-            super(builder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            int key = randomInt(keyCount);
-
-            switch (operation) {
-                case PUT:
-                    cache.put(key, key);
-                    counter.put++;
-                    break;
-
-                case GET:
-                    Object o = cache.get(key);
-                    assertNotNull(o);
-                    counter.get++;
-                    break;
-
-                case REMOVE:
-                    cache.remove(key);
-                    counter.remove++;
-                    break;
-
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            counters.add(counter);
-        }
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        counters.add(context.counter);
     }
 
     @Verify(global = false)
@@ -143,12 +110,16 @@ public class ReadWriteICacheTest extends AbstractTest {
         logger.info(name + ": " + writer);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         ICacheReadWriteCounter total = new ICacheReadWriteCounter();
         for (ICacheReadWriteCounter counter : counters) {
             total.add(counter);
         }
         logger.info(name + ": " + total + " from " + counters.size() + " worker threads");
+    }
+
+    public final class ThreadContext extends BaseThreadContext {
+        private final ICacheReadWriteCounter counter = new ICacheReadWriteCounter();
     }
 }

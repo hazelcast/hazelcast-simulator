@@ -16,16 +16,16 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheListenerOperationCounter;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -43,25 +43,12 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  */
 public class AddRemoveListenerICacheTest extends AbstractTest {
 
-    private enum Operation {
-        REGISTER,
-        DE_REGISTER,
-        PUT,
-        GET
-    }
-
+    // properties
     public int keyCount = 1000;
     public boolean syncEvents = true;
 
-    public double registerProb = 0.25;
-    public double deRegisterProb = 0.25;
-    public double putProb = 0.25;
-    public double getProb = 0.25;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
     private final ICacheEntryListener<Integer, Long> listener = new ICacheEntryListener<Integer, Long>();
     private final ICacheEntryEventFilter<Integer, Long> filter = new ICacheEntryEventFilter<Integer, Long>();
-
     private IList<ICacheListenerOperationCounter> results;
     private CacheManager cacheManager;
     private Cache<Integer, Long> cache;
@@ -73,14 +60,9 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
 
         cacheManager = createCacheManager(targetInstance);
         cacheManager.getCache(name);
-
-        builder.addOperation(Operation.REGISTER, registerProb)
-                .addOperation(Operation.DE_REGISTER, deRegisterProb)
-                .addOperation(Operation.PUT, putProb)
-                .addOperation(Operation.GET, getProb);
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
         cache = cacheManager.getCache(name);
 
@@ -90,55 +72,45 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
                 false, syncEvents);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.25)
+    public void register(ThreadContext context) {
+        try {
+            cache.registerCacheEntryListener(listenerConfiguration);
+            context.operationCounter.register++;
+        } catch (IllegalArgumentException e) {
+            context.operationCounter.registerIllegalArgException++;
+        }
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0.25)
+    public void deregister(ThreadContext context) {
+        cache.deregisterCacheEntryListener(listenerConfiguration);
+        context.operationCounter.deRegister++;
+    }
 
+    @TimeStep(prob = 0.25)
+    public void put(ThreadContext context) {
+        cache.put(context.randomInt(keyCount), 1L);
+        context.operationCounter.put++;
+    }
+
+    @TimeStep(prob = 0.25)
+    public void get(ThreadContext context) {
+        cache.get(context.randomInt(keyCount));
+        context.operationCounter.put++;
+    }
+
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        logger.info(name + ": " + context.operationCounter);
+        results.add(context.operationCounter);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
         private final ICacheListenerOperationCounter operationCounter = new ICacheListenerOperationCounter();
-
-        public Worker() {
-            super(builder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            switch (operation) {
-                case REGISTER:
-                    try {
-                        cache.registerCacheEntryListener(listenerConfiguration);
-                        operationCounter.register++;
-                    } catch (IllegalArgumentException e) {
-                        operationCounter.registerIllegalArgException++;
-                    }
-                    break;
-                case DE_REGISTER:
-                    cache.deregisterCacheEntryListener(listenerConfiguration);
-                    operationCounter.deRegister++;
-                    break;
-                case PUT:
-                    cache.put(randomInt(keyCount), 1L);
-                    operationCounter.put++;
-                    break;
-                case GET:
-                    cache.get(randomInt(keyCount));
-                    operationCounter.put++;
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            logger.info(name + ": " + operationCounter);
-            results.add(operationCounter);
-        }
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         ICacheListenerOperationCounter total = new ICacheListenerOperationCounter();
         for (ICacheListenerOperationCounter i : results) {

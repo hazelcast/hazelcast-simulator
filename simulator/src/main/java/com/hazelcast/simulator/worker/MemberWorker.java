@@ -140,7 +140,7 @@ public final class MemberWorker implements Worker {
             return null;
         }
         WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
-        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), intervalSeconds, TimeUnit.SECONDS);
+        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), 1, TimeUnit.SECONDS);
     }
 
     private void signalStartToAgent() {

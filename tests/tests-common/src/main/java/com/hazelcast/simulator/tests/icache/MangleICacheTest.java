@@ -16,14 +16,14 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.CacheUtils;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheOperationCounter;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheException;
@@ -38,19 +38,6 @@ import javax.cache.spi.CachingProvider;
  */
 public class MangleICacheTest extends AbstractTest {
 
-    public enum Operation {
-        CLOSE_CACHING_PROVIDER,
-
-        CREATE_CACHE_MANAGER,
-        CLOSE_CACHE_MANAGER,
-
-        CREATE_CACHE,
-        CLOSE_CACHE,
-        DESTROY_CACHE,
-
-        PUT
-    }
-
     public int maxCaches = 100;
 
     public int keyCount = 100000;
@@ -62,156 +49,117 @@ public class MangleICacheTest extends AbstractTest {
     public double putCacheProb = 0.3;
     public double closeCacheProb = 0.1;
 
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-
     private IList<ICacheOperationCounter> results;
 
     @Setup
     public void setup() {
         results = targetInstance.getList(name);
-
-        operationSelectorBuilder.addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManagerProb)
-                .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerCloseProb)
-                .addOperation(Operation.CLOSE_CACHING_PROVIDER, cachingProviderCloseProb)
-                .addOperation(Operation.CREATE_CACHE, createCacheProb)
-                .addOperation(Operation.DESTROY_CACHE, destroyCacheProb)
-                .addOperation(Operation.PUT, putCacheProb)
-                .addOperation(Operation.CLOSE_CACHE, closeCacheProb);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void closeCachingProvider(ThreadContext context) {
+        try {
+            CachingProvider provider = context.cacheManager.getCachingProvider();
+            if (provider != null) {
+                provider.close();
+                context.counter.cachingProviderClose++;
+            }
+        } catch (CacheException e) {
+            context.counter.cachingProviderCloseException++;
+        }
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep
+    public void createCacheManager(ThreadContext context) {
+        try {
+            context.createNewCacheManager();
+            context.counter.createCacheManager++;
+        } catch (CacheException e) {
+            context.counter.createCacheManagerException++;
+        }
+    }
+
+    @TimeStep
+    public void closeCacheManager(ThreadContext context) {
+        try {
+            context.cacheManager.close();
+            context.counter.cacheManagerClose++;
+        } catch (CacheException e) {
+            context.counter.cacheManagerCloseException++;
+        }
+    }
+
+    @TimeStep
+    public void getCache(ThreadContext context) {
+        try {
+            int cacheNumber = context.randomInt(maxCaches);
+            context.cacheManager.getCache(name + cacheNumber);
+            context.counter.create++;
+        } catch (CacheException e) {
+            context.counter.createException++;
+        } catch (IllegalStateException e) {
+            context.counter.createException++;
+        }
+    }
+
+    @TimeStep
+    public void closeCache(ThreadContext context) {
+        int cacheNumber = context.randomInt(maxCaches);
+        Cache cache = context.getCacheIfExists(cacheNumber);
+        try {
+            if (cache != null) {
+                cache.close();
+                context.counter.cacheClose++;
+            }
+        } catch (CacheException e) {
+            context.counter.cacheCloseException++;
+        } catch (IllegalStateException e) {
+            context.counter.cacheCloseException++;
+        }
+    }
+
+    @TimeStep
+    public void destroyCache(ThreadContext context) {
+        try {
+            int cacheNumber = context.randomInt(maxCaches);
+            context.cacheManager.destroyCache(name + cacheNumber);
+            context.counter.destroy++;
+        } catch (CacheException e) {
+            context.counter.destroyException++;
+        } catch (IllegalStateException e) {
+            context.counter.destroyException++;
+        }
+    }
+
+    @TimeStep
+    public void put(ThreadContext context) {
+        int cacheNumber = context.randomInt(maxCaches);
+        Cache<Integer, Integer> cache = context.getCacheIfExists(cacheNumber);
+        try {
+            if (cache != null) {
+                cache.put(context.randomInt(keyCount), context.randomInt());
+                context.counter.put++;
+            }
+        } catch (CacheException e) {
+            context.counter.getPutException++;
+        } catch (IllegalStateException e) {
+            context.counter.getPutException++;
+        }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        results.add(context.counter);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
 
         private final ICacheOperationCounter counter = new ICacheOperationCounter();
 
         private CacheManager cacheManager;
 
-        public Worker() {
-            super(operationSelectorBuilder);
-
+        public ThreadContext() {
             createNewCacheManager();
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            switch (operation) {
-                case CLOSE_CACHING_PROVIDER:
-                    closeCachingProvider();
-                    break;
-                case CREATE_CACHE_MANAGER:
-                    createCacheManager();
-                    break;
-                case CLOSE_CACHE_MANAGER:
-                    closeCacheManager();
-                    break;
-                case CREATE_CACHE:
-                    getCache();
-                    break;
-                case CLOSE_CACHE:
-                    closeCache();
-                    break;
-                case DESTROY_CACHE:
-                    destroyCache();
-                    break;
-                case PUT:
-                    put();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        private void closeCachingProvider() {
-            try {
-                CachingProvider provider = cacheManager.getCachingProvider();
-                if (provider != null) {
-                    provider.close();
-                    counter.cachingProviderClose++;
-                }
-            } catch (CacheException e) {
-                counter.cachingProviderCloseException++;
-            }
-        }
-
-        private void createCacheManager() {
-            try {
-                createNewCacheManager();
-                counter.createCacheManager++;
-            } catch (CacheException e) {
-                counter.createCacheManagerException++;
-            }
-        }
-
-        private void closeCacheManager() {
-            try {
-                cacheManager.close();
-                counter.cacheManagerClose++;
-            } catch (CacheException e) {
-                counter.cacheManagerCloseException++;
-            }
-        }
-
-        private void getCache() {
-            try {
-                int cacheNumber = randomInt(maxCaches);
-                cacheManager.getCache(name + cacheNumber);
-                counter.create++;
-            } catch (CacheException e) {
-                counter.createException++;
-            } catch (IllegalStateException e) {
-                counter.createException++;
-            }
-        }
-
-        private void closeCache() {
-            int cacheNumber = randomInt(maxCaches);
-            Cache cache = getCacheIfExists(cacheNumber);
-            try {
-                if (cache != null) {
-                    cache.close();
-                    counter.cacheClose++;
-                }
-            } catch (CacheException e) {
-                counter.cacheCloseException++;
-            } catch (IllegalStateException e) {
-                counter.cacheCloseException++;
-            }
-        }
-
-        private void destroyCache() {
-            try {
-                int cacheNumber = randomInt(maxCaches);
-                cacheManager.destroyCache(name + cacheNumber);
-                counter.destroy++;
-            } catch (CacheException e) {
-                counter.destroyException++;
-            } catch (IllegalStateException e) {
-                counter.destroyException++;
-            }
-        }
-
-        private void put() {
-            int cacheNumber = randomInt(maxCaches);
-            Cache<Integer, Integer> cache = getCacheIfExists(cacheNumber);
-            try {
-                if (cache != null) {
-                    cache.put(randomInt(keyCount), randomInt());
-                    counter.put++;
-                }
-            } catch (CacheException e) {
-                counter.getPutException++;
-            } catch (IllegalStateException e) {
-                counter.getPutException++;
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            results.add(counter);
         }
 
         private void createNewCacheManager() {
@@ -247,6 +195,4 @@ public class MangleICacheTest extends AbstractTest {
         }
         logger.info(name + ": " + total + " from " + results.size() + " worker threads");
     }
-
-
 }

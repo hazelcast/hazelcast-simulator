@@ -97,6 +97,7 @@ public class ExtractorMapTest extends AbstractTest {
         streamer.await();
     }
 
+
     @RunWithWorker
     public Worker createWorker() {
         return new Worker(operationSelectorBuilder);

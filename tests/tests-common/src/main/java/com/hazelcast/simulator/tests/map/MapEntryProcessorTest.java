@@ -19,15 +19,16 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.KeyUtils;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorkerWithProbeControl;
 
 import java.util.Map;
 
@@ -66,35 +67,29 @@ public class MapEntryProcessorTest extends AbstractTest {
         }
     }
 
+    @TimeStep
+    public void timeStep(ThreadContext context, Probe probe) {
+        int key = keys[context.randomInt(keys.length)];
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+        long increment = context.randomInt(100);
+        int delayMs = context.calculateDelay();
+
+        long started = System.nanoTime();
+        map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
+        probe.recordValue(System.nanoTime() - started);
+
+        context.localIncrementsAtKey[key] += increment;
     }
 
-    private class Worker extends AbstractMonotonicWorkerWithProbeControl {
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        // sleep to give time for the last EntryProcessor tasks to complete
+        sleepMillis(maxProcessorDelayMs * 2);
+        resultsPerWorker.add(context.localIncrementsAtKey);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
         private final long[] localIncrementsAtKey = new long[keyCount];
-
-        @Override
-        public void timeStep(Probe probe) {
-            int key = keys[randomInt(keys.length)];
-
-            long increment = randomInt(100);
-            int delayMs = calculateDelay();
-
-            long started = System.nanoTime();
-            map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
-            probe.recordValue(System.nanoTime() - started);
-
-            localIncrementsAtKey[key] += increment;
-        }
-
-        @Override
-        public void afterRun() {
-            // sleep to give time for the last EntryProcessor tasks to complete
-            sleepMillis(maxProcessorDelayMs * 2);
-            resultsPerWorker.add(localIncrementsAtKey);
-        }
 
         private int calculateDelay() {
             int delayMs = 0;

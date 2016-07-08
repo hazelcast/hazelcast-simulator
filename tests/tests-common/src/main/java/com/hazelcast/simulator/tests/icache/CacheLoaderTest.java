@@ -16,13 +16,13 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -32,6 +32,7 @@ import javax.cache.integration.CompletionListenerFuture;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.assertTrue;
@@ -74,35 +75,27 @@ public class CacheLoaderTest extends AbstractTest {
         cache = cacheManager.getCache(name);
     }
 
-    @Warmup(global = false)
+    @Warmup
     public void warmup() {
         for (int i = 0; i < keyCount; i++) {
             keySet.add(i);
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void timeStep() throws ExecutionException, InterruptedException {
+        CompletionListenerFuture loaded = new CompletionListenerFuture();
+        cache.loadAll(keySet, true, loaded);
+
+        if (waitForLoadAllFutureCompletion) {
+            loaded.get();
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        public void timeStep() throws Exception {
-            CompletionListenerFuture loaded = new CompletionListenerFuture();
-            cache.loadAll(keySet, true, loaded);
-
-            if (waitForLoadAllFutureCompletion) {
-                loaded.get();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
-            loaderList.add(loader);
-        }
+    @AfterRun
+    public void afterRun() {
+        RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
+        loaderList.add(loader);
     }
 
     @Verify(global = false)
@@ -111,7 +104,7 @@ public class CacheLoaderTest extends AbstractTest {
         logger.info(name + ": " + loader);
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         for (int i = 0; i < keyCount; i++) {
             assertTrue(name + ": cache should contain key " + i, cache.containsKey(i));

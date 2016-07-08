@@ -58,7 +58,6 @@ public class WorkerOperationProcessor extends OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
-
     private final ExceptionLogger exceptionLogger;
     private final WorkerType type;
     private final HazelcastInstance hazelcastInstance;

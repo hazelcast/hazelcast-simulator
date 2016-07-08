@@ -119,8 +119,10 @@ public class BatchingICacheTest extends AbstractTest {
         }
     }
 
+
     @Teardown
     public void teardown() {
         cache.close();
     }
+
 }

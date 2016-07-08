@@ -16,14 +16,16 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,50 +62,40 @@ public class MapCasTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun(ThreadContext context) {
+        int size = map.size();
+        if (size != keyCount) {
+            throw new TestException("Warmup has not run since the map is not filled correctly, "
+                    + "found size: %s, expected size: %s", size, keyCount);
+        }
+        for (int i = 0; i < keyCount; i++) {
+            context.result.put(i, 0L);
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
-        private final Map<Integer, Long> result = new HashMap<Integer, Long>();
+    @TimeStep
+    public void timeStep(ThreadContext context) {
+        Integer key = context.randomInt(keyCount);
+        long incrementValue = context.randomInt(100);
 
-        @Override
-        public void beforeRun() {
-            int size = map.size();
-            if (size != keyCount) {
-                throw new TestException(
-                        "Warmup has not run since the map is not filled correctly, found size: %s, expected size: %s",
-                        size, keyCount);
-            }
-            for (int i = 0; i < keyCount; i++) {
-                result.put(i, 0L);
+        for (; ; ) {
+            Long current = map.get(key);
+            Long update = current + incrementValue;
+            if (map.replace(key, current, update)) {
+                context.result.put(key, context.result.get(key) + incrementValue);
+                break;
             }
         }
+    }
 
-        @Override
-        protected void timeStep() throws Exception {
-            Integer key = randomInt(keyCount);
-            long incrementValue = randomInt(100);
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        resultsPerWorker.put(newSecureUuidString(), context.result);
+    }
 
-            for (; ; ) {
-                Long current = map.get(key);
-                Long update = current + incrementValue;
-                if (map.replace(key, current, update)) {
-                    increment(key, incrementValue);
-                    break;
-                }
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            resultsPerWorker.put(newSecureUuidString(), result);
-        }
-
-        private void increment(int key, long increment) {
-            result.put(key, result.get(key) + increment);
-        }
+    public class ThreadContext extends BaseThreadContext {
+        Map<Integer, Long> result = new HashMap<Integer, Long>();
     }
 
     @Verify
@@ -133,4 +125,6 @@ public class MapCasTest extends AbstractTest {
         map.destroy();
         resultsPerWorker.destroy();
     }
+
+
 }

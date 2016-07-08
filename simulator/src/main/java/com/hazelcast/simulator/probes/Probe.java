@@ -39,9 +39,9 @@ public interface Probe {
     void recordValue(long latencyNanos);
 
     /**
-     * Get the number of iterations.
+     * Get the number of iteration.
      *
-     * @return the number of iterations.
+     * @return the number of iteration.
      * @throws UnsupportedOperationException on non-lightweight implementations
      */
     long get();

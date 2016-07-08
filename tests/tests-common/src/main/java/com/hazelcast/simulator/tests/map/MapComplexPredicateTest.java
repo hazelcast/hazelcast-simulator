@@ -18,15 +18,16 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.ComplexDomainObject;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.Map;
 import java.util.Random;
@@ -311,11 +312,6 @@ public class MapComplexPredicateTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
     private int randomUpTo14() {
         return random.nextInt(14);
     }
@@ -420,24 +416,24 @@ public class MapComplexPredicateTest extends AbstractTest {
                 randomUpTo14() * 3);
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @BeforeRun
+    public void beforeRun(ThreadContext context) {
+        context.predicate = new SqlPredicate(query.getSql());
+    }
+
+    @TimeStep
+    public void timeStep(ThreadContext context) {
+        long startTime = System.nanoTime();
+        Set<Map.Entry<String, ComplexDomainObject>> entries = map.entrySet(context.predicate);
+        long durationNanos = System.nanoTime() - startTime;
+        long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
+
+        throttlingLogger.log(INFO, "Query Evaluation Took " + durationMillis + "ms. Size of the result size: " + entries.size());
+
+    }
+
+    public class ThreadContext extends BaseThreadContext {
 
         private Predicate<String, ComplexDomainObject> predicate;
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public void beforeRun() {
-            predicate = new SqlPredicate(query.getSql());
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            long startTime = System.nanoTime();
-            Set<Map.Entry<String, ComplexDomainObject>> entries = map.entrySet(predicate);
-            long durationNanos = System.nanoTime() - startTime;
-            long durationMillis = TimeUnit.NANOSECONDS.toMillis(durationNanos);
-
-            throttlingLogger.log(INFO, "Query Evaluation Took " + durationMillis + "ms. Size of the result size: " + entries.size());
-        }
     }
 }

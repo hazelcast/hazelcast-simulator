@@ -17,18 +17,16 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.TruePredicate;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.Collection;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 import static org.junit.Assert.assertEquals;
 
@@ -44,8 +42,6 @@ public class AllValuesTest extends AbstractTest {
     public int keyLength = 10;
     // the size of the value (in chars, since value is a string)
     public int valueLength = 1000;
-    // a switch between using IMap.keySet() or IMap.keySet(true-predicate)
-    public boolean usePredicate = false;
 
     private IMap<String, String> map;
 
@@ -65,29 +61,20 @@ public class AllValuesTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0)
+    public void withPredicate() {
+        Collection<String> result = map.values(TruePredicate.INSTANCE);
+        assertEquals(entryCount, result.size());
     }
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        protected void timeStep() throws Exception {
-            Collection<String> result;
-            if (usePredicate) {
-                result = map.values(TruePredicate.INSTANCE);
-            } else {
-                result = map.values();
-            }
-
-            assertEquals(entryCount, result.size());
-        }
+    @TimeStep(prob = 1)
+    public void withoutPredicate() {
+        Collection<String> result = map.values();
+        assertEquals(entryCount, result.size());
     }
 
     @Teardown
     public void teardown() {
         map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
     }
 }

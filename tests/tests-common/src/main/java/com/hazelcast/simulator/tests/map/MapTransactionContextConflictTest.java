@@ -18,19 +18,19 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyIncrementPair;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static org.junit.Assert.assertEquals;
@@ -46,6 +46,7 @@ public class MapTransactionContextConflictTest extends AbstractTest {
 
     private static final int MAX_INCREMENT = 999;
 
+    //todo: this property is not used anymore in this test.
     public int threadCount = 3;
     public int keyCount = 50;
     public int maxKeysPerTxn = 5;
@@ -60,74 +61,63 @@ public class MapTransactionContextConflictTest extends AbstractTest {
         }
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
+    @TimeStep
+    public void timeStep(ThreadContext threadCtx) {
+        List<KeyIncrementPair> potentialIncrements = new ArrayList<KeyIncrementPair>();
+        for (int i = 0; i < maxKeysPerTxn; i++) {
+            KeyIncrementPair p = new KeyIncrementPair(threadCtx.random, keyCount, MAX_INCREMENT);
+            potentialIncrements.add(p);
         }
-        spawner.awaitCompletion();
-    }
 
-    private class Worker implements Runnable {
+        List<KeyIncrementPair> putIncrements = new ArrayList<KeyIncrementPair>();
 
-        private final Random random = new Random();
-        private final long[] localIncrements = new long[keyCount];
-        private final TxnCounter count = new TxnCounter();
+        TransactionContext transactionContext = targetInstance.newTransactionContext();
+        try {
+            transactionContext.beginTransaction();
+            TransactionalMap<Integer, Long> map = transactionContext.getMap(name);
 
-        @Override
-        @SuppressWarnings("PMD.PreserveStackTrace")
-        public void run() {
-            while (!testContext.isStopped()) {
+            for (KeyIncrementPair p : potentialIncrements) {
+                long current = map.getForUpdate(p.key);
+                map.put(p.key, current + p.increment);
 
-                List<KeyIncrementPair> potentialIncrements = new ArrayList<KeyIncrementPair>();
-                for (int i = 0; i < maxKeysPerTxn; i++) {
-                    KeyIncrementPair p = new KeyIncrementPair(random, keyCount, MAX_INCREMENT);
-                    potentialIncrements.add(p);
-                }
+                putIncrements.add(p);
+            }
+            transactionContext.commitTransaction();
 
-                List<KeyIncrementPair> putIncrements = new ArrayList<KeyIncrementPair>();
+            // Do local key increments if commit is successful
+            threadCtx.count.committed++;
+            for (KeyIncrementPair p : putIncrements) {
+                threadCtx.localIncrements[p.key] += p.increment;
+            }
+        } catch (TransactionException commitException) {
+            logger.warning(name + ": commit failed. tried key increments=" + putIncrements, commitException);
+            if (throwCommitException) {
+                throw rethrow(commitException);
+            }
 
-                TransactionContext context = targetInstance.newTransactionContext();
-                try {
-                    context.beginTransaction();
-                    TransactionalMap<Integer, Long> map = context.getMap(name);
+            try {
+                transactionContext.rollbackTransaction();
+                threadCtx.count.rolled++;
+            } catch (TransactionException rollBackException) {
+                logger.warning(name + ": rollback failed " + rollBackException.getMessage(), rollBackException);
+                threadCtx.count.failedRollbacks++;
 
-                    for (KeyIncrementPair p : potentialIncrements) {
-                        long current = map.getForUpdate(p.key);
-                        map.put(p.key, current + p.increment);
-
-                        putIncrements.add(p);
-                    }
-                    context.commitTransaction();
-
-                    // Do local key increments if commit is successful
-                    count.committed++;
-                    for (KeyIncrementPair p : putIncrements) {
-                        localIncrements[p.key] += p.increment;
-                    }
-                } catch (TransactionException commitException) {
-                    logger.warning(name + ": commit failed. tried key increments=" + putIncrements, commitException);
-                    if (throwCommitException) {
-                        throw rethrow(commitException);
-                    }
-
-                    try {
-                        context.rollbackTransaction();
-                        count.rolled++;
-                    } catch (TransactionException rollBackException) {
-                        logger.warning(name + ": rollback failed " + rollBackException.getMessage(), rollBackException);
-                        count.failedRollbacks++;
-
-                        if (throwRollBackException) {
-                            throw rethrow(rollBackException);
-                        }
-                    }
+                if (throwRollBackException) {
+                    throw rethrow(rollBackException);
                 }
             }
-            targetInstance.getList(name + "inc").add(localIncrements);
-            targetInstance.getList(name + "count").add(count);
         }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        targetInstance.getList(name + "inc").add(context.localIncrements);
+        targetInstance.getList(name + "count").add(context.count);
+    }
+
+    private class ThreadContext extends BaseThreadContext {
+        private final long[] localIncrements = new long[keyCount];
+        private final TxnCounter count = new TxnCounter();
     }
 
     @Verify(global = false)
@@ -157,5 +147,4 @@ public class MapTransactionContextConflictTest extends AbstractTest {
         }
         assertEquals(name + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
-
 }
