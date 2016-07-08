@@ -37,7 +37,7 @@ public class TxnQueueWithLockTest extends AbstractTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
@@ -51,17 +51,17 @@ public class TxnQueueWithLockTest extends AbstractTest {
         public void run() {
             while (!testContext.isStopped()) {
                 try {
-                    ILock firstLock = targetInstance.getLock(basename + "l1");
+                    ILock firstLock = targetInstance.getLock(name + "l1");
                     firstLock.lock();
 
                     TransactionContext ctx = targetInstance.newTransactionContext();
                     try {
                         ctx.beginTransaction();
 
-                        TransactionalQueue<Integer> queue = ctx.getQueue(basename + 'q');
+                        TransactionalQueue<Integer> queue = ctx.getQueue(name + 'q');
                         queue.offer(1);
 
-                        ILock secondLock = targetInstance.getLock(basename + "l2");
+                        ILock secondLock = targetInstance.getLock(name + "l2");
                         secondLock.lock();
                         secondLock.unlock();
 
@@ -75,39 +75,39 @@ public class TxnQueueWithLockTest extends AbstractTest {
                             ctx.rollbackTransaction();
                             counter.rolled++;
 
-                            logger.severe(basename + ": Exception in txn " + counter, txnException);
+                            logger.severe(name + ": Exception in txn " + counter, txnException);
                         } catch (Exception rollException) {
                             counter.failedRollbacks++;
-                            logger.severe(basename + ": Exception in roll " + counter, rollException);
+                            logger.severe(name + ": Exception in roll " + counter, rollException);
                         }
                     } finally {
                         firstLock.unlock();
                     }
                 } catch (Exception e) {
-                    logger.severe(basename + ": outer Exception" + counter, e);
+                    logger.severe(name + ": outer Exception" + counter, e);
                 }
             }
-            IList<TxnCounter> results = targetInstance.getList(basename + "results");
+            IList<TxnCounter> results = targetInstance.getList(name + "results");
             results.add(counter);
         }
     }
 
     @Verify
     public void globalVerify() {
-        IQueue queue = targetInstance.getQueue(basename + 'q');
-        ILock firstLock = targetInstance.getLock(basename + "l1");
-        ILock secondLock = targetInstance.getLock(basename + "l2");
+        IQueue queue = targetInstance.getQueue(name + 'q');
+        ILock firstLock = targetInstance.getLock(name + "l1");
+        ILock secondLock = targetInstance.getLock(name + "l2");
 
-        IList<TxnCounter> results = targetInstance.getList(basename + "results");
+        IList<TxnCounter> results = targetInstance.getList(name + "results");
 
         TxnCounter total = new TxnCounter();
         for (TxnCounter counter : results) {
             total.add(counter);
         }
 
-        logger.info(basename + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
-        assertFalse(basename + ": firstLock.isLocked()", firstLock.isLocked());
-        assertFalse(basename + ": secondLock.isLocked()", secondLock.isLocked());
+        logger.info(name + ": " + total + " from " + results.size() + " worker Threads  Queue size=" + queue.size());
+        assertFalse(name + ": firstLock.isLocked()", firstLock.isLocked());
+        assertFalse(name + ": secondLock.isLocked()", secondLock.isLocked());
         // TODO: check if this assert can be re-enabled: assertEquals(total.committed - total.rolled, queue.size())
     }
 }

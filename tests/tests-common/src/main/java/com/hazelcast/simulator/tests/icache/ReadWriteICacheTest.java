@@ -65,7 +65,7 @@ public class ReadWriteICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        counters = targetInstance.getList(basename + "counters");
+        counters = targetInstance.getList(name + "counters");
 
         RecordingCacheLoader<Integer> loader = new RecordingCacheLoader<Integer>();
         loader.loadDelayMs = getDelayMs;
@@ -81,8 +81,8 @@ public class ReadWriteICacheTest extends AbstractTest {
         config.setCacheWriterFactory(FactoryBuilder.factoryOf(writer));
 
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename);
+        cacheManager.createCache(name, config);
+        cache = cacheManager.getCache(name);
 
         builder.addOperation(Operation.PUT, putProb)
                 .addOperation(Operation.GET, getProb)
@@ -139,8 +139,8 @@ public class ReadWriteICacheTest extends AbstractTest {
         RecordingCacheLoader loader = (RecordingCacheLoader) config.getCacheLoaderFactory().create();
         RecordingCacheWriter writer = (RecordingCacheWriter) config.getCacheWriterFactory().create();
 
-        logger.info(basename + ": " + loader);
-        logger.info(basename + ": " + writer);
+        logger.info(name + ": " + loader);
+        logger.info(name + ": " + writer);
     }
 
     @Verify(global = true)
@@ -149,6 +149,6 @@ public class ReadWriteICacheTest extends AbstractTest {
         for (ICacheReadWriteCounter counter : counters) {
             total.add(counter);
         }
-        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + counters.size() + " worker threads");
     }
 }

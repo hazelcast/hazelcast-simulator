@@ -15,6 +15,9 @@
  */
 package com.hazelcast.simulator.test;
 
+import com.hazelcast.simulator.utils.PropertyBindingSupport;
+import org.apache.log4j.Logger;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,6 +27,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 
 public class TestCase {
+    private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
     private final String id;
     private final Map<String, String> properties = new HashMap<String, String>();
@@ -52,6 +56,10 @@ public class TestCase {
     }
 
     public void setProperty(String name, String value) {
+        if ("basename".equals(name)) {
+            LOGGER.warn("Property 'basename' is deprecated, use 'name' instead. Property has been automatically upgraded.");
+            name = "name";
+        }
         properties.put(name, value.trim());
     }
 

@@ -56,10 +56,10 @@ public class AtomicLongTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(name + ":TotalCounter");
         counters = new IAtomicLong[countersLength];
 
-        String[] names = generateStringKeys(basename, countersLength, keyLocality, targetInstance);
+        String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < countersLength; i++) {
             counters[i] = targetInstance.getAtomicLong(names[i]);
         }
@@ -127,7 +127,7 @@ public class AtomicLongTest extends AbstractTest {
         long actual = 0;
         for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
             String key = distributedObject.getName();
-            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename) && !key.equals(totalName)) {
+            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(name) && !key.equals(totalName)) {
                 actual += targetInstance.getAtomicLong(key).get();
             }
         }

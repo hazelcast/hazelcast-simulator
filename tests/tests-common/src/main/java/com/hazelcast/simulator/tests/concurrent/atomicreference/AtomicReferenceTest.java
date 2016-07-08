@@ -64,7 +64,7 @@ public class AtomicReferenceTest extends AbstractTest {
         }
 
         counters = getCounters();
-        String[] names = generateStringKeys(basename, countersLength, keyLocality, targetInstance);
+        String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < counters.length; i++) {
             IAtomicReference<Object> atomicReference = targetInstance.getAtomicReference(names[i]);
             atomicReference.set(values[random.nextInt(values.length)]);

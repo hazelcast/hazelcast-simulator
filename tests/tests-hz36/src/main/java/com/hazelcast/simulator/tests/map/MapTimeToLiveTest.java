@@ -68,8 +68,8 @@ public class MapTimeToLiveTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(basename);
-        results = targetInstance.getList(basename + "report");
+        map = targetInstance.getMap(name);
+        results = targetInstance.getList(name + "report");
 
         builder.addOperation(Operation.PUT_TTL, putTTLProb)
                 .addOperation(Operation.ASYNC_PUT_TTL, putAsyncTTLProb)
@@ -143,12 +143,12 @@ public class MapTimeToLiveTest extends AbstractTest {
         for (MapOperationCounter counter : results) {
             total.add(counter);
         }
-        logger.info(basename + ": " + total + " total of " + results.size());
+        logger.info(name + ": " + total + " total of " + results.size());
 
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                assertEquals(basename + ": Map should be empty, some TTL events are not processed", 0, map.size());
+                assertEquals(name + ": Map should be empty, some TTL events are not processed", 0, map.size());
             }
         });
     }

@@ -44,12 +44,12 @@ public class PartitionServiceMBeanTest extends AbstractTest {
 
     private MBeanServer mBeanServer;
     private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-    private ObjectName name;
+    private ObjectName objectName;
 
     @Setup
     public void setUp() throws Exception {
         this.mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        this.name = new ObjectName("com.hazelcast:instance=" + targetInstance.getName()
+        this.objectName = new ObjectName("com.hazelcast:instance=" + targetInstance.getName()
                 + ",name=" + targetInstance.getName() + ",type=HazelcastInstance.PartitionServiceMBean");
 
         operationSelectorBuilder.addOperation(Operation.IS_LOCAL_MEMBER_SAFE, isLocalMemberSafeProb)
@@ -78,12 +78,12 @@ public class PartitionServiceMBeanTest extends AbstractTest {
             switch (operation) {
                 case IS_CLUSTER_SAFE:
                     started = System.nanoTime();
-                    mBeanServer.getAttribute(name, "isClusterSafe");
+                    mBeanServer.getAttribute(objectName, "isClusterSafe");
                     probe.done(started);
                     break;
                 case IS_LOCAL_MEMBER_SAFE:
                     started = System.nanoTime();
-                    mBeanServer.getAttribute(name, "isLocalMemberSafe");
+                    mBeanServer.getAttribute(objectName, "isLocalMemberSafe");
                     probe.done(started);
                     break;
                 default:

@@ -74,8 +74,8 @@ public class SerializationStrategyTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        uniqueStrings = targetInstance.getSet(basename);
+        map = targetInstance.getMap(name);
+        uniqueStrings = targetInstance.getSet(name);
 
         operationSelectorBuilder.addOperation(Operation.GET_BY_STRING_INDEX, getByStringIndexProb)
                 .addOperation(Operation.GET_BY_INT_INDEX, getByIntIndexProb)

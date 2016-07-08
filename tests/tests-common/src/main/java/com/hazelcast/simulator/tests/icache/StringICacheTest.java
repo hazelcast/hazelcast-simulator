@@ -63,7 +63,7 @@ public class StringICacheTest extends AbstractTest {
     @Setup
     public void setup() {
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cache = cacheManager.getCache(basename);
+        cache = cacheManager.getCache(name);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
                 .addDefaultOperation(Operation.GET);

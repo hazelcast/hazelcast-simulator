@@ -54,7 +54,6 @@ public class MapReduceTest extends AbstractTest {
     }
 
     // properties
-    public String baseName = MapReduceTest.class.getSimpleName();
     public int keyCount = 1000;
 
     public double mapReduceProb = 0.5;
@@ -68,8 +67,8 @@ public class MapReduceTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(baseName);
-        operationCounterList = targetInstance.getList(baseName + "OperationCounter");
+        map = targetInstance.getMap(name);
+        operationCounterList = targetInstance.getList(name + "OperationCounter");
 
         operationSelectorBuilder.addOperation(Operation.MAP_REDUCE, mapReduceProb)
                 .addOperation(Operation.GET_MAP_ENTRY, getMapEntryProb)
@@ -113,7 +112,7 @@ public class MapReduceTest extends AbstractTest {
         }
 
         private void mapReduce() throws Exception {
-            JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + baseName);
+            JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + name);
             KeyValueSource<Integer, Employee> source = KeyValueSource.fromMap(map);
             Job<Integer, Employee> job = tracker.newJob(source);
 
@@ -276,6 +275,6 @@ public class MapReduceTest extends AbstractTest {
         for (MapReduceOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        logger.info(baseName + ": " + total + " from " + operationCounterList.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 }

@@ -50,10 +50,10 @@ public class EntryProcessorICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        resultsPerWorker = targetInstance.getList(basename + ":ResultMap");
+        resultsPerWorker = targetInstance.getList(name + ":ResultMap");
 
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cache = cacheManager.getCache(basename);
+        cache = cacheManager.getCache(name);
     }
 
     @Warmup(global = true)

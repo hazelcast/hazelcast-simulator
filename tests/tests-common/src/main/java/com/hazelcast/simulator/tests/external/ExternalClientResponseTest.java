@@ -26,14 +26,14 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 public class ExternalClientResponseTest extends AbstractTest {
 
     // properties
-    public String basename = "externalClientsFinished";
+    public String name = "externalClientsFinished";
     public int delaySeconds = 60;
 
     private ICountDownLatch clientsFinished;
 
     @Setup
     public void setUp() {
-        clientsFinished = targetInstance.getCountDownLatch(basename);
+        clientsFinished = targetInstance.getCountDownLatch(name);
     }
 
     @Run

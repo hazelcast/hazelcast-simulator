@@ -54,16 +54,16 @@ public class ExecutorTest extends AbstractTest {
     public void setup() {
         executors = new IExecutorService[executorCount];
         for (int i = 0; i < executors.length; i++) {
-            executors[i] = targetInstance.getExecutorService(basename + '-' + i);
+            executors[i] = targetInstance.getExecutorService(name + '-' + i);
         }
 
-        executedCounter = targetInstance.getAtomicLong(basename + ":ExecutedCounter");
-        expectedExecutedCounter = targetInstance.getAtomicLong(basename + ":ExpectedExecutedCounter");
+        executedCounter = targetInstance.getAtomicLong(name + ":ExecutedCounter");
+        expectedExecutedCounter = targetInstance.getAtomicLong(name + ":ExpectedExecutedCounter");
     }
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }

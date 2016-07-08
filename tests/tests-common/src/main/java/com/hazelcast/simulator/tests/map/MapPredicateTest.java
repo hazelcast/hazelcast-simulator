@@ -81,10 +81,10 @@ public class MapPredicateTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        operationCounterList = targetInstance.getList(basename + "OperationCounter");
+        map = targetInstance.getMap(name);
+        operationCounterList = targetInstance.getList(name + "OperationCounter");
 
-        baseAssertMessage = format("%s: %%s not matching %%s", basename);
+        baseAssertMessage = format("%s: %%s not matching %%s", name);
 
         operationSelectorBuilder.addOperation(Operation.PREDICATE_BUILDER, predicateBuilderProb)
                 .addOperation(Operation.SQL_STRING, sqlStringProb)
@@ -277,6 +277,6 @@ public class MapPredicateTest extends AbstractTest {
         for (PredicateOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        logger.info(format("Operation counters from %s: %s", basename, total));
+        logger.info(format("Operation counters from %s: %s", name, total));
     }
 }

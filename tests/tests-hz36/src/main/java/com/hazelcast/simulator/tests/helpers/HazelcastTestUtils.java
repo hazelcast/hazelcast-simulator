@@ -142,7 +142,7 @@ public final class HazelcastTestUtils {
         return result;
     }
 
-    public static void logPartitionStatistics(ILogger log, String basename, IMap<Object, Integer> map, boolean printSizes) {
+    public static void logPartitionStatistics(ILogger log, String name, IMap<Object, Integer> map, boolean printSizes) {
         MapProxyImpl mapProxy = (MapProxyImpl) map;
         MapService mapService = (MapService) mapProxy.getService();
         MapServiceContext mapServiceContext = mapService.getMapServiceContext();
@@ -159,7 +159,7 @@ public final class HazelcastTestUtils {
             separator = ", ";
         }
         log.info(format("%s: Local partitions (count %d) (size %d) (avg %.2f) (IDs %s)%s",
-                basename, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
+                name, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
                 printSizes ? format(" (sizes %s)", partitionSizes.toString()) : ""));
     }
 

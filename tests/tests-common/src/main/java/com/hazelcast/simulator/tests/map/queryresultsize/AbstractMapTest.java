@@ -45,13 +45,13 @@ abstract class AbstractMapTest extends AbstractTest {
     int localKeyCount;
 
     void failOnVersionMismatch() {
-        HazelcastTestUtils.failOnVersionMismatch("3.5", basename + ": This tests needs Hazelcast %s or newer");
+        HazelcastTestUtils.failOnVersionMismatch("3.5", name + ": This tests needs Hazelcast %s or newer");
     }
 
     void baseSetup() {
-        this.map = targetInstance.getMap(basename);
-        this.operationCounter = targetInstance.getAtomicLong(basename + "Ops");
-        this.exceptionCounter = targetInstance.getAtomicLong(basename + "Exceptions");
+        this.map = targetInstance.getMap(name);
+        this.operationCounter = targetInstance.getAtomicLong(name + "Ops");
+        this.exceptionCounter = targetInstance.getAtomicLong(name + "Exceptions");
 
         Integer minResultSizeLimit = 100000;
         Float resultLimitFactor = 1.15f;
@@ -60,7 +60,7 @@ abstract class AbstractMapTest extends AbstractTest {
             minResultSizeLimit = getStaticFieldValue(queryResultSizeLimiterClazz, "MINIMUM_MAX_RESULT_LIMIT", int.class);
             resultLimitFactor = getStaticFieldValue(queryResultSizeLimiterClazz, "MAX_RESULT_LIMIT_FACTOR", float.class);
         } catch (Exception e) {
-            logger.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", basename));
+            logger.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", name));
         }
 
         int clusterSize = targetInstance.getCluster().getMembers().size();
@@ -68,7 +68,7 @@ abstract class AbstractMapTest extends AbstractTest {
         this.localKeyCount = (int) Math.ceil(globalKeyCount / (double) clusterSize);
 
         logger.info(format("%s: Filling map with %d items (%d items per member, %d members in cluster)",
-                basename, globalKeyCount, localKeyCount, clusterSize));
+                name, globalKeyCount, localKeyCount, clusterSize));
     }
 
     // due to class movement, the class can be at different locations depending on the hz version.
@@ -102,7 +102,7 @@ abstract class AbstractMapTest extends AbstractTest {
         }
         streamer.await();
 
-        logPartitionStatistics(logger, basename, map, true);
+        logPartitionStatistics(logger, name, map, true);
     }
 
     protected void baseVerify(boolean expectedExceptions) {
@@ -110,7 +110,7 @@ abstract class AbstractMapTest extends AbstractTest {
         long ops = operationCounter.get();
         long exceptions = exceptionCounter.get();
 
-        logger.info(basename + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
+        logger.info(name + ": Map size: " + mapSize + ", Ops: " + ops + ", Exceptions: " + exceptions);
 
         assertTrue(format("Expected mapSize >= globalKeyCount (%d >= %d)", mapSize, globalKeyCount), mapSize >= globalKeyCount);
         assertTrue(format("Expected ops > 0 (%d > 0)", ops), ops > 0);

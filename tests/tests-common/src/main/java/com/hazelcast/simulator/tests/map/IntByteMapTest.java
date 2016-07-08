@@ -58,7 +58,7 @@ public class IntByteMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
 
         if (minSize > maxSize) {

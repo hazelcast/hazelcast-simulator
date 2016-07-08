@@ -42,7 +42,7 @@ public class SimpleLockTest extends AbstractTest {
     @Warmup(global = true)
     public void warmup() {
         for (int i = 0; i < maxAccounts; i++) {
-            IAtomicLong account = targetInstance.getAtomicLong(basename + i);
+            IAtomicLong account = targetInstance.getAtomicLong(name + i);
             account.set(INITIAL_VALUE);
         }
         totalValue = INITIAL_VALUE * maxAccounts;
@@ -50,7 +50,7 @@ public class SimpleLockTest extends AbstractTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
@@ -71,14 +71,14 @@ public class SimpleLockTest extends AbstractTest {
                     key2 = random.nextInt(maxAccounts);
                 } while (key1 == key2);
 
-                ILock lock1 = targetInstance.getLock(basename + key1);
+                ILock lock1 = targetInstance.getLock(name + key1);
                 if (lock1.tryLock()) {
                     try {
-                        ILock lock2 = targetInstance.getLock(basename + key2);
+                        ILock lock2 = targetInstance.getLock(name + key2);
                         if (lock2.tryLock()) {
                             try {
-                                IAtomicLong account1 = targetInstance.getAtomicLong(basename + key1);
-                                IAtomicLong account2 = targetInstance.getAtomicLong(basename + key2);
+                                IAtomicLong account1 = targetInstance.getAtomicLong(name + key1);
+                                IAtomicLong account2 = targetInstance.getAtomicLong(name + key2);
 
                                 int delta = random.nextInt(100);
                                 if (account1.get() >= delta) {
@@ -101,16 +101,16 @@ public class SimpleLockTest extends AbstractTest {
     public void verify() {
         int value = 0;
         for (int i = 0; i < maxAccounts; i++) {
-            ILock lock = targetInstance.getLock(basename + i);
-            IAtomicLong account = targetInstance.getAtomicLong(basename + i);
+            ILock lock = targetInstance.getLock(name + i);
+            IAtomicLong account = targetInstance.getAtomicLong(name + i);
 
             logger.info(format("%s %d", account, account.get()));
 
-            assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
-            assertTrue(basename + ": Amount is < 0 ", account.get() >= 0);
+            assertFalse(name + ": Lock should be unlocked", lock.isLocked());
+            assertTrue(name + ": Amount is < 0 ", account.get() >= 0);
             value += account.get();
         }
-        assertEquals(basename + " totals not adding up ", totalValue, value);
+        assertEquals(name + " totals not adding up ", totalValue, value);
     }
 
 }

@@ -69,7 +69,7 @@ public class ExtractorMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        String mapName = usePortable ? "Portable " + basename : basename;
+        String mapName = usePortable ? "Portable " + name : name;
         map = targetInstance.getMap(mapName);
 
         operationSelectorBuilder

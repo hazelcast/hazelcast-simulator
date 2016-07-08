@@ -45,8 +45,8 @@ public class PutAsyncAndThenTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        keys = generateStringKeys(basename, keyCount, keyLocality, targetInstance);
+        map = targetInstance.getMap(name);
+        keys = generateStringKeys(name, keyCount, keyLocality, targetInstance);
     }
 
     @RunWithWorker
@@ -76,7 +76,7 @@ public class PutAsyncAndThenTest extends AbstractTest {
 
         @Override
         public void onFailure(Throwable throwable) {
-            ExceptionReporter.report(basename, throwable);
+            ExceptionReporter.report(name, throwable);
         }
     }
 

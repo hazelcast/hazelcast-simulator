@@ -51,7 +51,7 @@ public class AllKeySetTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        this.map = targetInstance.getMap(basename);
+        this.map = targetInstance.getMap(name);
     }
 
     @Warmup(global = true)

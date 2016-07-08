@@ -46,7 +46,7 @@ public class TryLockTimeOutTest extends AbstractTest {
 
     @Warmup(global = true)
     public void warmup() {
-        IList<Long> accounts = targetInstance.getList(basename);
+        IList<Long> accounts = targetInstance.getList(name);
         for (int i = 0; i < maxAccounts; i++) {
             accounts.add(initialAccountValue);
         }
@@ -56,7 +56,7 @@ public class TryLockTimeOutTest extends AbstractTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
@@ -74,7 +74,7 @@ public class TryLockTimeOutTest extends AbstractTest {
                 int key1 = random.nextInt(maxAccounts);
                 int key2 = random.nextInt(maxAccounts);
 
-                ILock outerLock = targetInstance.getLock(basename + key1);
+                ILock outerLock = targetInstance.getLock(name + key1);
                 try {
                     if (outerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                         try {
@@ -88,15 +88,15 @@ public class TryLockTimeOutTest extends AbstractTest {
                     counter.interruptedException++;
                 }
             }
-            targetInstance.getList(basename + "count").add(counter);
+            targetInstance.getList(name + "count").add(counter);
         }
 
         private void innerLockOperation(int key1, int key2) {
-            ILock innerLock = targetInstance.getLock(basename + key2);
+            ILock innerLock = targetInstance.getLock(name + key2);
             try {
                 if (innerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
                     try {
-                        IList<Long> accounts = targetInstance.getList(basename);
+                        IList<Long> accounts = targetInstance.getList(name);
                         int delta = random.nextInt(100);
 
                         if (accounts.get(key1) >= delta) {
@@ -138,20 +138,20 @@ public class TryLockTimeOutTest extends AbstractTest {
     public void verify() {
 
         for (int i = 0; i < maxAccounts; i++) {
-            ILock lock = targetInstance.getLock(basename + i);
-            assertFalse(basename + ": Lock should be unlocked", lock.isLocked());
+            ILock lock = targetInstance.getLock(name + i);
+            assertFalse(name + ": Lock should be unlocked", lock.isLocked());
         }
 
         long totalValue = 0;
-        IList<Long> accounts = targetInstance.getList(basename);
+        IList<Long> accounts = targetInstance.getList(name);
         for (long value : accounts) {
             totalValue += value;
         }
         logger.info(": totalValue=" + totalValue);
-        assertEquals(basename + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
+        assertEquals(name + ": totalInitialValue != totalValue ", totalInitialValue, totalValue);
 
         Counter total = new Counter();
-        IList<Counter> totals = targetInstance.getList(basename + "count");
+        IList<Counter> totals = targetInstance.getList(name + "count");
         for (Counter count : totals) {
             total.add(count);
         }

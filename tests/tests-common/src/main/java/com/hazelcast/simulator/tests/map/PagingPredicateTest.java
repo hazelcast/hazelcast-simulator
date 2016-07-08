@@ -57,7 +57,7 @@ public class PagingPredicateTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
         innerPredicate = new SqlPredicate(innerPredicateQuery);
     }
 

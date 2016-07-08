@@ -43,14 +43,14 @@ public class ProducerConsumerTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        produced = targetInstance.getAtomicLong(basename + ":Produced");
-        consumed = targetInstance.getAtomicLong(basename + ":Consumed");
-        workQueue = targetInstance.getQueue(basename + ":WorkQueue");
+        produced = targetInstance.getAtomicLong(name + ":Produced");
+        consumed = targetInstance.getAtomicLong(name + ":Consumed");
+        workQueue = targetInstance.getQueue(name + ":WorkQueue");
     }
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < producerCount; i++) {
             spawner.spawn("ProducerThread", new Producer(i));
         }

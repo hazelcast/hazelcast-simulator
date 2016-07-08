@@ -61,11 +61,11 @@ public class ReliableTopicTest extends AbstractTest {
     @Setup
     @SuppressWarnings("unchecked")
     public void setup() {
-        totalMessagesSend = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");
+        totalMessagesSend = targetInstance.getAtomicLong(name + ":TotalExpectedCounter");
         topics = new ITopic[topicCount];
         listeners = new LinkedList<MessageListenerImpl>();
 
-        String[] names = generateStringKeys(basename, topicCount, keyLocality, targetInstance);
+        String[] names = generateStringKeys(name, topicCount, keyLocality, targetInstance);
 
         int listenerIdCounter = 0;
         for (int i = 0; i < topics.length; i++) {

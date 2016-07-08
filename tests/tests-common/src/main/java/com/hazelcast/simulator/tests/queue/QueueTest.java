@@ -48,7 +48,7 @@ public class QueueTest extends AbstractTest {
         queues = new IQueue[queueLength];
 
         // the KeyLocality has to be RANDOM here, since we need different queues on each Worker
-        String[] names = generateStringKeys(basename, queueLength, basename.length() + 5, RANDOM, targetInstance);
+        String[] names = generateStringKeys(name, queueLength, name.length() + 5, RANDOM, targetInstance);
         for (int i = 0; i < queues.length; i++) {
             queues[i] = targetInstance.getQueue(names[i]);
         }
@@ -62,7 +62,7 @@ public class QueueTest extends AbstractTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int queueIndex = 0; queueIndex < queueLength; queueIndex++) {
             for (int i = 0; i < threadsPerQueue; i++) {
                 spawner.spawn(new Worker(queueIndex));

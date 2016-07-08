@@ -52,7 +52,7 @@ public class SqlPredicateTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        this.map = targetInstance.getMap(basename);
+        this.map = targetInstance.getMap(name);
     }
 
     @Warmup(global = true)

@@ -39,7 +39,7 @@ public class ClusterStatisticsTest extends AbstractTest {
     @Setup
     public void setUp() {
         this.partitionService = targetInstance.getPartitionService();
-        this.map = targetInstance.getMap(basename);
+        this.map = targetInstance.getMap(name);
     }
 
     @Warmup
@@ -50,14 +50,14 @@ public class ClusterStatisticsTest extends AbstractTest {
 
         int retry = 0;
         while (!partitionService.isClusterSafe() && retry++ < isClusterSafeRetries) {
-            logger.info(basename + ": isClusterSafe() " + partitionService.isClusterSafe());
+            logger.info(name + ": isClusterSafe() " + partitionService.isClusterSafe());
             sleepSeconds(1);
         }
-        logger.info(basename + ": isClusterSafe() " + partitionService.isClusterSafe());
-        logger.info(basename + ": isLocalMemberSafe() " + partitionService.isLocalMemberSafe());
-        logger.info(basename + ": getCluster().getMembers().size() " + targetInstance.getCluster().getMembers().size());
+        logger.info(name + ": isClusterSafe() " + partitionService.isClusterSafe());
+        logger.info(name + ": isLocalMemberSafe() " + partitionService.isLocalMemberSafe());
+        logger.info(name + ": getCluster().getMembers().size() " + targetInstance.getCluster().getMembers().size());
 
-        logPartitionStatistics(logger, basename, map, false);
+        logPartitionStatistics(logger, name, map, false);
     }
 
     @RunWithWorker

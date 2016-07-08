@@ -58,7 +58,7 @@ public class StringStringSyntheticMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + basename);
+        map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + name);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)

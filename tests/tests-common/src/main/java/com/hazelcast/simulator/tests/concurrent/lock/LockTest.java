@@ -42,7 +42,7 @@ public class LockTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        lockCounter = targetInstance.getAtomicLong(basename + ":LockCounter");
+        lockCounter = targetInstance.getAtomicLong(name + ":LockCounter");
     }
 
     @Warmup(global = true)
@@ -104,11 +104,11 @@ public class LockTest extends AbstractTest {
     }
 
     private String getLockId(long key) {
-        return basename + '-' + key;
+        return name + '-' + key;
     }
 
     private String getAccountId(long key) {
-        return basename + '-' + key;
+        return name + '-' + key;
     }
 
     @Verify
@@ -124,7 +124,7 @@ public class LockTest extends AbstractTest {
         }
 
         long expected = initialAmount * lockCounter.get();
-        assertEquals(format("%s: Money was lost or created (%d)", basename, expected - actual), expected, actual);
+        assertEquals(format("%s: Money was lost or created (%d)", name, expected - actual), expected, actual);
     }
 
     @Teardown

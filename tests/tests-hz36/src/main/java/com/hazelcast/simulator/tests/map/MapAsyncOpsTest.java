@@ -57,8 +57,8 @@ public class MapAsyncOpsTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        results = targetInstance.getList(basename + "report");
+        map = targetInstance.getMap(name);
+        results = targetInstance.getList(name + "report");
 
         operationSelectorBuilder.addOperation(Operation.PUT_ASYNC, putAsyncProb)
                 .addOperation(Operation.PUT_ASYNC_TTL, putAsyncTTLProb)
@@ -121,13 +121,13 @@ public class MapAsyncOpsTest extends AbstractTest {
         for (MapOperationCounter mapOperationsCount : results) {
             totalMapOperationsCount.add(mapOperationsCount);
         }
-        logger.info(basename + ": " + totalMapOperationsCount + " total of " + results.size());
+        logger.info(name + ": " + totalMapOperationsCount + " total of " + results.size());
     }
 
     @Verify(global = false)
     public void verify() {
         sleepSeconds(maxTTLExpirySeconds * 2);
 
-        logger.info(basename + ": map size  =" + map.size());
+        logger.info(name + ": map size  =" + map.size());
     }
 }

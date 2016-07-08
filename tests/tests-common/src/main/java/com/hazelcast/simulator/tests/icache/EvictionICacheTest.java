@@ -82,10 +82,10 @@ public class EvictionICacheTest extends AbstractTest {
         random.nextBytes(value);
 
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cache = (ICache<Object, Object>) cacheManager.getCache(basename);
+        cache = (ICache<Object, Object>) cacheManager.getCache(name);
 
         CacheConfig config = cache.getConfiguration(CacheConfig.class);
-        logger.info(basename + ": " + cache.getName() + " config=" + config);
+        logger.info(name + ": " + cache.getName() + " config=" + config);
 
         configuredMaxSize = config.getEvictionConfig().getSize();
 
@@ -144,37 +144,37 @@ public class EvictionICacheTest extends AbstractTest {
             }
 
             if (size > estimatedMaxSize) {
-                fail(basename + ": cache " + cache.getName() + " size=" + cache.size()
+                fail(name + ": cache " + cache.getName() + " size=" + cache.size()
                         + " configuredMaxSize=" + configuredMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
             }
         }
 
         @Override
         public void afterRun() throws Exception {
-            targetInstance.getList(basename + "max").add(max);
-            targetInstance.getList(basename + "counter").add(counter);
+            targetInstance.getList(name + "max").add(max);
+            targetInstance.getList(name + "counter").add(counter);
         }
     }
 
     @Verify
     public void globalVerify() {
-        IList<Integer> results = targetInstance.getList(basename + "max");
+        IList<Integer> results = targetInstance.getList(name + "max");
         int observedMaxSize = 0;
         for (int m : results) {
             if (observedMaxSize < m) {
                 observedMaxSize = m;
             }
         }
-        logger.info(basename + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
+        logger.info(name + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
                 + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
 
-        IList<Counter> counters = targetInstance.getList(basename + "counter");
+        IList<Counter> counters = targetInstance.getList(name + "counter");
         Counter total = new Counter();
         for (Counter c : counters) {
             total.add(c);
         }
-        logger.info(basename + ": " + total);
-        logger.info(basename + ": putAllMap size=" + putAllMap.size());
+        logger.info(name + ": " + total);
+        logger.info(name + ": putAllMap size=" + putAllMap.size());
     }
 
     private static class Counter implements Serializable {

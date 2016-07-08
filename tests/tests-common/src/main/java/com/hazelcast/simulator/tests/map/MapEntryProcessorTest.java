@@ -54,8 +54,8 @@ public class MapEntryProcessorTest extends AbstractTest {
                     + " maxProcessorDelayMs = " + maxProcessorDelayMs);
         }
 
-        map = targetInstance.getMap(basename);
-        resultsPerWorker = targetInstance.getList(basename + ":ResultMap");
+        map = targetInstance.getMap(name);
+        resultsPerWorker = targetInstance.getList(name + ":ResultMap");
         keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
     }
 

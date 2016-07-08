@@ -52,7 +52,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
 
         // calculate how many entries we have to insert per member and thread
         long free = Runtime.getRuntime().freeMemory();
@@ -75,7 +75,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
         // fill the cluster as fast as possible with data
         long startKey = 0;
         boolean isLogger = true;
-        ThreadSpawner threadSpawner = new ThreadSpawner(basename);
+        ThreadSpawner threadSpawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             threadSpawner.spawn(new FillMapWorker(isLogger, startKey));
             isLogger = false;
@@ -83,7 +83,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
         }
         threadSpawner.awaitCompletion();
 
-        StringBuilder sb = new StringBuilder(basename).append(": After warmup phase the map size is ").append(map.size());
+        StringBuilder sb = new StringBuilder(name).append(": After warmup phase the map size is ").append(map.size());
         addMemoryStatistics(sb);
         logger.info(sb.toString());
     }
@@ -114,7 +114,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
                 key++;
 
                 if (isLogger && key % logFrequency == 0) {
-                    sb.append(basename).append(": In warmup phase the map size is ").append(map.size());
+                    sb.append(name).append(": In warmup phase the map size is ").append(map.size());
                     addMemoryStatistics(sb);
                     logger.info(sb.toString());
                     sb.setLength(0);
@@ -147,7 +147,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
             return;
         }
 
-        StringBuilder sb = new StringBuilder(basename).append(": In local verify phase the map size is ").append(map.size());
+        StringBuilder sb = new StringBuilder(name).append(": In local verify phase the map size is ").append(map.size());
         addMemoryStatistics(sb);
         logger.info(sb.toString());
     }
