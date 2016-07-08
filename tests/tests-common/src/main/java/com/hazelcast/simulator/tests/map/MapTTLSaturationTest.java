@@ -38,7 +38,7 @@ public class MapTTLSaturationTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
     }
 
     @BeforeRun
@@ -50,14 +50,14 @@ public class MapTTLSaturationTest extends AbstractTest {
     public void timeStep(ThreadContext context) throws Exception {
         double usedPercentage = heapUsedPercentage();
         if (usedPercentage >= maxHeapUsagePercentage) {
-            logger.info(basename + " heap used: " + usedPercentage + " %, map size: " + map.size());
+            logger.info(name + " heap used: " + usedPercentage + " %, map size: " + map.size());
 
             sleepSeconds(10);
         } else {
             for (int i = 0; i < 1000; i++) {
                 context.counter++;
                 if (context.counter % 100000 == 0) {
-                    logger.info(basename + " at: " + context.counter + ", heap used: " + usedPercentage
+                    logger.info(name + " at: " + context.counter + ", heap used: " + usedPercentage
                             + " %, map size: " + map.size());
                 }
                 long key = context.random.nextLong();
@@ -82,12 +82,12 @@ public class MapTTLSaturationTest extends AbstractTest {
         long max = Runtime.getRuntime().maxMemory();
         double usedOfMax = 100.0 * ((double) used / (double) max);
 
-        logger.info(basename + ' ' + header);
-        logger.info(basename + " map size: " + map.size());
-        logger.info(basename + " free: " + humanReadableByteCount(free, true) + " = " + free);
-        logger.info(basename + " used: " + humanReadableByteCount(used, true) + " = " + used);
-        logger.info(basename + " max: " + humanReadableByteCount(max, true) + " = " + max);
-        logger.info(basename + " usedOfMax: " + usedOfMax + '%');
+        logger.info(name + ' ' + header);
+        logger.info(name + " map size: " + map.size());
+        logger.info(name + " free: " + humanReadableByteCount(free, true) + " = " + free);
+        logger.info(name + " used: " + humanReadableByteCount(used, true) + " = " + used);
+        logger.info(name + " max: " + humanReadableByteCount(max, true) + " = " + max);
+        logger.info(name + " usedOfMax: " + usedOfMax + '%');
     }
 
     private static double heapUsedPercentage() {

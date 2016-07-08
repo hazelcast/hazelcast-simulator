@@ -42,14 +42,14 @@ public class CreateDestroyICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        counters = targetInstance.getList(basename);
+        counters = targetInstance.getList(name);
         cacheManager = createCacheManager(targetInstance);
     }
 
     @TimeStep(prob = 0.4)
     public void createCatch(ThreadContext context) {
         try {
-            cacheManager.getCache(basename);
+            cacheManager.getCache(name);
             context.counter.create++;
         } catch (IllegalStateException e) {
             context.counter.createException++;
@@ -59,7 +59,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
     @TimeStep(prob = 0.3)
     public void putCache(ThreadContext context) {
         try {
-            Cache<Integer, Integer> cache = cacheManager.getCache(basename);
+            Cache<Integer, Integer> cache = cacheManager.getCache(name);
             if (cache != null) {
                 cache.put(context.randomInt(keyCount), context.randomInt());
                 context.counter.put++;
@@ -72,7 +72,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
     @TimeStep(prob = 0.2)
     public void closeCache(ThreadContext context) {
         try {
-            Cache cache = cacheManager.getCache(basename);
+            Cache cache = cacheManager.getCache(name);
             if (cache != null) {
                 cache.close();
                 context.counter.close++;
@@ -85,7 +85,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
     @TimeStep(prob = 0.2)
     public void destroyCache(ThreadContext context) {
         try {
-            cacheManager.destroyCache(basename);
+            cacheManager.destroyCache(name);
             context.counter.destroy++;
         } catch (IllegalStateException e) {
             context.counter.destroyException++;
@@ -107,6 +107,6 @@ public class CreateDestroyICacheTest extends AbstractTest {
         for (ICacheCreateDestroyCounter counter : counters) {
             total.add(counter);
         }
-        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + counters.size() + " worker threads");
     }
 }

@@ -37,7 +37,7 @@ public class LeaseLockTest extends AbstractTest {
     @TimeStep
     public void timeStep(BaseThreadContext context) {
         int lockIndex = context.randomInt(lockCount);
-        ILock lock = targetInstance.getLock(basename + lockIndex);
+        ILock lock = targetInstance.getLock(name + lockIndex);
 
         int leaseTime = 1 + context.randomInt(maxLeaseTimeMillis);
         int tryTime = 1 + context.randomInt(maxTryTimeMillis);
@@ -61,7 +61,7 @@ public class LeaseLockTest extends AbstractTest {
     @Verify
     public void verify() {
         for (int i = 0; i < lockCount; i++) {
-            ILock lock = targetInstance.getLock(basename + i);
+            ILock lock = targetInstance.getLock(name + i);
 
             boolean isLocked = lock.isLocked();
             long remainingLeaseTime = lock.getRemainingLeaseTime();

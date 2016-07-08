@@ -56,7 +56,7 @@ public class MultiValueMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
     }
 
     @Warmup(global = true)

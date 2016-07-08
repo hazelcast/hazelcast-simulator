@@ -56,8 +56,8 @@ public class MapTransactionTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(basename);
-        resultList = targetInstance.getList(basename + "results");
+        map = targetInstance.getMap(name);
+        resultList = targetInstance.getList(name + "results");
 
         transactionOptions = new TransactionOptions();
         transactionOptions.setTransactionType(transactionType).setDurability(durability);
@@ -79,7 +79,7 @@ public class MapTransactionTest extends AbstractTest {
             targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
                 @Override
                 public Object execute(TransactionalTaskContext txContext) {
-                    TransactionalMap<Integer, Long> txMap = txContext.getMap(basename);
+                    TransactionalMap<Integer, Long> txMap = txContext.getMap(name);
                     Long value;
                     if (getForUpdate) {
                         value = txMap.getForUpdate(key);
@@ -95,7 +95,7 @@ public class MapTransactionTest extends AbstractTest {
             if (reThrowTransactionException) {
                 throw rethrow(e);
             }
-            logger.warning(basename + ": caught TransactionException ", e);
+            logger.warning(name + ": caught TransactionException ", e);
         }
     }
 
@@ -112,7 +112,7 @@ public class MapTransactionTest extends AbstractTest {
     public void globalVerify() {
         long[] total = new long[keyCount];
 
-        logger.info(basename + ": collected increments from " + resultList.size() + " worker threads");
+        logger.info(name + ": collected increments from " + resultList.size() + " worker threads");
 
         for (long[] increments : resultList) {
             for (int i = 0; i < increments.length; i++) {
@@ -124,11 +124,11 @@ public class MapTransactionTest extends AbstractTest {
         for (int i = 0; i < keyCount; i++) {
             if (total[i] != map.get(i)) {
                 failures++;
-                logger.info(basename + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
+                logger.info(name + ": key=" + i + " expected val " + total[i] + " !=  map val" + map.get(i));
             }
         }
 
-        assertEquals(basename + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys",
+        assertEquals(name + ": " + failures + " keys have been incremented unexpectedly out of " + keyCount + " keys",
                 0, failures);
     }
 }

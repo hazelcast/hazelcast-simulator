@@ -50,7 +50,7 @@ public class MapTransactionReadWriteTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
     }
 
     @Warmup

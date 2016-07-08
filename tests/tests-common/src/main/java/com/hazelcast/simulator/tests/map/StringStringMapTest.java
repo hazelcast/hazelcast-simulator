@@ -48,7 +48,7 @@ public class StringStringMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
     }
 
     @Warmup

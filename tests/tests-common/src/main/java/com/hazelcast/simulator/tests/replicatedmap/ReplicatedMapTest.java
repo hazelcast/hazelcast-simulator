@@ -38,7 +38,7 @@ public class ReplicatedMapTest extends AbstractTest {
 
     @Setup
     public void setUp() throws Exception {
-        map = targetInstance.getReplicatedMap(basename + "-" + testContext.getTestId());
+        map = targetInstance.getReplicatedMap(name + "-" + testContext.getTestId());
     }
 
     @Warmup
