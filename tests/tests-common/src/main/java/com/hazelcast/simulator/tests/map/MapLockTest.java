@@ -44,8 +44,8 @@ public class MapLockTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        incrementsList = targetInstance.getList(basename);
+        map = targetInstance.getMap(name);
+        incrementsList = targetInstance.getList(name);
     }
 
     @Warmup(global = true)
@@ -93,7 +93,7 @@ public class MapLockTest extends AbstractTest {
                 expected[i] += increments[i];
             }
         }
-        logger.info(format("%s: collected increments from %d worker threads", basename, incrementsList.size()));
+        logger.info(format("%s: collected increments from %d worker threads", name, incrementsList.size()));
 
         int failures = 0;
         for (int i = 0; i < keyCount; i++) {
@@ -101,7 +101,7 @@ public class MapLockTest extends AbstractTest {
                 failures++;
             }
         }
-        assertEquals(format("%s: %d keys have been incremented unexpectedly out of %d keys", basename, failures, keyCount), 0,
+        assertEquals(format("%s: %d keys have been incremented unexpectedly out of %d keys", name, failures, keyCount), 0,
                 failures);
     }
 }

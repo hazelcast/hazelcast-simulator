@@ -80,7 +80,7 @@ public class SlowOperationMapTest extends AbstractTest {
     public void setUp() {
         isClient = isClient(targetInstance);
         keys = generateIntKeys(keyCount, KeyLocality.LOCAL, targetInstance);
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)
@@ -90,7 +90,7 @@ public class SlowOperationMapTest extends AbstractTest {
         if (isMemberNode(targetInstance)) {
             slowOperationDetector = getFieldValue(getOperationService(targetInstance), "slowOperationDetector");
             if (slowOperationDetector == null) {
-                fail(basename + ": This test needs Hazelcast 3.5 or newer");
+                fail(name + ": This test needs Hazelcast 3.5 or newer");
             }
         }
     }

@@ -59,13 +59,13 @@ public class ITopicTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        totalExpectedCounter = targetInstance.getAtomicLong(basename + ":TotalExpectedCounter");
-        totalFoundCounter = targetInstance.getAtomicLong(basename + ":TotalFoundCounter");
+        totalExpectedCounter = targetInstance.getAtomicLong(name + ":TotalExpectedCounter");
+        totalFoundCounter = targetInstance.getAtomicLong(name + ":TotalFoundCounter");
 
         topics = new ITopic[topicCount];
         listeners = new LinkedList<TopicListener>();
         for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
-            ITopic<Long> topic = targetInstance.getTopic(basename + topicIndex);
+            ITopic<Long> topic = targetInstance.getTopic(name + topicIndex);
             topics[topicIndex] = topic;
 
             for (int listenerIndex = 0; listenerIndex < listenersPerTopic; listenerIndex++) {

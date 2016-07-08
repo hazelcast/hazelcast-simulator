@@ -99,8 +99,8 @@ public class MapStoreTest extends AbstractTest {
         putTTlKeyDomain = keyCount;
         putTTlKeyRange = keyCount;
 
-        map = targetInstance.getMap(basename);
-        operationCounterList = targetInstance.getList(basename + "report");
+        map = targetInstance.getMap(name);
+        operationCounterList = targetInstance.getList(name + "report");
 
         MapStoreWithCounter.setMinMaxDelayMs(mapStoreMinDelayMs, mapStoreMaxDelayMs);
 
@@ -119,7 +119,7 @@ public class MapStoreTest extends AbstractTest {
                 .addOperation(MapPutOperation.PUT_IF_ABSENT, putUsingPutIfAbsent)
                 .addOperation(MapPutOperation.REPLACE, putUsingReplaceProb);
 
-        assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounter.class);
+        assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounter.class);
     }
 
 
@@ -215,7 +215,7 @@ public class MapStoreTest extends AbstractTest {
         for (MapOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        logger.info(basename + ": " + total + " from " + operationCounterList.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 
     @Verify(global = false)
@@ -224,7 +224,7 @@ public class MapStoreTest extends AbstractTest {
             return;
         }
 
-        MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(basename).getMapStoreConfig();
+        MapStoreConfig mapStoreConfig = targetInstance.getConfig().getMapConfig(name).getMapStoreConfig();
         int writeDelayMs = (int) TimeUnit.SECONDS.toMillis(mapStoreConfig.getWriteDelaySeconds());
 
         int sleepMs = mapStoreMaxDelayMs * 2 + maxTTLExpiryMs * 2 + (writeDelayMs * 2);
@@ -233,8 +233,8 @@ public class MapStoreTest extends AbstractTest {
 
         final MapStoreWithCounter mapStore = (MapStoreWithCounter) mapStoreConfig.getImplementation();
 
-        logger.info(basename + ": map size = " + map.size());
-        logger.info(basename + ": map store = " + mapStore);
+        logger.info(name + ": map size = " + map.size());
+        logger.info(name + ": map store = " + mapStore);
 
         assertTrueEventually(new AssertTask() {
             @Override
@@ -245,7 +245,7 @@ public class MapStoreTest extends AbstractTest {
                 assertEquals("Map entrySets should be equal", map.getAll(map.localKeySet()).entrySet(), mapStore.entrySet());
 
                 for (int key = putTTlKeyDomain; key < putTTlKeyDomain + putTTlKeyRange; key++) {
-                    assertNull(basename + ": TTL key should not be in the map", map.get(key));
+                    assertNull(name + ": TTL key should not be in the map", map.get(key));
                 }
             }
         });

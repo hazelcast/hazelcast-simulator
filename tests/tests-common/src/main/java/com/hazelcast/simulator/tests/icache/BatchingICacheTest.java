@@ -61,7 +61,7 @@ public class BatchingICacheTest extends AbstractTest {
     @Setup
     public void setup() {
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cache = (ICache<Object, Object>) cacheManager.getCache(basename);
+        cache = (ICache<Object, Object>) cacheManager.getCache(name);
         operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);
     }
 

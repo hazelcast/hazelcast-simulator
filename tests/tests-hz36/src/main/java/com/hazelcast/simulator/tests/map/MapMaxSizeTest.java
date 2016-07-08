@@ -73,8 +73,8 @@ public class MapMaxSizeTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        operationCounterList = targetInstance.getList(basename + "OperationCounter");
+        map = targetInstance.getMap(name);
+        operationCounterList = targetInstance.getList(name + "OperationCounter");
 
         mapOperationSelectorBuilder
                 .addOperation(MapOperation.PUT, putProb)
@@ -87,12 +87,12 @@ public class MapMaxSizeTest extends AbstractTest {
 
 
         if (isMemberNode(targetInstance)) {
-            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(basename).getMaxSizeConfig();
+            MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(name).getMaxSizeConfig();
             maxSizePerNode = maxSizeConfig.getSize();
             assertEqualsStringFormat("Expected MaxSizePolicy %s, but was %s", PER_NODE, maxSizeConfig.getMaxSizePolicy());
             assertTrue("Expected MaxSizePolicy.getSize() < Integer.MAX_VALUE", maxSizePerNode < Integer.MAX_VALUE);
 
-            logger.info("MapSizeConfig of " + basename + ": " + maxSizeConfig);
+            logger.info("MapSizeConfig of " + name + ": " + maxSizeConfig);
         }
     }
 
@@ -101,7 +101,7 @@ public class MapMaxSizeTest extends AbstractTest {
         if (isMemberNode(targetInstance)) {
             int mapSize = map.size();
             int clusterSize = targetInstance.getCluster().getMembers().size();
-            assertTrue(format("Size of map %s should be <= %d * %d, but was %d", basename, clusterSize, maxSizePerNode, mapSize),
+            assertTrue(format("Size of map %s should be <= %d * %d, but was %d", name, clusterSize, maxSizePerNode, mapSize),
                     mapSize <= clusterSize * maxSizePerNode);
         }
     }
@@ -165,7 +165,7 @@ public class MapMaxSizeTest extends AbstractTest {
         for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
             total.add(operationCounter);
         }
-        logger.info(format("Operation counters from %s: %s", basename, total));
+        logger.info(format("Operation counters from %s: %s", name, total));
 
         assertMapMaxSize();
     }

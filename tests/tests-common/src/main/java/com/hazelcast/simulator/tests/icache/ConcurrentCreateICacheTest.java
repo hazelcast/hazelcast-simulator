@@ -36,25 +36,22 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConcurrentCreateICacheTest extends AbstractTest {
 
-    // properties
-    public String baseName = ConcurrentCreateICacheTest.class.getSimpleName();
-
     private IList<Counter> counterList;
 
     @Setup
     public void setup() {
-        counterList = targetInstance.getList(baseName);
+        counterList = targetInstance.getList(name);
 
         CacheConfig config = new CacheConfig();
-        config.setName(baseName);
+        config.setName(name);
 
         Counter counter = new Counter();
         try {
             CacheManager cacheManager = createCacheManager(targetInstance);
-            cacheManager.createCache(baseName, config);
+            cacheManager.createCache(name, config);
             counter.create++;
         } catch (CacheException e) {
-            logger.severe(baseName + ": createCache exception " + e, e);
+            logger.severe(name + ": createCache exception " + e, e);
             counter.createException++;
         }
         counterList.add(counter);
@@ -89,8 +86,8 @@ public class ConcurrentCreateICacheTest extends AbstractTest {
         for (Counter counter : counterList) {
             total.add(counter);
         }
-        logger.info(baseName + ": " + total + " from " + counterList.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + counterList.size() + " worker threads");
 
-        assertEquals(baseName + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
+        assertEquals(name + ": We expect 0 CacheException from multi node create cache calls", 0, total.createException);
     }
 }

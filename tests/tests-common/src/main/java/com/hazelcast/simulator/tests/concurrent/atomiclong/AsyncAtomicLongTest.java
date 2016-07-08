@@ -69,11 +69,11 @@ public class AsyncAtomicLongTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        totalCounter = targetInstance.getAtomicLong(basename + ":TotalCounter");
+        totalCounter = targetInstance.getAtomicLong(name + ":TotalCounter");
         if (isMemberNode(targetInstance)) {
             counters = new AsyncAtomicLong[countersLength];
 
-            String[] names = generateStringKeys(basename, countersLength, keyLocality, targetInstance);
+            String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
             for (int i = 0; i < countersLength; i++) {
                 counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(names[i]);
             }
@@ -177,7 +177,7 @@ public class AsyncAtomicLongTest extends AbstractTest {
                 long actual = 0;
                 for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
                     String key = distributedObject.getName();
-                    if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(basename)) {
+                    if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(name)) {
                         actual += targetInstance.getAtomicLong(key).get();
                     }
                 }

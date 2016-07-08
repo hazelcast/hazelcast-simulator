@@ -66,8 +66,8 @@ public class ExpiryTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        cache = getCache(targetInstance, basename);
-        results = targetInstance.getList(basename);
+        cache = getCache(targetInstance, name);
+        results = targetInstance.getList(name);
 
         operationSelectorBuilder
                 .addOperation(Operation.PUT, putProb)
@@ -155,13 +155,13 @@ public class ExpiryTest extends AbstractTest {
         for (Counter counter : results) {
             totalCounter.add(counter);
         }
-        logger.info(basename + " " + totalCounter + " from " + results.size() + " worker Threads");
+        logger.info(name + " " + totalCounter + " from " + results.size() + " worker Threads");
 
         for (int i = 0; i < keyCount; i++) {
-            assertFalse(basename + " ICache should not contain key " + i, cache.containsKey(i));
+            assertFalse(name + " ICache should not contain key " + i, cache.containsKey(i));
         }
-        assertFalse(basename + " ICache iterator should not have elements", cache.iterator().hasNext());
-        assertEquals(basename + " ICache size should be 0", 0, cache.size());
+        assertFalse(name + " ICache iterator should not have elements", cache.iterator().hasNext());
+        assertEquals(name + " ICache size should be 0", 0, cache.size());
     }
 
 }

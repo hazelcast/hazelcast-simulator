@@ -43,7 +43,7 @@ public class ExpiryICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        cache = getCache(targetInstance, basename);
+        cache = getCache(targetInstance, name);
     }
 
     @RunWithWorker
@@ -74,8 +74,8 @@ public class ExpiryICacheTest extends AbstractTest {
             @Override
             public void run() throws Exception {
                 int cacheSize = cache.size();
-                logger.info(basename + " ICache size: " + cacheSize);
-                assertEquals(basename + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
+                logger.info(name + " ICache size: " + cacheSize);
+                assertEquals(name + " ICache should be empty, but TTL events are not processed", 0, cacheSize);
             }
         });
     }

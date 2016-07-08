@@ -49,8 +49,8 @@ public class MapCasTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        resultsPerWorker = targetInstance.getMap(basename + ":ResultMap");
+        map = targetInstance.getMap(name);
+        resultsPerWorker = targetInstance.getMap(name + ":ResultMap");
     }
 
     @Warmup(global = true)

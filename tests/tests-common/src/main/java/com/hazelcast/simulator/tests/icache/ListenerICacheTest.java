@@ -82,10 +82,10 @@ public class ListenerICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        results = targetInstance.getList(basename);
-        listeners = targetInstance.getList(basename + "listeners");
+        results = targetInstance.getList(name);
+        listeners = targetInstance.getList(name + "listeners");
 
-        cache = CacheUtils.getCache(targetInstance, basename);
+        cache = CacheUtils.getCache(targetInstance, name);
         listener = new ICacheEntryListener<Integer, Long>();
         filter = new ICacheEntryEventFilter<Integer, Long>();
 
@@ -183,8 +183,8 @@ public class ListenerICacheTest extends AbstractTest {
 
     @Verify(global = false)
     public void localVerify() {
-        logger.info(basename + " Listener " + listener);
-        logger.info(basename + " Filter " + filter);
+        logger.info(name + " Listener " + listener);
+        logger.info(name + " Filter " + filter);
     }
 
     @Verify
@@ -193,14 +193,14 @@ public class ListenerICacheTest extends AbstractTest {
         for (Counter counter : results) {
             totalCounter.add(counter);
         }
-        logger.info(basename + " " + totalCounter + " from " + results.size() + " Worker threads");
+        logger.info(name + " " + totalCounter + " from " + results.size() + " Worker threads");
 
         ICacheEntryListener totalEvents = new ICacheEntryListener();
         for (ICacheEntryListener entryListener : listeners) {
             totalEvents.add(entryListener);
         }
-        logger.info(basename + " totalEvents: " + totalEvents);
-        assertEquals(basename + " unexpected events found", 0, totalEvents.getUnexpected());
+        logger.info(name + " totalEvents: " + totalEvents);
+        assertEquals(name + " unexpected events found", 0, totalEvents.getUnexpected());
     }
 
     private static class Counter implements Serializable {

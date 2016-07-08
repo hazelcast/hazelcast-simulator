@@ -93,10 +93,10 @@ public class MapEntryListenerTest extends AbstractTest {
         values = generateStrings(valueCount, valueLength);
         listener = new EntryListenerImpl<Integer, String>(minEntryListenerDelayMs, maxEntryListenerDelayMs);
 
-        eventCounts = targetInstance.getList(basename + "eventCount");
-        listeners = targetInstance.getList(basename + "listeners");
+        eventCounts = targetInstance.getList(name + "eventCount");
+        listeners = targetInstance.getList(name + "listeners");
 
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
         map.addEntryListener(listener, true);
 
         mapOperationSelectorBuilder
@@ -242,7 +242,7 @@ public class MapEntryListenerTest extends AbstractTest {
         for (int i = 0; i < listeners.size() - 1; i++) {
             EntryListenerImpl a = listeners.get(i);
             EntryListenerImpl b = listeners.get(i + 1);
-            assertEquals(basename + ": not same amount of event in all listeners", a, b);
+            assertEquals(name + ": not same amount of event in all listeners", a, b);
         }
     }
 
@@ -260,7 +260,7 @@ public class MapEntryListenerTest extends AbstractTest {
                         + "%n remove: %d / %d"
                         + "%n evict: %d / %d"
                         + "%n mapSize: %d / %d",
-                basename,
+                name,
                 listener.addCount.get(), total.addCount.get(),
                 listener.updateCount.get(), total.updateCount.get(),
                 listener.removeCount.get(), total.removeCount.get(),

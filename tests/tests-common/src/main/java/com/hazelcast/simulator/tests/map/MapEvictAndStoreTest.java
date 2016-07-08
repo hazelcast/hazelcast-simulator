@@ -41,10 +41,10 @@ public class MapEvictAndStoreTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(basename);
-        keyCounter = targetInstance.getAtomicLong(basename);
+        map = targetInstance.getMap(name);
+        keyCounter = targetInstance.getAtomicLong(name);
 
-        assertMapStoreConfiguration(logger, targetInstance, basename, MapStoreWithCounterPerKey.class);
+        assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounterPerKey.class);
     }
 
     @RunWithWorker
@@ -67,21 +67,21 @@ public class MapEvictAndStoreTest extends AbstractTest {
             return;
         }
 
-        MapConfig mapConfig = targetInstance.getConfig().getMapConfig(basename);
-        logger.info(basename + ": MapConfig: " + mapConfig);
+        MapConfig mapConfig = targetInstance.getConfig().getMapConfig(name);
+        logger.info(name + ": MapConfig: " + mapConfig);
 
         MapStoreConfig mapStoreConfig = mapConfig.getMapStoreConfig();
-        logger.info(basename + ": MapStoreConfig: " + mapStoreConfig);
+        logger.info(name + ": MapStoreConfig: " + mapStoreConfig);
 
         int sleepSeconds = mapConfig.getTimeToLiveSeconds() * 2 + mapStoreConfig.getWriteDelaySeconds() * 2;
         logger.info("Sleeping for " + sleepSeconds + " seconds to wait for delay and TTL values.");
         sleepSeconds(sleepSeconds);
 
         MapStoreWithCounterPerKey mapStore = (MapStoreWithCounterPerKey) mapStoreConfig.getImplementation();
-        logger.info(basename + ": map size = " + map.size());
-        logger.info(basename + ": map store = " + mapStore);
+        logger.info(name + ": map size = " + map.size());
+        logger.info(name + ": map store = " + mapStore);
 
-        logger.info(basename + ": Checking if some keys where stored more than once");
+        logger.info(name + ": Checking if some keys where stored more than once");
         for (Object key : mapStore.keySet()) {
             assertEquals("There were multiple calls to MapStore.store", 1, mapStore.valueOf(key));
         }

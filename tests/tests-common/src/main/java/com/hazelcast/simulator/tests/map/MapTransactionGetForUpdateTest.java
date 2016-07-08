@@ -50,7 +50,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
 
     @Warmup(global = true)
     public void warmup() {
-        IMap<Integer, Long> map = targetInstance.getMap(basename);
+        IMap<Integer, Long> map = targetInstance.getMap(name);
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
         }
@@ -58,7 +58,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }
@@ -87,7 +87,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
                     context = targetInstance.newTransactionContext(options);
                     context.beginTransaction();
 
-                    final TransactionalMap<Integer, Long> map = context.getMap(basename);
+                    final TransactionalMap<Integer, Long> map = context.getMap(name);
 
                     Long current = map.getForUpdate(key);
                     Long update = current + increment;
@@ -101,7 +101,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
                 } catch (Exception commitFailedException) {
                     if (context != null) {
                         try {
-                            logger.warning(basename + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
+                            logger.warning(name + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
                             if (rethrowAllException) {
                                 throw rethrow(commitFailedException);
                             }
@@ -109,7 +109,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
                             context.rollbackTransaction();
                             count.rolled++;
                         } catch (Exception rollBackFailedException) {
-                            logger.warning(basename + ": rollback failed key=" + key + " inc=" + increment,
+                            logger.warning(name + ": rollback failed key=" + key + " inc=" + increment,
                                     rollBackFailedException);
                             count.failedRollbacks++;
 
@@ -120,21 +120,21 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
                     }
                 }
             }
-            targetInstance.getList(basename + "res").add(localIncrements);
-            targetInstance.getList(basename + "report").add(count);
+            targetInstance.getList(name + "res").add(localIncrements);
+            targetInstance.getList(name + "report").add(count);
         }
     }
 
     @Verify(global = false)
     public void verify() {
-        IList<TxnCounter> counts = targetInstance.getList(basename + "report");
+        IList<TxnCounter> counts = targetInstance.getList(name + "report");
         TxnCounter total = new TxnCounter();
         for (TxnCounter c : counts) {
             total.add(c);
         }
-        logger.info(basename + ": " + total + " from " + counts.size() + " workers");
+        logger.info(name + ": " + total + " from " + counts.size() + " workers");
 
-        IList<long[]> allIncrements = targetInstance.getList(basename + "res");
+        IList<long[]> allIncrements = targetInstance.getList(name + "res");
         long[] expected = new long[keyCount];
         for (long[] incs : allIncrements) {
             for (int i = 0; i < incs.length; i++) {
@@ -142,16 +142,16 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
             }
         }
 
-        IMap<Integer, Long> map = targetInstance.getMap(basename);
+        IMap<Integer, Long> map = targetInstance.getMap(name);
 
         int failures = 0;
         for (int i = 0; i < keyCount; i++) {
             if (expected[i] != map.get(i)) {
                 failures++;
-                logger.info(basename + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
+                logger.info(name + ": key=" + i + " expected " + expected[i] + " != " + "actual " + map.get(i));
             }
         }
 
-        assertEquals(basename + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
+        assertEquals(name + ": " + failures + " key=>values have been incremented unExpected", 0, failures);
     }
 }

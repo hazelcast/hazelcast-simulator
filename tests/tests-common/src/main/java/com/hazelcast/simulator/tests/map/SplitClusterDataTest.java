@@ -38,7 +38,7 @@ public class SplitClusterDataTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
 
         if (clusterSize == -1 || splitClusterSize == -1) {
             throw new IllegalStateException("priorities: clusterSize == -1 Or splitClusterSize == -1");
@@ -56,7 +56,7 @@ public class SplitClusterDataTest extends AbstractTest {
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         spawner.spawn(new Worker());
         spawner.awaitCompletion();
     }
@@ -72,13 +72,13 @@ public class SplitClusterDataTest extends AbstractTest {
 
     @Verify(global = false)
     public void verify() {
-        logger.info(basename + ": cluster size =" + targetInstance.getCluster().getMembers().size());
-        logger.info(basename + ": map size =" + map.size());
+        logger.info(name + ": cluster size =" + targetInstance.getCluster().getMembers().size());
+        logger.info(name + ": map size =" + map.size());
 
         if (targetInstance.getCluster().getMembers().size() == splitClusterSize) {
-            logger.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
+            logger.info(name + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
         } else {
-            logger.info(basename + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
+            logger.info(name + ": check again cluster =" + targetInstance.getCluster().getMembers().size());
 
             int max = 0;
             while (map.size() != maxItems) {
@@ -89,7 +89,7 @@ public class SplitClusterDataTest extends AbstractTest {
             }
 
             assertEquals("data loss ", map.size(), maxItems);
-            logger.info(basename + "verify OK ");
+            logger.info(name + "verify OK ");
         }
     }
 }

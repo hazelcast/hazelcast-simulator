@@ -68,7 +68,7 @@ public class MangleICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        results = targetInstance.getList(basename);
+        results = targetInstance.getList(name);
 
         operationSelectorBuilder.addOperation(Operation.CREATE_CACHE_MANAGER, createCacheManagerProb)
                 .addOperation(Operation.CLOSE_CACHE_MANAGER, cacheManagerCloseProb)
@@ -158,7 +158,7 @@ public class MangleICacheTest extends AbstractTest {
         private void getCache() {
             try {
                 int cacheNumber = randomInt(maxCaches);
-                cacheManager.getCache(basename + cacheNumber);
+                cacheManager.getCache(name + cacheNumber);
                 counter.create++;
             } catch (CacheException e) {
                 counter.createException++;
@@ -185,7 +185,7 @@ public class MangleICacheTest extends AbstractTest {
         private void destroyCache() {
             try {
                 int cacheNumber = randomInt(maxCaches);
-                cacheManager.destroyCache(basename + cacheNumber);
+                cacheManager.destroyCache(name + cacheNumber);
                 counter.destroy++;
             } catch (CacheException e) {
                 counter.destroyException++;
@@ -225,7 +225,7 @@ public class MangleICacheTest extends AbstractTest {
 
         private Cache<Integer, Integer> getCacheIfExists(int cacheNumber) {
             try {
-                Cache<Integer, Integer> cache = cacheManager.getCache(basename + cacheNumber);
+                Cache<Integer, Integer> cache = cacheManager.getCache(name + cacheNumber);
                 counter.getCache++;
                 return cache;
 
@@ -245,7 +245,7 @@ public class MangleICacheTest extends AbstractTest {
         for (ICacheOperationCounter counter : results) {
             total.add(counter);
         }
-        logger.info(basename + ": " + total + " from " + results.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + results.size() + " worker threads");
     }
 
 

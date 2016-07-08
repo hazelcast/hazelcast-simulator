@@ -46,13 +46,13 @@ public class GrowingMapTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        idGenerator = targetInstance.getIdGenerator(basename + ":IdGenerator");
-        map = targetInstance.getMap(basename);
+        idGenerator = targetInstance.getIdGenerator(name + ":IdGenerator");
+        map = targetInstance.getMap(name);
     }
 
     @Run
     public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(basename);
+        ThreadSpawner spawner = new ThreadSpawner(name);
         for (int i = 0; i < threadCount; i++) {
             spawner.spawn(new Worker());
         }

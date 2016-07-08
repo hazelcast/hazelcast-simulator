@@ -45,8 +45,8 @@ public class MapRaceTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
-        resultMap = targetInstance.getMap(basename + ":ResultMap");
+        map = targetInstance.getMap(name);
+        resultMap = targetInstance.getMap(name + ":ResultMap");
     }
 
     @Warmup(global = true)

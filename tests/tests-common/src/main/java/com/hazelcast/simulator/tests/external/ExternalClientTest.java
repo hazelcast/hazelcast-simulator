@@ -35,7 +35,7 @@ import static java.lang.String.format;
 public class ExternalClientTest extends AbstractTest {
 
     // properties
-    public String basename = "externalClientsRunning";
+    public String name = "externalClientsRunning";
     public int waitForClientsCount = 0;
     public int waitIntervalSeconds = 60;
     public int expectedResultSize = 0;
@@ -53,11 +53,11 @@ public class ExternalClientTest extends AbstractTest {
         }
 
         // init ICountDownLatch with waitForClientsCount
-        clientsRunning = targetInstance.getCountDownLatch(basename);
+        clientsRunning = targetInstance.getCountDownLatch(name);
         setCountDownLatch(clientsRunning, waitForClientsCount);
 
         // determine one instance per cluster
-        if (targetInstance.getMap(basename).putIfAbsent(basename, true) == null) {
+        if (targetInstance.getMap(name).putIfAbsent(name, true) == null) {
             isExternalResultsCollectorInstance = true;
             logger.info("This instance will collect all probe results from external clients");
         } else {

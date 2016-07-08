@@ -51,6 +51,7 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 import static org.junit.Assert.fail;
 
 public final class HazelcastTestUtils {
@@ -142,7 +143,7 @@ public final class HazelcastTestUtils {
         return result;
     }
 
-    public static void logPartitionStatistics(ILogger log, String basename, IMap<Object, Integer> map, boolean printSizes) {
+    public static void logPartitionStatistics(ILogger log, String name, IMap<Object, Integer> map, boolean printSizes) {
         MapProxyImpl mapProxy = (MapProxyImpl) map;
         MapService mapService = (MapService) mapProxy.getService();
         MapServiceContext mapServiceContext = mapService.getMapServiceContext();
@@ -159,7 +160,7 @@ public final class HazelcastTestUtils {
             separator = ", ";
         }
         log.info(format("%s: Local partitions (count %d) (size %d) (avg %.2f) (IDs %s)%s",
-                basename, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
+                name, localPartitions.size(), localSize, localSize / (float) localPartitions.size(), partitionIDs.toString(),
                 printSizes ? format(" (sizes %s)", partitionSizes.toString()) : ""));
     }
 

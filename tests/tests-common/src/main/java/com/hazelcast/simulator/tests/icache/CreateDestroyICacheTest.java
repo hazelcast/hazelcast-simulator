@@ -55,7 +55,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        counters = targetInstance.getList(basename);
+        counters = targetInstance.getList(name);
 
         cacheManager = createCacheManager(targetInstance);
 
@@ -83,7 +83,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
             switch (operation) {
                 case CREATE_CACHE:
                     try {
-                        cacheManager.getCache(basename);
+                        cacheManager.getCache(name);
                         counter.create++;
                     } catch (IllegalStateException e) {
                         counter.createException++;
@@ -92,7 +92,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
 
                 case PUT_CACHE:
                     try {
-                        Cache<Integer, Integer> cache = cacheManager.getCache(basename);
+                        Cache<Integer, Integer> cache = cacheManager.getCache(name);
                         if (cache != null) {
                             cache.put(randomInt(keyCount), randomInt());
                             counter.put++;
@@ -104,7 +104,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
 
                 case CLOSE_CACHE:
                     try {
-                        Cache cache = cacheManager.getCache(basename);
+                        Cache cache = cacheManager.getCache(name);
                         if (cache != null) {
                             cache.close();
                             counter.close++;
@@ -116,7 +116,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
 
                 case DESTROY_CACHE:
                     try {
-                        cacheManager.destroyCache(basename);
+                        cacheManager.destroyCache(name);
                         counter.destroy++;
                     } catch (IllegalStateException e) {
                         counter.destroyException++;
@@ -140,6 +140,6 @@ public class CreateDestroyICacheTest extends AbstractTest {
         for (ICacheCreateDestroyCounter counter : counters) {
             total.add(counter);
         }
-        logger.info(basename + ": " + total + " from " + counters.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + counters.size() + " worker threads");
     }
 }

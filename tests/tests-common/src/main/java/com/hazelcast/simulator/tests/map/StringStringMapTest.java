@@ -62,7 +62,7 @@ public class StringStringMapTest extends AbstractTest {
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(basename);
+        map = targetInstance.getMap(name);
 
         operationSelectorBuilder.addOperation(Operation.PUT, putProb)
                 .addOperation(Operation.SET, setProb)

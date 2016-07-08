@@ -49,10 +49,10 @@ public class CasICacheTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        resultsPerWorker = targetInstance.getList(basename);
+        resultsPerWorker = targetInstance.getList(name);
 
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cache = cacheManager.getCache(basename);
+        cache = cacheManager.getCache(name);
     }
 
     @Warmup(global = true)

@@ -49,10 +49,10 @@ public class LockConflictTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        list = targetInstance.getList(basename);
+        list = targetInstance.getList(name);
 
-        globalIncrements = targetInstance.getList(basename + "res");
-        globalCounter = targetInstance.getList(basename + "report");
+        globalIncrements = targetInstance.getList(name + "res");
+        globalCounter = targetInstance.getList(name + "report");
     }
 
     @Warmup(global = true)
@@ -99,13 +99,13 @@ public class LockConflictTest extends AbstractTest {
                             localCounter.locked++;
                         }
                     } catch (Exception e) {
-                        logger.severe(basename + ": trying lock=" + keyIncrementPair.key, e);
+                        logger.severe(name + ": trying lock=" + keyIncrementPair.key, e);
                         if (throwException) {
                             throw rethrow(e);
                         }
                     }
                 } catch (Exception e) {
-                    logger.severe(basename + ": getting lock for locking=" + keyIncrementPair.key, e);
+                    logger.severe(name + ": getting lock for locking=" + keyIncrementPair.key, e);
                     if (throwException) {
                         throw rethrow(e);
                     }
@@ -123,7 +123,7 @@ public class LockConflictTest extends AbstractTest {
                     localIncrements[keyIncrementPair.key] += keyIncrementPair.increment;
                     localCounter.increased++;
                 } catch (Exception e) {
-                    logger.severe(basename + ": updating account=" + keyIncrementPair, e);
+                    logger.severe(name + ": updating account=" + keyIncrementPair, e);
                     if (throwException) {
                         throw rethrow(e);
                     }
@@ -144,13 +144,13 @@ public class LockConflictTest extends AbstractTest {
                             localCounter.unlocked++;
                             iterator.remove();
                         } catch (Exception e) {
-                            logger.severe(basename + ": unlocking lock =" + keyIncrementPair.key, e);
+                            logger.severe(name + ": unlocking lock =" + keyIncrementPair.key, e);
                             if (throwException) {
                                 throw rethrow(e);
                             }
                         }
                     } catch (Exception e) {
-                        logger.severe(basename + ": getting lock for unlocking=" + keyIncrementPair.key, e);
+                        logger.severe(name + ": getting lock for unlocking=" + keyIncrementPair.key, e);
                         if (throwException) {
                             throw rethrow(e);
                         }
@@ -159,14 +159,14 @@ public class LockConflictTest extends AbstractTest {
                 sleepSeconds(1);
 
                 if (++unlockAttempts > 5) {
-                    logger.info(basename + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
+                    logger.info(name + ": Cant unlock=" + locked + " unlockAttempts=" + unlockAttempts);
                     break;
                 }
             }
         }
 
         private ILock getLock(KeyIncrementPair keyIncrementPair) {
-            return targetInstance.getLock(basename + 'l' + keyIncrementPair.key);
+            return targetInstance.getLock(name + 'l' + keyIncrementPair.key);
         }
 
         @Override
@@ -182,7 +182,7 @@ public class LockConflictTest extends AbstractTest {
         for (LockCounter counter : globalCounter) {
             total.add(counter);
         }
-        logger.info(basename + ": " + total + " from " + globalCounter.size() + " worker threads");
+        logger.info(name + ": " + total + " from " + globalCounter.size() + " worker threads");
 
         long[] expected = new long[keyCount];
         for (long[] increments : globalIncrements) {
@@ -195,9 +195,9 @@ public class LockConflictTest extends AbstractTest {
         for (int key = 0; key < keyCount; key++) {
             if (expected[key] != list.get(key)) {
                 failures++;
-                logger.info(basename + ": key=" + key + " expected " + expected[key] + " != " + "actual " + list.get(key));
+                logger.info(name + ": key=" + key + " expected " + expected[key] + " != " + "actual " + list.get(key));
             }
         }
-        assertEquals(basename + ": " + failures + " key=>values have been incremented unexpected", 0, failures);
+        assertEquals(name + ": " + failures + " key=>values have been incremented unexpected", 0, failures);
     }
 }

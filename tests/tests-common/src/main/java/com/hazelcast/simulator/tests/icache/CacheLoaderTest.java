@@ -60,7 +60,7 @@ public class CacheLoaderTest extends AbstractTest {
 
     @Setup
     public void setup() {
-        loaderList = targetInstance.getList(basename + "loaders");
+        loaderList = targetInstance.getList(name + "loaders");
 
         config = new MutableConfiguration<Integer, Integer>();
         config.setReadThrough(true);
@@ -70,8 +70,8 @@ public class CacheLoaderTest extends AbstractTest {
         config.setCacheLoaderFactory(FactoryBuilder.factoryOf(recordingCacheLoader));
 
         CacheManager cacheManager = createCacheManager(targetInstance);
-        cacheManager.createCache(basename, config);
-        cache = cacheManager.getCache(basename);
+        cacheManager.createCache(name, config);
+        cache = cacheManager.getCache(name);
     }
 
     @Warmup(global = false)
@@ -108,13 +108,13 @@ public class CacheLoaderTest extends AbstractTest {
     @Verify(global = false)
     public void verify() {
         RecordingCacheLoader<Integer> loader = (RecordingCacheLoader<Integer>) config.getCacheLoaderFactory().create();
-        logger.info(basename + ": " + loader);
+        logger.info(name + ": " + loader);
     }
 
     @Verify(global = true)
     public void globalVerify() {
         for (int i = 0; i < keyCount; i++) {
-            assertTrue(basename + ": cache should contain key " + i, cache.containsKey(i));
+            assertTrue(name + ": cache should contain key " + i, cache.containsKey(i));
         }
 
         boolean[] loaded = new boolean[keyCount];
@@ -128,7 +128,7 @@ public class CacheLoaderTest extends AbstractTest {
         }
 
         for (int i = 0; i < keyCount; i++) {
-            assertTrue(basename + ": key " + i + " not in loader", loaded[i]);
+            assertTrue(name + ": key " + i + " not in loader", loaded[i]);
         }
     }
 

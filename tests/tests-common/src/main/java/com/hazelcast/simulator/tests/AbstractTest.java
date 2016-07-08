@@ -29,7 +29,7 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
  */
 public abstract class AbstractTest {
 
-    public String basename = getClass().getSimpleName();
+    public String name = getClass().getSimpleName();
 
     protected final ILogger logger = Logger.getLogger(getClass());
 
