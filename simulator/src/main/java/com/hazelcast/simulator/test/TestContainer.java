@@ -34,7 +34,6 @@ import com.hazelcast.simulator.worker.RunWithWorkersRunStrategy;
 import com.hazelcast.simulator.worker.TimeStepRunStrategy;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -145,8 +144,8 @@ public class TestContainer {
 
         try {
             task.call();
-        }finally {
-            if(testPhase == RUN){
+        } finally {
+            if (testPhase == RUN) {
                 saveHdrProbes();
             }
         }
@@ -163,7 +162,7 @@ public class TestContainer {
                             entry.getKey(),
                             getTestStartedTimestamp(),
                             System.currentTimeMillis() - getTestStartedTimestamp());
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }

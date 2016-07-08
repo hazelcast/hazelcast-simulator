@@ -16,13 +16,12 @@
 package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestException;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogProcessor;
 import org.HdrHistogram.HistogramLogWriter;
 import org.HdrHistogram.Recorder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -74,14 +73,21 @@ public class HdrProbe implements Probe {
         return getIntervalHistogram().getTotalCount();
     }
 
-    public void saveToFile(String testId, String probeName, long starttime, long baseTime) throws IOException {
-        File latencyFile =new File("peter-" + testId + '-' + probeName + ".hgrm");
-        HistogramLogWriter writer = new HistogramLogWriter(latencyFile);
-        writer.outputStartTime(starttime);
-        writer.setBaseTime(baseTime);
-        writer.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
-        writer.outputLogFormatVersion();
-        writer.outputLegend();
-        writer.outputIntervalHistogram(recorder.getIntervalHistogram());
+    public void saveToFile(String testId, String probeName, long starttime, long baseTime) throws IOException, InterruptedException {
+        File latencyFile = new File(testId + '-' + probeName + ".hdr");
+//        HistogramLogWriter writer = new HistogramLogWriter(latencyFile);
+//        writer.outputStartTime(starttime);
+//        writer.setBaseTime(baseTime);
+//        writer.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
+//        writer.outputLogFormatVersion();
+//        writer.outputLegend();
+//        writer.outputIntervalHistogram(recorder.getIntervalHistogram());
+
+        //HistogramLogProcessor -i READ.hdr -o uncorrected -outputValueUnitRatio 1000
+
+        HistogramLogProcessor histogramLogWriter = new HistogramLogProcessor(
+                new String[]{"-i", latencyFile.getName(), "-o", "peter", "-outputValueUnitRatio", "1000"});
+        histogramLogWriter.start();
+        histogramLogWriter.join();
     }
 }
