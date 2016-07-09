@@ -1,10 +1,5 @@
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.test;
 
-import com.hazelcast.simulator.test.BaseThreadContext;
-import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContainer;
-import com.hazelcast.simulator.test.TestContextImpl;
-import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -23,7 +18,7 @@ import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static org.junit.Assert.assertEquals;
 
-public class TimeStepRunStrategyIntegrationTest {
+public class TestContainer_TimeStepTest {
 
     @Test
     public void testWithAllPhases() throws Exception {
@@ -89,7 +84,7 @@ public class TimeStepRunStrategyIntegrationTest {
                 .setProperty("threadCount", threadCount)
                 .setProperty("class", testInstance.getClass().getName());
 
-       TestContextImpl testContext = new TestContextImpl(testCase.getId());
+        TestContextImpl testContext = new TestContextImpl(testCase.getId());
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
