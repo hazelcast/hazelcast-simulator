@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.external;
 import com.hazelcast.core.ICountDownLatch;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.tests.AbstractTest;
+import com.hazelcast.simulator.test.AbstractTest;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;

@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.external;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.tests.AbstractTest;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.Bash;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;

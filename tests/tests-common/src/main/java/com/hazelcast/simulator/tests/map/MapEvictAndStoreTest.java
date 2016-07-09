@@ -22,7 +22,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.tests.AbstractTest;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounterPerKey;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 

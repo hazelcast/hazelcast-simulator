@@ -20,7 +20,7 @@ import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.AbstractTest;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.simulator.worker.tasks.NoOperationWorker;
 

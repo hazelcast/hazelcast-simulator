@@ -20,7 +20,7 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.tests.AbstractTest;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
