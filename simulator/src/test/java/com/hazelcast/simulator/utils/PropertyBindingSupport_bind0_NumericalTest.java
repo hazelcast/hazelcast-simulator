@@ -7,7 +7,7 @@ import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind0;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class PropertyBindingSupport_bindProperty_NumericalTest {
+public class PropertyBindingSupport_bind0_NumericalTest {
 
     private final BindPropertyTestClass bindPropertyTestClass = new BindPropertyTestClass();
 
