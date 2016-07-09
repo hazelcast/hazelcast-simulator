@@ -24,7 +24,6 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,11 +102,7 @@ public abstract class TimeStepRunner implements Runnable {
         try {
             constructor.setAccessible(true);
             return constructor.newInstance((Object[]) args);
-        } catch (IllegalAccessException e) {
-            throw new IllegalTestException(e.getMessage(), e);
-        } catch (InstantiationException e) {
-            throw new IllegalTestException(e.getMessage(), e);
-        } catch (InvocationTargetException e) {
+        } catch (Exception e) {
             throw new IllegalTestException(e.getMessage(), e);
         }
     }

@@ -14,7 +14,7 @@ import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
-public class TimeStepRunnerCodeGenerator_IllegalTest {
+public class TimeStepModel_IllegalTest {
 
     private static final AtomicLong id = new AtomicLong();
 
@@ -149,6 +149,14 @@ public class TimeStepRunnerCodeGenerator_IllegalTest {
         assertBroken("class CLAZZ{\n"
                 + "@TimeStep(prob=0.1) public void timeStep1(){}\n"
                 + "@TimeStep(prob=0.1) public void timeStep2(){}\n"
+                + "}\n");
+    }
+
+    @Test
+    public void test_probability_multipleMethodsExceedOne() {
+        assertBroken("class CLAZZ{\n"
+                + "@TimeStep(prob=1) public void timeStep1(){}\n"
+                + "@TimeStep(prob=1) public void timeStep2(){}\n"
                 + "}\n");
     }
 

@@ -74,11 +74,6 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
                 return null;
             }
 
-            // create instance to get the class of the IWorker implementation
-            //IWorker workerInstance = invokeMethod(testInstance, runWithWorkersMethod);
-            //Class<? extends IWorker> workerClass = workerInstance.getClass();
-            ///    Map<Enum, Probe> operationProbeMap = createOperationProbeMap(workerClass, workerInstance);
-
             onRunStarted();
             // spawn workers and wait for completion
             IWorker worker = runWorkers();
@@ -103,9 +98,6 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
             }
 
             testContainer.getDependencyInjector().inject(worker);
-//            if (operationProbes != null) {
-//                ((IMultipleProbesWorker) worker).setProbeMap(operationProbes);
-//            }
 
             spawner.spawn(new WorkerTask(worker));
             workers[i] = worker;
