@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.findAllMethods;
+import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isPublic;
 
 public class TimeStepModel {
@@ -245,10 +247,14 @@ public class TimeStepModel {
         }
 
         if (classes.size() > 1) {
-            throw new IllegalTestException("More than 1 type of WorkerContext class found:" + classes);
+            throw new IllegalTestException("More than 1 type of Thread Context class found:" + classes);
         }
 
-        return classes.iterator().next();
+        Class threadContextClazz = classes.iterator().next();
+
+       // todo: constructor
+
+        return threadContextClazz;
     }
 
     private static void collectThreadContextClass(Set<Class> classes, List<Method> methods) {
@@ -257,6 +263,27 @@ public class TimeStepModel {
                 if (paramType.isAssignableFrom(Probe.class)) {
                     continue;
                 }
+
+                if (paramType.isPrimitive()) {
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
+                            + "Thread context can't be a primitive.", method, paramType));
+                }
+
+                if (paramType.isInterface()) {
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
+                            + "Thread context can't be an interface.", method, paramType));
+                }
+
+                if (isAbstract(paramType.getModifiers())) {
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
+                            + "Thread context can't be an abstract.", method, paramType));
+                }
+
+                if (!isPublic(paramType.getModifiers())) {
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
+                            + "Thread context should be public", method, paramType));
+                }
+
 
                 classes.add(paramType);
             }
