@@ -219,8 +219,7 @@ public class TestContainer {
         }
 
         if (runStrategies.isEmpty()) {
-            throw new IllegalTestException(
-                    format("Test must contain either %s or %s or %s method",
+            throw new IllegalTestException(format("Test must contain either %s or %s or %s method",
                             Run.class, RunWithWorker.class, TimeStep.class));
         }
 

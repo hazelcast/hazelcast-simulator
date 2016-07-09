@@ -1,6 +1,0 @@
-null
-java.lang.ClassCastException: com.hazelcast.simulator.worker.TimeStepIntegrationTest$DummyTestContext cannot be cast to com.hazelcast.simulator.test.TestContextImpl
-	at GeneratedTimeStepRunner_1.timeStepLoop(GeneratedTimeStepRunner_1.java:19)
-	at com.hazelcast.simulator.worker.TimeStepRunner.run(TimeStepRunner.java:72)
-	at java.lang.Thread.run(Thread.java:745)
-	at com.hazelcast.simulator.utils.ThreadSpawner$ReportExceptionThread.run(ThreadSpawner.java:181)

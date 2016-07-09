@@ -15,6 +15,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,6 +104,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
+    @Ignore
     public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() throws InterruptedException {
         performanceMonitor.start();
         sleepMillis(300);
@@ -127,6 +129,7 @@ public class WorkerPerformanceMonitorTest {
         verifyServerConnector();
     }
 
+    @Ignore
     @Test
     public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLightweightProbe() throws InterruptedException {
         performanceMonitor.start();

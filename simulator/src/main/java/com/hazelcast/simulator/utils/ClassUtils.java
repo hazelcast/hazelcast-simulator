@@ -15,9 +15,12 @@
  */
 package com.hazelcast.simulator.utils;
 
-public class ClassUtils {
+public final class ClassUtils {
+
+    private ClassUtils() {
+    }
+
     public static String getClassName(Class clazz) {
         return clazz == null ? null : clazz.getName().replace('$', '.');
     }
-
 }
