@@ -20,7 +20,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.tests.AbstractTest;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheReadWriteCounter;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheLoader;
 import com.hazelcast.simulator.tests.icache.helpers.RecordingCacheWriter;

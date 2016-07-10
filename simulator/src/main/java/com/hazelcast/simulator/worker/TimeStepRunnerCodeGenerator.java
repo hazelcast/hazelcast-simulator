@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
+
 /**
  * todo:
  * - verification: detecting that timestep method only has probe/context args
@@ -178,9 +180,6 @@ public class TimeStepRunnerCodeGenerator {
         }
     }
 
-    private String getClassName(Class clazz) {
-        return clazz == null ? null : clazz.getName().replace('$', '.');
-    }
 
     static class JavaSourceFromString extends SimpleJavaFileObject {
         final String code;

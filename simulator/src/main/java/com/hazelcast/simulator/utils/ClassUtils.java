@@ -13,8 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test;
+package com.hazelcast.simulator.utils;
 
-public interface DependencyInjectorAware {
-    void inject(DependencyInjector dependencyInjector);
+public final class ClassUtils {
+
+    private ClassUtils() {
+    }
+
+    public static String getClassName(Class clazz) {
+        return clazz == null ? null : clazz.getName().replace('$', '.');
+    }
 }
