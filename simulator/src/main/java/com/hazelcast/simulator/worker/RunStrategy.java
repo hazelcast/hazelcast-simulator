@@ -29,25 +29,45 @@ public abstract class RunStrategy implements Callable {
     private volatile long startedTimeStamp;
 
     /**
-     * Returns the number  of iterations.
+     * Returns the number  of iterations, e.g. the number of times that a timestep method has been called.
      *
-     * @return
+     * @return the number of operations.
      */
     public abstract long iterations();
 
+    /**
+     * Checks if the run strategy is running.
+     *
+     * This method is thread-safe.
+     *
+     * @return true if running, false otherwise.
+     */
     public final boolean isRunning() {
         return running;
     }
 
+    /**
+     * Notifies the RunStrategy it has started running.
+     */
     protected final void onRunStarted() {
         running = true;
         startedTimeStamp = System.currentTimeMillis();
     }
 
+    /**
+     * Notifies the RunStrategy that it has completed running.
+     */
     protected final void onRunCompleted() {
         running = false;
     }
 
+    /**
+     * Returns the timestap when the test started running. As long as the test has not started, the returned value is 0.
+     *
+     * This method is thread-safe.
+     *
+     * @return the started timestamp.
+     */
     public final long getStartedTimestamp() {
         return startedTimeStamp;
     }

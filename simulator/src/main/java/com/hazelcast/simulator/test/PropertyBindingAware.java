@@ -16,5 +16,5 @@
 package com.hazelcast.simulator.test;
 
 public interface PropertyBindingAware {
-    void inject(PropertyBinding binding);
+    void bind(PropertyBinding binding);
 }

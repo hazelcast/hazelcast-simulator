@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -25,7 +25,6 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 
 import java.util.concurrent.atomic.AtomicLong;

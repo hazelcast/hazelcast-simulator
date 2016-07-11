@@ -22,12 +22,12 @@ import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.List;
 
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isStatic;
 
 public final class AnnotationReflectionUtils {
 
@@ -221,7 +221,7 @@ public final class AnnotationReflectionUtils {
     }
 
     private static void assertNotStatic(Method method) {
-        if (Modifier.isStatic(method.getModifiers())) {
+        if (isStatic(method.getModifiers())) {
             throw new ReflectionException(format("Method  %s can't be static", method.getName()));
         }
     }

@@ -20,8 +20,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Needs to be placed on a load generating method of a test.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface TimeStep {
+
+    /**
+     * The probability of this method running. 0 means there is 0% chance, and 1 means there is 100% chance.
+     *
+     * The sum of probability of all timestep methods needs to be one.
+     *
+     * @return the probability.
+     */
     double prob() default 1;
 }

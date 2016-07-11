@@ -20,6 +20,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
+/**
+ * Is run after a thread executing {@link TimeStep}, completes. So for every load generating thread, there will be 1 call
+ * to the {@link @AfterRun} method.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface AfterRun {

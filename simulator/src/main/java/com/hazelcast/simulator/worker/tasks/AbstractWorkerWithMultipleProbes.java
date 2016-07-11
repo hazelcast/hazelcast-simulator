@@ -51,7 +51,7 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
     }
 
     @Override
-    public void inject(PropertyBinding binding) {
+    public void bind(PropertyBinding binding) {
         Set<O> operations = operationSelectorBuilder.getOperations();
         workerProbes = new Probe[operations.size()];
         for (Enum operation : operations) {

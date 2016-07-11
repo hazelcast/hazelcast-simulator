@@ -100,6 +100,8 @@ public class PropertyBinding {
     }
 
     public String loadProperty(String propertyName) {
+        checkNotNull(propertyName, "propertyName can't be null");
+
         String value = testCase.getProperty(propertyName);
         if (value != null) {
             unusedProperties.remove(propertyName);
@@ -119,7 +121,7 @@ public class PropertyBinding {
         } while (classType != null);
 
         if (object instanceof PropertyBindingAware) {
-            ((PropertyBindingAware) object).inject(this);
+            ((PropertyBindingAware) object).bind(this);
         }
     }
 

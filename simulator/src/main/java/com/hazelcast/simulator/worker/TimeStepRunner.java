@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.PropertyBinding;
 import com.hazelcast.simulator.test.PropertyBindingAware;
-import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
@@ -54,7 +54,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     }
 
     @Override
-    public void inject(PropertyBinding binding) {
+    public void bind(PropertyBinding binding) {
         for (Method method : timeStepModel.getActiveTimeStepMethods()) {
             Probe probe = binding.getOrCreateProbe(method.getName(), false);
             if (probe != null) {
@@ -119,7 +119,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
                 method.invoke(testInstance, threadContext);
                 break;
             default:
-                throw new RuntimeException();
+                throw new RuntimeException("Unhandled number of arguments for '" + method + "'");
         }
     }
 }
