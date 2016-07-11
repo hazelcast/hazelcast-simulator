@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.DependencyInjector;
+import com.hazelcast.simulator.test.PropertyBinding;
 import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -51,11 +51,11 @@ public class TimeStepModel {
     private final List<Method> timeStepMethods;
     private final Map<Method, Double> probabilities;
     private final byte[] timeStepProbabilityArray;
-    private final DependencyInjector dependencyInjector;
+    private final PropertyBinding propertyBinding;
     private final Constructor threadContextConstructor;
 
-    public TimeStepModel(Class testClass, DependencyInjector dependencyInjector) {
-        this.dependencyInjector = dependencyInjector;
+    public TimeStepModel(Class testClass, PropertyBinding propertyBinding) {
+        this.propertyBinding = propertyBinding;
         this.testClass = testClass;
         this.beforeRunMethods = loadBeforeRunMethods();
         this.afterRunMethods = loadAfterRunMethods();
@@ -64,40 +64,6 @@ public class TimeStepModel {
         this.threadContextConstructor = loadThreadContextConstructor();
         this.probabilities = loadProbabilities();
         this.timeStepProbabilityArray = loadTimeStepProbabilityArray();
-    }
-
-    public Constructor getThreadContextConstructor() {
-        return threadContextConstructor;
-    }
-
-    private Constructor loadThreadContextConstructor() {
-        if (threadContextClass == null) {
-            return null;
-        }
-
-        Constructor constructor = null;
-        try {
-            constructor = threadContextClass.getDeclaredConstructor();
-        } catch (NoSuchMethodException ignore) {
-        }
-
-        try {
-            constructor = threadContextClass.getDeclaredConstructor(testClass);
-        } catch (NoSuchMethodException ignore) {
-        }
-
-        if (constructor == null) {
-            throw new IllegalTestException("No valid constructor found for " + constructor.getName() + ". "
-                    + "The constructor should have no arguments, or an instance of the Test as argument (non static inner class)");
-        }
-
-        try {
-            constructor.setAccessible(true);
-        } catch (Exception e) {
-            throw new IllegalTestException(e.getMessage(), e);
-        }
-
-        return constructor;
     }
 
     private List<Method> loadBeforeRunMethods() {
@@ -144,7 +110,7 @@ public class TimeStepModel {
             String methodName = method.getName();
             if (!names.add(methodName)) {
                 throw new IllegalTestException(
-                        testClass.getName() + " has 2 or more timeStep methods with the name:" + methodName);
+                        testClass.getName() + " has 2 or more timeStep methods with name '" + methodName + "'");
             }
         }
     }
@@ -181,7 +147,7 @@ public class TimeStepModel {
 
             double probability;
             String propertyName = method.getName() + "Prob";
-            String configuredValue = dependencyInjector.loadProperty(propertyName);
+            String configuredValue = propertyBinding.loadProperty(propertyName);
             if (configuredValue == null) {
                 // nothing was specified. So lets use what is on the annotation
                 TimeStep timeStep = method.getAnnotation(TimeStep.class);
@@ -286,7 +252,41 @@ public class TimeStepModel {
         return result;
     }
 
-    public Class loadThreadContextClass() {
+    public Constructor getThreadContextConstructor() {
+        return threadContextConstructor;
+    }
+
+    private Constructor loadThreadContextConstructor() {
+        if (threadContextClass == null) {
+            return null;
+        }
+
+        Constructor constructor = null;
+        try {
+            constructor = threadContextClass.getDeclaredConstructor();
+        } catch (NoSuchMethodException ignore) {
+        }
+
+        try {
+            constructor = threadContextClass.getDeclaredConstructor(testClass);
+        } catch (NoSuchMethodException ignore) {
+        }
+
+        if (constructor == null) {
+            throw new IllegalTestException("No valid constructor found for " + constructor.getName() + ". "
+                    + "The constructor should have no arguments or one argument of type '" + threadContextClass.getName() + "'");
+        }
+
+        try {
+            constructor.setAccessible(true);
+        } catch (Exception e) {
+            throw new IllegalTestException(e.getMessage(), e);
+        }
+
+        return constructor;
+    }
+
+    private Class loadThreadContextClass() {
         Set<Class> classes = new HashSet<Class>();
         collectThreadContextClass(classes, beforeRunMethods);
         collectThreadContextClass(classes, afterRunMethods);

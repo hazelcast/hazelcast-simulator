@@ -55,6 +55,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostO
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static javassist.Modifier.isPublic;
 
 /**
  * Container for test class instances.
@@ -73,8 +74,8 @@ public class TestContainer {
     private final TestCase testCase;
     private final Object testInstance;
     private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
-    private final DependencyInjector dependencyInjector;
-    private final Class testInstanceClass;
+    private final PropertyBinding propertyBinding;
+    private final Class testClass;
 
     public TestContainer(TestContext testContext, TestCase testCase) {
         this(testContext, null, testCase);
@@ -83,21 +84,22 @@ public class TestContainer {
     public TestContainer(TestContext testContext, Object givenTestInstance, TestCase testCase) {
         this.testContext = checkNotNull(testContext, "testContext can't null!");
         this.testCase = checkNotNull(testCase, "testCase can't be null!");
-        this.dependencyInjector = new DependencyInjector(testContext, testCase);
+        this.propertyBinding = new PropertyBinding(testCase)
+            .setTestContext(testContext);
 
-        dependencyInjector.inject(this);
+        propertyBinding.inject(this);
 
         if (givenTestInstance == null) {
             this.testInstance = newTestInstance();
         } else {
             this.testInstance = givenTestInstance;
         }
-        this.testInstanceClass = testInstance.getClass();
-        dependencyInjector.inject(testInstance);
+        this.testClass = testInstance.getClass();
+        propertyBinding.inject(testInstance);
 
         registerTestPhaseTasks();
 
-        dependencyInjector.ensureNoUnusedProperties();
+        propertyBinding.ensureNoUnusedProperties();
     }
 
     private Object newTestInstance() {
@@ -110,8 +112,8 @@ public class TestContainer {
         }
     }
 
-    public DependencyInjector getDependencyInjector() {
-        return dependencyInjector;
+    public PropertyBinding getPropertyBinding() {
+        return propertyBinding;
     }
 
     public Object getTestInstance() {
@@ -142,7 +144,7 @@ public class TestContainer {
     }
 
     public Map<String, Probe> getProbeMap() {
-        return dependencyInjector.getProbeMap();
+        return propertyBinding.getProbeMap();
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
@@ -171,12 +173,12 @@ public class TestContainer {
         } catch (IllegalTestException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalTestException("Error during search for annotated test methods in" + testInstanceClass.getName(), e);
+            throw new IllegalTestException("Error during search for annotated test methods in" + testClass.getName(), e);
         }
     }
 
     private void registerSetupTask() {
-        Method setupMethod = getAtMostOneVoidMethod(testInstanceClass, Setup.class);
+        Method setupMethod = getAtMostOneVoidMethod(testClass, Setup.class);
         if (setupMethod != null) {
             Object[] args = getSetupArguments(setupMethod);
             taskPerPhaseMap.put(SETUP, new MethodInvokingCallable(testInstance, setupMethod, args));
@@ -194,7 +196,7 @@ public class TestContainer {
             Class<?> parameterType = parameterTypes[i];
             if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
                 throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found %s at position %d",
-                        testInstanceClass.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName(), i));
+                        testClass.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName(), i));
             }
             arguments[i] = testContext;
         }
@@ -202,28 +204,29 @@ public class TestContainer {
     }
 
     private void registerRunStrategyTask() {
-        Method runMethod = getAtMostOneVoidMethodWithoutArgs(testInstanceClass, Run.class);
+        Method runMethod = getAtMostOneVoidMethodWithoutArgs(testClass, Run.class);
         List<RunStrategy> runStrategies = new LinkedList<RunStrategy>();
         if (runMethod != null) {
             runStrategies.add(new PrimordialRunStrategy(testInstance, runMethod));
         }
 
-        Method runWithWorker = getAtMostOneMethodWithoutArgs(testInstanceClass, RunWithWorker.class, IWorker.class);
+        Method runWithWorker = getAtMostOneMethodWithoutArgs(testClass, RunWithWorker.class, IWorker.class);
         if (runWithWorker != null) {
             runStrategies.add(new RunWithWorkersRunStrategy(this, runWithWorker));
         }
 
-        List<Method> timeStepMethods = findAllMethods(testInstanceClass, TimeStep.class);
+        List<Method> timeStepMethods = findAllMethods(testClass, TimeStep.class);
         if (timeStepMethods.size() > 0) {
             runStrategies.add(new TimeStepRunStrategy(this));
         }
 
         if (runStrategies.isEmpty()) {
             throw new IllegalTestException(format("Test must contain either %s or %s or %s method",
-                            Run.class, RunWithWorker.class, TimeStep.class));
+                    Run.class, RunWithWorker.class, TimeStep.class));
         }
 
         if (runStrategies.size() > 1) {
+            //todo: better exception
             throw new IllegalTestException("Test must contain a single run strategy.");
         }
 
@@ -231,10 +234,16 @@ public class TestContainer {
     }
 
     private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
-        Method method = getAtMostOneVoidMethodWithoutArgs(testInstanceClass, annotationClass, filter);
-        if (method != null) {
-            taskPerPhaseMap.put(testPhase, new MethodInvokingCallable(testInstance, method));
-        }
-    }
+        Method method = getAtMostOneVoidMethodWithoutArgs(testClass, annotationClass, filter);
 
+        if (method == null) {
+            return;
+        }
+
+        if (!isPublic(method.getModifiers())) {
+            throw new IllegalTestException("Method '" + method + "' should be public");
+        }
+
+        taskPerPhaseMap.put(testPhase, new MethodInvokingCallable(testInstance, method));
+    }
 }

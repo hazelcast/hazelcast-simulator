@@ -16,7 +16,7 @@
 
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.test.DependencyInjector;
+import com.hazelcast.simulator.test.PropertyBinding;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -46,23 +46,23 @@ public class TimeStepRunStrategy extends RunStrategy {
     private final TimeStepModel timeStepModel;
     private final ThreadSpawner spawner;
     private volatile TimeStepRunner[] runners;
-    private final DependencyInjector dependencyInjector;
+    private final PropertyBinding propertyBinding;
 
     public TimeStepRunStrategy(TestContainer testContainer) {
-        this.dependencyInjector = testContainer.getDependencyInjector();
-        dependencyInjector.inject(this);
+        this.propertyBinding = testContainer.getPropertyBinding();
+        propertyBinding.inject(this);
 
         this.testContainer = testContainer;
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
 
         TimeStepRunnerCodeGenerator codeGenerator = new TimeStepRunnerCodeGenerator();
-        this.timeStepModel = new TimeStepModel(testInstance.getClass(), dependencyInjector);
+        this.timeStepModel = new TimeStepModel(testInstance.getClass(), propertyBinding);
 
         this.timeStepRunnerClass = codeGenerator.compile(
                  timeStepModel,
-                dependencyInjector.getMetronomeClass(),
-                dependencyInjector.getProbeClass());
+                propertyBinding.getMetronomeClass(),
+                propertyBinding.getProbeClass());
 
         this.spawner = new ThreadSpawner(testContext.getTestId());
     }
@@ -103,7 +103,7 @@ public class TimeStepRunStrategy extends RunStrategy {
         Constructor<TimeStepRunner> constructor = timeStepRunnerClass.getConstructor(Object.class, TimeStepModel.class);
         for (int i = 0; i < threadCount; i++) {
             TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel);
-            dependencyInjector.inject(runner);
+            propertyBinding.inject(runner);
             spawner.spawn(runner);
             runners[i] = runner;
         }

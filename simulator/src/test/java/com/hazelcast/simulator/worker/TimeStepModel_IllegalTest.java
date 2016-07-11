@@ -1,9 +1,8 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.test.DependencyInjector;
 import com.hazelcast.simulator.test.IllegalTestException;
+import com.hazelcast.simulator.test.PropertyBinding;
 import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.compiler.InMemoryJavaCompiler;
 import org.junit.Test;
 
@@ -11,7 +10,6 @@ import java.util.UUID;
 
 import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 
 public class TimeStepModel_IllegalTest {
 
@@ -173,10 +171,9 @@ public class TimeStepModel_IllegalTest {
             throw new RuntimeException(e);
         }
 
-        TestContext context = mock(TestContext.class);
         TestCase testCase = new TestCase("foo").setProperty("class", clazz.getName());
         try {
-            new TimeStepModel(clazz, new DependencyInjector(context, testCase));
+            new TimeStepModel(clazz, new PropertyBinding(testCase));
             fail();
         } catch (IllegalTestException e) {
             e.printStackTrace();

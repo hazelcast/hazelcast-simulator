@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.DependencyInjector;
-import com.hazelcast.simulator.test.DependencyInjectorAware;
+import com.hazelcast.simulator.test.PropertyBinding;
+import com.hazelcast.simulator.test.PropertyBindingAware;
 import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 
-public abstract class TimeStepRunner implements Runnable, DependencyInjectorAware {
+public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     @InjectTestContext
     protected TestContext testContext;
     @InjectMetronome
@@ -54,9 +54,9 @@ public abstract class TimeStepRunner implements Runnable, DependencyInjectorAwar
     }
 
     @Override
-    public void inject(DependencyInjector injector) {
+    public void inject(PropertyBinding binding) {
         for (Method method : timeStepModel.getActiveTimeStepMethods()) {
-            Probe probe = injector.getOrCreateProbe(method.getName(), false);
+            Probe probe = binding.getOrCreateProbe(method.getName(), false);
             if (probe != null) {
                 probeMap.put(method.getName(), probe);
             }

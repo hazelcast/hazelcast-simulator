@@ -45,7 +45,7 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
     private volatile IWorker[] workers;
 
     public RunWithWorkersRunStrategy(TestContainer testContainer, Method runWithWorkersMethod) {
-        testContainer.getDependencyInjector().inject(this);
+        testContainer.getPropertyBinding().inject(this);
 
         this.testContainer = testContainer;
         this.testContext = testContainer.getTestContext();
@@ -98,7 +98,7 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
                 firstWorker = worker;
             }
 
-            testContainer.getDependencyInjector().inject(worker);
+            testContainer.getPropertyBinding().inject(worker);
 
             spawner.spawn(new WorkerTask(worker));
             workers[i] = worker;

@@ -1,8 +1,7 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.test.DependencyInjector;
+import com.hazelcast.simulator.test.PropertyBinding;
 import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.compiler.InMemoryJavaCompiler;
 import org.junit.Test;
 
@@ -11,7 +10,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
 
 public class TimeStepModel_probabilityTest {
 
@@ -66,11 +64,10 @@ public class TimeStepModel_probabilityTest {
             throw new RuntimeException(e);
         }
 
-        TestContext context = mock(TestContext.class);
         TestCase testCase = new TestCase("foo").setProperty("class", clazz.getName());
         for (Map.Entry<String, Double> entry : probs.entrySet()) {
             testCase.setProperty(entry.getKey(),entry.getValue());
         }
-        return new TimeStepModel(clazz, new DependencyInjector(context, testCase));
+        return new TimeStepModel(clazz, new PropertyBinding( testCase));
     }
 }

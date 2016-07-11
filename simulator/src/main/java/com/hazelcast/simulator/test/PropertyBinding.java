@@ -58,7 +58,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * </ol>
  */
 @SuppressWarnings("checkstyle:visibilitymodifier")
-public class DependencyInjector {
+public class PropertyBinding {
 
     // properties
     public int metronomeIntervalUs;
@@ -67,14 +67,13 @@ public class DependencyInjector {
 
     private final Class<? extends Probe> probeClass;
     private final Class<? extends Metronome> metronomeClass;
-    private final TestContext testContext;
+    private TestContext testContext;
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<String>();
 
-    public DependencyInjector(TestContext testContext, TestCase testCase) {
+    public PropertyBinding(TestCase testCase) {
         this.testCase = testCase;
-        this.testContext = testContext;
         this.unusedProperties.addAll(testCase.getProperties().keySet());
         unusedProperties.remove("class");
 
@@ -82,6 +81,11 @@ public class DependencyInjector {
 
         this.metronomeClass = loadMetronomeClass();
         this.probeClass = loadProbeClass();
+    }
+
+    public PropertyBinding setTestContext(TestContext testContext) {
+        this.testContext = testContext;
+        return this;
     }
 
     public void ensureNoUnusedProperties() {
@@ -114,8 +118,8 @@ public class DependencyInjector {
             classType = classType.getSuperclass();
         } while (classType != null);
 
-        if (object instanceof DependencyInjectorAware) {
-            ((DependencyInjectorAware) object).inject(this);
+        if (object instanceof PropertyBindingAware) {
+            ((PropertyBindingAware) object).inject(this);
         }
     }
 

@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.DependencyInjector;
-import com.hazelcast.simulator.test.DependencyInjectorAware;
+import com.hazelcast.simulator.test.PropertyBinding;
+import com.hazelcast.simulator.test.PropertyBindingAware;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
@@ -38,7 +38,7 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 @Deprecated
 public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
         extends VeryAbstractWorker
-        implements DependencyInjectorAware {
+        implements PropertyBindingAware {
 
     private final OperationSelectorBuilder<O> operationSelectorBuilder;
     private final OperationSelector<O> operationSelector;
@@ -51,12 +51,12 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
     }
 
     @Override
-    public void inject(DependencyInjector dependencyInjector) {
+    public void inject(PropertyBinding binding) {
         Set<O> operations = operationSelectorBuilder.getOperations();
         workerProbes = new Probe[operations.size()];
         for (Enum operation : operations) {
             String probeName = capitalizeFully(operation.name(), '_').replace("_", "") + "Probe";
-            Probe probe = dependencyInjector.getOrCreateProbe(probeName, false);
+            Probe probe = binding.getOrCreateProbe(probeName, false);
             workerProbes[operation.ordinal()] = probe;
         }
     }

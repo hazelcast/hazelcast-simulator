@@ -28,6 +28,11 @@ public abstract class RunStrategy implements Callable {
     private volatile boolean running;
     private volatile long startedTimeStamp;
 
+    /**
+     * Returns the number  of iterations.
+     *
+     * @return
+     */
     public abstract long iterations();
 
     public final boolean isRunning() {
