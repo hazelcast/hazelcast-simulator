@@ -69,11 +69,11 @@ public class TimeStepRunStrategy extends RunStrategy {
 
     @Override
     public long iterations() {
-        TimeStepRunner[] workers = this.runners;
+        TimeStepRunner[] runners = this.runners;
         long iterations = 0;
-        if (workers != null) {
-            for (TimeStepRunner worker : workers) {
-                iterations += worker.iteration();
+        if (runners != null) {
+            for (TimeStepRunner runner : runners) {
+                iterations += runner.iteration();
             }
         }
         return iterations;
@@ -104,7 +104,6 @@ public class TimeStepRunStrategy extends RunStrategy {
         for (int i = 0; i < threadCount; i++) {
             TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel);
             dependencyInjector.inject(runner);
-            runner.initProbes(dependencyInjector);
             spawner.spawn(runner);
             runners[i] = runner;
         }

@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.DependencyInjector;
+import com.hazelcast.simulator.test.DependencyInjectorAware;
 import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
@@ -24,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 
-public abstract class TimeStepRunner implements Runnable {
+public abstract class TimeStepRunner implements Runnable, DependencyInjectorAware {
     @InjectTestContext
     protected TestContext testContext;
     @InjectMetronome
@@ -51,7 +53,8 @@ public abstract class TimeStepRunner implements Runnable {
         this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
     }
 
-    public void initProbes(DependencyInjector injector) {
+    @Override
+    public void inject(DependencyInjector injector) {
         for (Method method : timeStepModel.getActiveTimeStepMethods()) {
             Probe probe = injector.getOrCreateProbe(method.getName(), false);
             if (probe != null) {
@@ -76,31 +79,16 @@ public abstract class TimeStepRunner implements Runnable {
     }
 
     private Object initThreadContext() {
-        Class workerContextClazz = timeStepModel.getThreadContextClass();
-        if (workerContextClazz == null) {
+        Constructor constructor = timeStepModel.getThreadContextConstructor();
+        if (constructor == null) {
             return null;
         }
 
-        Constructor constructor = null;
-        Object[] args = null;
-        try {
-            constructor = workerContextClazz.getDeclaredConstructor();
-            args = new Object[0];
-        } catch (NoSuchMethodException ignore) {
-        }
+        Object[] args = constructor.getParameterTypes().length == 0
+                ? new Object[]{}
+                : new Object[]{threadContext};
 
         try {
-            constructor = workerContextClazz.getDeclaredConstructor(testInstance.getClass());
-            args = new Object[]{testInstance};
-        } catch (NoSuchMethodException ignore) {
-        }
-
-        if (constructor == null) {
-            throw new IllegalTestException("No valid constructor found for " + workerContextClazz.getName());
-        }
-
-        try {
-            constructor.setAccessible(true);
             return constructor.newInstance((Object[]) args);
         } catch (Exception e) {
             throw new IllegalTestException(e.getMessage(), e);
@@ -109,17 +97,7 @@ public abstract class TimeStepRunner implements Runnable {
 
     private void beforeRun() throws Exception {
         for (Method beforeRunMethod : timeStepModel.getBeforeRunMethods()) {
-            int argCount = beforeRunMethod.getParameterTypes().length;
-            switch (argCount) {
-                case 0:
-                    beforeRunMethod.invoke(testInstance);
-                    break;
-                case 1:
-                    beforeRunMethod.invoke(testInstance, threadContext);
-                    break;
-                default:
-                    throw new RuntimeException();
-            }
+            run(beforeRunMethod);
         }
     }
 
@@ -127,17 +105,21 @@ public abstract class TimeStepRunner implements Runnable {
 
     private void afterRun() throws Exception {
         for (Method afterRunMethod : timeStepModel.getAfterRunMethods()) {
-            int argCount = afterRunMethod.getParameterTypes().length;
-            switch (argCount) {
-                case 0:
-                    afterRunMethod.invoke(testInstance);
-                    break;
-                case 1:
-                    afterRunMethod.invoke(testInstance, threadContext);
-                    break;
-                default:
-                    throw new RuntimeException();
-            }
+            run(afterRunMethod);
+        }
+    }
+
+    private void run(Method method) throws IllegalAccessException, InvocationTargetException {
+        int argCount = method.getParameterTypes().length;
+        switch (argCount) {
+            case 0:
+                method.invoke(testInstance);
+                break;
+            case 1:
+                method.invoke(testInstance, threadContext);
+                break;
+            default:
+                throw new RuntimeException();
         }
     }
 }

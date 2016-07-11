@@ -3,12 +3,11 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.simulator.test.DependencyInjector;
 import com.hazelcast.simulator.test.IllegalTestException;
 import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.utils.compiler.InMemoryJavaCompiler;
 import org.junit.Test;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
 
 import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
 import static org.junit.Assert.fail;
@@ -16,7 +15,6 @@ import static org.mockito.Mockito.mock;
 
 public class TimeStepModel_IllegalTest {
 
-    private static final AtomicLong id = new AtomicLong();
 
     // ====================== threadContext ===========================
 
@@ -160,13 +158,12 @@ public class TimeStepModel_IllegalTest {
                 + "}\n");
     }
 
-
     public void assertBroken(String s) {
         String header = "import java.util.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n";
         s = header + s;
-        String className = "CLAZZ" + id.incrementAndGet();
+        String className = "CLAZZ" + UUID.randomUUID().toString().replace("-","");
         s = s.replace("CLAZZ", className);
 
         Class clazz;
@@ -177,7 +174,6 @@ public class TimeStepModel_IllegalTest {
         }
 
         TestContext context = mock(TestContext.class);
-        TestContainer testContainer = mock(TestContainer.class);
         TestCase testCase = new TestCase("foo").setProperty("class", clazz.getName());
         try {
             new TimeStepModel(clazz, new DependencyInjector(context, testCase));
@@ -186,5 +182,4 @@ public class TimeStepModel_IllegalTest {
             e.printStackTrace();
         }
     }
-
 }

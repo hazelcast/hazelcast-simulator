@@ -50,45 +50,8 @@ import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
 
 /**
  * todo:
- * - verification: detecting that timestep method only has probe/context args
  * - better id for the timesteprunner. Needs to be the same on all members.
  * - make sure all workers correctly set iteration.
- * <p>
- * done:
- * - old workers need to get probe
- * - isWorkerStopped
- * - determining the right probe class
- * - what should happen when no probe-class is defined, but the user has a probe method.
- * - there is a problem with the hbmr generator when there are no files
- * - loading the right probe instance per timestep method.
- * - no exiting of process.
- * - rename worker
- * - verification: max number of timestep methods bound to 128
- * - timestep probability binding
- * - using the prob from the properties.
- * - a unused timestep method is removed from code generation
- * - the timestep methods now all get equal chance to run. Which is not valid
- * - basic validation of timestep probability on the annotations
- * - location of the timesteprunner class file
- * - timesteprunner needs to have unique name.
- * - class file should be written of the test
- * - compile error of generated code exception
- * - property binding merge into DependencyInjector.
- * - keep track of property usage. If property not used, then throw an error.
- * - after completion & after run?
- * - split class hierarchies (no need to use IWorker) for the new worker
- * - configure interval in us for metronome
- * - single mechanism for determining the metronome
- * - timestep methods can handle exception
- * - generating 2 arg method method
- * - each timestep method has unique name
- * - detecting that each timestep method has unique name
- * - ensure all before/after/timestep methods are public
- * - ensure that beforeAfterRun have at most 1 argument
- * - ensure that before/afterRun methods have no probe argument
- * - probe defined per timestep method
- * - in case of calling with probe argument, then no time tracking for probe should be done
- * - determining the right metronome class
  */
 public class TimeStepRunnerCodeGenerator {
 
@@ -179,7 +142,6 @@ public class TimeStepRunnerCodeGenerator {
             throw new RuntimeException(e);
         }
     }
-
 
     static class JavaSourceFromString extends SimpleJavaFileObject {
         final String code;

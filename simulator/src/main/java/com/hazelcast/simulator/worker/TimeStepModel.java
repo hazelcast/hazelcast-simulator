@@ -22,6 +22,7 @@ import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.findAllMethods;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isPublic;
@@ -38,7 +41,7 @@ import static java.lang.reflect.Modifier.isPublic;
 public class TimeStepModel {
 
     static final int PROBABILITY_PRECISION = 3;
-    static final double PROBABILITY_LENGTH = Math.pow(10, PROBABILITY_PRECISION);
+    static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
     static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
 
     private final Class testClass;
@@ -49,6 +52,7 @@ public class TimeStepModel {
     private final Map<Method, Double> probabilities;
     private final byte[] timeStepProbabilityArray;
     private final DependencyInjector dependencyInjector;
+    private final Constructor threadContextConstructor;
 
     public TimeStepModel(Class testClass, DependencyInjector dependencyInjector) {
         this.dependencyInjector = dependencyInjector;
@@ -57,8 +61,43 @@ public class TimeStepModel {
         this.afterRunMethods = loadAfterRunMethods();
         this.timeStepMethods = loadTimeStepMethods();
         this.threadContextClass = loadThreadContextClass();
+        this.threadContextConstructor = loadThreadContextConstructor();
         this.probabilities = loadProbabilities();
-        this.timeStepProbabilityArray = newTimeStepProbabilityArray();
+        this.timeStepProbabilityArray = loadTimeStepProbabilityArray();
+    }
+
+    public Constructor getThreadContextConstructor() {
+        return threadContextConstructor;
+    }
+
+    private Constructor loadThreadContextConstructor() {
+        if (threadContextClass == null) {
+            return null;
+        }
+
+        Constructor constructor = null;
+        try {
+            constructor = threadContextClass.getDeclaredConstructor();
+        } catch (NoSuchMethodException ignore) {
+        }
+
+        try {
+            constructor = threadContextClass.getDeclaredConstructor(testClass);
+        } catch (NoSuchMethodException ignore) {
+        }
+
+        if (constructor == null) {
+            throw new IllegalTestException("No valid constructor found for " + constructor.getName() + ". "
+                    + "The constructor should have no arguments, or an instance of the Test as argument (non static inner class)");
+        }
+
+        try {
+            constructor.setAccessible(true);
+        } catch (Exception e) {
+            throw new IllegalTestException(e.getMessage(), e);
+        }
+
+        return constructor;
     }
 
     private List<Method> loadBeforeRunMethods() {
@@ -141,15 +180,20 @@ public class TimeStepModel {
         for (Method method : timeStepMethods) {
 
             double probability;
-            String x = dependencyInjector.loadProperty(method.getName() + "Prob");
-            if (x == null) {
+            String propertyName = method.getName() + "Prob";
+            String configuredValue = dependencyInjector.loadProperty(propertyName);
+            if (configuredValue == null) {
                 // nothing was specified. So lets use what is on the annotation
                 TimeStep timeStep = method.getAnnotation(TimeStep.class);
                 probability = timeStep.prob();
             } else {
                 // the user has explicitly configured a probability
-                //todo: exception handling.
-                probability = Double.parseDouble(x);
+                try {
+                    probability = Double.parseDouble(configuredValue);
+                } catch (NumberFormatException e) {
+                    throw new IllegalTestException(testClass.getName() + "." + propertyName
+                            + " value '" + configuredValue + "' is not a valid double value", e);
+                }
             }
 
             if (probability > 1) {
@@ -179,22 +223,29 @@ public class TimeStepModel {
         return probabilities;
     }
 
+    /**
+     * Returns null if there is one or no timestep methods.
+     *
+     * @return
+     */
     public byte[] getTimeStepProbabilityArray() {
         return timeStepProbabilityArray;
     }
 
-    private byte[] newTimeStepProbabilityArray() {
-        int arraySize = (int) PROBABILITY_LENGTH;
-        byte[] result = new byte[arraySize];
+    private byte[] loadTimeStepProbabilityArray() {
+        if (getActiveTimeStepMethods().size() < 2) {
+            return null;
+        }
+
+        byte[] result = new byte[PROBABILITY_LENGTH];
         int index = 0;
 
         List<Method> activeTimeStepMethods = getActiveTimeStepMethods();
-
         for (int k = 0; k < activeTimeStepMethods.size(); k++) {
             Method method = activeTimeStepMethods.get(k);
             double probability = probabilities.get(method);
-            for (int i = 0; i < Math.round(probability * arraySize); i++) {
-                if (index < arraySize) {
+            for (int i = 0; i < round(probability * result.length); i++) {
+                if (index < result.length) {
                     result[index] = (byte) k;
                     index++;
                 }
@@ -247,14 +298,10 @@ public class TimeStepModel {
         }
 
         if (classes.size() > 1) {
-            throw new IllegalTestException("More than 1 type of Thread Context class found:" + classes);
+            throw new IllegalTestException("More than 1 type of Thread Context class found: " + classes);
         }
 
-        Class threadContextClazz = classes.iterator().next();
-
-       // todo: constructor
-
-        return threadContextClazz;
+        return classes.iterator().next();
     }
 
     private static void collectThreadContextClass(Set<Class> classes, List<Method> methods) {
@@ -283,7 +330,6 @@ public class TimeStepModel {
                     throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
                             + "Thread context should be public", method, paramType));
                 }
-
 
                 classes.add(paramType);
             }
