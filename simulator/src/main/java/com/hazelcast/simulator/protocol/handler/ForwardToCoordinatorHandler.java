@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.handler;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -42,15 +42,15 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
     private final AddressLevel addressLevel;
 
     private final ConnectionManager connectionManager;
-    private final WorkerJvmManager workerJvmManager;
+    private final WorkerProcessManager workerProcessManager;
 
     public ForwardToCoordinatorHandler(SimulatorAddress localAddress, ConnectionManager connectionManager,
-                                       WorkerJvmManager workerJvmManager) {
+                                       WorkerProcessManager workerProcessManager) {
         this.localAddress = localAddress;
         this.addressLevel = localAddress.getAddressLevel();
 
         this.connectionManager = connectionManager;
-        this.workerJvmManager = workerJvmManager;
+        this.workerProcessManager = workerProcessManager;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class ForwardToCoordinatorHandler extends SimpleChannelInboundHandler<Byt
             }
 
             SimulatorAddress sourceAddress = getSourceAddress(buffer);
-            workerJvmManager.updateLastSeenTimestamp(sourceAddress);
+            workerProcessManager.updateLastSeenTimestamp(sourceAddress);
 
             Iterator<Channel> iterator = connectionManager.getChannels().iterator();
             if (!iterator.hasNext()) {

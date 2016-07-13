@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -280,12 +280,12 @@ public class TestCaseRunnerTest {
     }
 
     private Coordinator createCoordinator(int targetCount) {
-        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
+        WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
+        when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
 
         ComponentRegistry componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
-        componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerJvmSettings));
+        componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerProcessSettings));
         componentRegistry.addTests(testSuite);
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);

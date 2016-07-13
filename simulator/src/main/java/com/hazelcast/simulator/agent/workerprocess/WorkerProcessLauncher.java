@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.workerjvm;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
@@ -40,7 +40,10 @@ import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
 import static java.lang.String.format;
 
-public class WorkerJvmLauncher {
+/**
+ * Responsible for launching {@link WorkerProcess} instances.
+ */
+public class WorkerProcessLauncher {
 
     public static final String WORKERS_HOME_NAME = "workers";
 
@@ -49,22 +52,23 @@ public class WorkerJvmLauncher {
     private static final String CLASSPATH = System.getProperty("java.class.path");
     private static final String CLASSPATH_SEPARATOR = System.getProperty("path.separator");
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerJvmLauncher.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerProcessLauncher.class);
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
     private final Agent agent;
-    private final WorkerJvmManager workerJvmManager;
-    private final WorkerJvmSettings workerJvmSettings;
+    private final WorkerProcessManager workerProcessManager;
+    private final WorkerProcessSettings workerProcessSettings;
 
     private File hzConfigFile;
     private File log4jFile;
     private File testSuiteDir;
 
-    public WorkerJvmLauncher(Agent agent, WorkerJvmManager workerJvmManager, WorkerJvmSettings workerJvmSettings) {
+    public WorkerProcessLauncher(Agent agent, WorkerProcessManager workerProcessManager,
+                                 WorkerProcessSettings workerProcessSettings) {
         this.agent = agent;
-        this.workerJvmManager = workerJvmManager;
-        this.workerJvmSettings = workerJvmSettings;
+        this.workerProcessManager = workerProcessManager;
+        this.workerProcessSettings = workerProcessSettings;
     }
 
     public void launch() {
@@ -72,25 +76,26 @@ public class WorkerJvmLauncher {
             testSuiteDir = agent.getTestSuiteDir();
             ensureExistingDirectory(testSuiteDir);
 
-            WorkerType type = workerJvmSettings.getWorkerType();
-            int workerIndex = workerJvmSettings.getWorkerIndex();
+            WorkerType type = workerProcessSettings.getWorkerType();
+            int workerIndex = workerProcessSettings.getWorkerIndex();
             LOGGER.info(format("Starting a Java Virtual Machine for %s Worker #%d", type, workerIndex));
 
-            LOGGER.info("Spawning Worker JVM using settings: " + workerJvmSettings);
-            WorkerJvm worker = startWorkerJvm();
-            LOGGER.info(format("Finished starting a JVM for %s Worker #%d", type, workerIndex));
+            LOGGER.info("Spawning Worker using settings: " + workerProcessSettings);
+            WorkerProcess worker = startWorker();
+            LOGGER.info(format("Finished starting a for %s Worker #%d", type, workerIndex));
 
-            waitForWorkersStartup(worker, workerJvmSettings.getWorkerStartupTimeout());
+            waitForWorkersStartup(worker, workerProcessSettings.getWorkerStartupTimeout());
         } catch (Exception e) {
             throw new SpawnWorkerFailedException("Failed to start Worker", e);
         }
     }
 
-    private WorkerJvm startWorkerJvm() throws IOException {
-        int workerIndex = workerJvmSettings.getWorkerIndex();
-        WorkerType type = workerJvmSettings.getWorkerType();
+    private WorkerProcess startWorker() throws IOException {
+        int workerIndex = workerProcessSettings.getWorkerIndex();
+        WorkerType type = workerProcessSettings.getWorkerType();
 
-        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
+        SimulatorAddress workerAddress = new SimulatorAddress(
+                AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
         String workerId = "worker-" + workerAddress + '-' + agent.getPublicAddress() + '-' + type.toLowerCase();
         File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
 
@@ -98,14 +103,14 @@ public class WorkerJvmLauncher {
 
         String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
         hzConfigFile = ensureExistingFile(workerHome, hzConfigFileName + ".xml");
-        writeText(workerJvmSettings.getHazelcastConfig(), hzConfigFile);
+        writeText(workerProcessSettings.getHazelcastConfig(), hzConfigFile);
 
         log4jFile = ensureExistingFile(workerHome, "log4j.xml");
-        writeText(workerJvmSettings.getLog4jConfig(), log4jFile);
+        writeText(workerProcessSettings.getLog4jConfig(), log4jFile);
 
-        WorkerJvm workerJvm = new WorkerJvm(workerAddress, workerId, workerHome);
+        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerId, workerHome);
 
-        generateWorkerStartScript(workerJvm);
+        generateWorkerStartScript(workerProcess);
 
         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash", "worker.sh"})
                 .directory(workerHome);
@@ -118,13 +123,13 @@ public class WorkerJvmLauncher {
 
         Process process = processBuilder.start();
 
-        workerJvm.setProcess(process);
-        workerJvmManager.add(workerAddress, workerJvm);
+        workerProcess.setProcess(process);
+        workerProcessManager.add(workerAddress, workerProcess);
 
-        return workerJvm;
+        return workerProcess;
     }
 
-    private void waitForWorkersStartup(WorkerJvm worker, int workerTimeoutSec) {
+    private void waitForWorkersStartup(WorkerProcess worker, int workerTimeoutSec) {
         int loopCount = (int) TimeUnit.SECONDS.toMillis(workerTimeoutSec) / WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS;
         for (int i = 0; i < loopCount; i++) {
             if (hasExited(worker)) {
@@ -156,23 +161,23 @@ public class WorkerJvmLauncher {
         return javaHome;
     }
 
-    private void generateWorkerStartScript(WorkerJvm workerJvm) {
-        File startScript = new File(workerJvm.getWorkerHome(), "worker.sh");
+    private void generateWorkerStartScript(WorkerProcess workerProcess) {
+        File startScript = new File(workerProcess.getWorkerHome(), "worker.sh");
 
-        String script = workerJvmSettings.getWorkerScript();
+        String script = workerProcessSettings.getWorkerScript();
         script = replaceAll(script, "CLASSPATH", getClasspath());
-        script = replaceAll(script, "JVM_OPTIONS", workerJvmSettings.getJvmOptions());
+        script = replaceAll(script, "JVM_OPTIONS", workerProcessSettings.getJvmOptions());
         script = replaceAll(script, "LOG4J_FILE", log4jFile.getAbsolutePath());
         script = replaceAll(script, "SIMULATOR_HOME", getSimulatorHome());
-        script = replaceAll(script, "WORKER_ID", workerJvm.getId());
-        script = replaceAll(script, "WORKER_TYPE", workerJvmSettings.getWorkerType());
+        script = replaceAll(script, "WORKER_ID", workerProcess.getId());
+        script = replaceAll(script, "WORKER_TYPE", workerProcessSettings.getWorkerType());
         script = replaceAll(script, "PUBLIC_ADDRESS", agent.getPublicAddress());
         script = replaceAll(script, "AGENT_INDEX", agent.getAddressIndex());
-        script = replaceAll(script, "WORKER_INDEX", workerJvmSettings.getWorkerIndex());
-        script = replaceAll(script, "WORKER_PORT", agent.getPort() + workerJvmSettings.getWorkerIndex());
-        script = replaceAll(script, "AUTO_CREATE_HZ_INSTANCE", workerJvmSettings.isAutoCreateHzInstance());
+        script = replaceAll(script, "WORKER_INDEX", workerProcessSettings.getWorkerIndex());
+        script = replaceAll(script, "WORKER_PORT", agent.getPort() + workerProcessSettings.getWorkerIndex());
+        script = replaceAll(script, "AUTO_CREATE_HZ_INSTANCE", workerProcessSettings.isAutoCreateHzInstance());
         script = replaceAll(script, "WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                workerJvmSettings.getPerformanceMonitorIntervalSeconds());
+                workerProcessSettings.getPerformanceMonitorIntervalSeconds());
         script = replaceAll(script, "HZ_CONFIG_FILE", hzConfigFile.getAbsolutePath());
 
         writeText(script, startScript);
@@ -200,17 +205,17 @@ public class WorkerJvmLauncher {
         LOGGER.info(format("Finished copying '%s' to Worker", workersDir));
     }
 
-    private boolean hasExited(WorkerJvm workerJvm) {
+    private boolean hasExited(WorkerProcess workerProcess) {
         try {
-            workerJvm.getProcess().exitValue();
+            workerProcess.getProcess().exitValue();
             return true;
         } catch (IllegalThreadStateException e) {
             return false;
         }
     }
 
-    private String readAddress(WorkerJvm jvm) {
-        File file = new File(jvm.getWorkerHome(), "worker.address");
+    private String readAddress(WorkerProcess workerProcess) {
+        File file = new File(workerProcess.getWorkerHome(), "worker.address");
         if (!file.exists()) {
             return null;
         }
@@ -223,7 +228,7 @@ public class WorkerJvmLauncher {
 
     private String getClasspath() {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String hzVersionDirectory = directoryForVersionSpec(workerJvmSettings.getHazelcastVersionSpec());
+        String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getHazelcastVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
 

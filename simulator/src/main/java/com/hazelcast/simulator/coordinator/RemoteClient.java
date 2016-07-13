@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -101,11 +101,11 @@ public class RemoteClient {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
         int workerIndex = 0;
         for (AgentWorkerLayout agentWorkerLayout : clusterLayout.getAgentWorkerLayouts()) {
-            final List<WorkerJvmSettings> settingsList = new ArrayList<WorkerJvmSettings>();
-            for (WorkerJvmSettings workerJvmSettings : agentWorkerLayout.getWorkerJvmSettings()) {
-                WorkerType workerType = workerJvmSettings.getWorkerType();
+            final List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
+            for (WorkerProcessSettings workerProcessSettings : agentWorkerLayout.getWorkerJvmSettings()) {
+                WorkerType workerType = workerProcessSettings.getWorkerType();
                 if (workerType.isMember() == isMemberType) {
-                    settingsList.add(workerJvmSettings);
+                    settingsList.add(workerProcessSettings);
                 }
             }
 

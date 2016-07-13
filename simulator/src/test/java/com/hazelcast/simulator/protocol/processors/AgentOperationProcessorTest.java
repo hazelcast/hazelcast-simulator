@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvm;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -59,8 +59,8 @@ public class AgentOperationProcessorTest {
     private static final int DEFAULT_STARTUP_TIMEOUT = 10;
 
     private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
-    private final WorkerJvmFailureMonitor failureMonitor = mock(WorkerJvmFailureMonitor.class);
-    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
+    private final WorkerProcessFailureMonitor failureMonitor = mock(WorkerProcessFailureMonitor.class);
+    private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
     private final ScheduledExecutorService scheduler = createScheduledThreadPool(3, "AgentOperationProcessorTest");
 
     private TestSuite testSuite;
@@ -86,9 +86,9 @@ public class AgentOperationProcessorTest {
         when(agent.getTestSuiteDir()).thenReturn(testSuiteDir);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
         when(agent.getCoordinatorLogger()).thenReturn(coordinatorLogger);
-        when(agent.getWorkerJvmFailureMonitor()).thenReturn(failureMonitor);
+        when(agent.getWorkerProcessFailureMonitor()).thenReturn(failureMonitor);
 
-        processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, scheduler);
+        processor = new AgentOperationProcessor(exceptionLogger, agent, workerProcessManager, scheduler);
     }
 
     @After
@@ -177,27 +177,27 @@ public class AgentOperationProcessorTest {
     }
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
-        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-        when(workerJvmSettings.getWorkerType()).thenReturn(WorkerType.INTEGRATION_TEST);
-        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
-        when(workerJvmSettings.getHazelcastConfig()).thenReturn("");
-        when(workerJvmSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        when(workerJvmSettings.getWorkerScript()).thenReturn(withStartupException ? null : fileAsText("dist/src/main/dist/conf/worker.sh"));
-        when(workerJvmSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
-        when(workerJvmSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
-        when(workerJvmSettings.getJvmOptions()).thenReturn("-verbose:gc");
+        WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
+        when(workerProcessSettings.getWorkerType()).thenReturn(WorkerType.INTEGRATION_TEST);
+        when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
+        when(workerProcessSettings.getHazelcastConfig()).thenReturn("");
+        when(workerProcessSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
+        when(workerProcessSettings.getWorkerScript()).thenReturn(withStartupException ? null : fileAsText("dist/src/main/dist/conf/worker.sh"));
+        when(workerProcessSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
+        when(workerProcessSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
+        when(workerProcessSettings.getJvmOptions()).thenReturn("-verbose:gc");
 
-        SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerJvmSettings), 0);
+        SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerProcessSettings), 0);
         return processor.processOperation(getOperationType(operation), operation, COORDINATOR);
     }
 
     private void assertWorkerLifecycle() throws InterruptedException {
-        for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
-            File workerDir = new File(testSuiteDir, workerJvm.getId());
+        for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+            File workerDir = new File(testSuiteDir, workerProcess.getId());
             assertTrue(workerDir.exists());
 
             try {
-                workerJvm.getProcess().exitValue();
+                workerProcess.getProcess().exitValue();
                 fail("Expected IllegalThreadStateException since process should still be alive!");
             } catch (IllegalThreadStateException e) {
                 EmptyStatement.ignore(e);
@@ -207,16 +207,16 @@ public class AgentOperationProcessorTest {
             String pid = fileAsText(pidFile);
             execute("kill " + pid);
 
-            workerJvm.getProcess().waitFor();
-            workerJvm.getProcess().exitValue();
+            workerProcess.getProcess().waitFor();
+            workerProcess.getProcess().exitValue();
 
             deleteQuiet(pidFile);
         }
     }
 
     private void assertThatFileExistsInWorkerHomes(String fileName) {
-        for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
-            File workerHome = new File(testSuiteDir, workerJvm.getId()).getAbsoluteFile();
+        for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+            File workerHome = new File(testSuiteDir, workerProcess.getId()).getAbsoluteFile();
             assertTrue(format("WorkerHome %s should exist", workerHome), workerHome.exists());
 
             File file = new File(workerHome, fileName);

@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
@@ -59,11 +59,11 @@ public class RemoteClientTest {
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
 
-        WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-        when(workerJvmSettings.getWorkerIndex()).thenReturn(1);
+        WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
+        when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
 
         SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();
-        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerJvmSettings));
+        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerProcessSettings));
 
         TestCase testCase = new TestCase(DEFAULT_TEST_ID);
 

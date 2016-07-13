@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -45,7 +45,7 @@ public class Agent {
 
     private final File pidFile = new File("agent.pid");
 
-    private final WorkerJvmManager workerJvmManager = new WorkerJvmManager();
+    private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
 
     private final int addressIndex;
     private final String publicAddress;
@@ -55,7 +55,7 @@ public class Agent {
     private final String cloudIdentity;
     private final String cloudCredential;
 
-    private final WorkerJvmFailureMonitor workerJvmFailureMonitor;
+    private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
     private final AgentConnector agentConnector;
     private final CoordinatorLogger coordinatorLogger;
 
@@ -73,8 +73,9 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.workerJvmFailureMonitor = new WorkerJvmFailureMonitor(this, workerJvmManager, workerLastSeenTimeoutSeconds);
-        this.agentConnector = AgentConnector.createInstance(this, workerJvmManager, port, threadPoolSize);
+        this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
+                this, workerProcessManager, workerLastSeenTimeoutSeconds);
+        this.agentConnector = AgentConnector.createInstance(this, workerProcessManager, port, threadPoolSize);
         this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
@@ -109,8 +110,8 @@ public class Agent {
         return coordinatorLogger;
     }
 
-    public WorkerJvmFailureMonitor getWorkerJvmFailureMonitor() {
-        return workerJvmFailureMonitor;
+    public WorkerProcessFailureMonitor getWorkerProcessFailureMonitor() {
+        return workerProcessFailureMonitor;
     }
 
     public void setTestSuite(TestSuite testSuite) {
@@ -132,7 +133,7 @@ public class Agent {
 
     void start() {
         agentConnector.start();
-        workerJvmFailureMonitor.start();
+        workerProcessFailureMonitor.start();
     }
 
     void shutdown() {
@@ -201,10 +202,10 @@ public class Agent {
         @Override
         public void doRun() {
             echo("Stopping workers...");
-            workerJvmManager.shutdown();
+            workerProcessManager.shutdown();
 
-            echo("Stopping WorkerJvmFailureMonitor...");
-            workerJvmFailureMonitor.shutdown();
+            echo("Stopping WorkerProcessFailureMonitor...");
+            workerProcessFailureMonitor.shutdown();
 
             echo("Stopping AgentConnector...");
             agentConnector.shutdown();

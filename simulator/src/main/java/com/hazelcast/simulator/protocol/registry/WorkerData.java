@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.registry;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.WorkerType;
 
@@ -27,9 +27,9 @@ import com.hazelcast.simulator.worker.WorkerType;
 public class WorkerData {
 
     private final SimulatorAddress address;
-    private final WorkerJvmSettings settings;
+    private final WorkerProcessSettings settings;
 
-    WorkerData(SimulatorAddress parentAddress, WorkerJvmSettings settings) {
+    WorkerData(SimulatorAddress parentAddress, WorkerProcessSettings settings) {
         this.address = parentAddress.getChild(settings.getWorkerIndex());
         this.settings = settings;
     }
@@ -38,7 +38,7 @@ public class WorkerData {
         return address;
     }
 
-    public WorkerJvmSettings getSettings() {
+    public WorkerProcessSettings getSettings() {
         return settings;
     }
 

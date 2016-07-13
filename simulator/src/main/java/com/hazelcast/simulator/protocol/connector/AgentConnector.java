@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -65,14 +65,14 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     private final int addressIndex;
 
     private final ConnectionManager connectionManager;
-    private final WorkerJvmManager workerJvmManager;
+    private final WorkerProcessManager workerProcessManager;
 
     AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
-                   WorkerJvmManager workerJvmManager, ConnectionManager connectionManager, int threadPoolSize) {
+                   WorkerProcessManager workerProcessManager, ConnectionManager connectionManager, int threadPoolSize) {
         super(futureMap, localAddress, port, threadPoolSize);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
-        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerJvmManager, getScheduledExecutor());
+        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerProcessManager, getScheduledExecutor());
 
         this.futureMap = futureMap;
 
@@ -80,26 +80,27 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         this.addressIndex = localAddress.getAddressIndex();
 
         this.connectionManager = connectionManager;
-        this.workerJvmManager = workerJvmManager;
+        this.workerProcessManager = workerProcessManager;
     }
 
     /**
      * Creates an {@link AgentConnector} instance.
      *
      * @param agent            instance of this Simulator Agent
-     * @param workerJvmManager manager for WorkerJVM instances
+     * @param workerProcessManager manager for WorkerJVM instances
      * @param port             the port for incoming connections
      * @param threadPoolSize   size of the Netty thread pool to connect to Worker instances
      * @return the {@link AgentConnector} instance
      */
-    public static AgentConnector createInstance(Agent agent, WorkerJvmManager workerJvmManager, int port, int threadPoolSize) {
+    public static AgentConnector createInstance(Agent agent, WorkerProcessManager workerProcessManager,
+                                                int port, int threadPoolSize) {
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
         ConnectionManager connectionManager = new ConnectionManager();
 
         threadPoolSize = max(DEFAULT_THREAD_POOL_SIZE, threadPoolSize);
 
-        return new AgentConnector(futureMap, localAddress, port, agent, workerJvmManager, connectionManager, threadPoolSize);
+        return new AgentConnector(futureMap, localAddress, port, agent, workerProcessManager, connectionManager, threadPoolSize);
     }
 
     @Override
@@ -108,9 +109,9 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, remoteAddress));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
-        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, workerJvmManager));
+        pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress, workerProcessManager));
         pipeline.addLast("forwardToCoordinatorHandler", new ForwardToCoordinatorHandler(localAddress, connectionManager,
-                workerJvmManager));
+                workerProcessManager));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, remoteAddress, getFutureMap()));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getScheduledExecutor()));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));

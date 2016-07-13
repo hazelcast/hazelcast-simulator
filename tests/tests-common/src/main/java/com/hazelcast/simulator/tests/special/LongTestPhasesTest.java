@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.special;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -34,7 +35,7 @@ import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 /**
- * Used to test timeout detection of {@link com.hazelcast.simulator.agent.workerjvm.WorkerJvmFailureMonitor}.
+ * Used to test timeout detection of {@link WorkerProcessFailureMonitor}.
  */
 public class LongTestPhasesTest {
 

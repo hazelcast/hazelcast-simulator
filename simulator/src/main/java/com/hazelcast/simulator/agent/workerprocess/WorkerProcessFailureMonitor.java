@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.workerjvm;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -40,23 +40,28 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class WorkerJvmFailureMonitor {
 
-    private static final int DEFAULT_CHECK_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
+public class WorkerProcessFailureMonitor {
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerJvmFailureMonitor.class);
+    private static final int DEFAULT_CHECK_INTERVAL_MILLIS = (int) SECONDS.toMillis(1);
+
+    private static final Logger LOGGER = Logger.getLogger(WorkerProcessFailureMonitor.class);
 
     private final MonitorThread monitorThread;
 
     private int failureCount;
 
-    public WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds) {
-        this(agent, workerJvmManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
+    public WorkerProcessFailureMonitor(Agent agent, WorkerProcessManager workerProcessManager, int lastSeenTimeoutSeconds) {
+        this(agent, workerProcessManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
     }
 
-    WorkerJvmFailureMonitor(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds, int checkIntervalMillis) {
-        monitorThread = new MonitorThread(agent, workerJvmManager, lastSeenTimeoutSeconds, checkIntervalMillis);
+    WorkerProcessFailureMonitor(Agent agent,
+                                WorkerProcessManager workerProcessManager,
+                                int lastSeenTimeoutSeconds,
+                                int checkIntervalMillis) {
+        monitorThread = new MonitorThread(agent, workerProcessManager, lastSeenTimeoutSeconds, checkIntervalMillis);
     }
 
     public void start() {
@@ -86,29 +91,30 @@ public class WorkerJvmFailureMonitor {
     private final class MonitorThread extends Thread {
 
         private final Agent agent;
-        private final WorkerJvmManager workerJvmManager;
+        private final WorkerProcessManager workerProcessManager;
         private final int lastSeenTimeoutSeconds;
         private final int checkIntervalMillis;
 
         private volatile boolean running = true;
         private volatile boolean detectTimeouts;
 
-        private MonitorThread(Agent agent, WorkerJvmManager workerJvmManager, int lastSeenTimeoutSeconds,
+        private MonitorThread(Agent agent, WorkerProcessManager workerProcessManager, int lastSeenTimeoutSeconds,
                               int checkIntervalMillis) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
 
             this.agent = agent;
-            this.workerJvmManager = workerJvmManager;
+            this.workerProcessManager = workerProcessManager;
             this.lastSeenTimeoutSeconds = lastSeenTimeoutSeconds;
             this.checkIntervalMillis = checkIntervalMillis;
         }
 
+        @Override
         public void run() {
             while (running) {
                 try {
-                    for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
-                        detectFailures(workerJvm);
+                    for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+                        detectFailures(workerProcess);
                     }
                 } catch (Exception e) {
                     LOGGER.fatal("Failed to scan for failures", e);
@@ -118,26 +124,28 @@ public class WorkerJvmFailureMonitor {
         }
 
         private void updateLastSeen() {
-            for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
-                workerJvm.updateLastSeen();
+            for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+                workerProcess.updateLastSeen();
             }
         }
 
-        private void detectFailures(WorkerJvm workerJvm) {
-            if (workerJvm.isFinished()) {
+        private void detectFailures(WorkerProcess workerProcess) {
+            if (workerProcess.isFinished()) {
                 return;
             }
-            detectExceptions(workerJvm);
-            if (workerJvm.isOomeDetected()) {
+
+            detectExceptions(workerProcess);
+            if (workerProcess.isOomeDetected()) {
                 return;
             }
-            detectOomeFailure(workerJvm);
-            detectInactivity(workerJvm);
-            detectUnexpectedExit(workerJvm);
+
+            detectOomeFailure(workerProcess);
+            detectInactivity(workerProcess);
+            detectUnexpectedExit(workerProcess);
         }
 
-        private void detectExceptions(WorkerJvm workerJvm) {
-            File workerHome = workerJvm.getWorkerHome();
+        private void detectExceptions(WorkerProcess workerProcess) {
+            File workerHome = workerProcess.getWorkerHome();
             if (!workerHome.exists()) {
                 return;
             }
@@ -155,7 +163,10 @@ public class WorkerJvmFailureMonitor {
                 }
 
                 // we delete or rename the exception file so that we don't detect the same exception again
-                if (sendFailureOperation("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerJvm, testId, cause)) {
+                boolean send = sendFailureOperation(
+                        "Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess, testId, cause);
+
+                if (send) {
                     deleteQuiet(exceptionFile);
                 } else {
                     rename(exceptionFile, new File(exceptionFile.getName() + ".sendFailure"));
@@ -163,13 +174,13 @@ public class WorkerJvmFailureMonitor {
             }
         }
 
-        private void detectOomeFailure(WorkerJvm workerJvm) {
-            if (!isOomeFound(workerJvm.getWorkerHome())) {
+        private void detectOomeFailure(WorkerProcess workerProcess) {
+            if (!isOomeFound(workerProcess.getWorkerHome())) {
                 return;
             }
-            workerJvm.setOomeDetected();
+            workerProcess.setOomeDetected();
 
-            sendFailureOperation("Worker ran into an OOME", WORKER_OOM, workerJvm);
+            sendFailureOperation("Worker ran into an OOME", WORKER_OOM, workerProcess);
         }
 
         private boolean isOomeFound(File workerHome) {
@@ -185,19 +196,20 @@ public class WorkerJvmFailureMonitor {
             return (hprofFiles.length > 0);
         }
 
-        private void detectInactivity(WorkerJvm workerJvm) {
+        private void detectInactivity(WorkerProcess workerProcess) {
             if (!detectTimeouts) {
                 return;
             }
 
-            long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerJvm.getLastSeen());
+            long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerProcess.getLastSeen());
             if (elapsed > 0 && elapsed % lastSeenTimeoutSeconds == 0) {
-                sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerJvm);
+                sendFailureOperation(
+                        format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerProcess);
             }
         }
 
-        private void detectUnexpectedExit(WorkerJvm workerJvm) {
-            Process process = workerJvm.getProcess();
+        private void detectUnexpectedExit(WorkerProcess workerProcess) {
+            Process process = workerProcess.getProcess();
             int exitCode;
             try {
                 exitCode = process.exitValue();
@@ -207,31 +219,34 @@ public class WorkerJvmFailureMonitor {
             }
 
             if (exitCode == 0) {
-                workerJvm.setFinished();
-                sendFailureOperation("Worker terminated normally", WORKER_FINISHED, workerJvm);
+                workerProcess.setFinished();
+                sendFailureOperation("Worker terminated normally", WORKER_FINISHED, workerProcess);
                 return;
             }
 
-            workerJvmManager.shutdown(workerJvm);
+            workerProcessManager.shutdown(workerProcess);
 
-            sendFailureOperation(format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_EXIT, workerJvm);
+            sendFailureOperation(
+                    format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_EXIT, workerProcess);
         }
 
-        private void sendFailureOperation(String message, FailureType type, WorkerJvm jvm) {
-            sendFailureOperation(message, type, jvm, null, null);
+        private void sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess) {
+            sendFailureOperation(message, type, workerProcess, null, null);
         }
 
-        private boolean sendFailureOperation(String message, FailureType type, WorkerJvm jvm, String testId, String cause) {
+        private boolean sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess,
+                                             String testId, String cause) {
             boolean sentSuccessfully = true;
-            boolean isFailure = (type != WORKER_FINISHED);
-            SimulatorAddress workerAddress = jvm.getAddress();
+            boolean isFailure = type != WORKER_FINISHED;
+            SimulatorAddress workerAddress = workerProcess.getAddress();
             FailureOperation operation = new FailureOperation(message, type, workerAddress, agent.getPublicAddress(),
-                    jvm.getHazelcastAddress(), jvm.getId(), testId, agent.getTestSuite(), cause);
+                    workerProcess.getHazelcastAddress(), workerProcess.getId(), testId, agent.getTestSuite(), cause);
+
             if (isFailure) {
-                LOGGER.error(format("Detected failure on Worker %s (%s): %s", jvm.getId(), jvm.getAddress(),
+                LOGGER.error(format("Detected failure on Worker %s (%s): %s", workerProcess.getId(), workerProcess.getAddress(),
                         operation.getLogMessage(++failureCount)));
             } else {
-                LOGGER.info(format("Worker %s (%s) finished.", jvm.getId(), jvm.getAddress()));
+                LOGGER.info(format("Worker %s (%s) finished.", workerProcess.getId(), workerProcess.getAddress()));
             }
 
             AgentConnector agentConnector = agent.getAgentConnector();

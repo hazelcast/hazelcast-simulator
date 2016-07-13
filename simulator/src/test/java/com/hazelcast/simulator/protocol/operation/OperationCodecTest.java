@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
@@ -71,21 +71,21 @@ public class OperationCodecTest {
                 false
         );
 
-        WorkerJvmSettings workerJvmSettings = new WorkerJvmSettings(1, WorkerType.MEMBER, workerParameters);
+        WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(1, WorkerType.MEMBER, workerParameters);
 
-        CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerJvmSettings),0);
+        CreateWorkerOperation operation = new CreateWorkerOperation(Collections.singletonList(workerProcessSettings),0);
         String json = toJson(operation);
         assertNotNull(json);
         LOGGER.info(json);
 
         CreateWorkerOperation decoded = (CreateWorkerOperation) fromJson(json, CreateWorkerOperation.class);
-        WorkerJvmSettings decodedSettings = decoded.getWorkerJvmSettings().get(0);
-        assertEquals(workerJvmSettings.getWorkerIndex(), decodedSettings.getWorkerIndex());
-        assertEquals(workerJvmSettings.getWorkerType(), decodedSettings.getWorkerType());
-        assertEquals(workerJvmSettings.getHazelcastConfig(), decodedSettings.getHazelcastConfig());
-        assertEquals(workerJvmSettings.getJvmOptions(), decodedSettings.getJvmOptions());
-        assertEquals(workerJvmSettings.isAutoCreateHzInstance(), decodedSettings.isAutoCreateHzInstance());
-        assertEquals(workerJvmSettings.getWorkerStartupTimeout(), decodedSettings.getWorkerStartupTimeout());
-        assertEquals(workerJvmSettings.getWorkerScript(), decodedSettings.getWorkerScript());
+        WorkerProcessSettings decodedSettings = decoded.getWorkerJvmSettings().get(0);
+        assertEquals(workerProcessSettings.getWorkerIndex(), decodedSettings.getWorkerIndex());
+        assertEquals(workerProcessSettings.getWorkerType(), decodedSettings.getWorkerType());
+        assertEquals(workerProcessSettings.getHazelcastConfig(), decodedSettings.getHazelcastConfig());
+        assertEquals(workerProcessSettings.getJvmOptions(), decodedSettings.getJvmOptions());
+        assertEquals(workerProcessSettings.isAutoCreateHzInstance(), decodedSettings.isAutoCreateHzInstance());
+        assertEquals(workerProcessSettings.getWorkerStartupTimeout(), decodedSettings.getWorkerStartupTimeout());
+        assertEquals(workerProcessSettings.getWorkerScript(), decodedSettings.getWorkerScript());
     }
 }
