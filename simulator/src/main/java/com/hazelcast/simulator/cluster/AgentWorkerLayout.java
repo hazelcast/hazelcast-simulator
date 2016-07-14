@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.cluster;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class AgentWorkerLayout {
 
-    private final List<WorkerJvmSettings> workerJvmSettingsList = new ArrayList<WorkerJvmSettings>();
+    private final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
     private final AgentData agentData;
@@ -44,8 +44,8 @@ public final class AgentWorkerLayout {
         this.agentWorkerMode = agentWorkerMode;
     }
 
-    public List<WorkerJvmSettings> getWorkerJvmSettings() {
-        return workerJvmSettingsList;
+    public List<WorkerProcessSettings> getWorkerJvmSettings() {
+        return workerProcessSettingsList;
     }
 
     public SimulatorAddress getSimulatorAddress() {
@@ -62,8 +62,8 @@ public final class AgentWorkerLayout {
 
     public Set<String> getHazelcastVersionSpecs() {
         Set<String> hazelcastVersionSpecs = new HashSet<String>();
-        for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
-            hazelcastVersionSpecs.add(workerJvmSettings.getHazelcastVersionSpec());
+        for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
+            hazelcastVersionSpecs.add(workerProcessSettings.getHazelcastVersionSpec());
         }
         return hazelcastVersionSpecs;
     }
@@ -77,8 +77,8 @@ public final class AgentWorkerLayout {
     }
 
     void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
-        workerJvmSettingsList.add(
-                new WorkerJvmSettings(
+        workerProcessSettingsList.add(
+                new WorkerProcessSettings(
                         currentWorkerIndex.incrementAndGet(),
                         type,
                         parameters,
@@ -88,8 +88,8 @@ public final class AgentWorkerLayout {
     }
 
     void addWorker(WorkerType type, WorkerParameters parameters) {
-        workerJvmSettingsList.add(
-                new WorkerJvmSettings(
+        workerProcessSettingsList.add(
+                new WorkerProcessSettings(
                         currentWorkerIndex.incrementAndGet(),
                         type,
                         parameters));
@@ -97,8 +97,8 @@ public final class AgentWorkerLayout {
 
     int getCount(WorkerType type) {
         int count = 0;
-        for (WorkerJvmSettings workerJvmSettings : workerJvmSettingsList) {
-            if (workerJvmSettings.getWorkerType() == type) {
+        for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
+            if (workerProcessSettings.getWorkerType() == type) {
                 count++;
             }
         }

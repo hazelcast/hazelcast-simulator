@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.registry;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestCase;
@@ -78,8 +78,8 @@ public class ComponentRegistry {
         return agents.get(0);
     }
 
-    public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerJvmSettings> settingsList) {
-        for (WorkerJvmSettings settings : settingsList) {
+    public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
+        for (WorkerProcessSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
             agents.get(workerData.getAddress().getAgentIndex() - 1).addWorker(workerData);
             workers.add(workerData);

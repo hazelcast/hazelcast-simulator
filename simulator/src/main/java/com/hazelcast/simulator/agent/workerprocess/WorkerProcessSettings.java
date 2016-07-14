@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.workerjvm;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -21,9 +21,9 @@ import com.hazelcast.simulator.worker.WorkerType;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 
 /**
- * Settings for a (single) Simulator Worker JVM.
+ * Settings for a (single) Simulator Worker Process.
  */
-public class WorkerJvmSettings {
+public class WorkerProcessSettings {
 
     private final int workerIndex;
     private final String workerType;
@@ -39,14 +39,14 @@ public class WorkerJvmSettings {
 
     private final String workerScript;
 
-    public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
+    public WorkerProcessSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
         this(workerIndex, workerType, workerParameters, workerParameters.getHazelcastVersionSpec(),
                 (workerType == MEMBER) ? workerParameters.getMemberJvmOptions() : workerParameters.getClientJvmOptions(),
                 (workerType == MEMBER) ? workerParameters.getMemberHzConfig() : workerParameters.getClientHzConfig());
     }
 
-    public WorkerJvmSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters,
-                             String hazelcastVersionSpec, String jvmOptions, String hazelcastConfig) {
+    public WorkerProcessSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters,
+                                 String hazelcastVersionSpec, String jvmOptions, String hazelcastConfig) {
         this.workerIndex = workerIndex;
         this.workerType = workerType.name();
         this.hazelcastVersionSpec = hazelcastVersionSpec;
@@ -111,7 +111,7 @@ public class WorkerJvmSettings {
 
     @Override
     public String toString() {
-        return "WorkerJvmSettings{"
+        return "WorkerProcessSettings{"
                 + "workerIndex=" + workerIndex
                 + ", type=" + workerType
                 + ", jvmOptions='" + jvmOptions + '\''

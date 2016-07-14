@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestHistogramContainer;
@@ -145,9 +145,9 @@ class ProtocolUtil {
         Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(addressIndex);
 
-        WorkerJvmManager workerJvmManager = new WorkerJvmManager();
+        WorkerProcessManager workerProcessManager = new WorkerProcessManager();
 
-        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerJvmManager, port, 0);
+        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerProcessManager, port, 0);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
 
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {

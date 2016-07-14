@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.workerjvm;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -28,18 +28,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class WorkerJvmManager {
+public class WorkerProcessManager {
 
-    private static final Logger LOGGER = Logger.getLogger(WorkerJvmManager.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerProcessManager.class);
 
-    private final ConcurrentMap<SimulatorAddress, WorkerJvm> workerJVMs = new ConcurrentHashMap<SimulatorAddress, WorkerJvm>();
+    private final ConcurrentMap<SimulatorAddress, WorkerProcess> workerProcesses
+            = new ConcurrentHashMap<SimulatorAddress, WorkerProcess>();
 
-    public void add(SimulatorAddress workerAddress, WorkerJvm workerJvm) {
-        workerJVMs.put(workerAddress, workerJvm);
+    public void add(SimulatorAddress workerAddress, WorkerProcess workerProcess) {
+        workerProcesses.put(workerAddress, workerProcess);
     }
 
-    public Collection<WorkerJvm> getWorkerJVMs() {
-        return workerJVMs.values();
+    public Collection<WorkerProcess> getWorkerProcesses() {
+        return workerProcesses.values();
     }
 
     public void updateLastSeenTimestamp(Response response) {
@@ -57,36 +58,36 @@ public class WorkerJvmManager {
             return;
         }
 
-        WorkerJvm workerJvm = workerJVMs.get(sourceAddress);
-        if (workerJvm == null) {
+        WorkerProcess workerProcess = workerProcesses.get(sourceAddress);
+        if (workerProcess == null) {
             LOGGER.warn("Should update LastSeenTimestamp for unknown WorkerJVM: " + sourceAddress);
         } else {
             LOGGER.info("Updated LastSeenTimestamp for: " + sourceAddress);
-            workerJvm.updateLastSeen();
+            workerProcess.updateLastSeen();
         }
     }
 
     public void shutdown() {
         ThreadSpawner spawner = new ThreadSpawner("workerJvmManagerShutdown", true);
-        for (final WorkerJvm workerJvm : new ArrayList<WorkerJvm>(workerJVMs.values())) {
+        for (final WorkerProcess workerProcess : new ArrayList<WorkerProcess>(workerProcesses.values())) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    shutdown(workerJvm);
+                    shutdown(workerProcess);
                 }
             });
         }
         spawner.awaitCompletion();
     }
 
-    void shutdown(WorkerJvm workerJvm) {
-        workerJVMs.remove(workerJvm.getAddress());
+    void shutdown(WorkerProcess workerProcess) {
+        workerProcesses.remove(workerProcess.getAddress());
         try {
             // this sends SIGTERM on *nix
-            workerJvm.getProcess().destroy();
-            workerJvm.getProcess().waitFor();
+            workerProcess.getProcess().destroy();
+            workerProcess.getProcess().waitFor();
         } catch (Exception e) {
-            LOGGER.error("Failed to destroy Worker process: " + workerJvm, e);
+            LOGGER.error("Failed to destroy Worker process: " + workerProcess, e);
         }
     }
 }

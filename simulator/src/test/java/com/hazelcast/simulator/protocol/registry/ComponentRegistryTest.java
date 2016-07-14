@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.protocol.registry;
 
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestCase;
@@ -80,7 +80,7 @@ public class ComponentRegistryTest {
     @Test
     public void testAddWorkers() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(10);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(10);
 
         assertEquals(0, componentRegistry.workerCount());
         componentRegistry.addWorkers(parentAddress, settingsList);
@@ -91,7 +91,7 @@ public class ComponentRegistryTest {
     @Test
     public void testRemoveWorker_viaSimulatorAddress() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(5);
 
         componentRegistry.addWorkers(parentAddress, settingsList);
         assertEquals(5, componentRegistry.workerCount());
@@ -103,7 +103,7 @@ public class ComponentRegistryTest {
     @Test
     public void testRemoveWorker_viaWorkerData() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(5);
 
         componentRegistry.addWorkers(parentAddress, settingsList);
         assertEquals(5, componentRegistry.workerCount());
@@ -115,7 +115,7 @@ public class ComponentRegistryTest {
     @Test
     public void testHasClientWorkers_withoutClientWorkers() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(2);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(2);
         componentRegistry.addWorkers(parentAddress, settingsList);
 
         assertFalse(componentRegistry.hasClientWorkers());
@@ -124,7 +124,7 @@ public class ComponentRegistryTest {
     @Test
     public void testHasClientWorkers_withClientWorkers() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(2);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(2);
         componentRegistry.addWorkers(parentAddress, settingsList);
 
         settingsList = getWorkerJvmSettingsList(2, WorkerType.CLIENT);
@@ -136,7 +136,7 @@ public class ComponentRegistryTest {
     @Test
     public void testGetWorkers() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(10);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(10);
 
         componentRegistry.addWorkers(parentAddress, settingsList);
         assertEquals(10, componentRegistry.workerCount());
@@ -160,8 +160,8 @@ public class ComponentRegistryTest {
         assertEquals(3, componentRegistry.agentCount());
 
         for (AgentData agentData : componentRegistry.getAgents()) {
-            List<WorkerJvmSettings> memberSettings = getWorkerJvmSettingsList(1, WorkerType.MEMBER);
-            List<WorkerJvmSettings> clientSettings = getWorkerJvmSettingsList(1, WorkerType.CLIENT);
+            List<WorkerProcessSettings> memberSettings = getWorkerJvmSettingsList(1, WorkerType.MEMBER);
+            List<WorkerProcessSettings> clientSettings = getWorkerJvmSettingsList(1, WorkerType.CLIENT);
 
             componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
             componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
@@ -233,7 +233,7 @@ public class ComponentRegistryTest {
     @Test
     public void testGetFirstWorker() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(2);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(2);
 
         componentRegistry.addWorkers(parentAddress, settingsList);
         assertEquals(2, componentRegistry.workerCount());
@@ -254,14 +254,14 @@ public class ComponentRegistryTest {
     @Test
     public void testGetMissingWorkers() {
         SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerJvmSettings> settingsList = getWorkerJvmSettingsList(5);
+        List<WorkerProcessSettings> settingsList = getWorkerJvmSettingsList(5);
 
         componentRegistry.addWorkers(parentAddress, settingsList);
         assertEquals(5, componentRegistry.workerCount());
 
         Set<SimulatorAddress> finishedWorkers = new HashSet<SimulatorAddress>();
-        for (WorkerJvmSettings workerJvmSettings : settingsList) {
-            SimulatorAddress workerAddress = parentAddress.getChild(workerJvmSettings.getWorkerIndex());
+        for (WorkerProcessSettings workerProcessSettings : settingsList) {
+            SimulatorAddress workerAddress = parentAddress.getChild(workerProcessSettings.getWorkerIndex());
             finishedWorkers.add(workerAddress);
             if (finishedWorkers.size() == 3) {
                 break;
@@ -332,18 +332,18 @@ public class ComponentRegistryTest {
         return componentRegistry.getFirstAgent().getAddress();
     }
 
-    private List<WorkerJvmSettings> getWorkerJvmSettingsList(int workerCount) {
+    private List<WorkerProcessSettings> getWorkerJvmSettingsList(int workerCount) {
         return getWorkerJvmSettingsList(workerCount, WorkerType.MEMBER);
     }
 
-    private List<WorkerJvmSettings> getWorkerJvmSettingsList(int workerCount, WorkerType workerType) {
-        List<WorkerJvmSettings> settingsList = new ArrayList<WorkerJvmSettings>();
+    private List<WorkerProcessSettings> getWorkerJvmSettingsList(int workerCount, WorkerType workerType) {
+        List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
         for (int i = 1; i <= workerCount; i++) {
-            WorkerJvmSettings workerJvmSettings = mock(WorkerJvmSettings.class);
-            when(workerJvmSettings.getWorkerIndex()).thenReturn(i);
-            when(workerJvmSettings.getWorkerType()).thenReturn(workerType);
+            WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
+            when(workerProcessSettings.getWorkerIndex()).thenReturn(i);
+            when(workerProcessSettings.getWorkerType()).thenReturn(workerType);
 
-            settingsList.add(workerJvmSettings);
+            settingsList.add(workerProcessSettings);
         }
         return settingsList;
     }

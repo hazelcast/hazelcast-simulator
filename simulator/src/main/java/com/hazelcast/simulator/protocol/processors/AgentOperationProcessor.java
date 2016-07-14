@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmLauncher;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmManager;
-import com.hazelcast.simulator.agent.workerjvm.WorkerJvmSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessLauncher;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -54,14 +54,14 @@ public class AgentOperationProcessor extends OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(AgentOperationProcessor.class);
 
     private final Agent agent;
-    private final WorkerJvmManager workerJvmManager;
+    private final WorkerProcessManager workerProcessManager;
     private final ScheduledExecutorService executorService;
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerJvmManager workerJvmManager,
+    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerProcessManager workerProcessManager,
                                    ScheduledExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
-        this.workerJvmManager = workerJvmManager;
+        this.workerProcessManager = workerProcessManager;
         this.executorService = executorService;
     }
 
@@ -131,9 +131,9 @@ public class AgentOperationProcessor extends OperationProcessor {
 
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
-        for (WorkerJvmSettings workerJvmSettings : operation.getWorkerJvmSettings()) {
-            WorkerJvmLauncher launcher = new WorkerJvmLauncher(agent, workerJvmManager, workerJvmSettings);
-            LaunchWorkerCallable task = new LaunchWorkerCallable(launcher, workerJvmSettings);
+        for (WorkerProcessSettings workerProcessSettings : operation.getWorkerJvmSettings()) {
+            WorkerProcessLauncher launcher = new WorkerProcessLauncher(agent, workerProcessManager, workerProcessSettings);
+            LaunchWorkerCallable task = new LaunchWorkerCallable(launcher, workerProcessSettings);
             Future<Boolean> future = executorService.schedule(task, operation.getDelayMs(), TimeUnit.MILLISECONDS);
             futures.add(future);
         }
@@ -147,21 +147,21 @@ public class AgentOperationProcessor extends OperationProcessor {
     }
 
     private void processStartTimeoutDetection() {
-        agent.getWorkerJvmFailureMonitor().startTimeoutDetection();
+        agent.getWorkerProcessFailureMonitor().startTimeoutDetection();
     }
 
     private void processStopTimeoutDetection() {
-        agent.getWorkerJvmFailureMonitor().stopTimeoutDetection();
+        agent.getWorkerProcessFailureMonitor().stopTimeoutDetection();
     }
 
     private final class LaunchWorkerCallable implements Callable<Boolean> {
 
-        private final WorkerJvmLauncher launcher;
-        private final WorkerJvmSettings workerJvmSettings;
+        private final WorkerProcessLauncher launcher;
+        private final WorkerProcessSettings workerProcessSettings;
 
-        private LaunchWorkerCallable(WorkerJvmLauncher launcher, WorkerJvmSettings workerJvmSettings) {
+        private LaunchWorkerCallable(WorkerProcessLauncher launcher, WorkerProcessSettings workerProcessSettings) {
             this.launcher = launcher;
-            this.workerJvmSettings = workerJvmSettings;
+            this.workerProcessSettings = workerProcessSettings;
         }
 
         @Override
@@ -169,11 +169,11 @@ public class AgentOperationProcessor extends OperationProcessor {
             try {
                 launcher.launch();
 
-                int workerIndex = workerJvmSettings.getWorkerIndex();
+                int workerIndex = workerProcessSettings.getWorkerIndex();
                 int workerPort = agent.getPort() + workerIndex;
                 SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
 
-                WorkerType workerType = workerJvmSettings.getWorkerType();
+                WorkerType workerType = workerProcessSettings.getWorkerType();
                 agent.getCoordinatorLogger().debug(format("Created %s Worker %s", workerType, workerAddress));
 
                 return true;

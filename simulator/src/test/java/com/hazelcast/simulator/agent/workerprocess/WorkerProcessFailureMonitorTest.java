@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.agent.workerjvm;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class WorkerJvmFailureMonitorTest {
+public class WorkerProcessFailureMonitorTest {
 
     private static final int DEFAULT_TIMEOUT = 30000;
 
@@ -54,12 +54,12 @@ public class WorkerJvmFailureMonitorTest {
 
     private AgentConnector agentConnector;
     private Agent agent;
-    private WorkerJvmManager workerJvmManager;
+    private WorkerProcessManager workerProcessManager;
 
-    private WorkerJvm workerJvm;
+    private WorkerProcess workerProcess;
     private File workerHome;
 
-    private WorkerJvmFailureMonitor workerJvmFailureMonitor;
+    private WorkerProcessFailureMonitor workerProcessFailureMonitor;
 
     @Before
     public void setUp() {
@@ -72,24 +72,24 @@ public class WorkerJvmFailureMonitorTest {
         agent = mock(Agent.class);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
 
-        workerJvmManager = new WorkerJvmManager();
+        workerProcessManager = new WorkerProcessManager();
 
-        workerJvm = addWorkerJvm(workerJvmManager, getWorkerAddress(), true);
-        addWorkerJvm(workerJvmManager, getWorkerAddress(), false);
+        workerProcess = addWorkerJvm(workerProcessManager, getWorkerAddress(), true);
+        addWorkerJvm(workerProcessManager, getWorkerAddress(), false);
 
-        workerHome = workerJvm.getWorkerHome();
+        workerHome = workerProcess.getWorkerHome();
 
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(agent, workerProcessManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
                 DEFAULT_CHECK_INTERVAL);
-        workerJvmFailureMonitor.start();
+        workerProcessFailureMonitor.start();
     }
 
     @After
     public void tearDown() {
-        workerJvmFailureMonitor.shutdown();
+        workerProcessFailureMonitor.shutdown();
 
-        for (WorkerJvm workerJvm : workerJvmManager.getWorkerJVMs()) {
-            deleteQuiet(workerJvm.getWorkerHome());
+        for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+            deleteQuiet(workerProcess.getWorkerHome());
         }
         deleteQuiet("worker3");
         deleteQuiet("1.exception.sendFailure");
@@ -97,8 +97,8 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testConstructor() {
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
-        workerJvmFailureMonitor.start();
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(agent, workerProcessManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
+        workerProcessFailureMonitor.start();
     }
 
     @Test
@@ -112,7 +112,7 @@ public class WorkerJvmFailureMonitorTest {
     public void testRun_shouldContinueAfterExceptionDuringDetection() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenThrow(new IllegalArgumentException("expected exception")).thenReturn(0);
-        WorkerJvm exceptionWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
+        WorkerProcess exceptionWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
 
         do {
             sleepMillis(DEFAULT_SLEEP_TIME);
@@ -129,8 +129,8 @@ public class WorkerJvmFailureMonitorTest {
         when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
         when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class))).thenReturn(failOnceResponse);
 
-        workerJvmFailureMonitor.startTimeoutDetection();
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcessFailureMonitor.startTimeoutDetection();
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -143,8 +143,8 @@ public class WorkerJvmFailureMonitorTest {
                 .thenThrow(new SimulatorProtocolException("expected exception"))
                 .thenReturn(response);
 
-        workerJvmFailureMonitor.startTimeoutDetection();
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcessFailureMonitor.startTimeoutDetection();
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -154,7 +154,7 @@ public class WorkerJvmFailureMonitorTest {
     @Test
     public void testRun_shouldDetectException_withTestId() {
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "WorkerJvmFailureMonitorTest", cause);
+        File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -194,7 +194,7 @@ public class WorkerJvmFailureMonitorTest {
         when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class))).thenReturn(failOnceResponse);
 
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "WorkerJvmFailureMonitorTest", cause);
+        File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -211,7 +211,7 @@ public class WorkerJvmFailureMonitorTest {
                 .thenReturn(response);
 
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "WorkerJvmFailureMonitorTest", cause);
+        File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -245,8 +245,8 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectInactivity() {
-        workerJvmFailureMonitor.startTimeoutDetection();
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcessFailureMonitor.startTimeoutDetection();
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -255,16 +255,16 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionDisabled() {
-        workerJvmFailureMonitor = new WorkerJvmFailureMonitor(agent, workerJvmManager, -1, DEFAULT_CHECK_INTERVAL);
-        workerJvmFailureMonitor.start();
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(agent, workerProcessManager, -1, DEFAULT_CHECK_INTERVAL);
+        workerProcessFailureMonitor.start();
 
-        workerJvmFailureMonitor.startTimeoutDetection();
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcessFailureMonitor.startTimeoutDetection();
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        workerJvmFailureMonitor.stopTimeoutDetection();
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcessFailureMonitor.stopTimeoutDetection();
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -273,7 +273,7 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionNotStarted() {
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -282,12 +282,12 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testRun_shouldNotDetectInactivity_afterDetectionIsStopped() {
-        workerJvmFailureMonitor.startTimeoutDetection();
+        workerProcessFailureMonitor.startTimeoutDetection();
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        workerJvmFailureMonitor.stopTimeoutDetection();
-        workerJvm.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcessFailureMonitor.stopTimeoutDetection();
+        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -298,7 +298,7 @@ public class WorkerJvmFailureMonitorTest {
     public void testRun_shouldDetectUnexpectedExit_whenExitValueIsZero() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenReturn(0);
-        WorkerJvm exitWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
+        WorkerProcess exitWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
 
         do {
             sleepMillis(DEFAULT_SLEEP_TIME);
@@ -313,7 +313,7 @@ public class WorkerJvmFailureMonitorTest {
     public void testRun_shouldDetectUnexpectedExit_whenExitValueIsNonZero() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenReturn(134);
-        WorkerJvm exitWorker = addWorkerJvm(workerJvmManager, getWorkerAddress(), true, process);
+        WorkerProcess exitWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -325,14 +325,14 @@ public class WorkerJvmFailureMonitorTest {
 
     @Test
     public void testExceptionExtensionFilter_shouldReturnEmptyFileListIfDirectoryDoesNotExist() {
-        File[] files = WorkerJvmFailureMonitor.ExceptionExtensionFilter.listFiles(new File("notFound"));
+        File[] files = WorkerProcessFailureMonitor.ExceptionExtensionFilter.listFiles(new File("notFound"));
 
         assertEquals(0, files.length);
     }
 
     @Test
     public void testHProfExtensionFilter_shouldReturnEmptyFileListIfDirectoryDoesNotExist() {
-        File[] files = WorkerJvmFailureMonitor.HProfExtensionFilter.listFiles(new File("notFound"));
+        File[] files = WorkerProcessFailureMonitor.HProfExtensionFilter.listFiles(new File("notFound"));
 
         assertEquals(0, files.length);
     }
@@ -341,27 +341,27 @@ public class WorkerJvmFailureMonitorTest {
         return new SimulatorAddress(WORKER, 1, ++addressIndex, 0);
     }
 
-    private static WorkerJvm addWorkerJvm(WorkerJvmManager workerJvmManager, SimulatorAddress address, boolean createWorkerHome) {
+    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address, boolean createWorkerHome) {
         Process process = mock(Process.class);
         when(process.exitValue()).thenThrow(new IllegalThreadStateException("process is still running"));
 
-        return addWorkerJvm(workerJvmManager, address, createWorkerHome, process);
+        return addWorkerJvm(workerProcessManager, address, createWorkerHome, process);
     }
 
-    private static WorkerJvm addWorkerJvm(WorkerJvmManager workerJvmManager, SimulatorAddress address, boolean createWorkerHome,
-                                          Process process) {
+    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address, boolean createWorkerHome,
+                                              Process process) {
         int addressIndex = address.getAddressIndex();
         File workerHome = new File("worker" + address.getAddressIndex());
-        WorkerJvm workerJvm = new WorkerJvm(address, "WorkerJvmFailureMonitorTest" + addressIndex, workerHome);
-        workerJvm.setProcess(process);
+        WorkerProcess workerProcess = new WorkerProcess(address, "WorkerProcessFailureMonitorTest" + addressIndex, workerHome);
+        workerProcess.setProcess(process);
 
-        workerJvmManager.add(address, workerJvm);
+        workerProcessManager.add(address, workerProcess);
 
         if (createWorkerHome) {
             ensureExistingDirectory(workerHome);
         }
 
-        return workerJvm;
+        return workerProcess;
     }
 
     private static File createExceptionFile(File workerHome, String testId, String cause) {

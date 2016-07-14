@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.workerjvm;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.io.File;
 
-public class WorkerJvm {
+/**
+ * Represents a worker process. So the process that does the actual work.
+ */
+public class WorkerProcess {
 
     private final SimulatorAddress address;
     private final String id;
@@ -31,7 +34,7 @@ public class WorkerJvm {
     private volatile Process process;
     private volatile String hzAddress;
 
-    WorkerJvm(SimulatorAddress address, String id, File workerHome) {
+    WorkerProcess(SimulatorAddress address, String id, File workerHome) {
         this.address = address;
         this.id = id;
         this.workerHome = workerHome;
