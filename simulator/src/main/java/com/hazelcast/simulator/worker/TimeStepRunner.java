@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static java.lang.String.format;
 
 public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     @InjectTestContext
@@ -91,7 +92,9 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
         try {
             return constructor.newInstance((Object[]) args);
         } catch (Exception e) {
-            throw new IllegalTestException(e.getMessage(), e);
+            throw new IllegalTestException(
+                    format("Failed to create an instance of thread context class '%s'",
+                            timeStepModel.getThreadContextClass().getName()), e);
         }
     }
 
