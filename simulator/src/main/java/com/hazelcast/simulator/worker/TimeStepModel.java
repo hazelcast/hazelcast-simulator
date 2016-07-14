@@ -273,7 +273,7 @@ public class TimeStepModel {
         }
 
         if (constructor == null) {
-            throw new IllegalTestException("No valid constructor found for " + threadContextClass.getName() + ". "
+            throw new IllegalTestException("No valid constructor found for '" + threadContextClass.getName() + "'. "
                     + "The constructor should have no arguments or one argument of type '" + threadContextClass.getName() + "'");
         }
 
