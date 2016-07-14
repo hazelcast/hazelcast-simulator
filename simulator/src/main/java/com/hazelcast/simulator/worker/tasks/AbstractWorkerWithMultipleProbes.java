@@ -16,25 +16,29 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.PropertyBinding;
+import com.hazelcast.simulator.test.PropertyBindingAware;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 
-import java.util.Map;
 import java.util.Set;
+
+import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 /**
  * Version of {@link AbstractWorker} with an individual {@link Probe} per operation.
- *
+ * <p>
  * This worker provides a {@link #timeStep(Enum, Probe)} method with the operation specific {@link Probe} as additional parameter.
  * This can be used to make a finer selection of the measured code block.
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
+@Deprecated
 public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
         extends VeryAbstractWorker
-        implements IMultipleProbesWorker {
+        implements PropertyBindingAware {
 
     private final OperationSelectorBuilder<O> operationSelectorBuilder;
     private final OperationSelector<O> operationSelector;
@@ -47,19 +51,13 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
     }
 
     @Override
-    public final Set<? extends Enum> getOperations() {
-        return operationSelectorBuilder.getOperations();
-    }
-
-    @Override
-    public final void setProbeMap(Map<? extends Enum, Probe> probeMap) {
-        for (Map.Entry<? extends Enum, Probe> entry : probeMap.entrySet()) {
-            Enum operation = entry.getKey();
-            if (workerProbes == null) {
-                workerProbes = new Probe[operation.getDeclaringClass().getEnumConstants().length];
-            }
-
-            workerProbes[operation.ordinal()] = entry.getValue();
+    public void bind(PropertyBinding binding) {
+        Set<O> operations = operationSelectorBuilder.getOperations();
+        workerProbes = new Probe[operations.size()];
+        for (Enum operation : operations) {
+            String probeName = capitalizeFully(operation.name(), '_').replace("_", "") + "Probe";
+            Probe probe = binding.getOrCreateProbe(probeName, false);
+            workerProbes[operation.ordinal()] = probe;
         }
     }
 
@@ -84,7 +82,7 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     *
+     * <p>
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration

@@ -22,12 +22,12 @@ import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.List;
 
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isStatic;
 
 public final class AnnotationReflectionUtils {
 
@@ -91,7 +91,7 @@ public final class AnnotationReflectionUtils {
      * @param annotationType Type of the annotation
      * @return the found method or <tt>null</tt> if no method was found
      */
-    public static Method getAtMostOneVoidMethodSkipArgsCheck(Class classType, Class<? extends Annotation> annotationType) {
+    public static Method getAtMostOneVoidMethod(Class classType, Class<? extends Annotation> annotationType) {
         return getAtMostOneMethod(classType, annotationType, ALWAYS_FILTER, null, true);
     }
 
@@ -189,6 +189,19 @@ public final class AnnotationReflectionUtils {
         return null;
     }
 
+    public static List<Method> findAllMethods(
+            Class classType,
+            Class<? extends Annotation> annotation) {
+        List<Method> methods = new LinkedList<Method>();
+        do {
+            findMethod(classType, annotation, new AnnotationFilter.AlwaysFilter(), methods);
+            classType = classType.getSuperclass();
+        } while (classType != null);
+
+        return methods;
+    }
+
+
     @SuppressWarnings("unchecked")
     private static void findMethod(Class searchClass, Class<? extends Annotation> annotation, AnnotationFilter filter,
                                    List<Method> methods) {
@@ -208,7 +221,7 @@ public final class AnnotationReflectionUtils {
     }
 
     private static void assertNotStatic(Method method) {
-        if (Modifier.isStatic(method.getModifiers())) {
+        if (isStatic(method.getModifiers())) {
             throw new ReflectionException(format("Method  %s can't be static", method.getName()));
         }
     }

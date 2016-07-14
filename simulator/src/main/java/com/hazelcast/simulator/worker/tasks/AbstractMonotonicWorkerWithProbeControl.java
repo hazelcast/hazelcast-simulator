@@ -26,6 +26,7 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
  * This worker provides no {@link com.hazelcast.simulator.worker.selector.OperationSelector}, but a {@link #timeStep(Probe)}
  * method with the built-in {@link Probe} as parameter. This can be used to make a finer selection of the measured code block.
  */
+@Deprecated
 public abstract class AbstractMonotonicWorkerWithProbeControl extends VeryAbstractWorker {
 
     @InjectProbe(name = IWorker.DEFAULT_WORKER_PROBE_NAME, useForThroughput = true)

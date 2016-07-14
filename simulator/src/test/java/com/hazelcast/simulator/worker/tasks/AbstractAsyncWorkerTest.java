@@ -44,7 +44,7 @@ public class AbstractAsyncWorkerTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractAsyncWorkerTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+       // testContainer = new TestContainer(testContext, test, THREAD_COUNT);
 
         ExceptionReporter.reset();
     }

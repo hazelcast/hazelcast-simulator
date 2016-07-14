@@ -17,38 +17,27 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Reset;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
 public class AtomicLongTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
-    public KeyLocality keyLocality = KeyLocality.SHARED;
+    public KeyLocality keyLocality = SHARED;
     public int countersLength = 1000;
-    public int warmupIterations = 100;
-
-    public double writeProb = 1.0;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private AtomicLong operationsCounter = new AtomicLong();
     private IAtomicLong totalCounter;
@@ -63,60 +52,44 @@ public class AtomicLongTest extends AbstractTest {
         for (int i = 0; i < countersLength; i++) {
             counters[i] = targetInstance.getAtomicLong(names[i]);
         }
-
-        builder.addOperation(Operation.PUT, writeProb)
-                .addDefaultOperation(Operation.GET);
     }
 
-    @Warmup
-    public void warmup() {
-        for (int i = 0; i < warmupIterations; i++) {
-            for (IAtomicLong counter : counters) {
-                counter.get();
-            }
-        }
+    @TimeStep(prob = 0.9)
+    public void get(ThreadContext context) {
+        context.randomCounter().get();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(ThreadContext context) {
+        context.randomCounter().incrementAndGet();
+        context.increments++;
     }
 
-    private class Worker extends AbstractWorker<Operation> {
-
+    public class ThreadContext extends BaseThreadContext {
         private long increments;
 
-        public Worker() {
-            super(builder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            IAtomicLong counter = getRandomCounter();
-
-            switch (operation) {
-                case PUT:
-                    increments++;
-                    counter.incrementAndGet();
-                    break;
-                case GET:
-                    counter.get();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
+        private IAtomicLong randomCounter() {
+            if(counters == null){
+                throw new NullPointerException("Counters is null");
             }
-        }
 
-        @Override
-        public void afterRun() {
-            totalCounter.addAndGet(increments);
-            operationsCounter.addAndGet(getIteration());
-        }
-
-        private IAtomicLong getRandomCounter() {
             int index = randomInt(counters.length);
             return counters[index];
         }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadContext context) {
+        totalCounter.addAndGet(context.increments);
+        operationsCounter.addAndGet(context.iteration());
+    }
+
+    @Reset
+    public void globalReset(){
+        for (IAtomicLong counter : counters) {
+            counter.set(0);
+        }
+        totalCounter.set(0);
     }
 
     @Verify
@@ -127,7 +100,9 @@ public class AtomicLongTest extends AbstractTest {
         long actual = 0;
         for (DistributedObject distributedObject : targetInstance.getDistributedObjects()) {
             String key = distributedObject.getName();
-            if (serviceName.equals(distributedObject.getServiceName()) && key.startsWith(name) && !key.equals(totalName)) {
+            if (serviceName.equals(distributedObject.getServiceName())
+                    && key.startsWith(name)
+                    && !key.equals(totalName)) {
                 actual += targetInstance.getAtomicLong(key).get();
             }
         }
@@ -141,11 +116,5 @@ public class AtomicLongTest extends AbstractTest {
             counter.destroy();
         }
         totalCounter.destroy();
-
-        logger.info("Operations: " + operationsCounter);
-        logger.info(getOperationCountInformation(targetInstance));
-        logger.info(getPartitionDistributionInformation(targetInstance));
     }
-
-
 }

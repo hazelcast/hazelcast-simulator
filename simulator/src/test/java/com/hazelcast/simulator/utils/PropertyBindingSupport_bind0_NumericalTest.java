@@ -3,150 +3,150 @@ package com.hazelcast.simulator.utils;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind0;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class PropertyBindingSupport_bindProperty_NumericalTest {
+public class PropertyBindingSupport_bind0_NumericalTest {
 
     private final BindPropertyTestClass bindPropertyTestClass = new BindPropertyTestClass();
 
     @Test
     public void bindProperty_byte() {
-        bindProperty(bindPropertyTestClass, "byteField", "10");
+        bind0(bindPropertyTestClass, "byteField", "10");
         assertEquals(10, bindPropertyTestClass.byteField);
     }
 
     @Test
     public void bindProperty_byte_whitespace() {
-        bindProperty(bindPropertyTestClass, "byteField", " 10 ");
+        bind0(bindPropertyTestClass, "byteField", " 10 ");
         assertEquals(10, bindPropertyTestClass.byteField);
     }
 
     @Test
     public void bindProperty_Byte() {
-        bindProperty(bindPropertyTestClass, "byteObjectField", "null");
+        bind0(bindPropertyTestClass, "byteObjectField", "null");
         assertNull(bindPropertyTestClass.byteObjectField);
 
-        bindProperty(bindPropertyTestClass, "byteObjectField", "10");
+        bind0(bindPropertyTestClass, "byteObjectField", "10");
         assertEquals(new Byte("10"), bindPropertyTestClass.byteObjectField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Byte_invalid() {
-        bindProperty(bindPropertyTestClass, "byteObjectField", "invalid");
+        bind0(bindPropertyTestClass, "byteObjectField", "invalid");
     }
 
     @Test
     public void bindProperty_short() {
-        bindProperty(bindPropertyTestClass, "shortField", "10");
+        bind0(bindPropertyTestClass, "shortField", "10");
         assertEquals(10, bindPropertyTestClass.shortField);
     }
 
     @Test
     public void bindProperty_short_whitespace() {
-        bindProperty(bindPropertyTestClass, "shortField", " 10");
+        bind0(bindPropertyTestClass, "shortField", " 10");
         assertEquals(10, bindPropertyTestClass.shortField);
     }
 
     @Test
     public void bindProperty_Short() {
-        bindProperty(bindPropertyTestClass, "shortObjectField", "null");
+        bind0(bindPropertyTestClass, "shortObjectField", "null");
         assertNull(bindPropertyTestClass.shortObjectField);
 
-        bindProperty(bindPropertyTestClass, "shortObjectField", "10");
+        bind0(bindPropertyTestClass, "shortObjectField", "10");
         assertEquals(new Short("10"), bindPropertyTestClass.shortObjectField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Short_invalid() {
-        bindProperty(bindPropertyTestClass, "shortObjectField", "invalid");
+        bind0(bindPropertyTestClass, "shortObjectField", "invalid");
     }
 
     @Test
     public void bindProperty_int() {
-        bindProperty(bindPropertyTestClass, "intField", "10");
+        bind0(bindPropertyTestClass, "intField", "10");
         assertEquals(10, bindPropertyTestClass.intField);
     }
 
     @Test
     public void bindProperty_int_whitespace() {
-        bindProperty(bindPropertyTestClass, "intField", "10" + NEW_LINE);
+        bind0(bindPropertyTestClass, "intField", "10" + NEW_LINE);
         assertEquals(10, bindPropertyTestClass.intField);
     }
 
     @Test
     public void bindProperty_Integer() {
-        bindProperty(bindPropertyTestClass, "integerField", "null");
+        bind0(bindPropertyTestClass, "integerField", "null");
         assertNull(bindPropertyTestClass.integerField);
 
-        bindProperty(bindPropertyTestClass, "integerField", "10");
+        bind0(bindPropertyTestClass, "integerField", "10");
         assertEquals(new Integer(10), bindPropertyTestClass.integerField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Integer_invalid() {
-        bindProperty(bindPropertyTestClass, "integerObjectField", "invalid");
+        bind0(bindPropertyTestClass, "integerObjectField", "invalid");
     }
 
     @Test
     public void bindProperty_long() {
-        bindProperty(bindPropertyTestClass, "longField", "1234567890123");
+        bind0(bindPropertyTestClass, "longField", "1234567890123");
         assertEquals(1234567890123L, bindPropertyTestClass.longField);
     }
 
     @Test
     public void bindProperty_Long() {
-        bindProperty(bindPropertyTestClass, "longObjectField", "null");
+        bind0(bindPropertyTestClass, "longObjectField", "null");
         assertNull(bindPropertyTestClass.longObjectField);
 
-        bindProperty(bindPropertyTestClass, "longObjectField", "1234567890123");
+        bind0(bindPropertyTestClass, "longObjectField", "1234567890123");
         assertEquals(new Long("1234567890123"), bindPropertyTestClass.longObjectField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Long_invalid() {
-        bindProperty(bindPropertyTestClass, "longObjectField", "invalid");
+        bind0(bindPropertyTestClass, "longObjectField", "invalid");
     }
 
     @Test
     public void bindProperty_float() {
-        bindProperty(bindPropertyTestClass, "floatField", "23.42");
+        bind0(bindPropertyTestClass, "floatField", "23.42");
         assertEquals(23.42f, bindPropertyTestClass.floatField, 0.01);
     }
 
     @Test
     public void bindProperty_Float() {
-        bindProperty(bindPropertyTestClass, "floatObjectField", "null");
+        bind0(bindPropertyTestClass, "floatObjectField", "null");
         assertNull(bindPropertyTestClass.floatObjectField);
 
-        bindProperty(bindPropertyTestClass, "floatObjectField", "23.42");
+        bind0(bindPropertyTestClass, "floatObjectField", "23.42");
         assertEquals(new Float(23.42f), bindPropertyTestClass.floatObjectField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Float_invalid() {
-        bindProperty(bindPropertyTestClass, "floatObjectField", "invalid");
+        bind0(bindPropertyTestClass, "floatObjectField", "invalid");
     }
 
     @Test
     public void bindProperty_double() {
-        bindProperty(bindPropertyTestClass, "doubleField", "23420000000000.2342");
+        bind0(bindPropertyTestClass, "doubleField", "23420000000000.2342");
         assertEquals(23420000000000.2342d, bindPropertyTestClass.doubleField, 0.0001);
     }
 
     @Test
     public void bindProperty_Double() {
-        bindProperty(bindPropertyTestClass, "doubleObjectField", "null");
+        bind0(bindPropertyTestClass, "doubleObjectField", "null");
         assertNull(bindPropertyTestClass.doubleObjectField);
 
-        bindProperty(bindPropertyTestClass, "doubleObjectField", "23420000000000.2342");
+        bind0(bindPropertyTestClass, "doubleObjectField", "23420000000000.2342");
         assertEquals(new Double(23420000000000.2342d), bindPropertyTestClass.doubleObjectField);
     }
 
     @Test(expected = BindException.class)
     public void bindProperty_Double_invalid() {
-        bindProperty(bindPropertyTestClass, "doubleObjectField", "invalid");
+        bind0(bindPropertyTestClass, "doubleObjectField", "invalid");
     }
 
     @SuppressWarnings("unused")

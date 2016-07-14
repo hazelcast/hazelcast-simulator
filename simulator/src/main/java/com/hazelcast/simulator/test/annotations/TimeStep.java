@@ -13,30 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test;
+package com.hazelcast.simulator.test.annotations;
 
-import com.hazelcast.simulator.worker.tasks.IWorker;
-
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * A task that executes all lifecycles of a Worker.
+ * Needs to be placed on a load generating method of a test.
  */
-class WorkerTask implements Runnable {
-    private final IWorker worker;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface TimeStep {
 
-    public WorkerTask(IWorker worker) {
-        this.worker = worker;
-    }
-
-    @Override
-    public void run() {
-        try {
-            worker.beforeRun();
-            worker.run();
-            worker.afterRun();
-        } catch (Exception e) {
-            throw rethrow(e);
-        }
-    }
+    /**
+     * The probability of this method running. 0 means there is 0% chance, and 1 means there is 100% chance.
+     *
+     * The sum of probability of all timestep methods needs to be one.
+     *
+     * @return the probability.
+     */
+    double prob() default 1;
 }

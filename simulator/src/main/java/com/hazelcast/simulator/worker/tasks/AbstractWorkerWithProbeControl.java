@@ -30,6 +30,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  */
+@Deprecated
 public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends VeryAbstractWorker {
 
     private final OperationSelector<O> operationSelector;

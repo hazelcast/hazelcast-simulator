@@ -21,20 +21,27 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
+@Deprecated
 abstract class VeryAbstractWorker implements IWorker {
 
-    private final Random random = new Random();
+    protected final AtomicLong iterations = new AtomicLong();
 
     @InjectTestContext
     private TestContext testContext;
     @InjectMetronome
     private Metronome workerMetronome;
-
+    private final Random random = new Random();
     private boolean isWorkerStopped;
     private long iteration;
 
     VeryAbstractWorker() {
+    }
+
+    @Override
+    public long iteration() {
+        return iterations.get();
     }
 
     @Override

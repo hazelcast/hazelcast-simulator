@@ -26,6 +26,7 @@ package com.hazelcast.simulator.worker.tasks;
  * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
  * {@link com.hazelcast.simulator.test.annotations.InjectProbe}
  */
+@Deprecated
 public interface IWorker {
 
     /**
@@ -33,6 +34,15 @@ public interface IWorker {
      * {@link com.hazelcast.simulator.test.TestContainer}.
      */
     String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
+
+    /**
+     * Returns the current iteration.
+     *
+     * This method is thread-safe.
+     *
+     * @return
+     */
+    long iteration();
 
     /**
      * Override this method if you need to execute code on each worker before {@link #run()} is called.

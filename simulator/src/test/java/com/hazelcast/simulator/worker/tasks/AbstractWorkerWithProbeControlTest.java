@@ -2,6 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -46,7 +47,8 @@ public class AbstractWorkerWithProbeControlTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerWithProbeControl");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test,
+                new TestCase("id").setProperty("threadCount", THREAD_COUNT));
 
         ExceptionReporter.reset();
     }
@@ -120,7 +122,7 @@ public class AbstractWorkerWithProbeControlTest {
 
         assertEquals(ITERATION_COUNT, test.testIteration);
         assertNotNull(test.probe);
-        Histogram intervalHistogram = ((HdrProbe)test.probe).getIntervalHistogram();
+        Histogram intervalHistogram = ((HdrProbe) test.probe).getIntervalHistogram();
         assertEquals(THREAD_COUNT * ITERATION_COUNT, intervalHistogram.getTotalCount());
         assertEquals(THREAD_COUNT + 1, test.workerCreated);
     }

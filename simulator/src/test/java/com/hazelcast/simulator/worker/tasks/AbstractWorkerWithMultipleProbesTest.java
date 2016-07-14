@@ -2,6 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -47,7 +48,8 @@ public class AbstractWorkerWithMultipleProbesTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerWithMultipleProbesTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test,
+                new TestCase("foo").setProperty("threadCount",THREAD_COUNT));
 
         ExceptionReporter.reset();
     }

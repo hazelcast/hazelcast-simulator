@@ -17,37 +17,31 @@ package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
- * Measures the throughput only.
+ * A {@link Probe} implementation that doesn't do anything.
+ *
+ * This probe is used for code generation; when a user has defined a timestep method with a probe argument, but latency is
+ * not being tracked.
  */
-public class ThroughputProbe implements Probe {
+public class DeadProbe implements Probe {
 
-    private final AtomicLong counter = new AtomicLong();
-    private final boolean partOfTotalThroughput;
-
-    public ThroughputProbe(boolean partOfTotalThroughput) {
-        this.partOfTotalThroughput = partOfTotalThroughput;
-    }
+    public static final DeadProbe INSTANCE = new DeadProbe();
 
     @Override
     public boolean isPartOfTotalThroughput() {
-        return partOfTotalThroughput;
+        return false;
     }
 
     @Override
     public void done(long startedNanos) {
-        counter.incrementAndGet();
     }
 
     @Override
     public void recordValue(long latencyNanos) {
-        counter.incrementAndGet();
     }
 
     @Override
     public long get() {
-        return counter.get();
+        return 0;
     }
 }

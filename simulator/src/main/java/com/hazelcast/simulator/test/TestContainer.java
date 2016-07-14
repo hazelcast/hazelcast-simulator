@@ -15,65 +15,56 @@
  */
 package com.hazelcast.simulator.test;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
-import com.hazelcast.simulator.probes.impl.ThroughputProbe;
-import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
-import com.hazelcast.simulator.test.annotations.InjectMetronome;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
-import com.hazelcast.simulator.test.annotations.InjectTestContext;
+import com.hazelcast.simulator.test.annotations.Reset;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.AnnotationFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.ResetFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
-import com.hazelcast.simulator.utils.Preconditions;
-import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.tasks.IMultipleProbesWorker;
+import com.hazelcast.simulator.worker.PrimordialRunStrategy;
+import com.hazelcast.simulator.worker.RunStrategy;
+import com.hazelcast.simulator.worker.RunWithWorkersRunStrategy;
+import com.hazelcast.simulator.worker.TimeStepRunStrategy;
 import com.hazelcast.simulator.worker.tasks.IWorker;
-import org.apache.log4j.Logger;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Callable;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_RESET;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_RESET;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.RUN;
+import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.test.TestPhase.WARMUP;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.findAllMethods;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodSkipArgsCheck;
+import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethod;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeIntervalMillis;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getMetronomeType;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.getPropertyValue;
-import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
-import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
-import static com.hazelcast.simulator.worker.tasks.IWorker.DEFAULT_WORKER_PROBE_NAME;
-import static java.lang.Boolean.parseBoolean;
-import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
+import static javassist.Modifier.isPublic;
 
 /**
  * Container for test class instances.
- *
+ * <p>
  * <ul>
  * <li>Creates the test class instance by its fully qualified class name.</li>
  * <li>Binds properties to the test class instance (test parameters).</li>
@@ -84,163 +75,130 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
  */
 public class TestContainer {
 
-    static final String THREAD_COUNT_PROPERTY_NAME = "threadCount";
-    static final String METRONOME_INTERVAL_PROPERTY_NAME = "metronomeInterval";
-    static final String METRONOME_TYPE_PROPERTY_NAME = "metronomeType";
-    static final String LIGHTWEIGHT_PROBE_PROPERTY_NAME = "lightweightProbe";
-
-    private static final int DEFAULT_RUN_WITH_WORKER_THREAD_COUNT = 10;
-    private static final int DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL = 0;
-    private static final MetronomeType DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE = NOP;
-    private static final boolean DEFAULT_IS_LIGHTWEIGHT_PROBE = false;
-
-    private static final Set<String> OPTIONAL_TEST_PROPERTIES = new HashSet<String>(asList(
-            THREAD_COUNT_PROPERTY_NAME,
-            METRONOME_INTERVAL_PROPERTY_NAME,
-            METRONOME_TYPE_PROPERTY_NAME,
-            LIGHTWEIGHT_PROBE_PROPERTY_NAME
-    ));
-
-    private static final Logger LOGGER = Logger.getLogger(TestContainer.class);
-
-    private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
-    private final Map<TestPhase, Method> testMethods = new HashMap<TestPhase, Method>();
-
     private final TestContext testContext;
-    private final Object testClassInstance;
-    private final Class testClassType;
-
-    private final int runWithWorkerThreadCount;
-    private final int runWithWorkerMetronomeInterval;
-    private final MetronomeType runWithWorkerMetronomeType;
-    private final boolean runWithWorkerIsLightweightProbe;
-
-    private boolean runWithWorker;
-    private Object[] setupArguments;
-
-    private long testStartedTimestamp;
-    private volatile boolean isRunning;
+    private final TestCase testCase;
+    private final Object testInstance;
+    private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
+    private final PropertyBinding propertyBinding;
+    private final Class testClass;
+    private final RunStrategy runStrategy;
 
     public TestContainer(TestContext testContext, TestCase testCase) {
-        this(testContext, getTestClassInstance(testCase), getThreadCount(testCase),
-                getMetronomeIntervalProperty(testCase), getMetronomeTypeProperty(testCase),
-                isLightweightProbe(testCase));
+        this(testContext, null, testCase);
     }
 
-    public TestContainer(TestContext testContext, Object testClassInstance) {
-        this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT,
-                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, DEFAULT_IS_LIGHTWEIGHT_PROBE);
+    public TestContainer(TestContext testContext, Object givenTestInstance, TestCase testCase) {
+        this.testContext = checkNotNull(testContext, "testContext can't null!");
+        this.testCase = checkNotNull(testCase, "testCase can't be null!");
+        this.propertyBinding = new PropertyBinding(testCase)
+                .setTestContext(testContext);
+
+        propertyBinding.inject(this);
+
+        if (givenTestInstance == null) {
+            this.testInstance = newTestInstance();
+        } else {
+            this.testInstance = givenTestInstance;
+        }
+        this.testClass = testInstance.getClass();
+        propertyBinding.inject(testInstance);
+
+        this.runStrategy = loadRunStrategy();
+
+        registerTestPhaseTasks();
+
+        propertyBinding.ensureNoUnusedProperties();
     }
 
-    public TestContainer(TestContext testContext, Object testClassInstance, boolean runWithWorkerIsLightweightProbe) {
-        this(testContext, testClassInstance, DEFAULT_RUN_WITH_WORKER_THREAD_COUNT,
-                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE,
-                runWithWorkerIsLightweightProbe);
+    private Object newTestInstance() {
+        String testInstanceClassName = testCase.getClassname();
+        try {
+            Class testInstanceClass = TestContainer.class.getClassLoader().loadClass(testInstanceClassName);
+            return testInstanceClass.newInstance();
+        } catch (Exception e) {
+            throw new IllegalTestException("Could not create instance of " + testInstanceClassName, e);
+        }
     }
 
-    public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount) {
-        this(testContext, testClassInstance, runWithWorkerThreadCount,
-                DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL, DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE, DEFAULT_IS_LIGHTWEIGHT_PROBE);
-    }
-
-    public TestContainer(TestContext testContext, Object testClassInstance, int runWithWorkerThreadCount,
-                         int runWithWorkerMetronomeInterval, MetronomeType runWithWorkerMetronomeType,
-                         boolean runWithWorkerIsLightweightProbe) {
-        this.testContext = Preconditions.checkNotNull(testContext, "testContext can't be null");
-        this.testClassInstance = Preconditions.checkNotNull(testClassInstance, "testClassInstance can't be null");
-        this.testClassType = testClassInstance.getClass();
-
-        this.runWithWorkerThreadCount = runWithWorkerThreadCount;
-        this.runWithWorkerMetronomeInterval = runWithWorkerMetronomeInterval;
-        this.runWithWorkerMetronomeType = runWithWorkerMetronomeType;
-        this.runWithWorkerIsLightweightProbe = runWithWorkerIsLightweightProbe;
-
-        injectDependencies();
-        initTestMethods();
+    public PropertyBinding getPropertyBinding() {
+        return propertyBinding;
     }
 
     public Object getTestInstance() {
-        return testClassInstance;
+        return testInstance;
     }
 
     public TestContext getTestContext() {
         return testContext;
     }
 
+    public TestCase getTestCase() {
+        return testCase;
+    }
+
     public long getTestStartedTimestamp() {
-        return testStartedTimestamp;
+        return runStrategy == null ? 0 : runStrategy.getStartedTimestamp();
     }
 
     public boolean isRunning() {
-        return isRunning;
+        return runStrategy == null ? false : runStrategy.isRunning();
+    }
+
+    public long iteration() {
+        return runStrategy == null ? 0 : runStrategy.iterations();
     }
 
     public Map<String, Probe> getProbeMap() {
-        return probeMap;
+        return propertyBinding.getProbeMap();
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
-        switch (testPhase) {
-            case RUN:
-                invokeRun();
-                break;
-            case SETUP:
-                invokeMethod(testClassInstance, testMethods.get(TestPhase.SETUP), setupArguments);
-                break;
-            default:
-                invokeMethod(testClassInstance, testMethods.get(testPhase));
+        Callable task = taskPerPhaseMap.get(testPhase);
+        if (task == null) {
+            return;
         }
+
+        task.call();
     }
 
-    // just for testing
-    boolean hasProbe(String probeName) {
-        return probeMap.containsKey(probeName);
-    }
-
-    private void injectDependencies() {
-        Map<Field, Object> injectMap = createInjectMap(testClassType);
-        injectObjects(injectMap, testClassInstance);
-    }
-
-    private void initTestMethods() {
-        Method runMethod;
-        Method runWithWorkerMethod;
+    private void registerTestPhaseTasks() {
         try {
-            runMethod = getAtMostOneVoidMethodWithoutArgs(testClassType, Run.class);
-            runWithWorkerMethod = getAtMostOneMethodWithoutArgs(testClassType, RunWithWorker.class, IWorker.class);
-            if (runWithWorkerMethod != null) {
-                runWithWorker = true;
-                testMethods.put(TestPhase.RUN, runWithWorkerMethod);
-            } else {
-                testMethods.put(TestPhase.RUN, runMethod);
-            }
+            registerSetupTask();
 
-            Method setupMethod = getAtMostOneVoidMethodSkipArgsCheck(testClassType, Setup.class);
-            if (setupMethod != null) {
-                setupArguments = getSetupArguments(setupMethod);
-                testMethods.put(TestPhase.SETUP, setupMethod);
-            }
+            registerTask(Warmup.class, new WarmupFilter(false), LOCAL_WARMUP);
+            registerTask(Warmup.class, new WarmupFilter(true), GLOBAL_WARMUP);
 
-            setTestMethod(Warmup.class, new WarmupFilter(false), TestPhase.LOCAL_WARMUP);
-            setTestMethod(Warmup.class, new WarmupFilter(true), TestPhase.GLOBAL_WARMUP);
+            taskPerPhaseMap.put(WARMUP, runStrategy.getWarmupCallable());
 
-            setTestMethod(Verify.class, new VerifyFilter(false), TestPhase.LOCAL_VERIFY);
-            setTestMethod(Verify.class, new VerifyFilter(true), TestPhase.GLOBAL_VERIFY);
+            registerTask(Reset.class, new ResetFilter(false), LOCAL_RESET);
+            registerTask(Reset.class, new ResetFilter(true), GLOBAL_RESET);
 
-            setTestMethod(Teardown.class, new TeardownFilter(false), TestPhase.LOCAL_TEARDOWN);
-            setTestMethod(Teardown.class, new TeardownFilter(true), TestPhase.GLOBAL_TEARDOWN);
+            taskPerPhaseMap.put(RUN, runStrategy.getRunCallable());
+
+            registerTask(Verify.class, new VerifyFilter(false), LOCAL_VERIFY);
+            registerTask(Verify.class, new VerifyFilter(true), GLOBAL_VERIFY);
+
+            registerTask(Teardown.class, new TeardownFilter(false), LOCAL_TEARDOWN);
+            registerTask(Teardown.class, new TeardownFilter(true), GLOBAL_TEARDOWN);
+        } catch (IllegalTestException e) {
+            throw e;
         } catch (Exception e) {
-            throw new IllegalTestException("Error during search for annotated test methods in" + testClassType.getName(), e);
+            throw new IllegalTestException("Error during search for annotated test methods in" + testClass.getName(), e);
         }
-        if ((runMethod == null) == (runWithWorkerMethod == null)) {
-            throw new IllegalTestException(format("Test must contain either %s or %s method", Run.class, RunWithWorker.class));
+    }
+
+    private void registerSetupTask() {
+        Method setupMethod = getAtMostOneVoidMethod(testClass, Setup.class);
+        if (setupMethod != null) {
+            Object[] args = getSetupArguments(setupMethod);
+            taskPerPhaseMap.put(SETUP, new MethodInvokingCallable(testInstance, setupMethod, args));
         }
     }
 
     private Object[] getSetupArguments(Method setupMethod) {
         Class[] parameterTypes = setupMethod.getParameterTypes();
         Object[] arguments = new Object[parameterTypes.length];
-        if (parameterTypes.length < 1) {
+        if (parameterTypes.length == 0) {
             return arguments;
         }
 
@@ -248,176 +206,54 @@ public class TestContainer {
             Class<?> parameterType = parameterTypes[i];
             if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
                 throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found %s at position %d",
-                        testClassType.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName(), i));
+                        testClass.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName(), i));
             }
             arguments[i] = testContext;
         }
         return arguments;
     }
 
-    private void setTestMethod(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
-        Method method = getAtMostOneVoidMethodWithoutArgs(testClassType, annotationClass, filter);
-        testMethods.put(testPhase, method);
-    }
-
-    private void invokeRun() throws Exception {
-        try {
-            Method method = testMethods.get(TestPhase.RUN);
-            if (runWithWorker) {
-                invokeRunWithWorkerMethod(method);
-            } else {
-                testStartedTimestamp = System.currentTimeMillis();
-                isRunning = true;
-                invokeMethod(testClassInstance, method);
-            }
-        } finally {
-            isRunning = false;
+    private RunStrategy loadRunStrategy() {
+        Method runMethod = getAtMostOneVoidMethodWithoutArgs(testClass, Run.class);
+        List<RunStrategy> runStrategies = new LinkedList<RunStrategy>();
+        if (runMethod != null) {
+            runStrategies.add(new PrimordialRunStrategy(testInstance, runMethod));
         }
+
+        Method runWithWorker = getAtMostOneMethodWithoutArgs(testClass, RunWithWorker.class, IWorker.class);
+        if (runWithWorker != null) {
+            runStrategies.add(new RunWithWorkersRunStrategy(this, runWithWorker));
+        }
+
+        List<Method> timeStepMethods = findAllMethods(testClass, TimeStep.class);
+        if (timeStepMethods.size() > 0) {
+            runStrategies.add(new TimeStepRunStrategy(this));
+        }
+
+        if (runStrategies.isEmpty()) {
+            throw new IllegalTestException(format("Test must contain either %s or %s or %s method",
+                    Run.class, RunWithWorker.class, TimeStep.class));
+        }
+
+        if (runStrategies.size() > 1) {
+            //todo: better exception
+            throw new IllegalTestException("Test must contain a single run strategy.");
+        }
+
+        return runStrategies.get(0);
     }
 
-    private void invokeRunWithWorkerMethod(Method runMethod) throws Exception {
-        LOGGER.info(format("Spawning %d worker threads for test %s", runWithWorkerThreadCount, testContext.getTestId()));
-        if (runWithWorkerThreadCount <= 0) {
+    private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
+        Method method = getAtMostOneVoidMethodWithoutArgs(testClass, annotationClass, filter);
+
+        if (method == null) {
             return;
         }
 
-        // create instance to get the class of the IWorker implementation
-        IWorker workerInstance = invokeMethod(testClassInstance, runMethod);
-        Class<? extends IWorker> workerClass = workerInstance.getClass();
-
-        Map<Field, Object> injectMap = createInjectMap(workerClass);
-        Map<Enum, Probe> operationProbeMap = createOperationProbeMap(workerClass, workerInstance);
-
-        // everything is prepared, we can notify the outside world now
-        testStartedTimestamp = System.currentTimeMillis();
-        isRunning = true;
-
-        // spawn workers and wait for completion
-        IWorker worker = runWorkers(runWithWorkerThreadCount, runMethod, injectMap, operationProbeMap);
-
-        // call the afterCompletion() method on a single instance of the worker
-        worker.afterCompletion();
-    }
-
-    private Map<Field, Object> createInjectMap(Class classType) {
-        Map<Field, Object> injectMap = new HashMap<Field, Object>();
-        do {
-            for (Field field : classType.getDeclaredFields()) {
-                Class fieldType = field.getType();
-                if (field.isAnnotationPresent(InjectTestContext.class)) {
-                    assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
-                    injectMap.put(field, testContext);
-                } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
-                    assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
-                    injectMap.put(field, testContext.getTargetInstance());
-                } else if (field.isAnnotationPresent(InjectProbe.class)) {
-                    assertFieldType(fieldType, Probe.class, InjectProbe.class);
-                    Probe probe = getOrCreateProbe(getProbeName(field), isPartOfTotalThroughput(field));
-                    injectMap.put(field, probe);
-                } else if (field.isAnnotationPresent(InjectMetronome.class)) {
-                    assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
-                    int intervalMillis = getMetronomeIntervalMillis(field, runWithWorkerMetronomeInterval);
-                    MetronomeType type = getMetronomeType(field, runWithWorkerMetronomeType);
-                    injectMap.put(field, withFixedIntervalMs(intervalMillis, type));
-                }
-            }
-            classType = classType.getSuperclass();
-        } while (classType != null);
-        return injectMap;
-    }
-
-    private Map<Enum, Probe> createOperationProbeMap(Class<? extends IWorker> workerClass, IWorker worker) {
-        if (!IMultipleProbesWorker.class.isAssignableFrom(workerClass)) {
-            return null;
+        if (!isPublic(method.getModifiers())) {
+            throw new IllegalTestException("Method '" + method + "' should be public");
         }
 
-        // remove the default worker probe
-        probeMap.remove(DEFAULT_WORKER_PROBE_NAME);
-
-        Map<Enum, Probe> operationProbes = new HashMap<Enum, Probe>();
-        for (Enum operation : ((IMultipleProbesWorker) worker).getOperations()) {
-            String probeName = capitalizeFully(operation.name(), '_').replace("_", "") + "Probe";
-            operationProbes.put(operation, getOrCreateProbe(probeName, true));
-        }
-        return operationProbes;
+        taskPerPhaseMap.put(testPhase, new MethodInvokingCallable(testInstance, method));
     }
-
-    private Probe getOrCreateProbe(String probeName, boolean partOfTotalThroughput) {
-        Probe probe = probeMap.get(probeName);
-        if (probe == null) {
-            probe = (runWithWorkerIsLightweightProbe
-                    ? new ThroughputProbe(partOfTotalThroughput)
-                    : new HdrProbe(partOfTotalThroughput));
-            probeMap.put(probeName, probe);
-        }
-        return probe;
-    }
-
-    private IWorker runWorkers(int threadCount, Method runMethod, Map<Field, Object> injectMap,
-                               Map<Enum, Probe> operationProbes) throws Exception {
-        IWorker firstWorker = null;
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int i = 0; i < threadCount; i++) {
-            final IWorker worker = invokeMethod(testClassInstance, runMethod);
-            if (firstWorker == null) {
-                firstWorker = worker;
-            }
-
-            injectObjects(injectMap, worker);
-            if (operationProbes != null) {
-                ((IMultipleProbesWorker) worker).setProbeMap(operationProbes);
-            }
-            spawner.spawn(new WorkerTask(worker));
-        }
-        spawner.awaitCompletion();
-        return firstWorker;
-    }
-
-    private static Object getTestClassInstance(TestCase testCase) {
-        checkNotNull(testCase, "testCase can't be null");
-        String classname = testCase.getClassname();
-        Object testObject;
-        try {
-            ClassLoader classLoader = TestContainer.class.getClassLoader();
-            testObject = classLoader.loadClass(classname).newInstance();
-        } catch (Exception e) {
-            throw new IllegalTestException("Could not create instance of " + classname, e);
-        }
-        bindProperties(testObject, testCase, OPTIONAL_TEST_PROPERTIES);
-        return testObject;
-    }
-
-    private static int getThreadCount(TestCase testCase) {
-        String propertyValue = getPropertyValue(testCase, THREAD_COUNT_PROPERTY_NAME);
-        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_THREAD_COUNT : parseInt(propertyValue));
-    }
-
-    private static int getMetronomeIntervalProperty(TestCase testCase) {
-        String propertyValue = getPropertyValue(testCase, METRONOME_INTERVAL_PROPERTY_NAME);
-        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_INTERVAL : parseInt(propertyValue));
-    }
-
-    private static MetronomeType getMetronomeTypeProperty(TestCase testCase) {
-        String propertyValue = getPropertyValue(testCase, METRONOME_TYPE_PROPERTY_NAME);
-        return (propertyValue == null ? DEFAULT_RUN_WITH_WORKER_METRONOME_TYPE : MetronomeType.valueOf(propertyValue));
-    }
-
-    private static boolean isLightweightProbe(TestCase testCase) {
-        String propertyValue = getPropertyValue(testCase, LIGHTWEIGHT_PROBE_PROPERTY_NAME);
-        return parseBoolean(propertyValue);
-    }
-
-    private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {
-        if (!expectedFieldType.equals(fieldType)) {
-            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
-                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
-        }
-    }
-
-    private static void injectObjects(Map<Field, Object> injectMap, Object worker) {
-        for (Map.Entry<Field, Object> entry : injectMap.entrySet()) {
-            setFieldValue(worker, entry.getKey(), entry.getValue());
-        }
-    }
-
 }

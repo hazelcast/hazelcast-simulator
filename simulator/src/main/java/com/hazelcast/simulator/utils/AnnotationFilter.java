@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.test.annotations.Reset;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
@@ -59,6 +60,20 @@ public interface AnnotationFilter<A extends Annotation> {
 
         @Override
         public boolean allowed(Warmup verify) {
+            return verify.global() == isGlobal;
+        }
+    }
+
+
+    class ResetFilter implements AnnotationFilter<Reset> {
+        private final boolean isGlobal;
+
+        public ResetFilter(boolean isGlobal) {
+            this.isGlobal = isGlobal;
+        }
+
+        @Override
+        public boolean allowed(Reset verify) {
             return verify.global() == isGlobal;
         }
     }

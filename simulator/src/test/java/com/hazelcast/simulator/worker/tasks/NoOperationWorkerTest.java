@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContextImpl;
 import com.hazelcast.simulator.test.TestPhase;
@@ -21,7 +22,8 @@ public class NoOperationWorkerTest {
     public void setUp() {
         test = new WorkerTest();
         TestContextImpl testContext = new TestContextImpl("AbstractWorkerTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test,
+                new TestCase("id").setProperty("threadCount", "" + THREAD_COUNT));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

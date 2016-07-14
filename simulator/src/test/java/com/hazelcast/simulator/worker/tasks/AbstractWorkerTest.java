@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -43,7 +44,9 @@ public class AbstractWorkerTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        TestCase testCase = new TestCase("foo")
+                .setProperty("threadCount", "" + THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test, testCase);
 
         ExceptionReporter.reset();
     }
