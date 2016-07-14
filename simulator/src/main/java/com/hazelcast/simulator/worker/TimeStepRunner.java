@@ -86,7 +86,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
 
         Object[] args = constructor.getParameterTypes().length == 0
                 ? new Object[]{}
-                : new Object[]{threadContext};
+                : new Object[]{testInstance};
 
         try {
             return constructor.newInstance((Object[]) args);
