@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.annotations.Reset;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -24,6 +25,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.AnnotationFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.ResetFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
@@ -41,14 +43,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_RESET;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_RESET;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.test.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.findAllMethods;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneMethodWithoutArgs;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethod;
@@ -76,6 +81,7 @@ public class TestContainer {
     private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
     private final PropertyBinding propertyBinding;
     private final Class testClass;
+    private final RunStrategy runStrategy;
 
     public TestContainer(TestContext testContext, TestCase testCase) {
         this(testContext, null, testCase);
@@ -85,7 +91,7 @@ public class TestContainer {
         this.testContext = checkNotNull(testContext, "testContext can't null!");
         this.testCase = checkNotNull(testCase, "testCase can't be null!");
         this.propertyBinding = new PropertyBinding(testCase)
-            .setTestContext(testContext);
+                .setTestContext(testContext);
 
         propertyBinding.inject(this);
 
@@ -96,6 +102,8 @@ public class TestContainer {
         }
         this.testClass = testInstance.getClass();
         propertyBinding.inject(testInstance);
+
+        this.runStrategy = loadRunStrategy();
 
         registerTestPhaseTasks();
 
@@ -129,17 +137,14 @@ public class TestContainer {
     }
 
     public long getTestStartedTimestamp() {
-        RunStrategy runStrategy = (RunStrategy) taskPerPhaseMap.get(RUN);
         return runStrategy == null ? 0 : runStrategy.getStartedTimestamp();
     }
 
     public boolean isRunning() {
-        RunStrategy runStrategy = (RunStrategy) taskPerPhaseMap.get(RUN);
         return runStrategy == null ? false : runStrategy.isRunning();
     }
 
     public long iteration() {
-        RunStrategy runStrategy = (RunStrategy) taskPerPhaseMap.get(RUN);
         return runStrategy == null ? 0 : runStrategy.iterations();
     }
 
@@ -163,7 +168,12 @@ public class TestContainer {
             registerTask(Warmup.class, new WarmupFilter(false), LOCAL_WARMUP);
             registerTask(Warmup.class, new WarmupFilter(true), GLOBAL_WARMUP);
 
-            registerRunStrategyTask();
+            taskPerPhaseMap.put(WARMUP, runStrategy.getWarmupCallable());
+
+            registerTask(Reset.class, new ResetFilter(false), LOCAL_RESET);
+            registerTask(Reset.class, new ResetFilter(true), GLOBAL_RESET);
+
+            taskPerPhaseMap.put(RUN, runStrategy.getRunCallable());
 
             registerTask(Verify.class, new VerifyFilter(false), LOCAL_VERIFY);
             registerTask(Verify.class, new VerifyFilter(true), GLOBAL_VERIFY);
@@ -203,7 +213,7 @@ public class TestContainer {
         return arguments;
     }
 
-    private void registerRunStrategyTask() {
+    private RunStrategy loadRunStrategy() {
         Method runMethod = getAtMostOneVoidMethodWithoutArgs(testClass, Run.class);
         List<RunStrategy> runStrategies = new LinkedList<RunStrategy>();
         if (runMethod != null) {
@@ -230,7 +240,7 @@ public class TestContainer {
             throw new IllegalTestException("Test must contain a single run strategy.");
         }
 
-        taskPerPhaseMap.put(RUN, runStrategies.get(0));
+        return runStrategies.get(0);
     }
 
     private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {

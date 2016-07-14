@@ -20,11 +20,11 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Reset;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,7 +38,6 @@ public class AtomicLongTest extends AbstractTest {
     // properties
     public KeyLocality keyLocality = SHARED;
     public int countersLength = 1000;
-    public int warmupIterations = 100;
 
     private AtomicLong operationsCounter = new AtomicLong();
     private IAtomicLong totalCounter;
@@ -52,15 +51,6 @@ public class AtomicLongTest extends AbstractTest {
         String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < countersLength; i++) {
             counters[i] = targetInstance.getAtomicLong(names[i]);
-        }
-    }
-
-    @Warmup
-    public void warmup() {
-        for (int i = 0; i < warmupIterations; i++) {
-            for (IAtomicLong counter : counters) {
-                counter.get();
-            }
         }
     }
 
@@ -88,6 +78,14 @@ public class AtomicLongTest extends AbstractTest {
     public void afterRun(ThreadContext context) {
         totalCounter.addAndGet(context.increments);
         operationsCounter.addAndGet(context.iteration());
+    }
+
+    @Reset
+    public void globalReset(){
+        for (IAtomicLong counter : counters) {
+            counter.set(0);
+        }
+        totalCounter.set(0);
     }
 
     @Verify

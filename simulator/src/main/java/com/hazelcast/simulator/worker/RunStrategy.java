@@ -23,10 +23,21 @@ import java.util.concurrent.Callable;
  * - @runwithworker workers
  * - @timestep method
  */
-public abstract class RunStrategy implements Callable {
+public abstract class RunStrategy {
 
     private volatile boolean running;
     private volatile long startedTimeStamp;
+
+    public abstract Callable getRunCallable();
+
+    public Callable getWarmupCallable(){
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                return null;
+            }
+        };
+    }
 
     /**
      * Returns the number  of iterations, e.g. the number of times that a timestep method has been called.

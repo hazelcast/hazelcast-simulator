@@ -33,14 +33,17 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_RESET;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_RESET;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.test.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -125,23 +128,32 @@ final class TestCaseRunner implements TestPhaseListener {
     void run() {
         try {
             createTest();
-            runPhase(SETUP);
 
-            runPhase(LOCAL_WARMUP);
-            runPhase(GLOBAL_WARMUP);
+            executePhase(SETUP);
 
-            startTest();
-            waitForTestCompletion();
+            executePhase(LOCAL_WARMUP);
+            executePhase(GLOBAL_WARMUP);
+
+            if (testSuite.getWarmupDurationSeconds() > 0) {
+                executeWarmup();
+
+                executePhase(LOCAL_RESET);
+                executePhase(GLOBAL_RESET);
+            }else{
+                echo("Skipping Test warmup");
+            }
+
+            executeRun();
 
             if (isVerifyEnabled) {
-                runPhase(GLOBAL_VERIFY);
-                runPhase(LOCAL_VERIFY);
+                executePhase(GLOBAL_VERIFY);
+                executePhase(LOCAL_VERIFY);
             } else {
                 echo("Skipping Test verification");
             }
 
-            runPhase(GLOBAL_TEARDOWN);
-            runPhase(LOCAL_TEARDOWN);
+            executePhase(GLOBAL_TEARDOWN);
+            executePhase(LOCAL_TEARDOWN);
         } catch (Exception e) {
             throw rethrow(e);
         }
@@ -153,7 +165,7 @@ final class TestCaseRunner implements TestPhaseListener {
         echo("Completed Test initialization");
     }
 
-    private void runPhase(TestPhase testPhase) {
+    private void executePhase(TestPhase testPhase) {
         if (testSuite.isFailFast() && failureContainer.hasCriticalFailure(testCaseId)) {
             echo("Skipping Test " + testPhase.desc() + " (critical failure)");
             decrementAndGetCountDownLatch(testPhase);
@@ -171,14 +183,12 @@ final class TestCaseRunner implements TestPhaseListener {
         waitForGlobalTestPhaseCompletion(testPhase);
     }
 
-    private void startTest() {
+    private void executeRun() throws Exception {
         echo(format("Starting Test start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
         remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
         echo("Completed Test start");
-    }
 
-    private void waitForTestCompletion() throws Exception {
         StopThread stopThread = null;
         if (testSuite.getDurationSeconds() > 0) {
             stopThread = new StopThread();
@@ -199,6 +209,34 @@ final class TestCaseRunner implements TestPhaseListener {
         }
 
         waitForGlobalTestPhaseCompletion(RUN);
+    }
+
+    private void executeWarmup() throws Exception {
+        echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
+        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
+        echo("Completed Test warmup start");
+
+        StopThread stopThread = null;
+        if (testSuite.getDurationSeconds() > 0) {
+            stopThread = new StopThread();
+            stopThread.start();
+        }
+
+        if (testSuite.isWaitForTestCase()) {
+            echo("Test will run until it stops");
+            waitForPhaseCompletion(WARMUP);
+            echo("Test finished running");
+
+            if (stopThread != null) {
+                stopThread.shutdown();
+                stopThread.interrupt();
+            }
+        } else {
+            waitForStopThread.await();
+        }
+
+        waitForGlobalTestPhaseCompletion(WARMUP);
     }
 
     private void waitForPhaseCompletion(TestPhase testPhase) {

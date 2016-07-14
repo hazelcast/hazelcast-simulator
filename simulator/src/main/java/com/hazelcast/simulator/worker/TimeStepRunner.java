@@ -54,6 +54,11 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
         this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
     }
 
+
+    public void reset(){
+
+    }
+
     @Override
     public void bind(PropertyBinding binding) {
         for (Method method : timeStepModel.getActiveTimeStepMethods()) {

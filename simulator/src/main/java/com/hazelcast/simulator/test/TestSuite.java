@@ -43,6 +43,7 @@ public class TestSuite {
     private final String id;
 
     private int durationSeconds;
+    private int warmupDurationSeconds;
     private boolean waitForTestCase;
     private boolean failFast;
 
@@ -66,6 +67,14 @@ public class TestSuite {
 
     public void setDurationSeconds(int durationSeconds) {
         this.durationSeconds = durationSeconds;
+    }
+
+    public void setWarmupDurationSeconds(int warmupDurationSeconds) {
+        this.warmupDurationSeconds = warmupDurationSeconds;
+    }
+
+    public int getWarmupDurationSeconds() {
+        return warmupDurationSeconds;
     }
 
     public int getDurationSeconds() {
@@ -132,6 +141,7 @@ public class TestSuite {
     public String toString() {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
+                + "warmupDurationSeconds=" + warmupDurationSeconds
                 + "waitForTestCase=" + waitForTestCase
                 + ", id='" + id + '\''
                 + ", testRecipeList=" + testCaseList

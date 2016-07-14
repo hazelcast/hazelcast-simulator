@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.worker;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
 
 /**
  * {@link RunStrategy} uses for a test with a method annotated with {@link com.hazelcast.simulator.test.annotations.Run}.
@@ -33,13 +34,18 @@ public class PrimordialRunStrategy extends RunStrategy {
     }
 
     @Override
-    public Object call() throws Exception {
-        onRunStarted();
-        try {
-            return method.invoke(instance, args);
-        } finally {
-            onRunCompleted();
-        }
+    public Callable getRunCallable() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                onRunStarted();
+                try {
+                    return method.invoke(instance, args);
+                } finally {
+                    onRunCompleted();
+                }
+            }
+        };
     }
 
     @Override

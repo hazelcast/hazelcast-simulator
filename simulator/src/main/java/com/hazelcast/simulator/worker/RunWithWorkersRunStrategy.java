@@ -22,6 +22,7 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static java.lang.String.format;
@@ -66,26 +67,31 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
     }
 
     @Override
-    public Object call() throws Exception {
-        try {
-            LOGGER.info(format("Spawning %d worker threads for test %s",
-                    threadCount, testContext.getTestId()));
+    public Callable getRunCallable() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                try {
+                    LOGGER.info(format("Spawning %d worker threads for test %s",
+                            threadCount, testContext.getTestId()));
 
-            if (threadCount <= 0) {
+                    if (threadCount <= 0) {
+                        return null;
+                    }
+
+                    onRunStarted();
+                    // spawn workers and wait for completion
+                    IWorker worker = runWorkers();
+
+                    // call the afterCompletion() method on a single instance of the worker
+                    worker.afterCompletion();
+                } finally {
+                    onRunCompleted();
+                }
+
                 return null;
             }
-
-            onRunStarted();
-            // spawn workers and wait for completion
-            IWorker worker = runWorkers();
-
-            // call the afterCompletion() method on a single instance of the worker
-            worker.afterCompletion();
-        } finally {
-            onRunCompleted();
-        }
-
-        return null;
+        };
     }
 
     private IWorker runWorkers() throws Exception {
