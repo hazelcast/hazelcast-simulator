@@ -69,6 +69,10 @@ public class AtomicLongTest extends AbstractTest {
         private long increments;
 
         private IAtomicLong randomCounter() {
+            if(counters == null){
+                throw new NullPointerException("Counters is null");
+            }
+
             int index = randomInt(counters.length);
             return counters[index];
         }

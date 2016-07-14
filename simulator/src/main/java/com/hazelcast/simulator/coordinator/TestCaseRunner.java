@@ -139,7 +139,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
                 executePhase(LOCAL_RESET);
                 executePhase(GLOBAL_RESET);
-            }else{
+            } else {
                 echo("Skipping Test warmup");
             }
 
