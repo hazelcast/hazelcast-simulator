@@ -67,7 +67,6 @@ final class TestCaseRunner implements TestPhaseListener {
     private static final ConcurrentMap<TestPhase, Object> LOG_TEST_PHASE_COMPLETION = new ConcurrentHashMap<TestPhase, Object>();
 
     private final ConcurrentMap<TestPhase, AtomicInteger> phaseCompletedMap = new ConcurrentHashMap<TestPhase, AtomicInteger>();
-    private final CountDownLatch waitForStopThread = new CountDownLatch(1);
 
     private final int testIndex;
     private final TestCase testCase;
@@ -191,7 +190,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
         StopThread stopThread = null;
         if (testSuite.getDurationSeconds() > 0) {
-            stopThread = new StopThread();
+            stopThread = new StopThread(false);
             stopThread.start();
         }
 
@@ -205,7 +204,7 @@ final class TestCaseRunner implements TestPhaseListener {
                 stopThread.interrupt();
             }
         } else {
-            waitForStopThread.await();
+            stopThread.join();
         }
 
         waitForGlobalTestPhaseCompletion(RUN);
@@ -219,21 +218,21 @@ final class TestCaseRunner implements TestPhaseListener {
 
         StopThread stopThread = null;
         if (testSuite.getDurationSeconds() > 0) {
-            stopThread = new StopThread();
+            stopThread = new StopThread(true);
             stopThread.start();
         }
 
         if (testSuite.isWaitForTestCase()) {
-            echo("Test will run until it stops");
+            echo("Test will run warmup until it stops");
             waitForPhaseCompletion(WARMUP);
-            echo("Test finished running");
+            echo("Test finished warmup");
 
             if (stopThread != null) {
                 stopThread.shutdown();
                 stopThread.interrupt();
             }
         } else {
-            waitForStopThread.await();
+            stopThread.join();
         }
 
         waitForGlobalTestPhaseCompletion(WARMUP);
@@ -294,37 +293,38 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private final class StopThread extends Thread {
 
+        private final int durationSeconds;
         private volatile boolean isRunning = true;
 
-        public void shutdown() {
-            isRunning = false;
+        private final boolean warmup;
+
+        public StopThread(boolean warmup) {
+            this.warmup = warmup;
+            this.durationSeconds = warmup ? testSuite.getWarmupDurationSeconds() : testSuite.getDurationSeconds();
         }
 
         @Override
         public void run() {
-            try {
-                echo(format("Test will run for %s", secondsToHuman(testSuite.getDurationSeconds())));
-                sleepUntilFailure(testSuite.getDurationSeconds());
-                echo("Test finished running");
+            echo(format("Test will %s for %s", warmup ? "warmup" : "run", secondsToHuman(durationSeconds)));
+            sleepUntilFailure(durationSeconds);
+            echo(format("Test finished %s", warmup ? "warmup" : "running"));
 
-                echo("Starting Test stop");
-                remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
-                waitForPhaseCompletion(RUN);
-                echo("Completed Test stop");
-            } finally {
-                waitForStopThread.countDown();
-            }
+            echo(warmup ? "Starting Test warmup stop" : "Starting Test stop");
+            remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
+            waitForPhaseCompletion(RUN);
+            echo(warmup ? "Completed Test warmup stop" : "Completed Test stop");
         }
 
         private void sleepUntilFailure(int sleepSeconds) {
             int sleepLoops = sleepSeconds / logRunPhaseIntervalSeconds;
             for (int i = 1; i <= sleepLoops && isRunning; i++) {
                 if (failureContainer.hasCriticalFailure(testCaseId)) {
-                    echo("Critical failure detected, aborting run phase");
+                    echo(format("Critical failure detected, aborting %s phase", warmup ? "warmup" : "run"));
                     return;
                 }
+
                 if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
-                    echo("Aborting run phase due to failure");
+                    echo(format("Aborting %s phase due to failure", warmup ? "warmup" : "run"));
                     return;
                 }
 
@@ -342,12 +342,19 @@ final class TestCaseRunner implements TestPhaseListener {
         }
 
         private void logProgress(int elapsed, int sleepSeconds) {
-            String msg = format("Running %s (%s%%)", secondsToHuman(elapsed), formatPercentage(elapsed, sleepSeconds));
+            String msg = format("%s %s (%s%%)",
+                    warmup ? "Warming up " : "Running",
+                    secondsToHuman(elapsed),
+                    formatPercentage(elapsed, sleepSeconds));
             if (monitorPerformance && elapsed % logPerformanceIntervalSeconds == 0) {
                 msg += performanceStateContainer.formatPerformanceNumbers(testCaseId);
             }
 
             LOGGER.info(prefix + msg);
+        }
+
+        public void shutdown() {
+            isRunning = false;
         }
     }
 }
