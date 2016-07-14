@@ -64,7 +64,6 @@ final class TestCaseRunner implements TestPhaseListener {
     private static final ConcurrentMap<TestPhase, Object> LOG_TEST_PHASE_COMPLETION = new ConcurrentHashMap<TestPhase, Object>();
 
     private final ConcurrentMap<TestPhase, AtomicInteger> phaseCompletedMap = new ConcurrentHashMap<TestPhase, AtomicInteger>();
-    private final CountDownLatch waitForStopThread = new CountDownLatch(1);
 
     private final int testIndex;
     private final TestCase testCase;
@@ -186,16 +185,18 @@ final class TestCaseRunner implements TestPhaseListener {
         }
 
         if (testSuite.isWaitForTestCase()) {
+            // it will be the test deciding to determine how long to run.
             echo("Test will run until it stops");
             waitForPhaseCompletion(RUN);
             echo("Test finished running");
 
             if (stopThread != null) {
                 stopThread.shutdown();
-                stopThread.interrupt();
             }
-        } else {
-            waitForStopThread.await();
+        }
+
+        if (stopThread != null) {
+            stopThread.join();
         }
 
         waitForGlobalTestPhaseCompletion(RUN);
@@ -260,22 +261,19 @@ final class TestCaseRunner implements TestPhaseListener {
 
         public void shutdown() {
             isRunning = false;
+            interrupt();
         }
 
         @Override
         public void run() {
-            try {
-                echo(format("Test will run for %s", secondsToHuman(testSuite.getDurationSeconds())));
-                sleepUntilFailure(testSuite.getDurationSeconds());
-                echo("Test finished running");
+            echo(format("Test will run for %s", secondsToHuman(testSuite.getDurationSeconds())));
+            sleepUntilFailure(testSuite.getDurationSeconds());
+            echo("Test finished running");
 
-                echo("Starting Test stop");
-                remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
-                waitForPhaseCompletion(RUN);
-                echo("Completed Test stop");
-            } finally {
-                waitForStopThread.countDown();
-            }
+            echo("Starting Test stop");
+            remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
+            waitForPhaseCompletion(RUN);
+            echo("Completed Test stop");
         }
 
         private void sleepUntilFailure(int sleepSeconds) {
@@ -285,6 +283,7 @@ final class TestCaseRunner implements TestPhaseListener {
                     echo("Critical failure detected, aborting run phase");
                     return;
                 }
+
                 if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
                     echo("Aborting run phase due to failure");
                     return;
