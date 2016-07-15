@@ -29,25 +29,26 @@ public class TerminateWorkerOperation implements SimulatorOperation {
     private final int memberWorkerShutdownDelaySeconds;
 
     /**
-     * Defines if Java Workers should shutdown their log4j instances.
+     * Defines if Java Workers should shutdown their process (e.g. via {@link System#exit(int)}).
      *
-     * This is done to flush the log files and must be prevented in integration tests, otherwise the logging will be gone in
-     * subsequent tests.
+     * This is done to ensure that the Worker process is killed, even if some Threads are non-responsive.
+     * In Java Workers this is also used to shutdown log4j, to ensure flushing of the logs.
      *
-     * Non-Java Workers can ignore this parameter.
+     * This switch should not be set in integration tests, otherwise the logging will be gone in
+     * subsequent tests. This may also kill the JVM of the test itself.
      */
-    private final boolean shutdownLog4j;
+    private final boolean ensureProcessShutdown;
 
-    public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds, boolean shutdownLog4j) {
+    public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds, boolean ensureProcessShutdown) {
         this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
-        this.shutdownLog4j = shutdownLog4j;
+        this.ensureProcessShutdown = ensureProcessShutdown;
     }
 
     public int getMemberWorkerShutdownDelaySeconds() {
         return memberWorkerShutdownDelaySeconds;
     }
 
-    public boolean isShutdownLog4j() {
-        return shutdownLog4j;
+    public boolean isEnsureProcessShutdown() {
+        return ensureProcessShutdown;
     }
 }

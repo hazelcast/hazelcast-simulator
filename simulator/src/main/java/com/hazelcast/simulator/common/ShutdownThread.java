@@ -31,30 +31,31 @@ public abstract class ShutdownThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ShutdownThread.class);
 
     private final AtomicBoolean shutdownStarted;
-    private final boolean shutdownLog4j;
+    private final boolean ensureProcessShutdown;
     private final long waitForShutdownTimeoutMillis;
     private final CountDownLatch shutdownComplete;
 
-    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j) {
-        this(name, shutdownStarted, shutdownLog4j, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
+    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown) {
+        this(name, shutdownStarted, ensureProcessShutdown, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
     }
 
-    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j, CountDownLatch shutdownComplete) {
-        this(name, shutdownStarted, shutdownLog4j, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS, shutdownComplete);
+    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
+                             CountDownLatch shutdownComplete) {
+        this(name, shutdownStarted, ensureProcessShutdown, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS, shutdownComplete);
     }
 
-    ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
+    ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
                    long waitForShutdownTimeoutMillis) {
-        this(name, shutdownStarted, shutdownLog4j, waitForShutdownTimeoutMillis, new CountDownLatch(1));
+        this(name, shutdownStarted, ensureProcessShutdown, waitForShutdownTimeoutMillis, new CountDownLatch(1));
     }
 
-    private ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean shutdownLog4j,
+    private ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
                            long waitForShutdownTimeoutMillis, CountDownLatch shutdownComplete) {
         super(name);
         setDaemon(false);
 
         this.shutdownStarted = shutdownStarted;
-        this.shutdownLog4j = shutdownLog4j;
+        this.ensureProcessShutdown = ensureProcessShutdown;
         this.waitForShutdownTimeoutMillis = waitForShutdownTimeoutMillis;
         this.shutdownComplete = shutdownComplete;
     }
@@ -75,13 +76,16 @@ public abstract class ShutdownThread extends Thread {
 
         doRun();
 
-        // ensures that log4j will always flush the log buffers
-        if (shutdownLog4j) {
+        shutdownComplete.countDown();
+
+        if (ensureProcessShutdown) {
+            // ensures that log4j will always flush the log buffers
             LOGGER.info("Stopping log4j...");
             LogManager.shutdown();
-        }
 
-        shutdownComplete.countDown();
+            // ensures that the JVM will be killed, regardless of any unresponsive threads
+            System.exit(0);
+        }
     }
 
     protected abstract void doRun();

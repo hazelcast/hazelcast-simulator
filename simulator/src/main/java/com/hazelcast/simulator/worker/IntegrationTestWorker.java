@@ -39,7 +39,7 @@ public final class IntegrationTestWorker implements Worker {
     IntegrationTestWorker() {
         LOGGER.info("Hazelcast Simulator IntegrationTestWorker");
 
-        Runtime.getRuntime().addShutdownHook(new IntegrationTestWorkerShutdownThread(shutdownStarted, true, shutdownComplete));
+        Runtime.getRuntime().addShutdownHook(new IntegrationTestWorkerShutdownThread(shutdownStarted, shutdownComplete));
 
         int pid = NativeUtils.getPID();
         LOGGER.info("PID: " + pid);
@@ -62,8 +62,8 @@ public final class IntegrationTestWorker implements Worker {
     }
 
     @Override
-    public void shutdown(boolean shutdownLog4j) {
-        new IntegrationTestWorkerShutdownThread(shutdownStarted, false, shutdownComplete).start();
+    public void shutdown(boolean ensureProcessShutdown) {
+        new IntegrationTestWorkerShutdownThread(shutdownStarted, shutdownComplete).start();
     }
 
     @Override
@@ -83,9 +83,8 @@ public final class IntegrationTestWorker implements Worker {
 
     private static final class IntegrationTestWorkerShutdownThread extends ShutdownThread {
 
-        private IntegrationTestWorkerShutdownThread(AtomicBoolean shutdownStarted, boolean shutdownLog4j,
-                                                    CountDownLatch shutdownComplete) {
-            super("IntegrationTestWorkerShutdownThread", shutdownStarted, shutdownLog4j, shutdownComplete);
+        private IntegrationTestWorkerShutdownThread(AtomicBoolean shutdownStarted, CountDownLatch shutdownComplete) {
+            super("IntegrationTestWorkerShutdownThread", shutdownStarted, false, shutdownComplete);
         }
 
         @Override

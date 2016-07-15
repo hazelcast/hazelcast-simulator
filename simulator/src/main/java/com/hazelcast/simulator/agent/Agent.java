@@ -195,8 +195,8 @@ public class Agent {
 
     private final class AgentShutdownThread extends ShutdownThread {
 
-        private AgentShutdownThread(boolean shutdownLog4j) {
-            super("AgentShutdownThread", SHUTDOWN_STARTED, shutdownLog4j);
+        private AgentShutdownThread(boolean ensureProcessShutdown) {
+            super("AgentShutdownThread", SHUTDOWN_STARTED, ensureProcessShutdown);
         }
 
         @Override
