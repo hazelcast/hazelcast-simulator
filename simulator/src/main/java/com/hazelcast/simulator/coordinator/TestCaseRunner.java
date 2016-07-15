@@ -43,6 +43,7 @@ import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
@@ -141,6 +142,14 @@ final class TestCaseRunner implements TestPhaseListener {
 
             runPhase(GLOBAL_TEARDOWN);
             runPhase(LOCAL_TEARDOWN);
+        } catch (TestCaseAbortedException e) {
+            echo(e.getMessage());
+            // unblock other TestCaseRunner threads, if fail fast is not set and they have no failures on their own
+            TestPhase testPhase = e.testPhase;
+            while (testPhase != null) {
+                decrementAndGetCountDownLatch(testPhase);
+                testPhase = testPhase.getNextTestPhaseOrNull();
+            }
         } catch (Exception e) {
             throw rethrow(e);
         }
@@ -153,10 +162,8 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void runPhase(TestPhase testPhase) {
-        if (testSuite.isFailFast() && failureContainer.hasCriticalFailure(testCaseId)) {
-            echo("Skipping Test " + testPhase.desc() + " (critical failure)");
-            decrementAndGetCountDownLatch(testPhase);
-            return;
+        if (hasFailure()) {
+            throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
         }
 
         echo("Starting Test " + testPhase.desc());
@@ -185,7 +192,7 @@ final class TestCaseRunner implements TestPhaseListener {
         }
 
         if (testSuite.isWaitForTestCase()) {
-            // it will be the test deciding to determine how long to run.
+            // it will be the test deciding to determine how long to run
             echo("Test will run until it stops");
             waitForPhaseCompletion(RUN);
             echo("Test finished running");
@@ -194,10 +201,7 @@ final class TestCaseRunner implements TestPhaseListener {
                 stopThread.shutdown();
             }
         }
-
-        if (stopThread != null) {
-            stopThread.join();
-        }
+        joinThread(stopThread);
 
         waitForGlobalTestPhaseCompletion(RUN);
     }
@@ -210,9 +214,9 @@ final class TestCaseRunner implements TestPhaseListener {
         while (completedWorkers < expectedWorkers) {
             sleepSeconds(1);
 
-            if (failureContainer.hasCriticalFailure(testCaseId)) {
-                echo(format("Waiting for %s completion aborted (critical failure)", testPhase.desc()));
-                break;
+            if (hasFailure()) {
+                throw new TestCaseAbortedException(
+                        format("Waiting for %s completion aborted (critical failure)", testPhase.desc()), testPhase);
             }
 
             completedWorkers = phaseCompletedMap.get(testPhase).get();
@@ -231,7 +235,9 @@ final class TestCaseRunner implements TestPhaseListener {
             return;
         }
         CountDownLatch latch = decrementAndGetCountDownLatch(testPhase);
-        await(latch);
+        if (!hasFailure()) {
+            await(latch);
+        }
         if (LOG_TEST_PHASE_COMPLETION.putIfAbsent(testPhase, true) == null) {
             LOGGER.info("Completed TestPhase " + testPhase.desc());
         }
@@ -253,6 +259,10 @@ final class TestCaseRunner implements TestPhaseListener {
     private void echo(String msg) {
         remoteClient.logOnAllAgents(prefix + msg);
         LOGGER.info(prefix + msg);
+    }
+
+    private boolean hasFailure() {
+        return failureContainer.hasCriticalFailure(testCaseId) || failureContainer.hasCriticalFailure() && testSuite.isFailFast();
     }
 
     private final class StopThread extends Thread {
@@ -279,16 +289,10 @@ final class TestCaseRunner implements TestPhaseListener {
         private void sleepUntilFailure(int sleepSeconds) {
             int sleepLoops = sleepSeconds / logRunPhaseIntervalSeconds;
             for (int i = 1; i <= sleepLoops && isRunning; i++) {
-                if (failureContainer.hasCriticalFailure(testCaseId)) {
+                if (hasFailure()) {
                     echo("Critical failure detected, aborting run phase");
                     return;
                 }
-
-                if (failureContainer.hasCriticalFailure() && testSuite.isFailFast()) {
-                    echo("Aborting run phase due to failure");
-                    return;
-                }
-
                 sleepSeconds(logRunPhaseIntervalSeconds);
                 logProgress(logRunPhaseIntervalSeconds * i, sleepSeconds);
             }
@@ -309,6 +313,16 @@ final class TestCaseRunner implements TestPhaseListener {
             }
 
             LOGGER.info(prefix + msg);
+        }
+    }
+
+    private static final class TestCaseAbortedException extends RuntimeException {
+
+        TestPhase testPhase;
+
+        TestCaseAbortedException(String message, TestPhase testPhase) {
+            super(message);
+            this.testPhase = testPhase;
         }
     }
 }

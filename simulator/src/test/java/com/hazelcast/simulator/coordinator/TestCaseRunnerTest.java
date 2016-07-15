@@ -347,16 +347,18 @@ public class TestCaseRunnerTest {
             // has duration and waitForTestCase
             verifyExecuteOnAllWorkersWithRange = true;
         }
-        if (testSuite.isFailFast() && hasCriticalFailures) {
+        if (hasCriticalFailures) {
             // adjust expected counters if test has critical failures
             verifyExecuteOnAllWorkersWithRange = true;
-            if (parallel) {
+            if (testSuite.isFailFast()) {
+                if (!parallel) {
+                    createTestCount = 1;
+                }
+                sendToTestOnFirstWorkerTimes = 1;
+                sendToTestOnAllWorkersTimes = 1;
+            } else {
                 sendToTestOnFirstWorkerTimes = 2;
                 sendToTestOnAllWorkersTimes = 4;
-            } else {
-                createTestCount = 1;
-                sendToTestOnFirstWorkerTimes = 1;
-                sendToTestOnAllWorkersTimes = 2;
             }
         }
 

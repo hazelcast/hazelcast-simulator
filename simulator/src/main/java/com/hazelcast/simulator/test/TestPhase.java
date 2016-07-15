@@ -48,6 +48,13 @@ public enum TestPhase {
         return isGlobal;
     }
 
+    public TestPhase getNextTestPhaseOrNull() {
+        if (this == LAST_TEST_PHASE) {
+            return null;
+        }
+        return values()[ordinal() + 1];
+    }
+
     public static TestPhase getLastTestPhase() {
         return LAST_TEST_PHASE;
     }

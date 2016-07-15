@@ -123,6 +123,11 @@ public class CommonUtils_MiscTest {
         assertTrue(isInterrupted.get());
     }
 
+    @Test
+    public void testJoinThread_whenThreadIsNull_thenNothingHappens() {
+        joinThread(null);
+    }
+
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testAwait() {
         final CountDownLatch latch = new CountDownLatch(1);

@@ -109,6 +109,9 @@ public final class CommonUtils {
     }
 
     public static void joinThread(Thread thread) {
+        if (thread == null) {
+            return;
+        }
         try {
             thread.join();
         } catch (InterruptedException e) {
