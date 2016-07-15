@@ -100,6 +100,7 @@ public class WorkerPerformanceMonitor {
                                                Collection<TestContainer> testContainers,
                                                long intervalNanos) {
             super("WorkerPerformanceMonitor");
+            setDaemon(true);
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = intervalNanos;
