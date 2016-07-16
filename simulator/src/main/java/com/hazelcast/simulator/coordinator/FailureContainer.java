@@ -80,7 +80,7 @@ public class FailureContainer {
 
     public void addFailureOperation(FailureOperation operation) {
         boolean isFinishedFailure = false;
-        boolean isCriticalFailure = false;
+        boolean isCriticalFailure;
 
         FailureType failureType = operation.getType();
         if (failureType.isWorkerFinishedFailure()) {
@@ -95,16 +95,16 @@ public class FailureContainer {
         }
 
         int failureCount;
-        if (!nonCriticalFailures.contains(failureType)) {
+        if (nonCriticalFailures.contains(failureType)) {
+            isCriticalFailure = false;
+            failureCount = nonCriticalFailureCount.incrementAndGet();
+        } else {
             failureCount = criticalFailureCounter.incrementAndGet();
             String testId = operation.getTestId();
             if (testId != null) {
                 hasCriticalFailuresMap.put(testId, true);
             }
             isCriticalFailure = true;
-        } else {
-            isCriticalFailure = false;
-            failureCount = nonCriticalFailureCount.incrementAndGet();
         }
 
         logFailure(operation, failureCount, isCriticalFailure);
