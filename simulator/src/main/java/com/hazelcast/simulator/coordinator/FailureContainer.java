@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
@@ -44,15 +43,17 @@ import static java.lang.String.format;
 public class FailureContainer {
 
     private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
+    private static final int MAX_CONSOLE_FAILURE_COUNT = 25;
 
     private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
 
-    private final AtomicInteger failureCount = new AtomicInteger();
+    private final AtomicInteger failureNumberGenerator = new AtomicInteger();
     private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkers
             = new ConcurrentHashMap<SimulatorAddress, FailureType>();
     private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
 
-    private final AtomicBoolean hasCriticalFailure = new AtomicBoolean();
+    private final AtomicInteger nonCriticalFailureCount = new AtomicInteger();
+    private final AtomicInteger criticalFailureCounter = new AtomicInteger();
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
@@ -88,21 +89,26 @@ public class FailureContainer {
             componentRegistry.removeWorker(workerAddress);
             isFinishedFailure = true;
         }
+
         if (failureType.isPoisonPill()) {
             return;
         }
 
+        int failureCount;
         if (!nonCriticalFailures.contains(failureType)) {
-            hasCriticalFailure.set(true);
+            failureCount = criticalFailureCounter.incrementAndGet();
             String testId = operation.getTestId();
             if (testId != null) {
                 hasCriticalFailuresMap.put(testId, true);
             }
             isCriticalFailure = true;
+        } else {
+            isCriticalFailure = false;
+            failureCount = nonCriticalFailureCount.incrementAndGet();
         }
 
-        int failureNumber = failureCount.incrementAndGet();
-        LOGGER.error(operation.getLogMessage(failureNumber));
+        logFailure(operation, failureCount, isCriticalFailure);
+
         appendText(operation.getFileMessage(), file);
 
         for (FailureListener failureListener : listenerMap.keySet()) {
@@ -110,12 +116,31 @@ public class FailureContainer {
         }
     }
 
+    private void logFailure(FailureOperation operation, long failureCount, boolean isCriticalFailure) {
+        int failureNumber = failureNumberGenerator.incrementAndGet();
+        if (failureCount < MAX_CONSOLE_FAILURE_COUNT) {
+            if (isCriticalFailure) {
+                LOGGER.error(operation.getLogMessage(failureNumber));
+            } else {
+                LOGGER.info(operation.getLogMessage(failureNumber));
+            }
+        } else if (failureNumber == MAX_CONSOLE_FAILURE_COUNT) {
+            if (isCriticalFailure) {
+                LOGGER.error(format("Maximum number of critical failures has been reached. "
+                        + "Additional failures can be found in '%s'", file.getAbsolutePath()));
+            } else {
+                LOGGER.info(format("Maximum number of non critical failures has been reached. "
+                        + "Additional failures can be found in '%s'", file.getAbsolutePath()));
+            }
+        }
+    }
+
     int getFailureCount() {
-        return failureCount.get();
+        return criticalFailureCounter.get() + nonCriticalFailureCount.get();
     }
 
     boolean hasCriticalFailure() {
-        return hasCriticalFailure.get();
+        return criticalFailureCounter.get() > 0;
     }
 
     boolean hasCriticalFailure(String testId) {
@@ -143,16 +168,17 @@ public class FailureContainer {
     }
 
     void logFailureInfo() {
-        int tmpFailureCount = failureCount.get();
-        if (tmpFailureCount > 0) {
-            if (hasCriticalFailure.get()) {
+        int criticalFailureCount = this.criticalFailureCounter.get();
+        int nonCriticalFailureCount = this.nonCriticalFailureCount.get();
+        if (criticalFailureCount > 0 || nonCriticalFailureCount > 0) {
+            if (criticalFailureCount > 0) {
                 LOGGER.fatal(HORIZONTAL_RULER);
-                LOGGER.fatal(tmpFailureCount + " failures have been detected!!!");
+                LOGGER.fatal(criticalFailureCount + " critical failures have been detected!!!");
                 LOGGER.fatal(HORIZONTAL_RULER);
-                throw new CommandLineExitException(tmpFailureCount + " failures have been detected");
+                throw new CommandLineExitException(criticalFailureCount + " critical failures have been detected");
             } else {
                 LOGGER.fatal(HORIZONTAL_RULER);
-                LOGGER.fatal(tmpFailureCount + " non-critical failures have been detected!");
+                LOGGER.fatal(nonCriticalFailureCount + " non-critical failures have been detected!");
                 LOGGER.fatal(HORIZONTAL_RULER);
             }
             return;
