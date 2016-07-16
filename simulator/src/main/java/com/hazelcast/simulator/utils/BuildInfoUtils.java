@@ -71,7 +71,7 @@ public final class BuildInfoUtils {
                     return version;
                 }
             }
-        } catch (FileUtilsException ignored) {
+        } catch (UncheckedIOException ignored) {
             ignore(ignored);
         }
         return null;

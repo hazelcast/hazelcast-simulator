@@ -25,8 +25,8 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
+import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -132,7 +132,7 @@ public class FileUtilsTest {
         writeText("ignored", null);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testWriteText_withInvalidFilename() {
         writeText("ignored", INVALID_FILE);
     }
@@ -157,7 +157,7 @@ public class FileUtilsTest {
         appendText("ignored", (File) null);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testAppendText_withInvalidFilename() {
         appendText("ignored", INVALID_FILE);
     }
@@ -169,7 +169,7 @@ public class FileUtilsTest {
         assertEquals(EXAMPLE_CONTENT, fileContent);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testGetText_fileNotFound() throws Exception {
         getText(FILE_NOT_FOUND.toURI().toURL().toExternalForm());
     }
@@ -180,7 +180,7 @@ public class FileUtilsTest {
         assertEquals("testContent", resourceFileContent);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testGetResourceFile_fileNotFound() {
         getResourceFile("notFound");
     }
@@ -191,7 +191,7 @@ public class FileUtilsTest {
         assertEquals(EXAMPLE_CONTENT, actual);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testFileAsText_withInvalidFileName() {
         fileAsText(INVALID_FILE.getAbsolutePath());
     }
@@ -202,7 +202,7 @@ public class FileUtilsTest {
         assertEquals(EXAMPLE_CONTENT, actual);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testFileAsText_withInvalidFile() {
         fileAsText(INVALID_FILE);
     }
@@ -290,17 +290,17 @@ public class FileUtilsTest {
         ensureExistingFile(TARGET_FILE);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testEnsureExistingFile_withInaccessibleFile() {
         ensureExistingFile(new File(INACCESSIBLE_FILE, "test"));
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testEnsureExistingFile_withInvalidFile() {
         ensureExistingFile(INVALID_FILE);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testEnsureExistingFile_whenFileCouldNotBeCreated() throws Exception {
         File file = mock(File.class);
         when(file.isFile()).thenReturn(false);
@@ -351,12 +351,12 @@ public class FileUtilsTest {
         ensureExistingDirectory(TARGET_FILE);
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testEnsureExistingDirectory_withInaccessibleFile() {
         ensureExistingDirectory(new File(INACCESSIBLE_FILE, "test"));
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testEnsureExistingDirectory_whenFileCouldNotBeCreated() throws Exception {
         File file = mock(File.class);
         when(file.isFile()).thenReturn(false);
@@ -380,7 +380,7 @@ public class FileUtilsTest {
         rename(FILE_NOT_FOUND, new File("target"));
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testRename_whenCannotRename() {
         rename(EXAMPLE_FILE, INACCESSIBLE_FILE);
     }
@@ -393,7 +393,7 @@ public class FileUtilsTest {
         assertEquals(EXAMPLE_CONTENT, outputStream.toString());
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testCopy_toOutputStream_withClosedStream() throws Exception {
         OutputStream outputStream = new FileOutputStream(TARGET_FILE.getName());
         closeQuietly(outputStream);
@@ -409,7 +409,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testGetFile() {
+    public void testGetFileOrExit() {
         ensureExistingFile(TARGET_FILE);
 
         OptionParser parser = new OptionParser();
@@ -417,19 +417,19 @@ public class FileUtilsTest {
 
         OptionSet options = initOptionsWithHelp(parser, new String[]{"--fileName", TARGET_FILE.getName()});
 
-        File file = getFile(optionSpec, options, "getFileTest");
+        File file = getFileOrExit(optionSpec, options, "getFileTest");
 
         assertEquals(TARGET_FILE, file);
     }
 
-    @Test(expected = FileUtilsException.class)
-    public void testGetFile_fileNotFound() {
+    @Test(expected = CommandLineExitException.class)
+    public void testGetFileOrExit_fileNotFound() {
         OptionParser parser = new OptionParser();
         OptionSpec<String> optionSpec = parser.accepts("fileName").withRequiredArg().ofType(String.class);
 
         OptionSet options = initOptionsWithHelp(parser, new String[]{"--fileName", FILE_NOT_FOUND.getName()});
 
-        getFile(optionSpec, options, "getFileTest");
+        getFileOrExit(optionSpec, options, "getFileTest");
     }
 
     @Test
@@ -447,7 +447,7 @@ public class FileUtilsTest {
         assertTrue(content.startsWith("<hazelcast"));
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testGetFileAsTextFromWorkingDirOrBaseDir_withFileNotFound() {
         getFileAsTextFromWorkingDirOrBaseDir(null, FILE_NOT_FOUND.getName(), "desc");
     }
@@ -486,14 +486,14 @@ public class FileUtilsTest {
         assertFalse(files.isEmpty());
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testGetFilesFromClassPath_withWildcards_noDirectory() {
         ensureExistingFile(TARGET_FILE);
 
         getFilesFromClassPath(TARGET_FILE.getName() + File.separator + "*");
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testGetFilesFromClassPath_withFileNotFound() {
         getFilesFromClassPath(FILE_NOT_FOUND.getName());
     }
@@ -508,7 +508,7 @@ public class FileUtilsTest {
         assertTrue(TARGET_FILE.exists());
     }
 
-    @Test(expected = FileUtilsException.class)
+    @Test(expected = UncheckedIOException.class)
     public void testCopyFilesToDirectory_withInaccessibleTarget() {
         copyFilesToDirectory(new File[]{EXAMPLE_FILE}, INACCESSIBLE_FILE);
     }

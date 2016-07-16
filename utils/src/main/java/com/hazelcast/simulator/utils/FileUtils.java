@@ -105,7 +105,7 @@ public final class FileUtils {
             writer.write(text);
             writer.close();
         } catch (IOException e) {
-            throw new FileUtilsException(e);
+            throw new UncheckedIOException(e);
         } finally {
             closeQuietly(writer);
             closeQuietly(streamWriter);
@@ -134,7 +134,7 @@ public final class FileUtils {
             writer.append(text);
             writer.close();
         } catch (IOException e) {
-            throw new FileUtilsException("Could not append text", e);
+            throw new UncheckedIOException("Could not append text", e);
         } finally {
             closeQuietly(writer);
             closeQuietly(streamWriter);
@@ -164,7 +164,7 @@ public final class FileUtils {
                 closeQuietly(streamReader);
             }
         } catch (IOException e) {
-            throw new FileUtilsException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -173,7 +173,7 @@ public final class FileUtils {
             URL url = Resources.getResource(fileName);
             return Resources.toString(url, Charsets.UTF_8);
         } catch (Exception e) {
-            throw new FileUtilsException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -198,7 +198,7 @@ public final class FileUtils {
             }
             return builder.toString();
         } catch (IOException e) {
-            throw new FileUtilsException(e);
+            throw new UncheckedIOException(e);
         } finally {
             closeQuietly(reader);
             closeQuietly(streamReader);
@@ -236,7 +236,7 @@ public final class FileUtils {
         }
 
         if (!file.delete()) {
-            throw new FileUtilsException("Failed to delete file: " + file);
+            throw new UncheckedIOException("Failed to delete file: " + file);
         }
     }
 
@@ -264,10 +264,10 @@ public final class FileUtils {
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) {
-                    throw new FileUtilsException("Could not create file: " + file.getAbsolutePath());
+                    throw new UncheckedIOException("Could not create file: " + file.getAbsolutePath());
                 }
             } catch (IOException e) {
-                throw new FileUtilsException(e);
+                throw new UncheckedIOException(e);
             }
         }
     }
@@ -294,7 +294,7 @@ public final class FileUtils {
         }
 
         if (!dir.mkdirs()) {
-            throw new FileUtilsException("Could not create directory: " + dir.getAbsolutePath());
+            throw new UncheckedIOException("Could not create directory: " + dir.getAbsolutePath());
         }
     }
 
@@ -303,7 +303,7 @@ public final class FileUtils {
             return;
         }
         if (!source.renameTo(target)) {
-            throw new FileUtilsException(format("Could not rename [%s] to [%s]",
+            throw new UncheckedIOException(format("Could not rename [%s] to [%s]",
                     source.getAbsolutePath(), target.getAbsolutePath()));
         }
     }
@@ -322,7 +322,7 @@ public final class FileUtils {
                 outputStream.write(buffer, 0, readCount);
             }
         } catch (IOException e) {
-            throw new FileUtilsException(e);
+            throw new UncheckedIOException(e);
         } finally {
             closeQuietly(inputStream);
         }
@@ -333,10 +333,13 @@ public final class FileUtils {
         return new File((home != null) ? home : System.getProperty("user.dir"));
     }
 
-    public static File getFile(OptionSpec<String> spec, OptionSet options, String desc) {
+    /**
+     * Gets the file. If the file does not exist, a {@link CommandLineExitException} is thrown.
+     */
+    public static File getFileOrExit(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));
         if (!file.exists()) {
-            throw new FileUtilsException(format("%s [%s] does not exist", desc, file));
+            throw new CommandLineExitException(format("%s [%s] does not exist", desc, file));
         }
         return file;
     }
@@ -347,7 +350,7 @@ public final class FileUtils {
             file = newFile(baseDir + File.separator + "conf" + File.separator + fileName);
         }
         if (!file.exists()) {
-            throw new FileUtilsException(format("%s [%s] does not exist", desc, file.getAbsolutePath()));
+            throw new UncheckedIOException(format("%s [%s] does not exist", desc, file.getAbsolutePath()));
         }
         LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
 
@@ -366,7 +369,7 @@ public final class FileUtils {
             if (file.getName().contains("*")) {
                 File parent = file.getParentFile();
                 if (parent == null || !parent.isDirectory()) {
-                    throw new FileUtilsException(format("Could not find matching files for wildcard classpath %s",
+                    throw new UncheckedIOException(format("Could not find matching files for wildcard classpath %s",
                             file.getName()));
                 }
 
@@ -382,7 +385,7 @@ public final class FileUtils {
             } else if (file.exists()) {
                 files.add(file);
             } else {
-                throw new FileUtilsException(format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
+                throw new UncheckedIOException(format("Cannot convert classpath to java.io.File. [%s] doesn't exist", filePath));
             }
         }
 
@@ -400,7 +403,7 @@ public final class FileUtils {
         try {
             Files.copy(sourceFile, targetFile);
         } catch (IOException e) {
-            throw new FileUtilsException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
+            throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
                     targetFile.getAbsolutePath()), e);
         }
     }

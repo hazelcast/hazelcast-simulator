@@ -41,7 +41,7 @@ import static com.hazelcast.simulator.test.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getFile;
+import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -329,25 +329,25 @@ final class CoordinatorCli {
     }
 
     private static File getAgentsFile(CoordinatorCli cli, OptionSet options) {
-        File file = getFile(cli.agentsFileSpec, options, "Agents file");
+        File file = getFileOrExit(cli.agentsFileSpec, options, "Agents file");
         LOGGER.info("Loading Agents file: " + file.getAbsolutePath());
         return file;
     }
 
     private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
-        File file = getFile(cli.memberHzConfigFileSpec, options, "Hazelcast member configuration for Worker");
+        File file = getFileOrExit(cli.memberHzConfigFileSpec, options, "Hazelcast member configuration for Worker");
         LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
     private static String loadWorkerScript(OptionSet options, CoordinatorCli cli) {
-        File file = getFile(cli.workerScriptFileSpec, options, "Hazelcast worker.sh");
+        File file = getFileOrExit(cli.workerScriptFileSpec, options, "Hazelcast worker.sh");
         LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
     private static String loadClientHzConfig(OptionSet options, CoordinatorCli cli) {
-        File file = getFile(cli.clientHzConfigFileSpec, options, "Hazelcast client configuration for Worker");
+        File file = getFileOrExit(cli.clientHzConfigFileSpec, options, "Hazelcast client configuration for Worker");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }

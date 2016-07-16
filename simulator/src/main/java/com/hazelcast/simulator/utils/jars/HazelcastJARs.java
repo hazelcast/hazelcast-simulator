@@ -18,7 +18,7 @@ package com.hazelcast.simulator.utils.jars;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.FileUtilsException;
+import com.hazelcast.simulator.utils.UncheckedIOException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -225,7 +225,7 @@ public class HazelcastJARs {
         LOGGER.debug("Loading " + mavenMetadataUrl);
         try {
             return getText(mavenMetadataUrl);
-        } catch (FileUtilsException e) {
+        } catch (UncheckedIOException e) {
             throw new CommandLineExitException("Could not load " + mavenMetadataUrl, e);
         }
     }

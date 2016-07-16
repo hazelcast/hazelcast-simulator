@@ -15,17 +15,17 @@
  */
 package com.hazelcast.simulator.utils;
 
-public class FileUtilsException extends RuntimeException {
+public class UncheckedIOException extends RuntimeException {
 
-    public FileUtilsException(String message) {
+    public UncheckedIOException(String message) {
         super(message);
     }
 
-    public FileUtilsException(String message, Throwable cause) {
+    public UncheckedIOException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public FileUtilsException(Throwable cause) {
+    public UncheckedIOException(Throwable cause) {
         super(cause);
     }
 }
