@@ -244,7 +244,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private int getExpectedWorkerCount(TestPhase testPhase) {
-        return (testPhase.isGlobal()) ? 1 : componentRegistry.workerCount();
+        return testPhase.isGlobal() ? 1 : componentRegistry.workerCount();
     }
 
     private CountDownLatch decrementAndGetCountDownLatch(TestPhase testPhase) {
