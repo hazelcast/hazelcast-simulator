@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -12,9 +12,11 @@ import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +54,9 @@ public class CoordinatorConnectorTest {
     public void setUp() {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
+
+        File outputDirectory = TestUtils.createTmpDirectory();
+        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
         executorService = mock(ExecutorService.class);
 

@@ -17,6 +17,8 @@ package com.hazelcast.simulator.utils;
 
 import org.apache.log4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -40,6 +42,25 @@ public final class TestUtils {
     }
 
     private TestUtils() {
+    }
+
+    public static File createTmpDirectory() {
+        try {
+            File dir = File.createTempFile("temp", "tmp-" + UuidUtil.newUnsecureUuidString());
+
+            if (!dir.delete()) {
+                throw new UncheckedIOException("Failed to delete temp file '" + dir.getAbsolutePath() + "'");
+            }
+
+            if (!dir.mkdir()) {
+                throw new UncheckedIOException("Failed to create temp directory '" + dir.getAbsolutePath() + "'");
+            }
+
+            dir.deleteOnExit();
+            return dir;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     public static String getUserContextKeyFromTestId(String testId) {

@@ -3,8 +3,8 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
@@ -21,11 +21,13 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.test.TestContainer;
+import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.util.ExceptionUtil;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -161,7 +163,8 @@ class ProtocolUtil {
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
+        File outputDirectory = TestUtils.createTmpDirectory();
+        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
         CoordinatorConnector coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
                 performanceStateContainer, hdrHistogramContainer);

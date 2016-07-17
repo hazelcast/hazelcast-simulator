@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.probes;
 
 import com.hazelcast.simulator.probes.impl.ResultImpl;
-import com.hazelcast.simulator.probes.xml.ResultXmlUtils;
 import org.HdrHistogram.Histogram;
 
 import java.io.File;
@@ -52,11 +51,6 @@ public final class ProbeTestUtils {
             histogram.recordValue(getRandomLatency());
         }
         return histogram;
-    }
-
-    public static Result serializeAndDeserializeAgain(Result result) {
-        ResultXmlUtils.toXml(result, resultFile);
-        return ResultXmlUtils.fromXml(resultFile);
     }
 
     public static int getRandomLatency() {

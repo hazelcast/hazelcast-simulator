@@ -17,13 +17,15 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.probes.Result;
 import com.hazelcast.simulator.probes.impl.ResultImpl;
-import com.hazelcast.simulator.probes.xml.ResultXmlUtils;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogProcessor;
+import org.HdrHistogram.HistogramLogWriter;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,8 +45,10 @@ public class HdrHistogramContainer {
             = new ConcurrentHashMap<SimulatorAddress, HistogramsPerWorker>();
 
     private final PerformanceStateContainer performanceStateContainer;
+    private final File outputDirectory;
 
-    public HdrHistogramContainer(PerformanceStateContainer performanceStateContainer) {
+    public HdrHistogramContainer(File outputDirectory, PerformanceStateContainer performanceStateContainer) {
+        this.outputDirectory = outputDirectory;
         this.performanceStateContainer = performanceStateContainer;
     }
 
@@ -69,9 +73,24 @@ public class HdrHistogramContainer {
             return;
         }
 
-        String fileName = "probes-" + testSuiteId + '_' + testId + ".xml";
-        LOGGER.info("Writing histogram: " + fileName);
-        ResultXmlUtils.toXml(result, new File(fileName));
+        for (String probeName : result.probeNames()) {
+            String baseFileName = testSuiteId + '_' + testId + "_" + probeName;
+
+            Histogram histogram = result.getHistogram(probeName);
+            File hdrFile = new File(outputDirectory, baseFileName + ".hdr");
+            LOGGER.info("Writing " + hdrFile.getAbsolutePath());
+            try {
+                HistogramLogWriter writer = new HistogramLogWriter(hdrFile);
+                writer.outputIntervalHistogram(histogram);
+            } catch (IOException e) {
+                LOGGER.error(e);
+            }
+
+            // the HistogramLogProcessor creates 2 files. One with basename and no extension and one with 'hgrm' extension.
+            File hgrmFile = new File(outputDirectory, baseFileName);
+            LOGGER.info("Writing " + hgrmFile.getAbsolutePath() + ".hgrm");
+            HistogramLogProcessor.main(new String[]{"-i", hdrFile.getAbsolutePath(), "-o", hgrmFile.getAbsolutePath()});
+        }
     }
 
     private synchronized Result aggregateHistogramsForTestCase(String testId, PerformanceState state) {

@@ -2,8 +2,8 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.apache.log4j.Level;
 import org.junit.After;
@@ -28,6 +29,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -70,6 +72,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private FailureContainer failureContainer;
 
     private CoordinatorOperationProcessor processor;
+    private File outputDirectory;
 
     @BeforeClass
     public static void setUpEnvironment() {
@@ -90,7 +93,9 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
         performanceStateContainer = new PerformanceStateContainer();
-        hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
+
+        outputDirectory = TestUtils.createTmpDirectory();
+        hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", componentRegistry);
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
@@ -99,7 +104,8 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     @After
     public void tearDown() {
-        deleteQuiet("failures-CoordinatorOperationProcessorTest.txt");
+        deleteQuiet(outputDirectory);
+        new File("failures-CoordinatorOperationProcessorTest.txt").delete();
     }
 
     @Override
