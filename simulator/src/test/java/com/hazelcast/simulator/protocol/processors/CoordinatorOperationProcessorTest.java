@@ -3,7 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
-import com.hazelcast.simulator.coordinator.TestHistogramContainer;
+import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -66,7 +66,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private LocalExceptionLogger exceptionLogger;
     private TestPhaseListeners testPhaseListeners;
     private PerformanceStateContainer performanceStateContainer;
-    private TestHistogramContainer testHistogramContainer;
+    private HdrHistogramContainer hdrHistogramContainer;
     private FailureContainer failureContainer;
 
     private CoordinatorOperationProcessor processor;
@@ -90,11 +90,11 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
         performanceStateContainer = new PerformanceStateContainer();
-        testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
+        hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
         failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", componentRegistry);
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStateContainer, testHistogramContainer);
+                performanceStateContainer, hdrHistogramContainer);
     }
 
     @After
@@ -201,7 +201,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);
 
-        ConcurrentMap<String, Map<String, String>> testHistograms = testHistogramContainer.getTestHistograms(workerAddress);
+        ConcurrentMap<String, Map<String, String>> testHistograms = hdrHistogramContainer.getHistograms(workerAddress);
         assertNotNull(testHistograms);
         assertEquals(1, testHistograms.size());
 

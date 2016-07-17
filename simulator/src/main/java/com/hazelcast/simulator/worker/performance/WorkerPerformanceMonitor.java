@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -48,7 +49,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 public class WorkerPerformanceMonitor {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
-    private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
+    private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = MILLISECONDS.toNanos(100);
     private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitor.class);
 
     private final WorkerPerformanceMonitorThread thread;
@@ -179,8 +180,18 @@ public class WorkerPerformanceMonitor {
         private void purgeDeadTests(long currentTimestamp) {
             for (MonitoredTest test : tests.values()) {
                 // purge the testData if it wasn't seen in the current run
-                if (test.lastSeen != currentTimestamp) {
-                    tests.remove(test.testId);
+                if (test.lastSeen == currentTimestamp) {
+                    continue;
+                }
+
+                tests.remove(test.testId);
+
+                // we need to make sure the histogram data gets written on deletion.
+                TestPerformanceTracker tracker = test.tracker;
+                Map<String, String> histograms = tracker.aggregateIntervalHistograms();
+                if (!histograms.isEmpty()) {
+                    TestHistogramOperation operation = new TestHistogramOperation(test.testId, histograms);
+                    serverConnector.write(SimulatorAddress.COORDINATOR, operation);
                 }
             }
         }
