@@ -288,12 +288,12 @@ public final class Coordinator {
     void runTestSuite() {
         try {
             int testCount = testSuite.size();
-            boolean isParallel = (coordinatorParameters.isParallel() && testCount > 1);
+            boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
             int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
-            Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, isParallel, lastTestPhaseToSync);
+            Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel, lastTestPhaseToSync);
 
             echo("Starting TestSuite: %s", testSuite.getId());
-            logTestSuiteDuration(isParallel);
+            logTestSuiteDuration(parallel);
 
             for (TestData testData : componentRegistry.getTests()) {
                 int testIndex = testData.getTestIndex();
@@ -303,12 +303,12 @@ public final class Coordinator {
                 testPhaseListeners.addListener(testIndex, runner);
             }
 
-            echoTestSuiteStart(testCount, isParallel);
+            echoTestSuiteStart(testCount, parallel);
             long started = System.nanoTime();
-            if (isParallel) {
+            if (parallel) {
                 runParallel();
             } else {
-                runSequential(testCount);
+                runSequential();
             }
             echoTestSuiteEnd(testCount, started);
         } finally {
@@ -361,7 +361,7 @@ public final class Coordinator {
         spawner.awaitCompletion();
     }
 
-    private void runSequential(int testCount) {
+    private void runSequential() {
         int testIndex = 0;
         for (TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
             ((TestCaseRunner) testCaseRunner).run();
@@ -371,7 +371,7 @@ public final class Coordinator {
                 break;
             }
             // restart Workers if needed, but not after last test
-            if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testCount) {
+            if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
                 startWorkers();
             }
         }

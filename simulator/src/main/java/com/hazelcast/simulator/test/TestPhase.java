@@ -69,9 +69,9 @@ public enum TestPhase {
         return builder.toString();
     }
 
-    public static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean isParallel,
+    public static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean parallel,
                                                                      TestPhase latestTestPhaseToSync) {
-        if (!isParallel) {
+        if (!parallel) {
             return null;
         }
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
