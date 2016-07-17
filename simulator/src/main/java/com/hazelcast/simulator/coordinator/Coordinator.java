@@ -216,9 +216,16 @@ public final class Coordinator {
             }
             return;
         }
-        Uploader uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs,
-                coordinatorParameters.isUploadHazelcastJARs(), coordinatorParameters.isEnterpriseEnabled(),
-                coordinatorParameters.getWorkerClassPath(), testSuite.getId());
+
+        Uploader uploader = new Uploader(
+                bash,
+                componentRegistry,
+                clusterLayout,
+                hazelcastJARs,
+                coordinatorParameters.isUploadHazelcastJARs(),
+                coordinatorParameters.isEnterpriseEnabled(),
+                coordinatorParameters.getWorkerClassPath(),
+                testSuite.getId());
         uploader.run();
     }
 
