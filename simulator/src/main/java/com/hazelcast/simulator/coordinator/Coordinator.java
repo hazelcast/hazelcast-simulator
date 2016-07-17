@@ -73,7 +73,7 @@ public final class Coordinator {
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-    private final TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
+    private final HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
 
     private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
@@ -232,7 +232,7 @@ public final class Coordinator {
     private void startCoordinatorConnector() {
         try {
             coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
-                    performanceStateContainer, testHistogramContainer);
+                    performanceStateContainer, hdrHistogramContainer);
             failureContainer.addListener(coordinatorConnector);
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
             for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -331,7 +331,7 @@ public final class Coordinator {
 
             performanceStateContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
             for (TestCase testCase : testSuite.getTestCaseList()) {
-                testHistogramContainer.createProbeResults(testSuite.getId(), testCase.getId());
+                hdrHistogramContainer.writeAggregatedHistograms(testSuite.getId(), testCase.getId());
             }
         }
     }

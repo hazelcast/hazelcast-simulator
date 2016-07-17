@@ -24,13 +24,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TestHistogramContainerTest {
+public class HdrHistogramContainerTest {
 
     private File probeFile = new File("probes-testSuiteId_testId.xml");
     private SimulatorAddress workerAddress1 = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
     private SimulatorAddress workerAddress2 = new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0);
 
-    private TestHistogramContainer testHistogramContainer;
+    private HdrHistogramContainer hdrHistogramContainer;
 
     @Before
     public void setUp() {
@@ -39,7 +39,7 @@ public class TestHistogramContainerTest {
         PerformanceStateContainer performanceStateContainer = mock(PerformanceStateContainer.class);
         when(performanceStateContainer.get("testId")).thenReturn(performanceState);
 
-        testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
+        hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
     }
 
     @After
@@ -50,35 +50,35 @@ public class TestHistogramContainerTest {
     @Test
     public void testCreateProbeResults() {
         String histogram1 = createEncodedHistogram();
-        testHistogramContainer.addTestHistograms(workerAddress1, "testId", singletonMap("workerProbe", histogram1));
+        hdrHistogramContainer.addHistograms(workerAddress1, "testId", singletonMap("workerProbe", histogram1));
 
         String histogram2 = createEncodedHistogram();
-        testHistogramContainer.addTestHistograms(workerAddress2, "testId", singletonMap("workerProbe", histogram2));
+        hdrHistogramContainer.addHistograms(workerAddress2, "testId", singletonMap("workerProbe", histogram2));
 
-        testHistogramContainer.createProbeResults("testSuiteId", "testId");
+        hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "testId");
         assertTrue(probeFile.exists());
     }
 
     @Test
     public void testCreateProbeResults_noHistogramForTestId() {
         String histogram = createEncodedHistogram();
-        testHistogramContainer.addTestHistograms(workerAddress1, "anotherTestId", singletonMap("workerProbe", histogram));
+        hdrHistogramContainer.addHistograms(workerAddress1, "anotherTestId", singletonMap("workerProbe", histogram));
 
-        testHistogramContainer.createProbeResults("testSuiteId", "testId");
+        hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "testId");
         assertFalse(probeFile.exists());
     }
 
     @Test
     public void testCreateProbeResults_invalidHistogram() {
-        testHistogramContainer.addTestHistograms(workerAddress1, "testId", singletonMap("workerProbe", "invalidHistogram"));
+        hdrHistogramContainer.addHistograms(workerAddress1, "testId", singletonMap("workerProbe", "invalidHistogram"));
 
-        testHistogramContainer.createProbeResults("testSuiteId", "testId");
+        hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "testId");
         assertFalse(probeFile.exists());
     }
 
     @Test
     public void testCreateProbeResults_unknownTestId() {
-        testHistogramContainer.createProbeResults("testSuiteId", "unknownTestId");
+        hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "unknownTestId");
         assertFalse(probeFile.exists());
     }
 

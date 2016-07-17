@@ -17,7 +17,7 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
-import com.hazelcast.simulator.coordinator.TestHistogramContainer;
+import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -48,18 +48,18 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     private final FailureContainer failureContainer;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStateContainer performanceStateContainer;
-    private final TestHistogramContainer testHistogramContainer;
+    private final HdrHistogramContainer hdrHistogramContainer;
 
     public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger,
                                          FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
                                          PerformanceStateContainer performanceStateContainer,
-                                         TestHistogramContainer testHistogramContainer) {
+                                         HdrHistogramContainer hdrHistogramContainer) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.failureContainer = failureContainer;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStateContainer = performanceStateContainer;
-        this.testHistogramContainer = testHistogramContainer;
+        this.hdrHistogramContainer = hdrHistogramContainer;
     }
 
     @Override
@@ -109,6 +109,6 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     }
 
     private void processTestHistogram(TestHistogramOperation operation, SimulatorAddress sourceAddress) {
-        testHistogramContainer.addTestHistograms(sourceAddress, operation.getTestId(), operation.getProbeHistograms());
+        hdrHistogramContainer.addHistograms(sourceAddress, operation.getTestId(), operation.getProbeHistograms());
     }
 }

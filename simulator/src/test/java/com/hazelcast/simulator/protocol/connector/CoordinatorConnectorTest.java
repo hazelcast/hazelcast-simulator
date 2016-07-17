@@ -2,7 +2,7 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
-import com.hazelcast.simulator.coordinator.TestHistogramContainer;
+import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -52,12 +52,12 @@ public class CoordinatorConnectorTest {
     public void setUp() {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        TestHistogramContainer testHistogramContainer = new TestHistogramContainer(performanceStateContainer);
+        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
         executorService = mock(ExecutorService.class);
 
         coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
-                testHistogramContainer, executorService);
+                hdrHistogramContainer, executorService);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
