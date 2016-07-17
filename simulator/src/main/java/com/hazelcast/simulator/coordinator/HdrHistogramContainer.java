@@ -96,7 +96,7 @@ public class HdrHistogramContainer {
             map.put(testId, histograms);
         }
 
-        public Map<String, String> get(String testId) {
+        private Map<String, String> get(String testId) {
             return map.get(testId);
         }
 
