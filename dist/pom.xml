@@ -46,11 +46,6 @@
             <artifactId>tests-hz37</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>visualizer</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
     <build>

@@ -73,7 +73,7 @@ public final class Coordinator {
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-    private final HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
+    private final HdrHistogramContainer hdrHistogramContainer;
 
     private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
@@ -92,6 +92,7 @@ public final class Coordinator {
 
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
+    private final File outputDirectory = new File(System.getProperty("user.dir"));
 
     public Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
                        WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters) {
@@ -106,7 +107,7 @@ public final class Coordinator {
         this.coordinatorParameters = coordinatorParameters;
         this.workerParameters = workerParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
-
+        this.hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         this.failureContainer = new FailureContainer(testSuite, componentRegistry);
 
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();

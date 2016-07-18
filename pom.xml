@@ -57,7 +57,6 @@
         <guava.version>19.0</guava.version>
         <gson.version>2.6.2</gson.version>
         <hdr-histogram.version>2.1.9</hdr-histogram.version>
-        <jfreechart.version>1.0.19</jfreechart.version>
         <jgit.version>3.7.1.201504261725-r</jgit.version>
         <jopt.version>4.9</jopt.version>
         <xstream.version>1.4.9</xstream.version>
@@ -102,7 +101,6 @@
         <module>simulator</module>
         <module>tests</module>
         <module>utils</module>
-        <module>visualizer</module>
     </modules>
 
     <scm>

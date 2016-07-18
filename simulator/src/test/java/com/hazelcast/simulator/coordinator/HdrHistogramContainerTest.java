@@ -18,6 +18,7 @@ import java.util.zip.Deflater;
 import static com.hazelcast.simulator.probes.impl.HdrProbe.LATENCY_PRECISION;
 import static com.hazelcast.simulator.probes.impl.HdrProbe.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.TestUtils.createTmpDirectory;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,10 +27,10 @@ import static org.mockito.Mockito.when;
 
 public class HdrHistogramContainerTest {
 
-    private File probeFile = new File("probes-testSuiteId_testId.xml");
+    private File hdrFile;
+    private File outputDirectory;
     private SimulatorAddress workerAddress1 = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
     private SimulatorAddress workerAddress2 = new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0);
-
     private HdrHistogramContainer hdrHistogramContainer;
 
     @Before
@@ -39,12 +40,14 @@ public class HdrHistogramContainerTest {
         PerformanceStateContainer performanceStateContainer = mock(PerformanceStateContainer.class);
         when(performanceStateContainer.get("testId")).thenReturn(performanceState);
 
-        hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
+        outputDirectory = createTmpDirectory();
+        hdrFile = new File(outputDirectory, "testSuiteId_testId_workerProbe.hdr");
+        hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
     }
 
     @After
     public void tearDown() {
-        deleteQuiet(probeFile);
+        deleteQuiet(outputDirectory);
     }
 
     @Test
@@ -56,7 +59,7 @@ public class HdrHistogramContainerTest {
         hdrHistogramContainer.addHistograms(workerAddress2, "testId", singletonMap("workerProbe", histogram2));
 
         hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "testId");
-        assertTrue(probeFile.exists());
+        assertTrue(hdrFile.getAbsolutePath() + " does not exist", hdrFile.exists());
     }
 
     @Test
@@ -65,7 +68,7 @@ public class HdrHistogramContainerTest {
         hdrHistogramContainer.addHistograms(workerAddress1, "anotherTestId", singletonMap("workerProbe", histogram));
 
         hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "testId");
-        assertFalse(probeFile.exists());
+        assertFalse(hdrFile.exists());
     }
 
     @Test
@@ -73,13 +76,13 @@ public class HdrHistogramContainerTest {
         hdrHistogramContainer.addHistograms(workerAddress1, "testId", singletonMap("workerProbe", "invalidHistogram"));
 
         hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "testId");
-        assertFalse(probeFile.exists());
+        assertFalse(hdrFile.exists());
     }
 
     @Test
     public void testCreateProbeResults_unknownTestId() {
         hdrHistogramContainer.writeAggregatedHistograms("testSuiteId", "unknownTestId");
-        assertFalse(probeFile.exists());
+        assertFalse(hdrFile.exists());
     }
 
     private static String createEncodedHistogram() {

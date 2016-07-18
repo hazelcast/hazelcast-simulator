@@ -26,12 +26,14 @@ import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.CommonUtils;
+import com.hazelcast.simulator.utils.TestUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,6 +74,7 @@ public class AgentSmokeTest implements FailureListener {
     private static TestPhaseListeners testPhaseListeners;
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
+    private static File outputDirectory;
 
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
 
@@ -90,7 +93,8 @@ public class AgentSmokeTest implements FailureListener {
 
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(performanceStateContainer);
+        outputDirectory = TestUtils.createTmpDirectory();
+        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         failureContainer = new FailureContainer("agentSmokeTest", null);
 
         coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
