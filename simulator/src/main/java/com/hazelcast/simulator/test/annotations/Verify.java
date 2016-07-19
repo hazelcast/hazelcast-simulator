@@ -20,6 +20,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Is placed on a method in a test so for verification. E.g. when an IAtomicLong.inc is tested, in the verify method one
+ * could check if the counter of the IAtomicLong matches the actual number of increments.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Verify {
