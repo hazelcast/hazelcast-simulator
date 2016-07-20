@@ -3,20 +3,16 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.simulator.test.TestCase;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindOptionalProperty;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperties;
-import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindProperty;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind0;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class PropertyBindingSupportTest {
 
-    private final TestCase testCase = new TestCase("PropertyBindingSupportTest");
-    private final BindPropertyTestClass bindPropertyTestClass = new BindPropertyTestClass();
+    private final TestCase testCase = new TestCase(getClass().getName());
+    private final SomeObject someObject = new SomeObject();
 
     @Test
     public void testConstructor() throws Exception {
@@ -24,110 +20,104 @@ public class PropertyBindingSupportTest {
     }
 
     @Test
-    public void bindProperties_notFound_optional() {
+    public void testBind_testcaseIsNull() {
+        bind(someObject, null, "ignored");
+    }
+
+    @Test
+    public void testBind_propertyNotDefined() {
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
 
-        Set<String> optionalProperties = new HashSet<String>();
-        optionalProperties.add("notExist");
-
-        bindProperties(bindPropertyTestClass, testCase, optionalProperties);
+        bind(someObject, testCase, "propertyNotDefined");
     }
 
     @Test
-    public void testBindOptionalProperty_testcaseIsNull() {
-        bindOptionalProperty(bindPropertyTestClass, null, "ignored");
-    }
-
-    @Test
-    public void testBindOptionalProperty_propertyNotDefined() {
+    public void testBind_propertyNotFound() {
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("notExist", "isOptional");
 
-        bindOptionalProperty(bindPropertyTestClass, testCase, "propertyNotDefined");
+        bind(someObject, testCase, "notExist");
     }
 
     @Test
-    public void testBindOptionalProperty_propertyNotFound() {
-        testCase.setProperty("class", "willBeIgnored");
-        testCase.setProperty("notExist", "isOptional");
-
-        bindOptionalProperty(bindPropertyTestClass, testCase, "notExist");
-    }
-
-    @Test
-    public void testBindOptionalProperty() {
+    public void testBind() {
         testCase.setProperty("class", "willBeIgnored");
         testCase.setProperty("stringField", "foo");
 
-        bindOptionalProperty(bindPropertyTestClass, testCase, "stringField");
-        assertEquals("foo", bindPropertyTestClass.stringField);
+        bind(someObject, testCase, "stringField");
+        assertEquals("foo", someObject.stringField);
     }
 
     @Test
-    public void bindProperty_withPath() {
-        bindProperty(bindPropertyTestClass, "otherObject.stringField", "newValue");
-        assertEquals("newValue", bindPropertyTestClass.otherObject.stringField);
+    public void bind_withPath() {
+        bind0(someObject, "otherObject.stringField", "newValue");
+        assertEquals("newValue", someObject.otherObject.stringField);
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_withPathAndNullValue() {
-        bindProperty(bindPropertyTestClass, "nullOtherObject.stringField", "newValue");
+    public void bind_withPathAndNullValue() {
+        bind0(someObject, "nullOtherObject.stringField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_withPath_missingProperty() {
-        bindProperty(bindPropertyTestClass, "notExist.stringField", "newValue");
+    public void bind_withPath_missingProperty() {
+        bind0(someObject, "notExist.stringField", "newValue");
+    }
+
+    @Test
+    public void bind_unknownField() {
+        boolean result = bind0(someObject, "notExist", "null");
+
+        assertFalse(result);
     }
 
     @Test(expected = BindException.class)
-    public void testFailFastWhenPropertyNotFound() {
-        testCase.setProperty("doesNotExist", "foobar");
-        bindProperties(bindPropertyTestClass, testCase, Collections.<String>emptySet());
+    public void bind_protectedField() {
+        bind0(someObject, "protectedField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_unknownField() {
-        bindProperty(bindPropertyTestClass, "notExist", "null");
+    public void bind_packagePrivateField() {
+        bind0(someObject, "packagePrivateField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_protectedField() {
-        bindProperty(bindPropertyTestClass, "protectedField", "newValue");
+    public void bind_privateField() {
+        bind0(someObject, "privateField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_packagePrivateField() {
-        bindProperty(bindPropertyTestClass, "packagePrivateField", "newValue");
+    public void bind_staticField() {
+        OtherObject otherObject = new OtherObject();
+        bind0(otherObject, "staticField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_privateField() {
-        bindProperty(bindPropertyTestClass.otherObject, "privateField", "newValue");
+    public void bind_finalField() {
+        bind0(someObject, "finalField", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_staticField() {
-        bindProperty(bindPropertyTestClass.otherObject, "staticField", "newValue");
+    public void bind_illegalType() {
+        bind0(someObject, "unrecognizedFieldType", "newValue");
     }
 
     @Test(expected = BindException.class)
-    public void bindProperty_finalField() {
-        bindProperty(bindPropertyTestClass, "finalField", "newValue");
-    }
-
-    @Test(expected = BindException.class)
-    public void bindProperty_fallsThroughAllChecks() {
-        bindProperty(bindPropertyTestClass, "comparableField", "newValue");
+    public void bind_propertyTypeMismatch(){
+        bind0(someObject, "intField", "foobar");
     }
 
     @SuppressWarnings("unused")
-    private class BindPropertyTestClass {
+    private class SomeObject {
 
+        public int intField = 5;
         public final int finalField = 5;
 
         public String stringField;
-        public Comparable comparableField;
+
+        // We can't bind to this field because its type is not known.
+        public Comparable unrecognizedFieldType;
 
         public OtherObject otherObject = new OtherObject();
         public OtherObject nullOtherObject;

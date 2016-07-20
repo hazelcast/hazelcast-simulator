@@ -16,10 +16,8 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.ThroughputProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
-import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -27,7 +25,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 /**
  * Base implementation of {@link IWorker} which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker}
  * annotated test methods.
- *
+ * <p>
  * Implicitly measures throughput and latency with a built-in {@link Probe}.
  * The operation counter is automatically increased after each call of {@link #timeStep(Enum)}.
  *
@@ -51,27 +49,19 @@ public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWork
         final OperationSelector<O> selector = operationSelector;
         final Probe probe = workerProbe;
 
-        if (metronome.getClass() == EmptyMetronome.class && probe.getClass() == ThroughputProbe.class) {
-            while (!testContext.isStopped() && !isWorkerStopped()) {
-                timeStep(selector.select());
-                increaseIteration();
-                probe.recordValue(0);
-            }
-        } else {
-            while (!testContext.isStopped() && !isWorkerStopped()) {
-                metronome.waitForNext();
-                O operation = selector.select();
-                long started = System.nanoTime();
-                timeStep(operation);
-                probe.recordValue(System.nanoTime() - started);
-                increaseIteration();
-            }
+        while (!testContext.isStopped() && !isWorkerStopped()) {
+            metronome.waitForNext();
+            O operation = selector.select();
+            long started = System.nanoTime();
+            timeStep(operation);
+            probe.recordValue(System.nanoTime() - started);
+            increaseIteration();
         }
     }
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     *
+     * <p>
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration

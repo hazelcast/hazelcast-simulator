@@ -34,12 +34,12 @@ public class TestContainer_TeardownTest extends AbstractTestContainerTest {
         private boolean globalTeardownCalled;
 
         @Teardown
-        void localTeardown() {
+        public void localTeardown() {
             localTeardownCalled = true;
         }
 
         @Teardown(global = true)
-        void globalTeardown() {
+        public void globalTeardown() {
             globalTeardownCalled = true;
         }
     }

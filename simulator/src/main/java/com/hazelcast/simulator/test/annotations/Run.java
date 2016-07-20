@@ -20,6 +20,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Can be placed on a method in a test for running. This run method should take care of the whole thing; spawning threads and
+ * waiting for completion. The Run annotation is the oldest way of writing a simulator test and should not be used any longer
+ * unless there is some kind of integration requirement where the simulator doesn't control the threads.
+ *
+ * Otherwise it is best to have a look at {@link TimeStep} annotation.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Run {

@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test.annotations;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.hazelcast.simulator.test;
 
 /**
- * Can be placed on top of a method to generate a {@link com.hazelcast.simulator.worker.tasks.IWorker} instance. The
- * simulator will then take care of starting a thread for each of these works.
- *
- * This annotation should not be used any longer. Please upgrade to the {@link TimeStep} approach.
+ * A callback interface to be implemented on an object that is used in the {@link PropertyBinding#bind(Object)}. In some cases
+ * just binding on a property isn't possible and one needs to get direct access to the PropertyBinding.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface RunWithWorker {
+public interface PropertyBindingAware {
+    void bind(PropertyBinding binding);
 }

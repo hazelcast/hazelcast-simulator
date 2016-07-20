@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContextImpl;
 import com.hazelcast.simulator.test.TestPhase;
@@ -21,17 +22,18 @@ public class NoOperationWorkerTest {
     public void setUp() {
         test = new WorkerTest();
         TestContextImpl testContext = new TestContextImpl("AbstractWorkerTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        TestCase testCase = new TestCase("id").setProperty("threadCount", THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test, testCase);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testRun() throws Exception {
         testContainer.invoke(TestPhase.RUN);
 
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
-    private static class WorkerTest {
+    public static class WorkerTest {
 
         private volatile int workerCreated;
 

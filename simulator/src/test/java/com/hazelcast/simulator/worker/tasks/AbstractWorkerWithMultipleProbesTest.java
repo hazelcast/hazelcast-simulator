@@ -2,6 +2,7 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -18,6 +19,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static org.junit.Assert.assertEquals;
@@ -47,7 +49,9 @@ public class AbstractWorkerWithMultipleProbesTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerWithMultipleProbesTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        TestCase testCase = new TestCase(testContext.getTestId())
+                .setProperty("threadCount", THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test, testCase);
 
         ExceptionReporter.reset();
     }
@@ -75,7 +79,7 @@ public class AbstractWorkerWithMultipleProbesTest {
         for (int i = 1; i <= THREAD_COUNT; i++) {
             assertTrue(new File(i + ".exception").exists());
         }
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -86,7 +90,7 @@ public class AbstractWorkerWithMultipleProbesTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertFalse(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -97,7 +101,7 @@ public class AbstractWorkerWithMultipleProbesTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -112,7 +116,6 @@ public class AbstractWorkerWithMultipleProbesTest {
         assertNotNull(test.randomLong);
     }
 
-    @Ignore
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testGetIteration() throws Exception {
         test.operationSelectorBuilder.addDefaultOperation(Operation.ITERATION);
@@ -122,16 +125,15 @@ public class AbstractWorkerWithMultipleProbesTest {
 
         assertEquals(ITERATION_COUNT, test.testIteration);
         assertNotNull(test.probe);
-        Histogram intervalHistogram = ((HdrProbe)test.probe).getIntervalHistogram();
+        Histogram intervalHistogram = ((HdrProbe) test.probe).getIntervalHistogram();
         assertEquals(THREAD_COUNT * ITERATION_COUNT, intervalHistogram.getTotalCount());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
         assertEquals(1, testContainer.getProbeMap().size());
     }
 
-    private static class WorkerTest {
+    public static class WorkerTest {
 
         private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-
         private TestContext testContext;
 
         private volatile int workerCreated;
@@ -163,7 +165,7 @@ public class AbstractWorkerWithMultipleProbesTest {
 
             @Override
             protected void timeStep(Operation operation, Probe probe) throws Exception {
-                switch (operation) {
+                  switch (operation) {
                     case EXCEPTION:
                         throw new TestException("expected exception");
                     case STOP_WORKER:

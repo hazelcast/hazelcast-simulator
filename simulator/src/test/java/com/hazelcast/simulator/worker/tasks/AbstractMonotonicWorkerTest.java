@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -10,8 +11,6 @@ import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static org.junit.Assert.assertEquals;
@@ -34,7 +33,8 @@ public class AbstractMonotonicWorkerTest {
     public void setUp() {
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerTest");
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        TestCase testCase = new TestCase("id").setProperty("threadCount", THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test, testCase);
 
         ExceptionReporter.reset();
     }
@@ -60,10 +60,10 @@ public class AbstractMonotonicWorkerTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT + 1, test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
-    private static class WorkerTest {
+    public static class WorkerTest {
 
         private TestContext testContext;
 

@@ -6,6 +6,7 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
@@ -15,6 +16,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +28,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -113,11 +116,11 @@ public class WorkerPerformanceMonitorTest {
         Thread testRunnerThread = new TestRunnerThread();
         testRunnerThread.start();
 
-        test.recordValue(TimeUnit.MICROSECONDS.toNanos(500));
+        test.recordValue(MICROSECONDS.toNanos(500));
         sleepMillis(200);
 
-        test.recordValue(TimeUnit.MICROSECONDS.toNanos(200));
-        test.recordValue(TimeUnit.MICROSECONDS.toNanos(300));
+        test.recordValue(MICROSECONDS.toNanos(200));
+        test.recordValue(MICROSECONDS.toNanos(300));
         sleepMillis(200);
 
         test.stopTest();
@@ -125,32 +128,6 @@ public class WorkerPerformanceMonitorTest {
 
         performanceMonitor.shutdown();
         verifyServerConnector();
-    }
-
-    @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates_withLightweightProbe() throws InterruptedException {
-        performanceMonitor.start();
-        sleepMillis(300);
-
-        PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
-        addTest(test, 0, true);
-
-        Thread testRunnerThread = new TestRunnerThread();
-        testRunnerThread.start();
-
-        test.recordValue(TimeUnit.MICROSECONDS.toNanos(500));
-        sleepMillis(200);
-
-        test.recordValue(TimeUnit.MICROSECONDS.toNanos(200));
-        test.recordValue(TimeUnit.MICROSECONDS.toNanos(300));
-        sleepMillis(200);
-
-        test.stopTest();
-        joinThread(testRunnerThread);
-
-        performanceMonitor.shutdown();
-        verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
-        verifyNoMoreInteractions(serverConnector);
     }
 
     @Test
@@ -185,11 +162,8 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void addTest(Object test, int delayMillis) {
-        addTest(test, delayMillis, false);
-    }
-
-    private void addTest(Object test, int delayMillis, boolean isLightweightProbe) {
-        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, isLightweightProbe);
+        TestCase testCase = new TestCase(TEST_NAME);
+        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, testCase);
         tests.put(TEST_NAME, testContainer);
     }
 

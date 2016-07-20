@@ -62,7 +62,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
     @Test
     public void testRunWithWorker_withThreadCountZero() throws Exception {
         RunWithWorkerTest test = new RunWithWorkerTest();
-        testContainer = new TestContainer(testContext, test, 0);
+        testContainer = new TestContainer(testContext, test, new TestCase("id").setProperty("threadCount", 0));
 
         testContainer.invoke(TestPhase.RUN);
 
@@ -76,7 +76,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         volatile boolean runWithWorkerCalled;
 
         @RunWithWorker
-        IWorker createWorker() {
+        public IWorker createWorker() {
             runWithWorkerCreated = true;
 
             return new AbstractMonotonicWorker() {
@@ -121,7 +121,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         }
 
         @RunWithWorker
-        IWorker createWorker() {
+        public IWorker createWorker() {
             return new IWorker() {
 
                 @InjectHazelcastInstance
@@ -153,7 +153,8 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
     @Test
     public void testRunWithWorker_withAbstractWorkerWithMultipleProbesWorker() throws Exception {
         MultiProbeWorkerTest test = new MultiProbeWorkerTest();
-        testContainer = new TestContainer(testContext, test, THREAD_COUNT);
+        testContainer = new TestContainer(testContext, test, new TestCase("foo")
+                .setProperty("threadCount", THREAD_COUNT));
 
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);

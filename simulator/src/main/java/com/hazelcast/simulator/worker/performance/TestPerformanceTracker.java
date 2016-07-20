@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.worker.performance;
 
+import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestException;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogReader;
@@ -25,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
@@ -44,34 +44,34 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 final class TestPerformanceTracker {
     static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
 
+    long oldIterations;
+    final TestContainer testContainer;
+    // used to determine if the TestPerformanceTracker can be deleted
+    long lastSeen;
+    final String testId;
+
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final long testStartedTimestamp;
-    private final String testId;
     private final PerformanceStatsWriter performanceStatsWriter;
-
     private long lastTimestamp;
-
     private Map<String, Histogram> intervalHistogramMap;
-
     private double intervalAvgLatency;
     private long intervalPercentileLatency;
     private long intervalMaxLatency;
-
     private long intervalOperationCount;
     private long totalOperationCount;
-
     private double intervalThroughput;
     private double totalThroughput;
-
     private boolean isUpdated;
 
-    TestPerformanceTracker(String testId, Collection<String> probeNames, long testStartedTimestamp) {
-        this.testId = testId;
-        this.testStartedTimestamp = testStartedTimestamp;
+    TestPerformanceTracker(TestContainer testContainer) {
+        this.testContainer = testContainer;
+        this.testId = testContainer.getTestCase().getId();
+        this.testStartedTimestamp = testContainer.getTestStartedTimestamp();
         this.lastTimestamp = testStartedTimestamp;
         this.performanceStatsWriter = new PerformanceStatsWriter(new File("performance-" + testId + ".csv"));
 
-        for (String probeName : probeNames) {
+        for (String probeName : testContainer.getProbeMap().keySet()) {
             histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
         }
     }

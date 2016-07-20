@@ -15,35 +15,20 @@
  */
 package com.hazelcast.simulator.test.annotations;
 
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
-
 /**
- * Annotates {@link com.hazelcast.simulator.worker.metronome.Metronome} fields.
+ * Is run after a thread executing {@link TimeStep}, completes. So for every load generating thread, there will be 1 call
+ * to the {@link @AfterRun} method.
+ *
+ * If the test has no {@link TimeStep} methods, methods with {@link BeforeRun} are ignored.
+ *
+ * The BeforeRun can be useful for some initialization actions on the ThreadContext.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface InjectMetronome {
-
-    /**
-     * Defines the {@link com.hazelcast.simulator.worker.metronome.Metronome} interval in milliseconds.
-     *
-     * @return the {@link com.hazelcast.simulator.worker.metronome.Metronome} interval in milliseconds
-     */
-    @Deprecated
-    int intervalMillis() default 0;
-
-    /**
-     * Defines the {@link MetronomeType}.
-     *
-     * @return the {@link MetronomeType}
-     */
-    @Deprecated
-    MetronomeType type() default NOP;
+@Target(ElementType.METHOD)
+public @interface BeforeRun {
 }

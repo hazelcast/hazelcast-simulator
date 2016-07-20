@@ -6,33 +6,25 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.test.TestContainer.METRONOME_INTERVAL_PROPERTY_NAME;
-import static com.hazelcast.simulator.test.TestContainer.METRONOME_TYPE_PROPERTY_NAME;
-import static com.hazelcast.simulator.test.TestContainer.THREAD_COUNT_PROPERTY_NAME;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest {
 
     @Test
     public void testConstructor_withTestcase() throws Exception {
-        TestCase testCase = new TestCase("TestContainerMetronomeTest");
-        testCase.setProperty("class", MetronomeTest.class.getName());
-        testCase.setProperty(THREAD_COUNT_PROPERTY_NAME, "1");
-        testCase.setProperty(METRONOME_INTERVAL_PROPERTY_NAME, "100");
-        testCase.setProperty(METRONOME_TYPE_PROPERTY_NAME, SLEEPING.name());
+        TestCase testCase = new TestCase("TestContainerMetronomeTest")
+                .setProperty("class", MetronomeTest.class.getName())
+                .setProperty("threadCount", 1)
+                .setProperty("metronomeIntervalUs", 100000)
+                .setProperty("metronomeType", SLEEPING.name());
 
         testContainer = new TestContainer(testContext, testCase);
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);
-
-        assertNotNull(testContainer.getTestInstance());
-        assertTrue(testContainer.getTestInstance() instanceof MetronomeTest);
 
         MetronomeTest metronomeTest = (MetronomeTest) testContainer.getTestInstance();
         assertNotNull(metronomeTest.workerMetronome);
@@ -45,20 +37,11 @@ public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest
         MetronomeTest test = new MetronomeTest();
         testContainer = createTestContainer(test);
 
-        assertNotNull(test.nopMetronome);
-        assertEquals(0, test.nopMetronome.getInterval());
-        assertEquals(NOP, test.nopMetronome.getType());
-    }
-
-    @Test
-    public void testInjectMetronome_withParameters() {
-        MetronomeTest test = new MetronomeTest();
-        testContainer = createTestContainer(test);
-
         assertNotNull(test.metronome);
-        assertEquals(200, test.metronome.getInterval());
-        assertEquals(BUSY_SPINNING, test.metronome.getType());
+        assertEquals(0, test.metronome.getInterval());
+        assertEquals(NOP, test.metronome.getType());
     }
+
 
     @Test
     public void testInjectMetronome_withoutAnnotation() {
@@ -69,12 +52,9 @@ public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest
     }
 
     @SuppressWarnings("WeakerAccess")
-    static class MetronomeTest {
+    public static class MetronomeTest {
 
         @InjectMetronome
-        private Metronome nopMetronome;
-
-        @InjectMetronome(intervalMillis = 200, type = BUSY_SPINNING)
         private Metronome metronome;
 
         @SuppressWarnings("unused")

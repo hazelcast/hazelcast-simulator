@@ -77,7 +77,7 @@ public class SuccessTest {
     }
 
     @Run
-    void run() {
+    public void run() {
         while (!context.isStopped()) {
             sleepSeconds(1);
             testPhases.add(TestPhase.RUN);

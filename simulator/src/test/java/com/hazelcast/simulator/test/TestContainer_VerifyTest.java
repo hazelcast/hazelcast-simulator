@@ -34,12 +34,12 @@ public class TestContainer_VerifyTest extends AbstractTestContainerTest {
         private boolean globalVerifyCalled;
 
         @Verify(global = false)
-        void localVerify() {
+        public void localVerify() {
             localVerifyCalled = true;
         }
 
         @Verify
-        void globalVerify() {
+        public void globalVerify() {
             globalVerifyCalled = true;
         }
     }

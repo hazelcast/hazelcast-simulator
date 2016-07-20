@@ -12,50 +12,80 @@ import org.junit.Test;
 import java.lang.reflect.Method;
 
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.ALWAYS_FILTER;
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getAtMostOneVoidMethodWithoutArgs;
 import static org.junit.Assert.assertEquals;
 
 public class AnnotationFilterTest {
 
     @Test
     public void testAlwaysFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Setup.class, ALWAYS_FILTER);
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Setup.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(ALWAYS_FILTER)
+                .find();
         assertEquals("setupMethod", method.getName());
     }
 
     @Test
     public void testLocalTeardownFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Teardown.class, new TeardownFilter(false));
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Teardown.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(new TeardownFilter(false))
+                .find();
+
         assertEquals("localTearDown", method.getName());
     }
 
     @Test
     public void testGlobalTeardownFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Teardown.class, new TeardownFilter(true));
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Teardown.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(new TeardownFilter(true))
+                .find();
         assertEquals("globalTearDown", method.getName());
     }
 
     @Test
     public void testLocalWarmupFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Warmup.class, new WarmupFilter(false));
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(new WarmupFilter(false))
+                .find();
+
         assertEquals("localWarmup", method.getName());
     }
 
     @Test
     public void testGlobalWarmupFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Warmup.class, new WarmupFilter(true));
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(new WarmupFilter(true))
+                .find();
         assertEquals("globalWarmup", method.getName());
     }
 
     @Test
     public void testLocalVerifyFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Verify.class, new VerifyFilter(false));
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Verify.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(new VerifyFilter(false))
+                .find();
         assertEquals("localVerify", method.getName());
     }
 
     @Test
     public void testGlobalVerifyFilter() {
-        Method method = getAtMostOneVoidMethodWithoutArgs(AnnotationTestClass.class, Verify.class, new VerifyFilter(true));
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Verify.class)
+                .withVoidReturnType()
+                .withVoidReturnType()
+                .withFilter(new VerifyFilter(true))
+                .find();
+
         assertEquals("globalVerify", method.getName());
     }
 
@@ -63,31 +93,31 @@ public class AnnotationFilterTest {
     private static class AnnotationTestClass {
 
         @Setup
-        private void setupMethod() {
+        public void setupMethod() {
         }
 
         @Teardown(global = false)
-        private void localTearDown() {
+        public void localTearDown() {
         }
 
         @Teardown(global = true)
-        private void globalTearDown() {
+        public void globalTearDown() {
         }
 
         @Warmup(global = false)
-        private void localWarmup() {
+        public void localWarmup() {
         }
 
         @Warmup(global = true)
-        private void globalWarmup() {
+        public void globalWarmup() {
         }
 
         @Verify(global = false)
-        private void localVerify() {
+        public void localVerify() {
         }
 
         @Verify(global = true)
-        private void globalVerify() {
+        public void globalVerify() {
         }
     }
 }

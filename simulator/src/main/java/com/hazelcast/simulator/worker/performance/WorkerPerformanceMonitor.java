@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
@@ -92,7 +91,7 @@ public class WorkerPerformanceMonitor {
 
         private final PerformanceStatsWriter globalPerformanceStatsWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        private final Map<String, MonitoredTest> tests = new ConcurrentHashMap<String, MonitoredTest>();
+        private final Map<String, TestPerformanceTracker> trackers = new ConcurrentHashMap<String, TestPerformanceTracker>();
         private final ServerConnector serverConnector;
         private final Collection<TestContainer> testContainers;
         private final long intervalNanos;
@@ -118,7 +117,7 @@ public class WorkerPerformanceMonitor {
                 updateTrackers(currentTimestamp);
                 sendPerformanceStates();
                 writeStatsToFiles(currentTimestamp);
-                purgeDeadTests(currentTimestamp);
+                purgeDeadTrackers(currentTimestamp);
 
                 long elapsedNanos = System.nanoTime() - startedNanos;
                 if (intervalNanos > elapsedNanos) {
@@ -135,9 +134,9 @@ public class WorkerPerformanceMonitor {
         }
 
         private void sendTestHistograms() {
-            for (Map.Entry<String, MonitoredTest> entry : tests.entrySet()) {
+            for (Map.Entry<String, TestPerformanceTracker> entry : trackers.entrySet()) {
                 String testId = entry.getKey();
-                TestPerformanceTracker tracker = entry.getValue().tracker;
+                TestPerformanceTracker tracker = entry.getValue();
 
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms();
                 if (!histograms.isEmpty()) {
@@ -156,107 +155,107 @@ public class WorkerPerformanceMonitor {
                 }
 
                 String testId = testContainer.getTestContext().getTestId();
-                MonitoredTest test = tests.get(testId);
-                if (test == null) {
-                    test = new MonitoredTest(testContainer);
-                    tests.put(testId, test);
+                TestPerformanceTracker tracker = trackers.get(testId);
+                if (tracker == null) {
+                    tracker = new TestPerformanceTracker(testContainer);
+                    trackers.put(testId, tracker);
                 }
 
-                // we set the lastSeen timestamp, so we can easily purge dead tests
-                test.lastSeen = currentTimestamp;
+                // we set the lastSeen timestamp, so we can easily purge dead trackers
+                tracker.lastSeen = currentTimestamp;
                 runningTestFound = true;
             }
 
             return runningTestFound;
         }
 
-        private void updateTrackers(long currentTimestamp) {
-            for (MonitoredTest test : tests.values()) {
-                updateTrackers(currentTimestamp, test);
-            }
-        }
 
         // we remove every MonitoredTest that doesn't have the desired timestamp
-        private void purgeDeadTests(long currentTimestamp) {
-            for (MonitoredTest test : tests.values()) {
+        private void purgeDeadTrackers(long currentTimestamp) {
+            for (TestPerformanceTracker tracker : trackers.values()) {
                 // purge the testData if it wasn't seen in the current run
-                if (test.lastSeen == currentTimestamp) {
+                if (tracker.lastSeen == currentTimestamp) {
                     continue;
                 }
 
-                tests.remove(test.testId);
+                trackers.remove(tracker.testId);
 
                 // we need to make sure the histogram data gets written on deletion.
-                TestPerformanceTracker tracker = test.tracker;
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms();
                 if (!histograms.isEmpty()) {
-                    TestHistogramOperation operation = new TestHistogramOperation(test.testId, histograms);
+                    TestHistogramOperation operation = new TestHistogramOperation(tracker.testId, histograms);
                     serverConnector.write(SimulatorAddress.COORDINATOR, operation);
                 }
             }
         }
 
-        private void updateTrackers(long currentTimestamp, MonitoredTest test) {
-            TestContainer testContainer = test.testContainer;
+        private void updateTrackers(long currentTimestamp) {
+            for (TestPerformanceTracker tracker : trackers.values()) {
+                updateTrackers(currentTimestamp, tracker);
+            }
+        }
+
+        private void updateTrackers(long currentTimestamp, TestPerformanceTracker tracker) {
+            TestContainer testContainer = tracker.testContainer;
             Map<String, Probe> probeMap = testContainer.getProbeMap();
             Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
-            long intervalPercentileLatency = Long.MIN_VALUE;
-            double intervalAvgLatency = Long.MIN_VALUE;
-            long intervalMaxLatency = Long.MIN_VALUE;
-            long intervalOperationalCount = 0;
+            long intervalPercentileLatency = -1;
+            double intervalMean = -1;
+            long intervalMaxLatency = -1;
+
+            long oldIterations = tracker.oldIterations;
+            long iterations = testContainer.iteration();
+            tracker.oldIterations = iterations;
+            long intervalOperationCount = iterations - oldIterations;
 
             for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
                 String probeName = entry.getKey();
                 Probe probe = entry.getValue();
 
-                if (probe instanceof HdrProbe) {
-                    HdrProbe hdrProbe = (HdrProbe) probe;
-                    Histogram intervalHistogram = hdrProbe.getIntervalHistogram();
-                    intervalHistograms.put(probeName, intervalHistogram);
+                if (!(probe instanceof HdrProbe)) {
+                    continue;
+                }
 
-                    long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
-                    if (percentileValue > intervalPercentileLatency) {
-                        intervalPercentileLatency = percentileValue;
-                    }
-                    double avgValue = intervalHistogram.getMean();
-                    if (avgValue > intervalAvgLatency) {
-                        intervalAvgLatency = avgValue;
-                    }
-                    long maxValue = intervalHistogram.getMaxValue();
-                    if (maxValue > intervalMaxLatency) {
-                        intervalMaxLatency = maxValue;
-                    }
-                    if (probe.isPartOfTotalThroughput()) {
-                        intervalOperationalCount += intervalHistogram.getTotalCount();
-                    }
-                } else {
-                    intervalPercentileLatency = -1;
-                    intervalAvgLatency = -1;
-                    intervalMaxLatency = -1;
+                HdrProbe hdrProbe = (HdrProbe) probe;
+                Histogram intervalHistogram = hdrProbe.getIntervalHistogram();
+                intervalHistograms.put(probeName, intervalHistogram);
 
-                    if (probe.isPartOfTotalThroughput()) {
-                        AtomicLong previous = test.getOrCreatePrevious(probe);
+                long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+                if (percentileValue > intervalPercentileLatency) {
+                    intervalPercentileLatency = percentileValue;
+                }
 
-                        long current = probe.get();
-                        long delta = current - previous.get();
-                        previous.set(current);
+                double meanLatency = intervalHistogram.getMean();
+                if (meanLatency > intervalMean) {
+                    intervalMean = meanLatency;
+                }
 
-                        intervalOperationalCount += delta;
-                    }
+                long maxValue = intervalHistogram.getMaxValue();
+                if (maxValue > intervalMaxLatency) {
+                    intervalMaxLatency = maxValue;
+                }
+
+                if (probe.isPartOfTotalThroughput()) {
+                    intervalOperationCount += intervalHistogram.getTotalCount();
                 }
             }
 
-            test.tracker.update(intervalHistograms, intervalPercentileLatency, intervalAvgLatency, intervalMaxLatency,
-                    intervalOperationalCount, currentTimestamp);
+            tracker.update(
+                    intervalHistograms,
+                    intervalPercentileLatency,
+                    intervalMean,
+                    intervalMaxLatency,
+                    intervalOperationCount,
+                    currentTimestamp);
         }
 
         private void sendPerformanceStates() {
             PerformanceStateOperation operation = new PerformanceStateOperation();
 
-            for (MonitoredTest test : tests.values()) {
-                if (test.tracker.isUpdated()) {
-                    operation.addPerformanceState(test.testId, test.tracker.createPerformanceState());
+            for (TestPerformanceTracker tracker : trackers.values()) {
+                if (tracker.isUpdated()) {
+                    operation.addPerformanceState(tracker.testId, tracker.createPerformanceState());
                 }
             }
 
@@ -266,7 +265,7 @@ public class WorkerPerformanceMonitor {
         }
 
         private void writeStatsToFiles(long currentTimestamp) {
-            if (tests.isEmpty()) {
+            if (trackers.isEmpty()) {
                 return;
             }
 
@@ -275,9 +274,7 @@ public class WorkerPerformanceMonitor {
             long globalOperationsCount = 0;
             double globalIntervalThroughput = 0;
 
-            // performance stats per Simulator Test
-            for (MonitoredTest test : tests.values()) {
-                TestPerformanceTracker tracker = test.tracker;
+            for (TestPerformanceTracker tracker : trackers.values()) {
                 if (tracker.getAndResetIsUpdated()) {
                     tracker.writeStatsToFile(currentTimestamp, dateString);
 
@@ -294,41 +291,8 @@ public class WorkerPerformanceMonitor {
                     globalOperationsCount,
                     globalIntervalOperationCount,
                     globalIntervalThroughput,
-                    tests.size(),
+                    trackers.size(),
                     testContainers.size());
-        }
-    }
-
-    /**
-     * The Monitored test is wrapper around a {@link TestContainer} where all kinds of {@link WorkerPerformanceMonitor}
-     * specific functionality for a given test can be added.
-     */
-    private static class MonitoredTest {
-
-        private final TestPerformanceTracker tracker;
-        private final Map<Probe, AtomicLong> previousProbeValues = new HashMap<Probe, AtomicLong>();
-        private final TestContainer testContainer;
-        private final String testId;
-
-        // used to determine if the MonitoredTest can be deleted
-        private long lastSeen;
-
-        MonitoredTest(TestContainer testContainer) {
-            this.testContainer = testContainer;
-            this.tracker = new TestPerformanceTracker(
-                    testContainer.getTestContext().getTestId(),
-                    testContainer.getProbeMap().keySet(),
-                    testContainer.getTestStartedTimestamp());
-            this.testId = testContainer.getTestContext().getTestId();
-        }
-
-        AtomicLong getOrCreatePrevious(Probe probe) {
-            AtomicLong previous = previousProbeValues.get(probe);
-            if (previous == null) {
-                previous = new AtomicLong();
-                previousProbeValues.put(probe, previous);
-            }
-            return previous;
         }
     }
 }
