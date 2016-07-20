@@ -56,6 +56,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
@@ -70,6 +71,8 @@ public final class Coordinator {
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+
+    private final File outputDirectory = new File(System.getProperty("user.dir"));
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
@@ -92,7 +95,6 @@ public final class Coordinator {
 
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
-    private final File outputDirectory = new File(System.getProperty("user.dir"));
 
     public Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
                        WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters) {
@@ -215,10 +217,10 @@ public final class Coordinator {
             if (!simulatorProperties.getHazelcastVersionSpec().equals(OUT_OF_THE_BOX)) {
                 throw new CommandLineExitException("Local mode doesn't support custom Hazelcast versions!");
             }
-            return;
         }
 
         Uploader uploader = new Uploader(
+                isLocal(simulatorProperties),
                 bash,
                 componentRegistry,
                 clusterLayout,
@@ -387,12 +389,18 @@ public final class Coordinator {
 
     private void moveLogFiles() {
         if (isLocal(simulatorProperties)) {
-            File targetDirectory = ensureExistingDirectory(new File("."), WORKERS_HOME_NAME);
+            File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
+            File targetDirectory = ensureExistingDirectory(new File("."), testSuite.getId());
 
+            String workerPath = workerHome.getAbsolutePath();
             String targetPath = targetDirectory.getAbsolutePath();
-            execute(format("mv %s/%s/* %s || true", getSimulatorHome(), WORKERS_HOME_NAME, targetPath));
-            execute(format("mv ./agent.err %s/%s/ || true", targetPath, testSuite.getId()));
-            execute(format("mv ./agent.out %s/%s/ || true", targetPath, testSuite.getId()));
+
+            execute(format("mv %s/%s/* %s || true", workerPath, testSuite.getId(), targetPath));
+            execute(format("rmdir %s/%s || true", workerPath, testSuite.getId()));
+            execute(format("rmdir %s || true", workerPath));
+            execute(format("mv ./agent.err %s/ || true", targetPath));
+            execute(format("mv ./agent.out %s/ || true", targetPath));
+            execute(format("mv ./failures-%s.txt %s/ || true", testSuite.getId(), targetPath));
         }
     }
 

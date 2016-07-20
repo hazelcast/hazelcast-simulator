@@ -81,7 +81,7 @@ public class UploaderTest {
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(false, bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 workerClassPath, testSuiteId);
     }
 
@@ -127,7 +127,7 @@ public class UploaderTest {
         ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(xml, converter, 0, 0, 0, 2);
 
         clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(false, bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 workerClassPath, testSuiteId);
 
         uploader.uploadHazelcastJARs();
@@ -145,7 +145,7 @@ public class UploaderTest {
 
     @Test
     public void testUploadHazelcastJARs_isNull() {
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, null, true, false, workerClassPath, testSuiteId);
+        uploader = new Uploader(false, bash, componentRegistry, clusterLayout, null, true, false, workerClassPath, testSuiteId);
 
         uploader.uploadHazelcastJARs();
 
@@ -189,7 +189,7 @@ public class UploaderTest {
 
     @Test
     public void testUploadWorkerClassPath_workerClassPathIsNull() {
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false, null, testSuiteId);
+        uploader = new Uploader(false, bash, componentRegistry, clusterLayout, hazelcastJARs, true, false, null, testSuiteId);
 
         uploader.uploadWorkerClassPath();
 
@@ -198,7 +198,7 @@ public class UploaderTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testUploadWorkerClassPath_workerClassPathNotExists() {
-        uploader = new Uploader(bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
+        uploader = new Uploader(false, bash, componentRegistry, clusterLayout, hazelcastJARs, true, false,
                 notExists.getAbsolutePath(), testSuiteId);
 
         uploader.uploadWorkerClassPath();

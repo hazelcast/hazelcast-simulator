@@ -29,10 +29,14 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 
+import static com.hazelcast.simulator.agent.workerprocess.WorkerProcessLauncher.WORKERS_HOME_NAME;
 import static com.hazelcast.simulator.coordinator.Coordinator.SIMULATOR_VERSION;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.copyFileToDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static java.lang.String.format;
@@ -49,6 +53,8 @@ class Uploader {
 
     private final String simulatorHome = getSimulatorHome().getAbsolutePath();
 
+    private final boolean isLocalMode;
+
     private final Bash bash;
     private final ComponentRegistry componentRegistry;
     private final ClusterLayout clusterLayout;
@@ -60,9 +66,11 @@ class Uploader {
     private final String workerClassPath;
     private final String testSuiteId;
 
-    Uploader(Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
+    Uploader(boolean isLocalMode, Bash bash, ComponentRegistry componentRegistry, ClusterLayout clusterLayout,
              HazelcastJARs hazelcastJARs, boolean uploadHazelcastJARs, boolean isEnterpriseEnabled,
              String workerClassPath, String testSuiteId) {
+        this.isLocalMode = isLocalMode;
+
         this.bash = bash;
         this.componentRegistry = componentRegistry;
         this.clusterLayout = clusterLayout;
@@ -76,6 +84,48 @@ class Uploader {
     }
 
     void run() {
+        // TODO: maybe we should have two different Uploader implementations or strategies here
+        if (isLocalMode) {
+            runLocal();
+        } else {
+            runRemote();
+        }
+    }
+
+    private void runLocal() {
+        File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
+
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("Copying files...");
+        LOGGER.info(HORIZONTAL_RULER);
+
+        long started = System.nanoTime();
+        copyWorkerClassPath(workerHome);
+        long elapsed = getElapsedSeconds(started);
+
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info(format("Finished copying of files (%d seconds)", elapsed));
+        LOGGER.info(HORIZONTAL_RULER);
+    }
+
+    private void copyWorkerClassPath(File workerHome) {
+        if (workerClassPath == null) {
+            return;
+        }
+
+        File targetPath = newFile(workerHome, testSuiteId, "lib");
+        ensureExistingDirectory(targetPath);
+
+        LOGGER.info(format("Starting copying workerClasspath '%s' to agent", workerClassPath));
+        long started = System.nanoTime();
+        for (File sourceFile : getFilesFromClassPath(workerClassPath)) {
+            copyFileToDirectory(sourceFile, targetPath);
+        }
+        long elapsed = getElapsedSeconds(started);
+        LOGGER.info(format("Finished copying workerClasspath '%s' to agent (%d seconds)", workerClassPath, elapsed));
+    }
+
+    private void runRemote() {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("Uploading files to agents...");
         LOGGER.info(HORIZONTAL_RULER);
