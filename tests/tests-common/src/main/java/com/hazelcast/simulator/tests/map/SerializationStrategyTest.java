@@ -19,7 +19,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -102,8 +102,8 @@ public class SerializationStrategyTest extends AbstractTest {
     }
 
     @BeforeRun
-    public void beforeRun(ThreadContext threadContext) throws Exception {
-        threadContext.localUniqueStrings = uniqueStrings.toArray(new String[uniqueStrings.size()]);
+    public void beforeRun(ThreadState state) throws Exception {
+        state.localUniqueStrings = uniqueStrings.toArray(new String[uniqueStrings.size()]);
     }
 
     @TimeStep(prob = -1)
@@ -117,14 +117,14 @@ public class SerializationStrategyTest extends AbstractTest {
     }
 
     @TimeStep(prob = 1)
-    public void getByStringIndex(ThreadContext threadContext) {
-        String string = threadContext.getUniqueString();
+    public void getByStringIndex(ThreadState state) {
+        String string = state.getUniqueString();
         Predicate predicate = Predicates.equal("stringVal", string);
         Set<Map.Entry<String, DomainObject>> entries = map.entrySet(predicate);
         throttlingLogger.log(Level.INFO, "GetByStringIndex: " + entries.size() + " entries");
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
 
         private String[] localUniqueStrings;
 

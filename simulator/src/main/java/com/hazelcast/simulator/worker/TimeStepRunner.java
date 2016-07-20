@@ -40,7 +40,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     @InjectMetronome
     protected Metronome metronome;
 
-    protected final Object threadContext;
+    protected final Object threadState;
     protected final Object testInstance;
     protected final AtomicLong iterations = new AtomicLong();
     protected final TimeStepModel timeStepModel;
@@ -50,7 +50,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel) {
         this.testInstance = testInstance;
         this.timeStepModel = timeStepModel;
-        this.threadContext = initThreadContext();
+        this.threadState = initThreadContext();
         this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
     }
 
@@ -80,7 +80,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     }
 
     private Object initThreadContext() {
-        Constructor constructor = timeStepModel.getThreadContextConstructor();
+        Constructor constructor = timeStepModel.getThreadStateConstructor();
         if (constructor == null) {
             return null;
         }
@@ -93,8 +93,8 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
             return constructor.newInstance((Object[]) args);
         } catch (Exception e) {
             throw new IllegalTestException(
-                    format("Failed to create an instance of thread context class '%s'",
-                            timeStepModel.getThreadContextClass().getName()), e);
+                    format("Failed to create an instance of thread state class '%s'",
+                            timeStepModel.getThreadStateClass().getName()), e);
         }
     }
 
@@ -119,7 +119,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
                 method.invoke(testInstance);
                 break;
             case 1:
-                method.invoke(testInstance, threadContext);
+                method.invoke(testInstance, threadState);
                 break;
             default:
                 throw new RuntimeException("Unhandled number of arguments for '" + method + "'");

@@ -18,12 +18,12 @@ package com.hazelcast.simulator.test;
 import java.util.Random;
 
 /**
- * Implementations of this class should be public. This is required for the generated worker class to work optimally.
+ * Implementations of this class should be public. This is required for the generated TimeStepRunner class to work optimally.
  *
- * Why is this class called BaseThreadContext and not ThreadContext? In most cases a test needs to subclass this
- * BaseThreadContext; and in this case they can use the prettier name 'ThreadContext'.
+ * Why is this class called BaseThreadState and not ThreadState? In most cases a test needs to subclass this
+ * BaseThreadState; and in this case they can use the prettier name 'ThreadState'.
  */
-public class BaseThreadContext {
+public class BaseThreadState {
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public final Random random = new Random();

@@ -120,7 +120,7 @@ public class TimeStepRunnerCodeGenerator {
             root.put("probeClass", getClassName(probeClass));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
             root.put("Probe", Probe.class);
-            root.put("threadContextClass", getClassName(timeStepModel.getThreadContextClass()));
+            root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass()));
             root.put("hasProbe", new HasProbeMethod());
             root.put("className", className);
 

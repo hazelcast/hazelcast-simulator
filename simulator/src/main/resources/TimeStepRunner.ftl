@@ -31,8 +31,8 @@ public class ${className} extends TimeStepRunner {
         final ${probeClass} ${method.name}Probe = (${probeClass})probeMap.get("${method.name}");
     </#list>
 </#if>
-<#if threadContextClass??>
-        final ${threadContextClass} threadContext = (${threadContextClass})this.threadContext;
+<#if threadStateClass??>
+        final ${threadStateClass} threadState = (${threadStateClass})this.threadState;
 </#if>
 
 <#if timeStepMethods?size gt 1>
@@ -94,7 +94,7 @@ public class ${className} extends TimeStepRunner {
         com.hazelcast.simulator.probes.impl.DeadProbe.INSTANCE
         </#if>
     <#else>
-        threadContext
+        threadState
     </#if>
 </#macro>
 }

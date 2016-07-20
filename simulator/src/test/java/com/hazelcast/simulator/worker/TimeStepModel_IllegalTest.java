@@ -14,77 +14,83 @@ import static org.junit.Assert.fail;
 public class TimeStepModel_IllegalTest {
 
 
-    // ====================== threadContext ===========================
+    // ====================== threadState ===========================
 
     @Test
-    public void test_threadContext_interface() {
+    public void test_threadState_interface() {
         assertBroken("class CLAZZ{\n"
                 + "@TimeStep public void timeStep(List a1){}\n"
                 + "}\n");
     }
 
     @Test
-    public void test_threadContext_abstractClass() {
+    public void test_threadState_abstractClass() {
         assertBroken("class CLAZZ{\n"
                 + "@TimeStep public void timeStep(AbstractList a1){}\n"
                 + "}\n");
     }
 
     @Test
-    public void test_threadContext_primitive() {
+    public void test_threadState_primitive() {
         assertBroken("class CLAZZ{\n"
                 + "@TimeStep public void timeStep(int a1){}\n"
                 + "}\n");
     }
 
     @Test(expected = IllegalTestException.class)
-    public void test_threadContext_notPublicClass() {
+    public void test_threadState_notPublicClass() {
         TestCase testCase = new TestCase("id");
         PropertyBinding binding = new PropertyBinding(testCase);
-        new TimeStepModel(TestWithPrivateContext.class,binding);
+        new TimeStepModel(TestWithPrivateThreadState.class, binding);
     }
 
-    public static class TestWithPrivateContext {
-        private class BadContext {
+    public static class TestWithPrivateThreadState {
+        private class BadThreadState {
         }
 
-        @TimeStep public void timestep(BadContext badContext){}
+        @TimeStep
+        public void timestep(BadThreadState state) {
+        }
     }
 
     @Test(expected = IllegalTestException.class)
-    public void test_threadContext_illegalArgumentTypeInConstructor() {
+    public void test_threadState_illegalArgumentTypeInConstructor() {
         TestCase testCase = new TestCase("id");
         PropertyBinding binding = new PropertyBinding(testCase);
-        new TimeStepModel(TestWithContextWithIllegalArgumentTypeInConstructor.class,binding);
+        new TimeStepModel(TestWithContextWithIllegalArgumentTypeInConstructor.class, binding);
     }
 
     public static class TestWithContextWithIllegalArgumentTypeInConstructor {
-        public static class BadContext {
-            public BadContext(int a){
+        public static class BadThreadState {
+            public BadThreadState(int a) {
             }
         }
 
-        @TimeStep public void timestep(BadContext badContext){}
+        @TimeStep
+        public void timeStep(BadThreadState state) {
+        }
     }
 
     @Test(expected = IllegalTestException.class)
-    public void test_threadContext_illegalArgumentCountInConstructor() {
+    public void test_threadState_illegalArgumentCountInConstructor() {
         TestCase testCase = new TestCase("id");
         PropertyBinding binding = new PropertyBinding(testCase);
-        new TimeStepModel(TestWithContextWithIllegalArgumentCountConstructor.class,binding);
+        new TimeStepModel(TestWithContextWithIllegalArgumentCountConstructor.class, binding);
     }
 
     public static class TestWithContextWithIllegalArgumentCountConstructor {
-        public static class BadContext {
-            public BadContext(TestWithContextWithIllegalArgumentCountConstructor a, int b){
+        public static class BadThreadState {
+            public BadThreadState(TestWithContextWithIllegalArgumentCountConstructor a, int b) {
             }
         }
 
-        @TimeStep public void timestep(BadContext badContext){}
+        @TimeStep
+        public void timeStep(BadThreadState state) {
+        }
     }
 
     @Test
-    public void test_threadContext_conflictingTypesBetweenTimeStepMethods() {
+    public void test_threadState_conflictingTypesBetweenTimeStepMethods() {
         assertBroken("public class CLAZZ{\n"
                 + "@TimeStep(prob=0.5) public void timeStep1(ArrayList c){}\n"
                 + "@TimeStep(prob=0.5) public void timeStep2(LinkedList c){}\n"
@@ -92,7 +98,7 @@ public class TimeStepModel_IllegalTest {
     }
 
     @Test
-    public void test_threadContext_conflictingTypesBetweenTimeStepAndBeforeRun() {
+    public void test_threadState_conflictingTypesBetweenTimeStepAndBeforeRun() {
         assertBroken("public class CLAZZ{\n"
                 + "@BeforeRun public void beforeRun(ArrayList c){}\n"
                 + "@TimeStep(prob=0.5) public void timeStep2(LinkedList c){}\n"
@@ -100,7 +106,7 @@ public class TimeStepModel_IllegalTest {
     }
 
     @Test
-    public void test_threadContext_conflictingTypesBetweenTimeStepAndAfterRun() {
+    public void test_threadState_conflictingTypesBetweenTimeStepAndAfterRun() {
         assertBroken("public class CLAZZ{\n"
                 + "@AfterRun public void afterRun(ArrayList c){}\n"
                 + "@TimeStep(prob=0.5) public void timeStep2(LinkedList c){}\n"
@@ -119,7 +125,7 @@ public class TimeStepModel_IllegalTest {
     @Test
     public void test_tooManyArgumentsForAfterRunMethod() {
         assertBroken("public class CLAZZ{\n"
-                + "@BeforeRun public void beforeRun(BaseThreadContext a1, int a2){}\n"
+                + "@BeforeRun public void beforeRun(BaseThreadState a1, int a2){}\n"
                 + "@TimeStep public void timeStep(){}\n"
                 + "}\n");
     }
@@ -128,7 +134,7 @@ public class TimeStepModel_IllegalTest {
     public void test_tooManyArgumentsForBeforeRunMethod() {
         assertBroken("public class CLAZZ{\n"
                 + "@TimeStep public void timeStep(){}\n"
-                + "@BeforeRun public void beforeRun(BaseThreadContext a1, int a2){}\n"
+                + "@BeforeRun public void beforeRun(BaseThreadState a1, int a2){}\n"
                 + "}\n");
     }
 
@@ -212,7 +218,7 @@ public class TimeStepModel_IllegalTest {
 
     public void assertBroken(String s) {
         String header = "import java.util.*;\n"
-                +" import com.hazelcast.simulator.test.*;\n"
+                + " import com.hazelcast.simulator.test.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n";
         s = header + s;

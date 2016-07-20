@@ -110,21 +110,21 @@ public class TestContainer_TimeStepTest {
         assertEquals(threadCount, testInstance.map.size());
 
         // each context should be unique.
-        Set<BaseThreadContext> contexts = new HashSet<BaseThreadContext>(testInstance.map.values());
-        assertEquals(threadCount, contexts.size());
+        Set<BaseThreadState> threadStates = new HashSet<BaseThreadState>(testInstance.map.values());
+        assertEquals(threadCount, threadStates.size());
     }
 
     public static class TestWithThreadContext {
 
-        private final Map<Thread, BaseThreadContext> map = new ConcurrentHashMap<Thread, BaseThreadContext>();
+        private final Map<Thread, BaseThreadState> map = new ConcurrentHashMap<Thread, BaseThreadState>();
 
         @TimeStep
-        public void timestep(BaseThreadContext context) {
-            BaseThreadContext found = map.get(Thread.currentThread());
+        public void timestep(BaseThreadState state) {
+            BaseThreadState found = map.get(Thread.currentThread());
             if (found == null) {
-                map.put(Thread.currentThread(), context);
-            } else if (found != context) {
-                throw new RuntimeException("Unexpected context");
+                map.put(Thread.currentThread(), state);
+            } else if (found != state) {
+                throw new RuntimeException("Unexpected state");
             }
         }
     }
