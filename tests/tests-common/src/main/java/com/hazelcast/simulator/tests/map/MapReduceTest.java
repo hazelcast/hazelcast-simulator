@@ -28,15 +28,15 @@ import com.hazelcast.mapreduce.KeyValueSource;
 import com.hazelcast.mapreduce.Mapper;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.MapReduceOperationCounter;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,20 +47,8 @@ import static org.junit.Assert.assertTrue;
 
 public class MapReduceTest extends AbstractTest {
 
-    private enum Operation {
-        MAP_REDUCE,
-        GET_MAP_ENTRY,
-        MODIFY_MAP_ENTRY
-    }
-
     // properties
     public int keyCount = 1000;
-
-    public double mapReduceProb = 0.5;
-    public double getMapEntryProb = 0.25;
-    public double modifyEntryProb = 0.25;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Employee> map;
     private IList<MapReduceOperationCounter> operationCounterList;
@@ -69,10 +57,6 @@ public class MapReduceTest extends AbstractTest {
     public void setUp() {
         map = targetInstance.getMap(name);
         operationCounterList = targetInstance.getList(name + "OperationCounter");
-
-        operationSelectorBuilder.addOperation(Operation.MAP_REDUCE, mapReduceProb)
-                .addOperation(Operation.GET_MAP_ENTRY, getMapEntryProb)
-                .addOperation(Operation.MODIFY_MAP_ENTRY, modifyEntryProb);
     }
 
     @Warmup(global = true)
@@ -82,80 +66,57 @@ public class MapReduceTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.5)
+    public void mapReduce(ThreadState state) throws Exception {
+        JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + name);
+        KeyValueSource<Integer, Employee> source = KeyValueSource.fromMap(map);
+        Job<Integer, Employee> job = tracker.newJob(source);
+
+        ICompletableFuture<Map<Integer, Set<Employee>>> future = job
+                .mapper(new ModIdMapper(2))
+                .combiner(new RangeIdCombinerFactory(10, 30))
+                .reducer(new IdReducerFactory(10, 20, 30))
+                .submit();
+
+        Map<Integer, Set<Employee>> result = future.get();
+
+        for (Set<Employee> set : result.values()) {
+            for (Employee employee : set) {
+
+                assertTrue(employee.getId() % 2 == 0);
+                assertTrue(employee.getId() >= 10 && employee.getId() <= 30);
+                assertTrue(employee.getId() != 10);
+                assertTrue(employee.getId() != 20);
+                assertTrue(employee.getId() != 30);
+            }
+        }
+
+        state.operationCounter.mapReduce++;
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0.25)
+    public void getMapEntry(ThreadState state) {
+        map.get(state.randomInt(keyCount));
+
+        state.operationCounter.getMapEntry++;
+    }
+
+    @TimeStep(prob = 0.25)
+    public void modifyMapEntry(ThreadState state) {
+        Employee employee = map.get(state.randomInt(keyCount));
+        employee.randomizeProperties();
+        map.put(employee.getId(), employee);
+
+        state.operationCounter.modifyMapEntry++;
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounterList.add(state.operationCounter);
+    }
+
+    public class ThreadState extends BaseThreadState {
         private final MapReduceOperationCounter operationCounter = new MapReduceOperationCounter();
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            switch (operation) {
-                case MAP_REDUCE:
-                    mapReduce();
-                    break;
-                case GET_MAP_ENTRY:
-                    getMapEntry();
-                    break;
-                case MODIFY_MAP_ENTRY:
-                    modifyMapEntry();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        private void mapReduce() throws Exception {
-            JobTracker tracker = targetInstance.getJobTracker(Thread.currentThread().getName() + name);
-            KeyValueSource<Integer, Employee> source = KeyValueSource.fromMap(map);
-            Job<Integer, Employee> job = tracker.newJob(source);
-
-            ICompletableFuture<Map<Integer, Set<Employee>>> future = job
-                    .mapper(new ModIdMapper(2))
-                    .combiner(new RangeIdCombinerFactory(10, 30))
-                    .reducer(new IdReducerFactory(10, 20, 30))
-                    .submit();
-
-            Map<Integer, Set<Employee>> result = future.get();
-
-            for (Set<Employee> set : result.values()) {
-                for (Employee employee : set) {
-
-                    assertTrue(employee.getId() % 2 == 0);
-                    assertTrue(employee.getId() >= 10 && employee.getId() <= 30);
-                    assertTrue(employee.getId() != 10);
-                    assertTrue(employee.getId() != 20);
-                    assertTrue(employee.getId() != 30);
-                }
-            }
-
-            operationCounter.mapReduce++;
-        }
-
-        private void getMapEntry() {
-            map.get(randomInt(keyCount));
-
-            operationCounter.getMapEntry++;
-        }
-
-        private void modifyMapEntry() {
-            Employee employee = map.get(randomInt(keyCount));
-            employee.randomizeProperties();
-            map.put(employee.getId(), employee);
-
-            operationCounter.modifyMapEntry++;
-        }
-
-        @Override
-        public void afterRun() {
-            operationCounterList.add(operationCounter);
-        }
     }
 
     private static final class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
