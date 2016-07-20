@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.test;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Random;
  * Why is this class called BaseThreadState and not ThreadState? In most cases a test needs to subclass this
  * BaseThreadState; and in this case they can use the prettier name 'ThreadState'.
  */
-public class BaseThreadState {
+public class BaseThreadState implements Serializable{
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public final Random random = new Random();
