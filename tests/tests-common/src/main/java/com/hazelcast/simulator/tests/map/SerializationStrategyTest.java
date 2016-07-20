@@ -51,10 +51,8 @@ public class SerializationStrategyTest extends AbstractTest {
         IDENTIFIED_DATA_SERIALIZABLE
     }
 
-
     // properties
     public Strategy strategy = Strategy.PORTABLE;
-
     public int itemCount = 1000000;
     public int recordsPerUnique = 10000;
 
@@ -130,7 +128,7 @@ public class SerializationStrategyTest extends AbstractTest {
 
         private String[] localUniqueStrings;
 
-        public String getUniqueString() {
+        private String getUniqueString() {
             int i = randomInt(localUniqueStrings.length);
             return localUniqueStrings[i];
         }

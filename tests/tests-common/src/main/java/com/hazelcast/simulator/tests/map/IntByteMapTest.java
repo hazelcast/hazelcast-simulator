@@ -72,18 +72,18 @@ public class IntByteMapTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadContext context) {
-        map.put(context.randomKey(), context.randomValue());
+    public void put(ThreadContext threadContext) {
+        map.put(threadContext.randomKey(), threadContext.randomValue());
     }
 
     @TimeStep(prob = 0.0)
-    public void set(ThreadContext context) {
-        map.set(context.randomKey(), context.randomValue());
+    public void set(ThreadContext threadContext) {
+        map.set(threadContext.randomKey(), threadContext.randomValue());
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadContext context) {
-        map.get(context.randomKey());
+    public void get(ThreadContext threadContext) {
+        map.get(threadContext.randomKey());
     }
 
     public class ThreadContext extends BaseThreadContext {
