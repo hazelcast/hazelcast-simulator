@@ -409,6 +409,7 @@ public class Provisioner {
         uploadLibraryJar(ip, "javassist-*");
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");
+        uploadLibraryJar(ip, "freemarker*");
         uploadLibraryJar(ip, "HdrHistogram-*");
         uploadLibraryJar(ip, "log4j*");
         uploadLibraryJar(ip, "netty-*");
