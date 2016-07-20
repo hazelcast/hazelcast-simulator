@@ -16,17 +16,15 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import java.util.Random;
 
@@ -36,11 +34,6 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
 public class IntIntMapTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int keyCount = 10000;
     public int valueCount = 10000;
@@ -48,21 +41,14 @@ public class IntIntMapTest extends AbstractTest {
     public int valueLength = 10;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
-
-    public double putProb = 0.1;
     public boolean useSet = false;
 
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-
     private IMap<Integer, Integer> map;
-
     private int[] keys;
 
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb).addDefaultOperation(Operation.GET);
     }
 
     @Warmup(global = false)
@@ -78,42 +64,26 @@ public class IntIntMapTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(ThreadContext threadContext) {
+        int key = threadContext.randomKey();
+        int value = threadContext.randomValue();
+
+        // todo: a future cleanup is pull the set into its own timestep-method
+        if (useSet) {
+            map.set(key, value);
+        } else {
+            map.put(key, value);
+        }
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep(prob = -1)
+    public void get(ThreadContext threadContext) {
+        int key = threadContext.randomKey();
+        map.get(key);
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = randomKey();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    int value = randomValue();
-                    started = System.nanoTime();
-                    if (useSet) {
-                        map.set(key, value);
-                    } else {
-                        map.put(key, value);
-                    }
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    public class ThreadContext extends BaseThreadContext {
 
         private int randomKey() {
             return keys[randomInt(keys.length)];
