@@ -35,14 +35,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.test.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
@@ -56,7 +59,7 @@ import static java.util.Collections.synchronizedList;
 
 /**
  * Responsible for running a single {@link TestCase}.
- *
+ * <p>
  * Multiple TestCases can be run in parallel, by having multiple TestCaseRunners in parallel.
  */
 final class TestCaseRunner implements TestPhaseListener {
@@ -135,6 +138,15 @@ final class TestCaseRunner implements TestPhaseListener {
             executePhase(LOCAL_WARMUP);
             executePhase(GLOBAL_WARMUP);
 
+            if (testSuite.getWarmupDurationSeconds() > 0) {
+                executeWarmup();
+
+                executePhase(LOCAL_AFTER_WARMUP);
+                executePhase(GLOBAL_AFTER_WARMUP);
+            } else {
+                echo("Skipping Test warmup");
+            }
+
             executeRun();
 
             if (isVerifyEnabled) {
@@ -167,7 +179,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
         StopThread stopThread = null;
         if (testSuite.getDurationSeconds() > 0) {
-            stopThread = new StopThread();
+            stopThread = new StopThread(false);
             stopThread.start();
         }
 
@@ -184,6 +196,33 @@ final class TestCaseRunner implements TestPhaseListener {
         joinThread(stopThread);
 
         waitForGlobalTestPhaseCompletion(RUN);
+    }
+
+    private void executeWarmup() throws Exception {
+        echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
+        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
+        echo("Completed Test warmup start");
+
+        StopThread stopThread = null;
+        if (testSuite.getDurationSeconds() > 0) {
+            stopThread = new StopThread(true);
+            stopThread.start();
+        }
+
+        if (testSuite.isWaitForTestCase()) {
+            echo("Test will run warmup until it stops");
+            waitForPhaseCompletion(WARMUP);
+            echo("Test finished warmup");
+
+            if (stopThread != null) {
+                stopThread.shutdown();
+            }
+        }
+
+        joinThread(stopThread);
+
+        waitForGlobalTestPhaseCompletion(WARMUP);
     }
 
     private void createTest() {
@@ -290,7 +329,15 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private final class StopThread extends Thread {
 
+        private final int durationSeconds;
         private volatile boolean isRunning = true;
+
+        private final boolean warmup;
+
+        public StopThread(boolean warmup) {
+            this.warmup = warmup;
+            this.durationSeconds = warmup ? testSuite.getWarmupDurationSeconds() : testSuite.getDurationSeconds();
+        }
 
         public void shutdown() {
             isRunning = false;
@@ -299,21 +346,21 @@ final class TestCaseRunner implements TestPhaseListener {
 
         @Override
         public void run() {
-            echo(format("Test will run for %s", secondsToHuman(testSuite.getDurationSeconds())));
-            sleepUntilFailure(testSuite.getDurationSeconds());
-            echo("Test finished running");
+            echo(format("Test will %s for %s", warmup ? "warmup" : "run", secondsToHuman(durationSeconds)));
+            sleepUntilFailure(durationSeconds);
+            echo(format("Test finished %s", warmup ? "warmup" : "running"));
 
-            echo("Starting Test stop");
+            echo(warmup ? "Executing Test warmup stop" : "Executing Test stop");
             remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
             waitForPhaseCompletion(RUN);
-            echo("Completed Test stop");
+            echo(warmup ? "Completed Test warmup stop" : "Completed Test stop");
         }
 
         private void sleepUntilFailure(int sleepSeconds) {
             int sleepLoops = sleepSeconds / logRunPhaseIntervalSeconds;
             for (int i = 1; i <= sleepLoops && isRunning; i++) {
                 if (hasFailure()) {
-                    echo("Critical failure detected, aborting run phase");
+                    echo(format("Critical failure detected, aborting %s phase", warmup ? "warmup" : "run"));
                     return;
                 }
                 sleepSeconds(logRunPhaseIntervalSeconds);
@@ -330,13 +377,17 @@ final class TestCaseRunner implements TestPhaseListener {
         }
 
         private void logProgress(int elapsed, int sleepSeconds) {
-            String msg = format("Running %s (%s%%)", secondsToHuman(elapsed), formatPercentage(elapsed, sleepSeconds));
+            String msg = format("%s %s (%s%%)",
+                    warmup ? "Warming up " : "Running",
+                    secondsToHuman(elapsed),
+                    formatPercentage(elapsed, sleepSeconds));
             if (monitorPerformance && elapsed % logPerformanceIntervalSeconds == 0) {
                 msg += performanceStateContainer.formatPerformanceNumbers(testCaseId);
             }
 
             LOGGER.info(prefix + msg);
         }
+
     }
 
     private static final class TestCaseAbortedException extends RuntimeException {

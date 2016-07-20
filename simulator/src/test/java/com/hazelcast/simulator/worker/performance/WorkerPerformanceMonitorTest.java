@@ -8,6 +8,7 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.TestContextImpl;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorTest;
@@ -22,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.test.TestContext.LOCALHOST;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
@@ -170,11 +172,12 @@ public class WorkerPerformanceMonitorTest {
         verifyNoMoreInteractions(serverConnector);
     }
 
-    private static class DelayTestContext implements TestContext {
+    private static class DelayTestContext extends TestContextImpl {
 
         private final int delayMillis;
 
         DelayTestContext(int delayMillis) {
+            super(TEST_NAME);
             this.delayMillis = delayMillis;
         }
 

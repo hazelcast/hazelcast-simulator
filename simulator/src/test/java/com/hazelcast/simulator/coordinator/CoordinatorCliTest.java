@@ -167,12 +167,16 @@ public class CoordinatorCliTest {
         assertEquals(TimeUnit.DAYS.toSeconds(23), testSuite.getDurationSeconds());
     }
 
-    @Test(expected = CommandLineExitException.class)
+    // we are fine with a zero time execution; useful for a dry run.
+    @Test
     public void testInit_duration_withZero() {
         args.add("--duration");
         args.add("0s");
 
-        createCoordinator();
+        Coordinator coordinator = createCoordinator();
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertFalse(testSuite.isWaitForTestCase());
+        assertEquals(0, testSuite.getDurationSeconds());
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -180,11 +184,39 @@ public class CoordinatorCliTest {
         args.add("--duration");
         args.add("numberFormatException");
 
-        Coordinator coordinator = createCoordinator();
+        createCoordinator();
+    }
 
+    @Test(expected = CommandLineExitException.class)
+    public void testInit_warmupDuration_withNumberFormatException() {
+        args.add("--warmupDuration");
+        args.add("numberFormatException");
+
+        createCoordinator();
+    }
+
+    @Test
+    public void testInit_warmupDuration() {
+        args.add("--duration");
+        args.add("10s");
+        args.add("--warmupDuration");
+        args.add("5s");
+
+        Coordinator coordinator = createCoordinator();
         TestSuite testSuite = coordinator.getTestSuite();
         assertFalse(testSuite.isWaitForTestCase());
-        assertEquals(423, testSuite.getDurationSeconds());
+        assertEquals(10, testSuite.getDurationSeconds());
+        assertEquals(5, testSuite.getWarmupDurationSeconds());
+    }
+
+    @Test
+    public void testInit_warmupDuration_withZero() {
+        args.add("--warmupDuration");
+        args.add("0s");
+
+        Coordinator coordinator = createCoordinator();
+        TestSuite testSuite = coordinator.getTestSuite();
+        assertEquals(0, testSuite.getWarmupDurationSeconds());
     }
 
     @Test

@@ -23,6 +23,7 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Constructor;
+import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
 
@@ -45,7 +46,6 @@ public class TimeStepRunStrategy extends RunStrategy {
     private final Class runnerClass;
     private final TimeStepModel timeStepModel;
     private final PropertyBinding propertyBinding;
-
     private volatile TimeStepRunner[] runners;
 
     public TimeStepRunStrategy(TestContainer testContainer) {
@@ -75,29 +75,55 @@ public class TimeStepRunStrategy extends RunStrategy {
     }
 
     @Override
-    public Object call() throws Exception {
-        try {
-            LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
+    public Callable getRunCallable() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                try {
+                    LOGGER.info(format("Spawning %d worker threads for running %s", threadCount, testContext.getTestId()));
 
-            if (threadCount <= 0) {
-                return null;
+                    if (threadCount <= 0) {
+                        return null;
+                    }
+                    runners = createRunners();
+                    onRunStarted();
+                    ThreadSpawner spawner = spawnThreads(runners, false);
+                    spawner.awaitCompletion();
+
+                    return null;
+                } finally {
+                    onRunCompleted();
+                }
             }
-
-            runners = createRunners();
-
-            onRunStarted();
-
-            ThreadSpawner spawner = spawnThreads(runners);
-            spawner.awaitCompletion();
-
-            return null;
-        } finally {
-            onRunCompleted();
-        }
+        };
     }
 
-    private ThreadSpawner spawnThreads(TimeStepRunner[] runners) {
-        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+    @Override
+    public Callable getWarmupCallable() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                try {
+                    LOGGER.info(format("Spawning %d worker threads for warmup %s", threadCount, testContext.getTestId()));
+
+                    if (threadCount <= 0) {
+                        return null;
+                    }
+                    runners = createRunners();
+                    onRunStarted();
+                    ThreadSpawner spawner = spawnThreads(runners, true);
+                    spawner.awaitCompletion();
+                    return null;
+                } finally {
+                    onRunCompleted();
+                }
+            }
+        };
+    }
+
+    private ThreadSpawner spawnThreads(TimeStepRunner[] runners, boolean warmup) {
+        String identifier = (warmup ? "warmup-" : "run-") + testContext.getTestId();
+        ThreadSpawner spawner = new ThreadSpawner(identifier);
 
         for (TimeStepRunner runner : runners) {
             spawner.spawn(runner);
@@ -110,7 +136,6 @@ public class TimeStepRunStrategy extends RunStrategy {
     private TimeStepRunner[] createRunners() throws Exception {
         TimeStepRunner[] tmpRunners = new TimeStepRunner[threadCount];
         Constructor<TimeStepRunner> constructor = runnerClass.getConstructor(testInstance.getClass(), TimeStepModel.class);
-
         for (int i = 0; i < threadCount; i++) {
             TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel);
             propertyBinding.bind(runner);

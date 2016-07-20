@@ -22,6 +22,7 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
@@ -57,29 +58,34 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
     }
 
     @Override
-    public Object call() throws Exception {
-        try {
-            LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
-            if (threadCount <= 0) {
-                return null;
+    public Callable getRunCallable() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                try {
+                    LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
+                    if (threadCount <= 0) {
+                        return null;
+                    }
+
+                    // create the workers.
+                    IWorker[] workers = createWorkers();
+
+                    onRunStarted();
+
+                    // spawn workers-threads and wait for completion
+                    ThreadSpawner spawner = spawnThreads(workers);
+                    spawner.awaitCompletion();
+
+                    // call the afterCompletion() method on a single instance of the worker
+                    workers[0].afterCompletion();
+
+                    return null;
+                } finally {
+                    onRunCompleted();
+                }
             }
-
-            // create the workers.
-            IWorker[] workers = createWorkers();
-
-            onRunStarted();
-
-            // spawn workers-threads and wait for completion
-            ThreadSpawner spawner = spawnThreads(workers);
-            spawner.awaitCompletion();
-
-            // call the afterCompletion() method on a single instance of the worker
-            workers[0].afterCompletion();
-
-            return null;
-        } finally {
-            onRunCompleted();
-        }
+        };
     }
 
     private ThreadSpawner spawnThreads(IWorker[] workers) throws Exception {

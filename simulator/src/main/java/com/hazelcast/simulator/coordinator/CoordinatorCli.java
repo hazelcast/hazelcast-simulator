@@ -54,6 +54,7 @@ import static java.lang.String.format;
 final class CoordinatorCli {
 
     static final int DEFAULT_DURATION_SECONDS = 60;
+    static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
@@ -67,6 +68,11 @@ final class CoordinatorCli {
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
+
+    private final OptionSpec<String> warmupDurationSpec = parser.accepts("warmupDuration",
+            "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
+            .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_WARMUP_DURATION_SECONDS));
+
 
     private final OptionSpec waitForTestCaseSpec = parser.accepts("waitForTestCaseCompletion",
             "Wait for the TestCase to finish its RUN phase. Can be combined with --duration to limit runtime.");
@@ -287,15 +293,17 @@ final class CoordinatorCli {
     }
 
     private static TestSuite getTestSuite(CoordinatorCli cli, OptionSet options) {
-        int durationSeconds = getDurationSeconds(options, cli);
+        int durationSeconds = getDurationSeconds(options, cli.durationSpec, cli);
         boolean hasWaitForTestCase = options.has(cli.waitForTestCaseSpec);
         if (!options.has(cli.durationSpec) && hasWaitForTestCase) {
             durationSeconds = 0;
         }
 
+
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
                 options.valueOf(cli.testSuiteIdSpec));
         testSuite.setDurationSeconds(durationSeconds);
+        testSuite.setWarmupDurationSeconds(getDurationSeconds(options, cli.warmupDurationSpec, cli));
         testSuite.setWaitForTestCase(hasWaitForTestCase);
         testSuite.setFailFast(options.valueOf(cli.failFastSpec));
         testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
@@ -380,9 +388,9 @@ final class CoordinatorCli {
         }
     }
 
-    private static int getDurationSeconds(OptionSet options, CoordinatorCli cli) {
+    private static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec, CoordinatorCli cli) {
         int duration;
-        String value = options.valueOf(cli.durationSpec);
+        String value = options.valueOf(optionSpec);
         try {
             if (value.endsWith("s")) {
                 duration = parseDurationWithoutLastChar(TimeUnit.SECONDS, value);
@@ -399,7 +407,7 @@ final class CoordinatorCli {
             throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
         }
 
-        if (duration < 1) {
+        if (duration < 0) {
             throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
         }
         return duration;
