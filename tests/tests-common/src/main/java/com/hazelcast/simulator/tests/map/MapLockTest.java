@@ -17,12 +17,13 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -55,33 +56,28 @@ public class MapLockTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void timeStep(ThreadContext threadContext) {
+        int key = threadContext.randomInt(keyCount);
+        long increment = threadContext.randomInt(100);
+
+        map.lock(key);
+        try {
+            Long current = map.get(key);
+            map.put(key, current + increment);
+            threadContext.increments[key] += increment;
+        } finally {
+            map.unlock(key);
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @AfterRun
+    public void afterRun(ThreadContext threadContext) {
+        incrementsList.add(threadContext.increments);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
         private final long[] increments = new long[keyCount];
-
-        @Override
-        public void timeStep() {
-            int key = randomInt(keyCount);
-            long increment = randomInt(100);
-
-            map.lock(key);
-            try {
-                Long current = map.get(key);
-                map.put(key, current + increment);
-                increments[key] += increment;
-            } finally {
-                map.unlock(key);
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            incrementsList.add(increments);
-        }
     }
 
     @Verify
