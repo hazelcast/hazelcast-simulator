@@ -123,5 +123,4 @@ public class CacheLoaderTest extends AbstractTest {
             assertTrue(name + ": key " + i + " not in loader", loaded[i]);
         }
     }
-
 }

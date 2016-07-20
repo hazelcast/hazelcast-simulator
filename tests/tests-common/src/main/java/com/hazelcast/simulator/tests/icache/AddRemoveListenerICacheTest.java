@@ -116,5 +116,4 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
         }
         logger.info(name + ": " + total + " from " + results.size() + " worker threads");
     }
-
 }
