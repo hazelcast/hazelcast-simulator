@@ -16,14 +16,14 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.GenericTypes;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,25 +87,21 @@ public class MapPutAllTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
+    @TimeStep
+    public void timeStep(ThreadContext threadContext) {
+        Map<Object, Object> insertMap = threadContext.randomMap();
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        protected void timeStep() throws Exception {
-            Map<Object, Object> insertMap = randomMap();
-            if (usePutAll) {
-                map.putAll(insertMap);
-            } else {
-                for (Map.Entry<Object, Object> entry : insertMap.entrySet()) {
-                    map.put(entry.getKey(), entry.getValue());
-                }
+        // todo: would be better to have 2 timestep methods.
+        if (usePutAll) {
+            map.putAll(insertMap);
+        } else {
+            for (Map.Entry<Object, Object> entry : insertMap.entrySet()) {
+                map.put(entry.getKey(), entry.getValue());
             }
         }
+    }
 
+    public class ThreadContext extends BaseThreadContext {
         private Map<Object, Object> randomMap() {
             return inputMaps[randomInt(inputMaps.length)];
         }
