@@ -16,13 +16,15 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,36 +58,29 @@ public class MapRaceTest extends AbstractTest {
         }
     }
 
-
-
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun(ThreadContext threadContext) {
+        for (int i = 0; i < keyCount; i++) {
+            threadContext.result.put(i, 0L);
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @TimeStep
+    public void timeStep(ThreadContext threadContext) {
+        Integer key = threadContext.randomInt(keyCount);
+        long increment = threadContext.randomInt(100);
+
+        threadContext.incrementMap(map, key, increment);
+        threadContext.incrementMap(threadContext.result, key, increment);
+    }
+
+    @AfterRun
+    public void afterRun(ThreadContext threadContext) {
+        resultMap.put(newSecureUuidString(), threadContext.result);
+    }
+
+    public class ThreadContext extends BaseThreadContext {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
-
-        @Override
-        public void beforeRun() {
-            for (int i = 0; i < keyCount; i++) {
-                result.put(i, 0L);
-            }
-        }
-
-        @Override
-        public void timeStep() {
-            Integer key = randomInt(keyCount);
-            long increment = randomInt(100);
-
-            incrementMap(map, key, increment);
-            incrementMap(result, key, increment);
-        }
-
-        @Override
-        public void afterRun() {
-            resultMap.put(newSecureUuidString(), result);
-        }
 
         private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {
             map.put(key, map.get(key) + increment);
