@@ -369,8 +369,7 @@ public final class FileUtils {
             if (file.getName().contains("*")) {
                 File parent = file.getParentFile();
                 if (parent == null || !parent.isDirectory()) {
-                    throw new UncheckedIOException(format("Could not find matching files for wildcard classpath %s",
-                            file.getName()));
+                    throw new UncheckedIOException(format("Could not find matching files for wildcard classpath [%s]", filePath));
                 }
 
                 String regex = file.getName().replace("*", "(.*)");
