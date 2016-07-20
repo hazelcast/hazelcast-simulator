@@ -9,7 +9,7 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstru
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public class PropertyBindingSupportTest {
+public class PropertyBindingSupport_Test {
 
     private final TestCase testCase = new TestCase(getClass().getName());
     private final SomeObject someObject = new SomeObject();
@@ -60,9 +60,9 @@ public class PropertyBindingSupportTest {
         bind0(someObject, "nullOtherObject.stringField", "newValue");
     }
 
-    @Test(expected = BindException.class)
+    @Test
     public void bind_withPath_missingProperty() {
-        bind0(someObject, "notExist.stringField", "newValue");
+        assertFalse(bind0(someObject, "notExist.stringField", "newValue"));
     }
 
     @Test

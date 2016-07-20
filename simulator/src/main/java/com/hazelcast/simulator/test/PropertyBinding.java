@@ -23,7 +23,6 @@ import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.utils.BindException;
-import com.hazelcast.simulator.utils.PropertyBindingSupport;
 import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
@@ -41,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.lang.String.format;
@@ -56,7 +56,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * <li>Metronome instance in fields annotated with {@link InjectMetronome}</li>
  * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
- *
+ * <p>
  * The {@link PropertyBinding} also keeps track of all used properties. This makes it possible to detect if there are any unused
  * properties (so properties which are not bound). See {@link #ensureNoUnusedProperties()}.
  */
@@ -118,17 +118,20 @@ public class PropertyBinding {
         Class classType = object.getClass();
         do {
             for (Field field : classType.getDeclaredFields()) {
-                bind(object, field);
+                inject(object, field);
             }
             classType = classType.getSuperclass();
         } while (classType != null);
+
+        Set<String> used = bindAll(object, testCase);
+        unusedProperties.removeAll(used);
 
         if (object instanceof PropertyBindingAware) {
             ((PropertyBindingAware) object).bind(this);
         }
     }
 
-    private void bind(Object object, Field field) {
+    private void inject(Object object, Field field) {
         Class fieldType = field.getType();
         if (field.isAnnotationPresent(InjectTestContext.class)) {
             assertFieldType(fieldType, TestContext.class, InjectTestContext.class);
@@ -144,11 +147,6 @@ public class PropertyBinding {
             assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
             Metronome metronome = newMetronome(field);
             setFieldValue(object, field, metronome);
-        } else {
-            String propertyName = field.getName();
-            if (PropertyBindingSupport.bind(object, testCase, propertyName)) {
-                unusedProperties.remove(propertyName);
-            }
         }
     }
 
@@ -172,7 +170,7 @@ public class PropertyBinding {
             Constructor<? extends Metronome> constructor = metronomeClass.getConstructor(Long.TYPE);
             return constructor.newInstance(MICROSECONDS.toNanos(metronomeIntervalUs));
         } catch (Exception e) {
-            throw new IllegalTestException("Failed to bind " + InjectMetronome.class.getSimpleName()
+            throw new IllegalTestException("Failed to inject " + InjectMetronome.class.getSimpleName()
                     + " on field '" + field + "'", e);
         }
     }

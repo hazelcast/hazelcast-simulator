@@ -67,7 +67,7 @@ public final class ReflectionUtils {
 
     public static void setFieldValue(Object instance, Field field, Object value) {
         field.setAccessible(true);
-        setFieldValueInternal(instance, field, value);
+        setFieldValue0(instance, field, value);
     }
 
     public static <E> E getFieldValue(Object instance, String fieldName) {
@@ -81,7 +81,7 @@ public final class ReflectionUtils {
         } catch (Exception e) {
             throw new ReflectionException(e);
         }
-        return getFieldValueInternal(instance, field, clazz.getName(), fieldName);
+        return getFieldValue0(instance, field, clazz.getName(), fieldName);
     }
 
     /**
@@ -100,7 +100,7 @@ public final class ReflectionUtils {
         }
 
         field.setAccessible(true);
-        return getFieldValueInternal(null, field, clazz.getName(), fieldName);
+        return getFieldValue0(null, field, clazz.getName(), fieldName);
     }
 
     /**
@@ -141,7 +141,7 @@ public final class ReflectionUtils {
         constructor.newInstance();
     }
 
-    static void setFieldValueInternal(Object instance, Field field, Object value) {
+    static void setFieldValue0(Object instance, Field field, Object value) {
         try {
             field.set(instance, value);
         } catch (IllegalAccessException e) {
@@ -150,7 +150,7 @@ public final class ReflectionUtils {
     }
 
     @SuppressWarnings("unchecked")
-    static <E> E getFieldValueInternal(Object instance, Field field, String className, String fieldName) {
+    static <E> E getFieldValue0(Object instance, Field field, String className, String fieldName) {
         try {
             return (E) field.get(instance);
         } catch (IllegalAccessException e) {

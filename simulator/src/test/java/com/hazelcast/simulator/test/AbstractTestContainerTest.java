@@ -16,6 +16,11 @@ abstract class AbstractTestContainerTest {
         return new TestContainer(testContext, test, new TestCase("foo"));
     }
 
+
+    <T> TestContainer createTestContainer(T test, TestCase testCase) {
+        return new TestContainer(testContext, test, testCase);
+    }
+
     public static class BaseTest {
 
         boolean runCalled;

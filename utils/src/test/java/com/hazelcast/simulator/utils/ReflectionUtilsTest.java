@@ -12,14 +12,14 @@ import java.util.List;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue0;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFields;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFirstField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
-import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValueInternal;
+import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue0;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -209,13 +209,13 @@ public class ReflectionUtilsTest {
     public void testSetFieldValueInternal_privateField() {
         SetFieldTest setFieldTest = new SetFieldTest();
         Field field = getField(SetFieldTest.class, "injectField", Object.class);
-        setFieldValueInternal(setFieldTest, field, "value");
+        setFieldValue0(setFieldTest, field, "value");
     }
 
     @Test(expected = ReflectionException.class)
     public void testGetFieldValueInternal_privateField() {
         Field field = getField(StaticClass.class, "staticField", int.class);
-        getFieldValueInternal(null, field, "StaticClass", "staticField");
+        getFieldValue0(null, field, "StaticClass", "staticField");
     }
 
     @Retention(RetentionPolicy.RUNTIME)
