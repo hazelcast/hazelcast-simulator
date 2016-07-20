@@ -47,15 +47,15 @@ public class MapLongPerformanceTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(BaseThreadContext threadContext) {
-        Integer key = threadContext.randomInt(keyCount);
+    public void put(BaseThreadContext context) {
+        int key = context.randomInt(keyCount);
         map.set(key, System.currentTimeMillis());
 
     }
 
     @TimeStep(prob = -1)
-    public void get(BaseThreadContext threadContext) {
-        Integer key = threadContext.randomInt(keyCount);
+    public void get(BaseThreadContext context) {
+        int key = context.randomInt(keyCount);
         map.get(key);
     }
 
