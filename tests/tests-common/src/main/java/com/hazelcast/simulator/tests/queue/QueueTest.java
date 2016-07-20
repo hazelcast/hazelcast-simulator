@@ -16,11 +16,11 @@
 package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.IQueue;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.Queue;
@@ -37,7 +37,6 @@ public class QueueTest extends AbstractTest {
     public int queueLength = 100;
     public int threadsPerQueue = 1;
     public int messagesPerQueue = 1;
-    public int logFrequency = 200;
 
     private final AtomicLong totalCounter = new AtomicLong(0);
     private IQueue<Long>[] queues;
@@ -80,13 +79,6 @@ public class QueueTest extends AbstractTest {
             int toIndex = (queueLength - 1 == fromIndex) ? 0 : fromIndex + 1;
             fromQueue = queues[fromIndex];
             toQueue = queues[toIndex];
-
-            logger.info(String.format(
-                    "%s fromQueue[%d] %s: %d, toQueue[%d] %s: %d",
-                    Thread.currentThread().getName(),
-                    fromIndex, fromQueue.getName(), fromQueue.size(),
-                    toIndex, toQueue.getName(), toQueue.size()
-            ));
         }
 
         @Override
@@ -99,12 +91,6 @@ public class QueueTest extends AbstractTest {
                     toQueue.put(item + 1);
 
                     iteration++;
-                    if (logFrequency > 0 && iteration % logFrequency == 0) {
-                        logger.info(String.format(
-                                "%s iteration: %d, fromQueue size: %d, toQueue size: %d",
-                                Thread.currentThread().getName(), iteration, fromQueue.size(), toQueue.size()
-                        ));
-                    }
                 }
 
                 toQueue.put(0L);
