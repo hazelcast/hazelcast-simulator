@@ -16,38 +16,25 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadContext;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 public class MapLongPerformanceTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int keyCount = 1000000;
-    public double writeProb = 0.1;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Long> map;
 
     @Setup
     public void setUp() {
         map = targetInstance.getMap(name);
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, writeProb)
-                .addDefaultOperation(Operation.GET);
     }
 
     @Warmup(global = true)
@@ -59,32 +46,17 @@ public class MapLongPerformanceTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(BaseThreadContext threadContext) {
+        Integer key = threadContext.randomInt(keyCount);
+        map.set(key, System.currentTimeMillis());
+
     }
 
-    private class Worker extends AbstractWorker<Operation> {
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        public void timeStep(Operation operation) {
-            Integer key = randomInt(keyCount);
-
-            switch (operation) {
-                case PUT:
-                    map.set(key, System.currentTimeMillis());
-                    break;
-                case GET:
-                    map.get(key);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    @TimeStep(prob = -1)
+    public void get(BaseThreadContext threadContext) {
+        Integer key = threadContext.randomInt(keyCount);
+        map.get(key);
     }
 
     @Teardown
