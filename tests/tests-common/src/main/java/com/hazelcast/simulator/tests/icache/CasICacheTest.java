@@ -16,15 +16,16 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -64,33 +65,28 @@ public class CasICacheTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
+    @TimeStep
+    public void timeStep(ThreadState state) {
+        int key = state.randomInt(keyCount);
+        long increment = state.randomInt(100);
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        private final long[] increments = new long[keyCount];
-
-        @Override
-        public void timeStep() {
-            int key = randomInt(keyCount);
-            long increment = randomInt(100);
-
-            while (true) {
-                Long current = cache.get(key);
-                if (cache.replace(key, current, current + increment)) {
-                    increments[key] += increment;
-                    break;
-                }
+        while (true) {
+            Long current = cache.get(key);
+            if (cache.replace(key, current, current + increment)) {
+                state.increments[key] += increment;
+                break;
             }
         }
+    }
 
-        @Override
-        public void afterRun() {
-            resultsPerWorker.add(increments);
-        }
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        resultsPerWorker.add(state.increments);
+    }
+
+    public class ThreadState extends BaseThreadState {
+
+        private final long[] increments = new long[keyCount];
     }
 
     @Verify
