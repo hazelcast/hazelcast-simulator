@@ -16,11 +16,11 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -46,24 +46,16 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
+    @TimeStep
+    protected void timeStep(BaseThreadState state) throws Exception {
+        SortedMap<Integer, Integer> values = new TreeMap<Integer, Integer>();
+        for (int i = 0; i < batchSize; i++) {
+            int key = state.randomInt(keyRange);
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        @Override
-        protected void timeStep() throws Exception {
-            SortedMap<Integer, Integer> values = new TreeMap<Integer, Integer>();
-            for (int i = 0; i < batchSize; i++) {
-                int key = randomInt(keyRange);
-
-                values.put(key, key);
-            }
-
-            map.putAll(values);
+            values.put(key, key);
         }
+
+        map.putAll(values);
     }
 
     @Teardown
