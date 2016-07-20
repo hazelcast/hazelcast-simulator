@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
 import static org.HdrHistogram.Histogram.decodeFromCompressedByteBuffer;
@@ -43,6 +44,8 @@ public class HdrHistogramContainer {
 
     private final ConcurrentMap<SimulatorAddress, HistogramsPerWorker> histogramsPerWorkerMap
             = new ConcurrentHashMap<SimulatorAddress, HistogramsPerWorker>();
+
+    private final AtomicBoolean hgrmRenderUrlPrinted = new AtomicBoolean();
 
     private final PerformanceStateContainer performanceStateContainer;
     private final File outputDirectory;
@@ -73,7 +76,10 @@ public class HdrHistogramContainer {
             return;
         }
 
+        printHgrmRenderUrl();
+
         for (String probeName : result.probeNames()) {
+
             String baseFileName = testSuiteId + '_' + testId + "_" + probeName;
 
             Histogram histogram = result.getHistogram(probeName);
@@ -90,6 +96,12 @@ public class HdrHistogramContainer {
             File hgrmFile = new File(outputDirectory, baseFileName);
             LOGGER.info("Writing " + hgrmFile.getAbsolutePath() + ".hgrm");
             HistogramLogProcessor.main(new String[]{"-i", hdrFile.getAbsolutePath(), "-o", hgrmFile.getAbsolutePath()});
+        }
+    }
+
+    private void printHgrmRenderUrl() {
+        if (hgrmRenderUrlPrinted.compareAndSet(false, true)) {
+            LOGGER.info("hgrm files can rendered on http://hdrhistogram.github.io/HdrHistogram/plotFiles.html");
         }
     }
 
