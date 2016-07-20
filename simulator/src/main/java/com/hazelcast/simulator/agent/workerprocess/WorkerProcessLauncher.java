@@ -188,21 +188,21 @@ public class WorkerProcessLauncher {
     }
 
     private void copyResourcesToWorkerHome(String workerId) {
-        File workersDir = new File(getSimulatorHome(), WORKERS_HOME_NAME);
+        File workerHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
         String testSuiteId = agent.getTestSuite().getId();
-        File uploadDirectory = new File(workersDir, testSuiteId + "/upload/").getAbsoluteFile();
+        File uploadDirectory = new File(workerHome, testSuiteId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
         String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
-                workersDir,
+                workerHome,
                 testSuiteId,
-                workersDir,
+                workerHome,
                 testSuiteId,
                 workerId);
         execute(copyCommand);
-        LOGGER.info(format("Finished copying '%s' to Worker", workersDir));
+        LOGGER.info(format("Finished copying '%s' to Worker", workerHome));
     }
 
     private boolean hasExited(WorkerProcess workerProcess) {
