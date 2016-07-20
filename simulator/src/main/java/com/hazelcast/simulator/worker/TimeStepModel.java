@@ -47,14 +47,14 @@ public class TimeStepModel {
     static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
 
     private final Class testClass;
-    private final Class threadContextClass;
+    private final Class threadStateClass;
     private final List<Method> beforeRunMethods;
     private final List<Method> afterRunMethods;
     private final List<Method> timeStepMethods;
     private final Map<Method, Double> probabilities;
     private final byte[] timeStepProbabilityArray;
     private final PropertyBinding propertyBinding;
-    private final Constructor threadContextConstructor;
+    private final Constructor threadStateConstructor;
 
     public TimeStepModel(Class testClass, PropertyBinding propertyBinding) {
         this.propertyBinding = propertyBinding;
@@ -62,8 +62,8 @@ public class TimeStepModel {
         this.beforeRunMethods = loadBeforeRunMethods();
         this.afterRunMethods = loadAfterRunMethods();
         this.timeStepMethods = loadTimeStepMethods();
-        this.threadContextClass = loadThreadContextClass();
-        this.threadContextConstructor = loadThreadContextConstructor();
+        this.threadStateClass = loadThreadContextClass();
+        this.threadStateConstructor = loadThreadStateConstructor();
         this.probabilities = loadProbabilities();
         this.timeStepProbabilityArray = loadTimeStepProbabilityArray();
     }
@@ -253,8 +253,8 @@ public class TimeStepModel {
         return testClass;
     }
 
-    public Class getThreadContextClass() {
-        return threadContextClass;
+    public Class getThreadStateClass() {
+        return threadStateClass;
     }
 
     public List<Method> getBeforeRunMethods() {
@@ -280,31 +280,31 @@ public class TimeStepModel {
         return result;
     }
 
-    public Constructor getThreadContextConstructor() {
-        return threadContextConstructor;
+    public Constructor getThreadStateConstructor() {
+        return threadStateConstructor;
     }
 
-    private Constructor loadThreadContextConstructor() {
-        if (threadContextClass == null) {
+    private Constructor loadThreadStateConstructor() {
+        if (threadStateClass == null) {
             return null;
         }
 
         Constructor constructor = null;
         try {
-            constructor = threadContextClass.getDeclaredConstructor();
+            constructor = threadStateClass.getDeclaredConstructor();
         } catch (NoSuchMethodException ignore) {
             ignore(ignore);
         }
 
         try {
-            constructor = threadContextClass.getDeclaredConstructor(testClass);
+            constructor = threadStateClass.getDeclaredConstructor(testClass);
         } catch (NoSuchMethodException ignore) {
             ignore(ignore);
         }
 
         if (constructor == null) {
-            throw new IllegalTestException("No valid constructor found for '" + threadContextClass.getName() + "'. "
-                    + "The constructor should have no arguments or one argument of type '" + threadContextClass.getName() + "'");
+            throw new IllegalTestException("No valid constructor found for '" + threadStateClass.getName() + "'. "
+                    + "The constructor should have no arguments or one argument of type '" + threadStateClass.getName() + "'");
         }
 
         try {
@@ -342,23 +342,23 @@ public class TimeStepModel {
                 }
 
                 if (paramType.isPrimitive()) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
-                            + "Thread context can't be a primitive.", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
+                            + "Thread state can't be a primitive.", method, paramType));
                 }
 
                 if (paramType.isInterface()) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
-                            + "Thread context can't be an interface.", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
+                            + "Thread state can't be an interface.", method, paramType));
                 }
 
                 if (isAbstract(paramType.getModifiers())) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
-                            + "Thread context can't be an abstract.", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
+                            + "Thread state can't be an abstract.", method, paramType));
                 }
 
                 if (!isPublic(paramType.getModifiers())) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread context of type '%s'. "
-                            + "Thread context should be public", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
+                            + "Thread state should be public", method, paramType));
                 }
 
                 classes.add(paramType);

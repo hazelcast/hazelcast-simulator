@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -65,9 +65,9 @@ public class IntIntMapTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadContext threadContext) {
-        int key = threadContext.randomKey();
-        int value = threadContext.randomValue();
+    public void put(ThreadState state) {
+        int key = state.randomKey();
+        int value = state.randomValue();
 
         // todo: a future cleanup is pull the set into its own timestep-method
         if (useSet) {
@@ -78,12 +78,12 @@ public class IntIntMapTest extends AbstractTest {
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadContext threadContext) {
-        int key = threadContext.randomKey();
+    public void get(ThreadState state) {
+        int key = state.randomKey();
         map.get(key);
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
 
         private int randomKey() {
             return keys[randomInt(keys.length)];

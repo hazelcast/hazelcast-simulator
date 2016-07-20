@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -47,15 +47,15 @@ public class MapLongPerformanceTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(BaseThreadContext threadContext) {
-        int key = threadContext.randomInt(keyCount);
+    public void put(BaseThreadState state) {
+        int key = state.randomInt(keyCount);
         map.set(key, System.currentTimeMillis());
 
     }
 
     @TimeStep(prob = -1)
-    public void get(BaseThreadContext threadContext) {
-        int key = threadContext.randomInt(keyCount);
+    public void get(BaseThreadState state) {
+        int key = state.randomInt(keyCount);
         map.get(key);
     }
 

@@ -19,7 +19,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -67,25 +67,25 @@ public class MapEntryProcessorTest extends AbstractTest {
     }
 
     @TimeStep
-    public void timeStep(ThreadContext threadContext) {
-        int key = keys[threadContext.randomInt(keys.length)];
+    public void timeStep(ThreadState state) {
+        int key = keys[state.randomInt(keys.length)];
 
-        long increment = threadContext.randomInt(100);
-        int delayMs = threadContext.calculateDelay();
+        long increment = state.randomInt(100);
+        int delayMs = state.calculateDelay();
 
         map.executeOnKey(key, new IncrementEntryProcessor(increment, delayMs));
 
-        threadContext.localIncrementsAtKey[key] += increment;
+        state.localIncrementsAtKey[key] += increment;
     }
 
     @AfterRun
-    public void afterRun(ThreadContext threadContext) {
+    public void afterRun(ThreadState state) {
         // sleep to give time for the last EntryProcessor tasks to complete
         sleepMillis(maxProcessorDelayMs * 2);
-        resultsPerWorker.add(threadContext.localIncrementsAtKey);
+        resultsPerWorker.add(state.localIncrementsAtKey);
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
         private final long[] localIncrementsAtKey = new long[keyCount];
 
         private int calculateDelay() {
