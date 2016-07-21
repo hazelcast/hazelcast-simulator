@@ -17,13 +17,14 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyIncrementPair;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -62,28 +63,28 @@ public class LockConflictTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker run() {
-        return new Worker();
+    @TimeStep
+    public void timeStep(ThreadState state) throws Exception {
+        List<KeyIncrementPair> potentialLocks = state.getPotentialLocks();
+        List<KeyIncrementPair> locked = state.getLocks(potentialLocks);
+        state.incrementLockedValues(locked);
+        state.releaseLocks(locked);
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        globalIncrements.add(state.localIncrements);
+        globalCounter.add(state.localCounter);
+    }
 
+    public class ThreadState extends BaseThreadState {
         private final LockCounter localCounter = new LockCounter();
         private final long[] localIncrements = new long[keyCount];
-
-        @Override
-        protected void timeStep() throws Exception {
-            List<KeyIncrementPair> potentialLocks = getPotentialLocks();
-            List<KeyIncrementPair> locked = getLocks(potentialLocks);
-            incrementLockedValues(locked);
-            releaseLocks(locked);
-        }
 
         private List<KeyIncrementPair> getPotentialLocks() {
             List<KeyIncrementPair> potentialLocks = new ArrayList<KeyIncrementPair>();
             for (int i = 0; i < maxKeysPerTxn; i++) {
-                potentialLocks.add(new KeyIncrementPair(getRandom(), keyCount, 999));
+                potentialLocks.add(new KeyIncrementPair(random, keyCount, 999));
             }
             return potentialLocks;
         }
@@ -167,12 +168,6 @@ public class LockConflictTest extends AbstractTest {
 
         private ILock getLock(KeyIncrementPair keyIncrementPair) {
             return targetInstance.getLock(name + 'l' + keyIncrementPair.key);
-        }
-
-        @Override
-        public void afterRun() {
-            globalIncrements.add(localIncrements);
-            globalCounter.add(localCounter);
         }
     }
 
