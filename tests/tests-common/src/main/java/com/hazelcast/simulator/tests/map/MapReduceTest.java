@@ -116,7 +116,17 @@ public class MapReduceTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private final MapReduceOperationCounter operationCounter = new MapReduceOperationCounter();
+    }
+
+    @Verify(global = true)
+    public void globalVerify() {
+        MapReduceOperationCounter total = new MapReduceOperationCounter();
+        for (MapReduceOperationCounter operationCounter : operationCounterList) {
+            total.add(operationCounter);
+        }
+        logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 
     private static final class ModIdMapper implements Mapper<Integer, Employee, Integer, Employee> {
@@ -136,6 +146,7 @@ public class MapReduceTest extends AbstractTest {
     }
 
     private static final class RangeIdCombinerFactory implements CombinerFactory<Integer, Employee, Set<Employee>> {
+
         private final int min;
         private final int max;
 
@@ -178,7 +189,7 @@ public class MapReduceTest extends AbstractTest {
 
         private int[] removeIds = null;
 
-        public IdReducerFactory(int... removeIds) {
+        private IdReducerFactory(int... removeIds) {
             this.removeIds = removeIds;
         }
 
@@ -228,14 +239,5 @@ public class MapReduceTest extends AbstractTest {
             }
             return result;
         }
-    }
-
-    @Verify(global = true)
-    public void globalVerify() {
-        MapReduceOperationCounter total = new MapReduceOperationCounter();
-        for (MapReduceOperationCounter operationCounter : operationCounterList) {
-            total.add(operationCounter);
-        }
-        logger.info(name + ": " + total + " from " + operationCounterList.size() + " worker threads");
     }
 }
