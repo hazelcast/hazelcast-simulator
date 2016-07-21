@@ -91,7 +91,7 @@ public class MapPutAllTest extends AbstractTest {
     public void timeStep(ThreadState state) {
         Map<Object, Object> insertMap = state.randomMap();
 
-        // todo: would be better to have 2 timestep methods.
+        // TODO: would be better to have two timeStep methods
         if (usePutAll) {
             map.putAll(insertMap);
         } else {

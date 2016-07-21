@@ -34,7 +34,7 @@ import java.io.Serializable;
 /**
  * A test that checks how fast externalizable values can be put in a map. The key is an integer.
  *
- * todo:
+ * TODO:
  * add the following serializer
  * - identified data-serializable
  * - kryo

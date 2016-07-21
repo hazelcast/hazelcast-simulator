@@ -69,7 +69,7 @@ public class IntIntMapTest extends AbstractTest {
         int key = state.randomKey();
         int value = state.randomValue();
 
-        // todo: a future cleanup is pull the set into its own timestep-method
+        // TODO: a future cleanup is to pull the set() call into its own timeStep method
         if (useSet) {
             map.set(key, value);
         } else {
