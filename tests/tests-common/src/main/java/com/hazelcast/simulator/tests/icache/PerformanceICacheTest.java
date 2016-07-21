@@ -15,15 +15,14 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -35,17 +34,8 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  */
 public class PerformanceICacheTest extends AbstractTest {
 
-
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int keyCount = 1000000;
-    public double putProb = 0.1;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private Cache<Object, Object> cache;
 
@@ -53,9 +43,6 @@ public class PerformanceICacheTest extends AbstractTest {
     public void setup() {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(name);
-
-        operationSelectorBuilder.addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
     }
 
     @Warmup(global = true)
@@ -67,39 +54,24 @@ public class PerformanceICacheTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(ThreadState state) {
+        Integer key = state.randomInt(keyCount);
+        cache.put(key, state.value++);
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = -1)
+    public void get(ThreadState state) {
+        Integer key = state.randomInt(keyCount);
+        cache.get(key);
+    }
 
+    public class ThreadState extends BaseThreadState {
         private int value;
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        public void timeStep(Operation operation) {
-            Integer key = randomInt(keyCount);
-            switch (operation) {
-                case PUT:
-                    cache.put(key, value++);
-                    break;
-                case GET:
-                    cache.get(key);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
     }
 
     @Teardown
     public void teardown() {
         cache.close();
     }
-
-
 }
