@@ -21,10 +21,11 @@ import java.util.Random;
 /**
  * Implementations of this class should be public. This is required for the generated TimeStepRunner class to work optimally.
  *
- * Why is this class called BaseThreadState and not ThreadState? In most cases a test needs to subclass this
- * BaseThreadState; and in this case they can use the prettier name 'ThreadState'.
+ * This class is called BaseThreadState instead of ThreadState, since in most cases a test needs to subclass BaseThreadState.
+ * In this case the prettier and shorter name ThreadState can be used.
  */
-public class BaseThreadState implements Serializable{
+@SuppressWarnings("unused")
+public class BaseThreadState implements Serializable {
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public final Random random = new Random();
