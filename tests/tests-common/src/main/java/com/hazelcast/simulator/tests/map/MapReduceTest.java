@@ -185,7 +185,7 @@ public class MapReduceTest extends AbstractTest {
         }
     }
 
-    private static class IdReducerFactory implements ReducerFactory<Integer, Set<Employee>, Set<Employee>> {
+    private static final class IdReducerFactory implements ReducerFactory<Integer, Set<Employee>, Set<Employee>> {
 
         private int[] removeIds = null;
 
@@ -228,7 +228,8 @@ public class MapReduceTest extends AbstractTest {
         }
     }
 
-    public static class EmployeeCollator implements Collator<Map.Entry<Integer, Set<Employee>>, Map<Integer, Set<Employee>>> {
+    private static final class EmployeeCollator
+            implements Collator<Map.Entry<Integer, Set<Employee>>, Map<Integer, Set<Employee>>> {
         @Override
         public Map<Integer, Set<Employee>> collate(Iterable<Map.Entry<Integer, Set<Employee>>> values) {
             Map<Integer, Set<Employee>> result = new HashMap<Integer, Set<Employee>>();
