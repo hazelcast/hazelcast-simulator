@@ -404,13 +404,13 @@ public class Provisioner {
         uploadLibraryJar(ip, "cache-api*");
         uploadLibraryJar(ip, "commons-codec*");
         uploadLibraryJar(ip, "commons-lang3*");
+        uploadLibraryJar(ip, "freemarker*");
         uploadLibraryJar(ip, "gson-*");
         uploadLibraryJar(ip, "guava-*");
+        uploadLibraryJar(ip, "HdrHistogram-*");
         uploadLibraryJar(ip, "javassist-*");
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");
-        uploadLibraryJar(ip, "freemarker*");
-        uploadLibraryJar(ip, "HdrHistogram-*");
         uploadLibraryJar(ip, "log4j*");
         uploadLibraryJar(ip, "netty-*");
         uploadLibraryJar(ip, "slf4j-log4j12-*");
