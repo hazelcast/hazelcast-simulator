@@ -102,6 +102,7 @@ public class TestContainer {
         propertyBinding.ensureNoUnusedProperties();
     }
 
+    @SuppressWarnings("unchecked")
     private Object newTestInstance() {
         String testClassName = testCase.getClassname();
         try {
@@ -111,7 +112,7 @@ public class TestContainer {
         } catch (IllegalTestException e) {
             throw e;
         } catch (NoSuchMethodException e) {
-            throw new IllegalTestException(format("Test-class '%s' should have a public no arg constructor", testClassName));
+            throw new IllegalTestException(format("Test class '%s' should have a public no arg constructor", testClassName));
         } catch (Exception e) {
             throw new IllegalTestException("Could not create instance of " + testClassName, e);
         }
@@ -189,7 +190,8 @@ public class TestContainer {
         } catch (IllegalTestException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalTestException("Error during search for annotated test methods in" + testClass.getName(), e);
+            throw new IllegalTestException(format("Error during search for annotated test methods in %s: %s",
+                    testClass.getName(), e.getMessage()), e);
         }
     }
 
@@ -257,10 +259,11 @@ public class TestContainer {
         }
 
         if (runAnnotations.size() == 0) {
-            throw new IllegalTestException("Test is missing run strategy; must contain one of the following annotations: "
+            throw new IllegalTestException("Test is missing a run strategy, it must contain one of the following annotations: "
                     + asList(Run.class.getName(), RunWithWorker.class.getName(), TimeStep.class.getName()));
         } else if (runAnnotations.size() > 1) {
-            throw new IllegalTestException("Test has more than 1 run strategy, found: " + runAnnotations);
+            throw new IllegalTestException("Test has more than one run strategy, found the following annotations: "
+                    + runAnnotations);
         } else {
             taskPerPhaseMap.put(RUN, runStrategy);
         }
