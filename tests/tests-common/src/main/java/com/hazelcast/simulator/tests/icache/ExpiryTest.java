@@ -43,6 +43,7 @@ import static org.junit.Assert.assertFalse;
  * We verify that the cache is empty and items have expired.
  */
 public class ExpiryTest extends AbstractTest {
+
     public int expiryDuration = 500;
     public int keyCount = 1000;
 

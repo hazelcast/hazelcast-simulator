@@ -30,8 +30,9 @@ import javax.cache.CacheManager;
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 
 /**
- * In this test we are concurrently creating, deleting, destroying and putting to a cache.
- * However this test is a sub set of {@link MangleICacheTest}, so could be deleted.
+ * Concurrently creates, deletes, destroys and puts data to an {@link com.hazelcast.cache.ICache}.
+ *
+ * This test is a subset of {@link MangleICacheTest}, so could be deleted.
  */
 public class CreateDestroyICacheTest extends AbstractTest {
 
@@ -99,6 +100,7 @@ public class CreateDestroyICacheTest extends AbstractTest {
     }
 
     public final class ThreadState extends BaseThreadState {
+
         private final ICacheCreateDestroyCounter counter = new ICacheCreateDestroyCounter();
     }
 
