@@ -16,12 +16,12 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
@@ -46,18 +46,11 @@ public class ExpiryICacheTest extends AbstractTest {
         cache = getCache(targetInstance, name);
     }
 
-    @RunWithWorker
-    public Worker run() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractMonotonicWorker {
-        @Override
-        public void timeStep() {
-            int key = randomInt(keyCount);
-            if (!cache.containsKey(key)) {
-                cache.put(key, 0, expiryPolicy);
-            }
+    @TimeStep
+    public void timeStep(BaseThreadState state) {
+        int key = state.randomInt(keyCount);
+        if (!cache.containsKey(key)) {
+            cache.put(key, 0, expiryPolicy);
         }
     }
 
