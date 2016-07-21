@@ -19,17 +19,17 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IExecutorService;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -61,48 +61,39 @@ public class ExecutorTest extends AbstractTest {
         expectedExecutedCounter = targetInstance.getAtomicLong(name + ":ExpectedExecutedCounter");
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
+    @TimeStep
+    public void timeStep(ThreadState state) {
+        int index = state.randomInt(executors.length);
+        IExecutorService executorService = executors[index];
+        state.futureList.clear();
+
+        for (int i = 0; i < submitCount; i++) {
+            Future future = executorService.submit(new Task(testContext.getTestId()));
+            state.futureList.add(future);
+            state.iteration++;
         }
-        spawner.awaitCompletion();
+
+        for (Future future : state.futureList) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                throw rethrow(e);
+            }
+        }
+
+        if (state.iteration % 10000 == 0) {
+            logger.info(Thread.currentThread().getName() + " At iteration: " + state.iteration);
+        }
     }
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        expectedExecutedCounter.addAndGet(state.iteration);
+    }
 
-        @Override
-        public void run() {
-            long iteration = 0;
-
-            List<Future> futureList = new LinkedList<Future>();
-            while (!testContext.isStopped()) {
-                int index = random.nextInt(executors.length);
-                IExecutorService executorService = executors[index];
-                futureList.clear();
-
-                for (int i = 0; i < submitCount; i++) {
-                    Future future = executorService.submit(new Task(testContext.getTestId()));
-                    futureList.add(future);
-                    iteration++;
-                }
-
-                for (Future future : futureList) {
-                    try {
-                        future.get();
-                    } catch (Exception e) {
-                        throw rethrow(e);
-                    }
-                }
-
-                if (iteration % 10000 == 0) {
-                    logger.info(Thread.currentThread().getName() + " At iteration: " + iteration);
-                }
-            }
-            expectedExecutedCounter.addAndGet(iteration);
-        }
+    public class ThreadState extends BaseThreadState {
+        private List<Future> futureList = new LinkedList<Future>();
+        private int iteration;
     }
 
     private static final class Task implements Runnable, Serializable, HazelcastInstanceAware {
@@ -147,5 +138,4 @@ public class ExecutorTest extends AbstractTest {
             executor.destroy();
         }
     }
-
 }
