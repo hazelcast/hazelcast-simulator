@@ -58,7 +58,7 @@ public class TestContainer_TimeStepTest {
         assertTrue(testInstance.timeStepCount.get() > 100);
     }
 
-
+    @SuppressWarnings("unused")
     public static class TestWithAllPhases {
         private final AtomicLong beforeRunCount = new AtomicLong();
         private final AtomicLong afterRunCount = new AtomicLong();
@@ -70,7 +70,7 @@ public class TestContainer_TimeStepTest {
         }
 
         @TimeStep
-        public void timestep() {
+        public void timeStep() {
             timeStepCount.incrementAndGet();
         }
 
@@ -81,10 +81,10 @@ public class TestContainer_TimeStepTest {
     }
 
     @Test
-    public void testWithThreadContext() throws Exception {
+    public void testWithThreadState() throws Exception {
         int threadCount = 2;
 
-        TestWithThreadContext testInstance = new TestWithThreadContext();
+        TestWithThreadState testInstance = new TestWithThreadState();
 
         TestCase testCase = new TestCase("id")
                 .setProperty("threadCount", threadCount)
@@ -109,17 +109,17 @@ public class TestContainer_TimeStepTest {
 
         assertEquals(threadCount, testInstance.map.size());
 
-        // each context should be unique.
+        // each context should be unique
         Set<BaseThreadState> threadStates = new HashSet<BaseThreadState>(testInstance.map.values());
         assertEquals(threadCount, threadStates.size());
     }
 
-    public static class TestWithThreadContext {
+    public static class TestWithThreadState {
 
         private final Map<Thread, BaseThreadState> map = new ConcurrentHashMap<Thread, BaseThreadState>();
 
         @TimeStep
-        public void timestep(BaseThreadState state) {
+        public void timeStep(BaseThreadState state) {
             BaseThreadState found = map.get(Thread.currentThread());
             if (found == null) {
                 map.put(Thread.currentThread(), state);

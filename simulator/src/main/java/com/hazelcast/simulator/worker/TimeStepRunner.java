@@ -50,7 +50,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel) {
         this.testInstance = testInstance;
         this.timeStepModel = timeStepModel;
-        this.threadState = initThreadContext();
+        this.threadState = initThreadState();
         this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
     }
 
@@ -79,7 +79,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
         }
     }
 
-    private Object initThreadContext() {
+    private Object initThreadState() {
         Constructor constructor = timeStepModel.getThreadStateConstructor();
         if (constructor == null) {
             return null;

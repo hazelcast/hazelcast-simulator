@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TimeStepRunStrategyIntegrationTest {
 
-    public static final String TEST_ID = "SomeId";
+    private static final String TEST_ID = "SomeId";
 
     @After
     public void after() {
@@ -66,8 +66,9 @@ public class TimeStepRunStrategyIntegrationTest {
         System.out.println(testInstance.timeStepCount);
     }
 
-
+    @SuppressWarnings("unused")
     public static class TestWithAllPhases {
+
         private final AtomicLong beforeRunCount = new AtomicLong();
         private final AtomicLong afterRunCount = new AtomicLong();
         private final AtomicLong timeStepCount = new AtomicLong();
@@ -78,7 +79,7 @@ public class TimeStepRunStrategyIntegrationTest {
         }
 
         @TimeStep
-        public void timestep() {
+        public void timeStep() {
             timeStepCount.incrementAndGet();
         }
 
@@ -89,10 +90,10 @@ public class TimeStepRunStrategyIntegrationTest {
     }
 
     @Test
-    public void testWithThreadContext() throws Exception {
+    public void testWithThreadState() throws Exception {
         int threadCount = 2;
 
-        TestWithThreadContext testInstance = new TestWithThreadContext();
+        TestWithThreadState testInstance = new TestWithThreadState();
 
         TestCase testCase = new TestCase("someid")
                 .setProperty("threadCount", threadCount)
@@ -122,16 +123,16 @@ public class TimeStepRunStrategyIntegrationTest {
         assertEquals(threadCount, contexts.size());
     }
 
-    public static class TestWithThreadContext {
+    public static class TestWithThreadState {
 
         private final Map<Thread, BaseThreadState> map = new ConcurrentHashMap<Thread, BaseThreadState>();
 
         @TimeStep
-        public void timestep(BaseThreadState context) {
+        public void timeStep(BaseThreadState state) {
             BaseThreadState found = map.get(Thread.currentThread());
             if (found == null) {
-                map.put(Thread.currentThread(), context);
-            } else if (found != context) {
+                map.put(Thread.currentThread(), state);
+            } else if (found != state) {
                 throw new RuntimeException("Unexpected context");
             }
         }

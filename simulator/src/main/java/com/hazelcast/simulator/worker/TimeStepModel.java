@@ -42,9 +42,8 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public class TimeStepModel {
 
-    static final int PROBABILITY_PRECISION = 3;
-    static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
-    static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
+    private static final int PROBABILITY_PRECISION = 3;
+    private static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
 
     private final Class testClass;
     private final Class threadStateClass;
@@ -62,7 +61,7 @@ public class TimeStepModel {
         this.beforeRunMethods = loadBeforeRunMethods();
         this.afterRunMethods = loadAfterRunMethods();
         this.timeStepMethods = loadTimeStepMethods();
-        this.threadStateClass = loadThreadContextClass();
+        this.threadStateClass = loadThreadStateClass();
         this.threadStateConstructor = loadThreadStateConstructor();
         this.probabilities = loadProbabilities();
         this.timeStepProbabilityArray = loadTimeStepProbabilityArray();
@@ -75,7 +74,7 @@ public class TimeStepModel {
                 return probabilities.get(method);
             }
         }
-        return new Double(0);
+        return 0d;
     }
 
     private List<Method> loadBeforeRunMethods() {
@@ -284,6 +283,7 @@ public class TimeStepModel {
         return threadStateConstructor;
     }
 
+    @SuppressWarnings("unchecked")
     private Constructor loadThreadStateConstructor() {
         if (threadStateClass == null) {
             return null;
@@ -316,11 +316,11 @@ public class TimeStepModel {
         return constructor;
     }
 
-    private Class loadThreadContextClass() {
+    private Class loadThreadStateClass() {
         Set<Class> classes = new HashSet<Class>();
-        collectThreadContextClass(classes, beforeRunMethods);
-        collectThreadContextClass(classes, afterRunMethods);
-        collectThreadContextClass(classes, timeStepMethods);
+        collectThreadStateClass(classes, beforeRunMethods);
+        collectThreadStateClass(classes, afterRunMethods);
+        collectThreadStateClass(classes, timeStepMethods);
 
         if (classes.size() == 0) {
             // no first argument is found.
@@ -334,9 +334,9 @@ public class TimeStepModel {
         return classes.iterator().next();
     }
 
-    private static void collectThreadContextClass(Set<Class> classes, List<Method> methods) {
+    private static void collectThreadStateClass(Set<Class> classes, List<Method> methods) {
         for (Method method : methods) {
-            for (Class paramType : method.getParameterTypes()) {
+            for (Class<?> paramType : method.getParameterTypes()) {
                 if (paramType.isAssignableFrom(Probe.class)) {
                     continue;
                 }

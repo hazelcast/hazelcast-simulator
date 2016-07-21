@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  *
  * If the test has no {@link TimeStep} methods, methods with {@link BeforeRun} are ignored.
  *
- * The BeforeRun can be useful for some initialization actions on the ThreadContext.
+ * {@link BeforeRun} can be useful for some initialization actions on the ThreadState.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
