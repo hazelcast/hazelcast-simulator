@@ -16,13 +16,13 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheCreateDestroyCounter;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -35,20 +35,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  */
 public class CreateDestroyICacheTest extends AbstractTest {
 
-    private enum Operation {
-        CREATE_CACHE,
-        PUT_CACHE,
-        CLOSE_CACHE,
-        DESTROY_CACHE
-    }
-
     public int keyCount = 100000;
-    public double createCacheProb = 0.4;
-    public double putCacheProb = 0.2;
-    public double closeCacheProb = 0.2;
-    public double destroyCacheProb = 0.2;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IList<ICacheCreateDestroyCounter> counters;
     private CacheManager cacheManager;
@@ -58,80 +45,61 @@ public class CreateDestroyICacheTest extends AbstractTest {
         counters = targetInstance.getList(name);
 
         cacheManager = createCacheManager(targetInstance);
-
-        builder.addOperation(Operation.CREATE_CACHE, createCacheProb)
-                .addOperation(Operation.PUT_CACHE, putCacheProb)
-                .addOperation(Operation.CLOSE_CACHE, closeCacheProb)
-                .addOperation(Operation.DESTROY_CACHE, destroyCacheProb);
     }
 
-    @RunWithWorker
-    public Worker run() {
-        return new Worker();
-    }
-
-    private final class Worker extends AbstractWorker<Operation> {
-
-        private final ICacheCreateDestroyCounter counter = new ICacheCreateDestroyCounter();
-
-        private Worker() {
-            super(builder);
+    @TimeStep(prob = 0.4)
+    public void createCache(ThreadState state) {
+        try {
+            cacheManager.getCache(name);
+            state.counter.create++;
+        } catch (IllegalStateException e) {
+            state.counter.createException++;
         }
+    }
 
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            switch (operation) {
-                case CREATE_CACHE:
-                    try {
-                        cacheManager.getCache(name);
-                        counter.create++;
-                    } catch (IllegalStateException e) {
-                        counter.createException++;
-                    }
-                    break;
-
-                case PUT_CACHE:
-                    try {
-                        Cache<Integer, Integer> cache = cacheManager.getCache(name);
-                        if (cache != null) {
-                            cache.put(randomInt(keyCount), randomInt());
-                            counter.put++;
-                        }
-                    } catch (IllegalStateException e) {
-                        counter.putException++;
-                    }
-                    break;
-
-                case CLOSE_CACHE:
-                    try {
-                        Cache cache = cacheManager.getCache(name);
-                        if (cache != null) {
-                            cache.close();
-                            counter.close++;
-                        }
-                    } catch (IllegalStateException e) {
-                        counter.closeException++;
-                    }
-                    break;
-
-                case DESTROY_CACHE:
-                    try {
-                        cacheManager.destroyCache(name);
-                        counter.destroy++;
-                    } catch (IllegalStateException e) {
-                        counter.destroyException++;
-                    }
-                    break;
-
-                default:
-                    throw new UnsupportedOperationException();
+    @TimeStep(prob = 0.2)
+    public void putCache(ThreadState state) {
+        try {
+            Cache<Integer, Integer> cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.put(state.randomInt(keyCount), state.randomInt());
+                state.counter.put++;
             }
+        } catch (IllegalStateException e) {
+            state.counter.putException++;
         }
+    }
 
-        @Override
-        public void afterRun() {
-            counters.add(counter);
+    @TimeStep(prob = 0.2)
+    public void closeCache(ThreadState state) {
+        try {
+            Cache cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.close();
+                state.counter.close++;
+            }
+        } catch (IllegalStateException e) {
+            state.counter.closeException++;
         }
+    }
+
+    @TimeStep(prob = 0.2)
+    public void destroyCache(ThreadState state) {
+        try {
+            cacheManager.destroyCache(name);
+            state.counter.destroy++;
+        } catch (IllegalStateException e) {
+            state.counter.destroyException++;
+        }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        counters.add(state.counter);
+    }
+
+    public final class ThreadState extends BaseThreadState {
+        private final ICacheCreateDestroyCounter counter = new ICacheCreateDestroyCounter();
     }
 
     @Verify
