@@ -17,13 +17,11 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.utils.ThreadSpawner;
-
-import java.util.Random;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -48,51 +46,34 @@ public class SimpleLockTest extends AbstractTest {
         totalValue = INITIAL_VALUE * maxAccounts;
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
-        }
-        spawner.awaitCompletion();
-    }
+    @TimeStep
+    public void timeStep(BaseThreadState state) {
+        int key1 = state.randomInt(maxAccounts);
+        int key2;
+        do {
+            key2 = state.randomInt(maxAccounts);
+        } while (key1 == key2);
 
-    private class Worker implements Runnable {
-        private final Random random = new Random();
-
-        @Override
-        public void run() {
-            int key1;
-            int key2;
-            while (!testContext.isStopped()) {
-
-                key1 = random.nextInt(maxAccounts);
-                do {
-                    key2 = random.nextInt(maxAccounts);
-                } while (key1 == key2);
-
-                ILock lock1 = targetInstance.getLock(name + key1);
-                if (lock1.tryLock()) {
+        ILock lock1 = targetInstance.getLock(name + key1);
+        if (lock1.tryLock()) {
+            try {
+                ILock lock2 = targetInstance.getLock(name + key2);
+                if (lock2.tryLock()) {
                     try {
-                        ILock lock2 = targetInstance.getLock(name + key2);
-                        if (lock2.tryLock()) {
-                            try {
-                                IAtomicLong account1 = targetInstance.getAtomicLong(name + key1);
-                                IAtomicLong account2 = targetInstance.getAtomicLong(name + key2);
+                        IAtomicLong account1 = targetInstance.getAtomicLong(name + key1);
+                        IAtomicLong account2 = targetInstance.getAtomicLong(name + key2);
 
-                                int delta = random.nextInt(100);
-                                if (account1.get() >= delta) {
-                                    account1.set(account1.get() - delta);
-                                    account2.set(account2.get() + delta);
-                                }
-                            } finally {
-                                lock2.unlock();
-                            }
+                        int delta = state.randomInt(100);
+                        if (account1.get() >= delta) {
+                            account1.set(account1.get() - delta);
+                            account2.set(account2.get() + delta);
                         }
                     } finally {
-                        lock1.unlock();
+                        lock2.unlock();
                     }
                 }
+            } finally {
+                lock1.unlock();
             }
         }
     }
