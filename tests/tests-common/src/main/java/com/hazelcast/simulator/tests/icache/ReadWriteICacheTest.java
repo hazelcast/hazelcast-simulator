@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -74,33 +74,33 @@ public class ReadWriteICacheTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.4)
-    public void put(ThreadContext threadContext) {
-        int key = threadContext.randomInt(keyCount);
+    public void put(ThreadState state) {
+        int key = state.randomInt(keyCount);
         cache.put(key, key);
-        threadContext.counter.put++;
+        state.counter.put++;
     }
 
     @TimeStep(prob = 0.4)
-    public void get(ThreadContext threadContext) {
-        int key = threadContext.randomInt(keyCount);
+    public void get(ThreadState state) {
+        int key = state.randomInt(keyCount);
         Object o = cache.get(key);
         assertNotNull(o);
-        threadContext.counter.get++;
+        state.counter.get++;
     }
 
     @TimeStep(prob = 0.2)
-    public void remove(ThreadContext threadContext) {
-        int key = threadContext.randomInt(keyCount);
+    public void remove(ThreadState state) {
+        int key = state.randomInt(keyCount);
         cache.remove(key);
-        threadContext.counter.remove++;
+        state.counter.remove++;
     }
 
     @AfterRun
-    public void afterRun(ThreadContext threadContext) {
-        counters.add(threadContext.counter);
+    public void afterRun(ThreadState state) {
+        counters.add(state.counter);
     }
 
-    public final class ThreadContext extends BaseThreadContext {
+    public final class ThreadState extends BaseThreadState {
         private final ICacheReadWriteCounter counter = new ICacheReadWriteCounter();
     }
 

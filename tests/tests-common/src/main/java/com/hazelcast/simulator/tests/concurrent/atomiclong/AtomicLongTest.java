@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -62,17 +62,17 @@ public class AtomicLongTest extends AbstractTest {
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadContext context) {
-        context.randomCounter().get();
+    public void get(ThreadState state) {
+        state.randomCounter().get();
     }
 
     @TimeStep(prob = 0.1)
-    public void write(ThreadContext context) {
-        context.randomCounter().incrementAndGet();
-        context.increments++;
+    public void write(ThreadState state) {
+        state.randomCounter().incrementAndGet();
+        state.increments++;
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
         private long increments;
 
         private IAtomicLong randomCounter() {
@@ -82,8 +82,8 @@ public class AtomicLongTest extends AbstractTest {
     }
 
     @AfterRun
-    public void afterRun(ThreadContext context) {
-        totalCounter.addAndGet(context.increments);
+    public void afterRun(ThreadState state) {
+        totalCounter.addAndGet(state.increments);
     }
 
     @Verify

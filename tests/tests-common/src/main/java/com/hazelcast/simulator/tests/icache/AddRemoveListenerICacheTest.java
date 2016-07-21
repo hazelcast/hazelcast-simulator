@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -71,40 +71,40 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.25)
-    public void register(ThreadContext threadContext) {
+    public void register(ThreadState state) {
         try {
             cache.registerCacheEntryListener(listenerConfiguration);
-            threadContext.operationCounter.register++;
+            state.operationCounter.register++;
         } catch (IllegalArgumentException e) {
-            threadContext.operationCounter.registerIllegalArgException++;
+            state.operationCounter.registerIllegalArgException++;
         }
     }
 
     @TimeStep(prob = 0.25)
-    public void deregister(ThreadContext threadContext) {
+    public void deregister(ThreadState state) {
         cache.deregisterCacheEntryListener(listenerConfiguration);
-        threadContext.operationCounter.deRegister++;
+        state.operationCounter.deRegister++;
     }
 
     @TimeStep(prob = 0.25)
-    public void put(ThreadContext threadContext) {
-        cache.put(threadContext.randomInt(keyCount), 1L);
-        threadContext.operationCounter.put++;
+    public void put(ThreadState state) {
+        cache.put(state.randomInt(keyCount), 1L);
+        state.operationCounter.put++;
     }
 
     @TimeStep(prob = 0.25)
-    public void get(ThreadContext threadContext) {
-        cache.get(threadContext.randomInt(keyCount));
-        threadContext.operationCounter.put++;
+    public void get(ThreadState state) {
+        cache.get(state.randomInt(keyCount));
+        state.operationCounter.put++;
     }
 
     @AfterRun
-    public void afterRun(ThreadContext threadContext) {
-        logger.info(name + ": " + threadContext.operationCounter);
-        results.add(threadContext.operationCounter);
+    public void afterRun(ThreadState state) {
+        logger.info(name + ": " + state.operationCounter);
+        results.add(state.operationCounter);
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
         private final ICacheListenerOperationCounter operationCounter = new ICacheListenerOperationCounter();
     }
 

@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContextImpl;
@@ -118,17 +118,17 @@ public class TimeStepRunStrategyIntegrationTest {
         assertEquals(threadCount, testInstance.map.size());
 
         // each context should be unique.
-        Set<BaseThreadContext> contexts = new HashSet<BaseThreadContext>(testInstance.map.values());
+        Set<BaseThreadState> contexts = new HashSet<BaseThreadState>(testInstance.map.values());
         assertEquals(threadCount, contexts.size());
     }
 
     public static class TestWithThreadContext {
 
-        private final Map<Thread, BaseThreadContext> map = new ConcurrentHashMap<Thread, BaseThreadContext>();
+        private final Map<Thread, BaseThreadState> map = new ConcurrentHashMap<Thread, BaseThreadState>();
 
         @TimeStep
-        public void timestep(BaseThreadContext context) {
-            BaseThreadContext found = map.get(Thread.currentThread());
+        public void timestep(BaseThreadState context) {
+            BaseThreadState found = map.get(Thread.currentThread());
             if (found == null) {
                 map.put(Thread.currentThread(), context);
             } else if (found != context) {

@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -72,21 +72,21 @@ public class IntByteMapTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadContext threadContext) {
-        map.put(threadContext.randomKey(), threadContext.randomValue());
+    public void put(ThreadState state) {
+        map.put(state.randomKey(), state.randomValue());
     }
 
     @TimeStep(prob = 0.0)
-    public void set(ThreadContext threadContext) {
-        map.set(threadContext.randomKey(), threadContext.randomValue());
+    public void set(ThreadState state) {
+        map.set(state.randomKey(), state.randomValue());
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadContext threadContext) {
-        map.get(threadContext.randomKey());
+    public void get(ThreadState state) {
+        map.get(state.randomKey());
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
 
         private int randomKey() {
             return keys[randomInt(keys.length)];

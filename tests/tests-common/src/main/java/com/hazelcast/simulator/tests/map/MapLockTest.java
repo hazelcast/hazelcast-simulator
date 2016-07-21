@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -57,26 +57,26 @@ public class MapLockTest extends AbstractTest {
     }
 
     @TimeStep
-    public void timeStep(ThreadContext threadContext) {
-        int key = threadContext.randomInt(keyCount);
-        long increment = threadContext.randomInt(100);
+    public void timeStep(ThreadState state) {
+        int key = state.randomInt(keyCount);
+        long increment = state.randomInt(100);
 
         map.lock(key);
         try {
             Long current = map.get(key);
             map.put(key, current + increment);
-            threadContext.increments[key] += increment;
+            state.increments[key] += increment;
         } finally {
             map.unlock(key);
         }
     }
 
     @AfterRun
-    public void afterRun(ThreadContext threadContext) {
-        incrementsList.add(threadContext.increments);
+    public void afterRun(ThreadState state) {
+        incrementsList.add(state.increments);
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
         private final long[] increments = new long[keyCount];
     }
 

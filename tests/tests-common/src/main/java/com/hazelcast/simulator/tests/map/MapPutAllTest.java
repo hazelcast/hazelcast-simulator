@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.BaseThreadContext;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -88,8 +88,8 @@ public class MapPutAllTest extends AbstractTest {
     }
 
     @TimeStep
-    public void timeStep(ThreadContext threadContext) {
-        Map<Object, Object> insertMap = threadContext.randomMap();
+    public void timeStep(ThreadState state) {
+        Map<Object, Object> insertMap = state.randomMap();
 
         // todo: would be better to have 2 timestep methods.
         if (usePutAll) {
@@ -101,7 +101,7 @@ public class MapPutAllTest extends AbstractTest {
         }
     }
 
-    public class ThreadContext extends BaseThreadContext {
+    public class ThreadState extends BaseThreadState {
         private Map<Object, Object> randomMap() {
             return inputMaps[randomInt(inputMaps.length)];
         }
