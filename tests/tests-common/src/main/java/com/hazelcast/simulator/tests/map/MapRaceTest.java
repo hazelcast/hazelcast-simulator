@@ -80,6 +80,7 @@ public class MapRaceTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
 
         private void incrementMap(Map<Integer, Long> map, Integer key, long increment) {

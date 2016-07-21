@@ -105,6 +105,7 @@ public class AddRemoveListenerICacheTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private final ICacheListenerOperationCounter operationCounter = new ICacheListenerOperationCounter();
     }
 

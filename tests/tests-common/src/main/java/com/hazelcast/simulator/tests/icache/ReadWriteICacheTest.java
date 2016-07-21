@@ -101,6 +101,7 @@ public class ReadWriteICacheTest extends AbstractTest {
     }
 
     public final class ThreadState extends BaseThreadState {
+
         private final ICacheReadWriteCounter counter = new ICacheReadWriteCounter();
     }
 

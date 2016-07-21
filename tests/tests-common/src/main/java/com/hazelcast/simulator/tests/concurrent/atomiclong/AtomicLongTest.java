@@ -73,6 +73,7 @@ public class AtomicLongTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private long increments;
 
         private IAtomicLong randomCounter() {

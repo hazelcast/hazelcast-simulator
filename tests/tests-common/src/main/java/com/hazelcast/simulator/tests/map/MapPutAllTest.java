@@ -102,6 +102,7 @@ public class MapPutAllTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private Map<Object, Object> randomMap() {
             return inputMaps[randomInt(inputMaps.length)];
         }

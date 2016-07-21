@@ -86,6 +86,7 @@ public class MapEntryProcessorTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private final long[] localIncrementsAtKey = new long[keyCount];
 
         private int calculateDelay() {

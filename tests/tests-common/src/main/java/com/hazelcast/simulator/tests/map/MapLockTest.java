@@ -77,6 +77,7 @@ public class MapLockTest extends AbstractTest {
     }
 
     public class ThreadState extends BaseThreadState {
+
         private final long[] increments = new long[keyCount];
     }
 
