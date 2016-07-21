@@ -21,9 +21,9 @@ import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
- * <p>
+ *
  * The wait interval on the first {@link #waitForNext()} call is randomized.
- * <p>
+ *
  * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
 public final class BusySpinningMetronome implements Metronome {

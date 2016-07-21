@@ -94,7 +94,7 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     * <p>
+     *
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
      *
@@ -138,10 +138,10 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     * <p>
+     *
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
-     * <p>
+     *
      * Uses the default timeout of {@link #ASSERT_TRUE_EVENTUALLY_TIMEOUT} milliseconds.
      *
      * @param task AssertTask to execute

@@ -25,7 +25,7 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 /**
  * Base implementation of {@link IWorker} which is returned by {@link com.hazelcast.simulator.test.annotations.RunWithWorker}
  * annotated test methods.
- * <p>
+ *
  * Implicitly measures throughput and latency with a built-in {@link Probe}.
  * The operation counter is automatically increased after each call of {@link #timeStep(Enum)}.
  *
@@ -61,7 +61,7 @@ public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWork
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     * <p>
+     *
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration

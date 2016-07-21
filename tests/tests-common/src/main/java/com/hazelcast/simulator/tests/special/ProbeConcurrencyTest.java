@@ -15,15 +15,15 @@
  */
 package com.hazelcast.simulator.tests.special;
 
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
 /**
  * This test is to debug and check probe results from a very controlled test case.
- * <p>
+ *
  * By adjusting the threadCount and maxOperations the invocation count of probes are absolutely predictable.
  */
 public class ProbeConcurrencyTest extends AbstractTest {

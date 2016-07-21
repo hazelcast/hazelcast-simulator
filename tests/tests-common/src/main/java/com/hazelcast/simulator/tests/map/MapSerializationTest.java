@@ -19,10 +19,10 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.io.Externalizable;
@@ -33,7 +33,7 @@ import java.io.Serializable;
 
 /**
  * A test that checks how fast externalizable values can be put in a map. The key is an integer.
- * <p>
+ *
  * todo:
  * add the following serializer
  * - identified data-serializable

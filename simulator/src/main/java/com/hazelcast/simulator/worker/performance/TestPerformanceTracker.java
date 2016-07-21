@@ -36,9 +36,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Tracks performance related values for a single Simulator Test.
- * <p>
+ *
  * Has methods to update the performance values and write them to files.
- * <p>
+ *
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
 final class TestPerformanceTracker {

@@ -48,7 +48,7 @@ public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     * <p>
+     *
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure

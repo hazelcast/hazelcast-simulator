@@ -23,7 +23,7 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
 
 /**
  * An Abstract Test that provides basic behavior so it doesn't need to be repeated for every test.
- * <p>
+ *
  * Coordinator will not impose the AbstractTest to be the part of any test class.
  */
 public abstract class AbstractTest {

@@ -17,10 +17,10 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * In this test we are using map put methods with an expire time.
- * <p>
+ *
  * We put keys at random into the map using sync and async methods with some probability distribution.
  * In the end we verify that the map is empty and all key value pairs have expired out of the map.
  */

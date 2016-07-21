@@ -24,13 +24,13 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
 /**
  * This test verifies that {@link com.hazelcast.core.IMap#values()}, {@link com.hazelcast.core.IMap#keySet()} and
  * {@link com.hazelcast.core.IMap#entrySet()} throw an exception if the configured result size limit is exceeded.
- * <p>
+ *
  * To achieve this we fill a map slightly above the trigger limit of the query result size limit, so we are sure it will always
  * trigger the exception. Then we call the map methods and verify that each call created an exception.
- * <p>
+ *
  * The test can be configured to use {@link String} or {@link Integer} keys. You can also override the number of filled items
  * with the {@link #keyCount} property, e.g. to test for missing exceptions with enabled result size limit and an empty map.
- * <p>
+ *
  * You have to activate the query result size limit by providing a custom hazelcast.xml with the following setting:
  * <pre>
  *   {@code

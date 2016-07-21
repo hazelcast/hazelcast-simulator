@@ -26,7 +26,7 @@ import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCUR
 
 /**
  * Creates {@link Streamer} instances for {@link IMap} and {@link Cache}.
- * <p>
+ *
  * If possible an asynchronous variant is created, otherwise it will be synchronous.
  */
 public final class StreamerFactory {

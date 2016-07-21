@@ -19,11 +19,11 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Creates a number of {@link ITopic} and a number of listeners per topic. Each member publishes messages to every topic.
- * <p>
+ *
  * This test is inherently unreliable because the {@link ITopic} relies on the event system which is unreliable.
  * When messages are published with a too high rate, eventually the event system will drop incoming events.
  */

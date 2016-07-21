@@ -28,11 +28,11 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 /**
  * Responsible for spawning and waiting for threads.
- * <p>
+ *
  * If used in a test context {@link #identifier} should be set to the testId of that test. This is needed to correlate an
  * exception to a specific test case. In a test context you should not set {@link #throwException} to <code>true</code>,
  * so the {@link ExceptionReporter} will be used.
- * <p>
+ *
  * You can also use your own threads in Simulator tests, but make sure that you detect thrown exceptions and report them to the
  * {@link ExceptionReporter} by yourself.
  */
@@ -49,7 +49,7 @@ public class ThreadSpawner {
 
     /**
      * Creates a default {@link ThreadSpawner} for a test context.
-     * <p>
+     *
      * All occurring exceptions will be reported to the {@link ExceptionReporter}.
      *
      * @param identifier identifier to give reported exceptions a context
@@ -120,7 +120,7 @@ public class ThreadSpawner {
 
     /**
      * Waits for all threads to finish.
-     * <p>
+     *
      * If {@link #throwException} is <code>true</code> this method will throw the first occurred exception of a thread.
      */
     public void awaitCompletion() {

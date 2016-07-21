@@ -16,11 +16,11 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.concurrent.TimeUnit;
@@ -33,7 +33,7 @@ import static java.lang.String.format;
 
 /**
  * Fills up the cluster to a defined heap usage factor during warmup phase.
- * <p>
+ *
  * This tests intentionally has an empty run phase.
  */
 public class MapHeapHogWarmupTest extends AbstractTest {

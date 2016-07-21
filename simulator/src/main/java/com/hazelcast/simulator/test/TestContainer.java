@@ -58,7 +58,7 @@ import static java.util.Arrays.asList;
 
 /**
  * Container for test instances.
- * <p>
+ *
  * It is responsible for:
  * <ul>
  * <li>Creates the test class instance by its fully qualified class name.</li>

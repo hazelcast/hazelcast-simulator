@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 
 /**
  * Test for {@link IMap#putAll(Map)} which uses a set of prepared maps with input values during the RUN phase.
- * <p>
+ *
  * You can configure the {@link #keyType} and {@link #valueType} for the used maps.
  */
 public class MapPutAllTest extends AbstractTest {

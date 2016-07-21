@@ -42,7 +42,7 @@ public abstract class RunStrategy implements Callable {
 
     /**
      * Checks if the run strategy is running.
-     * <p>
+     *
      * This method is thread-safe.
      *
      * @return true if running, false otherwise.
@@ -68,7 +68,7 @@ public abstract class RunStrategy implements Callable {
 
     /**
      * Returns the timestap when the test started running. As long as the test has not started, the returned value is 0.
-     * <p>
+     *
      * This method is thread-safe.
      *
      * @return the started timestamp.

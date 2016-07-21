@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
 
 /**
  * Version of {@link AbstractWorker} with an individual {@link Probe} per operation.
- * <p>
+ *
  * This worker provides a {@link #timeStep(Enum, Probe)} method with the operation specific {@link Probe} as additional parameter.
  * This can be used to make a finer selection of the measured code block.
  *
@@ -89,7 +89,7 @@ public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
 
     /**
      * This method is called for each iteration of {@link #run()}.
-     * <p>
+     *
      * Won't be called if an error occurs in {@link #beforeRun()}.
      *
      * @param operation The selected operation for this iteration

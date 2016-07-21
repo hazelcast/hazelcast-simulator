@@ -18,10 +18,10 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.map.helpers.MapMaxSizeOperationCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * This tests runs {@link IMap#put(Object, Object)} and {@link IMap#get(Object)} operations on a map, which is configured with
  * {@link MaxSizeConfig.MaxSizePolicy#PER_NODE}.
- * <p>
+ *
  * With some prob distribution we are doing put, putAsync, get and verification operations on the map.
  * We verify during the test and at the end that the map has not exceeded its max configured size.
  */

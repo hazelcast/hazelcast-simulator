@@ -16,10 +16,10 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.icache.helpers.CacheUtils;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheOperationCounter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
@@ -32,7 +32,7 @@ import javax.cache.spi.CachingProvider;
 
 /**
  * In this tests we are intentionally creating, destroying, closing and using cache managers and their caches.
- * <p>
+ *
  * This type of cache usage is well outside normal usage, however we found several bugs with this test. It could highlight memory
  * leaks when repeatedly creating and destroying caches and/or managers, something that regular test would not find.
  */
