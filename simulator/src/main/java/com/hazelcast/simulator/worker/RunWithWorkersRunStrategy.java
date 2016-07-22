@@ -32,7 +32,8 @@ import static java.lang.String.format;
  */
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class RunWithWorkersRunStrategy extends RunStrategy {
-    public static final int DEFAULT_THREAD_COUNT = 10;
+
+    private static final int DEFAULT_THREAD_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(RunWithWorkersRunStrategy.class);
 
@@ -56,9 +57,7 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
     @Override
     public Object call() throws Exception {
         try {
-            LOGGER.info(format("Spawning %d worker threads for test %s",
-                    threadCount, testContext.getTestId()));
-
+            LOGGER.info(format("Spawning %d worker threads for test %s", threadCount, testContext.getTestId()));
             if (threadCount <= 0) {
                 return null;
             }
@@ -72,14 +71,12 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
         } finally {
             onRunCompleted();
         }
-
         return null;
     }
 
     private IWorker runWorkers() throws Exception {
         IWorker firstWorker = null;
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        IWorker[] workers = new IWorker[threadCount];
         for (int i = 0; i < threadCount; i++) {
             final IWorker worker = invokeMethod(testInstance, runWithWorkersMethod);
             if (firstWorker == null) {
@@ -89,13 +86,13 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
             testContainer.getPropertyBinding().bind(worker);
 
             spawner.spawn(new WorkerTask(worker));
-            workers[i] = worker;
         }
         spawner.awaitCompletion();
         return firstWorker;
     }
 
-    static class WorkerTask implements Runnable {
+    private static class WorkerTask implements Runnable {
+
         private final IWorker worker;
 
         WorkerTask(IWorker worker) {

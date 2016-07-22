@@ -33,26 +33,26 @@ import static java.lang.String.format;
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class TimeStepRunStrategy extends RunStrategy {
 
-    public static final int DEFAULT_THREAD_COUNT = 10;
+    private static final int DEFAULT_THREAD_COUNT = 10;
+
     private static final Logger LOGGER = Logger.getLogger(TimeStepRunStrategy.class);
 
     // properties
     public int threadCount = DEFAULT_THREAD_COUNT;
 
-    private final TestContainer testContainer;
     private final TestContext testContext;
     private final Object testInstance;
     private final Class runnerClass;
     private final TimeStepModel timeStepModel;
     private final ThreadSpawner spawner;
-    private volatile TimeStepRunner[] runners;
     private final PropertyBinding propertyBinding;
+
+    private volatile TimeStepRunner[] runners;
 
     public TimeStepRunStrategy(TestContainer testContainer) {
         this.propertyBinding = testContainer.getPropertyBinding();
         propertyBinding.bind(this);
 
-        this.testContainer = testContainer;
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
         this.timeStepModel = new TimeStepModel(testInstance.getClass(), propertyBinding);
@@ -95,6 +95,7 @@ public class TimeStepRunStrategy extends RunStrategy {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private void spawnTimeStepRunners() throws Exception {
         TimeStepRunner[] runners = new TimeStepRunner[threadCount];
         Constructor<TimeStepRunner> constructor = runnerClass.getConstructor(testInstance.getClass(), TimeStepModel.class);
