@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
