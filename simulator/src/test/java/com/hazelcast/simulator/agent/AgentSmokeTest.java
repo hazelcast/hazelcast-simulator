@@ -5,9 +5,9 @@ import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
+import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
-import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
@@ -74,7 +74,6 @@ public class AgentSmokeTest implements FailureListener {
     private static TestPhaseListeners testPhaseListeners;
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
-    private static File outputDirectory;
 
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
 
@@ -93,7 +92,7 @@ public class AgentSmokeTest implements FailureListener {
 
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        outputDirectory = TestUtils.createTmpDirectory();
+        File outputDirectory = TestUtils.createTmpDirectory();
         HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         failureContainer = new FailureContainer("agentSmokeTest", null);
 
