@@ -15,15 +15,13 @@
  */
 package com.hazelcast.simulator.tests.syntheticmap;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import java.util.Random;
 
@@ -34,11 +32,6 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
 public class StringStringSyntheticMapTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int keyLength = 10;
     public int valueLength = 10;
@@ -47,23 +40,16 @@ public class StringStringSyntheticMapTest extends AbstractTest {
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
 
-    public double putProb = 0.1;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private SyntheticMap<String, String> map;
-
     private String[] keys;
     private String[] values;
 
     @Setup
     public void setUp() {
         map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + name);
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
     }
+
     @Warmup
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
@@ -77,38 +63,20 @@ public class StringStringSyntheticMapTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void put(ThreadState state) {
+        String key = state.randomKey();
+        String value = state.randomValue();
+        map.put(key, value);
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
+    @TimeStep(prob = -1)
+    public void get(ThreadState state) {
+        String key = state.randomKey();
+        map.get(key);
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            String key = randomKey();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    String value = randomValue();
-                    started = System.nanoTime();
-                    map.put(key, value);
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    public class ThreadState extends BaseThreadState {
 
         private String randomKey() {
             return keys[randomInt(keys.length)];
@@ -119,12 +87,9 @@ public class StringStringSyntheticMapTest extends AbstractTest {
         }
     }
 
-
     @Teardown
     public void tearDown() {
         map.destroy();
         logger.info(getOperationCountInformation(targetInstance));
     }
-
-
 }
