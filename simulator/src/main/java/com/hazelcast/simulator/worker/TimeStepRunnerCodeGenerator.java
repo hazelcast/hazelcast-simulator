@@ -66,8 +66,8 @@ class TimeStepRunnerCodeGenerator {
 
     Class compile(JavaCompiler compiler, JavaFileObject file, String className) {
         if (compiler == null) {
-            throw new IllegalStateException(
-                    "Could not get Java compiler in TimeStepRunnerCodeGenerator. You need to use a JDK to run Simulator!");
+            throw new IllegalStateException("Could not get Java compiler in TimeStepRunnerCodeGenerator."
+                    + " You need to use a JDK to run Simulator! Version found: " + System.getProperty("java.version"));
         }
 
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
