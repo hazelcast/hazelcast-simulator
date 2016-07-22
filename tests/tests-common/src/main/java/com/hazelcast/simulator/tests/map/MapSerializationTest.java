@@ -20,9 +20,11 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.io.Externalizable;
@@ -60,32 +62,30 @@ public class MapSerializationTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void serializable(BaseThreadState state){
+        int key = state.randomInt(keyCount);
+        map.put(key, new SerializableValue(key));
     }
 
-    private class Worker extends AbstractMonotonicWorker {
-        @Override
-        protected void timeStep() throws Exception {
-            int key = randomInt(keyCount);
-            switch (serializer) {
-                case SERIALIZABLE:
-                    map.put(key, new SerializableValue(key));
-                    break;
-                case EXTERNALIZABLE:
-                    map.put(key, new ExternalizableValue(key));
-                    break;
-                case DATA_SERIALIZABLE:
-                    map.put(key, new DataSerializableValue(key));
-                    break;
-                case LONG:
-                    map.put(key, (long) key);
-                    break;
-                default:
-                    throw new IllegalStateException("Unrecognized serializer: " + serializer);
-            }
-        }
+    @TimeStep
+    public void externalizable(BaseThreadState state){
+        int key = state.randomInt(keyCount);
+        map.put(key, new ExternalizableValue(key));
+
+    }
+
+    @TimeStep
+    public void dataSerializable(BaseThreadState state){
+        int key = state.randomInt(keyCount);
+        map.put(key, new DataSerializableValue(key));
+
+    }
+
+    @TimeStep
+    public void longType(BaseThreadState state){
+        int key = state.randomInt(keyCount);
+        map.put(key, (long) key);
     }
 
     private static class ExternalizableValue implements Externalizable {
