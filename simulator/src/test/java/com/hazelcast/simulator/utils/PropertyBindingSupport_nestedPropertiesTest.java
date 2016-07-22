@@ -3,6 +3,7 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.simulator.test.TestCase;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 public class PropertyBindingSupport_nestedPropertiesTest {
 
     @Test
-    public void test() {
+    public void testBindAll() {
         TestCase testCase = new TestCase("id")
                 .setProperty("arm.finger.length", 10)
                 .setProperty("age", 40);
@@ -29,7 +30,7 @@ public class PropertyBindingSupport_nestedPropertiesTest {
     @Test
     public void testNotAllPropertiesBound() {
         TestCase testCase = new TestCase("id")
-                .setProperty("foo",1000)
+                .setProperty("foo", 1000)
                 .setProperty("arm.finger.length", 10)
                 .setProperty("age", 40);
 
@@ -64,25 +65,26 @@ public class PropertyBindingSupport_nestedPropertiesTest {
         assertEquals(asSet("nullArm.finger.length"), usedProperties);
     }
 
-    public Set<String> asSet(String... strings) {
+    private static Set<String> asSet(String... strings) {
         Set<String> result = new HashSet<String>();
-        for (String s : strings) {
-            result.add(s);
-        }
+        Collections.addAll(result, strings);
         return result;
     }
 
-    public static class Person {
+    private static class Person {
+
         public Arm arm = new Arm();
         public Arm nullArm;
         public int age;
     }
 
-    public static class Arm {
+    static class Arm {
+
         public Finger finger = new Finger();
     }
 
-    public static class Finger {
+    static class Finger {
+
         public int length;
     }
 }

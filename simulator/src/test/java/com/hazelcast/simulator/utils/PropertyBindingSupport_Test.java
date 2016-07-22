@@ -104,7 +104,7 @@ public class PropertyBindingSupport_Test {
     }
 
     @Test(expected = BindException.class)
-    public void bind_propertyTypeMismatch(){
+    public void bind_propertyTypeMismatch() {
         bind0(someObject, "intField", "foobar");
     }
 
@@ -116,7 +116,7 @@ public class PropertyBindingSupport_Test {
 
         public String stringField;
 
-        // We can't bind to this field because its type is not known.
+        // we can't bind to this field because its type is not known
         public Comparable unrecognizedFieldType;
 
         public OtherObject otherObject = new OtherObject();

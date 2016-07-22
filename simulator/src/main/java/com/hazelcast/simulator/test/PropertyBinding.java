@@ -46,7 +46,6 @@ import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
-
 /**
  * Responsible for injecting:
  * <ol>
@@ -56,7 +55,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * <li>Metronome instance in fields annotated with {@link InjectMetronome}</li>
  * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
- * <p>
+ *
  * The {@link PropertyBinding} also keeps track of all used properties. This makes it possible to detect if there are any unused
  * properties (so properties which are not bound). See {@link #ensureNoUnusedProperties()}.
  */

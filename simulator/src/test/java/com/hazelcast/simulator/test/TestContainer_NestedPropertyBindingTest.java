@@ -10,7 +10,7 @@ import static org.junit.Assert.assertNotNull;
 public class TestContainer_NestedPropertyBindingTest extends AbstractTestContainerTest {
 
     @Test
-    public void test() throws Exception {
+    public void testNestProperties() {
         TestCase testCase = new TestCase("id")
                 .setProperty("nested.intField", 10)
                 .setProperty("nested.booleanField", true)
@@ -26,9 +26,8 @@ public class TestContainer_NestedPropertyBindingTest extends AbstractTestContain
         assertEquals("somestring", test.nested.stringField);
     }
 
-
     @Test(expected = BindException.class)
-    public void testNestedPropertyNotFound() throws Exception {
+    public void testNestedPropertyNotFound() {
         TestCase testCase = new TestCase("id")
                 .setProperty("nested.notexist", 10);
 
@@ -37,15 +36,16 @@ public class TestContainer_NestedPropertyBindingTest extends AbstractTestContain
     }
 
     public class DummyTest {
+
         public NestedProperties nested = new NestedProperties();
 
         @TimeStep
-        public void timestep(){
-
+        public void timeStep() {
         }
     }
 
     public class NestedProperties {
+
         public int intField;
         public boolean booleanField;
         public String stringField;
