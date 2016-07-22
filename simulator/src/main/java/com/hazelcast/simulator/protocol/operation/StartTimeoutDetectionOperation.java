@@ -15,10 +15,8 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
-
 /**
- * Starts the timeout detection for {@link WorkerProcess} on the Simulator Agent.
+ * Starts the timeout detection for {@link com.hazelcast.simulator.agent.workerprocess.WorkerProcess} on the Simulator Agent.
  */
 public class StartTimeoutDetectionOperation implements SimulatorOperation {
 }

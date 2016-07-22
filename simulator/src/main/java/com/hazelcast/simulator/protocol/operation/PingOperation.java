@@ -15,11 +15,9 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
-
 /**
- * Creates traffic on the wire, so the {@link WorkerProcessFailureMonitor} on the Agent can
- * see, that the Worker is still responsive.
+ * Creates traffic on the wire, so the {@link com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor}
+ * on the Agent can see, that the Worker is still responsive.
  *
  * This is needed for long running test phases, which lead to a radio silence on the wire.
  */
