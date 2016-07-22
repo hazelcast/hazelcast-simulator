@@ -15,11 +15,9 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import org.HdrHistogram.Histogram;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
 import static org.junit.Assert.assertEquals;
@@ -165,7 +163,7 @@ public class AbstractWorkerWithMultipleProbesTest {
 
             @Override
             protected void timeStep(Operation operation, Probe probe) throws Exception {
-                  switch (operation) {
+                switch (operation) {
                     case EXCEPTION:
                         throw new TestException("expected exception");
                     case STOP_WORKER:

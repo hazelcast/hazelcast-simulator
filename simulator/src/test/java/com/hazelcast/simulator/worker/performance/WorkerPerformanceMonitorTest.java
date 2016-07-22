@@ -16,7 +16,6 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
