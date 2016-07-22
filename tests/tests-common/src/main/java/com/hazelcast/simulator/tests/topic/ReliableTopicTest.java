@@ -23,15 +23,17 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
-import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.TestException;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -80,37 +82,32 @@ public class ReliableTopicTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun(ThreadState state) {
+        for (ITopic topic : topics) {
+            state.counterMap.put(topic, new AtomicLong());
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @TimeStep
+    public void timeStep(ThreadState state) throws Exception {
+        ITopic<MessageEntity> topic = state.getRandomTopic();
+        AtomicLong counter = state.counterMap.get(topic);
+        MessageEntity msg = new MessageEntity(state.id, counter.incrementAndGet());
+        state.messagesSend++;
+        topic.publish(msg);
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        totalMessagesSend.addAndGet(state.messagesSend);
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private long messagesSend = 0;
-
         private final Map<ITopic, AtomicLong> counterMap = new HashMap<ITopic, AtomicLong>();
         private final String id = newSecureUuidString();
-
-        public Worker() {
-            for (ITopic topic : topics) {
-                counterMap.put(topic, new AtomicLong());
-            }
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            ITopic<MessageEntity> topic = getRandomTopic();
-            AtomicLong counter = counterMap.get(topic);
-            MessageEntity msg = new MessageEntity(id, counter.incrementAndGet());
-            messagesSend++;
-            topic.publish(msg);
-        }
-
-        @Override
-        public void afterRun() {
-            totalMessagesSend.addAndGet(messagesSend);
-        }
 
         private ITopic<MessageEntity> getRandomTopic() {
             int index = randomInt(topics.length);
@@ -214,7 +211,6 @@ public class ReliableTopicTest extends AbstractTest {
                     + '}';
         }
     }
-
 
     @Verify(global = true)
     public void verify() {
