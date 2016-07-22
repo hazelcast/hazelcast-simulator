@@ -190,8 +190,8 @@ public class TestContainer {
         } catch (IllegalTestException e) {
             throw e;
         } catch (Exception e) {
-            throw new IllegalTestException(format("Error during search for annotated test methods in %s: %s",
-                    testClass.getName(), e.getMessage()), e);
+            throw new IllegalTestException(format("Error during search for annotated test methods in %s: [%s] %s",
+                    testClass.getName(), e.getClass().getSimpleName(), e.getMessage()), e);
         }
     }
 
