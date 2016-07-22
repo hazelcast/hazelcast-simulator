@@ -20,8 +20,11 @@ import com.hazelcast.simulator.test.TestCase;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValueInternal;
+import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue0;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isPublic;
@@ -58,6 +61,21 @@ public final class PropertyBindingSupport {
         return bind0(instance, propertyName, value);
     }
 
+    public static Set<String> bindAll(Object instance, TestCase testCase) {
+        Set<String> usedProperties = new HashSet<String>();
+
+        for (Map.Entry<String, String> entry : testCase.getProperties().entrySet()) {
+            String fullPropertyPath = entry.getKey().trim();
+            String value = entry.getValue().trim();
+
+            if (bind0(instance, fullPropertyPath, value)) {
+                usedProperties.add(fullPropertyPath);
+            }
+        }
+
+        return usedProperties;
+    }
+
     /**
      * Returns a single property contained in the {@link TestCase} instance.
      *
@@ -85,19 +103,18 @@ public final class PropertyBindingSupport {
 
         String[] path = property.split("\\.");
 
-        object = findPropertyObjectInPath(object, property, path);
-
-        Field field = findPropertyField(object.getClass(), path[path.length - 1]);
-        if (field == null) {
+        object = findTargetObject(object, property, path);
+        if (object == null) {
             return false;
         }
 
-        if (isProbeField(field)) {
+        Field field = findField(object.getClass(), path[path.length - 1]);
+        if (field == null || isProbeField(field)) {
             return false;
         }
 
         try {
-            setValue(object, value, field);
+            setField(field, object, value);
             return true;
         } catch (Exception e) {
             throw new BindException(format("Failed to bind value [%s] to property [%s.%s] of type [%s]",
@@ -105,35 +122,50 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static Object findPropertyObjectInPath(Object object, String property, String[] path) {
-        Field field;
+    private static Object findTargetObject(Object parent, String property, String[] path) {
         for (int i = 0; i < path.length - 1; i++) {
-            Class<?> clazz = object.getClass();
-            String element = path[i];
-            field = findPropertyField(clazz, element);
+            Class<?> clazz = parent.getClass();
+            String fieldName = path[i];
+            Field field = findField(clazz, fieldName);
             if (field == null) {
-                throw new BindException(format("Failed to find field [%s] in property [%s]", element, property));
+                if (i == 0) {
+                    // we have no match at all
+                    return null;
+                } else {
+                    // we found at least one item in the path.
+                    throw new BindException(
+                            format("Failed to find field [%s.%s] in property [%s]", clazz.getName(), fieldName, property));
+                }
             }
-            object = getFieldValueInternal(object, field, clazz.getName(), property);
-            if (object == null) {
-                throw new BindException(format("Failed to bind to property [%s] encountered a null value at field [%s]",
-                        property, field));
+
+            Object child = getFieldValue0(parent, field, clazz.getName(), property);
+            if (child == null) {
+                try {
+                    child = field.getType().newInstance();
+                    field.set(parent, child);
+                } catch (InstantiationException e) {
+                    throw new BindException(format("Failed to initialize null field '%s'", field), e);
+                } catch (IllegalAccessException e) {
+                    throw new BindException(format("Failed to initialize null field '%s'", field), e);
+                }
             }
+
+            parent = child;
         }
-        return object;
+        return parent;
     }
 
-    private static Field findPropertyField(Class clazz, String property) {
+    private static Field findField(Class clazz, String fieldName) {
         try {
-            Field field = clazz.getDeclaredField(property);
+            Field field = clazz.getDeclaredField(fieldName);
             if (!isPublic(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] is not public", clazz.getName(), property));
+                throw new BindException(format("Property [%s.%s] is not public", clazz.getName(), fieldName));
             }
             if (isStatic(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] is static", clazz.getName(), property));
+                throw new BindException(format("Property [%s.%s] is static", clazz.getName(), fieldName));
             }
             if (isFinal(field.getModifiers())) {
-                throw new BindException(format("Property [%s.%s] is final", clazz.getName(), property));
+                throw new BindException(format("Property [%s.%s] is final", clazz.getName(), fieldName));
             }
             return field;
         } catch (NoSuchFieldException e) {
@@ -141,7 +173,7 @@ public final class PropertyBindingSupport {
             if (superClass == null) {
                 return null;
             }
-            return findPropertyField(superClass, property);
+            return findField(superClass, fieldName);
         }
     }
 
@@ -149,16 +181,10 @@ public final class PropertyBindingSupport {
         return Probe.class.equals(field.getType());
     }
 
-    private static void setValue(Object object, String value, Field field) throws IllegalAccessException {
-        if (setIntegralValue(object, value, field)) {
-            return;
-        }
-
-        if (setFloatingPointValue(object, value, field)) {
-            return;
-        }
-
-        if (setNonNumericValue(object, value, field)) {
+    private static void setField(Field field, Object object, String value) throws IllegalAccessException {
+        if (setIntegralField(field, object, value)
+                || setFloatingPointField(field, object, value)
+                || setNonNumericField(field, object, value)) {
             return;
         }
 
@@ -167,68 +193,68 @@ public final class PropertyBindingSupport {
                         object.getClass().getName(), field.getName(), field.getType()));
     }
 
-    private static boolean setIntegralValue(Object object, String value, Field field) throws IllegalAccessException {
+    private static boolean setIntegralField(Field field, Object object, String value) throws IllegalAccessException {
         if (Byte.TYPE.equals(field.getType())) {
             // primitive byte
             field.set(object, Byte.parseByte(value));
         } else if (Byte.class.equals(field.getType())) {
-            bindByte(object, value, field);
+            setByteField(object, value, field);
         } else if (Short.TYPE.equals(field.getType())) {
             // primitive short
             field.set(object, Short.parseShort(value));
         } else if (Short.class.equals(field.getType())) {
-            bindShort(object, value, field);
+            setShortField(object, value, field);
         } else if (Integer.TYPE.equals(field.getType())) {
             // primitive integer
             field.set(object, Integer.parseInt(value));
         } else if (Integer.class.equals(field.getType())) {
-            bindInteger(object, value, field);
+            setIntegerField(object, value, field);
         } else if (Long.TYPE.equals(field.getType())) {
             // primitive long
             field.set(object, Long.parseLong(value));
         } else if (Long.class.equals(field.getType())) {
-            bindLong(object, value, field);
+            setLongField(object, value, field);
         } else {
             return false;
         }
         return true;
     }
 
-    private static boolean setFloatingPointValue(Object object, String value, Field field) throws IllegalAccessException {
+    private static boolean setFloatingPointField(Field field, Object object, String value) throws IllegalAccessException {
         if (Float.TYPE.equals(field.getType())) {
             // primitive float
             field.set(object, Float.parseFloat(value));
         } else if (Float.class.equals(field.getType())) {
-            bindFloat(object, value, field);
+            setFloatField(object, value, field);
         } else if (Double.TYPE.equals(field.getType())) {
             // primitive double
             field.set(object, Double.parseDouble(value));
         } else if (Double.class.equals(field.getType())) {
-            bindDouble(object, value, field);
+            setDoubleField(object, value, field);
         } else {
             return false;
         }
         return true;
     }
 
-    private static boolean setNonNumericValue(Object object, String value, Field field) throws IllegalAccessException {
+    private static boolean setNonNumericField(Field field, Object object, String value) throws IllegalAccessException {
         if (Boolean.TYPE.equals(field.getType())) {
-            bindPrimitiveBoolean(object, value, field);
+            setPrimitiveBooleanField(object, value, field);
         } else if (Boolean.class.equals(field.getType())) {
-            bindBoolean(object, value, field);
+            setBooleanField(object, value, field);
         } else if (field.getType().isAssignableFrom(Class.class)) {
-            bindClass(object, value, field);
+            setClassField(object, value, field);
         } else if (String.class.equals(field.getType())) {
-            bindString(object, value, field);
+            setStringField(object, value, field);
         } else if (field.getType().isEnum()) {
-            bindEnum(object, value, field);
+            setEnumField(object, value, field);
         } else {
             return false;
         }
         return true;
     }
 
-    private static void bindByte(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setByteField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -236,7 +262,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindShort(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setShortField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -244,7 +270,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindInteger(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setIntegerField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -252,7 +278,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindLong(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setLongField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -260,7 +286,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindFloat(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setFloatField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -268,7 +294,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindDouble(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setDoubleField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -276,7 +302,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindPrimitiveBoolean(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setPrimitiveBooleanField(Object object, String value, Field field) throws IllegalAccessException {
         if ("true".equals(value)) {
             field.set(object, true);
         } else if ("false".equals(value)) {
@@ -286,7 +312,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindBoolean(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setBooleanField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else if ("true".equals(value)) {
@@ -298,7 +324,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindClass(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setClassField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -310,7 +336,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindString(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setStringField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
@@ -318,7 +344,7 @@ public final class PropertyBindingSupport {
         }
     }
 
-    private static void bindEnum(Object object, String value, Field field) throws IllegalAccessException {
+    private static void setEnumField(Object object, String value, Field field) throws IllegalAccessException {
         if (NULL_LITERAL.equals(value)) {
             field.set(object, null);
         } else {
