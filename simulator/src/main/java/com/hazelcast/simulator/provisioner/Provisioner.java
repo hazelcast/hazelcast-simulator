@@ -137,6 +137,28 @@ public class Provisioner {
         }
     }
 
+    void installJava() {
+        ensureIsRemoteSetup(properties, "installJava");
+
+        long started = System.nanoTime();
+        echoImportant("Installing JAVA on %d machines...", componentRegistry.agentCount());
+
+        ThreadSpawner spawner = new ThreadSpawner("installJava", true);
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    echo("Installing JAVA on %s", agentData.getPublicAddress());
+                    uploadJava(agentData.getPublicAddress());
+                }
+            });
+        }
+        spawner.awaitCompletion();
+
+        long elapsed = getElapsedSeconds(started);
+        echoImportant("Finished installing JAVA on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
+    }
+
     void installSimulator() {
         ensureIsRemoteSetup(properties, "install");
 
@@ -385,6 +407,29 @@ public class Provisioner {
         }
     }
 
+    private void uploadJava(String ip) {
+        if ("outofthebox".equals(properties.get("JDK_FLAVOR"))) {
+            return;
+        }
+        bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
+        bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
+        bash.ssh(ip, "bash install-java.sh");
+    }
+
+    private File getJavaInstallScript() {
+        String flavor = properties.get("JDK_FLAVOR");
+        String version = properties.get("JDK_VERSION");
+
+        String script = "jdk-" + flavor + '-' + version + "-64.sh";
+        File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
+        return new File(scriptDir, script);
+    }
+
+    private File getJavaSupportScript() {
+        File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
+        return new File(scriptDir, "jdk-support.sh");
+    }
+
     private void uploadJARs(String ip) {
         String simulatorVersion = getSimulatorVersion();
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", simulatorVersion));
@@ -485,15 +530,11 @@ public class Provisioner {
 
         @Override
         public void run() {
-            // install Java if needed
             if (!"outofthebox".equals(properties.get("JDK_FLAVOR"))) {
                 echo(INDENTATION + ip + " JAVA INSTALLATION STARTED...");
-                bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
-                bash.scpToRemote(ip, getJavaInstallScript(), "install-java.sh");
-                bash.ssh(ip, "bash install-java.sh");
+                uploadJava(ip);
                 echo(INDENTATION + ip + " JAVA INSTALLED");
             }
-
             echo(INDENTATION + ip + " SIMULATOR INSTALLATION STARTED...");
             uploadJARs(ip);
             echo(INDENTATION + ip + " SIMULATOR INSTALLED");
@@ -502,20 +543,6 @@ public class Provisioner {
                 bash.ssh(ip, startHarakiriMonitorCommand);
                 echo(INDENTATION + ip + " HARAKIRI MONITOR STARTED");
             }
-        }
-
-        private File getJavaInstallScript() {
-            String flavor = properties.get("JDK_FLAVOR");
-            String version = properties.get("JDK_VERSION");
-
-            String script = "jdk-" + flavor + '-' + version + "-64.sh";
-            File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
-            return new File(scriptDir, script);
-        }
-
-        private File getJavaSupportScript() {
-            File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
-            return new File(scriptDir, "jdk-support.sh");
         }
     }
 }
