@@ -18,7 +18,6 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.IllegalTestException;
-import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
 import freemarker.template.Configuration;
@@ -40,44 +39,47 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static java.util.Collections.singletonList;
 
-public class TimeStepRunnerCodeGenerator {
+class TimeStepRunnerCodeGenerator {
 
-    private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    private final JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
 
-    public Class compile(
+    Class compile(
             String testCaseId,
             TimeStepModel timeStepModel,
             Class<? extends Metronome> metronomeClass,
             Class<? extends Probe> probeClass) {
-
         String className = timeStepModel.getTestClass().getSimpleName() + "Runner";
         if (!"".equals(testCaseId)) {
             className += testCaseId;
         }
         JavaFileObject file = createJavaFileObject(className, metronomeClass, timeStepModel, probeClass);
-        return compile(file, className);
+        return compile(javaCompiler, file, className);
     }
 
-    private Class compile(JavaFileObject file, String className) {
-        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+    Class compile(JavaCompiler compiler, JavaFileObject file, String className) {
+        if (compiler == null) {
+            throw new IllegalStateException(
+                    "Could not get Java compiler in TimeStepRunnerCodeGenerator. You need to use a JDK to run Simulator!");
+        }
 
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
         JavaCompiler.CompilationTask task = compiler.getTask(
                 null,
                 null,
                 diagnostics,
                 null,
                 null,
-                Arrays.asList(file));
+                singletonList(file));
 
         boolean success = task.call();
-
         if (!success) {
             StringBuilder sb = new StringBuilder();
             for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
@@ -105,7 +107,6 @@ public class TimeStepRunnerCodeGenerator {
             Class<? extends Metronome> metronomeClass,
             TimeStepModel timeStepModel,
             Class<? extends Probe> probeClass) {
-
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_24);
             cfg.setClassForTemplateLoading(this.getClass(), "/");
@@ -131,15 +132,16 @@ public class TimeStepRunnerCodeGenerator {
             String javaCode = out.toString();
 
             File javaFile = new File(className + ".java");
-            FileUtils.writeText(javaCode, javaFile);
+            writeText(javaCode, javaFile);
 
             return new JavaSourceFromString(className, javaCode);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalTestException(e);
         }
     }
 
-    static class JavaSourceFromString extends SimpleJavaFileObject {
+    private static class JavaSourceFromString extends SimpleJavaFileObject {
+
         final String code;
 
         JavaSourceFromString(String name, String code) {
@@ -156,26 +158,26 @@ public class TimeStepRunnerCodeGenerator {
     private static final class IsAssignableFromMethod implements TemplateMethodModelEx {
 
         @Override
+        @SuppressWarnings("unchecked")
         public Object exec(List list) throws TemplateModelException {
             if (list.size() != 2) {
-                throw new TemplateModelException("Wrong arguments for method 'isAssignableFrom'. "
-                        + "Method has two required parameters: object and class");
+                throw new TemplateModelException("Wrong number of arguments for method isAssignableFrom()."
+                        + " Method has two required parameters: [Class, Class]. Found: " + list.size());
             }
 
             Object arg1 = ((WrapperTemplateModel) list.get(0)).getWrappedObject();
             if (!(arg1 instanceof Class)) {
-                throw new TemplateModelException("Wrong type of the first parameter. "
-                        + "It should be Class. Found: " + arg1.getClass());
+                throw new TemplateModelException("Wrong type of the first parameter."
+                        + " It should be Class. Found: " + arg1.getClass());
             }
 
             Object arg2 = ((WrapperTemplateModel) list.get(1)).getWrappedObject();
             if (!(arg2 instanceof Class)) {
-                throw new TemplateModelException("Wrong type of the second parameter. "
-                        + "It should be Class. Found: " + arg2.getClass());
+                throw new TemplateModelException("Wrong type of the second parameter."
+                        + " It should be Class. Found: " + arg2.getClass());
             }
 
-            Class c = (Class) arg2;
-            return c.isAssignableFrom((Class) arg1);
+            return ((Class) arg2).isAssignableFrom((Class) arg1);
         }
     }
 
@@ -184,14 +186,14 @@ public class TimeStepRunnerCodeGenerator {
         @Override
         public Object exec(List list) throws TemplateModelException {
             if (list.size() != 1) {
-                throw new TemplateModelException("Wrong arguments for method 'hasProbe'. "
-                        + "Method has 1 required parameters: Method");
+                throw new TemplateModelException("Wrong number of arguments for method hasProbe()."
+                        + " Method has one required parameter: [Method]. Found: " + list.size());
             }
 
             Object arg1 = ((WrapperTemplateModel) list.get(0)).getWrappedObject();
             if (!(arg1 instanceof Method)) {
-                throw new TemplateModelException("Wrong type of the first parameter. "
-                        + "It should be Method. Found: " + arg1.getClass());
+                throw new TemplateModelException("Wrong type of the first parameter."
+                        + " It should be Method. Found: " + arg1.getClass());
             }
 
             Method method = (Method) arg1;
@@ -205,5 +207,3 @@ public class TimeStepRunnerCodeGenerator {
         }
     }
 }
-
-
