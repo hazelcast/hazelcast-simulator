@@ -100,6 +100,10 @@ final class ClusterUtils {
         int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
         int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
 
+        if (agentCount == 0) {
+            throw new CommandLineExitException("You need at least one agent in your cluster!"
+                    + " Please configure your agents.txt or run Provisioner.");
+        }
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));

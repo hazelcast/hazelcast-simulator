@@ -38,8 +38,10 @@ public class ClusterLayoutTest {
     }
 
     private void testGetVersionSpecs(List<AgentData> agents, int memberCount, int clientCount) {
-        ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
-        when(componentRegistry.getAgents()).thenReturn(agents);
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+        for (AgentData agent : agents) {
+            componentRegistry.addAgent(agent.getPublicAddress(), agent.getPrivateAddress());
+        }
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.OUT_OF_THE_BOX);
