@@ -100,20 +100,7 @@ final class ClusterUtils {
         int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
         int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
 
-        if (agentCount == 0) {
-            throw new CommandLineExitException("You need at least one agent in your cluster!"
-                    + " Please configure your agents.txt or run Provisioner.");
-        }
-        if (dedicatedMemberMachineCount > agentCount) {
-            throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
-                    dedicatedMemberMachineCount, agentCount));
-        }
-        if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
-            throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
-        }
-        if (memberWorkerCount == 0 && clientWorkerCount == 0) {
-            throw new CommandLineExitException("No workers have been defined!");
-        }
+        checkParameters(agentCount, dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
 
         assignDedicatedMemberMachines(agentCount, agentWorkerLayouts, dedicatedMemberMachineCount);
 
@@ -127,6 +114,24 @@ final class ClusterUtils {
             // assign clients
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
             agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
+        }
+    }
+
+    private static void checkParameters(int agentCount, int dedicatedMemberMachineCount,
+                                        int memberWorkerCount, int clientWorkerCount) {
+        if (agentCount == 0) {
+            throw new CommandLineExitException("You need at least one agent in your cluster!"
+                    + " Please configure your agents.txt or run Provisioner.");
+        }
+        if (dedicatedMemberMachineCount > agentCount) {
+            throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
+                    dedicatedMemberMachineCount, agentCount));
+        }
+        if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
+            throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
+        }
+        if (memberWorkerCount == 0 && clientWorkerCount == 0) {
+            throw new CommandLineExitException("No workers have been defined!");
         }
     }
 
