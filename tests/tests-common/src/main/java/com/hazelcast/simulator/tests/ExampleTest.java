@@ -16,30 +16,21 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import static org.junit.Assert.assertEquals;
 
 public class ExampleTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int maxKeys = 1000;
     public double putProb = 0.5;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, String> map;
 
@@ -49,10 +40,6 @@ public class ExampleTest extends AbstractTest {
         map = targetInstance.getMap("exampleMap");
 
         logger.info("Map name is: " + map.getName());
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
     }
 
     @Warmup
@@ -61,41 +48,18 @@ public class ExampleTest extends AbstractTest {
         logger.info("Map size is: " + map.size());
     }
 
+    @TimeStep(prob = 0.5)
+    public void put(BaseThreadState state) {
+        int key = state.randomInt(maxKeys);
+        map.put(key, "value" + key);
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = randomInt(maxKeys);
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    started = System.nanoTime();
-                    map.put(key, "value" + key);
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown operation: " + operation);
-            }
-        }
+    @TimeStep(prob = 0.5)
+    public void get(BaseThreadState state) {
+        int key = state.randomInt(maxKeys);
+        map.get(key);
     }
-
-
 
     @Verify
     public void verify() {
@@ -117,5 +81,4 @@ public class ExampleTest extends AbstractTest {
         map.destroy();
         logger.info("======== THE END =========");
     }
-
 }
