@@ -16,15 +16,15 @@
 package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-
-import java.util.concurrent.TimeUnit;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.fail;
 
 public class LeaseLockTest extends AbstractTest {
@@ -34,35 +34,28 @@ public class LeaseLockTest extends AbstractTest {
     public int maxTryTimeMillis = 100;
     public boolean allowZeroMillisRemainingLeaseLockTime = false;
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
+    @TimeStep
+    public void timeStep(BaseThreadState state) {
+        int lockIndex = state.randomInt(lockCount);
+        ILock lock = targetInstance.getLock(name + lockIndex);
 
-    private class Worker extends AbstractMonotonicWorker {
+        int leaseTime = 1 + state.randomInt(maxLeaseTimeMillis);
+        int tryTime = 1 + state.randomInt(maxTryTimeMillis);
 
-        public void timeStep() {
-            int lockIndex = randomInt(lockCount);
-            ILock lock = targetInstance.getLock(name + lockIndex);
-
-            int leaseTime = 1 + randomInt(maxLeaseTimeMillis);
-            int tryTime = 1 + randomInt(maxTryTimeMillis);
-
-            if (getRandom().nextBoolean()) {
-                lock.lock(leaseTime, TimeUnit.MILLISECONDS);
-            } else {
-                try {
-                    lock.tryLock(tryTime, TimeUnit.MILLISECONDS, leaseTime, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    logger.info("tryLock() got exception: " + e.getMessage());
-                }
+        if (state.randomBoolean()) {
+            lock.lock(leaseTime, MILLISECONDS);
+        } else {
+            try {
+                lock.tryLock(tryTime, MILLISECONDS, leaseTime, MILLISECONDS);
+            } catch (InterruptedException e) {
+                logger.info("tryLock() got exception: " + e.getMessage());
             }
         }
+    }
 
-        @Override
-        public void afterRun() throws Exception {
-            sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
-        }
+    @AfterRun
+    public void afterRun() throws Exception {
+        sleepMillis((maxTryTimeMillis + maxLeaseTimeMillis) * 2);
     }
 
     @Verify
