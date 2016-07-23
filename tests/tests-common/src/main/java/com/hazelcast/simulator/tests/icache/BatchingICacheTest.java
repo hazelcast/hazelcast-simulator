@@ -18,14 +18,13 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import javax.cache.CacheManager;
 import java.util.ArrayList;
@@ -35,26 +34,18 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 
 /**
  * Demonstrates the effect of batching.
- *
+ * <p>
  * It uses async methods to invoke operation and wait for future to complete every {@code batchSize} invocations.
  * Hence setting {@link #batchSize} to 1 is effectively the same as using sync operations.
- *
+ * <p>
  * Setting {@link #batchSize} to values greater than 1 causes the batch-effect to kick-in, pipe-lines are utilized better
  * and overall throughput goes up.
  */
 public class BatchingICacheTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET,
-    }
-
     // properties
     public int keyCount = 1000000;
-    public double writeProb = 0.1;
     public int batchSize = 1;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private ICache<Object, Object> cache;
 
@@ -62,7 +53,6 @@ public class BatchingICacheTest extends AbstractTest {
     public void setup() {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cache = (ICache<Object, Object>) cacheManager.getCache(name);
-        operationSelectorBuilder.addOperation(Operation.PUT, writeProb).addDefaultOperation(Operation.GET);
     }
 
     @Warmup(global = true)
@@ -74,40 +64,29 @@ public class BatchingICacheTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void write(ThreadState state) throws Exception {
+        Integer key = state.randomInt(keyCount);
+        ICompletableFuture<?> future;
+        Integer value = state.randomInt();
+        future = cache.putAsync(key, value);
+        state.futureList.add(future);
+        state.syncIfNecessary(state.iteration++);
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = -1)
+    public void get(ThreadState state) throws Exception {
+        Integer key = state.randomInt(keyCount);
+        ICompletableFuture<?> future;
+        future = cache.getAsync(key);
+        state.futureList.add(future);
+        state.syncIfNecessary(state.iteration++);
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private final List<ICompletableFuture<?>> futureList = new ArrayList<ICompletableFuture<?>>(batchSize);
-
         private long iteration;
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        public void timeStep(Operation operation) throws Exception {
-            Integer key = randomInt(keyCount);
-            ICompletableFuture<?> future;
-            switch (operation) {
-                case PUT:
-                    Integer value = randomInt();
-                    future = cache.putAsync(key, value);
-                    break;
-                case GET:
-                    future = cache.getAsync(key);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown operation " + operation);
-            }
-            futureList.add(future);
-
-            syncIfNecessary(iteration++);
-        }
 
         private void syncIfNecessary(long iteration) throws Exception {
             if (iteration % batchSize == 0) {
