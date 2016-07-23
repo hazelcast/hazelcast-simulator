@@ -19,23 +19,21 @@ import com.hazelcast.core.Member;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.InternalCompletableFuture;
-import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.OperationService;
 import com.hazelcast.spi.UrgentSystemOperation;
 
 import java.io.IOException;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.LockSupport;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
@@ -43,28 +41,15 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperat
 
 public class GenericOperationTest extends AbstractTest {
 
-    private enum PrioritySelector {
-        PRIORITY,
-        NORMAL
-    }
-
     // properties
-    public double priorityProb = 0.1;
     public int delayNs = 100 * 1000;
 
     private OperationService operationService;
     private Address[] memberAddresses;
 
-    private final OperationSelectorBuilder<PrioritySelector> operationSelectorBuilder
-            = new OperationSelectorBuilder<PrioritySelector>();
-
     @Setup
     public void setUp() {
         operationService = getOperationService(targetInstance);
-
-        operationSelectorBuilder
-                .addOperation(PrioritySelector.PRIORITY, priorityProb)
-                .addDefaultOperation(PrioritySelector.NORMAL);
     }
 
     @Warmup
@@ -78,42 +63,25 @@ public class GenericOperationTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void priority(ThreadState state) throws ExecutionException, InterruptedException {
+        Address address = state.randomAddress();
+        GenericPriorityOperation op = new GenericPriorityOperation(delayNs);
+        InternalCompletableFuture f = operationService.invokeOnTarget(null, op, address);
+        f.get();
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<PrioritySelector> {
+    @TimeStep(prob = -1)
+    public void normal(ThreadState state) throws ExecutionException, InterruptedException {
+        Address address = state.randomAddress();
+        GenericOperation op = new GenericOperation(delayNs);
+        InternalCompletableFuture f = operationService.invokeOnTarget(null, op, address);
+        f.get();
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(PrioritySelector operationSelector, Probe probe) {
-            Address address = randomAddress();
-
-            switch (operationSelector) {
-                case PRIORITY:
-                    invokeOperation(new GenericPriorityOperation(delayNs), address, probe);
-                    break;
-                case NORMAL:
-                    invokeOperation(new GenericOperation(delayNs), address, probe);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
+    public class ThreadState extends BaseThreadState {
         private Address randomAddress() {
             return memberAddresses[randomInt(memberAddresses.length)];
-        }
-
-        private void invokeOperation(Operation operation, Address address, Probe probe) {
-            long started = System.nanoTime();
-            InternalCompletableFuture future = operationService.invokeOnTarget(null, operation, address);
-            future.getSafely();
-            probe.done(started);
         }
     }
 
