@@ -27,11 +27,15 @@ public interface Metronome {
 
     /**
      * Returns the defined interval.
+     *
+     * @deprecated will be removed in 0.9. No alternative will be provided because it exposes implementation details.
      */
     long getInterval();
 
     /**
      * Returns the {@link Metronome} type.
+     *
+     * @deprecated will be removed in 0.9. No alternative will be provided because it exposes implementation details.
      */
     MetronomeType getType();
 }
