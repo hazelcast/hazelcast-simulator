@@ -20,12 +20,13 @@ import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -76,32 +77,25 @@ public class ITopicTest extends AbstractTest {
         }
     }
 
+    @TimeStep
+    public void timeStep(ThreadState state) {
+        sleepRandomNanos(state.random, maxPublicationDelayNanos);
 
+        long msg = state.nextMessage();
+        state.count += msg;
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+        ITopic<Long> topic = state.getRandomTopic();
+        topic.publish(msg);
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        totalExpectedCounter.addAndGet(state.count);
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private long count;
-
-        @Override
-        public void timeStep() {
-            sleepRandomNanos(getRandom(), maxPublicationDelayNanos);
-
-            long msg = nextMessage();
-            count += msg;
-
-            ITopic<Long> topic = getRandomTopic();
-            topic.publish(msg);
-        }
-
-        @Override
-        public void afterRun() {
-            totalExpectedCounter.addAndGet(count);
-        }
 
         @SuppressWarnings("unchecked")
         private ITopic<Long> getRandomTopic() {
@@ -110,7 +104,7 @@ public class ITopicTest extends AbstractTest {
         }
 
         private long nextMessage() {
-            long msg = getRandom().nextLong() % 1000;
+            long msg = randomLong() % 1000;
             return (msg < 0) ? -msg : msg;
         }
     }
