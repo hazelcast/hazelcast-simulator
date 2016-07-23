@@ -24,14 +24,11 @@ import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.utils.BindException;
-import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
-import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.metronome.MetronomeBuilder;
 import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,9 +40,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTo
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * Responsible for injecting:
@@ -56,7 +51,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * <li>Metronome instance in fields annotated with {@link InjectMetronome}</li>
  * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
- *
+ * <p>
  * The {@link PropertyBinding} also keeps track of all used properties. This makes it possible to detect if there are any unused
  * properties (so properties which are not bound). See {@link #ensureNoUnusedProperties()}.
  */
@@ -64,8 +59,13 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
 public class PropertyBinding {
 
     // properties
-    public int metronomeIntervalUs;
-    public MetronomeType metronomeType = SLEEPING;
+    public int intervalUs;
+    public double ratePerSecond;
+    public MetronomeType metronomeType = MetronomeBuilder.DEFAULT_METRONOME_TYPE;
+    public boolean accountForCoordinatedOmission = true;
+
+    // if we want to measure latency. Normally this is always true; but in its current setting, hdr can cause contention
+    // and I want a switch that turns of hdr recording. Perhaps that with some tuning this isn't needed.
     public boolean measureLatency = true;
 
     private final Class<? extends Probe> probeClass;
@@ -74,6 +74,7 @@ public class PropertyBinding {
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<String>();
+    private final MetronomeBuilder metronomeBuilder = new MetronomeBuilder();
 
     public PropertyBinding(TestCase testCase) {
         this.testCase = testCase;
@@ -145,7 +146,7 @@ public class PropertyBinding {
             setFieldValue(object, field, probe);
         } else if (field.isAnnotationPresent(InjectMetronome.class)) {
             assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
-            Metronome metronome = newMetronome(field);
+            Metronome metronome = metronomeBuilder.build();
             setFieldValue(object, field, metronome);
         }
     }
@@ -161,35 +162,17 @@ public class PropertyBinding {
         return metronomeClass;
     }
 
-    private Metronome newMetronome(Field field) {
-        if (metronomeClass == null) {
-            return new EmptyMetronome();
-        }
-
-        try {
-            Constructor<? extends Metronome> constructor = metronomeClass.getConstructor(Long.TYPE);
-            return constructor.newInstance(MICROSECONDS.toNanos(metronomeIntervalUs));
-        } catch (Exception e) {
-            throw new IllegalTestException("Failed to inject " + InjectMetronome.class.getSimpleName()
-                    + " on field '" + field + "'", e);
-        }
-    }
-
     private Class<? extends Metronome> loadMetronomeClass() {
-        if (metronomeIntervalUs == 0) {
-            return null;
+        metronomeBuilder
+                .withIntervalMicros(intervalUs)
+                .withAccountForCoordinatedOmission(accountForCoordinatedOmission)
+                .withMetronomeType(metronomeType);
+
+        if (ratePerSecond > 0) {
+            metronomeBuilder.withRatePerSecond(ratePerSecond);
         }
 
-        switch (metronomeType) {
-            case NOP:
-                return null;
-            case BUSY_SPINNING:
-                return BusySpinningMetronome.class;
-            case SLEEPING:
-                return SleepingMetronome.class;
-            default:
-                throw new IllegalStateException("Unrecognized metronomeType:" + metronomeType);
-        }
+        return metronomeBuilder.getMetronomeClass();
     }
 
     public Class<? extends Probe> getProbeClass() {

@@ -19,14 +19,15 @@ import com.hazelcast.core.AsyncAtomicLong;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.metronome.Metronome;
+import com.hazelcast.simulator.worker.metronome.MetronomeBuilder;
 import com.hazelcast.simulator.worker.metronome.MetronomeType;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractAsyncWorker;
@@ -42,7 +43,6 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static org.junit.Assert.assertEquals;
 
 public class AsyncAtomicLongTest extends AbstractTest {
@@ -91,7 +91,10 @@ public class AsyncAtomicLongTest extends AbstractTest {
     private class Worker extends AbstractAsyncWorker<Operation, Long> {
 
         private final List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
-        private final Metronome metronome = withFixedIntervalMs(metronomeIntervalMs, metronomeType);
+        private final Metronome metronome = new MetronomeBuilder()
+                .withMetronomeType(metronomeType)
+                .withIntervalMicros(metronomeIntervalMs)
+                .build();
 
         private long increments;
 

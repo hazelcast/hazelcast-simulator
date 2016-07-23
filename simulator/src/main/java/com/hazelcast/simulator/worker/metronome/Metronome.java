@@ -17,27 +17,19 @@ package com.hazelcast.simulator.worker.metronome;
 
 /**
  * Used to clock a running task or Worker with a defined interval.
+ *
+ * Metronome is not threadsafe.
  */
 public interface Metronome {
 
     /**
-     * Waits for the defined interval.
-     */
-    void waitForNext();
-
-    /**
-     * Returns the defined interval.
+     * Waits next execution.
      *
-     * @return the defined internval
-     * @deprecated will be removed in 0.9. No alternative will be provided because it exposes implementation details.
-     */
-    long getInterval();
-
-    /**
-     * Returns the {@link Metronome} type.
+     * This call returns the time the call was expected to executed. This can be used to prevent the co-ordinated omission
+     * problem. For more information see: https://vanilla-java.github.io/2016/07/20/Latency-for-a-set-Throughput.html
      *
-     * @return the type of the {@link Metronome}
-     * @deprecated will be removed in 0.9. No alternative will be provided because it exposes implementation details.
+     * Returns the time the call was supposed to execute.
      */
-    MetronomeType getType();
+    long waitForNext();
 }
+
