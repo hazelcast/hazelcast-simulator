@@ -17,44 +17,29 @@ package com.hazelcast.simulator.tests.replicatedmap;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ReplicatedMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.util.EmptyStatement;
 
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static org.junit.Assert.assertEquals;
 
 public class ReplicatedMapTimeToLiveTest extends AbstractTest {
 
-    private enum Operation {
-        PUT_TTL,
-        GET
-    }
-
     // properties
     public int keyCount = 100000;
 
-    public double putTTLProb = 0.7;
-    public double getProb = 0.3;
-    public MetronomeType metronomeType = MetronomeType.SLEEPING;
-    public int intervalMs = 20;
-
     public int minTTLExpiryMs = 1;
     public int maxTTLExpiryMs = 1000;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private ReplicatedMap<Integer, Integer> map;
     private IList<MapOperationCounter> results;
@@ -63,59 +48,42 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
     public void setup() {
         map = targetInstance.getReplicatedMap(name);
         results = targetInstance.getList(name + "report");
-
-        builder.addOperation(Operation.PUT_TTL, putTTLProb)
-                .addOperation(Operation.GET, getProb);
     }
 
-
-
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractWorker<Operation> {
-        private final MapOperationCounter count = new MapOperationCounter();
-        private final Metronome metronome = withFixedIntervalMs(intervalMs, metronomeType);
-
-
-        public Worker() {
-            super(builder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            metronome.waitForNext();
-            try {
-                int key = randomInt(keyCount);
-
-                switch (operation) {
-                    case PUT_TTL:
-                        int value = randomInt();
-                        int delayMs = minTTLExpiryMs;
-                        if (maxTTLExpiryMs > 0) {
-                            delayMs += randomInt(maxTTLExpiryMs);
-                        }
-                        map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
-                        count.putTTLCount.incrementAndGet();
-                        break;
-                    case GET:
-                        map.get(key);
-                        count.getCount.incrementAndGet();
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-            } catch (DistributedObjectDestroyedException e) {
-                EmptyStatement.ignore(e);
+    @TimeStep(prob = 0.7)
+    public void putTTL(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            int value = state.randomInt();
+            int delayMs = minTTLExpiryMs;
+            if (maxTTLExpiryMs > 0) {
+                delayMs += state.randomInt(maxTTLExpiryMs);
             }
+            map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
+            state.count.putTTLCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
         }
+    }
 
-        @Override
-        public void afterRun() {
-            results.add(count);
+    @TimeStep(prob = 0.3)
+    public void get(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            map.get(key);
+            state.count.getCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
         }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        results.add(state.count);
+    }
+
+    public class ThreadState extends BaseThreadState {
+        private final MapOperationCounter count = new MapOperationCounter();
     }
 
     @Verify(global = false)
