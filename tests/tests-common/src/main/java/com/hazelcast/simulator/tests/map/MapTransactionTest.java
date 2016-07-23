@@ -18,12 +18,13 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionOptions.TransactionType;
@@ -31,6 +32,7 @@ import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.TransactionalTaskContext;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
+import static com.hazelcast.transaction.TransactionOptions.TransactionType.TWO_PHASE;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -44,7 +46,7 @@ public class MapTransactionTest extends AbstractTest {
     // properties
     public int keyCount = 1000;
     public boolean reThrowTransactionException = false;
-    public TransactionType transactionType = TransactionType.TWO_PHASE;
+    public TransactionType transactionType = TWO_PHASE;
     public int durability = 1;
     public boolean getForUpdate = true;
 
@@ -68,48 +70,42 @@ public class MapTransactionTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep
+    public void timeStep(ThreadState state) throws Exception {
+        final int key = state.randomInt(keyCount);
+        final int increment = state.randomInt(100);
+
+        try {
+            targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
+                @Override
+                public Object execute(TransactionalTaskContext txContext) {
+                    TransactionalMap<Integer, Long> txMap = txContext.getMap(name);
+                    Long value;
+                    if (getForUpdate) {
+                        value = txMap.getForUpdate(key);
+                    } else {
+                        value = txMap.get(key);
+                    }
+                    txMap.put(key, value + increment);
+                    return null;
+                }
+            });
+            state.increments[key] += increment;
+        } catch (TransactionException e) {
+            if (reThrowTransactionException) {
+                throw rethrow(e);
+            }
+            logger.warning(name + ": caught TransactionException ", e);
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        resultList.add(state.increments);
+    }
 
+    public class ThreadState extends BaseThreadState {
         private final long[] increments = new long[keyCount];
-
-        @Override
-        protected void timeStep() throws Exception {
-            final int key = randomInt(keyCount);
-            final int increment = randomInt(100);
-
-            try {
-                targetInstance.executeTransaction(transactionOptions, new TransactionalTask<Object>() {
-                    @Override
-                    public Object execute(TransactionalTaskContext txContext) {
-                        TransactionalMap<Integer, Long> txMap = txContext.getMap(name);
-                        Long value;
-                        if (getForUpdate) {
-                            value = txMap.getForUpdate(key);
-                        } else {
-                            value = txMap.get(key);
-                        }
-                        txMap.put(key, value + increment);
-                        return null;
-                    }
-                });
-                increments[key] += increment;
-            } catch (TransactionException e) {
-                if (reThrowTransactionException) {
-                    throw rethrow(e);
-                }
-                logger.warning(name + ": caught TransactionException ", e);
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            resultList.add(increments);
-        }
     }
 
     @Verify(global = true)
