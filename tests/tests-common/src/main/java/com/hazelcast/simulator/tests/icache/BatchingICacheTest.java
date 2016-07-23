@@ -67,9 +67,8 @@ public class BatchingICacheTest extends AbstractTest {
     @TimeStep(prob = 0.1)
     public void write(ThreadState state) throws Exception {
         Integer key = state.randomInt(keyCount);
-        ICompletableFuture<?> future;
         Integer value = state.randomInt();
-        future = cache.putAsync(key, value);
+        ICompletableFuture<?> future = cache.putAsync(key, value);
         state.futureList.add(future);
         state.syncIfNecessary(state.iteration++);
     }
@@ -77,8 +76,7 @@ public class BatchingICacheTest extends AbstractTest {
     @TimeStep(prob = -1)
     public void get(ThreadState state) throws Exception {
         Integer key = state.randomInt(keyCount);
-        ICompletableFuture<?> future;
-        future = cache.getAsync(key);
+        ICompletableFuture<?> future = cache.getAsync(key);
         state.futureList.add(future);
         state.syncIfNecessary(state.iteration++);
     }
