@@ -17,13 +17,15 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,10 +35,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This tests the cas method: replace. So for optimistic concurrency control.
- *
+ * <p>
  * We have a bunch of predefined keys, and we are going to concurrently increment the value and we protect ourselves against lost
  * updates using cas method replace.
- *
+ * <p>
  * Locally we keep track of all increments, and if the sum of these local increments matches the global increment, we are done.
  */
 public class MapCasTest extends AbstractTest {
@@ -60,46 +62,42 @@ public class MapCasTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun(ThreadState state) {
+        int size = map.size();
+        if (size != keyCount) {
+            throw new TestException(
+                    "Warmup has not run since the map is not filled correctly, found size: %s, expected size: %s",
+                    size, keyCount);
+        }
+
+        for (int i = 0; i < keyCount; i++) {
+            state.result.put(i, 0L);
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @TimeStep
+    protected void timeStep(ThreadState state) throws Exception {
+        Integer key = state.randomInt(keyCount);
+        long incrementValue = state.randomInt(100);
+
+        for (; ; ) {
+            Long current = map.get(key);
+            Long update = current + incrementValue;
+            if (map.replace(key, current, update)) {
+                state.increment(key, incrementValue);
+                break;
+            }
+        }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        resultsPerWorker.put(newSecureUuidString(), state.result);
+    }
+
+    public class ThreadState extends BaseThreadState {
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
-
-        @Override
-        public void beforeRun() {
-            int size = map.size();
-            if (size != keyCount) {
-                throw new TestException(
-                        "Warmup has not run since the map is not filled correctly, found size: %s, expected size: %s",
-                        size, keyCount);
-            }
-            for (int i = 0; i < keyCount; i++) {
-                result.put(i, 0L);
-            }
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            Integer key = randomInt(keyCount);
-            long incrementValue = randomInt(100);
-
-            for (; ; ) {
-                Long current = map.get(key);
-                Long update = current + incrementValue;
-                if (map.replace(key, current, update)) {
-                    increment(key, incrementValue);
-                    break;
-                }
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            resultsPerWorker.put(newSecureUuidString(), result);
-        }
 
         private void increment(int key, long increment) {
             result.put(key, result.get(key) + increment);
