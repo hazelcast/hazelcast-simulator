@@ -15,14 +15,11 @@
  */
 package com.hazelcast.simulator.tests.jmx;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -33,17 +30,10 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClust
 
 public class PartitionServiceMBeanTest extends AbstractTest {
 
-    private enum Operation {
-        IS_LOCAL_MEMBER_SAFE,
-        IS_CLUSTER_SAFE
-    }
-
     // properties
     public int minNumberOfMembers = 0;
-    public double isLocalMemberSafeProb = 0;
 
     private MBeanServer mBeanServer;
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private ObjectName objectName;
 
     @Setup
@@ -51,45 +41,23 @@ public class PartitionServiceMBeanTest extends AbstractTest {
         this.mBeanServer = ManagementFactory.getPlatformMBeanServer();
         this.objectName = new ObjectName("com.hazelcast:instance=" + targetInstance.getName()
                 + ",name=" + targetInstance.getName() + ",type=HazelcastInstance.PartitionServiceMBean");
-
-        operationSelectorBuilder.addOperation(Operation.IS_LOCAL_MEMBER_SAFE, isLocalMemberSafeProb)
-                .addDefaultOperation(Operation.IS_CLUSTER_SAFE);
-    }
+   }
 
     @Warmup(global = false)
     public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+
+    @TimeStep(prob = -1)
+    public void isClusterSafe() throws Exception {
+        mBeanServer.getAttribute(objectName, "isClusterSafe");
+
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            long started;
-            switch (operation) {
-                case IS_CLUSTER_SAFE:
-                    started = System.nanoTime();
-                    mBeanServer.getAttribute(objectName, "isClusterSafe");
-                    probe.done(started);
-                    break;
-                case IS_LOCAL_MEMBER_SAFE:
-                    started = System.nanoTime();
-                    mBeanServer.getAttribute(objectName, "isLocalMemberSafe");
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    @TimeStep(prob = 0)
+    public void isLocalMemberSafe() throws Exception {
+        mBeanServer.getAttribute(objectName, "isLocalMemberSafe");
     }
 
     @Teardown
