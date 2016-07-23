@@ -16,16 +16,17 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-
-import java.util.concurrent.TimeUnit;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
+import static java.util.concurrent.TimeUnit.HOURS;
 
 public class MapTTLSaturationTest extends AbstractTest {
 
@@ -39,44 +40,38 @@ public class MapTTLSaturationTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun() {
+        logHeapUsage("beforeRun()");
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @TimeStep
+    public void timeStep(ThreadState state) throws Exception {
+        double usedPercentage = heapUsedPercentage();
+        if (usedPercentage >= maxHeapUsagePercentage) {
+            logger.info(name + " heap used: " + usedPercentage + " %, map size: " + map.size());
 
-        private int counter = 1;
-
-        @Override
-        public void beforeRun() {
-            logHeapUsage("beforeRun()");
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            double usedPercentage = heapUsedPercentage();
-            if (usedPercentage >= maxHeapUsagePercentage) {
-                logger.info(name + " heap used: " + usedPercentage + " %, map size: " + map.size());
-
-                sleepSeconds(10);
-            } else {
-                for (int i = 0; i < 1000; i++) {
-                    counter++;
-                    if (counter % 100000 == 0) {
-                        logger.info(name + " at: " + counter + ", heap used: " + usedPercentage
-                                + " %, map size: " + map.size());
-                    }
-                    long key = getRandom().nextLong();
-                    map.put(key, 0L, 24, TimeUnit.HOURS);
+            sleepSeconds(10);
+        } else {
+            for (int i = 0; i < 1000; i++) {
+                state.counter++;
+                if (state.counter % 100000 == 0) {
+                    logger.info(name + " at: " + state.counter + ", heap used: " + usedPercentage
+                            + " %, map size: " + map.size());
                 }
+                long key = state.randomLong();
+                map.put(key, 0L, 24, HOURS);
             }
         }
+    }
 
-        @Override
-        public void afterRun() {
-            logHeapUsage("afterRun()");
-        }
+    @AfterRun
+    public void afterRun() {
+        logHeapUsage("afterRun()");
+    }
+
+    public class ThreadState extends BaseThreadState {
+        private int counter = 1;
     }
 
     private void logHeapUsage(String header) {
