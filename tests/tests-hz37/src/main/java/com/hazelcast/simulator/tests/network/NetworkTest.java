@@ -29,14 +29,14 @@ import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
 import com.hazelcast.nio.tcp.nonblocking.SelectorMode;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import com.hazelcast.spi.impl.PacketHandler;
 
 import java.util.LinkedList;
@@ -174,43 +174,39 @@ public class NetworkTest extends AbstractTest {
         Thread.sleep(30);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+
+    @TimeStep
+    public void timeStep(ThreadState state) throws Exception {
+        if (state.responseFuture.thread == null) {
+            state.responseFuture.thread = Thread.currentThread();
+        }
+
+        Connection connection = state.nextConnection();
+        byte[] payload = makePayload(payloadSize);
+        Packet requestPacket = new Packet(payload, state.workerId);
+
+        if (!connection.write(requestPacket)) {
+            throw new TestException("Failed to write packet to connection %s", connection);
+        }
+
+        try {
+            state.responseFuture.get(requestTimeout, requestTimeUnit);
+        } catch (Exception e) {
+            throw new TestException("Failed to receive request from connection %s within timeout %d %s", connection,
+                    requestTimeout, requestTimeUnit, e);
+        }
+        state.responseFuture.reset();
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    public class ThreadState extends BaseThreadState {
 
         private final int workerId;
         private final RequestFuture responseFuture;
 
-        public Worker() {
+        public ThreadState() {
             workerId = workerIdGenerator.getAndIncrement();
             responseFuture = packetHandler.futures[workerId];
 
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            if (responseFuture.thread == null) {
-                responseFuture.thread = Thread.currentThread();
-            }
-
-            Connection connection = nextConnection();
-            byte[] payload = makePayload(payloadSize);
-            Packet requestPacket = new Packet(payload, workerId);
-
-            if (!connection.write(requestPacket)) {
-                throw new TestException("Failed to write packet to connection %s", connection);
-            }
-
-            try {
-                responseFuture.get(requestTimeout, requestTimeUnit);
-            } catch (Exception e) {
-                throw new TestException("Failed to receive request from connection %s within timeout %d %s", connection,
-                        requestTimeout, requestTimeUnit, e);
-            }
-            responseFuture.reset();
         }
 
         private Connection nextConnection() {
