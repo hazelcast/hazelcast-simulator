@@ -15,8 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.probes.Result;
-import com.hazelcast.simulator.probes.impl.ResultImpl;
+import com.hazelcast.simulator.probes.impl.Result;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.HdrHistogram.Histogram;
@@ -107,10 +106,10 @@ public class HdrHistogramContainer {
 
     private synchronized Result aggregateHistogramsForTestCase(String testId, PerformanceState state) {
         if (state == null) {
-            return new ResultImpl(testId, 0, 0.0d);
+            return new Result(testId, 0, 0.0d);
         }
 
-        Result result = new ResultImpl(testId, state.getOperationCount(), state.getTotalThroughput());
+        Result result = new Result(testId, state.getOperationCount(), state.getTotalThroughput());
         for (HistogramsPerWorker histogramsPerWorker : histogramsPerWorkerMap.values()) {
             histogramsPerWorker.aggregate(testId, result);
         }
