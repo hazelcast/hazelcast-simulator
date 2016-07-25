@@ -77,7 +77,7 @@ public class MapCasTest extends AbstractTest {
     }
 
     @TimeStep
-    protected void timeStep(ThreadState state) throws Exception {
+    public void timeStep(ThreadState state) throws Exception {
         Integer key = state.randomInt(keyCount);
         long incrementValue = state.randomInt(100);
 
