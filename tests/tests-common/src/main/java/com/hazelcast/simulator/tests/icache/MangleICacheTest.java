@@ -56,7 +56,7 @@ public class MangleICacheTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void closeCachingProvider(ThreadState state) {
+    public void cachingProviderClose(ThreadState state) {
         try {
             CachingProvider provider = state.cacheManager.getCachingProvider();
             if (provider != null) {
@@ -79,7 +79,7 @@ public class MangleICacheTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void closeCacheManager(ThreadState state) {
+    public void cacheManagerClose(ThreadState state) {
         try {
             state.cacheManager.close();
             state.counter.cacheManagerClose++;
@@ -131,7 +131,7 @@ public class MangleICacheTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.3)
-    public void put(ThreadState state) {
+    public void putCache(ThreadState state) {
         int cacheNumber = state.randomInt(maxCaches);
         Cache<Integer, Integer> cache = state.getCacheIfExists(cacheNumber);
         try {
