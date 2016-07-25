@@ -13,7 +13,6 @@ import static org.junit.Assert.fail;
 
 public class TimeStepModel_IllegalTest {
 
-
     // ====================== threadState ===========================
 
     @Test
@@ -49,7 +48,7 @@ public class TimeStepModel_IllegalTest {
         }
 
         @TimeStep
-        public void timestep(BadThreadState state) {
+        public void timeStep(BadThreadState state) {
         }
     }
 
@@ -61,6 +60,7 @@ public class TimeStepModel_IllegalTest {
     }
 
     public static class TestWithContextWithIllegalArgumentTypeInConstructor {
+
         public static class BadThreadState {
             public BadThreadState(int a) {
             }
@@ -79,6 +79,7 @@ public class TimeStepModel_IllegalTest {
     }
 
     public static class TestWithContextWithIllegalArgumentCountConstructor {
+
         public static class BadThreadState {
             public BadThreadState(TestWithContextWithIllegalArgumentCountConstructor a, int b) {
             }
@@ -215,19 +216,18 @@ public class TimeStepModel_IllegalTest {
                 + "}\n");
     }
 
-
-    public void assertBroken(String s) {
+    private static void assertBroken(String source) {
         String header = "import java.util.*;\n"
                 + " import com.hazelcast.simulator.test.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n";
-        s = header + s;
+        source = header + source;
         String className = "CLAZZ" + UUID.randomUUID().toString().replace("-", "");
-        s = s.replace("CLAZZ", className);
+        source = source.replace("CLAZZ", className);
 
         Class clazz;
         try {
-            clazz = InMemoryJavaCompiler.compile(className, s);
+            clazz = InMemoryJavaCompiler.compile(className, source);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -235,7 +235,7 @@ public class TimeStepModel_IllegalTest {
         TestCase testCase = new TestCase("foo").setProperty("class", clazz.getName());
         try {
             new TimeStepModel(clazz, new PropertyBinding(testCase));
-            fail();
+            fail("Expected IllegalTestException in TimeStepModel constructor");
         } catch (IllegalTestException e) {
             e.printStackTrace();
         }

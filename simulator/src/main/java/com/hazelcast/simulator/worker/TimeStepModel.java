@@ -44,6 +44,7 @@ public class TimeStepModel {
 
     private static final int PROBABILITY_PRECISION = 3;
     private static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
+    private static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
 
     private final Class testClass;
     private final Class threadStateClass;
@@ -102,7 +103,7 @@ public class TimeStepModel {
         // there is a bound on the max number of timestep methods so they fit into a byte
         // we can easily increase the number to 256 in the future.
         if (methods.size() > Byte.MAX_VALUE) {
-            throw new IllegalTestException(testClass.getName() + " has more than 127 TimeStep methods, found:" + methods.size());
+            throw new IllegalTestException(testClass.getName() + " has more than 127 TimeStep methods, found: " + methods.size());
         }
 
         validateUniqueMethodNames(methods);
@@ -114,7 +115,7 @@ public class TimeStepModel {
     private void validateTimeStepArguments(List<Method> methods) {
         for (Method method : methods) {
             if (method.getParameterTypes().length > 2) {
-                throw new IllegalTestException("TimeStep method '" + method + "' can't have more than 2 argument");
+                throw new IllegalTestException("TimeStep method '" + method + "' can't have more than 2 arguments");
             }
         }
     }
@@ -162,29 +163,27 @@ public class TimeStepModel {
     private Map<Method, Double> loadProbabilities() {
         Map<Method, Double> probabilities = new HashMap<Method, Double>();
 
-        double totalProbability = 0;
         Method defaultMethod = null;
+        double totalProbability = 0;
         for (Method method : timeStepMethods) {
             double probability = loadProbability(method);
-
             if (probability == -1) {
                 if (defaultMethod != null) {
-                    throw new IllegalTestException("TimeStep method '" + method + "' can't have -1 probability. "
-                            + "method '" + defaultMethod + "' already has -1 probability and only one such method is allowed");
+                    throw new IllegalTestException("TimeStep method '" + method + "' can't have probability -1."
+                            + " Method '" + defaultMethod + "' already has probability -1 and only one such method is allowed");
                 }
                 defaultMethod = method;
             } else if (probability > 1) {
-                throw new IllegalTestException("TimeStep method '" + method + "' "
-                        + "can't have a probability larger than 1, found " + probability);
+                throw new IllegalTestException("TimeStep method '" + method + "'"
+                        + " can't have a probability larger than 1, found: " + probability);
             } else if (probability < 0) {
-                throw new IllegalTestException("TimeStep method '" + method + "' "
-                        + "can't have a probability smaller than 0, found " + probability);
+                throw new IllegalTestException("TimeStep method '" + method + "'"
+                        + " can't have a probability smaller than 0, found: " + probability);
             } else {
                 totalProbability += probability;
-
                 if (totalProbability > 1) {
-                    throw new IllegalTestException("TimeStep method '" + method + "' with probability "
-                            + probability + " exceeds the total probability of 1");
+                    throw new IllegalTestException("TimeStep method '" + method + "' with probability " + probability
+                            + " exceeds the total probability of 1");
                 }
                 probabilities.put(method, probability);
             }
@@ -193,9 +192,9 @@ public class TimeStepModel {
         if (defaultMethod != null) {
             double probability = 1 - totalProbability;
             probabilities.put(defaultMethod, probability);
-        } else if (totalProbability < 0.999) {
+        } else if (1.0 - totalProbability > PROBABILITY_INTERVAL) {
             throw new IllegalTestException("The total probability of timeStep methods in test " + testClass.getName()
-                    + " is smaller than 1. Found " + totalProbability);
+                    + " is smaller than 1, found: " + totalProbability);
         }
 
         return probabilities;

@@ -146,8 +146,7 @@ public class TimeStepModel_probabilityTest {
         assertNotNull(model.getTimeStepProbabilityArray());
     }
 
-
-    public TimeStepModel loadModel(String code, Map<String, Double> probs) {
+    private TimeStepModel loadModel(String code, Map<String, Double> probs) {
         String header = "import java.util.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n"
                 + "import com.hazelcast.simulator.test.annotations.*;\n";
