@@ -14,8 +14,8 @@ import static org.junit.Assert.assertTrue;
 
 public class HistogramTest {
 
-    public static final int LATENCY_RECORD_COUNT = 5000;
-    public static final int MAX_LATENCY = 30000;
+    private static final int LATENCY_RECORD_COUNT = 5000;
+    private static final int MAX_LATENCY = 30000;
 
     private final Random random = new Random();
 

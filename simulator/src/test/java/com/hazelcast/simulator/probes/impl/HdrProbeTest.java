@@ -27,11 +27,6 @@ public class HdrProbeTest {
     }
 
     @Test
-    public void testIsMeasuringLatency() {
-        assertTrue(probe instanceof HdrProbe);
-    }
-
-    @Test
     public void testDone_withExternalStarted() {
         int expectedCount = 1;
         long expectedLatency = 150;

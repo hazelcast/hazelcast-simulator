@@ -3,16 +3,13 @@ package com.hazelcast.simulator.probes;
 import com.hazelcast.simulator.probes.impl.ResultImpl;
 import org.HdrHistogram.Histogram;
 
-import java.io.File;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.probes.impl.HdrProbe.LATENCY_PRECISION;
 import static com.hazelcast.simulator.probes.impl.HdrProbe.MAXIMUM_LATENCY;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -26,15 +23,6 @@ public final class ProbeTestUtils {
     private static final int TOLERANCE_MILLIS = 1000;
 
     private static final Random RANDOM = new Random();
-    private static File resultFile = new File("tmpProbeResult.xml");
-
-    public static void cleanup() {
-        deleteQuiet(resultFile);
-    }
-
-    public static File getResultFile() {
-        return resultFile;
-    }
 
     public static Result createProbeResult(int histogramCount) {
         Result result = new ResultImpl("test", histogramCount * HISTOGRAM_RECORD_COUNT, HISTOGRAM_RECORD_COUNT);
@@ -55,18 +43,6 @@ public final class ProbeTestUtils {
 
     public static int getRandomLatency() {
         return RANDOM.nextInt(MAX_LATENCY);
-    }
-
-    public static void assertEqualsResult(Result firstResult, Result secondResult) {
-        assertEquals(firstResult.getInvocations(), secondResult.getInvocations());
-        assertEquals(firstResult.getThroughput(), secondResult.getThroughput(), 0.0001);
-        assertEquals(firstResult.probeNames(), secondResult.probeNames());
-
-        for (String probeName : firstResult.probeNames()) {
-            Histogram firstHistogram = firstResult.getHistogram(probeName);
-            Histogram secondHistogram = secondResult.getHistogram(probeName);
-            assertEquals(firstHistogram, secondHistogram);
-        }
     }
 
     public static void assertHistogram(Histogram histogram, long expectedCount, long expectedMinValueMillis,
