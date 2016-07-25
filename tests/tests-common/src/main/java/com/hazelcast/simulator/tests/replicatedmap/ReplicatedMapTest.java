@@ -38,12 +38,12 @@ public class ReplicatedMapTest extends AbstractTest {
     private String[] values;
 
     @Setup
-    public void setUp() throws Exception {
+    public void setUp() {
         map = targetInstance.getReplicatedMap(name + "-" + testContext.getTestId());
     }
 
     @Warmup
-    public void warmup() throws InterruptedException {
+    public void warmup() {
         values = generateStrings(valueCount, valueLength);
     }
 
@@ -73,7 +73,7 @@ public class ReplicatedMapTest extends AbstractTest {
     }
 
     @Teardown
-    public void tearDown() throws Exception {
+    public void tearDown() {
         map.destroy();
         logger.info(getOperationCountInformation(targetInstance));
     }
