@@ -7,10 +7,14 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.jar.JarFile;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class CommonUtils_CloseableTest {
 
@@ -20,15 +24,20 @@ public class CommonUtils_CloseableTest {
     }
 
     @Test
-    public void testCloseQuietlySocket() {
+    public void testCloseQuietlySocket() throws Exception {
         Socket socket = mock(Socket.class);
+
         closeQuietly(socket);
+
+        verify(socket).close();
+        verifyNoMoreInteractions(socket);
     }
 
     @Test
-    public void testCloseQuietlySocketException() throws IOException {
+    public void testCloseQuietlySocketException() throws Exception {
         Socket socket = mock(Socket.class);
         doThrow(new IOException("Expected exception")).when(socket).close();
+
         closeQuietly(socket);
     }
 
@@ -38,15 +47,19 @@ public class CommonUtils_CloseableTest {
     }
 
     @Test
-    public void testCloseQuietlyCloseable() {
+    public void testCloseQuietlyCloseable() throws Exception {
         Closeable closeable = mock(Closeable.class);
         closeQuietly(closeable);
+
+        verify(closeable).close();
+        verifyNoMoreInteractions(closeable);
     }
 
     @Test
-    public void testCloseQuietlyCloseableException() throws IOException {
+    public void testCloseQuietlyCloseableException() throws Exception {
         Closeable closeable = mock(Closeable.class);
         doThrow(new IOException("Expected exception")).when(closeable).close();
+
         closeQuietly(closeable);
     }
 
@@ -56,17 +69,44 @@ public class CommonUtils_CloseableTest {
     }
 
     @Test
-    public void testCloseQuietlyCloseables() {
+    public void testCloseQuietlyCloseables() throws Exception {
         Closeable closeable = mock(Closeable.class);
+
         closeQuietly(closeable, closeable);
+
+        verify(closeable, times(2)).close();
+        verifyNoMoreInteractions(closeable);
     }
 
     @Test
-    public void testCloseQuietlyCloseablesException() throws IOException {
+    public void testCloseQuietlyCloseablesException() throws Exception {
         Closeable closeable = mock(Closeable.class);
         Closeable closeableException = mock(Closeable.class);
         doThrow(new IOException("Expected exception")).when(closeableException).close();
+
         closeQuietly(closeable, closeableException);
+    }
+
+    @Test
+    public void testCloseQuietlyJarFileNull() {
+        closeQuietly((JarFile) null);
+    }
+
+    @Test
+    public void testCloseQuietlyJarFile() throws Exception {
+        JarFile jarFile = mock(JarFile.class);
+        closeQuietly(jarFile);
+
+        verify(jarFile).close();
+        verifyNoMoreInteractions(jarFile);
+    }
+
+    @Test
+    public void testCloseQuietlyJarFileException() throws Exception {
+        JarFile jarFile = mock(JarFile.class);
+        doThrow(new IOException("Expected exception")).when(jarFile).close();
+
+        closeQuietly(jarFile);
     }
 
     @Test
@@ -75,15 +115,20 @@ public class CommonUtils_CloseableTest {
     }
 
     @Test
-    public void testCloseQuietlyXMLStreamWriter() {
+    public void testCloseQuietlyXMLStreamWriter() throws Exception {
         XMLStreamWriter xmlStreamWriter = mock(XMLStreamWriter.class);
+
         closeQuietly(xmlStreamWriter);
+
+        verify(xmlStreamWriter).close();
+        verifyNoMoreInteractions(xmlStreamWriter);
     }
 
     @Test
-    public void testCloseQuietlyXMLStreamWriterException() throws XMLStreamException {
+    public void testCloseQuietlyXMLStreamWriterException() throws Exception {
         XMLStreamWriter xmlStreamWriter = mock(XMLStreamWriter.class);
         doThrow(new XMLStreamException("Expected exception")).when(xmlStreamWriter).close();
+
         closeQuietly(xmlStreamWriter);
     }
 }
