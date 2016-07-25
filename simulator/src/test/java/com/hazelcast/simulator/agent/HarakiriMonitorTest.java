@@ -16,6 +16,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManager;
 import static com.hazelcast.simulator.agent.HarakiriMonitorCli.createHarakiriMonitor;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -82,7 +83,7 @@ public class HarakiriMonitorTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testHarakiriMonitor_isEC2() throws InterruptedException {
+    public void testHarakiriMonitor_isEC2() {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         Thread thread = new Thread() {
             @Override
@@ -93,13 +94,13 @@ public class HarakiriMonitorTest {
             }
         };
         thread.start();
-        thread.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS * 2));
+        joinThread(thread, TimeUnit.SECONDS.toMillis(WAIT_SECONDS * 2));
 
         assertEquals(0, countDownLatch.getCount());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testHarakiriMonitor_isEC2_withFailure() throws InterruptedException {
+    public void testHarakiriMonitor_isEC2_withFailure() {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         Thread thread = new Thread() {
             @Override
@@ -110,13 +111,13 @@ public class HarakiriMonitorTest {
             }
         };
         thread.start();
-        thread.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS * 2));
+        joinThread(thread, TimeUnit.SECONDS.toMillis(WAIT_SECONDS * 2));
 
         assertEquals(1, countDownLatch.getCount());
     }
 
     @Test
-    public void testMain() throws InterruptedException {
+    public void testMain() {
         addCloudProviderArgs();
         addCloudIdentityArgs();
         addCloudCredentialArgs();
@@ -130,7 +131,7 @@ public class HarakiriMonitorTest {
             }
         };
         thread.start();
-        thread.join(TimeUnit.SECONDS.toMillis(1));
+        joinThread(thread, TimeUnit.SECONDS.toMillis(1));
 
         assertEquals(1, countDownLatch.getCount());
     }

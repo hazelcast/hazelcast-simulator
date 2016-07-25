@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -70,12 +71,12 @@ public class WorkerPerformanceMonitor {
         thread.start();
     }
 
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         if (!shutdown.compareAndSet(false, true)) {
             return;
         }
 
-        thread.join(MINUTES.toMillis(SHUTDOWN_TIMEOUT_SECONDS));
+        joinThread(thread, MINUTES.toMillis(SHUTDOWN_TIMEOUT_SECONDS));
     }
 
     /**

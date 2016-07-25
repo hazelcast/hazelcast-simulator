@@ -57,7 +57,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @After
-    public void tearDown() throws InterruptedException {
+    public void tearDown() {
         performanceMonitor.shutdown();
     }
 
@@ -70,7 +70,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_shutdownTwice() throws InterruptedException {
+    public void test_shutdownTwice() {
         performanceMonitor.start();
 
         performanceMonitor.shutdown();
@@ -78,7 +78,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test(expected = IllegalThreadStateException.class)
-    public void test_restartAfterStop() throws InterruptedException {
+    public void test_restartAfterStop() {
         performanceMonitor.start();
 
         performanceMonitor.shutdown();
@@ -105,7 +105,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() throws InterruptedException {
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() {
         performanceMonitor.start();
         sleepMillis(300);
 
@@ -130,7 +130,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() throws InterruptedException {
+    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() {
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test, 200);
 

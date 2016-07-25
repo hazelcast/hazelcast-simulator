@@ -255,11 +255,7 @@ public final class MemberWorker implements Worker {
 
             if (workerPerformanceMonitor != null) {
                 echo("Shutting down WorkerPerformanceMonitor");
-                try {
-                    workerPerformanceMonitor.shutdown();
-                } catch (InterruptedException e) {
-                    echo("Failed wait for WorkerPerformanceMonitor shutdown ");
-                }
+                workerPerformanceMonitor.shutdown();
             }
 
             if (workerConnector != null) {
