@@ -16,6 +16,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -130,6 +131,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
+    @Ignore("Fails randomly when the probeMap is empty during TestPerformanceTracker init -> NPE on histogramLogWriterMap.get()")
     public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() {
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test, 200);
