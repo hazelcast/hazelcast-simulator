@@ -181,7 +181,7 @@ public class WorkerPerformanceMonitor {
 
                 trackers.remove(tracker.testId);
 
-                // we need to make sure the histogram data gets written on deletion.
+                // we need to make sure the histogram data gets written on deletion
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms();
                 if (!histograms.isEmpty()) {
                     TestHistogramOperation operation = new TestHistogramOperation(tracker.testId, histograms);

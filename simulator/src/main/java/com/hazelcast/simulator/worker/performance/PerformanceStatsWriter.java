@@ -26,11 +26,11 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
  */
 final class PerformanceStatsWriter {
 
-    private final File file;
     private final StringBuffer sb = new StringBuffer();
     private final DecimalFormat format = new DecimalFormat("#.##");
+    private final File file;
 
-    public PerformanceStatsWriter(File file) {
+    PerformanceStatsWriter(File file) {
         this.file = checkNotNull(file, "file can't be null");
         writeHeader();
     }
@@ -40,7 +40,7 @@ final class PerformanceStatsWriter {
         appendText(columns, file);
     }
 
-    public void write(long timeMillis,
+    void write(long timeMillis,
                       String timestamp,
                       long operationsTotal,
                       long operationsDelta,

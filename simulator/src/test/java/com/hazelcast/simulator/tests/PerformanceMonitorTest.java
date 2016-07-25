@@ -20,15 +20,12 @@ import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
 
 public class PerformanceMonitorTest {
+
     @InjectProbe(useForThroughput = true)
     private Probe performanceProbe;
 
     @Run
     public void run() {
         performanceProbe.recordValue(50);
-    }
-
-    public Probe getPerformanceProbe() {
-        return performanceProbe;
     }
 }

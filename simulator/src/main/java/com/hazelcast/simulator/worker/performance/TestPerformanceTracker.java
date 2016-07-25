@@ -42,13 +42,15 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
 final class TestPerformanceTracker {
-    static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
+
+    private static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
+
+    final TestContainer testContainer;
+    final String testId;
 
     long oldIterations;
-    final TestContainer testContainer;
     // used to determine if the TestPerformanceTracker can be deleted
     long lastSeen;
-    final String testId;
 
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final long testStartedTimestamp;

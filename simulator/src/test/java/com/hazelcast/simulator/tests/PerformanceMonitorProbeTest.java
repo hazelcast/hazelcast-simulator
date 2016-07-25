@@ -42,12 +42,10 @@ public class PerformanceMonitorProbeTest {
 
         @Override
         public void beforeRun() throws Exception {
-
         }
 
         @Override
         public void afterRun() throws Exception {
-
         }
 
         @Override
