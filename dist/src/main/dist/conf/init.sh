@@ -19,6 +19,9 @@ if [ -d /mnt/ephemeral ] ; then
         sudo chown -R ${user} /mnt/ephemeral/workers/
         ln -s /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
      fi
+
+    sudo ethtool -K eth0 sg off
+
 else
     echo "[/mnt/ephemeral/] is not found. Skipping linking workers to ephemeral drive."
 fi
