@@ -193,7 +193,7 @@ public class TimeStepModel {
         if (defaultMethod != null) {
             double probability = 1 - totalProbability;
             probabilities.put(defaultMethod, probability);
-        } else if (totalProbability < 1) {
+        } else if (totalProbability < 0.999) {
             throw new IllegalTestException("The total probability of timeStep methods in test " + testClass.getName()
                     + " is smaller than 1. Found " + totalProbability);
         }
