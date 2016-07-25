@@ -56,7 +56,7 @@
                 <executions>
                     <execution>
                         <id>build-distribution-archive</id>
-                        <phase>process-resources</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
