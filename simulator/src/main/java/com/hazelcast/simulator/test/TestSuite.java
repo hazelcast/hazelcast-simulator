@@ -134,7 +134,7 @@ public class TestSuite {
                 + "durationSeconds=" + durationSeconds
                 + ", waitForTestCase=" + waitForTestCase
                 + ", id='" + id + '\''
-                + ", testRecipeList=" + testCaseList
+                + ", testCaseList=" + testCaseList
                 + ", failFast=" + failFast
                 + '}';
     }
