@@ -132,7 +132,7 @@ public class TestSuite {
     public String toString() {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
-                + "waitForTestCase=" + waitForTestCase
+                + ", waitForTestCase=" + waitForTestCase
                 + ", id='" + id + '\''
                 + ", testRecipeList=" + testCaseList
                 + ", failFast=" + failFast
