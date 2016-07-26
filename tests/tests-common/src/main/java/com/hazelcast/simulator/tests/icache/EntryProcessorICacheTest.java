@@ -16,15 +16,17 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -65,41 +67,37 @@ public class EntryProcessorICacheTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @BeforeRun
+    public void beforeRun(ThreadState state) {
+        for (int i = 0; i < keyCount; i++) {
+            state.result.put(i, 0L);
+        }
     }
 
-    private class Worker extends AbstractMonotonicWorker {
+    @TimeStep
+    public void timeStep(ThreadState state) {
+        int key = state.randomInt(keyCount);
+        long increment = state.randomInt(100);
+
+        int delayMs = 0;
+        if (maxProcessorDelayMs != 0) {
+            delayMs = minProcessorDelayMs + state.randomInt(maxProcessorDelayMs);
+        }
+
+        cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
+        state.increment(key, increment);
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        // sleep to give time for the last EntryProcessor tasks to complete
+        sleepMillis(maxProcessorDelayMs * 2);
+        resultsPerWorker.add(state.result);
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private final Map<Integer, Long> result = new HashMap<Integer, Long>();
-
-        public Worker() {
-            for (int i = 0; i < keyCount; i++) {
-                result.put(i, 0L);
-            }
-        }
-
-        @Override
-        public void timeStep() {
-            int key = randomInt(keyCount);
-            long increment = randomInt(100);
-
-            int delayMs = 0;
-            if (maxProcessorDelayMs != 0) {
-                delayMs = minProcessorDelayMs + randomInt(maxProcessorDelayMs);
-            }
-
-            cache.invoke(key, new IncrementEntryProcessor(increment, delayMs));
-            increment(key, increment);
-        }
-
-        @Override
-        public void afterRun() {
-            // sleep to give time for the last EntryProcessor tasks to complete
-            sleepMillis(maxProcessorDelayMs * 2);
-            resultsPerWorker.add(result);
-        }
 
         private void increment(int key, long increment) {
             result.put(key, result.get(key) + increment);
