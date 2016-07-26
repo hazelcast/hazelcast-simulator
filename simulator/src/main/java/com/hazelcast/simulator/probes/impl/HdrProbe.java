@@ -29,7 +29,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 public class HdrProbe implements Probe {
 
     public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
-    public static final int LATENCY_PRECISION = 4;
+    public static final int LATENCY_PRECISION = 5;
 
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
 

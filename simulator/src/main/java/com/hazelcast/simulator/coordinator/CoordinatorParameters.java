@@ -27,6 +27,7 @@ class CoordinatorParameters {
     private final SimulatorProperties simulatorProperties;
     private final String workerClassPath;
 
+    private final boolean skipDownload;
     private final boolean uploadHazelcastJARs;
     private final boolean enterpriseEnabled;
     private final boolean verifyEnabled;
@@ -38,25 +39,35 @@ class CoordinatorParameters {
 
     private final TestPhase lastTestPhaseToSync;
     private final int workerVmStartupDelayMs;
+    private final String afterCompletionFile;
 
     @SuppressWarnings("checkstyle:parameternumber")
-    CoordinatorParameters(SimulatorProperties properties, String workerClassPath, boolean uploadHazelcastJARs,
-                          boolean enterpriseEnabled, boolean verifyEnabled, boolean parallel, boolean refreshJvm,
-                          TargetType targetType, int targetCount, TestPhase lastTestPhaseToSync, int workerVmStartupDelayMs) {
+    CoordinatorParameters(SimulatorProperties properties,
+                          String workerClassPath,
+                          boolean uploadHazelcastJARs,
+                          boolean enterpriseEnabled,
+                          boolean verifyEnabled,
+                          boolean parallel,
+                          boolean refreshJvm,
+                          TargetType targetType,
+                          int targetCount,
+                          TestPhase lastTestPhaseToSync,
+                          int workerVmStartupDelayMs,
+                          boolean skipDownload,
+                          String afterCompletionFile) {
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
-
         this.uploadHazelcastJARs = uploadHazelcastJARs;
         this.enterpriseEnabled = enterpriseEnabled;
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
         this.refreshJvm = refreshJvm;
-
         this.targetType = targetType;
         this.targetCount = targetCount;
-
         this.lastTestPhaseToSync = lastTestPhaseToSync;
         this.workerVmStartupDelayMs = workerVmStartupDelayMs;
+        this.skipDownload = skipDownload;
+        this.afterCompletionFile = afterCompletionFile;
     }
 
     public int getWorkerVmStartupDelayMs() {
@@ -101,5 +112,13 @@ class CoordinatorParameters {
 
     TestPhase getLastTestPhaseToSync() {
         return lastTestPhaseToSync;
+    }
+
+    public boolean skipDownload() {
+        return skipDownload;
+    }
+
+    public String getAfterCompletionFile() {
+        return afterCompletionFile;
     }
 }

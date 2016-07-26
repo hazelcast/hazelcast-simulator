@@ -19,12 +19,10 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
-import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -60,16 +58,10 @@ public class FailureContainer {
     private final ComponentRegistry componentRegistry;
     private final Set<FailureType> nonCriticalFailures;
 
-    public FailureContainer(TestSuite testSuite, ComponentRegistry componentRegistry) {
-        this(testSuite.getId(), componentRegistry, testSuite.getTolerableFailures());
-    }
-
-    public FailureContainer(String testSuiteId, ComponentRegistry componentRegistry) {
-        this(testSuiteId, componentRegistry, Collections.<FailureType>emptySet());
-    }
-
-    public FailureContainer(String testSuiteId, ComponentRegistry componentRegistry, Set<FailureType> nonCriticalFailures) {
-        this.file = new File("failures-" + testSuiteId + ".txt");
+    public FailureContainer(File outputDirectory,
+                            ComponentRegistry componentRegistry,
+                            Set<FailureType> nonCriticalFailures) {
+        this.file = new File(outputDirectory, "failures.txt");
         this.componentRegistry = componentRegistry;
         this.nonCriticalFailures = nonCriticalFailures;
     }

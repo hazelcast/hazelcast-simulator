@@ -79,8 +79,7 @@ public class HdrHistogramContainer {
         printHgrmRenderUrl();
 
         for (String probeName : result.probeNames()) {
-
-            String baseFileName = testSuiteId + '_' + testId + "_" + probeName;
+            String baseFileName = testId + "_" + probeName;
 
             Histogram histogram = result.getHistogram(probeName);
             File hdrFile = new File(outputDirectory, baseFileName + ".hdr");
@@ -91,11 +90,6 @@ public class HdrHistogramContainer {
             } catch (IOException e) {
                 LOGGER.error(e);
             }
-
-            // the HistogramLogProcessor creates 2 files. One with basename and no extension and one with 'hgrm' extension.
-            File hgrmFile = new File(outputDirectory, baseFileName);
-            LOGGER.info("Writing " + hgrmFile.getAbsolutePath() + ".hgrm");
-            HistogramLogProcessor.main(new String[]{"-i", hdrFile.getAbsolutePath(), "-o", hgrmFile.getAbsolutePath()});
         }
     }
 

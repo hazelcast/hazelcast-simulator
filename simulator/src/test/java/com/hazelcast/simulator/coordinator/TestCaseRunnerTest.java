@@ -21,6 +21,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockito.verification.VerificationMode;
 
+import java.io.File;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -77,7 +78,7 @@ public class TestCaseRunnerTest {
         TestCase testCase1 = new TestCase("CoordinatorTest1");
         TestCase testCase2 = new TestCase("CoordinatorTest2");
 
-        testSuite = new TestSuite();
+        testSuite = new TestSuite("testrun-" + System.currentTimeMillis());
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);
 
@@ -101,10 +102,8 @@ public class TestCaseRunnerTest {
 
     @After
     public void cleanUp() {
+        deleteQuiet(new File(testSuite.getId()).getAbsoluteFile());
         deleteQuiet(AgentsFile.NAME);
-        deleteQuiet("failures-" + testSuite.getId() + ".txt");
-        deleteQuiet("probes-" + testSuite.getId() + "_CoordinatorTest1.xml");
-        deleteQuiet("probes-" + testSuite.getId() + "_CoordinatorTest2.xml");
     }
 
     @Test

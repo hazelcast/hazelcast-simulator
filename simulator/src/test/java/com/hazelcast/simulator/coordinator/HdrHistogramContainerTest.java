@@ -41,7 +41,7 @@ public class HdrHistogramContainerTest {
         when(performanceStateContainer.get("testId")).thenReturn(performanceState);
 
         outputDirectory = createTmpDirectory();
-        hdrFile = new File(outputDirectory, "testSuiteId_testId_workerProbe.hdr");
+        hdrFile = new File(outputDirectory, "testId_workerProbe.hdr");
         hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
     }
 

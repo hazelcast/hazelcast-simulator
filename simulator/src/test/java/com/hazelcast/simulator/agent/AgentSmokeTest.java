@@ -19,6 +19,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
@@ -27,6 +28,7 @@ import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.CommonUtils;
+import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -35,6 +37,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,6 +79,7 @@ public class AgentSmokeTest implements FailureListener {
     private static TestPhaseListeners testPhaseListeners;
     private static CoordinatorConnector coordinatorConnector;
     private static RemoteClient remoteClient;
+    private static File outputDirectory;
 
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
 
@@ -93,9 +98,9 @@ public class AgentSmokeTest implements FailureListener {
 
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-        File outputDirectory = TestUtils.createTmpDirectory();
+        outputDirectory = TestUtils.createTmpDirectory();
         HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
-        failureContainer = new FailureContainer("agentSmokeTest", null);
+        failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
 
         coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
                 hdrHistogramContainer);
@@ -117,10 +122,11 @@ public class AgentSmokeTest implements FailureListener {
 
             resetUserDir();
             deleteLogs();
-            deleteQuiet("failures-agentSmokeTest.txt");
 
             resetLogLevel();
         }
+
+        deleteQuiet(outputDirectory);
     }
 
     @Override

@@ -57,6 +57,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
@@ -64,6 +65,7 @@ import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@SuppressWarnings("checkstyle:methodcount")
 public final class Coordinator {
 
     static final String SIMULATOR_VERSION = getSimulatorVersion();
@@ -72,7 +74,7 @@ public final class Coordinator {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    private final File outputDirectory = new File(System.getProperty("user.dir"));
+    private final File outputDirectory;
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
@@ -96,21 +98,33 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    public Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
-                       WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters) {
+    public Coordinator(TestSuite testSuite,
+                       ComponentRegistry componentRegistry,
+                       CoordinatorParameters coordinatorParameters,
+                       WorkerParameters workerParameters,
+                       ClusterLayoutParameters clusterLayoutParameters) {
         this(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters,
                 new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters));
     }
 
-    Coordinator(TestSuite testSuite, ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters,
-                WorkerParameters workerParameters, ClusterLayoutParameters clusterLayoutParameters, ClusterLayout clusterLayout) {
+    Coordinator(TestSuite testSuite,
+                ComponentRegistry componentRegistry,
+                CoordinatorParameters coordinatorParameters,
+                WorkerParameters workerParameters,
+                ClusterLayoutParameters clusterLayoutParameters,
+                ClusterLayout clusterLayout) {
+
+        this.outputDirectory = ensureExistingDirectory(new File(System.getProperty("user.dir"), testSuite.getId()));
+
         this.testSuite = testSuite;
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
         this.workerParameters = workerParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
         this.hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
-        this.failureContainer = new FailureContainer(testSuite, componentRegistry);
+
+        this.failureContainer = new FailureContainer(
+                outputDirectory, componentRegistry, testSuite.getTolerableFailures());
 
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
@@ -169,6 +183,7 @@ public final class Coordinator {
         echoLocal("Total number of Hazelcast member workers: %s", clusterLayout.getMemberWorkerCount());
         echoLocal("Total number of Hazelcast client workers: %s", clusterLayout.getClientWorkerCount());
         echoLocal("Last TestPhase to sync: %s", lastTestPhaseToSync);
+        echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
         boolean performanceEnabled = workerParameters.isMonitorPerformance();
         int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
@@ -207,8 +222,21 @@ public final class Coordinator {
             if (hazelcastJARs != null) {
                 hazelcastJARs.shutdown();
             }
-            moveLogFiles();
+
+            download();
+
+            executeAfterCompletion();
+
             OperationTypeCounter.printStatistics();
+        }
+    }
+
+
+    private void executeAfterCompletion() {
+        if (coordinatorParameters.getAfterCompletionFile() != null) {
+            echoLocal("Executing after-completion script:" + coordinatorParameters.getAfterCompletionFile());
+            bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
+            echoLocal("Finished after-completion script");
         }
     }
 
@@ -387,21 +415,84 @@ public final class Coordinator {
         }
     }
 
-    private void moveLogFiles() {
-        if (isLocal(simulatorProperties)) {
-            File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
-            File targetDirectory = ensureExistingDirectory(newFile(".", WORKERS_HOME_NAME), testSuite.getId());
-
-            String workerPath = workerHome.getAbsolutePath();
-            String targetPath = targetDirectory.getAbsolutePath();
-
-            execute(format("mv %s/%s/* %s || true", workerPath, testSuite.getId(), targetPath));
-            execute(format("rmdir %s/%s || true", workerPath, testSuite.getId()));
-            execute(format("rmdir %s || true", workerPath));
-            execute(format("mv ./agent.err %s/ || true", targetPath));
-            execute(format("mv ./agent.out %s/ || true", targetPath));
-            execute(format("mv ./failures-%s.txt %s/ || true", testSuite.getId(), targetPath));
+    private void download() {
+        if (!coordinatorParameters.skipDownload()) {
+            if (isLocal(simulatorProperties)) {
+                downloadLocal();
+            } else {
+                downloadRemote();
+            }
         }
+    }
+
+    private void downloadLocal() {
+        echoLocal("Retrieving artifacts of local machine");
+
+        File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
+        String workerPath = workerHome.getAbsolutePath();
+
+        execute(format("mv %s/%s/* %s || true", workerPath, testSuite.getId(), outputDirectory.getAbsolutePath()));
+        execute(format("rmdir %s/%s || true", workerPath, testSuite.getId()));
+        execute(format("rmdir %s || true", workerPath));
+        execute(format("mv ./agent.err %s/ || true", outputDirectory.getAbsolutePath()));
+        execute(format("mv ./agent.out %s/ || true", outputDirectory.getAbsolutePath()));
+    }
+
+    private void downloadRemote() {
+        long started = System.nanoTime();
+        echoLocal("Download artifacts of %s machines...", componentRegistry.agentCount());
+
+        ThreadSpawner spawner = new ThreadSpawner("download", true);
+
+        final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
+        final String sshOptions = simulatorProperties.getSshOptions();
+        final String sshUser = simulatorProperties.getUser();
+
+        // download Worker logs
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    String ip = agentData.getPublicAddress();
+                    String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), testSuite.getId());
+
+                    String rsyncCommand = format(baseCommand, "", sshOptions, sshUser,
+                            outputDirectory.getParentFile().getAbsolutePath());
+
+                    echoLocal("Downloading Worker logs from %s", ip);
+                    bash.executeQuiet(format(rsyncCommand, ip, workersPath));
+                }
+            });
+        }
+
+        // download Agent logs
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                for (final AgentData agentData : componentRegistry.getAgents()) {
+                    String ip = agentData.getPublicAddress();
+                    String agentAddress = agentData.getAddress().toString();
+
+                    echoLocal("Downloading Agent logs from %s", ip);
+                    String rsyncCommand = format(
+                            baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, outputDirectory.getAbsolutePath());
+
+                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.out"));
+                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.err"));
+
+                    File agentOut = new File(outputDirectory.getAbsolutePath(), "agent.out");
+                    File agentErr = new File(outputDirectory.getAbsolutePath(), "agent.err");
+
+                    rename(agentOut, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.out"));
+                    rename(agentErr, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.err"));
+                }
+            }
+        });
+
+        spawner.awaitCompletion();
+
+        long elapsed = getElapsedSeconds(started);
+        echoLocal("Finished downloading artifacts of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
     private void echoTestSuiteStart(int testCount, boolean isParallel) {
@@ -440,7 +531,7 @@ public final class Coordinator {
         try {
             init(args).run();
         } catch (Exception e) {
-            exitWithError(LOGGER, "Failed to run TestSuite", e);
+            exitWithError(LOGGER, "Failed to run Coordinator", e);
         }
     }
 
