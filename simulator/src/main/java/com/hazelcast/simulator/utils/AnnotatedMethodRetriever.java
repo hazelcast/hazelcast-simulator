@@ -148,7 +148,44 @@ public class AnnotatedMethodRetriever {
                 continue;
             }
 
-            methods.add(method);
+            if (!isOveridden(methods, method)) {
+                methods.add(method);
+            }
         }
+    }
+
+    private static boolean isOveridden(List<Method> subMethods, Method superMethod) {
+        for (Method subMethod : subMethods) {
+            if (!subMethod.getName().equals(superMethod.getName())) {
+                continue;
+            }
+
+            Class<?>[] subParamTypes = subMethod.getParameterTypes();
+            Class<?>[] methodParamTypes = superMethod.getParameterTypes();
+            if (subParamTypes.length != methodParamTypes.length) {
+                continue;
+            }
+
+            boolean equalParameters = true;
+            for (int i = 0; i < subParamTypes.length; i++) {
+                if (!subParamTypes[i].equals(methodParamTypes[i])) {
+                    equalParameters = false;
+                    break;
+                }
+            }
+
+            if (!equalParameters) {
+                continue;
+            }
+
+            if (!superMethod.getReturnType().equals(subMethod.getReturnType())) {
+                continue;
+            }
+
+            // todo: in the future we need to deal with covariant return types, bridge methods and parameter types in the methods.
+
+            return true;
+        }
+        return false;
     }
 }

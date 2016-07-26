@@ -38,6 +38,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +59,7 @@ import static java.util.Arrays.asList;
 
 /**
  * Container for test instances.
- *
+ * <p>
  * It is responsible for:
  * <ul>
  * <li>Creates the test class instance by its fully qualified class name.</li>
@@ -196,35 +197,37 @@ public class TestContainer {
     }
 
     private void registerSetupTask() {
-        Method setupMethod = new AnnotatedMethodRetriever(testClass, Setup.class)
+        List<Method> setupMethods = new AnnotatedMethodRetriever(testClass, Setup.class)
                 .withVoidReturnType()
                 .withPublicNonStaticModifier()
-                .find();
+                .findAll();
 
-        if (setupMethod == null) {
-            return;
-        }
+        List<Callable> callableList = new ArrayList<Callable>(setupMethods.size());
+        for (Method setupMethod : setupMethods) {
+            Class[] parameterTypes = setupMethod.getParameterTypes();
 
-        Object[] args = getSetupArguments(setupMethod);
-        taskPerPhaseMap.put(SETUP, new MethodInvokingCallable(testInstance, setupMethod, args));
-    }
-
-    private Object[] getSetupArguments(Method setupMethod) {
-        Class[] parameterTypes = setupMethod.getParameterTypes();
-        Object[] arguments = new Object[parameterTypes.length];
-        if (parameterTypes.length == 0) {
-            return arguments;
-        }
-
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Class<?> parameterType = parameterTypes[i];
-            if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
-                throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found %s at position %d",
-                        testClass.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName(), i));
+            Object[] args;
+            switch (parameterTypes.length) {
+                case 0:
+                    args = new Object[0];
+                    break;
+                case 1:
+                    Class parameterType = setupMethod.getParameterTypes()[0];
+                    if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
+                        throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found ",
+                                testClass.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName()));
+                    }
+                    args = new Object[]{testContext};
+                    break;
+                default:
+                    throw new IllegalTestException(format("Setup method '%s' can have at most a single argument", setupMethod));
             }
-            arguments[i] = testContext;
+
+            callableList.add(new MethodInvokingCallable(testInstance, setupMethod, args));
         }
-        return arguments;
+
+
+        taskPerPhaseMap.put(SETUP, new CompositeCallable(callableList));
     }
 
     private void registerRunStrategyTask() {
@@ -270,16 +273,17 @@ public class TestContainer {
     }
 
     private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
-        Method method = new AnnotatedMethodRetriever(testClass, annotationClass)
+        List<Method> methods = new AnnotatedMethodRetriever(testClass, annotationClass)
                 .withoutArgs()
                 .withPublicNonStaticModifier()
                 .withFilter(filter)
-                .find();
+                .findAll();
 
-        if (method == null) {
-            return;
+        List<Callable> callableList = new ArrayList<Callable>(methods.size());
+        for (Method method : methods) {
+            callableList.add(new MethodInvokingCallable(testInstance, method));
         }
 
-        taskPerPhaseMap.put(testPhase, new MethodInvokingCallable(testInstance, method));
+        taskPerPhaseMap.put(testPhase, new CompositeCallable(callableList));
     }
 }
