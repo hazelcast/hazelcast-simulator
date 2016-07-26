@@ -216,23 +216,22 @@ public class TestSuite {
         Map<String, String> propertiesOverride = parseProperties(propertiesOverrideString);
 
         TestSuite testSuite = new TestSuite(testSuiteId);
-        for (String testcaseId : getTestCaseIds(testCases)) {
-            TestCase testcase = testCases.get(testcaseId);
-            testcase.override(propertiesOverride);
+        for (String testCaseId : getTestCaseIds(testCases)) {
+            TestCase testCase = testCases.get(testCaseId);
+            testCase.override(propertiesOverride);
 
-            if (testcase.getClassname() == null) {
+            if (testCase.getClassname() == null) {
                 String msg;
-                if (testcaseId.isEmpty()) {
+                if (testCaseId.isEmpty()) {
                     msg = format("There is no class set in property file [%s]. Add class=YourTestClass", file.getAbsolutePath());
                 } else {
                     msg = format("There is no class set for test [%s] in property file [%s]. Add %s.class=YourTestClass",
-                            testcaseId, file.getAbsolutePath(), testcaseId
-                    );
+                            testCaseId, file.getAbsolutePath(), testCaseId);
                 }
                 throw new BindException(msg);
             }
 
-            testSuite.addTest(testcase);
+            testSuite.addTest(testCase);
         }
 
         return testSuite;
@@ -254,9 +253,9 @@ public class TestSuite {
     }
 
     private static List<String> getTestCaseIds(Map<String, TestCase> testCases) {
-        List<String> testcaseIds = new LinkedList<String>(testCases.keySet());
-        Collections.sort(testcaseIds);
-        return testcaseIds;
+        List<String> testCaseIds = new LinkedList<String>(testCases.keySet());
+        Collections.sort(testCaseIds);
+        return testCaseIds;
     }
 
     private static String createId() {
