@@ -21,6 +21,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.test.FailureType;
+import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -293,6 +294,14 @@ final class CoordinatorCli {
         testSuite.setWaitForTestCase(hasWaitForTestCase);
         testSuite.setFailFast(options.valueOf(cli.failFastSpec));
         testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
+
+        // if the coordinator is not monitoring performance, we don't care for measuring latencies.
+        if (!options.has(cli.monitorPerformanceSpec)) {
+            for (TestCase testCase : testSuite.getTestCaseList()) {
+                testCase.setProperty("measureLatency", "false");
+            }
+        }
+
         return testSuite;
     }
 
