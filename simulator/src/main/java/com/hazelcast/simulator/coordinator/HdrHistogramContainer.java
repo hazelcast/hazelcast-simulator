@@ -20,7 +20,6 @@ import com.hazelcast.simulator.probes.impl.ResultImpl;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceState;
 import org.HdrHistogram.Histogram;
-import org.HdrHistogram.HistogramLogProcessor;
 import org.HdrHistogram.HistogramLogWriter;
 import org.apache.log4j.Logger;
 
@@ -79,8 +78,7 @@ public class HdrHistogramContainer {
         printHgrmRenderUrl();
 
         for (String probeName : result.probeNames()) {
-
-            String baseFileName = testSuiteId + '_' + testId + "_" + probeName;
+            String baseFileName = testId + "_" + probeName;
 
             Histogram histogram = result.getHistogram(probeName);
             File hdrFile = new File(outputDirectory, baseFileName + ".hdr");
@@ -91,11 +89,6 @@ public class HdrHistogramContainer {
             } catch (IOException e) {
                 LOGGER.error(e);
             }
-
-            // the HistogramLogProcessor creates 2 files, one with basename and no extension and one with 'hgrm' extension
-            File hgrmFile = new File(outputDirectory, baseFileName);
-            LOGGER.info("Writing " + hgrmFile.getAbsolutePath() + ".hgrm");
-            HistogramLogProcessor.main(new String[]{"-i", hdrFile.getAbsolutePath(), "-o", hgrmFile.getAbsolutePath()});
         }
     }
 

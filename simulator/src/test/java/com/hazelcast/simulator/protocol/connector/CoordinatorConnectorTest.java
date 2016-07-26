@@ -12,11 +12,13 @@ import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -57,7 +59,8 @@ public class CoordinatorConnectorTest {
 
         File outputDirectory = TestUtils.createTmpDirectory();
         HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
-        FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
+        FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
+
         executorService = mock(ExecutorService.class);
 
         coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
