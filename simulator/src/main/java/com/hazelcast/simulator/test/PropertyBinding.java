@@ -17,6 +17,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.EmptyProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
@@ -201,7 +202,7 @@ public class PropertyBinding {
 
     public Probe getOrCreateProbe(String probeName, boolean partOfTotalThroughput) {
         if (probeClass == null) {
-            return null;
+            return EmptyProbe.INSTANCE;
         }
 
         Probe probe = probeMap.get(probeName);

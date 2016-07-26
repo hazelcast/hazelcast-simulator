@@ -23,11 +23,11 @@ import com.hazelcast.simulator.probes.Probe;
  * This probe is used for code generation; when a user has defined a {@link com.hazelcast.simulator.test.annotations.TimeStep}
  * method with a probe argument, but latency is not being tracked.
  */
-public class DeadProbe implements Probe {
+public class EmptyProbe implements Probe {
 
     // the field is used in a code template, so it doesn't show up here
     @SuppressWarnings("unused")
-    public static final DeadProbe INSTANCE = new DeadProbe();
+    public static final EmptyProbe INSTANCE = new EmptyProbe();
 
     @Override
     public boolean isPartOfTotalThroughput() {
