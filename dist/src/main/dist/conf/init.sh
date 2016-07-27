@@ -19,6 +19,16 @@ if [ -d /mnt/ephemeral ] ; then
         sudo chown -R ${user} /mnt/ephemeral/workers/
         ln -s /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
      fi
+
+    ver=$(awk -F. '{print $1$2}' <<< $(uname -r))
+    if (( ${ver} < 319 )); then
+        sudo ethtool -K eth0 sg off
+        echo 'Use Linux kernel 3.19+ when running Hazelcast on AWS'
+        echo 'applied fix:-> "sudo ethtool -K eth0 sg off"'
+    fi
+
+
+
 else
     echo "[/mnt/ephemeral/] is not found. Skipping linking workers to ephemeral drive."
 fi
