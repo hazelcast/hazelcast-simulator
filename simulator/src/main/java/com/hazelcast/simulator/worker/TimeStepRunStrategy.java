@@ -44,7 +44,6 @@ public class TimeStepRunStrategy extends RunStrategy {
     private final Object testInstance;
     private final Class runnerClass;
     private final TimeStepModel timeStepModel;
-    private final ThreadSpawner spawner;
     private final PropertyBinding propertyBinding;
 
     private volatile TimeStepRunner[] runners;
@@ -61,7 +60,6 @@ public class TimeStepRunStrategy extends RunStrategy {
                 timeStepModel,
                 propertyBinding.getMetronomeClass(),
                 propertyBinding.getProbeClass());
-        this.spawner = new ThreadSpawner(testContext.getTestId());
     }
 
     @Override
@@ -85,27 +83,39 @@ public class TimeStepRunStrategy extends RunStrategy {
                 return null;
             }
 
+            this.runners = createRunners();
+
             onRunStarted();
-            spawnTimeStepRunners();
+
+            ThreadSpawner spawner = spawnThreads(runners);
             spawner.awaitCompletion();
+
+            return null;
         } finally {
             onRunCompleted();
         }
-
-        return null;
     }
 
     @SuppressWarnings("unchecked")
-    private void spawnTimeStepRunners() throws Exception {
+    private ThreadSpawner spawnThreads(TimeStepRunner[] runners) throws Exception {
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
+
+        for (TimeStepRunner runner : runners) {
+            spawner.spawn(runner);
+        }
+
+        return spawner;
+    }
+
+    private TimeStepRunner[] createRunners() throws Exception {
         TimeStepRunner[] runners = new TimeStepRunner[threadCount];
         Constructor<TimeStepRunner> constructor = runnerClass.getConstructor(testInstance.getClass(), TimeStepModel.class);
 
         for (int i = 0; i < threadCount; i++) {
             TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel);
             propertyBinding.bind(runner);
-            spawner.spawn(runner);
             runners[i] = runner;
         }
-        this.runners = runners;
+        return runners;
     }
 }

@@ -62,33 +62,40 @@ public class RunWithWorkersRunStrategy extends RunStrategy {
                 return null;
             }
 
+            // create the workers.
+            IWorker[] workers = createWorkers();
+
             onRunStarted();
-            // spawn workers and wait for completion
-            IWorker worker = runWorkers();
+
+            // spawn workers-threads and wait for completion
+            ThreadSpawner spawner = spawnThreads(workers);
+            spawner.awaitCompletion();
 
             // call the afterCompletion() method on a single instance of the worker
-            worker.afterCompletion();
+            workers[0].afterCompletion();
+
+            return null;
         } finally {
             onRunCompleted();
         }
-        return null;
     }
 
-    private IWorker runWorkers() throws Exception {
-        IWorker firstWorker = null;
+    private ThreadSpawner spawnThreads(IWorker[] workers) throws Exception {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
-        for (int i = 0; i < threadCount; i++) {
-            final IWorker worker = invokeMethod(testInstance, runWithWorkersMethod);
-            if (firstWorker == null) {
-                firstWorker = worker;
-            }
-
-            testContainer.getPropertyBinding().bind(worker);
-
+        for (IWorker worker : workers) {
             spawner.spawn(new WorkerTask(worker));
         }
-        spawner.awaitCompletion();
-        return firstWorker;
+        return spawner;
+    }
+
+    private IWorker[] createWorkers() throws Exception {
+        IWorker[] workers = new IWorker[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            IWorker worker = invokeMethod(testInstance, runWithWorkersMethod);
+            testContainer.getPropertyBinding().bind(worker);
+            workers[i] = worker;
+        }
+        return workers;
     }
 
     private static class WorkerTask implements Runnable {
