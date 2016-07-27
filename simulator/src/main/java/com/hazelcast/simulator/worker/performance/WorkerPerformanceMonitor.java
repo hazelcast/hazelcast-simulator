@@ -62,7 +62,7 @@ public class WorkerPerformanceMonitor {
         thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
-                LOGGER.fatal(e);
+                LOGGER.fatal(e.getMessage(), e);
             }
         });
     }
