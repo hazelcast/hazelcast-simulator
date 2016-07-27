@@ -101,9 +101,10 @@ public class TimeStepModel {
                 .findAll();
 
         // there is a bound on the max number of timestep methods so they fit into a byte
-        // we can easily increase the number to 256 in the future.
+        // we can easily increase the number to 256 in the future
         if (methods.size() > Byte.MAX_VALUE) {
-            throw new IllegalTestException(testClass.getName() + " has more than 127 TimeStep methods, found: " + methods.size());
+            throw new IllegalTestException(
+                    testClass.getName() + " has more than 127 TimeStep methods, found: " + methods.size());
         }
 
         validateUniqueMethodNames(methods);
@@ -115,7 +116,7 @@ public class TimeStepModel {
     private void validateTimeStepArguments(List<Method> methods) {
         for (Method method : methods) {
             if (method.getParameterTypes().length > 2) {
-                throw new IllegalTestException("TimeStep method '" + method + "' can't have more than 2 arguments");
+                throw new IllegalTestException("TimeStep method '" + method + "' can't have more than two arguments");
             }
         }
     }
@@ -127,7 +128,7 @@ public class TimeStepModel {
             String methodName = method.getName();
             if (!names.add(methodName)) {
                 throw new IllegalTestException(
-                        testClass.getName() + " has 2 or more timeStep methods with name '" + methodName + "'");
+                        testClass.getName() + " has two or more TimeStep methods with name '" + methodName + "'");
             }
         }
     }
@@ -155,7 +156,7 @@ public class TimeStepModel {
                     }
                     break;
                 default:
-                    throw new IllegalTestException(owner + " method '" + method + "' can't have more than 1 argument");
+                    throw new IllegalTestException(owner + " method '" + method + "' can't have more than one argument");
             }
         }
     }
@@ -193,7 +194,7 @@ public class TimeStepModel {
             double probability = 1 - totalProbability;
             probabilities.put(defaultMethod, probability);
         } else if (1.0 - totalProbability > PROBABILITY_INTERVAL) {
-            throw new IllegalTestException("The total probability of timeStep methods in test " + testClass.getName()
+            throw new IllegalTestException("The total probability of TimeStep methods in test " + testClass.getName()
                     + " is smaller than 1, found: " + totalProbability);
         }
 
@@ -218,7 +219,7 @@ public class TimeStepModel {
     }
 
     /**
-     * Returns null if there is only a single timestep method active.
+     * Returns null if there is only a single {@link TimeStep} method active.
      */
     public byte[] getTimeStepProbabilityArray() {
         return timeStepProbabilityArray;
@@ -302,8 +303,8 @@ public class TimeStepModel {
         }
 
         if (constructor == null) {
-            throw new IllegalTestException("No valid constructor found for '" + threadStateClass.getName() + "'. "
-                    + "The constructor should have no arguments or one argument of type '" + threadStateClass.getName() + "'");
+            throw new IllegalTestException("Found no valid constructor for '" + threadStateClass.getName() + "'."
+                    + " The constructor should have no arguments or one argument of type '" + threadStateClass.getName() + "'");
         }
 
         try {
@@ -322,12 +323,12 @@ public class TimeStepModel {
         collectThreadStateClass(classes, timeStepMethods);
 
         if (classes.size() == 0) {
-            // no first argument is found.
+            // no first argument is found
             return null;
         }
 
         if (classes.size() > 1) {
-            throw new IllegalTestException("More than 1 type of Thread Context class found: " + classes);
+            throw new IllegalTestException("More than one type of thread state class found: " + classes);
         }
 
         return classes.iterator().next();
@@ -341,23 +342,20 @@ public class TimeStepModel {
                 }
 
                 if (paramType.isPrimitive()) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
-                            + "Thread state can't be a primitive.", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
+                            + " Thread state can't be a primitive.", method, paramType));
                 }
-
                 if (paramType.isInterface()) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
-                            + "Thread state can't be an interface.", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
+                            + " Thread state can't be an interface.", method, paramType));
                 }
-
                 if (isAbstract(paramType.getModifiers())) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
-                            + "Thread state can't be an abstract.", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
+                            + " Thread state can't be an abstract.", method, paramType));
                 }
-
                 if (!isPublic(paramType.getModifiers())) {
-                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'. "
-                            + "Thread state should be public", method, paramType));
+                    throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
+                            + " Thread state should be public.", method, paramType));
                 }
 
                 classes.add(paramType);
