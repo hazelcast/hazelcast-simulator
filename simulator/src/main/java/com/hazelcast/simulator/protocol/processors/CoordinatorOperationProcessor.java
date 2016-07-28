@@ -100,7 +100,8 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
         int testIndex = sourceAddress.getTestIndex();
-        testPhaseListeners.updatePhaseCompletion(testIndex, operation.getTestPhase());
+        SimulatorAddress workerAddress = sourceAddress.getParent();
+        testPhaseListeners.updatePhaseCompletion(testIndex, operation.getTestPhase(), workerAddress);
         return SUCCESS;
     }
 

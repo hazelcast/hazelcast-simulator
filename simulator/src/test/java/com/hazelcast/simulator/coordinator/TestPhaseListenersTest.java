@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestPhase;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class TestPhaseListenersTest {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
         testPhaseListeners.addListener(1, listener);
 
-        testPhaseListeners.updatePhaseCompletion(1, TestPhase.GLOBAL_WARMUP);
+        testPhaseListeners.updatePhaseCompletion(1, TestPhase.GLOBAL_WARMUP, null);
 
         assertEquals(TestPhase.GLOBAL_WARMUP, listener.lastTestPhase);
     }
@@ -45,7 +46,7 @@ public class TestPhaseListenersTest {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
         testPhaseListeners.addListener(1, listener);
 
-        testPhaseListeners.updatePhaseCompletion(2, TestPhase.GLOBAL_WARMUP);
+        testPhaseListeners.updatePhaseCompletion(2, TestPhase.GLOBAL_WARMUP, null);
 
         assertEquals(null, listener.lastTestPhase);
     }
@@ -55,7 +56,7 @@ public class TestPhaseListenersTest {
         private TestPhase lastTestPhase;
 
         @Override
-        public void completed(TestPhase testPhase) {
+        public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
             lastTestPhase = testPhase;
         }
     }

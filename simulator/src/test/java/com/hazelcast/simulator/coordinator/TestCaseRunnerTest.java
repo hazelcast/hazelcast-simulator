@@ -402,16 +402,17 @@ public class TestCaseRunnerTest {
 
         @Override
         public void run() {
+            SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
+
             for (TestPhase testPhase : TestPhase.values()) {
                 sleepMillis(100);
                 for (TestData testData : componentRegistry.getTests()) {
-                    testPhaseListeners.updatePhaseCompletion(testData.getTestIndex(), testPhase);
+                    testPhaseListeners.updatePhaseCompletion(testData.getTestIndex(), testPhase, workerAddress);
                 }
             }
 
             if (finishWorkerLatch != null) {
                 await(finishWorkerLatch);
-                SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
                 FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
                         "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
                 failureContainer.addFailureOperation(operation);

@@ -12,6 +12,7 @@ import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
@@ -254,7 +255,7 @@ public class AgentSmokeTest implements FailureListener {
         }
 
         @Override
-        public void completed(TestPhase testPhase) {
+        public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
             latches.get(testPhase).countDown();
         }
 

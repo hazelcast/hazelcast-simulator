@@ -105,7 +105,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     @After
     public void tearDown() {
         deleteQuiet(outputDirectory);
-        new File("failures-CoordinatorOperationProcessorTest.txt").delete();
+        deleteQuiet(new File("failures-CoordinatorOperationProcessorTest.txt"));
     }
 
     @Override
@@ -157,7 +157,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         testPhaseListeners.addListener(1, new TestPhaseListener() {
             @Override
-            public void completed(TestPhase testPhase) {
+            public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
                 if (testPhase.equals(TestPhase.LOCAL_TEARDOWN)) {
                     phaseCompleted.incrementAndGet();
                 }

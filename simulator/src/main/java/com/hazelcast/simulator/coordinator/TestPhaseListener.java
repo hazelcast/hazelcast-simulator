@@ -15,9 +15,10 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestPhase;
 
 public interface TestPhaseListener {
 
-    void completed(TestPhase testPhase);
+    void completed(TestPhase testPhase, SimulatorAddress workerAddress);
 }

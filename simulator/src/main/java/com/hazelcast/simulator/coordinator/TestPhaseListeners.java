@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestPhase;
 import org.apache.log4j.Logger;
 
@@ -41,13 +42,13 @@ public class TestPhaseListeners {
         listenerMap.put(testIndex, listener);
     }
 
-    public void updatePhaseCompletion(int testIndex, TestPhase testPhase) {
+    public void updatePhaseCompletion(int testIndex, TestPhase testPhase, SimulatorAddress workerAddress) {
         TestPhaseListener listener = listenerMap.get(testIndex);
         if (listener == null) {
             LOGGER.error(format("Could not find listener for testIndex %d (%d listeners in total)", testIndex,
                     listenerMap.size()));
             return;
         }
-        listener.completed(testPhase);
+        listener.completed(testPhase, workerAddress);
     }
 }
