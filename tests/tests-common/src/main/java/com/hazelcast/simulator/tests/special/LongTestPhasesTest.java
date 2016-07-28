@@ -23,6 +23,8 @@ import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 
+import java.util.Random;
+
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
@@ -42,6 +44,7 @@ public class LongTestPhasesTest {
     public boolean allPhases = false;
     public TestPhase testPhase = RUN;
     public int sleepSeconds = 120;
+    public boolean randomWorker = false;
 
     @Setup
     public void setUp(TestContext testContext) {
@@ -84,6 +87,12 @@ public class LongTestPhasesTest {
     }
 
     private void sleep(TestPhase currentTestPhase) {
+        if (randomWorker) {
+            Random random = new Random();
+            if (random.nextBoolean()) {
+                return;
+            }
+        }
         if (allPhases || currentTestPhase.equals(testPhase)) {
             sleepSeconds(sleepSeconds);
         }
