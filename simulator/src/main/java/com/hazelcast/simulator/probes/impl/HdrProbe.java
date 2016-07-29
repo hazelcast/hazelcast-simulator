@@ -35,6 +35,8 @@ public class HdrProbe implements Probe {
 
     private final boolean partOfTotalThroughput;
 
+    private long startTimeMs = System.currentTimeMillis();
+
     public HdrProbe(boolean partOfTotalThroughput) {
         this.partOfTotalThroughput = partOfTotalThroughput;
     }
@@ -61,7 +63,13 @@ public class HdrProbe implements Probe {
     }
 
     public Histogram getIntervalHistogram() {
-        return recorder.getIntervalHistogram();
+        long currentTime = System.currentTimeMillis();
+
+        Histogram histogram = recorder.getIntervalHistogram();
+        histogram.setStartTimeStamp(startTimeMs);
+        histogram.setEndTimeStamp(currentTime);
+        startTimeMs = currentTime;
+        return histogram;
     }
 
     @Override

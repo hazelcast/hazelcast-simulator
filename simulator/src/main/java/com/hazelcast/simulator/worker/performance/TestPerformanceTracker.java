@@ -36,9 +36,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Tracks performance related values for a single Simulator Test.
- *
+ * <p>
  * Has methods to update the performance values and write them to files.
- *
+ * <p>
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
 final class TestPerformanceTracker {
@@ -74,7 +74,8 @@ final class TestPerformanceTracker {
         this.performanceStatsWriter = new PerformanceStatsWriter(new File("performance-" + testId + ".csv"));
 
         for (String probeName : testContainer.getProbeMap().keySet()) {
-            histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
+            HistogramLogWriter writer = createHistogramLogWriter(testId, probeName, testStartedTimestamp);
+            histogramLogWriterMap.put(probeName, writer);
         }
     }
 
@@ -133,10 +134,10 @@ final class TestPerformanceTracker {
 
         for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
             String probeName = histogramEntry.getKey();
-            HistogramLogWriter histogramLogWriter = histogramLogWriterMap.get(probeName);
+            HistogramLogWriter writer = histogramLogWriterMap.get(probeName);
 
             Histogram intervalHistogram = histogramEntry.getValue();
-            histogramLogWriter.outputIntervalHistogram(intervalHistogram);
+            writer.outputIntervalHistogram(intervalHistogram);
         }
     }
 
@@ -148,20 +149,20 @@ final class TestPerformanceTracker {
     Map<String, String> aggregateIntervalHistograms() {
         Map<String, String> probeResults = new HashMap<String, String>();
 
-        HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testId, "aggregated", 0);
+        HistogramLogWriter writer = createHistogramLogWriter(testId, "aggregated", 0);
         for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
             String probeName = histogramEntry.getKey();
-            HistogramLogReader histogramLogReader = createHistogramLogReader(testId, probeName);
+            HistogramLogReader reader = createHistogramLogReader(testId, probeName);
             Histogram combined = new Histogram(MAXIMUM_LATENCY, LATENCY_PRECISION);
 
-            Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+            Histogram histogram = (Histogram) reader.nextIntervalHistogram();
             while (histogram != null) {
                 combined.add(histogram);
-                histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
+                histogram = (Histogram) reader.nextIntervalHistogram();
             }
 
-            histogramLogWriter.outputComment("probeName=" + probeName);
-            histogramLogWriter.outputIntervalHistogram(combined);
+            writer.outputComment("probeName=" + probeName);
+            writer.outputIntervalHistogram(combined);
 
             String encodedHistogram = getEncodedHistogram(combined);
             probeResults.put(probeName, encodedHistogram);
@@ -173,12 +174,13 @@ final class TestPerformanceTracker {
     static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {
         try {
             File latencyFile = getLatencyFile(testId, probeName);
-            HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
-            histogramLogWriter.setBaseTime(baseTime);
-            histogramLogWriter.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
-            histogramLogWriter.outputLogFormatVersion();
-            histogramLogWriter.outputLegend();
-            return histogramLogWriter;
+            HistogramLogWriter writer = new HistogramLogWriter(latencyFile);
+            writer.outputStartTime(baseTime);
+            writer.setBaseTime(baseTime);
+            writer.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
+            writer.outputLogFormatVersion();
+            writer.outputLegend();
+            return writer;
         } catch (IOException e) {
             throw new TestException("Could not initialize HistogramLogWriter for test " + testId, e);
         }
