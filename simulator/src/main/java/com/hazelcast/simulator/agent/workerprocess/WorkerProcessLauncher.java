@@ -96,7 +96,7 @@ public class WorkerProcessLauncher {
 
         SimulatorAddress workerAddress = new SimulatorAddress(
                 AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
-        String workerId = "worker-" + workerAddress + '-' + agent.getPublicAddress() + '-' + type.toLowerCase();
+        String workerId = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + type.toLowerCase();
         File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
 
         copyResourcesToWorkerHome(workerId);
