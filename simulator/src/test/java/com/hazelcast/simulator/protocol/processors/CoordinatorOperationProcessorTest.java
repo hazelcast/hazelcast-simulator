@@ -2,7 +2,6 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -15,7 +14,6 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestException;
@@ -30,11 +28,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,7 +51,6 @@ import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -69,7 +63,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private LocalExceptionLogger exceptionLogger;
     private TestPhaseListeners testPhaseListeners;
     private PerformanceStateContainer performanceStateContainer;
-    private HdrHistogramContainer hdrHistogramContainer;
     private FailureContainer failureContainer;
 
     private CoordinatorOperationProcessor processor;
@@ -96,11 +89,10 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         performanceStateContainer = new PerformanceStateContainer();
 
         outputDirectory = TestUtils.createTmpDirectory();
-        hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStateContainer, hdrHistogramContainer);
+                performanceStateContainer);
     }
 
     @After
@@ -195,26 +187,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(33, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(42, LATENCY_FORMAT_LENGTH)));
-    }
-
-    @Test
-    public void processTestHistogram() {
-        Map<String, String> probeHistograms = new HashMap<String, String>();
-        probeHistograms.put("probe1", "histogram1");
-        probeHistograms.put("probe2", "histogram2");
-        TestHistogramOperation operation = new TestHistogramOperation("testId", probeHistograms);
-
-        ResponseType responseType = processor.process(operation, workerAddress);
-        assertEquals(SUCCESS, responseType);
-
-        ConcurrentMap<String, Map<String, String>> testHistograms = hdrHistogramContainer.getHistograms(workerAddress);
-        assertNotNull(testHistograms);
-        assertEquals(1, testHistograms.size());
-
-        Map<String, String> actualProbeHistograms = testHistograms.get("testId");
-        assertNotNull(actualProbeHistograms);
-        assertEquals("histogram1", actualProbeHistograms.get("probe1"));
-        assertEquals("histogram2", actualProbeHistograms.get("probe2"));
     }
 
     private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {

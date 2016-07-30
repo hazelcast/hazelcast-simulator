@@ -78,7 +78,6 @@ public final class Coordinator {
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
-    private final HdrHistogramContainer hdrHistogramContainer;
 
     private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
@@ -121,7 +120,6 @@ public final class Coordinator {
         this.coordinatorParameters = coordinatorParameters;
         this.workerParameters = workerParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
-        this.hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
 
         this.failureContainer = new FailureContainer(
                 outputDirectory, componentRegistry, testSuite.getTolerableFailures());
@@ -261,7 +259,7 @@ public final class Coordinator {
     private void startCoordinatorConnector() {
         try {
             coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
-                    performanceStateContainer, hdrHistogramContainer);
+                    performanceStateContainer);
             failureContainer.addListener(coordinatorConnector);
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
             for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -359,9 +357,6 @@ public final class Coordinator {
             }
 
             performanceStateContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
-            for (TestCase testCase : testSuite.getTestCaseList()) {
-                hdrHistogramContainer.writeAggregatedHistograms(testSuite.getId(), testCase.getId());
-            }
         }
     }
 

@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -28,7 +27,6 @@ import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -48,18 +46,15 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     private final FailureContainer failureContainer;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStateContainer performanceStateContainer;
-    private final HdrHistogramContainer hdrHistogramContainer;
 
     public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger,
                                          FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                                         PerformanceStateContainer performanceStateContainer,
-                                         HdrHistogramContainer hdrHistogramContainer) {
+                                         PerformanceStateContainer performanceStateContainer) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.failureContainer = failureContainer;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStateContainer = performanceStateContainer;
-        this.hdrHistogramContainer = hdrHistogramContainer;
     }
 
     @Override
@@ -76,9 +71,6 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
                 return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
             case PERFORMANCE_STATE:
                 processPerformanceState((PerformanceStateOperation) operation, sourceAddress);
-                break;
-            case TEST_HISTOGRAMS:
-                processTestHistogram((TestHistogramOperation) operation, sourceAddress);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -107,9 +99,5 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
 
     private void processPerformanceState(PerformanceStateOperation operation, SimulatorAddress sourceAddress) {
         performanceStateContainer.update(sourceAddress, operation.getPerformanceStates());
-    }
-
-    private void processTestHistogram(TestHistogramOperation operation, SimulatorAddress sourceAddress) {
-        hdrHistogramContainer.addHistograms(sourceAddress, operation.getTestId(), operation.getProbeHistograms());
     }
 }

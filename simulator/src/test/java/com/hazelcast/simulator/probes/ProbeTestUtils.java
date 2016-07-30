@@ -4,12 +4,12 @@ import com.hazelcast.simulator.probes.impl.Result;
 import org.HdrHistogram.Histogram;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.probes.impl.HdrProbe.LATENCY_PRECISION;
 import static com.hazelcast.simulator.probes.impl.HdrProbe.MAXIMUM_LATENCY;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -47,16 +47,20 @@ public final class ProbeTestUtils {
 
     public static void assertHistogram(Histogram histogram, long expectedCount, long expectedMinValueMillis,
                                        long expectedMaxValueMillis, long expectedMeanValueMillis) {
-        long toleranceMicros = TimeUnit.MILLISECONDS.toMicros(TOLERANCE_MILLIS);
+        long toleranceMicros = MILLISECONDS.toMicros(TOLERANCE_MILLIS);
 
         long minValue = histogram.getMinValue();
         long maxValue = histogram.getMaxValue();
-        assertNotEquals("Expected minValue and maxValue to differ", minValue, maxValue);
-        assertWithinTolerance("minValue", TimeUnit.MILLISECONDS.toMicros(expectedMinValueMillis), minValue, toleranceMicros);
-        assertWithinTolerance("maxValue", TimeUnit.MILLISECONDS.toMicros(expectedMaxValueMillis), maxValue, toleranceMicros);
+
+        if (expectedMinValueMillis != expectedMaxValueMillis) {
+            assertNotEquals("Expected minValue and maxValue to differ", minValue, maxValue);
+        }
+
+        assertWithinTolerance("minValue", MILLISECONDS.toMicros(expectedMinValueMillis), minValue, toleranceMicros);
+        assertWithinTolerance("maxValue", MILLISECONDS.toMicros(expectedMaxValueMillis), maxValue, toleranceMicros);
 
         long meanValue = (long) histogram.getMean();
-        assertWithinTolerance("meanValue", TimeUnit.MILLISECONDS.toMicros(expectedMeanValueMillis), meanValue, toleranceMicros);
+        assertWithinTolerance("meanValue", MILLISECONDS.toMicros(expectedMeanValueMillis), meanValue, toleranceMicros);
 
         assertEqualsStringFormat("Expected %d records, but was %d", expectedCount, histogram.getTotalCount());
     }

@@ -21,24 +21,18 @@ import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogReader;
 import org.HdrHistogram.HistogramLogWriter;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.Deflater;
 
-import static com.hazelcast.simulator.probes.impl.HdrProbe.LATENCY_PRECISION;
-import static com.hazelcast.simulator.probes.impl.HdrProbe.MAXIMUM_LATENCY;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Tracks performance related values for a single Simulator Test.
- *
+ * <p>
  * Has methods to update the performance values and write them to files.
- *
+ * <p>
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
 final class TestPerformanceTracker {
@@ -166,31 +160,6 @@ final class TestPerformanceTracker {
                 intervalAvgLatency, intervalPercentileLatency, intervalMaxLatency);
     }
 
-    Map<String, String> aggregateIntervalHistograms() {
-        Map<String, String> probeResults = new HashMap<String, String>();
-
-        HistogramLogWriter histogramLogWriter = createHistogramLogWriter(testId, "aggregated", 0);
-        for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
-            String probeName = histogramEntry.getKey();
-            HistogramLogReader histogramLogReader = createHistogramLogReader(testId, probeName);
-            Histogram combined = new Histogram(MAXIMUM_LATENCY, LATENCY_PRECISION);
-
-            Histogram histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
-            while (histogram != null) {
-                combined.add(histogram);
-                histogram = (Histogram) histogramLogReader.nextIntervalHistogram();
-            }
-
-            histogramLogWriter.outputComment("probeName=" + probeName);
-            histogramLogWriter.outputIntervalHistogram(combined);
-
-            String encodedHistogram = getEncodedHistogram(combined);
-            probeResults.put(probeName, encodedHistogram);
-        }
-
-        return probeResults;
-    }
-
     static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {
         try {
             File latencyFile = getLatencyFile(testId, probeName);
@@ -212,13 +181,6 @@ final class TestPerformanceTracker {
         } catch (IOException e) {
             throw new TestException("Could not initialize HistogramLogReader for test " + testName, e);
         }
-    }
-
-    private static String getEncodedHistogram(Histogram combined) {
-        ByteBuffer targetBuffer = ByteBuffer.allocate(combined.getNeededByteBufferCapacity());
-        int compressedLength = combined.encodeIntoCompressedByteBuffer(targetBuffer, Deflater.BEST_COMPRESSION);
-        byte[] compressedArray = Arrays.copyOf(targetBuffer.array(), compressedLength);
-        return DatatypeConverter.printBase64Binary(compressedArray);
     }
 
     private static File getLatencyFile(String testId, String probeName) {

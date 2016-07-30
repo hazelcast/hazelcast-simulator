@@ -20,7 +20,6 @@ import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
-import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.test.TestContainer;
 import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
@@ -131,20 +130,6 @@ public class WorkerPerformanceMonitor {
                     LOGGER.warn("WorkerPerformanceMonitorThread.run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
                 }
             }
-            sendTestHistograms();
-        }
-
-        private void sendTestHistograms() {
-            for (Map.Entry<String, TestPerformanceTracker> entry : trackers.entrySet()) {
-                String testId = entry.getKey();
-                TestPerformanceTracker tracker = entry.getValue();
-
-                Map<String, String> histograms = tracker.aggregateIntervalHistograms();
-                if (!histograms.isEmpty()) {
-                    TestHistogramOperation operation = new TestHistogramOperation(testId, histograms);
-                    serverConnector.write(SimulatorAddress.COORDINATOR, operation);
-                }
-            }
         }
 
         private boolean refreshTests(long currentTimestamp) {
@@ -179,13 +164,6 @@ public class WorkerPerformanceMonitor {
                 }
 
                 trackers.remove(tracker.getTestId());
-
-                // we need to make sure the histogram data gets written on deletion
-                Map<String, String> histograms = tracker.aggregateIntervalHistograms();
-                if (!histograms.isEmpty()) {
-                    TestHistogramOperation operation = new TestHistogramOperation(tracker.getTestId(), histograms);
-                    serverConnector.write(SimulatorAddress.COORDINATOR, operation);
-                }
             }
         }
 

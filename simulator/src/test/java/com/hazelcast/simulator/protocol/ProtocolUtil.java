@@ -3,7 +3,6 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -166,10 +165,9 @@ class ProtocolUtil {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         File outputDirectory = TestUtils.createTmpDirectory();
-        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
         CoordinatorConnector coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
-                performanceStateContainer, hdrHistogramContainer);
+                performanceStateContainer);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }

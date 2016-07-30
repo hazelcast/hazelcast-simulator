@@ -35,7 +35,6 @@ public enum OperationType {
     FAILURE(FailureOperation.class, 4),
     PHASE_COMPLETED(PhaseCompletedOperation.class, 5),
     PERFORMANCE_STATE(PerformanceStateOperation.class, 6),
-    TEST_HISTOGRAMS(TestHistogramOperation.class, 7),
 
     // AgentOperationProcessor
     INIT_TEST_SUITE(InitTestSuiteOperation.class, 8),
