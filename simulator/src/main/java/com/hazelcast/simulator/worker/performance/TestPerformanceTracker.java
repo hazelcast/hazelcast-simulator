@@ -53,8 +53,8 @@ final class TestPerformanceTracker {
 
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final long testStartedTimestamp;
-    private final PerformanceStatsWriter performanceStatsWriter;
     private long lastIterations;
+    private final PerformanceLogWriter performanceLogWriter;
     private long lastTimestamp;
     private Map<String, Histogram> intervalHistogramMap;
     private double intervalAvgLatency;
@@ -71,7 +71,7 @@ final class TestPerformanceTracker {
         this.testId = testContainer.getTestCase().getId();
         this.testStartedTimestamp = testContainer.getTestStartedTimestamp();
         this.lastTimestamp = testStartedTimestamp;
-        this.performanceStatsWriter = new PerformanceStatsWriter(new File("performance-" + testId + ".csv"));
+        this.performanceLogWriter = new PerformanceLogWriter(new File("performance-" + testId + ".csv"));
 
         for (String probeName : testContainer.getProbeMap().keySet()) {
             histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
@@ -143,7 +143,7 @@ final class TestPerformanceTracker {
     }
 
     void writeStatsToFile(long epochTime, String timestamp) {
-        performanceStatsWriter.write(
+        performanceLogWriter.write(
                 epochTime,
                 timestamp,
                 totalOperationCount,

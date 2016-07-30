@@ -90,7 +90,7 @@ public class WorkerPerformanceMonitor {
      */
     private final class WorkerPerformanceMonitorThread extends Thread {
 
-        private final PerformanceStatsWriter globalPerformanceStatsWriter;
+        private final PerformanceLogWriter globalPerformanceLogWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final Map<String, TestPerformanceTracker> trackers = new ConcurrentHashMap<String, TestPerformanceTracker>();
         private final ServerConnector serverConnector;
@@ -105,7 +105,7 @@ public class WorkerPerformanceMonitor {
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = intervalNanos;
-            this.globalPerformanceStatsWriter = new PerformanceStatsWriter(new File("performance.csv"));
+            this.globalPerformanceLogWriter = new PerformanceLogWriter(new File("performance.csv"));
         }
 
         @Override
@@ -283,7 +283,7 @@ public class WorkerPerformanceMonitor {
             }
 
             // global performance stats
-            globalPerformanceStatsWriter.write(
+            globalPerformanceLogWriter.write(
                     currentTimestamp,
                     dateString,
                     globalOperationsCount,
