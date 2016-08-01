@@ -92,7 +92,7 @@ public class HdrHistogramContainer {
                 LOGGER.error(e);
             }
 
-            // the HistogramLogProcessor creates 2 files. One with basename and no extension and one with 'hgrm' extension.
+            // the HistogramLogProcessor creates 2 files, one with basename and no extension and one with 'hgrm' extension
             File hgrmFile = new File(outputDirectory, baseFileName);
             LOGGER.info("Writing " + hgrmFile.getAbsolutePath() + ".hgrm");
             HistogramLogProcessor.main(new String[]{"-i", hdrFile.getAbsolutePath(), "-o", hgrmFile.getAbsolutePath()});
@@ -101,7 +101,7 @@ public class HdrHistogramContainer {
 
     private void printHgrmRenderUrl() {
         if (hgrmRenderUrlPrinted.compareAndSet(false, true)) {
-            LOGGER.info("hgrm files can rendered on http://hdrhistogram.github.io/HdrHistogram/plotFiles.html");
+            LOGGER.info("hgrm files can be rendered on http://hdrhistogram.github.io/HdrHistogram/plotFiles.html");
         }
     }
 
