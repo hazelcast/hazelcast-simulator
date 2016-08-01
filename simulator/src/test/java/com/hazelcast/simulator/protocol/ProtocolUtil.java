@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -29,6 +30,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -165,7 +167,7 @@ class ProtocolUtil {
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         File outputDirectory = TestUtils.createTmpDirectory();
         HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
-        FailureContainer failureContainer = new FailureContainer("ProtocolUtil", null);
+        FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
         CoordinatorConnector coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
                 performanceStateContainer, hdrHistogramContainer);
         for (int i = 1; i <= numberOfAgents; i++) {

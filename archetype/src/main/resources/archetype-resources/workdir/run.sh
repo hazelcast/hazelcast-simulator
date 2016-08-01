@@ -15,6 +15,4 @@ coordinator     --memberWorkerCount 2 \
                 --monitorPerformance \
                 test.properties
 
-provisioner --download
-
 provisioner --terminate

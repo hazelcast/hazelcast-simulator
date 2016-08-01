@@ -284,9 +284,9 @@ public final class FileUtils {
         return dir;
     }
 
-    public static void ensureExistingDirectory(File dir) {
+    public static File ensureExistingDirectory(File dir) {
         if (dir.isDirectory()) {
-            return;
+            return dir;
         }
 
         if (dir.isFile()) {
@@ -296,6 +296,8 @@ public final class FileUtils {
         if (!dir.mkdirs()) {
             throw new UncheckedIOException("Could not create directory: " + dir.getAbsolutePath());
         }
+
+        return dir;
     }
 
     public static void rename(File source, File target) {
