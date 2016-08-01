@@ -130,23 +130,23 @@ final class TestCaseRunner implements TestPhaseListener {
     void run() {
         try {
             createTest();
-            runPhase(SETUP);
+            executePhase(SETUP);
 
-            runPhase(LOCAL_WARMUP);
-            runPhase(GLOBAL_WARMUP);
+            executePhase(LOCAL_WARMUP);
+            executePhase(GLOBAL_WARMUP);
 
             startTest();
             waitForTestCompletion();
 
             if (isVerifyEnabled) {
-                runPhase(GLOBAL_VERIFY);
-                runPhase(LOCAL_VERIFY);
+                executePhase(GLOBAL_VERIFY);
+                executePhase(LOCAL_VERIFY);
             } else {
                 echo("Skipping Test verification");
             }
 
-            runPhase(GLOBAL_TEARDOWN);
-            runPhase(LOCAL_TEARDOWN);
+            executePhase(GLOBAL_TEARDOWN);
+            executePhase(LOCAL_TEARDOWN);
         } catch (TestCaseAbortedException e) {
             echo(e.getMessage());
             // unblock other TestCaseRunner threads, if fail fast is not set and they have no failures on their own
@@ -166,7 +166,7 @@ final class TestCaseRunner implements TestPhaseListener {
         echo("Completed Test initialization");
     }
 
-    private void runPhase(TestPhase testPhase) {
+    private void executePhase(TestPhase testPhase) {
         if (hasFailure()) {
             throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
         }
