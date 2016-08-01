@@ -30,7 +30,6 @@ public class ExampleTest extends AbstractTest {
 
     // properties
     public int maxKeys = 1000;
-    public double putProb = 0.5;
 
     private IMap<Integer, String> map;
 

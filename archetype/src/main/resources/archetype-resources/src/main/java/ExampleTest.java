@@ -15,70 +15,55 @@
  */
 package ${package};
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.TestRunner;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 
 import static org.junit.Assert.assertEquals;
 
-public class ExampleTest {
-
-    private enum Operation {
-        PUT,
-        GET
-    }
-
-    private static final ILogger LOGGER = Logger.getLogger(ExampleTest.class);
+public class ExampleTest extends AbstractTest {
 
     // properties
     public int maxKeys = 1000;
-    public double putProb = 0.5;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, String> map;
 
     @Setup
-    public void setUp(TestContext testContext) {
-        LOGGER.info("======== SETUP =========");
-        HazelcastInstance targetInstance = testContext.getTargetInstance();
+    public void setUp() {
+        logger.info("======== SETUP =========");
         map = targetInstance.getMap("exampleMap");
 
-        LOGGER.info("Map name is: " + map.getName());
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
-    }
-
-    @Teardown
-    public void tearDown() {
-        LOGGER.info("======== TEAR DOWN =========");
-        map.destroy();
-        LOGGER.info("======== THE END =========");
+        logger.info("Map name is: " + map.getName());
     }
 
     @Warmup
     public void warmup() {
-        LOGGER.info("======== WARMUP =========");
-        LOGGER.info("Map size is: " + map.size());
+        logger.info("======== WARMUP =========");
+        logger.info("Map size is: " + map.size());
+    }
+
+    @TimeStep(prob = 0.5)
+    public void put(BaseThreadState state) {
+        int key = state.randomInt(maxKeys);
+        map.put(key, "value" + key);
+
+    }
+
+    @TimeStep(prob = 0.5)
+    public void get(BaseThreadState state) {
+        int key = state.randomInt(maxKeys);
+        map.get(key);
     }
 
     @Verify
     public void verify() {
-        LOGGER.info("======== VERIFYING =========");
-        LOGGER.info("Map size is: " + map.size());
+        logger.info("======== VERIFYING =========");
+        logger.info("Map size is: " + map.size());
 
         for (int i = 0; i < maxKeys; i++) {
             String actualValue = map.get(i);
@@ -89,36 +74,10 @@ public class ExampleTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = randomInt(maxKeys);
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    started = System.nanoTime();
-                    map.put(key, "value" + key);
-                    probe.done(started);
-                    break;
-                case GET:
-                    started = System.nanoTime();
-                    map.get(key);
-                    probe.done(started);
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unknown operation: " + operation);
-            }
-        }
+    @Teardown
+    public void tearDown() {
+        logger.info("======== TEAR DOWN =========");
+        map.destroy();
+        logger.info("======== THE END =========");
     }
 }
