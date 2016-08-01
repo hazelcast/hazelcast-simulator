@@ -107,8 +107,8 @@ public class TestContainer {
     private Object newTestInstance() {
         String testClassName = testCase.getClassname();
         try {
-            Class testClass = TestContainer.class.getClassLoader().loadClass(testClassName);
-            Constructor constructor = testClass.getConstructor();
+            Class testClazz = TestContainer.class.getClassLoader().loadClass(testClassName);
+            Constructor constructor = testClazz.getConstructor();
             return constructor.newInstance();
         } catch (IllegalTestException e) {
             throw rethrow(e);
