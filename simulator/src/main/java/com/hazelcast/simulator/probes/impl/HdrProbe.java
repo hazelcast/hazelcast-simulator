@@ -64,7 +64,6 @@ public class HdrProbe implements Probe {
         return recorder.getIntervalHistogram();
     }
 
-    @Override
     public long get() {
         return getIntervalHistogram().getTotalCount();
     }

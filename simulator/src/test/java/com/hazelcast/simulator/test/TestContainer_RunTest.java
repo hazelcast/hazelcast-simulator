@@ -2,6 +2,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -165,7 +166,8 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
 
         long totalCount = 0;
         for (Probe probe : probeMap.values()) {
-            totalCount += probe.get();
+            HdrProbe hdrProbe = (HdrProbe)probe;
+            totalCount += hdrProbe.get();
         }
         assertEquals(THREAD_COUNT * ITERATION_COUNT, totalCount);
     }
