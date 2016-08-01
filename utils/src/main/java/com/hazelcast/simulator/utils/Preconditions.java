@@ -21,12 +21,13 @@ public final class Preconditions {
     }
 
     /**
-     * Tests if an argument is not null.
+     * Tests if an argument is not {@code null}.
      *
-     * @param argument     the argument tested to see if it is not null.
+     * @param argument     the argument tested to see if it is not {@code null}.
      * @param errorMessage the errorMessage
-     * @return the argument that was tested.
-     * @throws java.lang.NullPointerException if argument is null
+     * @param <T>          type of the argument
+     * @return the argument if its not {@code null}
+     * @throws java.lang.NullPointerException if argument is {@code null}
      */
     public static <T> T checkNotNull(T argument, String errorMessage) {
         if (argument == null) {
