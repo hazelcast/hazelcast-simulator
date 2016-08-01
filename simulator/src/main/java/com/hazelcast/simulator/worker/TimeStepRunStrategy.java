@@ -50,7 +50,7 @@ public class TimeStepRunStrategy extends RunStrategy {
 
     public TimeStepRunStrategy(TestContainer testContainer) {
         this.propertyBinding = testContainer.getPropertyBinding();
-        propertyBinding.bind(this);
+        this.propertyBinding.bind(this);
 
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
@@ -64,10 +64,10 @@ public class TimeStepRunStrategy extends RunStrategy {
 
     @Override
     public long iterations() {
-        TimeStepRunner[] runners = this.runners;
+        TimeStepRunner[] localRunners = runners;
         long iterations = 0;
-        if (runners != null) {
-            for (TimeStepRunner runner : runners) {
+        if (localRunners != null) {
+            for (TimeStepRunner runner : localRunners) {
                 iterations += runner.iteration();
             }
         }
@@ -83,7 +83,7 @@ public class TimeStepRunStrategy extends RunStrategy {
                 return null;
             }
 
-            this.runners = createRunners();
+            runners = createRunners();
 
             onRunStarted();
 
@@ -96,8 +96,7 @@ public class TimeStepRunStrategy extends RunStrategy {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private ThreadSpawner spawnThreads(TimeStepRunner[] runners) throws Exception {
+    private ThreadSpawner spawnThreads(TimeStepRunner[] runners) {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
 
         for (TimeStepRunner runner : runners) {
@@ -107,15 +106,16 @@ public class TimeStepRunStrategy extends RunStrategy {
         return spawner;
     }
 
+    @SuppressWarnings("unchecked")
     private TimeStepRunner[] createRunners() throws Exception {
-        TimeStepRunner[] runners = new TimeStepRunner[threadCount];
+        TimeStepRunner[] tmpRunners = new TimeStepRunner[threadCount];
         Constructor<TimeStepRunner> constructor = runnerClass.getConstructor(testInstance.getClass(), TimeStepModel.class);
 
         for (int i = 0; i < threadCount; i++) {
             TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel);
             propertyBinding.bind(runner);
-            runners[i] = runner;
+            tmpRunners[i] = runner;
         }
-        return runners;
+        return tmpRunners;
     }
 }
