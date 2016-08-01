@@ -5,7 +5,6 @@ import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
-import com.hazelcast.simulator.protocol.operation.TestHistogramOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
@@ -168,7 +167,6 @@ public class WorkerPerformanceMonitorTest {
 
     private void verifyServerConnector() {
         verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
-        verify(serverConnector, times(1)).write(eq(COORDINATOR), any(TestHistogramOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 

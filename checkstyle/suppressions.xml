@@ -24,4 +24,7 @@
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/tests/.*Test\.java$"/>
 
+    <!-- file comes from HdrHistogram project; see comments for more info -->
+    <suppress checks="" files="com/hazelcast/simulator/utils/HistogramLogProcessor"/>
+
 </suppressions>

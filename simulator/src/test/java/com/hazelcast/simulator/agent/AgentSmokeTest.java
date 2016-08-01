@@ -5,7 +5,6 @@ import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.HdrHistogramContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
@@ -28,7 +27,6 @@ import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.CommonUtils;
-import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -37,7 +35,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -99,14 +96,12 @@ public class AgentSmokeTest implements FailureListener {
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
         outputDirectory = TestUtils.createTmpDirectory();
-        HdrHistogramContainer hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
         failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
 
-        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
-                hdrHistogramContainer);
+        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0,0);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0, 0);
     }
 
     @AfterClass

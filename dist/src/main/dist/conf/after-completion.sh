@@ -13,19 +13,40 @@ set -e
 
 dir=$1
 if [ ! -d "${dir}" ]; then
-  echo Directory $dir does not exist.
-  exit 1
+    echo Directory $dir does not exist.
+    exit 1
 fi
 
-# Convert all hdr files to hgrm files so they can easily be plot using
+# Merge all hdr files of each member into a hdr file which gets stored in the dir.
+probes=($(ls -R $dir | grep .hdr | sort | uniq))
+for probe in "${probes[@]}"
+do
+    echo Processing $probe
+
+    hdr_files=($(find $dir | grep $probe))
+
+   java -cp "${SIMULATOR_HOME}/lib/*" com.hazelcast.simulator.utils.HistogramLogMerger "${dir}/${probe}" "${hdr_files[@]}"
+done
+
+
+# Convert all hdr files to hgrm files so they can easily be plot usingdist/src/main/dist/conf/after-completion.sh:31
 # http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
 hdr_files=($(find $dir | grep .hdr))
 for hdr_file in "${hdr_files[@]}"
 do
-        # prevent getting *.hdr as result in case of empty directory
-        file_name="${hdr_file%.*}"
+    file_name="${hdr_file%.*}"
+    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+        -i ${hdr_file} \
+        -o ${file_name} \
+        -outputValueUnitRatio 1000
 
-        classpath=$(ls $SIMULATOR_HOME/lib/HdrHistogram*)
-        java -cp ${classpath}  org.HdrHistogram.HistogramLogProcessor -i ${hdr_file} -o ${file_name}
+    mv "${file_name}.hgrm" "${file_name}.hgrm.bak"
+
+    java -cp "${SIMULATOR_HOME}/lib/*"  com.hazelcast.simulator.utils.SimulatorHistogramLogProcessor \
+        -csv \
+        -i ${hdr_file} \
+        -o ${file_name} \
+        -outputValueUnitRatio 1000
+
+    mv "${file_name}.hgrm.bak" "${file_name}.hgrm"
 done
-
