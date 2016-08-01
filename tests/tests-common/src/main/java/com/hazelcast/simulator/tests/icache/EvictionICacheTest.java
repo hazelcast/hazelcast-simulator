@@ -19,11 +19,12 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
+
 
 import javax.cache.CacheManager;
 import java.io.Serializable;
@@ -31,9 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.icache.EvictionICacheTest.Operation.PUT;
-import static com.hazelcast.simulator.tests.icache.EvictionICacheTest.Operation.PUT_ALL;
-import static com.hazelcast.simulator.tests.icache.EvictionICacheTest.Operation.PUT_ASYNC;
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static org.junit.Assert.fail;
 
@@ -47,20 +45,10 @@ import static org.junit.Assert.fail;
  */
 public class EvictionICacheTest extends AbstractTest {
 
-    enum Operation {
-        PUT,
-        PUT_ASYNC,
-        PUT_ALL,
-    }
-
     public int partitionCount;
 
     // number of bytes for the value/payload of a key
     public int valueSize = 2;
-
-    public double putProb = 0.8;
-    public double putAsyncProb = 0.1;
-    public double putAllProb = 0.1;
 
     private byte[] value;
     private ICache<Object, Object> cache;
@@ -69,8 +57,6 @@ public class EvictionICacheTest extends AbstractTest {
 
     // find estimated max size (entry count) that cache can reach at max
     private int estimatedMaxSize;
-
-    private OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     @Setup
     public void setup() {
@@ -97,46 +83,42 @@ public class EvictionICacheTest extends AbstractTest {
         int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker
                 .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
         estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
-
-        operationSelectorBuilder
-                .addOperation(PUT, putProb)
-                .addOperation(PUT_ASYNC, putAsyncProb)
-                .addOperation(PUT_ALL, putAllProb);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.8)
+    public void put(ThreadState state) {
+        int key = state.randomInt();
+        cache.put(key, value);
+        state.counter.put++;
+        state.assertSize();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
-        private final Counter counter = new Counter();
-        private int max = 0;
+    @TimeStep(prob = 0.1)
+    public void putAsync(ThreadState state) {
+        int key = state.randomInt();
+        cache.putAsync(key, value);
+        state.counter.putAsync++;
+        state.assertSize();
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
+    @TimeStep(prob = 0.1)
+    public void putAll(ThreadState state) {
+        cache.putAll(putAllMap);
+        state.counter.putAll++;
+        state.assertSize();
+    }
 
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            int key = randomInt();
-            switch (operation) {
-                case PUT:
-                    cache.put(key, value);
-                    counter.put++;
-                    break;
-                case PUT_ASYNC:
-                    cache.putAsync(key, value);
-                    counter.putAsync++;
-                    break;
-                case PUT_ALL:
-                    cache.putAll(putAllMap);
-                    counter.putAll++;
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        targetInstance.getList(name + "max").add(state.max);
+        targetInstance.getList(name + "counter").add(state.counter);
+    }
 
+    public class ThreadState extends BaseThreadState {
+        final Counter counter = new Counter();
+        int max = 0;
+
+        void assertSize() {
             int size = cache.size();
             if (size > max) {
                 max = size;
@@ -146,12 +128,6 @@ public class EvictionICacheTest extends AbstractTest {
                 fail(name + ": cache " + cache.getName() + " size=" + cache.size()
                         + " configuredMaxSize=" + configuredMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
             }
-        }
-
-        @Override
-        public void afterRun() throws Exception {
-            targetInstance.getList(name + "max").add(max);
-            targetInstance.getList(name + "counter").add(counter);
         }
     }
 
@@ -177,9 +153,9 @@ public class EvictionICacheTest extends AbstractTest {
     }
 
     private static class Counter implements Serializable {
-        public int put = 0;
-        public int putAsync = 0;
-        public int putAll = 0;
+        int put = 0;
+        int putAsync = 0;
+        int putAll = 0;
 
         public void add(Counter c) {
             put += c.put;
