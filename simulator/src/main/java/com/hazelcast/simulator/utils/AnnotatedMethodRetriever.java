@@ -17,17 +17,19 @@ package com.hazelcast.simulator.utils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isPublic;
+import static java.lang.reflect.Modifier.isStatic;
 
 public class AnnotatedMethodRetriever {
 
     private final Class clazz;
     private final Class annotationClazz;
+
     private Class returnType;
     private boolean mustBePublic;
     private boolean mustBeNotStatic;
@@ -39,10 +41,8 @@ public class AnnotatedMethodRetriever {
         this.annotationClazz = checkNotNull(annotationClazz, "annotationClazz can't be null");
     }
 
-    public AnnotatedMethodRetriever withPublicNonStaticModifier() {
-        mustBePublic = true;
-        mustBeNotStatic = true;
-        return this;
+    public AnnotatedMethodRetriever withVoidReturnType() {
+        return withReturnType(Void.TYPE);
     }
 
     public AnnotatedMethodRetriever withReturnType(Class returnType) {
@@ -50,8 +50,10 @@ public class AnnotatedMethodRetriever {
         return this;
     }
 
-    public AnnotatedMethodRetriever withVoidReturnType() {
-        return withReturnType(Void.TYPE);
+    public AnnotatedMethodRetriever withPublicNonStaticModifier() {
+        mustBePublic = true;
+        mustBeNotStatic = true;
+        return this;
     }
 
     public AnnotatedMethodRetriever withoutArgs() {
@@ -66,7 +68,6 @@ public class AnnotatedMethodRetriever {
 
     public Method find() {
         List<Method> methods = findAll();
-
         switch (methods.size()) {
             case 0:
                 return null;
@@ -98,27 +99,22 @@ public class AnnotatedMethodRetriever {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void verifyReturnType(Method method) {
-        if (returnType != null) {
-            if (!returnType.isAssignableFrom(method.getReturnType())) {
-                throw new ReflectionException(format("Method '%s' should have returnType %s", method, returnType));
-            }
+        if (returnType != null && !returnType.isAssignableFrom(method.getReturnType())) {
+            throw new ReflectionException(format("Method '%s' should have returnType %s", method, returnType));
         }
     }
 
     private void verifyNotStatic(Method method) {
-        if (mustBeNotStatic) {
-            if (Modifier.isStatic(method.getModifiers())) {
-                throw new ReflectionException(format("Method '%s' should no be static", method));
-            }
+        if (mustBeNotStatic && isStatic(method.getModifiers())) {
+            throw new ReflectionException(format("Method '%s' should no be static", method));
         }
     }
 
     private void verifyPublic(Method method) {
-        if (mustBePublic) {
-            if (!Modifier.isPublic(method.getModifiers())) {
-                throw new ReflectionException(format("Method '%s' should be public", method));
-            }
+        if (mustBePublic && !isPublic(method.getModifiers())) {
+            throw new ReflectionException(format("Method '%s' should be public", method));
         }
     }
 
@@ -136,10 +132,10 @@ public class AnnotatedMethodRetriever {
         return methods;
     }
 
+    @SuppressWarnings("unchecked")
     private void findDeclaredMethods(Class searchClass, List<Method> methods) {
         for (Method method : searchClass.getDeclaredMethods()) {
             Annotation found = method.getAnnotation(annotationClazz);
-
             if (found == null) {
                 continue;
             }
