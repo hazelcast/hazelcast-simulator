@@ -135,8 +135,7 @@ final class TestCaseRunner implements TestPhaseListener {
             executePhase(LOCAL_WARMUP);
             executePhase(GLOBAL_WARMUP);
 
-            startTest();
-            waitForTestCompletion();
+            executeRun();
 
             if (isVerifyEnabled) {
                 executePhase(GLOBAL_VERIFY);
@@ -160,6 +159,33 @@ final class TestCaseRunner implements TestPhaseListener {
         }
     }
 
+    private void executeRun() throws Exception {
+        echo(format("Starting Test start on %s", targetType.toString(targetCount)));
+        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
+        echo("Completed Test start");
+
+        StopThread stopThread = null;
+        if (testSuite.getDurationSeconds() > 0) {
+            stopThread = new StopThread();
+            stopThread.start();
+        }
+
+        if (testSuite.isWaitForTestCase()) {
+            // it will be the test deciding to determine how long to run
+            echo("Test will run until it stops");
+            waitForPhaseCompletion(RUN);
+            echo("Test finished running");
+
+            if (stopThread != null) {
+                stopThread.shutdown();
+            }
+        }
+        joinThread(stopThread);
+
+        waitForGlobalTestPhaseCompletion(RUN);
+    }
+
     private void createTest() {
         echo("Starting Test initialization");
         remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
@@ -180,35 +206,6 @@ final class TestCaseRunner implements TestPhaseListener {
         waitForPhaseCompletion(testPhase);
         echo("Completed Test " + testPhase.desc());
         waitForGlobalTestPhaseCompletion(testPhase);
-    }
-
-    private void startTest() {
-        echo(format("Starting Test start on %s", targetType.toString(targetCount)));
-        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
-        echo("Completed Test start");
-    }
-
-    private void waitForTestCompletion() throws Exception {
-        StopThread stopThread = null;
-        if (testSuite.getDurationSeconds() > 0) {
-            stopThread = new StopThread();
-            stopThread.start();
-        }
-
-        if (testSuite.isWaitForTestCase()) {
-            // it will be the test deciding to determine how long to run
-            echo("Test will run until it stops");
-            waitForPhaseCompletion(RUN);
-            echo("Test finished running");
-
-            if (stopThread != null) {
-                stopThread.shutdown();
-            }
-        }
-        joinThread(stopThread);
-
-        waitForGlobalTestPhaseCompletion(RUN);
     }
 
     private void waitForPhaseCompletion(TestPhase testPhase) {
