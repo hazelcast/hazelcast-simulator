@@ -15,51 +15,45 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.lang.System.nanoTime;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
- *
+ * <p>
+ * If an execution takes more than the intervalNanos, the request are queued and get processed as soon as the system
+ * has time for time. This queue will get processed as fast as possible and there metronome will not introduce any deliberate
+ * slowdowns. For more information see:
+ * https://vanilla-java.github.io/2016/07/20/Latency-for-a-set-Throughput.html
+ * <p>
+ * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
- *
- * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
 public final class BusySpinningMetronome implements Metronome {
 
     private final long intervalNanos;
+    private final boolean accountForCoordinatedOmission;
+    private long nextNanos;
 
-    private long waitUntil;
-
-    public BusySpinningMetronome(long intervalNanos) {
+    public BusySpinningMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
         this.intervalNanos = intervalNanos;
+        this.accountForCoordinatedOmission = accountForCoordinatedOmission;
     }
 
     @Override
-    public void waitForNext() {
+    public long waitForNext() {
         // set random interval on the first run
-        if (waitUntil == 0) {
-            waitUntil = System.nanoTime() + nextLong(0, intervalNanos);
+        if (nextNanos == 0) {
+            nextNanos = nanoTime() + nextLong(0, intervalNanos);
         }
 
-        // busy loop
         long now;
         do {
-            now = System.nanoTime();
-        } while (now < waitUntil);
+            now = nanoTime();
+        } while (now < nextNanos);
 
-        // set regular interval for next call
-        waitUntil = now + intervalNanos;
-    }
-
-    @Override
-    public long getInterval() {
-        return NANOSECONDS.toMillis(intervalNanos);
-    }
-
-    @Override
-    public MetronomeType getType() {
-        return BUSY_SPINNING;
+        long expectedStartNanos = nextNanos;
+        nextNanos = expectedStartNanos + intervalNanos;
+        return accountForCoordinatedOmission ? expectedStartNanos : nanoTime();
     }
 }

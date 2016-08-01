@@ -15,47 +15,43 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.lang.System.nanoTime;
+import static java.util.concurrent.locks.LockSupport.parkNanos;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which sleeps on a fixed interval.
- *
+ * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
- *
- * It is recommended to create a new instance for each worker thread, so they are clocked interleaved.
  */
 public final class SleepingMetronome implements Metronome {
 
     private final long intervalNanos;
+    private final boolean accountForCoordinatedOmission;
+    private long nextNanos;
 
-    private boolean isFirstSleep = true;
-
-    public SleepingMetronome(long intervalNanos) {
+    public SleepingMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
         this.intervalNanos = intervalNanos;
+        this.accountForCoordinatedOmission = accountForCoordinatedOmission;
     }
 
     @Override
-    public void waitForNext() {
-        // sleep random interval on the first run
-        if (isFirstSleep) {
-            sleepNanos(nextLong(0, intervalNanos));
-            isFirstSleep = false;
-            return;
+    public long waitForNext() {
+        if (nextNanos == 0) {
+            nextNanos = nanoTime() + nextLong(0, intervalNanos);
         }
 
-        sleepNanos(intervalNanos);
+        long delayNanos = nextNanos - nanoTime();
+        if (delayNanos > 0) {
+            parkNanos(delayNanos);
+        }
+
+        long expectedStartNanos = nextNanos;
+        nextNanos += intervalNanos;
+        return accountForCoordinatedOmission ? expectedStartNanos : nanoTime();
     }
 
-    @Override
-    public long getInterval() {
-        return NANOSECONDS.toMillis(intervalNanos);
-    }
-
-    @Override
-    public MetronomeType getType() {
-        return SLEEPING;
+    public long getIntervalNanos() {
+        return intervalNanos;
     }
 }

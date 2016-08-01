@@ -15,21 +15,12 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
-
 public class EmptyMetronome implements Metronome {
 
-    @Override
-    public void waitForNext() {
-    }
+    public static final EmptyMetronome INSTANCE = new EmptyMetronome();
 
     @Override
-    public long getInterval() {
-        return 0;
-    }
-
-    @Override
-    public MetronomeType getType() {
-        return NOP;
+    public long waitForNext() {
+        return System.nanoTime();
     }
 }

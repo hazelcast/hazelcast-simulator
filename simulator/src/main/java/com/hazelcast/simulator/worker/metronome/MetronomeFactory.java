@@ -15,10 +15,14 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-import java.util.concurrent.TimeUnit;
-
+import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.lang.Math.round;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
+/**
+ * @deprecated make use of the {@link MetronomeBuilder}. Will be removed in Simulator 0.9.
+ */
 public final class MetronomeFactory {
 
     private static final Metronome EMPTY_METRONOME = new EmptyMetronome();
@@ -33,19 +37,19 @@ public final class MetronomeFactory {
      * @return a {@link Metronome} instance
      */
     public static Metronome withFixedIntervalMs(int intervalMs) {
-        return withFixedIntervalMs(intervalMs, MetronomeType.SLEEPING);
+        return withFixedIntervalMs(intervalMs, SLEEPING);
     }
 
     /**
      * Creates a {@link Metronome} instance with a fixed frequency in Hz of type {@link MetronomeType#SLEEPING}.
-     *
+     * <p>
      * If the frequency is 0 Hz the method {@link Metronome#waitForNext()} will have no delay.
      *
      * @param frequency frequency in Hz
      * @return a {@link Metronome} instance
      */
     public static Metronome withFixedFrequency(float frequency) {
-        return withFixedFrequency(frequency, MetronomeType.SLEEPING);
+        return withFixedFrequency(frequency, SLEEPING);
     }
 
     /**
@@ -61,9 +65,9 @@ public final class MetronomeFactory {
         }
         switch (type) {
             case BUSY_SPINNING:
-                return new BusySpinningMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
+                return new BusySpinningMetronome(MILLISECONDS.toNanos(intervalMs), true);
             case SLEEPING:
-                return new SleepingMetronome(TimeUnit.MILLISECONDS.toNanos(intervalMs));
+                return new SleepingMetronome(MILLISECONDS.toNanos(intervalMs), true);
             default:
                 return EMPTY_METRONOME;
         }
@@ -71,7 +75,7 @@ public final class MetronomeFactory {
 
     /**
      * Creates a {@link Metronome} instance with a fixed frequency in Hz.
-     *
+     * <p>
      * If the frequency is 0 Hz the method {@link Metronome#waitForNext()} will have no delay.
      *
      * @param frequency frequency in Hz
@@ -82,12 +86,13 @@ public final class MetronomeFactory {
         if (frequency == 0) {
             return EMPTY_METRONOME;
         }
-        long intervalNanos = round((double) TimeUnit.SECONDS.toNanos(1) / frequency);
+
+        long intervalNanos = round((double) SECONDS.toNanos(1) / frequency);
         switch (type) {
             case BUSY_SPINNING:
-                return new BusySpinningMetronome(intervalNanos);
+                return new BusySpinningMetronome(intervalNanos, true);
             case SLEEPING:
-                return new SleepingMetronome(intervalNanos);
+                return new SleepingMetronome(intervalNanos, true);
             default:
                 return EMPTY_METRONOME;
         }

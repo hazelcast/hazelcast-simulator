@@ -39,20 +39,25 @@ public class ${className} extends TimeStepRunner {
         final byte[] probs  = this.timeStepProbabilities;
 </#if>
 
-<#if probeClass??>
-        long startNanos;
-</#if>
         long iteration = 0;
         while (!testContext.isStopped()) {
-<#if metronomeClass??>
+<#if probeClass??>
+    <#if metronomeClass??>
+            long startNanos = metronome.waitForNext();
+    <#else>
+            long startNanos = System.nanoTime();
+    </#if>
+<#else>
+    <#if metronomeClass??>
             metronome.waitForNext();
+    </#if>
 </#if>
+
 <#if timeStepMethods?size==1>
     <#assign method=timeStepMethods?first>
     <#if hasProbe(method)|| !probeClass??>
             <@timestepMethodCall m=method/>;
     <#else>
-            startNanos = System.nanoTime();
             <@timestepMethodCall m=method/>;
             ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
     </#if>
@@ -64,7 +69,6 @@ public class ${className} extends TimeStepRunner {
         <#if hasProbe(method) || !probeClass??>
                     <@timestepMethodCall m=method/>;
         <#else>
-                    startNanos = System.nanoTime();
                     <@timestepMethodCall m=method/>;
                     ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
         </#if>
