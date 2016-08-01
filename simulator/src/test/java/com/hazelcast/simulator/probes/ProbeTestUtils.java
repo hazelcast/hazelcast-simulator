@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.probes;
 
-import com.hazelcast.simulator.probes.impl.ResultImpl;
+import com.hazelcast.simulator.probes.impl.Result;
 import org.HdrHistogram.Histogram;
 
 import java.util.Random;
@@ -25,7 +25,7 @@ public final class ProbeTestUtils {
     private static final Random RANDOM = new Random();
 
     public static Result createProbeResult(int histogramCount) {
-        Result result = new ResultImpl("test", histogramCount * HISTOGRAM_RECORD_COUNT, HISTOGRAM_RECORD_COUNT);
+        Result result = new Result("test", histogramCount * HISTOGRAM_RECORD_COUNT, HISTOGRAM_RECORD_COUNT);
         for (int i = 1; i <= histogramCount; i++) {
             Histogram histogram = createRandomHistogram(HISTOGRAM_RECORD_COUNT);
             result.addHistogram("probe" + i, histogram);

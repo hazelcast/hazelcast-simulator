@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.Result;
 import org.HdrHistogram.Histogram;
 
 import java.io.ByteArrayOutputStream;
@@ -26,40 +25,35 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 
-public class ResultImpl implements Result {
+public class Result {
 
     private final String testName;
     private final long invocations;
     private final double throughput;
     private final Map<String, Histogram> probeHistogramMap = new HashMap<String, Histogram>();
 
-    public ResultImpl(String testName, long invocations, double throughput) {
+    public Result(String testName, long invocations, double throughput) {
         this.testName = testName;
         this.invocations = invocations;
         this.throughput = throughput;
     }
 
-    @Override
     public String getTestName() {
         return testName;
     }
 
-    @Override
     public long getInvocations() {
         return invocations;
     }
 
-    @Override
     public double getThroughput() {
         return throughput;
     }
 
-    @Override
     public boolean isEmpty() {
         return probeHistogramMap.isEmpty();
     }
 
-    @Override
     public void addHistogram(String probeName, Histogram histogram) {
         if (histogram == null) {
             return;
@@ -74,17 +68,14 @@ public class ResultImpl implements Result {
         candidate.add(histogram);
     }
 
-    @Override
     public Histogram getHistogram(String probeName) {
         return probeHistogramMap.get(probeName);
     }
 
-    @Override
     public Set<String> probeNames() {
         return probeHistogramMap.keySet();
     }
 
-    @Override
     public String toHumanString(String probeName) {
         Histogram histogram = probeHistogramMap.get(probeName);
         if (histogram == null) {

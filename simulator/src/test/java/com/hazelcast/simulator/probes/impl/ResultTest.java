@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.probes.impl;
 
-import com.hazelcast.simulator.probes.Result;
 import org.HdrHistogram.Histogram;
 import org.junit.Test;
 
@@ -17,13 +16,13 @@ import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
-public class ResultImplTest {
+public class ResultTest {
 
     @Test
     public void testConstructor() {
-        Result result = new ResultImpl("ResultImplTest", 1000, 500.0);
+        Result result = new Result("ResultTest", 1000, 500.0);
 
-        assertEquals("ResultImplTest", result.getTestName());
+        assertEquals("ResultTest", result.getTestName());
         assertEquals(1000, result.getInvocations());
         assertEquals(500, result.getThroughput(), 0.0001);
         assertTrue(result.isEmpty());
