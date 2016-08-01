@@ -25,6 +25,8 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
  *
  * This worker provides no {@link com.hazelcast.simulator.worker.selector.OperationSelector}, just a simple {@link #timeStep()}
  * method without parameters.
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public abstract class AbstractMonotonicWorker extends VeryAbstractWorker {
 

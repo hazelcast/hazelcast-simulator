@@ -30,6 +30,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  * The operation counter is automatically increased after each call of {@link #timeStep(Enum)}.
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public abstract class AbstractWorker<O extends Enum<O>> extends VeryAbstractWorker {
 

@@ -32,6 +32,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
  * @param <V> Type of {@link ExecutionCallback}
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public abstract class AbstractAsyncWorker<O extends Enum<O>, V> extends VeryAbstractWorker implements ExecutionCallback<V> {
 

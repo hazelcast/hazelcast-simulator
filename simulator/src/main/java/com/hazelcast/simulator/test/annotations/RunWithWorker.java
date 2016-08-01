@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
  * simulator will then take care of starting a thread for each of these works.
  *
  * This annotation should not be used any longer. Please upgrade to the {@link TimeStep} approach.
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

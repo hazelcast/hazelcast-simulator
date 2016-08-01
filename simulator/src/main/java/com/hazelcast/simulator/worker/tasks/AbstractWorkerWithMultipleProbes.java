@@ -34,6 +34,8 @@ import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
  * This can be used to make a finer selection of the measured code block.
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public abstract class AbstractWorkerWithMultipleProbes<O extends Enum<O>>
         extends VeryAbstractWorker

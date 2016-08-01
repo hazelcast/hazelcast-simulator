@@ -19,6 +19,8 @@ package com.hazelcast.simulator.worker.tasks;
  * Worker implementation which does nothing.
  *
  * Can be used on nodes which should not interact with the cluster.
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public final class NoOperationWorker extends VeryAbstractWorker {
 

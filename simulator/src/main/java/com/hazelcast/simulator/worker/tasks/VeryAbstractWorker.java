@@ -22,6 +22,9 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.util.Random;
 
+/**
+ * @deprecated is likely to be removed in Simulator 0.10.
+ */
 abstract class VeryAbstractWorker implements IWorker {
 
     private final Random random = new Random();

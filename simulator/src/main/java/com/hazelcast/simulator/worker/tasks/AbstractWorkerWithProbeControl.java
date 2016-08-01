@@ -29,6 +29,8 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
  * This can be used to make a finer selection of the measured code block.
  *
  * @param <O> Type of {@link Enum} used by the {@link com.hazelcast.simulator.worker.selector.OperationSelector}
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public abstract class AbstractWorkerWithProbeControl<O extends Enum<O>> extends VeryAbstractWorker {
 

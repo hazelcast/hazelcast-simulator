@@ -25,6 +25,8 @@ package com.hazelcast.simulator.worker.tasks;
  * {@link com.hazelcast.simulator.test.annotations.InjectTestContext}
  * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
  * {@link com.hazelcast.simulator.test.annotations.InjectProbe}
+ *
+ * @deprecated is likely to be removed in Simulator 0.10.
  */
 public interface IWorker {
 
