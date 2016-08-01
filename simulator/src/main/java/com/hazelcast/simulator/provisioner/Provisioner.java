@@ -320,11 +320,11 @@ public class Provisioner {
         echo("Username: " + properties.getUser());
         echo("Using init script: " + initScriptFile.getAbsolutePath());
 
-        String jdkFlavor = properties.get("JDK_FLAVOR", "outofthebox");
+        String jdkFlavor = properties.getJdkFlavor();
         if ("outofthebox".equals(jdkFlavor)) {
             echo("JDK spec: outofthebox");
         } else {
-            String jdkVersion = properties.get("JDK_VERSION", "7");
+            String jdkVersion = properties.getJdkVersion();
             echo("JDK spec: %s %s", jdkFlavor, jdkVersion);
         }
 
@@ -408,7 +408,7 @@ public class Provisioner {
     }
 
     private void uploadJava(String ip) {
-        if ("outofthebox".equals(properties.get("JDK_FLAVOR"))) {
+        if ("outofthebox".equals(properties.getJdkFlavor())) {
             return;
         }
         bash.scpToRemote(ip, getJavaSupportScript(), "jdk-support.sh");
@@ -417,8 +417,8 @@ public class Provisioner {
     }
 
     private File getJavaInstallScript() {
-        String flavor = properties.get("JDK_FLAVOR");
-        String version = properties.get("JDK_VERSION");
+        String flavor = properties.getJdkFlavor();
+        String version = properties.getJdkVersion();
 
         String script = "jdk-" + flavor + '-' + version + "-64.sh";
         File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
@@ -530,7 +530,7 @@ public class Provisioner {
 
         @Override
         public void run() {
-            if (!"outofthebox".equals(properties.get("JDK_FLAVOR"))) {
+            if (!"outofthebox".equals(properties.getJdkFlavor())) {
                 echo(INDENTATION + ip + " JAVA INSTALLATION STARTED...");
                 uploadJava(ip);
                 echo(INDENTATION + ip + " JAVA INSTALLED");

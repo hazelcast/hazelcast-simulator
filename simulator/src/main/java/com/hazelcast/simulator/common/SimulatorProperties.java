@@ -125,6 +125,14 @@ public class SimulatorProperties {
         return get("USER", "simulator");
     }
 
+    public String getJdkFlavor() {
+        return get("JDK_FLAVOR", "outofthebox");
+    }
+
+    public String getJdkVersion() {
+        return get("JDK_VERSION", "7");
+    }
+
     public String getHazelcastVersionSpec() {
         if (forcedHazelcastVersionSpec == null) {
             return get("HAZELCAST_VERSION_SPEC", OUT_OF_THE_BOX);
