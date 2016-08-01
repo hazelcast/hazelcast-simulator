@@ -17,12 +17,10 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.worker.tasks.IWorker;
-import com.hazelcast.simulator.worker.tasks.NoOperationWorker;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
@@ -60,8 +58,8 @@ public class ClusterStatisticsTest extends AbstractTest {
         logPartitionStatistics(logger, name, map, false);
     }
 
-    @RunWithWorker
-    public IWorker createWorker() {
-        return new NoOperationWorker();
+    @TimeStep
+    public void timeStep() {
+        testContext.stop();
     }
 }
