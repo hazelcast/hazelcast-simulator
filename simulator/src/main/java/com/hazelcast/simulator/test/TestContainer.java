@@ -52,6 +52,7 @@ import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -110,7 +111,7 @@ public class TestContainer {
             Constructor constructor = testClass.getConstructor();
             return constructor.newInstance();
         } catch (IllegalTestException e) {
-            throw e;
+            throw rethrow(e);
         } catch (NoSuchMethodException e) {
             throw new IllegalTestException(format("Test class '%s' should have a public no arg constructor", testClassName));
         } catch (Exception e) {
@@ -188,7 +189,7 @@ public class TestContainer {
             registerTask(Teardown.class, new TeardownFilter(false), LOCAL_TEARDOWN);
             registerTask(Teardown.class, new TeardownFilter(true), GLOBAL_TEARDOWN);
         } catch (IllegalTestException e) {
-            throw e;
+            throw rethrow(e);
         } catch (Exception e) {
             throw new IllegalTestException(format("Error during search for annotated test methods in %s: [%s] %s",
                     testClass.getName(), e.getClass().getSimpleName(), e.getMessage()), e);

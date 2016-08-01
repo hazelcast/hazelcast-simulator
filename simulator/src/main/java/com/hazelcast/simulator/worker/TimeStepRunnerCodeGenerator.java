@@ -39,12 +39,14 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
+import static java.security.AccessController.doPrivileged;
 import static java.util.Collections.singletonList;
 
 class TimeStepRunnerCodeGenerator {
@@ -64,7 +66,7 @@ class TimeStepRunnerCodeGenerator {
         return compile(javaCompiler, file, className);
     }
 
-    Class compile(JavaCompiler compiler, JavaFileObject file, String className) {
+    Class compile(JavaCompiler compiler, JavaFileObject file, final String className) {
         if (compiler == null) {
             throw new IllegalStateException("Could not get Java compiler in TimeStepRunnerCodeGenerator."
                     + " You need to use a JDK to run Simulator! Version found: " + System.getProperty("java.version"));
@@ -92,14 +94,19 @@ class TimeStepRunnerCodeGenerator {
             throw new IllegalTestException(sb.toString());
         }
 
-        try {
-            URLClassLoader classLoader = new URLClassLoader(new URL[]{new File("./").toURI().toURL()});
-            return (Class) classLoader.loadClass(className);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalTestException(e.getMessage(), e);
-        } catch (MalformedURLException e) {
-            throw new IllegalTestException(e.getMessage(), e);
-        }
+        return (Class) doPrivileged(new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+                    URLClassLoader classLoader = new URLClassLoader(new URL[]{new File("./").toURI().toURL()});
+                    return (Class) classLoader.loadClass(className);
+                } catch (ClassNotFoundException e) {
+                    throw new IllegalTestException(e.getMessage(), e);
+                } catch (MalformedURLException e) {
+                    throw new IllegalTestException(e.getMessage(), e);
+                }
+            }
+        });
     }
 
     private JavaFileObject createJavaFileObject(
