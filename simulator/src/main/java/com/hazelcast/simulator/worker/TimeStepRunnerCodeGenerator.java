@@ -149,7 +149,7 @@ class TimeStepRunnerCodeGenerator {
 
     private static class JavaSourceFromString extends SimpleJavaFileObject {
 
-        final String code;
+        private final String code;
 
         JavaSourceFromString(String name, String code) {
             super(URI.create("string:///" + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
