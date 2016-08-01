@@ -17,8 +17,8 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -33,7 +33,7 @@ import static java.lang.String.format;
 
 /**
  * Fills up the cluster to a defined heap usage factor during warmup phase.
- *
+ * <p>
  * This tests intentionally has an empty run phase.
  */
 public class MapHeapHogWarmupTest extends AbstractTest {
@@ -89,9 +89,9 @@ public class MapHeapHogWarmupTest extends AbstractTest {
     }
 
 
-    @Run
-    public void run() {
-        // nothing to do here
+    @TimeStep
+    public void timeStep() {
+        testContext.stop();
     }
 
     private final class FillMapWorker implements Runnable {
