@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hazelcast.simulator.utils;
 
 import org.HdrHistogram.DoubleHistogram;
@@ -5,7 +20,12 @@ import org.HdrHistogram.Histogram;
 
 import java.io.FileNotFoundException;
 
+@SuppressWarnings({"checkstyle:methodlength", "checkstyle:magicnumber"})
 public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
+
+    public SimulatorHistogramLogProcessor(String[] args) throws FileNotFoundException {
+        super(args);
+    }
 
     protected Object[] buildRegularHistogramStatistics(Histogram intervalHistogram, Histogram accumulatedHistogram) {
         double intervalThroughput = ((double) (intervalHistogram.getTotalCount())
@@ -46,7 +66,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
                 accumulatedHistogram.getMaxValue() / config.outputValueUnitRatio,
                 accumulatedHistogram.getMean() / config.outputValueUnitRatio,
                 accumulatedHistogram.getStdDeviation() / config.outputValueUnitRatio,
-                totalThroughput / config.outputValueUnitRatio
+                totalThroughput / config.outputValueUnitRatio,
         };
     }
 
@@ -95,39 +115,41 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
 
     protected String buildLegend(boolean cvs) {
         if (cvs) {
-            return "\"Timestamp\"," +
-                    "\"Int_Count\"," +
-                    "\"Int_25%\"," +
-                    "\"Int_50%\"," +
-                    "\"Int_75%\"," +
-                    "\"Int_90%\"," +
-                    "\"Int_99%\"," +
-                    "\"Int_99.9%\"," +
-                    "\"Int_99.99%\"," +
-                    "\"Int_99.999%\"," +
-                    "\"Int_Min\"," +
-                    "\"Int_Max\"," +
-                    "\"Int_Mean\"," +
-                    "\"Int_Std_Deviation\"," +
-                    "\"Int_Throughput\"," +
-                    "\"Total_Count\"," +
-                    "\"Total_25%\"," +
-                    "\"Total_50%\"," +
-                    "\"Total_75%\"," +
-                    "\"Total_90%\"," +
-                    "\"Total_99%\"," +
-                    "\"Total_99.9%\"," +
-                    "\"Total_99.99%\"," +
-                    "\"Total_99.999%\"," +
-                    "\"Total_Min%\"," +
-                    "\"Total_Max\"" +
-                    "\"Total_Mean\"" +
-                    "\"Total_Std_Deviation\"" +
-                    "\"Total_Throughput\""
+            return "\"Timestamp\","
+                    + "\"Int_Count\","
+                    + "\"Int_25%\","
+                    + "\"Int_50%\","
+                    + "\"Int_75%\","
+                    + "\"Int_90%\","
+                    + "\"Int_99%\","
+                    + "\"Int_99.9%\","
+                    + "\"Int_99.99%\","
+                    + "\"Int_99.999%\","
+                    + "\"Int_Min\","
+                    + "\"Int_Max\","
+                    + "\"Int_Mean\","
+                    + "\"Int_Std_Deviation\","
+                    + "\"Int_Throughput\","
+                    + "\"Total_Count\","
+                    + "\"Total_25%\","
+                    + "\"Total_50%\","
+                    + "\"Total_75%\","
+                    + "\"Total_90%\","
+                    + "\"Total_99%\","
+                    + "\"Total_99.9%\","
+                    + "\"Total_99.99%\","
+                    + "\"Total_99.999%\","
+                    + "\"Total_Min%\","
+                    + "\"Total_Max\""
+                    + "\"Total_Mean\""
+                    + "\"Total_Std_Deviation\""
+                    + "\"Total_Throughput\""
                     ;
         } else {
-            return "Time: IntervalPercentiles:count ( 25% 50% 75% 90% 99.9% 99.99% 99.999% Min Max Mean Std-Deviation Throughput) " +
-                    "TotalPercentiles:count ( 25% 50% 75% 90% 99% 99.9% 99.99% 99.9% Min Max Mean Std-Deviation Throughput)";
+            return "Time: IntervalPercentiles:count "
+                    + "( 25% 50% 75% 90% 99.9% 99.99% 99.999% Min Max Mean Std-Deviation Throughput) "
+                    + "TotalPercentiles:count "
+                    + "( 25% 50% 75% 90% 99% 99.9% 99.99% 99.9% Min Max Mean Std-Deviation Throughput)";
         }
     }
 
@@ -166,47 +188,43 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
                     + "\n"
                     ;
         } else {
-            return "%4.3f: I" +
-                    ":%d " + //int count
-                    "( " +
-                    "%7.3f " + //int 25%
-                    "%7.3f " + //int 50%
-                    "%7.3f " + //int 75%
-                    "%7.3f " + //int 90%
-                    "%7.3f " + //int 99%
-                    "%7.3f " + //int 99.9%
-                    "%7.3f " + //int 99.99%
-                    "%7.3f " + //int 99.999%
-                    "%7.3f " + //int min
-                    "%7.3f " + //int max
-                    "%7.3f " + //int mean
-                    "%7.3f " + //int std deviation
-                    "%7.3f " + //int throughput
-                    "( " +
-                    "T:%d " + //total count
-                    "( " +
-                    "%7.3f " + //total 25%
-                    "%7.3f " + //total 50%
-                    "%7.3f " + //total 75%
-                    "%7.3f " + //total 99%
-                    "%7.3f " + //total 99.9%
-                    "%7.3f " + //total 99.99%
-                    "%7.3f " + //total 99.999%
-                    "%7.3f " + //total min
-                    "%7.3f " + //total max
-                    "%7.3f " + //total mean
-                    "%7.3f " + //total std deviation
-                    "%7.3f " + //total throughput
-                    ")\n"
+            return "%4.3f: I"
+                    + ":%d " //int count
+                    + "( "
+                    + "%7.3f " //int 25%
+                    + "%7.3f " //int 50%
+                    + "%7.3f " //int 75%
+                    + "%7.3f " //int 90%
+                    + "%7.3f " //int 99%
+                    + "%7.3f " //int 99.9%
+                    + "%7.3f " //int 99.99%
+                    + "%7.3f " //int 99.999%
+                    + "%7.3f " //int min
+                    + "%7.3f " //int max
+                    + "%7.3f " //int mean
+                    + "%7.3f " //int std deviation
+                    + "%7.3f " //int throughput
+                    + "( "
+                    + "T:%d " //total count
+                    + "( "
+                    + "%7.3f " //total 25%
+                    + "%7.3f " //total 50%
+                    + "%7.3f " //total 75%
+                    + "%7.3f " //total 99%
+                    + "%7.3f " //total 99.9%
+                    + "%7.3f " //total 99.99%
+                    + "%7.3f " //total 99.999%
+                    + "%7.3f " //total min
+                    + "%7.3f " //total max
+                    + "%7.3f " //total mean
+                    + "%7.3f " //total std deviation
+                    + "%7.3f " //total throughput
+                    + ")\n"
                     ;
         }
     }
 
-    public SimulatorHistogramLogProcessor(String[] args) throws FileNotFoundException {
-        super(args);
-    }
-
-    public static void main(final String[] args)  {
+    public static void main(final String[] args) {
         final SimulatorHistogramLogProcessor processor;
         try {
             processor = new SimulatorHistogramLogProcessor(args);
