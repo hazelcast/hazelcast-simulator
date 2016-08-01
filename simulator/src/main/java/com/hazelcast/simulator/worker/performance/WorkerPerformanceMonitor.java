@@ -163,28 +163,27 @@ public class WorkerPerformanceMonitor {
                 }
 
                 // we set the lastSeen timestamp, so we can easily purge dead trackers
-                tracker.lastSeen = currentTimestamp;
+                tracker.setLastSeen(currentTimestamp);
                 runningTestFound = true;
             }
 
             return runningTestFound;
         }
 
-
         // we remove every MonitoredTest that doesn't have the desired timestamp
         private void purgeDeadTrackers(long currentTimestamp) {
             for (TestPerformanceTracker tracker : trackers.values()) {
                 // purge the testData if it wasn't seen in the current run
-                if (tracker.lastSeen == currentTimestamp) {
+                if (tracker.getLastSeen() == currentTimestamp) {
                     continue;
                 }
 
-                trackers.remove(tracker.testId);
+                trackers.remove(tracker.getTestId());
 
                 // we need to make sure the histogram data gets written on deletion
                 Map<String, String> histograms = tracker.aggregateIntervalHistograms();
                 if (!histograms.isEmpty()) {
-                    TestHistogramOperation operation = new TestHistogramOperation(tracker.testId, histograms);
+                    TestHistogramOperation operation = new TestHistogramOperation(tracker.getTestId(), histograms);
                     serverConnector.write(SimulatorAddress.COORDINATOR, operation);
                 }
             }
@@ -197,7 +196,7 @@ public class WorkerPerformanceMonitor {
         }
 
         private void updateTrackers(long currentTimestamp, TestPerformanceTracker tracker) {
-            TestContainer testContainer = tracker.testContainer;
+            TestContainer testContainer = tracker.getTestContainer();
             Map<String, Probe> probeMap = testContainer.getProbeMap();
             Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
@@ -205,15 +204,12 @@ public class WorkerPerformanceMonitor {
             double intervalMean = -1;
             long intervalMaxLatency = -1;
 
-            long oldIterations = tracker.oldIterations;
             long iterations = testContainer.iteration();
-            tracker.oldIterations = iterations;
-            long intervalOperationCount = iterations - oldIterations;
+            long intervalOperationCount = iterations - tracker.getLastIterations();
 
             for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
                 String probeName = entry.getKey();
                 Probe probe = entry.getValue();
-
                 if (!(probe instanceof HdrProbe)) {
                     continue;
                 }
@@ -248,6 +244,7 @@ public class WorkerPerformanceMonitor {
                     intervalMean,
                     intervalMaxLatency,
                     intervalOperationCount,
+                    iterations,
                     currentTimestamp);
         }
 
@@ -256,7 +253,7 @@ public class WorkerPerformanceMonitor {
 
             for (TestPerformanceTracker tracker : trackers.values()) {
                 if (tracker.isUpdated()) {
-                    operation.addPerformanceState(tracker.testId, tracker.createPerformanceState());
+                    operation.addPerformanceState(tracker.getTestId(), tracker.createPerformanceState());
                 }
             }
 

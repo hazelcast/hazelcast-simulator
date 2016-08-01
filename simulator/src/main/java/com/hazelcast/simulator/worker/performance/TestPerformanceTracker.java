@@ -45,16 +45,16 @@ final class TestPerformanceTracker {
 
     private static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
 
-    final TestContainer testContainer;
-    final String testId;
+    private final TestContainer testContainer;
+    private final String testId;
 
-    long oldIterations;
     // used to determine if the TestPerformanceTracker can be deleted
-    long lastSeen;
+    private long lastSeen;
 
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final long testStartedTimestamp;
     private final PerformanceStatsWriter performanceStatsWriter;
+    private long lastIterations;
     private long lastTimestamp;
     private Map<String, Histogram> intervalHistogramMap;
     private double intervalAvgLatency;
@@ -76,6 +76,26 @@ final class TestPerformanceTracker {
         for (String probeName : testContainer.getProbeMap().keySet()) {
             histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
         }
+    }
+
+    public TestContainer getTestContainer() {
+        return testContainer;
+    }
+
+    String getTestId() {
+        return testId;
+    }
+
+    long getLastSeen() {
+        return lastSeen;
+    }
+
+    void setLastSeen(long lastSeen) {
+        this.lastSeen = lastSeen;
+    }
+
+    long getLastIterations() {
+        return lastIterations;
     }
 
     long getIntervalOperationCount() {
@@ -101,7 +121,7 @@ final class TestPerformanceTracker {
     }
 
     void update(Map<String, Histogram> intervalHistograms, long intervalPercentileLatency, double intervalAvgLatency,
-                long intervalMaxLatency, long intervalOperationCount, long currentTimestamp) {
+                long intervalMaxLatency, long intervalOperationCount, long iterations, long currentTimestamp) {
         this.intervalHistogramMap = intervalHistograms;
 
         this.intervalPercentileLatency = intervalPercentileLatency;
@@ -117,6 +137,7 @@ final class TestPerformanceTracker {
         this.intervalThroughput = (intervalOperationCount * ONE_SECOND_IN_MILLIS) / (double) intervalTimeDelta;
         this.totalThroughput = (totalOperationCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
 
+        this.lastIterations = iterations;
         this.lastTimestamp = currentTimestamp;
         this.isUpdated = true;
     }
