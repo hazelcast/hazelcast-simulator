@@ -36,7 +36,7 @@ final class PerformanceStatsWriter {
     }
 
     private void writeHeader() {
-        String columns = "time-millis,timestamp,operations,operations-delta,operations/second,number-of-tests,total-tests\n";
+        String columns = "epoch,timestamp,operations,operations-delta,operations/second,number-of-tests,total-tests\n";
         appendText(columns, file);
     }
 
@@ -48,7 +48,7 @@ final class PerformanceStatsWriter {
                       long numberOfTests,
                       long totalTests) {
         sb.setLength(0);
-        sb.append(timeMillis);
+        sb.append(timeMillis/1000);
         sb.append(',').append(timestamp);
         sb.append(',').append(operationsTotal);
         sb.append(',').append(operationsDelta);

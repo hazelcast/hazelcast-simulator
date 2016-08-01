@@ -29,11 +29,13 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 public class HdrProbe implements Probe {
 
     public static final long MAXIMUM_LATENCY = TimeUnit.SECONDS.toMicros(60);
-    public static final int LATENCY_PRECISION = 4;
+    public static final int LATENCY_PRECISION = 5;
 
     private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
 
     private final boolean partOfTotalThroughput;
+
+    private long startTimeMs = System.currentTimeMillis();
 
     public HdrProbe(boolean partOfTotalThroughput) {
         this.partOfTotalThroughput = partOfTotalThroughput;
@@ -61,7 +63,13 @@ public class HdrProbe implements Probe {
     }
 
     public Histogram getIntervalHistogram() {
-        return recorder.getIntervalHistogram();
+        long currentTime = System.currentTimeMillis();
+
+        Histogram histogram = recorder.getIntervalHistogram();
+        histogram.setStartTimeStamp(startTimeMs);
+        histogram.setEndTimeStamp(currentTime);
+        startTimeMs = currentTime;
+        return histogram;
     }
 
     @Override

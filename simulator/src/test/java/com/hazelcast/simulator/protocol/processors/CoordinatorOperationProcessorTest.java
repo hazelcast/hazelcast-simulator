@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -96,7 +97,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         outputDirectory = TestUtils.createTmpDirectory();
         hdrHistogramContainer = new HdrHistogramContainer(outputDirectory, performanceStateContainer);
-        failureContainer = new FailureContainer("CoordinatorOperationProcessorTest", componentRegistry);
+        failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
                 performanceStateContainer, hdrHistogramContainer);
@@ -105,7 +106,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     @After
     public void tearDown() {
         deleteQuiet(outputDirectory);
-        deleteQuiet(new File("failures-CoordinatorOperationProcessorTest.txt"));
     }
 
     @Override

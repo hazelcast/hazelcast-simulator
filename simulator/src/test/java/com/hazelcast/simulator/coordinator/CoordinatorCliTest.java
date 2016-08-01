@@ -4,9 +4,12 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -50,9 +53,10 @@ public class CoordinatorCliTest {
     private static File propertiesFile;
 
     private final List<String> args = new ArrayList<String>();
+    private String testSuiteId;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void beforeClass() throws Exception {
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
 
@@ -62,13 +66,25 @@ public class CoordinatorCliTest {
         propertiesFile = ensureExistingFile("simulator.properties");
     }
 
+    @Before
+    public void before(){
+        args.add("--testSuiteId");
+        testSuiteId = "testrun-" + System.currentTimeMillis();
+        args.add(testSuiteId);
+    }
+
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetUserDir();
         deleteAgentsFile();
 
         deleteQuiet(testSuiteFile);
         deleteQuiet(propertiesFile);
+    }
+
+    @After
+    public void after(){
+        deleteQuiet(new File(testSuiteId).getAbsoluteFile());
     }
 
     @Test

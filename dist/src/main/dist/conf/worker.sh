@@ -41,16 +41,6 @@ esac
 
 java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
 
-# Convert all hdr files to hgrm files so they can easily be plot using
-# http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
-for HDR_FILE in *.hdr; do
-        # prevent getting *.hdr as result in case of empty directory
-        [ -f "$HDR_FILE" ] || break
-        FILE_NAME="${HDR_FILE%.*}"
-        java -cp ${CLASSPATH}  org.HdrHistogram.HistogramLogProcessor -i ${HDR_FILE} -o ${FILE_NAME}
-done
-
-
 
 #########################################################################
 # Yourkit

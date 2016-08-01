@@ -204,6 +204,9 @@ final class CoordinatorCli {
             "Sets the license key for Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(String.class);
 
+    private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
+            "Prevents downloading of the created worker artifacts.");
+
     private CoordinatorCli() {
     }
 
@@ -242,7 +245,9 @@ final class CoordinatorCli {
                 options.valueOf(cli.targetTypeSpec),
                 options.valueOf(cli.targetCountSpec),
                 options.valueOf(cli.syncToTestPhaseSpec),
-                options.valueOf(cli.workerVmStartupDelayMsSpec)
+                options.valueOf(cli.workerVmStartupDelayMsSpec),
+                options.has(cli.skipDownloadSpec),
+                getDefaultConfigurationFile("after-completion.sh")
         );
 
         String memberHzConfig = loadMemberHzConfig(options, cli);

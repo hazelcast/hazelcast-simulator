@@ -79,8 +79,7 @@ public class HdrHistogramContainer {
         printHgrmRenderUrl();
 
         for (String probeName : result.probeNames()) {
-
-            String baseFileName = testSuiteId + '_' + testId + "_" + probeName;
+            String baseFileName = testId + "_" + probeName;
 
             Histogram histogram = result.getHistogram(probeName);
             File hdrFile = new File(outputDirectory, baseFileName + ".hdr");
