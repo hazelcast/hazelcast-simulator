@@ -41,7 +41,6 @@ public class ExecutorTest extends AbstractTest {
 
     // properties
     public int executorCount = 1;
-    public int threadCount = 5;
     // the number of outstanding submits, before doing get. A count of 1 means that you wait for every task to complete,
     // before sending in the next
     public int submitCount = 5;

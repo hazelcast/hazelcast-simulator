@@ -60,10 +60,7 @@ public class SlowOperationMapTest extends AbstractTest {
     }
 
     // properties
-    public int keyLength = 10;
-    public int valueLength = 10;
     public int keyCount = 100;
-    public int valueCount = 100;
     public double putProb = 0.5;
     public int recursionDepth = 10;
 

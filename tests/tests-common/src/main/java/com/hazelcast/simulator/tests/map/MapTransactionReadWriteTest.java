@@ -18,11 +18,11 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -45,10 +45,7 @@ public class MapTransactionReadWriteTest extends AbstractTest {
     }
 
     // properties
-    public int keyLength = 10;
-    public int valueLength = 10;
     public int keyCount = 10000;
-    public int valueCount = 10000;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
 

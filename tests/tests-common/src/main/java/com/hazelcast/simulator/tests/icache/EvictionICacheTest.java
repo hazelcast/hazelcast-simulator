@@ -18,10 +18,10 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
@@ -53,7 +53,6 @@ public class EvictionICacheTest extends AbstractTest {
         PUT_ALL,
     }
 
-    public int threadCount = 3;
     public int partitionCount;
 
     // number of bytes for the value/payload of a key
