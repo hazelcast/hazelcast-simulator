@@ -20,35 +20,37 @@ import java.text.DecimalFormat;
 
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Responsible for writing to performance stats to disk in csv format.
  */
-final class PerformanceStatsWriter {
+final class PerformanceLogWriter {
 
     private final StringBuffer sb = new StringBuffer();
-    private final DecimalFormat format = new DecimalFormat("#.##");
+    private final DecimalFormat format = new DecimalFormat("#.###");
     private final File file;
 
-    PerformanceStatsWriter(File file) {
+    PerformanceLogWriter(File file) {
         this.file = checkNotNull(file, "file can't be null");
         writeHeader();
     }
 
     private void writeHeader() {
-        String columns = "time-millis,timestamp,operations,operations-delta,operations/second,number-of-tests,total-tests\n";
+        String columns = "epoch,timestamp,operations,operations-delta,operations/second,number-of-tests,total-tests\n";
         appendText(columns, file);
     }
 
     void write(long timeMillis,
-                      String timestamp,
-                      long operationsTotal,
-                      long operationsDelta,
-                      double operationsPerSecond,
-                      long numberOfTests,
-                      long totalTests) {
+               String timestamp,
+               long operationsTotal,
+               long operationsDelta,
+               double operationsPerSecond,
+               long numberOfTests,
+               long totalTests) {
         sb.setLength(0);
-        sb.append(timeMillis);
+        // ms are expressed in epoch time after the decimal point
+        sb.append(format.format(timeMillis * 1d / SECONDS.toMillis(1)));
         sb.append(',').append(timestamp);
         sb.append(',').append(operationsTotal);
         sb.append(',').append(operationsDelta);
