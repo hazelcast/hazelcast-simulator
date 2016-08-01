@@ -58,7 +58,8 @@ final class WizardUtils {
         if (profileFile.isFile()) {
             return profileFile;
         }
-        throw new CommandLineExitException("Could not find .bashrc or .profile file! Installation not supported on this system!");
+        throw new CommandLineExitException("Could not find .bashrc or .profile file!"
+                + " Installation not supported on this system!");
     }
 
     static Properties getUserProperties() {
@@ -83,12 +84,12 @@ final class WizardUtils {
     }
 
     static boolean containsCommentedOutProperty(String propertiesString, String property) {
-        Pattern pattern = Pattern.compile("^\\h*#\\h*" + property + "\\h*=.*$", Pattern.MULTILINE);
+        Pattern pattern = Pattern.compile("^[\\t ]*#[\\t ]*" + property + "[\\t ]*=.*$", Pattern.MULTILINE);
         return pattern.matcher(propertiesString).find();
     }
 
     static String getCommentedOutProperty(String propertiesString, String property) {
-        Pattern pattern = Pattern.compile("^\\h*#\\h*" + property + "\\h*=\\h*(.*)$", Pattern.MULTILINE);
+        Pattern pattern = Pattern.compile("^[\\t ]*#[\\t ]*" + property + "[\\t ]*=[\\t ]*(.*)$", Pattern.MULTILINE);
         Matcher matcher = pattern.matcher(propertiesString);
         if (matcher.find()) {
             return matcher.group(1).trim();
