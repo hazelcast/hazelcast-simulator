@@ -92,10 +92,8 @@ public class AnnotatedMethodRetriever {
     }
 
     private void verifyArgs(Method method) {
-        if (mustBoNoArg) {
-            if (method.getParameterTypes().length != 0) {
-                throw new ReflectionException(format("Method '%s' can't have any args", method));
-            }
+        if (mustBoNoArg && method.getParameterTypes().length != 0) {
+            throw new ReflectionException(format("Method '%s' can't have any args", method));
         }
     }
 
