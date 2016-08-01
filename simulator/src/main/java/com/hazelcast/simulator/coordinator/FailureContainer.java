@@ -52,7 +52,7 @@ public class FailureContainer {
             = new ConcurrentHashMap<SimulatorAddress, FailureType>();
     private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
 
-    private final AtomicInteger nonCriticalFailureCount = new AtomicInteger();
+    private final AtomicInteger nonCriticalFailureCounter = new AtomicInteger();
     private final AtomicInteger criticalFailureCounter = new AtomicInteger();
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
@@ -97,7 +97,7 @@ public class FailureContainer {
         int failureCount;
         if (nonCriticalFailures.contains(failureType)) {
             isCriticalFailure = false;
-            failureCount = nonCriticalFailureCount.incrementAndGet();
+            failureCount = nonCriticalFailureCounter.incrementAndGet();
         } else {
             failureCount = criticalFailureCounter.incrementAndGet();
             String testId = operation.getTestId();
@@ -136,7 +136,7 @@ public class FailureContainer {
     }
 
     int getFailureCount() {
-        return criticalFailureCounter.get() + nonCriticalFailureCount.get();
+        return criticalFailureCounter.get() + nonCriticalFailureCounter.get();
     }
 
     boolean hasCriticalFailure() {
@@ -168,8 +168,8 @@ public class FailureContainer {
     }
 
     void logFailureInfo() {
-        int criticalFailureCount = this.criticalFailureCounter.get();
-        int nonCriticalFailureCount = this.nonCriticalFailureCount.get();
+        int criticalFailureCount = criticalFailureCounter.get();
+        int nonCriticalFailureCount = nonCriticalFailureCounter.get();
         if (criticalFailureCount > 0 || nonCriticalFailureCount > 0) {
             if (criticalFailureCount > 0) {
                 LOGGER.fatal(HORIZONTAL_RULER);
