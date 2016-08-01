@@ -344,7 +344,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private static final class TestCaseAbortedException extends RuntimeException {
 
-        TestPhase testPhase;
+        private TestPhase testPhase;
 
         TestCaseAbortedException(String message, TestPhase testPhase) {
             super(message);
