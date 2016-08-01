@@ -198,7 +198,7 @@ public class TimeStepModel {
     }
 
     private Map<Method, Double> loadProbabilities() {
-        Map<Method, Double> probabilities = new HashMap<Method, Double>();
+        Map<Method, Double> probMap = new HashMap<Method, Double>();
 
         Method defaultMethod = null;
         double totalProbability = 0;
@@ -222,19 +222,19 @@ public class TimeStepModel {
                     throw new IllegalTestException("TimeStep method '" + method + "' with probability " + probability
                             + " exceeds the total probability of 1");
                 }
-                probabilities.put(method, probability);
+                probMap.put(method, probability);
             }
         }
 
         if (defaultMethod != null) {
             double probability = 1 - totalProbability;
-            probabilities.put(defaultMethod, probability);
+            probMap.put(defaultMethod, probability);
         } else if (1.0 - totalProbability > PROBABILITY_INTERVAL) {
             throw new IllegalTestException("The total probability of TimeStep methods in test " + testClass.getName()
                     + " is smaller than 1, found: " + totalProbability);
         }
 
-        return probabilities;
+        return probMap;
     }
 
     private double loadProbability(Method method) {
