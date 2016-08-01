@@ -339,6 +339,7 @@ public final class FileUtils {
      * @param spec    The {@link OptionSpec} which contains the filename.
      * @param options The {@link OptionSet} which contains the actual options.
      * @param desc    The description of the file.
+     * @return the {@link File} from the defined {@link OptionSpec}
      * @throws CommandLineExitException if the file cannot be found.
      */
     public static File getFileOrExit(OptionSpec<String> spec, OptionSet options, String desc) {
