@@ -213,10 +213,8 @@ public final class Coordinator {
     }
 
     void uploadFiles() {
-        if (isLocal(simulatorProperties)) {
-            if (!simulatorProperties.getHazelcastVersionSpec().equals(OUT_OF_THE_BOX)) {
-                throw new CommandLineExitException("Local mode doesn't support custom Hazelcast versions!");
-            }
+        if (isLocal(simulatorProperties) && !simulatorProperties.getHazelcastVersionSpec().equals(OUT_OF_THE_BOX)) {
+            throw new CommandLineExitException("Local mode doesn't support custom Hazelcast versions!");
         }
 
         Uploader uploader = new Uploader(
