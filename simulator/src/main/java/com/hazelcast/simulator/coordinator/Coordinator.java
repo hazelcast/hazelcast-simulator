@@ -399,6 +399,7 @@ public final class Coordinator {
             execute(format("mv ./agent.err %s/ || true", targetPath));
             execute(format("mv ./agent.out %s/ || true", targetPath));
             execute(format("mv ./failures-%s.txt %s/ || true", testSuite.getId(), targetPath));
+            execute(format("mv ./%s_* %s/ || true", testSuite.getId(), targetPath));
         }
     }
 
