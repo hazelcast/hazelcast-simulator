@@ -219,7 +219,10 @@ public class TimeStepModel {
     }
 
     /**
-     * Returns null if there is only a single {@link TimeStep} method active.
+     * Returns the probabilities of the {@link TimeStep} methods.
+     *
+     * @return the array of probabilities for each {@link TimeStep} method
+     * or {@code null} if there is only a single {@link TimeStep} method.
      */
     public byte[] getTimeStepProbabilityArray() {
         return timeStepProbabilityArray;

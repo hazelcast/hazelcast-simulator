@@ -21,9 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Is run after a thread executing {@link TimeStep}, completes. So for every load generating thread, there will be 1 call
- * to the {@link @AfterRun} method.
+ * Is run after a thread is executing its {@link TimeStep} methods.
  *
+ * For every load generating thread, there will be one call to the {@link AfterRun} method.
  * If the test has no {@link TimeStep} methods, methods with {@link AfterRun} are ignored.
  */
 @Retention(RetentionPolicy.RUNTIME)

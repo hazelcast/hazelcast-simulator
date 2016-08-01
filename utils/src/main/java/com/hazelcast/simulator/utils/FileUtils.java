@@ -334,7 +334,12 @@ public final class FileUtils {
     }
 
     /**
-     * Gets the file. If the file does not exist, a {@link CommandLineExitException} is thrown.
+     * Gets a {@link File} from a defined {@link OptionSpec}.
+     *
+     * @param spec    The {@link OptionSpec} which contains the filename.
+     * @param options The {@link OptionSet} which contains the actual options.
+     * @param desc    The description of the file.
+     * @throws CommandLineExitException if the file cannot be found.
      */
     public static File getFileOrExit(OptionSpec<String> spec, OptionSet options, String desc) {
         File file = newFile(options.valueOf(spec));

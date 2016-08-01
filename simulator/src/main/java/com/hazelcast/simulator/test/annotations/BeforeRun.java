@@ -21,12 +21,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Is run after a thread executing {@link TimeStep}, completes. So for every load generating thread, there will be 1 call
- * to the {@link @AfterRun} method.
+ * Is run before a thread is executing its {@link TimeStep} methods.
  *
+ * For every load generating thread, there will be one call to the {@link BeforeRun} method.
  * If the test has no {@link TimeStep} methods, methods with {@link BeforeRun} are ignored.
  *
- * {@link BeforeRun} can be useful for some initialization actions on the ThreadState.
+ * {@link BeforeRun} can be useful for some initialization actions on the {@link com.hazelcast.simulator.test.BaseThreadState}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

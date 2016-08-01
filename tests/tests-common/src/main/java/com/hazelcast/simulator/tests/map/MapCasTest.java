@@ -35,10 +35,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This tests the cas method: replace. So for optimistic concurrency control.
- * <p>
+ *
  * We have a bunch of predefined keys, and we are going to concurrently increment the value and we protect ourselves against lost
  * updates using cas method replace.
- * <p>
+ *
  * Locally we keep track of all increments, and if the sum of these local increments matches the global increment, we are done.
  */
 public class MapCasTest extends AbstractTest {

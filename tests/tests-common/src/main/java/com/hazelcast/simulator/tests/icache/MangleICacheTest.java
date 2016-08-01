@@ -33,7 +33,7 @@ import javax.cache.spi.CachingProvider;
 
 /**
  * In this tests we are intentionally creating, destroying, closing and using cache managers and their caches.
- * <p>
+ *
  * This type of cache usage is well outside normal usage, however we found several bugs with this test. It could highlight memory
  * leaks when repeatedly creating and destroying caches and/or managers, something that regular test would not find.
  */
