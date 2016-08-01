@@ -18,13 +18,13 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 import com.hazelcast.spi.exception.DistributedObjectDestroyedException;
 import com.hazelcast.util.EmptyStatement;
 
@@ -35,33 +35,15 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * In this test we are using map put methods with an expire time.
- *
+ * <p>
  * We put keys at random into the map using sync and async methods with some probability distribution.
  * In the end we verify that the map is empty and all key value pairs have expired out of the map.
  */
 public class MapTimeToLiveTest extends AbstractTest {
-
-    private enum Operation {
-        PUT_TTL,
-        ASYNC_PUT_TTL,
-        GET,
-        ASYNC_GET,
-        DESTROY
-    }
-
     // properties
     public int keyCount = 10;
-
-    public double putTTLProb = 0.4;
-    public double putAsyncTTLProb = 0.3;
-    public double getProb = 0.2;
-    public double getAsyncProb = 0.1;
-    public double destroyProb = 0.0;
-
     public int maxTTLExpiryMs = 3000;
     public int minTTLExpiryMs = 1;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Integer> map;
     private IList<MapOperationCounter> results;
@@ -70,71 +52,74 @@ public class MapTimeToLiveTest extends AbstractTest {
     public void setup() {
         map = targetInstance.getMap(name);
         results = targetInstance.getList(name + "report");
-
-        builder.addOperation(Operation.PUT_TTL, putTTLProb)
-                .addOperation(Operation.ASYNC_PUT_TTL, putAsyncTTLProb)
-                .addOperation(Operation.GET, getProb)
-                .addOperation(Operation.ASYNC_GET, getAsyncProb)
-                .addOperation(Operation.DESTROY, destroyProb);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.4)
+    public void putTTL(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            int value = state.randomInt();
+            int delayMs = minTTLExpiryMs + state.randomInt(maxTTLExpiryMs);
+            map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
+            state.count.putTTLCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0.3)
+    public void asyncPutTTL(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            int value = state.randomInt();
+            int delayMs = minTTLExpiryMs + state.randomInt(maxTTLExpiryMs);
+            map.putAsync(key, value, delayMs, TimeUnit.MILLISECONDS);
+            state.count.putAsyncTTLCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    @TimeStep(prob = 0.2)
+    public void get(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            map.get(key);
+            state.count.getCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    @TimeStep(prob = 0.1)
+    public void getAsync(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            map.getAsync(key);
+            state.count.getAsyncCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    @TimeStep(prob = 0)
+    public void destroy(ThreadState state) {
+        try {
+            map.destroy();
+            state.count.destroyCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private final MapOperationCounter count = new MapOperationCounter();
+    }
 
-        public Worker() {
-            super(builder);
-        }
-
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            try {
-                int key = randomInt(keyCount);
-                int value;
-                int delayMs;
-
-                switch (operation) {
-                    case PUT_TTL:
-                        value = randomInt();
-                        delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
-                        map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
-                        count.putTTLCount.incrementAndGet();
-                        break;
-                    case ASYNC_PUT_TTL:
-                        value = randomInt();
-                        delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
-                        map.putAsync(key, value, delayMs, TimeUnit.MILLISECONDS);
-                        count.putAsyncTTLCount.incrementAndGet();
-                        break;
-                    case GET:
-                        map.get(key);
-                        count.getCount.incrementAndGet();
-                        break;
-                    case ASYNC_GET:
-                        map.getAsync(key);
-                        count.getAsyncCount.incrementAndGet();
-                        break;
-                    case DESTROY:
-                        map.destroy();
-                        count.destroyCount.incrementAndGet();
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-            } catch (DistributedObjectDestroyedException e) {
-                EmptyStatement.ignore(e);
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            results.add(count);
-        }
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        results.add(state.count);
     }
 
     @Verify
