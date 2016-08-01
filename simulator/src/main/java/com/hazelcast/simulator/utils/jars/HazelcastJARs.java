@@ -80,7 +80,7 @@ public class HazelcastJARs {
             return null;
         }
         if (OUT_OF_THE_BOX.equals(versionSpec)) {
-            return "outofthebox";
+            return OUT_OF_THE_BOX;
         }
         return versionSpec.replace('=', '-');
     }
