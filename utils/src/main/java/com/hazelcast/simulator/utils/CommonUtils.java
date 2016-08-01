@@ -235,7 +235,7 @@ public final class CommonUtils {
     }
 
     public static void exitWithError() {
-        System.exit(1);
+        exit(1);
     }
 
     public static void exitWithError(Logger logger, String msg, Throwable throwable) {
@@ -250,6 +250,10 @@ public final class CommonUtils {
             String throwableString = throwableToString(throwable);
             logger.fatal(msg + NEW_LINE + throwableString);
         }
-        System.exit(1);
+        exit(1);
+    }
+
+    public static void exit(int code) {
+        System.exit(code);
     }
 }

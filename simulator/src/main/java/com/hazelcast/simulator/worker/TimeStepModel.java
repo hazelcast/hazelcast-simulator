@@ -22,6 +22,7 @@ import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -66,6 +67,41 @@ public class TimeStepModel {
         this.threadStateConstructor = loadThreadStateConstructor();
         this.probabilities = loadProbabilities();
         this.timeStepProbabilityArray = loadTimeStepProbabilityArray();
+    }
+
+    public final Class getTestClass() {
+        return testClass;
+    }
+
+    public final Class getThreadStateClass() {
+        return threadStateClass;
+    }
+
+    public final List<Method> getBeforeRunMethods() {
+        return beforeRunMethods;
+    }
+
+    public final List<Method> getAfterRunMethods() {
+        return afterRunMethods;
+    }
+
+    public final List<Method> getTimeStepMethods() {
+        return timeStepMethods;
+    }
+
+    public final List<Method> getActiveTimeStepMethods() {
+        List<Method> result = new ArrayList<Method>();
+        for (Method method : timeStepMethods) {
+            double probability = probabilities.get(method);
+            if (probability > 0) {
+                result.add(method);
+            }
+        }
+        return result;
+    }
+
+    public final Constructor getThreadStateConstructor() {
+        return threadStateConstructor;
     }
 
     // just for testing
@@ -224,6 +260,7 @@ public class TimeStepModel {
      * @return the array of probabilities for each {@link TimeStep} method
      * or {@code null} if there is only a single {@link TimeStep} method.
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getTimeStepProbabilityArray() {
         return timeStepProbabilityArray;
     }
@@ -249,41 +286,6 @@ public class TimeStepModel {
         }
 
         return result;
-    }
-
-    public Class getTestClass() {
-        return testClass;
-    }
-
-    public Class getThreadStateClass() {
-        return threadStateClass;
-    }
-
-    public List<Method> getBeforeRunMethods() {
-        return beforeRunMethods;
-    }
-
-    public List<Method> getAfterRunMethods() {
-        return afterRunMethods;
-    }
-
-    public List<Method> getTimeStepMethods() {
-        return timeStepMethods;
-    }
-
-    public List<Method> getActiveTimeStepMethods() {
-        List<Method> result = new ArrayList<Method>();
-        for (Method method : timeStepMethods) {
-            double probability = probabilities.get(method);
-            if (probability > 0) {
-                result.add(method);
-            }
-        }
-        return result;
-    }
-
-    public Constructor getThreadStateConstructor() {
-        return threadStateConstructor;
     }
 
     @SuppressWarnings("unchecked")

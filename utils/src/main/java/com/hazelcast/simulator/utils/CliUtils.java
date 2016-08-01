@@ -23,6 +23,8 @@ import joptsimple.OptionSpec;
 
 import java.io.OutputStream;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exit;
+
 public final class CliUtils {
 
     private static final int HELP_WIDTH = 160;
@@ -58,6 +60,6 @@ public final class CliUtils {
         } catch (Exception e) {
             throw new CommandLineExitException("Could not print command line help", e);
         }
-        System.exit(0);
+        exit(0);
     }
 }

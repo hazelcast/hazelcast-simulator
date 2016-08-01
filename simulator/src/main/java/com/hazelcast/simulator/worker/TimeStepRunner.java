@@ -35,6 +35,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.lang.String.format;
 
 public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
+
     @InjectTestContext
     protected TestContext testContext;
     @InjectMetronome
@@ -122,7 +123,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
                 method.invoke(testInstance, threadState);
                 break;
             default:
-                throw new RuntimeException("Unhandled number of arguments for '" + method + "'");
+                throw new IllegalTestException("Unhandled number of arguments for '" + method + "'");
         }
     }
 }

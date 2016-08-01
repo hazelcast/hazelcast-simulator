@@ -102,7 +102,7 @@ public class TestContainer {
         propertyBinding.ensureNoUnusedProperties();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "PMD.PreserveStackTrace"})
     private Object newTestInstance() {
         String testClassName = testCase.getClassname();
         try {
