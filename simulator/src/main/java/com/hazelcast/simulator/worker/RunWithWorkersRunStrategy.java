@@ -29,6 +29,8 @@ import static java.lang.String.format;
 
 /**
  * A {@link RunStrategy} for tests with a method annotated with {@link com.hazelcast.simulator.test.annotations.RunWithWorker}.
+ *
+ * @deprecated and is likely to be removed in Simulator 0.10.
  */
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class RunWithWorkersRunStrategy extends RunStrategy {
