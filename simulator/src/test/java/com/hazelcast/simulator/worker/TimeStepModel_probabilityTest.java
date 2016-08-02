@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -23,8 +24,12 @@ public class TimeStepModel_probabilityTest {
                 + "@TimeStep public void timeStep1(){}\n"
                 + "}\n", probs);
 
-        assertEquals(new Double(1.0), model.getProbability("timeStep1"));
+        assertProbability(model, "timeStep1", 1.0);
         assertNull(model.getTimeStepProbabilityArray());
+    }
+
+    private void assertProbability(TimeStepModel model, String method, double value) {
+        assertEquals(value, model.getProbability(method).getValue(), 0.001);
     }
 
     @Test(expected = IllegalTestException.class)
@@ -82,8 +87,8 @@ public class TimeStepModel_probabilityTest {
                 + "@TimeStep(prob=0.5) public void timeStep2(){}\n"
                 + "}\n", probs);
 
-        assertEquals(new Double(1.0), model.getProbability("timeStep1"));
-        assertEquals(new Double(0.0), model.getProbability("timeStep2"));
+        assertProbability(model, "timeStep1", 1.0);
+        assertProbability(model, "timeStep2", 0.0);
         assertNull(model.getTimeStepProbabilityArray());
     }
 
@@ -96,11 +101,10 @@ public class TimeStepModel_probabilityTest {
                 + "@TimeStep(prob=0) public void timeStep2(){}\n"
                 + "}\n", probs);
 
-        assertEquals(new Double(1.0), model.getProbability("timeStep1"));
-        assertEquals(new Double(0.0), model.getProbability("timeStep2"));
+        assertProbability(model, "timeStep1", 1.0);
+        assertProbability(model, "timeStep2", 0.0);
         assertNull(model.getTimeStepProbabilityArray());
     }
-
 
     @Test
     public void test_multipleActiveMethods() {
@@ -111,8 +115,8 @@ public class TimeStepModel_probabilityTest {
                 + "@TimeStep(prob=0.5) public void timeStep2(){}\n"
                 + "}\n", probs);
 
-        assertEquals(new Double(0.5), model.getProbability("timeStep1"));
-        assertEquals(new Double(0.5), model.getProbability("timeStep2"));
+        assertProbability(model, "timeStep1", 0.5);
+        assertProbability(model, "timeStep2", 0.5);
         assertNotNull(model.getTimeStepProbabilityArray());
     }
 
@@ -125,8 +129,8 @@ public class TimeStepModel_probabilityTest {
                 + "@TimeStep(prob=-1) public void timeStep2(){}\n"
                 + "}\n", probs);
 
-        assertEquals(new Double(0.2), model.getProbability("timeStep1"));
-        assertEquals(new Double(0.8), model.getProbability("timeStep2"));
+        assertProbability(model, "timeStep1", 0.2);
+        assertProbability(model, "timeStep2", 0.8);
         assertNotNull(model.getTimeStepProbabilityArray());
     }
 
@@ -141,8 +145,8 @@ public class TimeStepModel_probabilityTest {
                 + "@TimeStep(prob=0.8) public void timeStep2(){}\n"
                 + "}\n", probs);
 
-        assertEquals(new Double(0.3), model.getProbability("timeStep1"));
-        assertEquals(new Double(0.7), model.getProbability("timeStep2"));
+        assertProbability(model, "timeStep1", 0.3);
+        assertProbability(model, "timeStep2", 0.7);
         assertNotNull(model.getTimeStepProbabilityArray());
     }
 
