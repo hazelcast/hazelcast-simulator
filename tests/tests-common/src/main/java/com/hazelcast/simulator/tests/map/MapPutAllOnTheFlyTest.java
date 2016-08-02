@@ -47,7 +47,7 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
     }
 
     @TimeStep
-    protected void timeStep(BaseThreadState state) throws Exception {
+    public void timeStep(BaseThreadState state) throws Exception {
         SortedMap<Integer, Integer> values = new TreeMap<Integer, Integer>();
         for (int i = 0; i < batchSize; i++) {
             int key = state.randomInt(keyRange);
