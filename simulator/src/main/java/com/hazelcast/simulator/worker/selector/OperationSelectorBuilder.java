@@ -34,6 +34,7 @@ import static java.lang.String.format;
  * use a single builder and call the {@link #build()} method in each thread constructor.
  *
  * @param <T> enum of operations
+ * @deprecated since 0.9 and will be removed in 0.10.
  */
 public class OperationSelectorBuilder<T extends Enum<T>> {
 

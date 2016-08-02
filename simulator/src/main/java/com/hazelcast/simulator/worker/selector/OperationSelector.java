@@ -27,6 +27,8 @@ import java.util.Random;
  * {@link OperationSelectorBuilder#build()} method in each thread constructor.
  *
  * @param <T> enum of operations
+ *
+ * @deprecated since 0.9 and will be removed in 0.10.
  */
 public class OperationSelector<T extends Enum<T>> {
 
