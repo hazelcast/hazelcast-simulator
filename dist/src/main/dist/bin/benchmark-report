@@ -19,8 +19,11 @@ image_height=1024
 # - image link should only be printed of image exist
 # - problem with dstat not found and reporting
 # - summary of the benchmark
+# - latency line labels too long; contains full file path
+# - aggregated throughput funky underscore problem
 #
 # DONE
+# - if dstats files not present, give hint.
 #
 # Nice to have
 # - attractive plots
@@ -94,7 +97,7 @@ plot_start(){
 
 plot_complete(){
     gnuplot gnuplot.tmp
-    rm gnuplot.tml
+    rm gnuplot.tmp
 }
 
 plot(){
@@ -118,9 +121,8 @@ html_h2(){
 html_img(){
      img=$1
      image_file="$output_dir/images/${img}.png"
-     if [ -f "$image_file" ]
-     then
-        html "<img src=\"images/${img}.png\" style=\"width:640px;height:480px;\" onclick=\"window.open(this.src)\">"
+     if [ -f "$image_file" ] ; then
+        html "<img src=\"images/${img}.png\" style=\"width:640px;height:512px;\" onclick=\"window.open(this.src)\">"
      fi
 }
 
@@ -132,7 +134,7 @@ html(){
 # ============================================================================
 
 report_start(){
-    rm -fr report_file
+    rm -fr $report_file
     html "<html>"
     html "<body>"
 }
@@ -173,8 +175,6 @@ report_throughput(){
         done
     done
     plot_complete
-
-echo "222"
 
     plot_start
     plot "set style data lines"
@@ -221,8 +221,6 @@ echo "222"
     html_img "throughput_aggregated"
     html_img "throughput_per_worker"
 
-echo 333
-
     html "<table border=\"2\">"
     html "<tr><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
     for benchmark_dir in "${benchmark_dirs[@]}"
@@ -232,8 +230,6 @@ echo 333
         html_stats "${aggregated_file}" 2
     done
     html "</table>"
-
-echo 444
 
     rm -fr *.tmp
 }
@@ -498,15 +494,24 @@ plot_dstat_probe(){
     rm -fr *.tmp
 }
 
-report_dstats()
+report_dstat()
 {
     html_h1 DStat
-#
-#    dstat_files=($(find "${benchmark_dirs[@]}" -name dstat.csv))
-#    if [ ${#dstat_files[@]} -eq 0 ]; then
-#        html "No DStat information is found. Check out the worker.sh for an example how to enable dstat"
-#        return
-#    fi
+
+    # Checking if dstat information is available in the benchmarks.
+    dstat_files_found=0
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        dstat_files=($(find $benchmark_dir -name dstat.csv))
+
+        if [ ! ${#dstat_files[@]} -eq 0 ]; then
+            dstat_files_found=1
+        fi
+    done
+    if [ $dstat_files_found -eq 0 ]; then
+        html "No dstat information is found. Check the SIMULATOR_HOME/conf/worker.sh for an example how to enable dstat"
+        return
+    fi
 
     ###################################################
     #               CPU
@@ -643,7 +648,7 @@ report_throughput
 
 report_latency
 
-report_dstats
+report_dstat
 
 report_end
 
