@@ -34,8 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
-import static java.lang.Math.pow;
-import static java.lang.Math.round;
+import static com.hazelcast.simulator.worker.Probability.loadTimeStepProbabilityArray;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isPublic;
@@ -43,16 +42,12 @@ import static java.lang.reflect.Modifier.isStatic;
 
 public class TimeStepModel {
 
-    private static final int PROBABILITY_PRECISION = 3;
-    private static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
-    private static final double PROBABILITY_INTERVAL = 1.0 / PROBABILITY_LENGTH;
-
     private final Class testClass;
     private final Class threadStateClass;
     private final List<Method> beforeRunMethods;
     private final List<Method> afterRunMethods;
     private final List<Method> timeStepMethods;
-    private final Map<Method, Double> probabilities;
+    private final Map<Method, Probability> probabilities;
     private final byte[] timeStepProbabilityArray;
     private final PropertyBinding propertyBinding;
     private final Constructor threadStateConstructor;
@@ -66,7 +61,7 @@ public class TimeStepModel {
         this.threadStateClass = loadThreadStateClass();
         this.threadStateConstructor = loadThreadStateConstructor();
         this.probabilities = loadProbabilities();
-        this.timeStepProbabilityArray = loadTimeStepProbabilityArray();
+        this.timeStepProbabilityArray = loadTimeStepProbabilityArray(probabilities, getActiveTimeStepMethods());
     }
 
     public final Class getTestClass() {
@@ -92,8 +87,7 @@ public class TimeStepModel {
     public final List<Method> getActiveTimeStepMethods() {
         List<Method> result = new ArrayList<Method>();
         for (Method method : timeStepMethods) {
-            double probability = probabilities.get(method);
-            if (probability > 0) {
+            if (probabilities.get(method).isLargerThanZero()) {
                 result.add(method);
             }
         }
@@ -105,13 +99,13 @@ public class TimeStepModel {
     }
 
     // just for testing
-    Double getProbability(String methodName) {
+    Probability getProbability(String methodName) {
         for (Method method : getTimeStepMethods()) {
             if (method.getName().equals(methodName)) {
                 return probabilities.get(method);
             }
         }
-        return 0d;
+        return null;
     }
 
     private List<Method> loadBeforeRunMethods() {
@@ -197,39 +191,39 @@ public class TimeStepModel {
         }
     }
 
-    private Map<Method, Double> loadProbabilities() {
-        Map<Method, Double> probMap = new HashMap<Method, Double>();
+    private Map<Method, Probability> loadProbabilities() {
+        Map<Method, Probability> probMap = new HashMap<Method, Probability>();
 
         Method defaultMethod = null;
-        double totalProbability = 0;
+        Probability totalProbability = new Probability(0);
         for (Method method : timeStepMethods) {
-            double probability = loadProbability(method);
-            if (probability == -1) {
+            Probability timeStepProbability = loadProbability(method);
+            if (timeStepProbability.isMinusOne()) {
                 if (defaultMethod != null) {
                     throw new IllegalTestException("TimeStep method '" + method + "' can't have probability -1."
                             + " Method '" + defaultMethod + "' already has probability -1 and only one such method is allowed");
                 }
                 defaultMethod = method;
-            } else if (probability > 1) {
+            } else if (timeStepProbability.isLargerThanOne()) {
                 throw new IllegalTestException("TimeStep method '" + method + "'"
-                        + " can't have a probability larger than 1, found: " + probability);
-            } else if (probability < 0) {
+                        + " can't have a probability larger than 1, found: " + timeStepProbability);
+            } else if (timeStepProbability.isSmallerThanZero()) {
                 throw new IllegalTestException("TimeStep method '" + method + "'"
-                        + " can't have a probability smaller than 0, found: " + probability);
+                        + " can't have a probability smaller than 0, found: " + timeStepProbability);
             } else {
-                totalProbability += probability;
-                if (totalProbability > 1) {
-                    throw new IllegalTestException("TimeStep method '" + method + "' with probability " + probability
+                totalProbability = totalProbability.add(timeStepProbability);
+                if (totalProbability.isLargerThanOne()) {
+                    throw new IllegalTestException("TimeStep method '" + method + "' with probability " + timeStepProbability
                             + " exceeds the total probability of 1");
                 }
-                probMap.put(method, probability);
+                probMap.put(method, timeStepProbability);
             }
         }
 
         if (defaultMethod != null) {
-            double probability = 1 - totalProbability;
+            Probability probability = new Probability(1).sub(totalProbability);
             probMap.put(defaultMethod, probability);
-        } else if (1.0 - totalProbability > PROBABILITY_INTERVAL) {
+        } else if (totalProbability.isSmallerThanOne()) {
             throw new IllegalTestException("The total probability of TimeStep methods in test " + testClass.getName()
                     + " is smaller than 1, found: " + totalProbability);
         }
@@ -237,21 +231,25 @@ public class TimeStepModel {
         return probMap;
     }
 
-    private double loadProbability(Method method) {
+    private Probability loadProbability(Method method) {
         String propertyName = method.getName() + "Prob";
-        String configuredValue = propertyBinding.loadProperty(propertyName);
-        if (configuredValue == null) {
+        String valueString = propertyBinding.loadProperty(propertyName);
+
+        double value;
+        if (valueString == null) {
             // nothing was specified. So lets use what is on the annotation
-            return method.getAnnotation(TimeStep.class).prob();
+            value = method.getAnnotation(TimeStep.class).prob();
         } else {
             // the user has explicitly configured a probability
             try {
-                return Double.parseDouble(configuredValue);
+                value = Double.parseDouble(valueString);
             } catch (NumberFormatException e) {
                 throw new IllegalTestException(testClass.getName() + "." + propertyName
-                        + " value '" + configuredValue + "' is not a valid double value", e);
+                        + " value '" + valueString + "' is not a valid double value", e);
             }
         }
+
+        return new Probability(value);
     }
 
     /**
@@ -259,34 +257,15 @@ public class TimeStepModel {
      *
      * @return the array of probabilities for each {@link TimeStep} method
      * or {@code null} if there is only a single {@link TimeStep} method.
+     *
+     * The value in the byte refers to the index of the method in the {@link #getActiveTimeStepMethods()}. If a method has 0.5
+     * probability and index 15, then 50% of the values in the array will point to 15.
      */
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getTimeStepProbabilityArray() {
         return timeStepProbabilityArray;
     }
 
-    private byte[] loadTimeStepProbabilityArray() {
-        if (getActiveTimeStepMethods().size() < 2) {
-            return null;
-        }
-
-        byte[] result = new byte[PROBABILITY_LENGTH];
-        int index = 0;
-
-        List<Method> activeTimeStepMethods = getActiveTimeStepMethods();
-        for (int k = 0; k < activeTimeStepMethods.size(); k++) {
-            Method method = activeTimeStepMethods.get(k);
-            double probability = probabilities.get(method);
-            for (int i = 0; i < round(probability * result.length); i++) {
-                if (index < result.length) {
-                    result[index] = (byte) k;
-                    index++;
-                }
-            }
-        }
-
-        return result;
-    }
 
     @SuppressWarnings("unchecked")
     private Constructor loadThreadStateConstructor() {
