@@ -15,15 +15,16 @@ image_height=1024
 # - from one of the latency:  [3.19078e+06:3.19078e+06], adjusting to [3.15888e+06:3.22269e+06]
 # - test suite / jvm parameters etc should all be copied into the output directory so the whole bundle is self explaining.
 # - regular latency histogram contains all hgrm files from each benchmark for each commulative probe; but no info which probe
-# - cli:w hat if no directories are passed
 # - image link should only be printed of image exist
-# - problem with dstat not found and reporting
 # - summary of the benchmark
-# - latency line labels too long; contains full file path
-
+#
 # DONE
+# - cli:w hat if no directories are passed
+# - problem with dstat not found and reporting
+# - html title
 # - if dstats files not present, give hint.
 # - aggregated throughput funky underscore problem
+# - latency line labels too long; contains full file path
 #
 # Nice to have
 # - attractive plots
@@ -34,41 +35,32 @@ image_height=1024
 # - gc info: https://github.com/chewiebug/GCViewer
 
 
-benchmark_dirs=""
-
-
 # ================================== reading commandline =============================
 
-reading_OUTPUT_DIR=0
-report_file=""
-help="Usage: benchmark-report -o output_directory benchmark_directory ..."
+help="Usage: benchmark-report output_directory benchmark_directory ..."
 
-for var in $@; do
-    if [ $reading_OUTPUT_DIR -eq 1 ]; then
-        output_dir=$var
-        report_file="${output_dir}/report.html"
-        reading_OUTPUT_DIR=2
-     elif [ $var = "-o" ]; then
-        reading_OUTPUT_DIR=1
-     elif [ $var = "-h" ]; then
-        message $help
-        exit 255
-     else
-        benchmark_dir=$var
-        if [ ! -d "$benchmark_dir" ]; then
-            echo Directory $benchmark_dir does not exist! Aborting.
-            exit 1
-        fi
-
-        benchmark_dirs="$benchmark_dirs $benchmark_dir"
-    fi
-done
-
-if [ !  $reading_OUTPUT_DIR -eq 2 ]; then
-    echo "Invalid usage: output_directory is not set"
+if [ "$#" -le 1 ]; then
     echo $help
     exit 1
 fi
+
+if [ $1 = "-h" ] ; then
+    echo $help
+    exit 0
+fi
+
+output_dir="$1"
+report_file="${output_dir}/report.html"
+shift
+benchmark_dirs=("$@")
+
+for benchmark_dir in "${benchmark_dirs[@]}" ; do
+    if [ ! -d "$benchmark_dir" ] ; then
+        echo "benchmark directory $benchmark_dir does not exist"
+        exit 1
+    fi
+done
+
 
 # ================================== general functions =============================
 
@@ -135,7 +127,19 @@ html(){
 
 report_start(){
     rm -fr $report_file
+
+    title=""
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        benchmark_name=$(basename $benchmark_dir)
+        if [ -z "$title" ]; then
+            title="$benchmark_name"
+        else
+            title="$title vs $benchmark_name"
+        fi
+    done
     html "<html>"
+    html "<head><title>Benchmark: $title</title></head>"
     html "<body>"
 }
 
@@ -305,7 +309,7 @@ plot_latency_stat(){
             fi
 
             # first 4 lines contain header info.
-            plot "  \"$name\" every ::2  using 1:$column with lines, \\"
+            plot "  \"$name\" every ::2  using 1:$column title '${line_title}' noenhanced with lines, \\"
          done
     done
     plot_complete
