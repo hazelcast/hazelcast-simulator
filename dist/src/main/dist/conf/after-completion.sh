@@ -13,8 +13,8 @@ set -e
 
 dir=$1
 if [ ! -d "${dir}" ]; then
-    echo Directory $dir does not exist.
-    exit 1
+    echo Directory $dir does not exist. Exiting silently.
+    exit 0
 fi
 
 # Merge all hdr files of each member into a hdr file which gets stored in the dir.

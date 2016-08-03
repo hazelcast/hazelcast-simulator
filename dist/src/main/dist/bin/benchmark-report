@@ -144,6 +144,8 @@ report_start(){
 }
 
 report_throughput(){
+    echo "Reporting throughput"
+
     html_h1 "Throughput"
 
     plot_start
@@ -316,6 +318,8 @@ plot_latency_stat(){
 }
 
 report_latency(){
+    echo "Reporting latencies"
+
     html_h1 "Latency"
 
     plot_start
@@ -500,6 +504,8 @@ plot_dstat_probe(){
 
 report_dstat()
 {
+    echo "Reporting dstat"
+
     html_h1 DStat
 
     # Checking if dstat information is available in the benchmarks.
@@ -641,6 +647,7 @@ mkdir -p $output_dir/images
 
 for benchmark_dir in "${benchmark_dirs[@]}"
 do
+    echo "Copying $benchmark_dir into $output_dir"
     cp -r $benchmark_dir $output_dir
 done
 
