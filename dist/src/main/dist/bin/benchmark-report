@@ -17,14 +17,18 @@ image_height=1024
 # - regular latency histogram contains all hgrm files from each benchmark for each commulative probe; but no info which probe
 # - image link should only be printed of image exist
 # - summary of the benchmark
+# - statistics overview doesn't mention the name of the benchmark
+# - latency doesn't have a time unit
 #
 # DONE
+# - latency statistics has 'stuff' inside title
 # - cli:w hat if no directories are passed
 # - problem with dstat not found and reporting
 # - html title
 # - if dstats files not present, give hint.
 # - aggregated throughput funky underscore problem
 # - latency line labels too long; contains full file path
+# - aggregated dstats underscore issue
 #
 # Nice to have
 # - attractive plots
@@ -288,7 +292,7 @@ plot_latency_stat(){
     plot "set terminal png size $image_width,$image_height"
     plot "set grid"
     plot "set key below"
-    plot "set xlabel 'stuff'"
+    plot "set xlabel 'Time seconds'"
     plot "set title '$title'"
     plot "set ylabel '${ylabel}'"
     plot "set output '$output_dir/images/${image}.png'"
@@ -354,40 +358,40 @@ report_latency(){
     html_img "latency"
 
     html_img "interval_25"
-    plot_latency_stat "Interval 25%" "?" "interval_25" 3
+    plot_latency_stat "Interval 25%" "Latency (ms)" "interval_25" 3
 
     html_img "interval_50"
-    plot_latency_stat "Interval 50%" "?" "interval_50" 4
+    plot_latency_stat "Interval 50%" "Latency (ms)" "interval_50" 4
 
     html_img "interval_75"
-    plot_latency_stat "Interval 75%" "?" "interval_75" 5
+    plot_latency_stat "Interval 75%" "Latency (ms)" "interval_75" 5
 
     html_img "interval_90"
-    plot_latency_stat "Interval 90%" "?" "interval_90" 6
+    plot_latency_stat "Interval 90%" "Latency (ms)" "interval_90" 6
 
     html_img "interval_99"
-    plot_latency_stat "Interval 99%" "?" "interval_99" 7
+    plot_latency_stat "Interval 99%" "Latency (ms)" "interval_99" 7
 
     html_img "interval_999"
-    plot_latency_stat "Interval 99.9%" "?" "interval_999" 8
+    plot_latency_stat "Interval 99.9%" "Latency (ms)" "interval_999" 8
 
     html_img "interval_9999"
-    plot_latency_stat "Interval 99.99%" "?" "interval_9999" 9
+    plot_latency_stat "Interval 99.99%" "Latency (ms)" "interval_9999" 9
 
     html_img "interval_99999"
-    plot_latency_stat "Interval 99.999%" "?" "interval_99999" 10
+    plot_latency_stat "Interval 99.999%" "Latency (ms)" "interval_99999" 10
 
     html_img "interval_min"
-    plot_latency_stat "Interval Min" "?" "interval_min" 11
+    plot_latency_stat "Interval Min" "Latency (ms)" "interval_min" 11
 
     html_img "interval_max"
-    plot_latency_stat "Interval Max" "?" "interval_max" 12
+    plot_latency_stat "Interval Max" "Latency (ms)" "interval_max" 12
 
     html_img "interval_mean"
-    plot_latency_stat "Interval Mean" "?" "interval_mean" 13
+    plot_latency_stat "Interval Mean" "Latency (ms)" "interval_mean" 13
 
     html_img "interval_std_deviation"
-    plot_latency_stat "Interval Std Deviation" "?" "interval_std_deviation" 14
+    plot_latency_stat "Interval Std Deviation" "Latency (ms)" "interval_std_deviation" 14
 }
 
 plot_dstat_probe(){
@@ -485,7 +489,7 @@ plot_dstat_probe(){
             }' "${files[@]
         }" > ${aggregated_file}
 
-        plot " \"${aggregated_file}\" using (t0(timecolumn(1))):($multiplier_y * \$2) title '${benchmark_name}' with lines , \\"
+        plot " \"${aggregated_file}\" using (t0(timecolumn(1))):($multiplier_y * \$2) title '${benchmark_name}' noenhanced with lines , \\"
     done
     plot_complete
 
