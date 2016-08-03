@@ -45,6 +45,11 @@ public class NativeUtilsTest {
         NativeUtils.execute("pwd && false");
     }
 
+    @Test(expected = CommandLineExitException.class)
+    public void testExecute_withException() {
+        NativeUtils.execute("pwd && false", true);
+    }
+
     @Test
     public void testGetPIDorNull() {
         // we should have at least one implementation which works on each build system

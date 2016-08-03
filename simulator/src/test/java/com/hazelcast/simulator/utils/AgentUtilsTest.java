@@ -22,6 +22,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
@@ -80,11 +81,11 @@ public class AgentUtilsTest {
         setCloudProvider(PROVIDER_STATIC);
 
         StringBuilder result = new StringBuilder("Warning: foobar SIM-OK");
-        when(bash.ssh(eq("172.16.16.1"), anyString())).thenReturn(result);
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn(result);
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
-        verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent"));
+        verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent"), anyBoolean());
         verifyNoMoreInteractions(bash);
     }
 
@@ -93,7 +94,18 @@ public class AgentUtilsTest {
         setCloudProvider(PROVIDER_STATIC);
 
         StringBuilder result = new StringBuilder("Warning: foobar SIM-NOK");
-        when(bash.ssh(eq("172.16.16.1"), anyString())).thenReturn(result);
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn(result);
+
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testCheckInstallation_isStatic_whenSshCommandFails() {
+        setCloudProvider(PROVIDER_STATIC);
+
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenThrow(
+                new CommandLineExitException("expected exception", new CommandLineExitException("inner cause"))
+        );
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
     }

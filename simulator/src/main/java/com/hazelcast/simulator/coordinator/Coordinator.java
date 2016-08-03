@@ -121,8 +121,7 @@ public final class Coordinator {
         this.workerParameters = workerParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
 
-        this.failureContainer = new FailureContainer(
-                outputDirectory, componentRegistry, testSuite.getTolerableFailures());
+        this.failureContainer = new FailureContainer(outputDirectory, componentRegistry, testSuite.getTolerableFailures());
 
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
@@ -189,9 +188,11 @@ public final class Coordinator {
     }
 
     void run() {
+        boolean isPrePhaseDone = false;
         try {
             checkInstallation(bash, simulatorProperties, componentRegistry);
             uploadFiles();
+            isPrePhaseDone = true;
 
             try {
                 startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
@@ -217,18 +218,16 @@ public final class Coordinator {
                 }
             }
         } finally {
-            if (hazelcastJARs != null) {
-                hazelcastJARs.shutdown();
+            hazelcastJARs.shutdown();
+
+            if (isPrePhaseDone) {
+                download();
+                executeAfterCompletion();
+
+                OperationTypeCounter.printStatistics();
             }
-
-            download();
-
-            executeAfterCompletion();
-
-            OperationTypeCounter.printStatistics();
         }
     }
-
 
     private void executeAfterCompletion() {
         if (coordinatorParameters.getAfterCompletionFile() != null) {

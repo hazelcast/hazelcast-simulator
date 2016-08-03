@@ -38,6 +38,10 @@ public final class NativeUtils {
     }
 
     public static StringBuilder execute(String command) {
+        return execute(command, false);
+    }
+
+    public static StringBuilder execute(String command, boolean throwException) {
         StringBuilder sb = new StringBuilder();
 
         if (LOGGER.isDebugEnabled()) {
@@ -56,6 +60,10 @@ public final class NativeUtils {
             int shellExitStatus = shell.waitFor();
 
             if (shellExitStatus != 0) {
+                if (throwException) {
+                    throw new CommandLineExitException(format("Failed to execute [%s]", command),
+                            new CommandLineExitException(sb.toString()));
+                }
                 LOGGER.error(format("Failed to execute [%s]", command));
                 LOGGER.error(sb.toString());
                 exitWithError();

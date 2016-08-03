@@ -85,8 +85,15 @@ public final class AgentUtils {
         @Override
         public void run() {
             String ip = agentData.getPublicAddress();
-            String result = bash.ssh(ip, format("[[ -f hazelcast-simulator-%s/bin/agent ]] && echo SIM-OK || echo SIM-NOK",
-                    SIMULATOR_VERSION)).toString().trim();
+            String result;
+            try {
+                result = bash.ssh(ip, format("[[ -f hazelcast-simulator-%s/bin/agent ]] && echo SIM-OK || echo SIM-NOK",
+                        SIMULATOR_VERSION), true).toString().trim();
+            } catch (CommandLineExitException e) {
+                throw new CommandLineExitException(format(
+                        "Could not connect to %s. Please check your agents.txt file for invalid IP addresses.%n%s",
+                        ip, e.getCause().getMessage()));
+            }
             if (result.endsWith("SIM-NOK")) {
                 throw new CommandLineExitException(format(
                         "Simulator is not installed correctly on %s. Please run provisioner --install to fix this.", ip));
