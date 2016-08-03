@@ -21,11 +21,15 @@ import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Warmup;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
+import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys;
 
 /**
  * Test for {@link IMap#putAll(java.util.Map)} which creates the input values on the fly during the RUN phase.
@@ -38,7 +42,10 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
     // properties
     public int batchSize = 10;
     public int keyRange = 1000000;
+    // the number of prepared maps with input values (default is 0 which means everything is created on the fly)
+    public int mapCount = 0;
 
+    private Map<Integer, Integer>[] inputMaps;
     private IMap<Integer, Integer> map;
 
     @Setup
@@ -46,16 +53,57 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @TimeStep
-    public void timeStep(BaseThreadState state) throws Exception {
-        SortedMap<Integer, Integer> values = new TreeMap<Integer, Integer>();
-        for (int i = 0; i < batchSize; i++) {
-            int key = state.randomInt(keyRange);
+    @Warmup
+    @SuppressWarnings("unchecked")
+    public void warmup() {
+        if (mapCount > 0) {
+            // prepare the input maps
+            Integer[] keys = generateIntegerKeys(keyRange, SHARED, targetInstance);
 
-            values.put(key, key);
+            inputMaps = new Map[mapCount];
+            Random random = new Random();
+            for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
+                Map<Integer, Integer> inputMap = new HashMap<Integer, Integer>(batchSize);
+                while (inputMap.size() < batchSize) {
+                    Integer key = keys[random.nextInt(keyRange)];
+                    inputMap.put(key, key);
+                }
+                inputMaps[mapIndex] = inputMap;
+            }
+        }
+    }
+
+    @TimeStep
+    public void timeStep(ThreadState state) throws Exception {
+        Map<Integer, Integer> inputMap;
+        if (mapCount > 0) {
+            // use a prepared input map
+            inputMap = state.randomMap();
+        } else {
+            // fill the input map on the fly
+            inputMap = state.getMap();
+            for (int i = 0; i < batchSize; i++) {
+                int key = state.randomInt(keyRange);
+
+                inputMap.put(key, key);
+            }
         }
 
-        map.putAll(values);
+        map.putAll(inputMap);
+    }
+
+    public class ThreadState extends BaseThreadState {
+
+        private final Map<Integer, Integer> inputMap = new HashMap<Integer, Integer>();
+
+        private Map<Integer, Integer> getMap() {
+            inputMap.clear();
+            return inputMap;
+        }
+
+        private Map<Integer, Integer> randomMap() {
+            return inputMaps[randomInt(inputMaps.length)];
+        }
     }
 
     @Teardown
