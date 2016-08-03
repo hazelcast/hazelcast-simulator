@@ -80,7 +80,6 @@ public class MapAsyncOpsTest extends AbstractTest {
 
     @TimeStep(prob = 0.2)
     public void destroy(BaseThreadState state) {
-        int key = state.randomInt(keyCount);
         map.destroy();
         count.destroyCount.incrementAndGet();
     }
