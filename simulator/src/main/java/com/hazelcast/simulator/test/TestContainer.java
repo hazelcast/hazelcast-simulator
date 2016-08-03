@@ -213,9 +213,9 @@ public class TestContainer {
                     args = new Object[0];
                     break;
                 case 1:
-                    Class parameterType = setupMethod.getParameterTypes()[0];
+                    Class<?> parameterType = setupMethod.getParameterTypes()[0];
                     if (!parameterType.isAssignableFrom(TestContext.class) || parameterType.isAssignableFrom(Object.class)) {
-                        throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found ",
+                        throw new IllegalTestException(format("Method %s.%s() supports arguments of type %s, but found %s",
                                 testClass.getSimpleName(), setupMethod, TestContext.class.getName(), parameterType.getName()));
                     }
                     args = new Object[]{testContext};
