@@ -22,9 +22,9 @@ public class PerformanceStateTest {
         assertEquals(250, addState.getOperationCount());
         assertEquals(11.0, addState.getIntervalThroughput(), 0.00001);
         assertEquals(22.0, addState.getTotalThroughput(), 0.00001);
-        assertEquals(150, addState.getIntervalPercentileLatency());
-        assertEquals(175.0d, addState.getIntervalAvgLatency(), 0.00001);
-        assertEquals(200, addState.getIntervalMaxLatency());
+        assertEquals(150, addState.getIntervalLatency999PercentileNanos());
+        assertEquals(175.0d, addState.getIntervalLatencyAvgNanos(), 0.00001);
+        assertEquals(200, addState.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -36,9 +36,9 @@ public class PerformanceStateTest {
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
         assertEquals(10.0, addState.getTotalThroughput(), 0.00001);
-        assertEquals(300, addState.getIntervalPercentileLatency());
-        assertEquals(550.0d, addState.getIntervalAvgLatency(), 0.00001);
-        assertEquals(800, addState.getIntervalMaxLatency());
+        assertEquals(300, addState.getIntervalLatency999PercentileNanos());
+        assertEquals(550.0d, addState.getIntervalLatencyAvgNanos(), 0.00001);
+        assertEquals(800, addState.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -50,9 +50,9 @@ public class PerformanceStateTest {
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
         assertEquals(10.0, addState.getTotalThroughput(), 0.00001);
-        assertEquals(400, addState.getIntervalPercentileLatency());
-        assertEquals(450.0d, addState.getIntervalAvgLatency(), 0.00001);
-        assertEquals(500, addState.getIntervalMaxLatency());
+        assertEquals(400, addState.getIntervalLatency999PercentileNanos());
+        assertEquals(450.0d, addState.getIntervalLatencyAvgNanos(), 0.00001);
+        assertEquals(500, addState.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -64,9 +64,9 @@ public class PerformanceStateTest {
         assertEquals(150, addState.getOperationCount());
         assertEquals(6.0, addState.getIntervalThroughput(), 0.00001);
         assertEquals(12.0, addState.getTotalThroughput(), 0.00001);
-        assertEquals(150, addState.getIntervalPercentileLatency());
-        assertEquals(175.0d, addState.getIntervalAvgLatency(), 0.00001);
-        assertEquals(200, addState.getIntervalMaxLatency());
+        assertEquals(150, addState.getIntervalLatency999PercentileNanos());
+        assertEquals(175.0d, addState.getIntervalLatencyAvgNanos(), 0.00001);
+        assertEquals(200, addState.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -78,9 +78,9 @@ public class PerformanceStateTest {
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
         assertEquals(10.0, addState.getTotalThroughput(), 0.00001);
-        assertEquals(300, addState.getIntervalPercentileLatency());
-        assertEquals(550.0d, addState.getIntervalAvgLatency(), 0.00001);
-        assertEquals(800, addState.getIntervalMaxLatency());
+        assertEquals(300, addState.getIntervalLatency999PercentileNanos());
+        assertEquals(550.0d, addState.getIntervalLatencyAvgNanos(), 0.00001);
+        assertEquals(800, addState.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -92,9 +92,9 @@ public class PerformanceStateTest {
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
         assertEquals(10.0, addState.getTotalThroughput(), 0.00001);
-        assertEquals(400, addState.getIntervalPercentileLatency());
-        assertEquals(450.0d, addState.getIntervalAvgLatency(), 0.00001);
-        assertEquals(500, addState.getIntervalMaxLatency());
+        assertEquals(400, addState.getIntervalLatency999PercentileNanos());
+        assertEquals(450.0d, addState.getIntervalLatencyAvgNanos(), 0.00001);
+        assertEquals(500, addState.getIntervalLatencyMaxNanos());
     }
 
     @Test

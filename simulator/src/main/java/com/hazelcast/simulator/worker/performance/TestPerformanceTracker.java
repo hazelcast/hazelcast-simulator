@@ -51,9 +51,9 @@ final class TestPerformanceTracker {
     private final PerformanceLogWriter performanceLogWriter;
     private long lastTimestamp;
     private Map<String, Histogram> intervalHistogramMap;
-    private double intervalAvgLatency;
-    private long intervalPercentileLatency;
-    private long intervalMaxLatency;
+    private double intervalLatencyAvgNanos;
+    private long intervalLatency999PercentileNanos;
+    private long intervalLatencyMaxNanos;
     private long intervalOperationCount;
     private long totalOperationCount;
     private double intervalThroughput;
@@ -118,9 +118,9 @@ final class TestPerformanceTracker {
                 long intervalMaxLatency, long intervalOperationCount, long iterations, long currentTimestamp) {
         this.intervalHistogramMap = intervalHistograms;
 
-        this.intervalPercentileLatency = intervalPercentileLatency;
-        this.intervalAvgLatency = intervalAvgLatency;
-        this.intervalMaxLatency = intervalMaxLatency;
+        this.intervalLatency999PercentileNanos = intervalPercentileLatency;
+        this.intervalLatencyAvgNanos = intervalAvgLatency;
+        this.intervalLatencyMaxNanos = intervalMaxLatency;
 
         this.intervalOperationCount = intervalOperationCount;
         this.totalOperationCount += intervalOperationCount;
@@ -157,7 +157,7 @@ final class TestPerformanceTracker {
 
     PerformanceState createPerformanceState() {
         return new PerformanceState(totalOperationCount, intervalThroughput, totalThroughput,
-                intervalAvgLatency, intervalPercentileLatency, intervalMaxLatency);
+                intervalLatencyAvgNanos, intervalLatency999PercentileNanos, intervalLatencyMaxNanos);
     }
 
     static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {
