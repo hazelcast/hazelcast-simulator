@@ -89,16 +89,17 @@ verify_software()
 # ================================== gnuplot functions =============================
 
 plot_start(){
-    rm -fr gnu.plot
+    rm -fr gnuplot.tmp
 }
 
 plot_complete(){
-    gnuplot gnu.plot
+    gnuplot gnuplot.tmp
+    rm gnuplot.tml
 }
 
 plot(){
     command=$1
-    echo "$command" >> gnu.plot
+    echo "$command" >> gnuplot.tmp
 }
 
 # ================================== html functions =============================
@@ -173,6 +174,8 @@ report_throughput(){
     done
     plot_complete
 
+echo "222"
+
     plot_start
     plot "set style data lines"
     plot 'set datafile separator ","'
@@ -218,15 +221,19 @@ report_throughput(){
     html_img "throughput_aggregated"
     html_img "throughput_per_worker"
 
+echo 333
+
     html "<table border=\"2\">"
     html "<tr><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
-#    for benchmark_dir in "${benchmark_dirs[@]}"
-#    do
-#        benchmark_name=$(basename $benchmark_dir)
-#        aggregated_file="${benchmark_name}_throughput_aggregated.tmp"
-#        html_stats "${aggregated_file}" 2
-#    done
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        benchmark_name=$(basename $benchmark_dir)
+        aggregated_file="${benchmark_name}_throughput_aggregated.tmp"
+        html_stats "${aggregated_file}" 2
+    done
     html "</table>"
+
+echo 444
 
     rm -fr *.tmp
 }
@@ -494,14 +501,12 @@ plot_dstat_probe(){
 report_dstats()
 {
     html_h1 DStat
-
-    echo  "${benchmark_dirs[@]}"
-
-    dstat_files=($(find "${benchmark_dirs[@]}" -name dstat.csv))
-    if [ ${#dstat_files[@]} -eq 0 ]; then
-        html "No DStat information is found. Check out the worker.sh for an example how to enable dstat"
-        return
-    fi
+#
+#    dstat_files=($(find "${benchmark_dirs[@]}" -name dstat.csv))
+#    if [ ${#dstat_files[@]} -eq 0 ]; then
+#        html "No DStat information is found. Check out the worker.sh for an example how to enable dstat"
+#        return
+#    fi
 
     ###################################################
     #               CPU
@@ -628,21 +633,6 @@ mkdir -p $output_dir/images
 for benchmark_dir in "${benchmark_dirs[@]}"
 do
     cp -r $benchmark_dir $output_dir
-
-    echo $benchmark_dir
-    i=0
-    html "<UL>"
-    for filepath in `find "$benchmark_dir" -maxdepth 1 -mindepth 1 -type d | sort`; do
-        path=`basename "$filepath"`
-        html "  <LI>$path</LI>"
-        html "  <UL>"
-        for i in `find "$filepath" -maxdepth 1 -mindepth 1 -type f| sort`; do
-            file=`basename "$i"`
-            html "    <LI><a href=\"/$path/$file\">$file</a></LI>"
-        done
-        html "  </UL>"
-    done
-    html "</UL>"
 done
 
 verify_software
@@ -657,6 +647,5 @@ report_dstats
 
 report_end
 
-echo Benchmark report completed!
-echo Benchmark report destination directory: $output_dir
+echo Benchmark report available at: $output_dir
 
