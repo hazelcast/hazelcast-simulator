@@ -1,12 +1,4 @@
-/**
- * Written by Gil Tene of Azul Systems, and released to the public domain,
- * as explained at http://creativecommons.org/publicdomain/zero/1.0/
- *
- * @author Gil Tene
- */
-
 package com.hazelcast.simulator.utils;
-
 
 import org.HdrHistogram.DoubleHistogram;
 import org.HdrHistogram.EncodableHistogram;
@@ -21,13 +13,21 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
 /**
+ * Written by Gil Tene of Azul Systems, and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+ *
  * This is a modified {@link org.HdrHistogram.HistogramLogProcessor} that allows it to be subclassed. There is a pr pending
  * to modify the real one. So as soon as that is merged, we can get rid of this class.
  * https://github.com/HdrHistogram/HdrHistogram/pull/111
+ *
+ * @author Gil Tene
  */
 public class HistogramLogProcessor extends Thread {
+
     public static final String versionString = "Histogram Log Processor version ---SIMULATOR--";
 
     protected final HistogramLogProcessorConfiguration config;
@@ -119,7 +119,7 @@ public class HistogramLogProcessor extends Thread {
                                 "                             in output. [default = 1000000.0 (1 msec in nsec)]\n" +
                                 " [-listtags]                 list all tags found on histogram lines the input file."
                 );
-                System.exit(1);
+                exitWithError();
             }
         }
     }
@@ -151,7 +151,7 @@ public class HistogramLogProcessor extends Thread {
             if (config.verbose) {
                 throw ex;
             } else {
-                System.exit(1);
+                exitWithError();
             }
         }
         lineNumber++;
@@ -295,8 +295,8 @@ public class HistogramLogProcessor extends Thread {
             }
         } finally {
             if (config.outputFileName != null) {
-                timeIntervalLog.close();
-                histogramPercentileLog.close();
+                closeQuietly(timeIntervalLog);
+                closeQuietly(histogramPercentileLog);
             }
         }
     }
