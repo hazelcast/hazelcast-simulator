@@ -1,0 +1,662 @@
+#!/usr/bin/env bash
+
+# exit on error
+set -e
+
+image_width=1280
+image_height=1024
+
+# TODO:
+# - clients and members (we don't want to see members in the throughput in case of client test)
+# - cut of parts off the plot which are after completion or before start.
+# - graphs from same benchmark, same color.
+# - time in the hdr file; should be expressed in micro's instead of milli's with a comma?
+# - labels on latency suck
+# - from one of the latency:  [3.19078e+06:3.19078e+06], adjusting to [3.15888e+06:3.22269e+06]
+# - test suite / jvm parameters etc should all be copied into the output directory so the whole bundle is self explaining.
+# - regular latency histogram contains all hgrm files from each benchmark for each commulative probe; but no info which probe
+# - cli:w hat if no directories are passed
+# - image link should only be printed of image exist
+# - problem with dstat not found and reporting
+# - summary of the benchmark
+#
+# DONE
+#
+# Nice to have
+# - attractive plots
+#           http://stackoverflow.com/questions/10496469/how-do-i-enable-the-pngcairo-terminal-in-gnuplot
+# - generate 2 size pictures small/large
+# - better colours
+# - links to the benchmark directories should be made available in the html report.
+# - gc info: https://github.com/chewiebug/GCViewer
+
+
+benchmark_dirs=""
+
+
+# ================================== reading commandline =============================
+
+reading_OUTPUT_DIR=0
+report_file=""
+help="Usage: benchmark-report -o output_directory benchmark_directory ..."
+
+for var in $@; do
+    if [ $reading_OUTPUT_DIR -eq 1 ]; then
+        output_dir=$var
+        report_file="${output_dir}/report.html"
+        reading_OUTPUT_DIR=2
+     elif [ $var = "-o" ]; then
+        reading_OUTPUT_DIR=1
+     elif [ $var = "-h" ]; then
+        message $help
+        exit 255
+     else
+        benchmark_dir=$var
+        if [ ! -d "$benchmark_dir" ]; then
+            echo Directory $benchmark_dir does not exist! Aborting.
+            exit 1
+        fi
+
+        benchmark_dirs="$benchmark_dirs $benchmark_dir"
+    fi
+done
+
+if [ !  $reading_OUTPUT_DIR -eq 2 ]; then
+    echo "Invalid usage: output_directory is not set"
+    echo $help
+    exit 1
+fi
+
+# ================================== general functions =============================
+
+verify_software()
+{
+    # Check if gnuplot is installed.
+    if ! hash gnuplot 2>/dev/null ; then
+        echo gnuplot is not installed! Aborting.
+
+        os=$(uname)
+        if [[ $os == *"arwin"* ]]
+        then
+              echo gnuplot is available on OSX using homebrew: http://brewformulas.org/gnuplot
+              echo To install gnuplot using homebrew type: 'brew install gnuplot'
+        fi
+
+        exit 1
+    fi
+}
+
+# ================================== gnuplot functions =============================
+
+plot_start(){
+    rm -fr gnu.plot
+}
+
+plot_complete(){
+    gnuplot gnu.plot
+}
+
+plot(){
+    command=$1
+    echo "$command" >> gnu.plot
+}
+
+# ================================== html functions =============================
+
+
+html_h1(){
+    title=$1
+    html "<h1>$title</h1>"
+}
+
+html_h2(){
+    title=$1
+    html "<h2>$title</h2>"
+}
+
+html_img(){
+     img=$1
+     image_file="$output_dir/images/${img}.png"
+     if [ -f "$image_file" ]
+     then
+        html "<img src=\"images/${img}.png\" style=\"width:640px;height:480px;\" onclick=\"window.open(this.src)\">"
+     fi
+}
+
+html(){
+    text=$1
+    echo "$text" >> $report_file
+}
+
+# ============================================================================
+
+report_start(){
+    rm -fr report_file
+    html "<html>"
+    html "<body>"
+}
+
+report_throughput(){
+    html_h1 "Throughput"
+
+    plot_start
+    plot "set title 'Throughput Per Machine'"
+    plot "set style data lines"
+    plot 'set datafile separator ","'
+    plot "set terminal png size $image_width,$image_height"
+    plot "set grid"
+    plot "set key below"
+    plot "set xlabel 'Time seconds'"
+    plot "set xdata time"
+    plot "set timefmt \"%s\""
+    plot "offset = 0"
+    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    plot "set ylabel 'operations/second'"
+    plot "set format y '%.0f'"
+    plot "set output '$output_dir/images/throughput_per_worker.png'"
+    plot "plot \\"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        performance_files=($(find $benchmark_dir -name performance.csv))
+        benchmark_name=$(basename $benchmark_dir)
+
+        for performance_file in "${performance_files[@]}"
+        do
+            if [ ${#benchmark_dirs[@]} -eq 1 ]; then
+                worker_name=$(basename $(dirname $performance_file))
+            else
+                worker_name="${benchmark_name}#$(basename $(dirname $performance_file))"
+            fi
+            # we need to skip the first line because it contains header info and the time logic will choke on it.
+            plot "   \"$performance_file\" every ::1 using (t0(timecolumn(1))):5  title '$worker_name'   noenhanced with lines, \\"
+        done
+    done
+    plot_complete
+
+    plot_start
+    plot "set style data lines"
+    plot 'set datafile separator ","'
+    plot "set terminal png size $image_width,$image_height"
+    plot "set grid"
+    plot "set key below"
+    plot "set xlabel 'Time seconds'"
+    plot "set xdata time"
+    plot "set timefmt \"%s\""
+    plot "offset = 0"
+    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    plot "set title 'Throughput Aggregated'"
+    plot "set ylabel 'operations/second'"
+    plot "set format y '%.0f'"
+    plot "set output '$output_dir/images/throughput_aggregated.png'"
+    plot "plot \\"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        files=($(find $benchmark_dir -name performance.csv))
+        benchmark_name=$(basename $benchmark_dir)
+        aggregated_file="${benchmark_name}_throughput_aggregated.tmp"
+
+        # merge the operations/second column of all files and write that aggregated_file
+        awk -F ',' '
+        {
+            sum[FNR]+=$5;
+            b[FNR]++;
+            name[FNR]=$1;
+        } END {
+            for(i=1;i<=FNR;i++)
+                printf "%s, %.2f\n", name[i],sum[i];
+            }' "${files[@]
+        }" > "${aggregated_file}"
+
+        # cut of first line because it contains the headers.
+        sed -i -e 1,1d "${aggregated_file}"
+
+        plot " \"${aggregated_file}\" using (t0(timecolumn(1))):2 title '${benchmark_name}' with lines , \\"
+    done
+    plot_complete
+
+    html_h2 "Throughput"
+    html_img "throughput_aggregated"
+    html_img "throughput_per_worker"
+
+    html "<table border=\"2\">"
+    html "<tr><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
+#    for benchmark_dir in "${benchmark_dirs[@]}"
+#    do
+#        benchmark_name=$(basename $benchmark_dir)
+#        aggregated_file="${benchmark_name}_throughput_aggregated.tmp"
+#        html_stats "${aggregated_file}" 2
+#    done
+    html "</table>"
+
+    rm -fr *.tmp
+}
+
+html_stats()
+{
+    csv_file=$1
+    column=$2
+
+    # first we write the column into a file.
+    awk -v column=$column  '{print $column}' ${csv_file} > tmp
+
+    # then we calculate the results.
+    result=$( cat tmp | sort -n | awk '
+        BEGIN {
+            c = 0;
+            sum = 0;
+        }
+        $1 ~ /^[0-9]*(\.[0-9]*)?$/ {
+            a[c++] = $1;
+        sum += $1;
+        }
+        END {
+            mean = sum / c;
+            if( (c % 2) == 1 ) {
+                median = a[ int(c/2) ];
+            } else {
+                median = ( a[c/2] + a[c/2-1] ) / 2;
+            }
+            OFS="\t";
+            print c, mean, median, a[0], a[c-1];
+        }')
+
+    rm tmp
+
+    stats=($result)
+
+    html "<tr><td>${stats[1]}</td><td>${stats[2]}</td><td>${stats[3]}</td><td>${stats[4]}</td></tr>"
+}
+
+plot_latency_stat(){
+    title=$1
+    ylabel=$2
+    image=$3
+    column=$4
+
+    plot_start
+    plot "set style data lines"
+    plot "set datafile separator \",\""
+    plot "set terminal png size $image_width,$image_height"
+    plot "set grid"
+    plot "set key below"
+    plot "set xlabel 'stuff'"
+    plot "set title '$title'"
+    plot "set ylabel '${ylabel}'"
+    plot "set output '$output_dir/images/${image}.png'"
+    plot "plot \\"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        # look for all the hgrm in the root dir of the benchmark (so no member level)
+        hgrm_files=($(find $benchmark_dir -maxdepth 1 -name *.hgrm))
+        benchmark_name=$(basename $benchmark_dir)
+
+        for hgrm_file in "${hgrm_files[@]}"
+        do
+            worker_name=$(basename $(dirname $hgrm_file))
+            name=$(echo $hgrm_file | cut -f 1 -d '.')
+
+            if [ ${#benchmark_dirs[@]} -eq 1 ]; then
+                line_title="$worker_name"
+            else
+                line_title="${benchmark_name}_${worker_name}"
+            fi
+
+            # first 4 lines contain header info.
+            plot "  \"$name\" every ::2  using 1:$column with lines, \\"
+         done
+    done
+    plot_complete
+}
+
+report_latency(){
+    html_h1 "Latency"
+
+    plot_start
+    plot "set terminal png size $image_width,$image_height"
+    plot "unset xtics"
+    plot "set logscale x"
+    plot "set key top left"
+    plot "set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\""
+    plot "set output '$output_dir/images/latency.png'"
+    plot "plot '${SIMULATOR_HOME}/bin/xlabels.dat' with labels center offset 0, 1.5 point,\\"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        # look for all the hgrm in the root dir of the benchmark (so no member level)
+        hgrm_files=($(find $benchmark_dir -maxdepth 1 -name *.hgrm))
+        benchmark_name=$(basename $benchmark_dir)
+
+        for hgrm_file in "${hgrm_files[@]}"
+        do
+            worker_name=$(basename $(dirname $hgrm_file))
+
+            if [ ${#benchmark_dirs[@]} -eq 1 ]; then
+                line_title="$worker_name"
+            else
+                line_title="${benchmark_name}_${worker_name}"
+            fi
+
+            plot "   \"$hgrm_file\" using 4:1 with lines, \\"
+        done
+    done
+    plot_complete
+    html_h2 "Latency"
+    html_img "latency"
+
+    html_img "interval_25"
+    plot_latency_stat "Interval 25%" "?" "interval_25" 3
+
+    html_img "interval_50"
+    plot_latency_stat "Interval 50%" "?" "interval_50" 4
+
+    html_img "interval_75"
+    plot_latency_stat "Interval 75%" "?" "interval_75" 5
+
+    html_img "interval_90"
+    plot_latency_stat "Interval 90%" "?" "interval_90" 6
+
+    html_img "interval_99"
+    plot_latency_stat "Interval 99%" "?" "interval_99" 7
+
+    html_img "interval_999"
+    plot_latency_stat "Interval 99.9%" "?" "interval_999" 8
+
+    html_img "interval_9999"
+    plot_latency_stat "Interval 99.99%" "?" "interval_9999" 9
+
+    html_img "interval_99999"
+    plot_latency_stat "Interval 99.999%" "?" "interval_99999" 10
+
+    html_img "interval_min"
+    plot_latency_stat "Interval Min" "?" "interval_min" 11
+
+    html_img "interval_max"
+    plot_latency_stat "Interval Max" "?" "interval_max" 12
+
+    html_img "interval_mean"
+    plot_latency_stat "Interval Mean" "?" "interval_mean" 13
+
+    html_img "interval_std_deviation"
+    plot_latency_stat "Interval Std Deviation" "?" "interval_std_deviation" 14
+}
+
+plot_dstat_probe(){
+    title=$1
+    ylabel=$2
+    image=$3
+    format_y=$4
+    multiplier_y=$5
+    column=$6
+
+    # first we do per member.
+    plot_start
+    plot "set style data lines"
+    plot "set datafile separator \",\""
+    plot "set terminal png size $image_width,$image_height"
+    plot "set grid"
+    plot "set key below"
+    plot "set xlabel 'time seconds'"
+    plot "set xdata time"
+    plot "set timefmt \"%s\""
+    plot "offset = 0"
+    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    plot "set title '$title'"
+    plot "set ylabel '$ylabel'"
+    if [ -n "$format_y" ]; then
+        plot "set format y '$format_y'"
+    fi
+    plot "set output '$output_dir/images/${image}.png'"
+    plot "plot \\"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        dstat_files=($(find $benchmark_dir -name dstat.csv))
+        benchmark_name=$(basename $benchmark_dir)
+
+        for dstat_file in "${dstat_files[@]}"
+        do
+            worker_name=$(basename $(dirname $dstat_file))
+
+            if [ ${#benchmark_dirs[@]} -eq 1 ]; then
+                line_title="$worker_name"
+            else
+                line_title="${benchmark_name}_${worker_name}"
+            fi
+
+            # The worker file contains 2 columsn, 1 the timestap, 2 the selected column from the dstats file
+            worker_file="${benchmark_name}-${worker_name}.single.tmp"
+
+            # select the first (time) and desired column and write it to tmp
+            awk -F "," -v column=$column '{printf "%s,%s\n",$1,$column}' $dstat_file > "$worker_file"
+
+            # remove the first 7 lines, since they contain header info
+            sed -i -e 1,7d "$worker_file"
+
+            # and then we plot worker_file
+            plot "   \"$worker_file\" using (t0(timecolumn(1))):($multiplier_y * \$2) title '$line_title' noenhanced with lines, \\"
+        done
+    done
+    plot_complete
+
+    # now we do the aggregation of all members
+    plot_start
+    plot "set style data lines"
+    plot "set datafile separator \",\""
+    plot "set terminal png size $image_width,$image_height"
+    plot "set grid"
+    plot "set key below"
+    plot "set xlabel 'time seconds'"
+    plot "set xdata time"
+    plot "set timefmt \"%s\""
+    plot "offset = 0"
+    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    plot "set title '$title Aggregated'"
+    plot "set ylabel '$ylabel'"
+    if [ -n "$format_y" ]; then
+        plot "set format y '$format_y'"
+    fi
+    plot "set output '$output_dir/images/${image}_aggregated.png'"
+    plot "plot \\"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        benchmark_name=$(basename $benchmark_dir)
+        aggregated_file="${benchmark_name}_aggregated.tmp"
+
+        files=($(find ${benchmark_name}-*.single.tmp))
+
+        # merge the operations/second column of all files and write that to aggregated file
+        awk -F ',' '
+        {
+            sum[FNR]+=$2;
+            b[FNR]++;
+            name[FNR]=$1;
+        } END {
+            for(i=1;i<=FNR;i++)
+                printf "%s, %.2f\n", name[i],sum[i];
+            }' "${files[@]
+        }" > ${aggregated_file}
+
+        plot " \"${aggregated_file}\" using (t0(timecolumn(1))):($multiplier_y * \$2) title '${benchmark_name}' with lines , \\"
+    done
+    plot_complete
+
+    html "<table border=\"2\">"
+    html "<tr><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
+    for benchmark_dir in "${benchmark_dirs[@]}"
+    do
+        benchmark_name=$(basename $benchmark_dir)
+        aggregated_file="${benchmark_name}_aggregated.tmp"
+        html_stats "${aggregated_file}" 2
+    done
+    html "</table>"
+
+    rm -fr *.tmp
+}
+
+report_dstats()
+{
+    html_h1 DStat
+
+    echo  "${benchmark_dirs[@]}"
+
+    dstat_files=($(find "${benchmark_dirs[@]}" -name dstat.csv))
+    if [ ${#dstat_files[@]} -eq 0 ]; then
+        html "No DStat information is found. Check out the worker.sh for an example how to enable dstat"
+        return
+    fi
+
+    ###################################################
+    #               CPU
+    ###################################################
+
+    html_h2 "Total Cpu Usage"
+
+    html_img "cpu_user_aggregated"
+    html_img "cpu_user"
+    plot_dstat_probe "CPU User %" "CPU User %" "cpu_user" "" "1" 6
+
+    html_img "cpu_system_aggregated"
+    html_img "cpu_system"
+    plot_dstat_probe "CPU System %" "CPU System %" "cpu_system" "" "1" 7
+
+    html_img "cpu_idle_aggregated"
+    html_img "cpu_idle"
+    plot_dstat_probe "CPU Idle %" "CPU Idle %" "cpu_idle" "" "1" 8
+
+    html_img "cpu_wait_aggregated"
+    html_img "cpu_wait"
+    plot_dstat_probe "CPU Wait %" "CPU Wait %" "cpu_wait" "" "1" 9
+
+    ###################################################
+    #               memory
+    ###################################################
+    html_h2 "Memory Usage"
+
+    html_img "memory_used_aggregated"
+    html_img "memory_used"
+    plot_dstat_probe "Memory Used" "Memory Used" "memory_used" "%.0s%cByte" "1" 2
+
+    html_img "memory_cached_aggregated"
+    html_img "memory_cached"
+    plot_dstat_probe "Memory Buffered" "Memory Buffered" "memory_buffered" "%.0s%cByte" "1" 3
+
+    html_img "memory_buffered_aggregated"
+    html_img "memory_buffered"
+    plot_dstat_probe "Memory Cached" "Memory Cached" "memory_cached" "%.0s%cByte" "1" 4
+
+    html_img "memory_free_aggregated"
+    html_img "memory_free"
+    plot_dstat_probe "Memory Free" "Memory Free" "memory_free" "%.0s%cByte" "1" 5
+
+    ###################################################
+    #               Interrupts
+    ###################################################
+
+    html_h2 "Interrupts"
+
+    html_img "cpu_hardware_interrupts_aggregated"
+    html_img "cpu_hardware_interrupts"
+    plot_dstat_probe "CPU Hardware Interrupts" "CPU Hardware Interrupts/sec" "cpu_hardware_interrupts" "" "1" 10
+
+    html_img "images/cpu_software_interrupts_aggregated.png"
+    html_img "images/cpu_software_interrupts.png"
+    plot_dstat_probe "CPU Software Interrupts" "CPU Software Interrupts/sec" "cpu_software_interrupts" "" "1" 11
+
+    ###################################################
+    #               Network
+    ###################################################
+
+    html_h2 "Network"
+
+    html_img "net_send_aggregated"
+    html_img "net_send"
+    plot_dstat_probe "Net Receive" "Receiving/second" "net_receive" "%.0s%cbit" "8" 14
+
+    html_img "net_receive_aggregated"
+    html_img "net_receive"
+    plot_dstat_probe "Net Send" "Sending/second" "net_send" "%.0s%cbit" "8" 15
+
+    ###################################################
+    #               System
+    ###################################################
+
+    html_h2 "System"
+
+    html_img "system_interrupts_aggregated"
+    html_img "system_interrupts"
+    plot_dstat_probe "System Interrupts" "System Interrupts/second" "system_interrupts" "" "1" 17
+
+    html_img "system_context_switches_aggregated"
+    html_img "system_context_switches"
+    plot_dstat_probe "System Context Switches" "System Context Switches/sec" "system_context_switches" "" "1" 18
+
+    ###################################################
+    #               Disk
+    ###################################################
+
+    html_h2 "Disk"
+
+    html_img "disk_read_aggregated"
+    html_img "disk_read"
+    plot_dstat_probe "Disk Read" "" "disk_read" "%.0s%cByte" "1" 17
+
+    html_img "disk_write_aggregated"
+    html_img "disk_write"
+    plot_dstat_probe "Disk Write" "" "disk_write" "%.0s%cByte" "1" 18
+
+    ###################################################
+    #               Paging
+    ###################################################
+
+    html_h2 "Paging"
+
+    html_img "page_in_aggregated"
+    html_img "page_in"
+    plot_dstat_probe "Page In" "Pages in" "page_in" "" "1" 12
+
+    html_img "page_out_aggregated"
+    html_img "page_out"
+    plot_dstat_probe "Page Out" "Pages out" "page_out" "" "1" 13
+}
+
+report_end(){
+    html "</body>"
+    html "</html>"
+}
+
+mkdir -p $output_dir
+mkdir -p $output_dir/images
+
+for benchmark_dir in "${benchmark_dirs[@]}"
+do
+    cp -r $benchmark_dir $output_dir
+
+    echo $benchmark_dir
+    i=0
+    html "<UL>"
+    for filepath in `find "$benchmark_dir" -maxdepth 1 -mindepth 1 -type d | sort`; do
+        path=`basename "$filepath"`
+        html "  <LI>$path</LI>"
+        html "  <UL>"
+        for i in `find "$filepath" -maxdepth 1 -mindepth 1 -type f| sort`; do
+            file=`basename "$i"`
+            html "    <LI><a href=\"/$path/$file\">$file</a></LI>"
+        done
+        html "  </UL>"
+    done
+    html "</UL>"
+done
+
+verify_software
+
+report_start
+
+report_throughput
+
+report_latency
+
+report_dstats
+
+report_end
+
+echo Benchmark report completed!
+echo Benchmark report destination directory: $output_dir
+
