@@ -57,8 +57,6 @@ public class MapPutAllTest extends AbstractTest {
 
     // if we want to used a SortedMap for input values
     public boolean useSortedMap = true;
-    // if we want to use putAll() or put() in a loop (this is a nice setting to see what kind of speedup or slowdown to expect)
-    public boolean usePutAll = true;
 
     private IMap<Object, Object> map;
     private Map<Object, Object>[] inputMaps;
@@ -78,7 +76,7 @@ public class MapPutAllTest extends AbstractTest {
         for (int mapIndex = 0; mapIndex < mapCount; mapIndex++) {
             // generate a SortedMap or HashMap depending on the configuration
             Map<Object, Object> tmpMap = (useSortedMap ? new TreeMap<Object, Object>() : new HashMap<Object, Object>(itemCount));
-            for (int itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+            while (tmpMap.size() < itemCount) {
                 Object key = keys[random.nextInt(keyCount)];
                 Object value = valueType.generateValue(random, valueSize);
                 tmpMap.put(key, value);
@@ -87,17 +85,17 @@ public class MapPutAllTest extends AbstractTest {
         }
     }
 
-    @TimeStep
-    public void timeStep(ThreadState state) {
+    @TimeStep(prob = 1)
+    public void putAll(ThreadState state) {
         Map<Object, Object> insertMap = state.randomMap();
+        map.putAll(insertMap);
+    }
 
-        // TODO: would be better to have two timeStep methods
-        if (usePutAll) {
-            map.putAll(insertMap);
-        } else {
-            for (Map.Entry<Object, Object> entry : insertMap.entrySet()) {
-                map.put(entry.getKey(), entry.getValue());
-            }
+    @TimeStep(prob = 0)
+    public void put(ThreadState state) {
+        Map<Object, Object> insertMap = state.randomMap();
+        for (Map.Entry<Object, Object> entry : insertMap.entrySet()) {
+            map.put(entry.getKey(), entry.getValue());
         }
     }
 
