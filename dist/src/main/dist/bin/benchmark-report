@@ -20,10 +20,10 @@ image_height=1024
 # - problem with dstat not found and reporting
 # - summary of the benchmark
 # - latency line labels too long; contains full file path
-# - aggregated throughput funky underscore problem
-#
+
 # DONE
 # - if dstats files not present, give hint.
+# - aggregated throughput funky underscore problem
 #
 # Nice to have
 # - attractive plots
@@ -213,7 +213,7 @@ report_throughput(){
         # cut of first line because it contains the headers.
         sed -i -e 1,1d "${aggregated_file}"
 
-        plot " \"${aggregated_file}\" using (t0(timecolumn(1))):2 title '${benchmark_name}' with lines , \\"
+        plot " \"${aggregated_file}\" using (t0(timecolumn(1))):2 title '${benchmark_name}' noenhanced with lines , \\"
     done
     plot_complete
 
