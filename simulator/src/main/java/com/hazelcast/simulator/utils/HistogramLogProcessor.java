@@ -8,6 +8,7 @@ import org.HdrHistogram.HistogramLogReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
@@ -86,7 +87,6 @@ public class HistogramLogProcessor extends Thread {
                         throw new Exception("Invalid args: " + args[i]);
                     }
                 }
-
             } catch (Exception e) {
                 error = true;
                 errorMessage = "Error: " + versionString + " launched with the following args:\n";
@@ -210,17 +210,21 @@ public class HistogramLogProcessor extends Thread {
         try {
             if (config.outputFileName != null) {
                 try {
-                    timeIntervalLog = new PrintStream(new FileOutputStream(config.outputFileName), false);
+                    timeIntervalLog = new PrintStream(new FileOutputStream(config.outputFileName), false, "UTF-8");
                     outputTimeRange(timeIntervalLog, "Interval percentile log");
                 } catch (FileNotFoundException ex) {
                     System.err.println("Failed to open output file " + config.outputFileName);
+                } catch (UnsupportedEncodingException e) {
+                    System.err.println("Unsupported encoding: UTF-8");
                 }
                 String hgrmOutputFileName = config.outputFileName + ".hgrm";
                 try {
-                    histogramPercentileLog = new PrintStream(new FileOutputStream(hgrmOutputFileName), false);
+                    histogramPercentileLog = new PrintStream(new FileOutputStream(hgrmOutputFileName), false, "UTF-8");
                     outputTimeRange(histogramPercentileLog, "Overall percentile distribution");
                 } catch (FileNotFoundException ex) {
                     System.err.println("Failed to open percentiles histogram output file " + hgrmOutputFileName);
+                } catch (UnsupportedEncodingException e) {
+                    System.err.println("Unsupported encoding: UTF-8");
                 }
             }
 
