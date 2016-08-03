@@ -17,14 +17,14 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -54,65 +54,53 @@ public class TryLockTimeOutTest extends AbstractTest {
         logger.info("totalInitialValue=" + totalInitialValue);
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
+    @SuppressWarnings("checkstyle:nestedtrydepth")
+    @TimeStep
+    public void timeStep(ThreadState state) {
+        int key1 = state.randomInt(maxAccounts);
+        int key2 = state.randomInt(maxAccounts);
+
+        ILock outerLock = targetInstance.getLock(name + key1);
+        try {
+            if (outerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
+                try {
+                    ILock innerLock = targetInstance.getLock(name + key2);
+                    try {
+                        if (innerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
+                            try {
+                                IList<Long> accounts = targetInstance.getList(name);
+                                int delta = state.random.nextInt(100);
+
+                                if (accounts.get(key1) >= delta) {
+                                    accounts.set(key1, accounts.get(key1) - delta);
+                                    accounts.set(key2, accounts.get(key2) + delta);
+                                    state.counter.transfers++;
+                                }
+                            } finally {
+                                innerLock.unlock();
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        logger.severe("innerLock " + e.getMessage(), e);
+                        state.counter.interruptedException++;
+                    }
+                } finally {
+                    outerLock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
+            logger.severe("outerLock " + e.getMessage(), e);
+            state.counter.interruptedException++;
         }
-        spawner.awaitCompletion();
     }
 
-    private class Worker implements Runnable {
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        targetInstance.getList(name + "count").add(state.counter);
+    }
 
-        private final Random random = new Random();
+    public class ThreadState extends BaseThreadState {
         private final Counter counter = new Counter();
-
-        @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                int key1 = random.nextInt(maxAccounts);
-                int key2 = random.nextInt(maxAccounts);
-
-                ILock outerLock = targetInstance.getLock(name + key1);
-                try {
-                    if (outerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
-                        try {
-                            innerLockOperation(key1, key2);
-                        } finally {
-                            outerLock.unlock();
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    logger.severe("outerLock " + e.getMessage(), e);
-                    counter.interruptedException++;
-                }
-            }
-            targetInstance.getList(name + "count").add(counter);
-        }
-
-        private void innerLockOperation(int key1, int key2) {
-            ILock innerLock = targetInstance.getLock(name + key2);
-            try {
-                if (innerLock.tryLock(tryLockTimeOutMs, TimeUnit.MILLISECONDS)) {
-                    try {
-                        IList<Long> accounts = targetInstance.getList(name);
-                        int delta = random.nextInt(100);
-
-                        if (accounts.get(key1) >= delta) {
-                            accounts.set(key1, accounts.get(key1) - delta);
-                            accounts.set(key2, accounts.get(key2) + delta);
-                            counter.transfers++;
-                        }
-                    } finally {
-                        innerLock.unlock();
-                    }
-                }
-            } catch (InterruptedException e) {
-                logger.severe("innerLock " + e.getMessage(), e);
-                counter.interruptedException++;
-            }
-        }
     }
 
     private static class Counter implements Serializable {
@@ -136,7 +124,6 @@ public class TryLockTimeOutTest extends AbstractTest {
 
     @Verify(global = true)
     public void verify() {
-
         for (int i = 0; i < maxAccounts; i++) {
             ILock lock = targetInstance.getLock(name + i);
             assertFalse(name + ": Lock should be unlocked", lock.isLocked());
