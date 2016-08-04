@@ -26,9 +26,7 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue0;
 import static java.lang.String.format;
-import static java.lang.reflect.Modifier.isFinal;
-import static java.lang.reflect.Modifier.isPublic;
-import static java.lang.reflect.Modifier.isStatic;
+import static java.lang.reflect.Modifier.*;
 
 /**
  * Contains support functionality for binding properties.
@@ -97,7 +95,6 @@ public final class PropertyBindingSupport {
         return propertyValue;
     }
 
-
     static boolean bind0(Object object, String property, String value) {
         value = value.trim();
 
@@ -132,7 +129,7 @@ public final class PropertyBindingSupport {
                     // we have no match at all
                     return null;
                 } else {
-                    // we found at least one item in the path.
+                    // we found at least one item in the path
                     throw new BindException(
                             format("Failed to find field [%s.%s] in property [%s]", clazz.getName(), fieldName, property));
                 }
@@ -188,9 +185,8 @@ public final class PropertyBindingSupport {
             return;
         }
 
-        throw new BindException(
-                format("Property [%s.%s] has unsupported type '%s'",
-                        object.getClass().getName(), field.getName(), field.getType()));
+        throw new BindException(format("Property [%s.%s] has unsupported type '%s'",
+                object.getClass().getName(), field.getName(), field.getType()));
     }
 
     private static boolean setIntegralField(Field field, Object object, String value) throws IllegalAccessException {
