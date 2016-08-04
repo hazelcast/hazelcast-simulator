@@ -260,6 +260,7 @@ public class AwsProvisioner {
         for (Reservation reservation : result.getReservations()) {
             for (Instance reserved : reservation.getInstances()) {
                 appendText(reserved.getPublicIpAddress() + ',' + reserved.getPrivateIpAddress() + NEW_LINE, agentsFile);
+                componentRegistry.addAgent(reserved.getPublicIpAddress(), reserved.getPrivateIpAddress());
             }
         }
     }
