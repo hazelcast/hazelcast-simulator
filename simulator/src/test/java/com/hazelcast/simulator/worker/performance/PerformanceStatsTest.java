@@ -6,18 +6,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class PerformanceStateTest {
+public class PerformanceStatsTest {
 
     @Test
     public void testIsEmpty() {
-        assertTrue(new PerformanceState().isEmpty());
+        assertTrue(new PerformanceStats().isEmpty());
     }
 
     @Test
     public void testAdd() {
-        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 175.0d, 150, 200);
+        PerformanceStats addState = new PerformanceStats(100, 5.0, 10.0, 175.0d, 150, 200);
 
-        addState.add(new PerformanceState(150, 6.0, 12.0, 90.0d, 80, 100));
+        addState.add(new PerformanceStats(150, 6.0, 12.0, 90.0d, 80, 100));
 
         assertEquals(250, addState.getOperationCount());
         assertEquals(11.0, addState.getIntervalThroughput(), 0.00001);
@@ -29,9 +29,9 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd_emptyState() {
-        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 550.0d, 300, 800);
+        PerformanceStats addState = new PerformanceStats(100, 5.0, 10.0, 550.0d, 300, 800);
 
-        addState.add(new PerformanceState());
+        addState.add(new PerformanceStats());
 
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
@@ -43,9 +43,9 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd_toEmptyState() {
-        PerformanceState addState = new PerformanceState();
+        PerformanceStats addState = new PerformanceStats();
 
-        addState.add(new PerformanceState(100, 5.0, 10.0, 450.0d, 400, 500));
+        addState.add(new PerformanceStats(100, 5.0, 10.0, 450.0d, 400, 500));
 
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
@@ -57,9 +57,9 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd_withoutAddOperationCountAndThroughput() {
-        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 175.0d, 150, 200);
+        PerformanceStats addState = new PerformanceStats(100, 5.0, 10.0, 175.0d, 150, 200);
 
-        addState.add(new PerformanceState(150, 6.0, 12.0, 90.0d, 80, 100), false);
+        addState.add(new PerformanceStats(150, 6.0, 12.0, 90.0d, 80, 100), false);
 
         assertEquals(150, addState.getOperationCount());
         assertEquals(6.0, addState.getIntervalThroughput(), 0.00001);
@@ -71,9 +71,9 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd_withoutAddOperationCountAndThroughput_emptyState() {
-        PerformanceState addState = new PerformanceState(100, 5.0, 10.0, 550.0d, 300, 800);
+        PerformanceStats addState = new PerformanceStats(100, 5.0, 10.0, 550.0d, 300, 800);
 
-        addState.add(new PerformanceState(), false);
+        addState.add(new PerformanceStats(), false);
 
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
@@ -85,9 +85,9 @@ public class PerformanceStateTest {
 
     @Test
     public void testAdd_withoutAddOperationCountAndThroughput_toEmptyState() {
-        PerformanceState addState = new PerformanceState();
+        PerformanceStats addState = new PerformanceStats();
 
-        addState.add(new PerformanceState(100, 5.0, 10.0, 450.0d, 400, 500), false);
+        addState.add(new PerformanceStats(100, 5.0, 10.0, 450.0d, 400, 500), false);
 
         assertEquals(100, addState.getOperationCount());
         assertEquals(5.0, addState.getIntervalThroughput(), 0.00001);
@@ -99,6 +99,6 @@ public class PerformanceStateTest {
 
     @Test
     public void testToString() {
-        assertNotNull(new PerformanceState().toString());
+        assertNotNull(new PerformanceStats().toString());
     }
 }

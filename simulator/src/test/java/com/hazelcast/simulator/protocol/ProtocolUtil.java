@@ -3,7 +3,7 @@ package com.hazelcast.simulator.protocol;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
@@ -163,11 +163,11 @@ class ProtocolUtil {
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents) {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
-        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
         CoordinatorConnector coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
-                performanceStateContainer);
+                performanceStatsContainer);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }

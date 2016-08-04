@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -24,7 +24,7 @@ import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
-import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Logger;
@@ -45,16 +45,16 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     private final LocalExceptionLogger exceptionLogger;
     private final FailureContainer failureContainer;
     private final TestPhaseListeners testPhaseListeners;
-    private final PerformanceStateContainer performanceStateContainer;
+    private final PerformanceStatsContainer performanceStatsContainer;
 
     public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger,
                                          FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                                         PerformanceStateContainer performanceStateContainer) {
+                                         PerformanceStatsContainer performanceStatsContainer) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.failureContainer = failureContainer;
         this.testPhaseListeners = testPhaseListeners;
-        this.performanceStateContainer = performanceStateContainer;
+        this.performanceStatsContainer = performanceStatsContainer;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
             case PHASE_COMPLETED:
                 return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
             case PERFORMANCE_STATE:
-                processPerformanceState((PerformanceStateOperation) operation, sourceAddress);
+                processPerformanceStats((PerformanceStatsOperation) operation, sourceAddress);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -97,7 +97,7 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
         return SUCCESS;
     }
 
-    private void processPerformanceState(PerformanceStateOperation operation, SimulatorAddress sourceAddress) {
-        performanceStateContainer.update(sourceAddress, operation.getPerformanceStates());
+    private void processPerformanceStats(PerformanceStatsOperation operation, SimulatorAddress sourceAddress) {
+        performanceStatsContainer.update(sourceAddress, operation.getPerformanceStats());
     }
 }

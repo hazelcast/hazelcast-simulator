@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -54,14 +54,14 @@ public class CoordinatorConnectorTest {
     @Before
     public void setUp() {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
-        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
 
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
 
         executorService = mock(ExecutorService.class);
 
-        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer,
+        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer,
                 executorService);
     }
 

@@ -15,27 +15,27 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.worker.performance.PerformanceState;
+import com.hazelcast.simulator.worker.performance.PerformanceStats;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Sends a {@link PerformanceState} per running Simulator Test to the Coordinator, which contains the last snapshot of performance
+ * Sends a {@link PerformanceStats} per running Simulator Test to the Coordinator, which contains the last snapshot of performance
  * numbers from that test.
  */
-public class PerformanceStateOperation implements SimulatorOperation {
+public class PerformanceStatsOperation implements SimulatorOperation {
 
     /**
-     * Map of {@link PerformanceState} per Simulator Test.
+     * Map of {@link PerformanceStats} per Simulator Test.
      */
-    private final Map<String, PerformanceState> performanceStates = new HashMap<String, PerformanceState>();
+    private final Map<String, PerformanceStats> performanceStatsMap = new HashMap<String, PerformanceStats>();
 
-    public void addPerformanceState(String testId, PerformanceState performanceState) {
-        performanceStates.put(testId, performanceState);
+    public void addPerformanceStats(String testId, PerformanceStats performanceStats) {
+        performanceStatsMap.put(testId, performanceStats);
     }
 
-    public Map<String, PerformanceState> getPerformanceStates() {
-        return performanceStates;
+    public Map<String, PerformanceStats> getPerformanceStats() {
+        return performanceStatsMap;
     }
 }

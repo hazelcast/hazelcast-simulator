@@ -34,7 +34,7 @@ public enum OperationType {
     EXCEPTION(ExceptionOperation.class, 3),
     FAILURE(FailureOperation.class, 4),
     PHASE_COMPLETED(PhaseCompletedOperation.class, 5),
-    PERFORMANCE_STATE(PerformanceStateOperation.class, 6),
+    PERFORMANCE_STATE(PerformanceStatsOperation.class, 6),
 
     // AgentOperationProcessor
     INIT_TEST_SUITE(InitTestSuiteOperation.class, 8),

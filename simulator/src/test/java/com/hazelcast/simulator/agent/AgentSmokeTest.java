@@ -5,7 +5,7 @@ import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -94,11 +94,11 @@ public class AgentSmokeTest implements FailureListener {
         agentStarter = new AgentStarter();
 
         testPhaseListeners = new TestPhaseListeners();
-        PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+        PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
         outputDirectory = TestUtils.createTmpDirectory();
         failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
 
-        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStateContainer);
+        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0, 0);
