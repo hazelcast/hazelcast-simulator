@@ -30,7 +30,6 @@ public class HdrProbeTest {
         assertFalse(tmpProbe.isPartOfTotalThroughput());
     }
 
-    // this test is fragile and can easily fail if there is some kind of pausing going on
     @Test
     public void testDone_withExternalStarted() throws InterruptedException {
         long expectedLatency = TimeUnit.SECONDS.toNanos(2);
@@ -42,7 +41,11 @@ public class HdrProbeTest {
         probe.done(started);
 
         Histogram histogram = probe.getIntervalHistogram();
-        assertHistogramContent(histogram, expectedLatency);
+        assertEquals(1, histogram.getTotalCount());
+
+        HistogramIterationValue iterationValue = histogram.recordedValues().iterator().next();
+        assertTrue(0.90 * iterationValue.getValueIteratedFrom() < expectedLatency);
+        assertTrue(1.10 * iterationValue.getValueIteratedTo() > expectedLatency);
     }
 
     @Test(expected = IllegalArgumentException.class)
