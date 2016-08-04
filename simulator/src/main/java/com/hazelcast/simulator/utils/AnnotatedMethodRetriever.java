@@ -142,13 +142,13 @@ public class AnnotatedMethodRetriever {
                 continue;
             }
 
-            if (!isOveridden(methods, method)) {
+            if (!isOverridden(methods, method)) {
                 methods.add(method);
             }
         }
     }
 
-    private static boolean isOveridden(List<Method> subMethods, Method superMethod) {
+    private static boolean isOverridden(List<Method> subMethods, Method superMethod) {
         for (Method subMethod : subMethods) {
             if (!subMethod.getName().equals(superMethod.getName())) {
                 continue;
@@ -176,8 +176,7 @@ public class AnnotatedMethodRetriever {
                 continue;
             }
 
-            // todo: in the future we need to deal with covariant return types, bridge methods and parameter types in the methods.
-
+            // TODO: in the future we need to deal with covariant return types, bridge methods and parameter types in the methods
             return true;
         }
         return false;
