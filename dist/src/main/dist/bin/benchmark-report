@@ -170,18 +170,18 @@ report_throughput(){
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
-        performance_files=($(find $benchmark_dir -name performance.csv))
+        performance_logs=($(find $benchmark_dir -name performance.csv))
         benchmark_name=$(basename $benchmark_dir)
 
-        for performance_file in "${performance_files[@]}"
+        for performance_log in "${performance_logs[@]}"
         do
             if [ ${#benchmark_dirs[@]} -eq 1 ]; then
-                worker_name=$(basename $(dirname $performance_file))
+                worker_name=$(basename $(dirname $performance_log))
             else
-                worker_name="${benchmark_name}#$(basename $(dirname $performance_file))"
+                worker_name="${benchmark_name}#$(basename $(dirname $performance_log))"
             fi
             # we need to skip the first line because it contains header info and the time logic will choke on it.
-            plot "   \"$performance_file\" every ::1 using (t0(timecolumn(1))):5  title '$worker_name'   noenhanced with lines, \\"
+            plot "   \"$performance_log\" every ::1 using (t0(timecolumn(1))):5  title '$worker_name'   noenhanced with lines, \\"
         done
     done
     plot_complete
@@ -204,7 +204,7 @@ report_throughput(){
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
-        files=($(find $benchmark_dir -name performance.csv))
+        performance_logs=($(find $benchmark_dir -name performance.csv))
         benchmark_name=$(basename $benchmark_dir)
         aggregated_file="${benchmark_name}_throughput_aggregated.tmp"
 
@@ -217,7 +217,7 @@ report_throughput(){
         } END {
             for(i=1;i<=FNR;i++)
                 printf "%s, %.2f\n", name[i],sum[i];
-            }' "${files[@]
+            }' "${performance_logs[@]
         }" > "${aggregated_file}"
 
         # cut of first line because it contains the headers.
