@@ -20,10 +20,10 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyIncrementPair;
 
 import java.util.ArrayList;
@@ -56,8 +56,8 @@ public class LockConflictTest extends AbstractTest {
         globalCounter = targetInstance.getList(name + "report");
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         for (int i = 0; i < keyCount; i++) {
             list.add(0L);
         }

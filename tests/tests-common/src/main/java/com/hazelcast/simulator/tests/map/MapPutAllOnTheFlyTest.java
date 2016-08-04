@@ -18,10 +18,10 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys
 
 /**
  * Test for {@link IMap#putAll(java.util.Map)} which creates the input values on the fly during the RUN phase.
- *
+ * <p>
  * You can configure the {@link #batchSize} to determine the number of inserted values per operation.
  * You can configure the {@link #keyRange} to determine the key range for inserted values.
  */
@@ -53,9 +53,9 @@ public class MapPutAllOnTheFlyTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @Warmup
+    @Prepare
     @SuppressWarnings("unchecked")
-    public void warmup() {
+    public void prepare() {
         if (mapCount > 0) {
             // prepare the input maps
             Integer[] keys = generateIntegerKeys(keyRange, SHARED, targetInstance);

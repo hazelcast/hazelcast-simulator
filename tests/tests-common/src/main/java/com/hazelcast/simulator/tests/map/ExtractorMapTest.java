@@ -29,10 +29,10 @@ import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.extractor.ValueReader;
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -77,8 +77,8 @@ public class ExtractorMapTest extends AbstractTest {
                 .addDefaultOperation(Operation.QUERY);
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void globalPrepare() {
         if (useIndex) {
             for (int i = 0; i < indexValuesCount; i++) {
                 map.addIndex(format("payloadFromExtractor[%d]", i), true);

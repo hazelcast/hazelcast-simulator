@@ -18,10 +18,10 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.GenericTypes;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 
@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 
 /**
  * Test for {@link IMap#putAll(Map)} which uses a set of prepared maps with input values during the RUN phase.
- *
+ * <p>
  * You can configure the {@link #keyType} and {@link #valueType} for the used maps.
  */
 public class MapPutAllTest extends AbstractTest {
@@ -66,9 +66,9 @@ public class MapPutAllTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @Warmup
+    @Prepare
     @SuppressWarnings("unchecked")
-    public void warmup() {
+    public void prepare() {
         Object[] keys = keyType.generateKeys(targetInstance, keyLocality, keyCount, keySize);
 
         inputMaps = new Map[mapCount];

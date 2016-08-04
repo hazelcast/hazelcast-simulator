@@ -18,11 +18,12 @@ package ${package};
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
+
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,8 +42,8 @@ public class ExampleTest extends AbstractTest {
         logger.info("Map name is: " + map.getName());
     }
 
-    @Warmup
-    public void warmup() {
+    @Prepare
+    public void prepare() {
         logger.info("======== WARMUP =========");
         logger.info("Map size is: " + map.size());
     }

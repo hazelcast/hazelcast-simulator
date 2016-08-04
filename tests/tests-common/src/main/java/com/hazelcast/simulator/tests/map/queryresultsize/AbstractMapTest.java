@@ -82,7 +82,7 @@ abstract class AbstractMapTest extends AbstractTest {
 
     abstract long getGlobalKeyCount(Integer minResultSizeLimit, Float resultLimitFactor);
 
-    void baseWarmup(String keyType) {
+    void basePrepare(String keyType) {
         if (!isMemberNode(targetInstance)) {
             return;
         }

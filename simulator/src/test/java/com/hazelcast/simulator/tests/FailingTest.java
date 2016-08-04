@@ -17,10 +17,10 @@ package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.fail;
@@ -34,8 +34,8 @@ public class FailingTest {
         this.context = context;
     }
 
-    @Warmup
-    public void warmup() {
+    @Prepare
+    public void prepare() {
         sleepSeconds(1);
     }
 

@@ -16,8 +16,8 @@ public class TestPhaseTest {
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(5, true, TestPhase.RUN);
 
         assertEquals(5, testPhaseSyncMap.get(TestPhase.SETUP).getCount());
-        assertEquals(5, testPhaseSyncMap.get(TestPhase.LOCAL_WARMUP).getCount());
-        assertEquals(5, testPhaseSyncMap.get(TestPhase.GLOBAL_WARMUP).getCount());
+        assertEquals(5, testPhaseSyncMap.get(TestPhase.LOCAL_PREPARE).getCount());
+        assertEquals(5, testPhaseSyncMap.get(TestPhase.GLOBAL_PREPARE).getCount());
         assertEquals(5, testPhaseSyncMap.get(TestPhase.RUN).getCount());
         assertEquals(0, testPhaseSyncMap.get(TestPhase.GLOBAL_VERIFY).getCount());
         assertEquals(0, testPhaseSyncMap.get(TestPhase.LOCAL_VERIFY).getCount());

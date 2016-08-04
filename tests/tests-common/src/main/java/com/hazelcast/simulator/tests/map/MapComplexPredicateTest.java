@@ -21,9 +21,9 @@ import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.helpers.ComplexDomainObject;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
@@ -301,8 +301,8 @@ public class MapComplexPredicateTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @Warmup(global = true)
-    public void warmUp() {
+    @Prepare(global = true)
+    public void prepare() {
         Streamer<String, ComplexDomainObject> streamer = StreamerFactory.getInstance(map);
         for (int i = 0; i < mapSize; i++) {
             ComplexDomainObject value = createQuickSearchObject(i);

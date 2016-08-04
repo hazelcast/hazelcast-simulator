@@ -19,10 +19,10 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
@@ -54,8 +54,8 @@ public class MapTransactionReadWriteTest extends AbstractTest {
         map = targetInstance.getMap(name);
     }
 
-    @Warmup(global = false)
-    public void warmup() {
+    @Prepare
+    public void prepare() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateIntKeys(keyCount, keyLocality, targetInstance);
 

@@ -1,11 +1,11 @@
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -19,7 +19,7 @@ public class AnnotatedMethodRetrieverTest {
 
     @Test
     public void testGetAtMostOneVoidMethodSkipArgsCheck() {
-        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
                 .withVoidReturnType()
                 .find();
         assertEquals("voidMethod", method.getName());
@@ -27,7 +27,7 @@ public class AnnotatedMethodRetrieverTest {
 
     @Test
     public void testGetAtMostOneVoidMethodWithoutArgs() {
-        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
                 .withVoidReturnType()
                 .withoutArgs()
                 .find();
@@ -37,7 +37,7 @@ public class AnnotatedMethodRetrieverTest {
 
     @Test
     public void testGetAtMostOneVoidMethodWithoutArgs_AnnotationFilter() {
-        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
                 .withFilter(ALWAYS_FILTER)
                 .withVoidReturnType()
                 .withoutArgs()
@@ -92,7 +92,7 @@ public class AnnotatedMethodRetrieverTest {
 
     @Test(expected = ReflectionException.class)
     public void testGetAtMostOneVoidMethodWithoutArgs_wrongReturnTypeArgsFound() {
-        new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+        new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
                 .withReturnType(String.class)
                 .withoutArgs()
                 .find();
@@ -166,7 +166,7 @@ public class AnnotatedMethodRetrieverTest {
             return null;
         }
 
-        @Warmup
+        @Prepare
         public void voidMethod() {
         }
 

@@ -20,13 +20,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * @deprecated since Simulator 0.9. Use {@link Prepare} instead. This reason this class is deprecated, is that the name warmup
- * is confusing since it is being used to heat up the jit, but also it is used to fill the data-structures.
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Warmup {
+public @interface Prepare {
 
     /**
      * Global indicates that a single member in the cluster is responsible for the warmup. If not global, then

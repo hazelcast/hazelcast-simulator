@@ -23,8 +23,8 @@ public enum TestPhase {
 
     SETUP("setup", false),
     WARMUP("warmup", false),
-    LOCAL_WARMUP("local warmup", false),
-    GLOBAL_WARMUP("global warmup", true),
+    LOCAL_PREPARE("local prepare", false),
+    GLOBAL_PREPARE("global prepare", true),
     LOCAL_AFTER_WARMUP("local after warmup", false),
     GLOBAL_AFTER_WARMUP("global after warmup", true),
     RUN("run", false),

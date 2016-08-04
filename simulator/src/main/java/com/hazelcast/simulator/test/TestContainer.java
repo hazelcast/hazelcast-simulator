@@ -17,6 +17,7 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.AfterWarmup;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -29,7 +30,6 @@ import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.AfterWarmupFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
-import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import com.hazelcast.simulator.worker.PrimordialRunStrategy;
 import com.hazelcast.simulator.worker.RunStrategy;
 import com.hazelcast.simulator.worker.RunWithWorkersRunStrategy;
@@ -48,13 +48,13 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_AFTER_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_AFTER_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_PREPARE;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.test.TestPhase.WARMUP;
@@ -188,8 +188,8 @@ public class TestContainer {
         try {
             registerSetupTask();
 
-            registerTask(Warmup.class, new WarmupFilter(false), LOCAL_WARMUP);
-            registerTask(Warmup.class, new WarmupFilter(true), GLOBAL_WARMUP);
+            registerPrepareTasks(false);
+            registerPrepareTasks(true);
 
             taskPerPhaseMap.put(WARMUP, runStrategy.getWarmupCallable());
 
@@ -313,11 +313,32 @@ public class TestContainer {
                 .withFilter(filter)
                 .findAll();
 
+        taskPerPhaseMap.put(testPhase, toCallable(methods));
+    }
+
+    private void registerPrepareTasks(boolean global) {
+        List<Method> localPrepareMethods = new AnnotatedMethodRetriever(testClass, Prepare.class)
+                .withoutArgs()
+                .withPublicNonStaticModifier()
+                .withFilter(new AnnotationFilter.PrepareFilter(global))
+                .findAll();
+
+        List<Method> warmupMethods = new AnnotatedMethodRetriever(testClass, Warmup.class)
+                .withoutArgs()
+                .withPublicNonStaticModifier()
+                .withFilter(new AnnotationFilter.WarmupFilter(global))
+                .findAll();
+
+        localPrepareMethods.addAll(warmupMethods);
+
+        taskPerPhaseMap.put(global ? GLOBAL_PREPARE : LOCAL_PREPARE, toCallable(localPrepareMethods));
+    }
+
+    private Callable toCallable(List<Method> methods) {
         List<Callable> callableList = new ArrayList<Callable>(methods.size());
         for (Method method : methods) {
             callableList.add(new MethodInvokingCallable(testInstance, method));
         }
-
-        taskPerPhaseMap.put(testPhase, new CompositeCallable(callableList));
+        return new CompositeCallable(callableList);
     }
 }

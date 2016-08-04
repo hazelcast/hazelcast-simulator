@@ -19,9 +19,9 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -36,8 +36,8 @@ public class SimpleLockTest extends AbstractTest {
 
     private int totalValue = 0;
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         for (int i = 0; i < maxAccounts; i++) {
             IAtomicLong account = targetInstance.getAtomicLong(name + i);
             account.set(INITIAL_VALUE);

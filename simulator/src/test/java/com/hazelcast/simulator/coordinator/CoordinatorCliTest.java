@@ -4,7 +4,6 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.test.TestSuite;
-import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
@@ -320,13 +319,13 @@ public class CoordinatorCliTest {
     }
 
     @Test
-    public void testInit_syncToTestPhase_globalWarmup() {
+    public void testInit_syncToTestPhase_globalPrepare() {
         args.add("--syncToTestPhase");
-        args.add("GLOBAL_WARMUP");
+        args.add("GLOBAL_PREPARE");
 
         Coordinator coordinator = createCoordinator();
 
-        assertEquals(TestPhase.GLOBAL_WARMUP, coordinator.getCoordinatorParameters().getLastTestPhaseToSync());
+        assertEquals(TestPhase.GLOBAL_PREPARE, coordinator.getCoordinatorParameters().getLastTestPhaseToSync());
     }
 
     @Test

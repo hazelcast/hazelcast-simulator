@@ -20,11 +20,11 @@ import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 
@@ -81,14 +81,14 @@ public class FailingTest extends AbstractTest {
     }
 
 
-    @Warmup
-    public void localWarmup() throws Exception {
-        createFailure(TestPhase.LOCAL_WARMUP);
+    @Prepare
+    public void localPrepare() throws Exception {
+        createFailure(TestPhase.LOCAL_PREPARE);
     }
 
-    @Warmup(global = true)
-    public void globalWarmup() throws Exception {
-        createFailure(TestPhase.GLOBAL_WARMUP);
+    @Prepare(global = true)
+    public void globalPrepare() throws Exception {
+        createFailure(TestPhase.GLOBAL_PREPARE);
     }
 
     @TimeStep

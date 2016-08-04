@@ -15,23 +15,23 @@
  */
 package com.hazelcast.simulator.tests.map.queryresultsize;
 
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
 /**
  * This test creates latency probe results for {@link com.hazelcast.core.IMap#values()}, {@link com.hazelcast.core.IMap#keySet()}
  * and {@link com.hazelcast.core.IMap#entrySet()}. It is used to ensure that the query result size limit has no bad impact on the
  * latency of those method calls.
- *
+ * <p>
  * To achieve this we fill a map slightly below the trigger limit of the query result size limit, so we are sure it will never
  * trigger the exception. Then we call the map methods and measure their latency.
- *
+ * <p>
  * The test can be configured to use {@link String} or {@link Integer} keys. You can also override the number of filled items
  * with the {@link #keyCount} property, e.g. to test the latency impact of this feature with an empty map.
- *
+ * <p>
  * This test works fine with all Hazelcast versions, since it does not use any new functionality. Just be sure the default
  * values in {@link AbstractMapTest} match with the default values of the query result size limit in Hazelcast 3.5. Otherwise
  * the map will be filled with a different number of keys and the latency results may not be comparable.
@@ -56,9 +56,9 @@ public class MapLatencyTest extends AbstractMapTest {
         return Math.round(minResultSizeLimit * resultLimitFactor * 0.9);
     }
 
-    @Warmup
-    public void warmup() {
-        baseWarmup(keyType);
+    @Prepare
+    public void prepare() {
+        basePrepare(keyType);
     }
 
     @Verify
