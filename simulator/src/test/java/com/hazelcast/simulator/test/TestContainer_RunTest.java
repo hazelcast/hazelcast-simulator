@@ -110,7 +110,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         assertTrue(test.runWithWorkerCalled);
     }
 
-    private static class RunWithIWorkerTest {
+    private static class RunWithIWorkerTest extends AbstractTest{
 
         private final HazelcastInstance hazelcastInstance;
 

@@ -31,7 +31,7 @@ public class TestContainer_TimeStepTest {
     @Test
     public void testWithAllPhases() throws Exception {
         int threadCount = 2;
-        TestWithAllPhases testInstance = new TestWithAllPhases();
+        TestWithAllTimeStepPhases testInstance = new TestWithAllTimeStepPhases();
         TestCase testCase = new TestCase("id")
                 .setProperty("threadCount", threadCount)
                 .setProperty("class", testInstance.getClass().getName());
@@ -58,8 +58,8 @@ public class TestContainer_TimeStepTest {
         assertTrue(testInstance.timeStepCount.get() > 100);
     }
 
-    @SuppressWarnings("unused")
-    public static class TestWithAllPhases {
+
+    public static class TestWithAllTimeStepPhases {
         private final AtomicLong beforeRunCount = new AtomicLong();
         private final AtomicLong afterRunCount = new AtomicLong();
         private final AtomicLong timeStepCount = new AtomicLong();

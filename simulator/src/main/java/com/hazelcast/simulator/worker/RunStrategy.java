@@ -25,10 +25,21 @@ import java.util.concurrent.Callable;
  * <li>{@link com.hazelcast.simulator.test.annotations.TimeStep}</li>
  * </ol>
  */
-public abstract class RunStrategy implements Callable {
+public abstract class RunStrategy {
 
     private volatile boolean running;
     private volatile long startedTimeStamp;
+
+    public abstract Callable getRunCallable();
+
+    public Callable getWarmupCallable() {
+        return new Callable() {
+            @Override
+            public Object call() throws Exception {
+                return null;
+            }
+        };
+    }
 
     /**
      * Returns the number of iterations of all the executions. Value is 0 if it isn't tracked, or the information is only

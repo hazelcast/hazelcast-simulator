@@ -8,7 +8,7 @@ import static org.mockito.Mockito.mock;
 
 abstract class AbstractTestContainerTest {
 
-    TestContext testContext = new TestContextImpl(mock(HazelcastInstance.class), "TestContainerTest");
+    TestContextImpl testContext = new TestContextImpl(mock(HazelcastInstance.class), "TestContainerTest");
 
     TestContainer testContainer;
 

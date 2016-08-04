@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -25,6 +26,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
 import com.hazelcast.simulator.utils.AnnotationFilter;
+import com.hazelcast.simulator.utils.AnnotationFilter.AfterWarmupFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
@@ -45,14 +47,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
+import static com.hazelcast.simulator.test.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -72,18 +77,19 @@ import static java.util.Arrays.asList;
  */
 public class TestContainer {
 
-    private final TestContext testContext;
+    private final TestContextImpl testContext;
     private final TestCase testCase;
     private final Object testInstance;
     private final Map<TestPhase, Callable> taskPerPhaseMap = new HashMap<TestPhase, Callable>();
     private final PropertyBinding propertyBinding;
     private final Class testClass;
+    private final RunStrategy runStrategy;
 
-    public TestContainer(TestContext testContext, TestCase testCase) {
-        this(testContext, null, testCase);
+    public TestContainer(TestContextImpl targetInstance, TestCase testCase) {
+        this(targetInstance, null, testCase);
     }
 
-    public TestContainer(TestContext testContext, Object givenTestInstance, TestCase testCase) {
+    public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase) {
         this.testContext = checkNotNull(testContext, "testContext can't null!");
         this.testCase = checkNotNull(testCase, "testCase can't be null!");
         this.propertyBinding = new PropertyBinding(testCase)
@@ -98,6 +104,8 @@ public class TestContainer {
         }
         this.testClass = testInstance.getClass();
         propertyBinding.bind(testInstance);
+
+        this.runStrategy = loadRunStrategy();
 
         registerTestPhaseTasks();
 
@@ -137,17 +145,14 @@ public class TestContainer {
     }
 
     public long getTestStartedTimestamp() {
-        RunStrategy runStrategy = (RunStrategy) taskPerPhaseMap.get(RUN);
         return runStrategy == null ? 0 : runStrategy.getStartedTimestamp();
     }
 
     public boolean isRunning() {
-        RunStrategy runStrategy = (RunStrategy) taskPerPhaseMap.get(RUN);
-        return runStrategy != null && runStrategy.isRunning();
+        return runStrategy == null ? false : runStrategy.isRunning();
     }
 
     public long iteration() {
-        RunStrategy runStrategy = (RunStrategy) taskPerPhaseMap.get(RUN);
         return runStrategy == null ? 0 : runStrategy.iterations();
     }
 
@@ -156,6 +161,10 @@ public class TestContainer {
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
+        if (testPhase == LOCAL_AFTER_WARMUP) {
+            testContext.afterLocalWarmup();
+        }
+
         Callable task = taskPerPhaseMap.get(testPhase);
         if (task == null) {
             return;
@@ -182,7 +191,12 @@ public class TestContainer {
             registerTask(Warmup.class, new WarmupFilter(false), LOCAL_WARMUP);
             registerTask(Warmup.class, new WarmupFilter(true), GLOBAL_WARMUP);
 
-            registerRunStrategyTask();
+            taskPerPhaseMap.put(WARMUP, runStrategy.getWarmupCallable());
+
+            registerTask(AfterWarmup.class, new AfterWarmupFilter(false), LOCAL_AFTER_WARMUP);
+            registerTask(AfterWarmup.class, new AfterWarmupFilter(true), GLOBAL_AFTER_WARMUP);
+
+            taskPerPhaseMap.put(RUN, runStrategy.getRunCallable());
 
             registerTask(Verify.class, new VerifyFilter(false), LOCAL_VERIFY);
             registerTask(Verify.class, new VerifyFilter(true), GLOBAL_VERIFY);
@@ -231,45 +245,64 @@ public class TestContainer {
         taskPerPhaseMap.put(SETUP, new CompositeCallable(callableList));
     }
 
-    private void registerRunStrategyTask() {
-        List<String> runAnnotations = new LinkedList<String>();
-        RunStrategy runStrategy = null;
+    private RunStrategy loadRunStrategy() {
+        try {
+            List<String> runAnnotations = new LinkedList<String>();
+            RunStrategy runStrategy = null;
 
-        Method runMethod = new AnnotatedMethodRetriever(testClass, Run.class)
-                .withoutArgs()
-                .withVoidReturnType()
-                .withPublicNonStaticModifier()
-                .find();
-        if (runMethod != null) {
-            runAnnotations.add(Run.class.getName());
-            runStrategy = new PrimordialRunStrategy(testInstance, runMethod);
+            Method runMethod = new AnnotatedMethodRetriever(testClass, Run.class)
+                    .withoutArgs()
+                    .withVoidReturnType()
+                    .withPublicNonStaticModifier()
+                    .find();
+            if (runMethod != null) {
+                assertNoResetMethods(Run.class);
+                runAnnotations.add(Run.class.getName());
+                runStrategy = new PrimordialRunStrategy(testInstance, runMethod);
+            }
+
+            Method runWithWorker = new AnnotatedMethodRetriever(testClass, RunWithWorker.class)
+                    .withReturnType(IWorker.class)
+                    .withoutArgs()
+                    .withPublicNonStaticModifier()
+                    .find();
+            if (runWithWorker != null) {
+                assertNoResetMethods(Run.class);
+                runAnnotations.add(RunWithWorker.class.getName());
+                runStrategy = new RunWithWorkersRunStrategy(this, runWithWorker);
+            }
+
+            List<Method> timeStepMethods = new AnnotatedMethodRetriever(testClass, TimeStep.class)
+                    .findAll();
+            if (!timeStepMethods.isEmpty()) {
+                runAnnotations.add(TimeStep.class.getName());
+                runStrategy = new TimeStepRunStrategy(this);
+            }
+
+            if (runAnnotations.size() == 0) {
+                throw new IllegalTestException(
+                        "Test is missing a run strategy, it must contain one of the following annotations: "
+                                + asList(Run.class.getName(), RunWithWorker.class.getName(), TimeStep.class.getName()));
+            } else if (runAnnotations.size() > 1) {
+                throw new IllegalTestException("Test has more than one run strategy, found the following annotations: "
+                        + runAnnotations);
+            } else {
+                return runStrategy;
+            }
+        } catch (IllegalTestException e) {
+            throw rethrow(e);
+        } catch (Exception e) {
+            throw new IllegalTestException(format("Error loading run strategy in %s: [%s] %s",
+                    testClass.getName(), e.getClass().getSimpleName(), e.getMessage()), e);
         }
+    }
 
-        Method runWithWorker = new AnnotatedMethodRetriever(testClass, RunWithWorker.class)
-                .withReturnType(IWorker.class)
-                .withoutArgs()
-                .withPublicNonStaticModifier()
-                .find();
-        if (runWithWorker != null) {
-            runAnnotations.add(RunWithWorker.class.getName());
-            runStrategy = new RunWithWorkersRunStrategy(this, runWithWorker);
-        }
-
-        List<Method> timeStepMethods = new AnnotatedMethodRetriever(testClass, TimeStep.class)
-                .findAll();
-        if (!timeStepMethods.isEmpty()) {
-            runAnnotations.add(TimeStep.class.getName());
-            runStrategy = new TimeStepRunStrategy(this);
-        }
-
-        if (runAnnotations.size() == 0) {
-            throw new IllegalTestException("Test is missing a run strategy, it must contain one of the following annotations: "
-                    + asList(Run.class.getName(), RunWithWorker.class.getName(), TimeStep.class.getName()));
-        } else if (runAnnotations.size() > 1) {
-            throw new IllegalTestException("Test has more than one run strategy, found the following annotations: "
-                    + runAnnotations);
-        } else {
-            taskPerPhaseMap.put(RUN, runStrategy);
+    private void assertNoResetMethods(Class<? extends Annotation> runAnnotation) {
+        List<Method> methods = new AnnotatedMethodRetriever(testClass, AfterWarmup.class).findAll();
+        if (methods.size() > 0) {
+            throw new IllegalTestException(
+                    format("Can't have reset '%s' in class '%s' since it uses '%s'",
+                            methods.get(0), testClass.getName(), runAnnotation.getName()));
         }
     }
 

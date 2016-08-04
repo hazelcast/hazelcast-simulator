@@ -63,4 +63,8 @@ public class TestContextImpl implements TestContext {
     public void stop() {
         stopped = true;
     }
+
+    public void afterLocalWarmup() {
+        stopped = false;
+    }
 }

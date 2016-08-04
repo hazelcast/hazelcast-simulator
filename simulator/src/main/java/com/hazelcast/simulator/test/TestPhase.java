@@ -22,8 +22,11 @@ import java.util.concurrent.CountDownLatch;
 public enum TestPhase {
 
     SETUP("setup", false),
+    WARMUP("warmup", false),
     LOCAL_WARMUP("local warmup", false),
     GLOBAL_WARMUP("global warmup", true),
+    LOCAL_AFTER_WARMUP("local after warmup", false),
+    GLOBAL_AFTER_WARMUP("global after warmup", true),
     RUN("run", false),
     GLOBAL_VERIFY("global verify", true),
     LOCAL_VERIFY("local verify", false),
