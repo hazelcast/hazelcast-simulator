@@ -116,7 +116,6 @@ public class NetworkTest extends AbstractTest {
             case NonBlocking:
                 NonBlockingIOThreadingModel nonBlockingIOThreadingModel = new NonBlockingIOThreadingModel(
                         ioService, loggingService, metricsRegistry, threadGroup);
-                selectorMode = SelectorMode.SELECT;
                 nonBlockingIOThreadingModel.setSelectorMode(selectorMode);
                 threadingModel = nonBlockingIOThreadingModel;
                 break;

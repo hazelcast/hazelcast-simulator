@@ -27,6 +27,7 @@ import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.IOThreadingModel;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
 import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
+import com.hazelcast.nio.tcp.nonblocking.SelectorMode;
 import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
@@ -63,8 +64,7 @@ public class NetworkTest extends AbstractTest {
     public TimeUnit requestTimeUnit = TimeUnit.SECONDS;
     public int inputThreadCount = 1;
     public int outputThreadCount = 1;
-    public boolean inputSelectNow = false;
-    public boolean outputSelectNow = false;
+    public SelectorMode selectorMode = SelectorMode.SELECT;
     public boolean socketNoDelay = true;
     public int socketReceiveBufferSize = 32;
     public int socketSendBufferSize = 32;
@@ -116,8 +116,7 @@ public class NetworkTest extends AbstractTest {
             case NonBlocking:
                 NonBlockingIOThreadingModel nonBlockingIOThreadingModel = new NonBlockingIOThreadingModel(
                         ioService, loggingService, metricsRegistry, threadGroup);
-                nonBlockingIOThreadingModel.setInputSelectNow(inputSelectNow);
-                nonBlockingIOThreadingModel.setOutputSelectNow(outputSelectNow);
+                nonBlockingIOThreadingModel.setSelectorMode(selectorMode);
                 threadingModel = nonBlockingIOThreadingModel;
                 break;
             case Spinning:
