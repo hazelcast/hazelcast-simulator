@@ -23,6 +23,9 @@ import org.HdrHistogram.HistogramLogWriter;
 import java.io.File;
 import java.io.IOException;
 
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+
 /**
  * The HistogramLogMerger merges the Histograms of multiple HDR files. This will be done based under the assumption that
  * every histogram spans the same duration.
@@ -38,8 +41,8 @@ public final class HistogramLogMerger {
 
     public static void main(String[] args) throws IOException {
         File outputFile = new File(args[0]);
-        outputFile.delete();
-        outputFile.createNewFile();
+        deleteQuiet(outputFile);
+        ensureExistingFile(outputFile);
 
         HistogramLogReader[] readers = new HistogramLogReader[args.length - 1];
         for (int k = 1; k < args.length; k++) {
@@ -82,5 +85,4 @@ public final class HistogramLogMerger {
         int pos = name.lastIndexOf('.');
         return pos == -1 ? name : name.substring(0, pos);
     }
-
 }
