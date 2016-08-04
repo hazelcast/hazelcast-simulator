@@ -1,5 +1,6 @@
-package com.hazelcast.simulator.agent;
+package com.hazelcast.simulator.harakiri;
 
+import com.hazelcast.simulator.harakiri.HarakiriMonitor;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManager;
-import static com.hazelcast.simulator.agent.HarakiriMonitorCli.createHarakiriMonitor;
+import static com.hazelcast.simulator.harakiri.HarakiriMonitorCli.createHarakiriMonitor;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static org.junit.Assert.assertEquals;
