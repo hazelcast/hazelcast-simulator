@@ -30,13 +30,14 @@ public final class SleepingMetronome implements Metronome {
     private final boolean accountForCoordinatedOmission;
     private long nextNanos;
 
-    public SleepingMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
+    SleepingMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
         this.intervalNanos = intervalNanos;
         this.accountForCoordinatedOmission = accountForCoordinatedOmission;
     }
 
     @Override
     public long waitForNext() {
+        // set random interval on the first run
         if (nextNanos == 0) {
             nextNanos = nanoTime() + nextLong(0, intervalNanos);
         }

@@ -18,9 +18,7 @@ package com.hazelcast.simulator.worker.metronome;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
 import static java.lang.Math.round;
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.*;
 
 public class MetronomeBuilder {
 
@@ -45,7 +43,7 @@ public class MetronomeBuilder {
 
     public MetronomeBuilder withIntervalMicros(long intervalUs) {
         if (intervalUs < 0) {
-            throw new IllegalArgumentException("intervalUs can't be smaller than 0, but was:" + intervalUs);
+            throw new IllegalArgumentException("intervalUs can't be smaller than 0, but was: " + intervalUs);
         }
         this.intervalNanos = MICROSECONDS.toNanos(intervalUs);
         return this;
@@ -53,7 +51,7 @@ public class MetronomeBuilder {
 
     public MetronomeBuilder withIntervalMillis(long intervalMillis) {
         if (intervalMillis < 0) {
-            throw new IllegalArgumentException("intervalMillis can't be smaller than 0, but was:" + intervalMillis);
+            throw new IllegalArgumentException("intervalMillis can't be smaller than 0, but was: " + intervalMillis);
         }
         this.intervalNanos = MILLISECONDS.toNanos(intervalMillis);
         return this;
@@ -62,10 +60,6 @@ public class MetronomeBuilder {
     public MetronomeBuilder withAccountForCoordinatedOmission(boolean accountForCoordinatedOmission) {
         this.accountForCoordinatedOmission = accountForCoordinatedOmission;
         return this;
-    }
-
-    long getIntervalNanos() {
-        return intervalNanos;
     }
 
     public Metronome build() {
@@ -79,11 +73,15 @@ public class MetronomeBuilder {
             case SLEEPING:
                 return new SleepingMetronome(intervalNanos, accountForCoordinatedOmission);
             default:
-                throw new IllegalStateException("Unrecognized metronomeType:" + type);
+                throw new IllegalStateException("Unrecognized metronomeType: " + type);
         }
     }
 
     public Class<? extends Metronome> getMetronomeClass() {
         return build().getClass();
+    }
+
+    long getIntervalNanos() {
+        return intervalNanos;
     }
 }

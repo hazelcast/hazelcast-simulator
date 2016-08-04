@@ -35,7 +35,7 @@ public final class BusySpinningMetronome implements Metronome {
     private final boolean accountForCoordinatedOmission;
     private long nextNanos;
 
-    public BusySpinningMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
+    BusySpinningMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
         this.intervalNanos = intervalNanos;
         this.accountForCoordinatedOmission = accountForCoordinatedOmission;
     }

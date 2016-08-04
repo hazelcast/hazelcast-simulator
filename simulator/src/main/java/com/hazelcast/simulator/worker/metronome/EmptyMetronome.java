@@ -15,9 +15,12 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
-public class EmptyMetronome implements Metronome {
+public final class EmptyMetronome implements Metronome {
 
     public static final EmptyMetronome INSTANCE = new EmptyMetronome();
+
+    private EmptyMetronome() {
+    }
 
     @Override
     public long waitForNext() {

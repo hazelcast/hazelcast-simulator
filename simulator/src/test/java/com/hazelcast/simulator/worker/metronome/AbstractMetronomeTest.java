@@ -2,8 +2,6 @@ package com.hazelcast.simulator.worker.metronome;
 
 import org.junit.Test;
 
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedFrequency;
-import static com.hazelcast.simulator.worker.metronome.MetronomeFactory.withFixedIntervalMs;
 import static java.lang.String.format;
 import static org.junit.Assert.assertTrue;
 
@@ -49,11 +47,17 @@ public abstract class AbstractMetronomeTest {
     }
 
     private Metronome getFixedIntervalMsMetronome(int intervalMs) {
-        return withFixedIntervalMs(intervalMs, getMetronomeType());
+        return new MetronomeBuilder()
+                .withIntervalMillis(intervalMs)
+                .withMetronomeType(getMetronomeType())
+                .build();
     }
 
     private Metronome getFixedFrequencyMetronome(float frequency) {
-        return withFixedFrequency(frequency, getMetronomeType());
+        return new MetronomeBuilder()
+                .withRatePerSecond(frequency)
+                .withMetronomeType(getMetronomeType())
+                .build();
     }
 
     private void testMetronome(int intervalMs) {

@@ -2,21 +2,17 @@ package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.hazelcast.simulator.TestSupport.assertInstanceOf;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest {
 
@@ -30,8 +26,8 @@ public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest
 
         testContainer = new TestContainer(testContext, testCase);
         MetronomeTest testInstance = (MetronomeTest) testContainer.getTestInstance();
-        SleepingMetronome metronome = assertInstanceOf(SleepingMetronome.class, testInstance.metronome);
 
+        SleepingMetronome metronome = assertInstanceOf(SleepingMetronome.class, testInstance.metronome);
         assertEquals(MICROSECONDS.toNanos(5), metronome.getIntervalNanos());
 
         testContainer.invoke(TestPhase.SETUP);
@@ -50,6 +46,18 @@ public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest
         assertTrue(metronome instanceof EmptyMetronome);
     }
 
+    @Test
+    public void testInjectMetronome_withWorkerMetronome() throws Exception {
+        MetronomeTest test = new MetronomeTest();
+        testContainer = createTestContainer(test);
+
+        testContainer.invoke(TestPhase.SETUP);
+        testContainer.invoke(TestPhase.RUN);
+
+        assertNotNull(test.workerMetronome);
+        Metronome metronome = test.workerMetronome;
+        assertTrue(metronome instanceof EmptyMetronome);
+    }
 
     @Test
     public void testInjectMetronome_withoutAnnotation() {
@@ -77,7 +85,7 @@ public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest
 
         private class Worker extends AbstractMonotonicWorker {
 
-            @Override
+            @TimeStep
             protected void timeStep() throws Exception {
                 workerMetronome = getWorkerMetronome();
                 stopTestContext();
