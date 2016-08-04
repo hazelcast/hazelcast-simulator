@@ -22,18 +22,18 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.test.FailureType;
+import com.hazelcast.simulator.common.FailureType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.test.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.test.FailureType.WORKER_EXIT;
-import static com.hazelcast.simulator.test.FailureType.WORKER_FINISHED;
-import static com.hazelcast.simulator.test.FailureType.WORKER_OOM;
-import static com.hazelcast.simulator.test.FailureType.WORKER_TIMEOUT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.common.FailureType.WORKER_OOM;
+import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;

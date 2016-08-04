@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.protocol.operation;
 
 /**
- * Stops the {@link com.hazelcast.simulator.test.TestPhase#RUN} phase of a Simulator Test.
+ * Stops the {@link com.hazelcast.simulator.testcontainer.TestPhase#RUN} phase of a Simulator Test.
  */
 public class StopTestOperation implements SimulatorOperation {
 }

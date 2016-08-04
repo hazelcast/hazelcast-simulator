@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.test.FailureType;
-import com.hazelcast.simulator.test.TestCase;
-import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.common.FailureType;
+import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.TestSuite;
 
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;

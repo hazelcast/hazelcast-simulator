@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.common.TestCase;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bind;

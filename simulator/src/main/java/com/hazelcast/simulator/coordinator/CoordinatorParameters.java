@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.TargetType;
-import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.testcontainer.TestPhase;
 
 /**
  * Parameters for Simulator Coordinator.

@@ -24,7 +24,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
+import static com.hazelcast.simulator.common.FailureType.NETTY_EXCEPTION;
 
 /**
  * Handles uncaught exceptions in the channel pipeline.

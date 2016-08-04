@@ -32,7 +32,7 @@ import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;

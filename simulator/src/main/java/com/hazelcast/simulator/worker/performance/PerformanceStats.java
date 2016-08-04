@@ -83,9 +83,9 @@ public class PerformanceStats {
     /**
      * Combines {@link PerformanceStats} instances, e.g. from different Simulator Workers.
      *
-     * For the real-time performance monitor during the {@link com.hazelcast.simulator.test.TestPhase#RUN} the maximum values
-     * should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats} instances of
-     * the last interval.
+     * For the real-time performance monitor during the {@link com.hazelcast.simulator.testcontainer.TestPhase#RUN} the
+     * maximum value should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats}
+     * instances of the last interval.
      *
      * For the total performance number and the performance per Simulator Agent, the added values should be set, so we get the
      * summed up operation count and throughput values.

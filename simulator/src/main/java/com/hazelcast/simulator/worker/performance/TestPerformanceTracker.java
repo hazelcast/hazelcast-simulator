@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.worker.performance;
 
-import com.hazelcast.simulator.test.TestContainer;
+import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.test.TestException;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogReader;

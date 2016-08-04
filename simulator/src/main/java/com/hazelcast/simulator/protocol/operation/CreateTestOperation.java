@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.common.TestCase;
 
 import java.util.Map;
 
