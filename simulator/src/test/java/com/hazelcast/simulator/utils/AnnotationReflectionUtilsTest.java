@@ -11,12 +11,16 @@ import java.lang.reflect.Field;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeName;
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
+import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class AnnotationReflectionUtilsTest {
+
+    @Test
+    public void testConstructor() throws Exception {
+        invokePrivateConstructor(AnnotationReflectionUtils.class);
+    }
 
     @Test
     public void testGetProbeName_withAnnotation() {
@@ -65,7 +69,6 @@ public class AnnotationReflectionUtilsTest {
         Field field = getField(AnnotationTestClass.class, "notFound", Probe.class);
         assertFalse(isPartOfTotalThroughput(field));
     }
-
 
     @SuppressWarnings("unused")
     private static class AnnotationTestClass {
