@@ -10,7 +10,7 @@ public class MetronomeBuilderTest {
 
     @Test
     public void withRatePerSecond() {
-        //100 per second, is 1 every 10ms.
+        // 100 per second is once every 10 ms
         MetronomeBuilder builder = new MetronomeBuilder()
                 .withRatePerSecond(100);
 
