@@ -19,7 +19,7 @@ import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.test.TestContainer;
 import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
-import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERVAL_LATENCY_PERCENTILE;
+import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -82,7 +82,7 @@ public class WorkerPerformanceMonitor {
      * Thread to monitor the performance of Simulator Tests.
      * <p>
      * Iterates over all {@link TestContainer} to retrieve performance values from all {@link Probe} instances.
-     * Sends performance numbers as {@link PerformanceState} to the Coordinator.
+     * Sends performance numbers as {@link PerformanceStats} to the Coordinator.
      * Writes performance stats to files.
      * <p>
      * Holds one {@link TestPerformanceTracker} instance per Simulator Test.
@@ -115,7 +115,7 @@ public class WorkerPerformanceMonitor {
 
                 boolean runningTestFound = refreshTests(currentTimestamp);
                 updateTrackers(currentTimestamp);
-                sendPerformanceStates();
+                sendPerformanceStats();
                 writeStatsToFiles(currentTimestamp);
                 purgeDeadTrackers(currentTimestamp);
 
@@ -226,16 +226,16 @@ public class WorkerPerformanceMonitor {
                     currentTimestamp);
         }
 
-        private void sendPerformanceStates() {
-            PerformanceStateOperation operation = new PerformanceStateOperation();
+        private void sendPerformanceStats() {
+            PerformanceStatsOperation operation = new PerformanceStatsOperation();
 
             for (TestPerformanceTracker tracker : trackers.values()) {
                 if (tracker.isUpdated()) {
-                    operation.addPerformanceState(tracker.getTestId(), tracker.createPerformanceState());
+                    operation.addPerformanceStats(tracker.getTestId(), tracker.createPerformanceStats());
                 }
             }
 
-            if (operation.getPerformanceStates().size() > 0) {
+            if (operation.getPerformanceStats().size() > 0) {
                 serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
             }
         }

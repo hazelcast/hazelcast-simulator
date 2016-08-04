@@ -2,7 +2,7 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStateContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -11,7 +11,7 @@ import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
-import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -19,7 +19,7 @@ import com.hazelcast.simulator.test.FailureType;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.TestPhase;
 import com.hazelcast.simulator.utils.TestUtils;
-import com.hazelcast.simulator.worker.performance.PerformanceState;
+import com.hazelcast.simulator.worker.performance.PerformanceStats;
 import org.apache.log4j.Level;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -35,9 +35,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
-import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.LATENCY_FORMAT_LENGTH;
-import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.OPERATION_COUNT_FORMAT_LENGTH;
-import static com.hazelcast.simulator.coordinator.PerformanceStateContainer.THROUGHPUT_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.LATENCY_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.OPERATION_COUNT_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.THROUGHPUT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
@@ -62,7 +62,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     private LocalExceptionLogger exceptionLogger;
     private TestPhaseListeners testPhaseListeners;
-    private PerformanceStateContainer performanceStateContainer;
+    private PerformanceStatsContainer performanceStatsContainer;
     private FailureContainer failureContainer;
 
     private CoordinatorOperationProcessor processor;
@@ -86,13 +86,13 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
-        performanceStateContainer = new PerformanceStateContainer();
+        performanceStatsContainer = new PerformanceStatsContainer();
 
         outputDirectory = TestUtils.createTmpDirectory();
         failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStateContainer);
+                performanceStatsContainer);
     }
 
     @After
@@ -174,14 +174,14 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     }
 
     @Test
-    public void processPerformanceState() {
-        PerformanceStateOperation operation = new PerformanceStateOperation();
-        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 33000.0d, 23000, 42000));
+    public void processPerformanceStats() {
+        PerformanceStatsOperation operation = new PerformanceStatsOperation();
+        operation.addPerformanceStats("testId", new PerformanceStats(1000, 50.0, 1234.56, 33000.0d, 23000, 42000));
 
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);
 
-        String performanceNumbers = performanceStateContainer.formatPerformanceNumbers("testId");
+        String performanceNumbers = performanceStatsContainer.formatPerformanceNumbers("testId");
         assertTrue(performanceNumbers.contains(formatLong(1000, OPERATION_COUNT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatDouble(50, THROUGHPUT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));

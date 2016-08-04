@@ -4,7 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.PerformanceStateOperation;
+import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.test.TestCase;
 import com.hazelcast.simulator.test.TestContainer;
 import com.hazelcast.simulator.test.TestContext;
@@ -31,7 +31,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -104,7 +103,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStates() {
+    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStats() {
         performanceMonitor.start();
         sleepMillis(300);
 
@@ -129,7 +128,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStates() {
+    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStats() {
         PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
         addTest(test, 200);
 
@@ -166,7 +165,7 @@ public class WorkerPerformanceMonitorTest {
     }
 
     private void verifyServerConnector() {
-        verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStateOperation.class));
+        verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStatsOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
 

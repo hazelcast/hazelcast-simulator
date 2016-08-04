@@ -20,9 +20,9 @@ import static java.lang.Math.max;
 /**
  * Container to transfer performance statistics for some time window.
  * <p>
- * Has methods to combine {@link PerformanceState} instances by adding or setting maximum values.
+ * Has methods to combine {@link PerformanceStats} instances by adding or setting maximum values.
  */
-public class PerformanceState {
+public class PerformanceStats {
 
     public static final double INTERVAL_LATENCY_PERCENTILE = 99.9;
 
@@ -38,25 +38,25 @@ public class PerformanceState {
     private long intervalLatency999PercentileNanos;
 
     /**
-     * Creates an empty {@link PerformanceState} instance.
+     * Creates an empty {@link PerformanceStats} instance.
      */
-    public PerformanceState() {
+    public PerformanceStats() {
         this.operationCount = EMPTY_OPERATION_COUNT;
         this.intervalThroughput = EMPTY_THROUGHPUT;
     }
 
     /**
-     * Creates a {@link PerformanceState} instance with values.
+     * Creates a {@link PerformanceStats} instance with values.
      *
      * @param operationCount                    Operation count value.
      * @param intervalThroughput                Throughput value for an interval.
      * @param totalThroughput                   Total throughput value.
      * @param intervalLatencyAvgNanos           Average latency for an interval.
      * @param intervalLatency999PercentileNanos 99.9 Percentile latency for an interval
-     *                                          ({@link PerformanceState#INTERVAL_LATENCY_PERCENTILE}).
+     *                                          ({@link PerformanceStats#INTERVAL_LATENCY_PERCENTILE}).
      * @param intervalLatencyMaxNanos           Maximum latency for an interval.
      */
-    public PerformanceState(long operationCount,
+    public PerformanceStats(long operationCount,
                             double intervalThroughput,
                             double totalThroughput,
                             double intervalLatencyAvgNanos,
@@ -72,19 +72,19 @@ public class PerformanceState {
     }
 
     /**
-     * Combines two {@link PerformanceState} instances, e.g. from different Simulator Workers.
+     * Combines two {@link PerformanceStats} instances, e.g. from different Simulator Workers.
      *
-     * @param other {@link PerformanceState} which should be added to this instance
+     * @param other {@link PerformanceStats} which should be added to this instance
      */
-    public void add(PerformanceState other) {
+    public void add(PerformanceStats other) {
         add(other, true);
     }
 
     /**
-     * Combines {@link PerformanceState} instances, e.g. from different Simulator Workers.
+     * Combines {@link PerformanceStats} instances, e.g. from different Simulator Workers.
      * <p>
      * For the real-time performance monitor during the {@link com.hazelcast.simulator.test.TestPhase#RUN} the maximum values
-     * should be set, so we get the maximum operation count and throughput values of all {@link PerformanceState} instances of
+     * should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats} instances of
      * the last interval.
      * <p>
      * For the total performance number and the performance per Simulator Agent, the added values should be set, so we get the
@@ -92,11 +92,11 @@ public class PerformanceState {
      * <p>
      * The method always sets the maximum values for latency.
      *
-     * @param other                          {@link PerformanceState} which should be added to this instance
+     * @param other                          {@link PerformanceStats} which should be added to this instance
      * @param addOperationCountAndThroughput {@code true} if operation count and throughput should be added,
      *                                       {@code false} if the maximum value should be set
      */
-    public void add(PerformanceState other, boolean addOperationCountAndThroughput) {
+    public void add(PerformanceStats other, boolean addOperationCountAndThroughput) {
         if (other.isEmpty()) {
             return;
         }
@@ -127,9 +127,9 @@ public class PerformanceState {
     }
 
     /**
-     * Returns if the {@link PerformanceState} instance is still empty.
+     * Returns if the {@link PerformanceStats} instance is still empty.
      *
-     * @return {@code true} if the {@link PerformanceState} instance is empty, {@code false} otherwise
+     * @return {@code true} if the {@link PerformanceStats} instance is empty, {@code false} otherwise
      */
     public boolean isEmpty() {
         return (operationCount == EMPTY_OPERATION_COUNT && intervalThroughput == EMPTY_THROUGHPUT);
@@ -161,7 +161,7 @@ public class PerformanceState {
 
     @Override
     public String toString() {
-        return "PerformanceState{"
+        return "PerformanceStats{"
                 + "operationCount=" + operationCount
                 + ", intervalThroughput=" + intervalThroughput
                 + ", totalThroughput=" + totalThroughput

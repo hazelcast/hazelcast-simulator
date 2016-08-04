@@ -78,7 +78,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private final RemoteClient remoteClient;
     private final FailureContainer failureContainer;
-    private final PerformanceStateContainer performanceStateContainer;
+    private final PerformanceStatsContainer performanceStatsContainer;
     private final ComponentRegistry componentRegistry;
 
     private final String prefix;
@@ -101,7 +101,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
         this.remoteClient = coordinator.getRemoteClient();
         this.failureContainer = coordinator.getFailureContainer();
-        this.performanceStateContainer = coordinator.getPerformanceStateContainer();
+        this.performanceStatsContainer = coordinator.getPerformanceStatsContainer();
         this.componentRegistry = coordinator.getComponentRegistry();
 
         this.prefix = padRight(testCaseId, paddingLength + 1);
@@ -332,7 +332,7 @@ final class TestCaseRunner implements TestPhaseListener {
         private void logProgress(int elapsed, int sleepSeconds) {
             String msg = format("Running %s (%s%%)", secondsToHuman(elapsed), formatPercentage(elapsed, sleepSeconds));
             if (monitorPerformance && elapsed % logPerformanceIntervalSeconds == 0) {
-                msg += performanceStateContainer.formatPerformanceNumbers(testCaseId);
+                msg += performanceStatsContainer.formatPerformanceNumbers(testCaseId);
             }
 
             LOGGER.info(prefix + msg);

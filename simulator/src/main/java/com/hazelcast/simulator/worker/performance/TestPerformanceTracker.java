@@ -155,8 +155,8 @@ final class TestPerformanceTracker {
         }
     }
 
-    PerformanceState createPerformanceState() {
-        return new PerformanceState(totalOperationCount, intervalThroughput, totalThroughput,
+    PerformanceStats createPerformanceStats() {
+        return new PerformanceStats(totalOperationCount, intervalThroughput, totalThroughput,
                 intervalLatencyAvgNanos, intervalLatency999PercentileNanos, intervalLatencyMaxNanos);
     }
 

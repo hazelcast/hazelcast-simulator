@@ -77,7 +77,7 @@ public final class Coordinator {
     private final File outputDirectory;
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
-    private final PerformanceStateContainer performanceStateContainer = new PerformanceStateContainer();
+    private final PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
 
     private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
@@ -157,8 +157,8 @@ public final class Coordinator {
         return failureContainer;
     }
 
-    PerformanceStateContainer getPerformanceStateContainer() {
-        return performanceStateContainer;
+    PerformanceStatsContainer getPerformanceStatsContainer() {
+        return performanceStatsContainer;
     }
 
     RemoteClient getRemoteClient() {
@@ -258,7 +258,7 @@ public final class Coordinator {
     private void startCoordinatorConnector() {
         try {
             coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners,
-                    performanceStateContainer);
+                    performanceStatsContainer);
             failureContainer.addListener(coordinatorConnector);
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
             for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -355,7 +355,7 @@ public final class Coordinator {
                 LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
             }
 
-            performanceStateContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
+            performanceStatsContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
     }
 
