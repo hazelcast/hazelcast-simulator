@@ -31,10 +31,10 @@ import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.spi.impl.PacketHandler;
 
@@ -133,8 +133,8 @@ public class NetworkTest extends AbstractTest {
         networkCreateLock = targetInstance.getLock("connectionCreateLock");
     }
 
-    @Warmup
-    public void warmup() throws Exception {
+    @Prepare
+    public void prepare() throws Exception {
         networkCreateLock.lock();
         try {
             logger.info("Starting connections: " + (targetInstance.getCluster().getMembers().size() - 1));

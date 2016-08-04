@@ -20,11 +20,11 @@ import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
@@ -58,8 +58,8 @@ public class EntryProcessorICacheTest extends AbstractTest {
         cache = cacheManager.getCache(name);
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         Streamer<Integer, Long> streamer = StreamerFactory.getInstance(cache);
         for (int i = 0; i < keyCount; i++) {
             streamer.pushEntry(i, 0L);

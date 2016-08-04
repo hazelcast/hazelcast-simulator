@@ -16,11 +16,11 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
@@ -45,8 +45,8 @@ public class SplitClusterDataTest extends AbstractTest {
         }
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         waitClusterSize(logger, targetInstance, clusterSize);
 
         for (int i = 0; i < maxItems; i++) {

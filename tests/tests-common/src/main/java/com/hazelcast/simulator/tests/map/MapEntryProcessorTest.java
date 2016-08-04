@@ -21,11 +21,11 @@ import com.hazelcast.map.AbstractEntryProcessor;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.KeyUtils;
 
@@ -59,8 +59,8 @@ public class MapEntryProcessorTest extends AbstractTest {
         keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
         }

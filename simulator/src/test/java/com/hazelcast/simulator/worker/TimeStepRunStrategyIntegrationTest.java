@@ -114,7 +114,7 @@ public class TimeStepRunStrategyIntegrationTest {
         testContext.stop();
         warmupFuture.get();
         container.invoke(TestPhase.LOCAL_AFTER_WARMUP);
-        container.invoke(TestPhase.GLOBAL_WARMUP);
+        container.invoke(TestPhase.GLOBAL_PREPARE);
 
         Future runFuture = spawn(new Callable() {
             @Override

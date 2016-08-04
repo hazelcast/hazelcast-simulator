@@ -21,9 +21,9 @@ import com.hazelcast.query.Predicates;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.domain.DomainObject;
 import com.hazelcast.simulator.tests.map.domain.DomainObjectFactory;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
@@ -66,8 +66,8 @@ public class SerializationStrategyTest extends AbstractTest {
         uniqueStrings = targetInstance.getSet(name);
     }
 
-    @Warmup(global = true)
-    public void initDataLoad() {
+    @Prepare(global = true)
+    public void prepare() {
         int uniqueStringsCount = itemCount / recordsPerUnique;
         String[] strings = generateUniqueStrings(uniqueStringsCount);
 

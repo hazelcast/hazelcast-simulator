@@ -31,10 +31,10 @@ import com.hazelcast.mapreduce.ReducerFactory;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.MapReduceOperationCounter;
 
@@ -59,8 +59,8 @@ public class MapReduceTest extends AbstractTest {
         operationCounterList = targetInstance.getList(name + "OperationCounter");
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         for (int id = 0; id < keyCount; id++) {
             map.put(id, new Employee(id));
         }

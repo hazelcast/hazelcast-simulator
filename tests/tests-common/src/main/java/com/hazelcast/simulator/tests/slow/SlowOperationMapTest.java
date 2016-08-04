@@ -18,11 +18,11 @@ package com.hazelcast.simulator.tests.slow;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -47,7 +47,7 @@ import static org.junit.Assert.fail;
 
 /**
  * This test invokes slowed down map operations on a Hazelcast instance to provoke slow operation logs.
- *
+ * <p>
  * In the verification phase we check for the correct number of slow operation logs (one per operation type).
  *
  * @since Hazelcast 3.5
@@ -92,8 +92,8 @@ public class SlowOperationMapTest extends AbstractTest {
         }
     }
 
-    @Warmup
-    public void localWarmup() {
+    @Prepare
+    public void localPrepare() {
         if (isClient) {
             return;
         }
@@ -104,9 +104,9 @@ public class SlowOperationMapTest extends AbstractTest {
         }
     }
 
-    @Warmup(global = true)
-    public void globalWarmup() {
-        // add the interceptor after local warmup, otherwise that stage will take ages
+    @Prepare(global = true)
+    public void globalPrepare() {
+        // add the interceptor after local prepare, otherwise that stage will take ages
         map.addInterceptor(new SlowMapInterceptor(recursionDepth));
     }
 

@@ -17,20 +17,20 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import java.util.Random;
 
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_PREPARE;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -51,14 +51,14 @@ public class LongTestPhasesTest {
         sleep(SETUP);
     }
 
-    @Warmup(global = false)
-    public void localWarmup() {
-        sleep(LOCAL_WARMUP);
+    @Prepare(global = false)
+    public void localPrepare() {
+        sleep(LOCAL_PREPARE);
     }
 
-    @Warmup(global = true)
-    public void globalWarmup() {
-        sleep(GLOBAL_WARMUP);
+    @Prepare(global = true)
+    public void globalPrepare() {
+        sleep(GLOBAL_PREPARE);
     }
 
     @TimeStep

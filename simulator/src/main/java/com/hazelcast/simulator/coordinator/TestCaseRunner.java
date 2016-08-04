@@ -38,11 +38,11 @@ import java.util.concurrent.CountDownLatch;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.LOCAL_PREPARE;
 import static com.hazelcast.simulator.test.TestPhase.RUN;
 import static com.hazelcast.simulator.test.TestPhase.SETUP;
 import static com.hazelcast.simulator.test.TestPhase.WARMUP;
@@ -135,8 +135,8 @@ final class TestCaseRunner implements TestPhaseListener {
             createTest();
             executePhase(SETUP);
 
-            executePhase(LOCAL_WARMUP);
-            executePhase(GLOBAL_WARMUP);
+            executePhase(LOCAL_PREPARE);
+            executePhase(GLOBAL_PREPARE);
 
             if (testSuite.getWarmupDurationSeconds() > 0) {
                 executeWarmup();

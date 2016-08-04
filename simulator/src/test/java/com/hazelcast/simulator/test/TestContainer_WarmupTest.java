@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.test;
 
-import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -12,35 +12,35 @@ public class TestContainer_WarmupTest extends AbstractTestContainerTest {
     public void testLocalWarmup() throws Exception {
         WarmupTest test = new WarmupTest();
         testContainer = createTestContainer(test);
-        testContainer.invoke(TestPhase.LOCAL_WARMUP);
+        testContainer.invoke(TestPhase.LOCAL_PREPARE);
 
-        assertTrue(test.localWarmupCalled);
-        assertFalse(test.globalWarmupCalled);
+        assertTrue(test.localPrepareCalled);
+        assertFalse(test.globalPrepareCalled);
     }
 
     @Test
     public void testGlobalWarmup() throws Exception {
         WarmupTest test = new WarmupTest();
         testContainer = createTestContainer(test);
-        testContainer.invoke(TestPhase.GLOBAL_WARMUP);
+        testContainer.invoke(TestPhase.GLOBAL_PREPARE);
 
-        assertFalse(test.localWarmupCalled);
-        assertTrue(test.globalWarmupCalled);
+        assertFalse(test.localPrepareCalled);
+        assertTrue(test.globalPrepareCalled);
     }
 
     private static class WarmupTest extends BaseTest {
 
-        private boolean localWarmupCalled;
-        private boolean globalWarmupCalled;
+        private boolean localPrepareCalled;
+        private boolean globalPrepareCalled;
 
-        @Warmup
-        public void localTeardown() {
-            localWarmupCalled = true;
+        @Prepare
+        public void localPrepare() {
+            localPrepareCalled = true;
         }
 
-        @Warmup(global = true)
-        public void globalTeardown() {
-            globalWarmupCalled = true;
+        @Prepare(global = true)
+        public void globalPrepare() {
+            globalPrepareCalled = true;
         }
     }
 }

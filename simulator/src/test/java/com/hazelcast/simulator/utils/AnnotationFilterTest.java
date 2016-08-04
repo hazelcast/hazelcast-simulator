@@ -1,12 +1,12 @@
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.utils.AnnotationFilter.PrepareFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
-import com.hazelcast.simulator.utils.AnnotationFilter.WarmupFilter;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -20,7 +20,6 @@ public class AnnotationFilterTest {
     public void testAlwaysFilter() {
         Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Setup.class)
                 .withVoidReturnType()
-                .withVoidReturnType()
                 .withFilter(ALWAYS_FILTER)
                 .find();
         assertEquals("setupMethod", method.getName());
@@ -29,7 +28,6 @@ public class AnnotationFilterTest {
     @Test
     public void testLocalTeardownFilter() {
         Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Teardown.class)
-                .withVoidReturnType()
                 .withVoidReturnType()
                 .withFilter(new TeardownFilter(false))
                 .find();
@@ -41,7 +39,6 @@ public class AnnotationFilterTest {
     public void testGlobalTeardownFilter() {
         Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Teardown.class)
                 .withVoidReturnType()
-                .withVoidReturnType()
                 .withFilter(new TeardownFilter(true))
                 .find();
         assertEquals("globalTearDown", method.getName());
@@ -49,29 +46,26 @@ public class AnnotationFilterTest {
 
     @Test
     public void testLocalWarmupFilter() {
-        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
                 .withVoidReturnType()
-                .withVoidReturnType()
-                .withFilter(new WarmupFilter(false))
+                .withFilter(new PrepareFilter(false))
                 .find();
 
-        assertEquals("localWarmup", method.getName());
+        assertEquals("localPrepare", method.getName());
     }
 
     @Test
     public void testGlobalWarmupFilter() {
-        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Warmup.class)
+        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
                 .withVoidReturnType()
-                .withVoidReturnType()
-                .withFilter(new WarmupFilter(true))
+                .withFilter(new PrepareFilter(true))
                 .find();
-        assertEquals("globalWarmup", method.getName());
+        assertEquals("globalPrepare", method.getName());
     }
 
     @Test
     public void testLocalVerifyFilter() {
         Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Verify.class)
-                .withVoidReturnType()
                 .withVoidReturnType()
                 .withFilter(new VerifyFilter(false))
                 .find();
@@ -81,7 +75,6 @@ public class AnnotationFilterTest {
     @Test
     public void testGlobalVerifyFilter() {
         Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Verify.class)
-                .withVoidReturnType()
                 .withVoidReturnType()
                 .withFilter(new VerifyFilter(true))
                 .find();
@@ -104,12 +97,12 @@ public class AnnotationFilterTest {
         public void globalTearDown() {
         }
 
-        @Warmup(global = false)
-        public void localWarmup() {
+        @Prepare(global = false)
+        public void localPrepare() {
         }
 
-        @Warmup(global = true)
-        public void globalWarmup() {
+        @Prepare(global = true)
+        public void globalPrepare() {
         }
 
         @Verify(global = false)

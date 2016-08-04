@@ -20,9 +20,9 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
@@ -44,8 +44,8 @@ public class TryLockTimeOutTest extends AbstractTest {
 
     private long totalInitialValue;
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         IList<Long> accounts = targetInstance.getList(name);
         for (int i = 0; i < maxAccounts; i++) {
             accounts.add(initialAccountValue);

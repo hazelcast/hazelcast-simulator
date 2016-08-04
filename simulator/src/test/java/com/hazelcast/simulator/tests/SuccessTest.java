@@ -16,11 +16,11 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
@@ -41,13 +41,13 @@ public class SuccessTest {
     public void globalTearDown() {
     }
 
-    @Warmup(global = false)
-    public void localWarmup() {
+    @Prepare(global = false)
+    public void localPrepare() {
         sleepSeconds(1);
     }
 
-    @Warmup(global = true)
-    public void globalWarmup() {
+    @Prepare(global = true)
+    public void globalPrepare() {
         sleepSeconds(1);
     }
 

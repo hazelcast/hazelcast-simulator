@@ -20,11 +20,11 @@ import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This test verifies that there are race problems if the {@link IMap} is not used correctly.
- *
+ * <p>
  * This test is expected to fail.
  */
 public class MapRaceTest extends AbstractTest {
@@ -51,8 +51,8 @@ public class MapRaceTest extends AbstractTest {
         resultMap = targetInstance.getMap(name + ":ResultMap");
     }
 
-    @Warmup(global = true)
-    public void warmup() {
+    @Prepare(global = true)
+    public void prepare() {
         for (int i = 0; i < keyCount; i++) {
             map.put(i, 0L);
         }

@@ -18,10 +18,10 @@ package com.hazelcast.simulator.tests.replicatedmap;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
@@ -42,8 +42,8 @@ public class ReplicatedMapTest extends AbstractTest {
         map = targetInstance.getReplicatedMap(name + "-" + testContext.getTestId());
     }
 
-    @Warmup
-    public void warmup() {
+    @Prepare
+    public void prepare() {
         values = generateStrings(valueCount, valueLength);
     }
 

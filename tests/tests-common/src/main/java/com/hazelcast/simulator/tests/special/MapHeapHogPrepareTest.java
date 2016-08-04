@@ -17,10 +17,10 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.concurrent.TimeUnit;
@@ -32,11 +32,11 @@ import static com.hazelcast.simulator.utils.FormatUtils.humanReadableByteCount;
 import static java.lang.String.format;
 
 /**
- * Fills up the cluster to a defined heap usage factor during warmup phase.
+ * Fills up the cluster to a defined heap usage factor during prepare phase.
  * <p>
  * This tests intentionally has an empty run phase.
  */
-public class MapHeapHogWarmupTest extends AbstractTest {
+public class MapHeapHogPrepareTest extends AbstractTest {
 
     private static final long APPROX_ENTRY_BYTES_SIZE = 238;
 
@@ -66,8 +66,8 @@ public class MapHeapHogWarmupTest extends AbstractTest {
         maxEntriesPerThread = (long) (maxLocalEntries / (double) threadCount);
     }
 
-    @Warmup
-    public void warmup() {
+    @Prepare
+    public void prepare() {
         if (isClient(targetInstance)) {
             return;
         }
@@ -83,7 +83,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
         }
         threadSpawner.awaitCompletion();
 
-        StringBuilder sb = new StringBuilder(name).append(": After warmup phase the map size is ").append(map.size());
+        StringBuilder sb = new StringBuilder(name).append(": After prepare phase the map size is ").append(map.size());
         addMemoryStatistics(sb);
         logger.info(sb.toString());
     }
@@ -114,7 +114,7 @@ public class MapHeapHogWarmupTest extends AbstractTest {
                 key++;
 
                 if (isLogger && key % logFrequency == 0) {
-                    sb.append(name).append(": In warmup phase the map size is ").append(map.size());
+                    sb.append(name).append(": In prepare phase the map size is ").append(map.size());
                     addMemoryStatistics(sb);
                     logger.info(sb.toString());
                     sb.setLength(0);

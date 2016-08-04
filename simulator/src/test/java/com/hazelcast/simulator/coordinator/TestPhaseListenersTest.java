@@ -36,9 +36,9 @@ public class TestPhaseListenersTest {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
         testPhaseListeners.addListener(1, listener);
 
-        testPhaseListeners.updatePhaseCompletion(1, TestPhase.GLOBAL_WARMUP, null);
+        testPhaseListeners.updatePhaseCompletion(1, TestPhase.GLOBAL_PREPARE, null);
 
-        assertEquals(TestPhase.GLOBAL_WARMUP, listener.lastTestPhase);
+        assertEquals(TestPhase.GLOBAL_PREPARE, listener.lastTestPhase);
     }
 
     @Test
@@ -46,7 +46,7 @@ public class TestPhaseListenersTest {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
         testPhaseListeners.addListener(1, listener);
 
-        testPhaseListeners.updatePhaseCompletion(2, TestPhase.GLOBAL_WARMUP, null);
+        testPhaseListeners.updatePhaseCompletion(2, TestPhase.GLOBAL_PREPARE, null);
 
         assertEquals(null, listener.lastTestPhase);
     }
