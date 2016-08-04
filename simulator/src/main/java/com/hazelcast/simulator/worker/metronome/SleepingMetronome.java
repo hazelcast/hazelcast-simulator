@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which sleeps on a fixed interval.
- * <p>
+ *
  * The wait interval on the first {@link #waitForNext()} call is randomized.
  */
 public final class SleepingMetronome implements Metronome {

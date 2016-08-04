@@ -35,31 +35,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_AFTER_WARMUP;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_PREPARE;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_AFTER_WARMUP;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_PREPARE;
-import static com.hazelcast.simulator.test.TestPhase.RUN;
-import static com.hazelcast.simulator.test.TestPhase.SETUP;
-import static com.hazelcast.simulator.test.TestPhase.WARMUP;
-import static com.hazelcast.simulator.utils.CommonUtils.await;
-import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
-import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
-import static com.hazelcast.simulator.utils.FormatUtils.padRight;
-import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
+import static com.hazelcast.simulator.test.TestPhase.*;
+import static com.hazelcast.simulator.utils.CommonUtils.*;
+import static com.hazelcast.simulator.utils.FormatUtils.*;
 import static java.lang.String.format;
 import static java.util.Collections.synchronizedList;
 
 /**
  * Responsible for running a single {@link TestCase}.
- * <p>
+ *
  * Multiple TestCases can be run in parallel, by having multiple TestCaseRunners in parallel.
  */
 final class TestCaseRunner implements TestPhaseListener {

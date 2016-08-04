@@ -18,11 +18,7 @@ package com.hazelcast.simulator.tests.slow;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.test.annotations.*;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
@@ -33,21 +29,17 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationService;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.*;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static java.lang.String.format;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * This test invokes slowed down map operations on a Hazelcast instance to provoke slow operation logs.
- * <p>
+ *
  * In the verification phase we check for the correct number of slow operation logs (one per operation type).
  *
  * @since Hazelcast 3.5

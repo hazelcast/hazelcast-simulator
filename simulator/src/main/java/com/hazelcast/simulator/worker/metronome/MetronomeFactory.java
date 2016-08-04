@@ -42,7 +42,7 @@ public final class MetronomeFactory {
 
     /**
      * Creates a {@link Metronome} instance with a fixed frequency in Hz of type {@link MetronomeType#SLEEPING}.
-     * <p>
+     *
      * If the frequency is 0 Hz the method {@link Metronome#waitForNext()} will have no delay.
      *
      * @param frequency frequency in Hz
@@ -75,7 +75,7 @@ public final class MetronomeFactory {
 
     /**
      * Creates a {@link Metronome} instance with a fixed frequency in Hz.
-     * <p>
+     *
      * If the frequency is 0 Hz the method {@link Metronome#waitForNext()} will have no delay.
      *
      * @param frequency frequency in Hz

@@ -33,7 +33,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys
 
 /**
  * Test for {@link IMap#putAll(java.util.Map)} which creates the input values on the fly during the RUN phase.
- * <p>
+ *
  * You can configure the {@link #batchSize} to determine the number of inserted values per operation.
  * You can configure the {@link #keyRange} to determine the key range for inserted values.
  */

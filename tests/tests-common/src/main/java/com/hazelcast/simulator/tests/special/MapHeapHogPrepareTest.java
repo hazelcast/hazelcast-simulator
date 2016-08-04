@@ -33,7 +33,7 @@ import static java.lang.String.format;
 
 /**
  * Fills up the cluster to a defined heap usage factor during prepare phase.
- * <p>
+ *
  * This tests intentionally has an empty run phase.
  */
 public class MapHeapHogPrepareTest extends AbstractTest {

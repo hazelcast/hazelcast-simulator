@@ -37,9 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.*;
 
 /**
  * Monitors the performance of all running Simulator Tests on {@link com.hazelcast.simulator.worker.MemberWorker}
@@ -80,11 +78,11 @@ public class WorkerPerformanceMonitor {
 
     /**
      * Thread to monitor the performance of Simulator Tests.
-     * <p>
+     *
      * Iterates over all {@link TestContainer} to retrieve performance values from all {@link Probe} instances.
      * Sends performance numbers as {@link PerformanceStats} to the Coordinator.
      * Writes performance stats to files.
-     * <p>
+     *
      * Holds one {@link TestPerformanceTracker} instance per Simulator Test.
      */
     private final class WorkerPerformanceMonitorThread extends Thread {

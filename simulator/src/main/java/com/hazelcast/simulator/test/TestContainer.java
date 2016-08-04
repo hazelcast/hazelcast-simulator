@@ -16,15 +16,7 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.AfterWarmup;
-import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
+import com.hazelcast.simulator.test.annotations.*;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
 import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.AfterWarmupFilter;
@@ -40,24 +32,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_AFTER_WARMUP;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_PREPARE;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_TEARDOWN;
-import static com.hazelcast.simulator.test.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_AFTER_WARMUP;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_PREPARE;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_VERIFY;
-import static com.hazelcast.simulator.test.TestPhase.RUN;
-import static com.hazelcast.simulator.test.TestPhase.SETUP;
-import static com.hazelcast.simulator.test.TestPhase.WARMUP;
+import static com.hazelcast.simulator.test.TestPhase.*;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -65,7 +43,7 @@ import static java.util.Arrays.asList;
 
 /**
  * Container for test instances.
- * <p>
+ *
  * It is responsible for:
  * <ul>
  * <li>Creates the test class instance by its fully qualified class name.</li>

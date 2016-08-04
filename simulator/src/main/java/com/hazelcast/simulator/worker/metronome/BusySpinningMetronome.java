@@ -20,13 +20,13 @@ import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
- * <p>
+ *
  * If an execution takes more than the intervalNanos, the request are queued and get processed as soon as the system
  * has time for time. This queue will get processed as fast as possible and there metronome will not introduce any deliberate
  * slowdowns. For more information see:
  * https://vanilla-java.github.io/2016/07/20/Latency-for-a-set-Throughput.html
- * <p>
- * <p>
+ *
+ *
  * The wait interval on the first {@link #waitForNext()} call is randomized.
  */
 public final class BusySpinningMetronome implements Metronome {

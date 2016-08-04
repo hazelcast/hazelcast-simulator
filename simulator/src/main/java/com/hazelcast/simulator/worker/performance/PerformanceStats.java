@@ -19,7 +19,7 @@ import static java.lang.Math.max;
 
 /**
  * Container to transfer performance statistics for some time window.
- * <p>
+ *
  * Has methods to combine {@link PerformanceStats} instances by adding or setting maximum values.
  */
 public class PerformanceStats {
@@ -82,14 +82,14 @@ public class PerformanceStats {
 
     /**
      * Combines {@link PerformanceStats} instances, e.g. from different Simulator Workers.
-     * <p>
+     *
      * For the real-time performance monitor during the {@link com.hazelcast.simulator.test.TestPhase#RUN} the maximum values
      * should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats} instances of
      * the last interval.
-     * <p>
+     *
      * For the total performance number and the performance per Simulator Agent, the added values should be set, so we get the
      * summed up operation count and throughput values.
-     * <p>
+     *
      * The method always sets the maximum values for latency.
      *
      * @param other                          {@link PerformanceStats} which should be added to this instance
