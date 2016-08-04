@@ -11,16 +11,15 @@ image_height=1024
 # - cut of parts off the plot which are after completion or before start.
 # - graphs from same benchmark, same color.
 # - time in the hdr file; should be expressed in micro's instead of milli's with a comma?
-# - labels on latency suck
 # - from one of the latency:  [3.19078e+06:3.19078e+06], adjusting to [3.15888e+06:3.22269e+06]
 # - test suite / jvm parameters etc should all be copied into the output directory so the whole bundle is self explaining.
 # - regular latency histogram contains all hgrm files from each benchmark for each commulative probe; but no info which probe
 # - image link should only be printed of image exist
 # - summary of the benchmark
 # - statistics overview doesn't mention the name of the benchmark
-# - latency doesn't have a time unit
 #
 # DONE
+# - latency didn't have grid
 # - latency statistics has 'stuff' inside title
 # - cli:w hat if no directories are passed
 # - problem with dstat not found and reporting
@@ -328,7 +327,9 @@ report_latency(){
 
     plot_start
     plot "set terminal png size $image_width,$image_height"
+    plot "set grid"
     plot "unset xtics"
+    plot "set ylabel 'Latency (μs)'"
     plot "set logscale x"
     plot "set key top left"
     plot "set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\""
@@ -358,40 +359,40 @@ report_latency(){
     html_img "latency"
 
     html_img "interval_25"
-    plot_latency_stat "Interval 25%" "Latency (ms)" "interval_25" 3
+    plot_latency_stat "Interval 25%" "Latency (μs)" "interval_25" 3
 
     html_img "interval_50"
-    plot_latency_stat "Interval 50%" "Latency (ms)" "interval_50" 4
+    plot_latency_stat "Interval 50%" "Latency (μs)" "interval_50" 4
 
     html_img "interval_75"
-    plot_latency_stat "Interval 75%" "Latency (ms)" "interval_75" 5
+    plot_latency_stat "Interval 75%" "Latency (μs)" "interval_75" 5
 
     html_img "interval_90"
-    plot_latency_stat "Interval 90%" "Latency (ms)" "interval_90" 6
+    plot_latency_stat "Interval 90%" "Latency (μs)" "interval_90" 6
 
     html_img "interval_99"
-    plot_latency_stat "Interval 99%" "Latency (ms)" "interval_99" 7
+    plot_latency_stat "Interval 99%" "Latency (μs)" "interval_99" 7
 
     html_img "interval_999"
-    plot_latency_stat "Interval 99.9%" "Latency (ms)" "interval_999" 8
+    plot_latency_stat "Interval 99.9%" "Latency (μs)" "interval_999" 8
 
     html_img "interval_9999"
-    plot_latency_stat "Interval 99.99%" "Latency (ms)" "interval_9999" 9
+    plot_latency_stat "Interval 99.99%" "Latency (μs)" "interval_9999" 9
 
     html_img "interval_99999"
-    plot_latency_stat "Interval 99.999%" "Latency (ms)" "interval_99999" 10
+    plot_latency_stat "Interval 99.999%" "Latency (μs)" "interval_99999" 10
 
     html_img "interval_min"
-    plot_latency_stat "Interval Min" "Latency (ms)" "interval_min" 11
+    plot_latency_stat "Interval Min" "Latency (μs)" "interval_min" 11
 
     html_img "interval_max"
-    plot_latency_stat "Interval Max" "Latency (ms)" "interval_max" 12
+    plot_latency_stat "Interval Max" "Latency (μs)" "interval_max" 12
 
     html_img "interval_mean"
-    plot_latency_stat "Interval Mean" "Latency (ms)" "interval_mean" 13
+    plot_latency_stat "Interval Mean" "Latency (μs)" "interval_mean" 13
 
     html_img "interval_std_deviation"
-    plot_latency_stat "Interval Std Deviation" "Latency (ms)" "interval_std_deviation" 14
+    plot_latency_stat "Interval Std Deviation" "Latency (μs)" "interval_std_deviation" 14
 }
 
 plot_dstat_probe(){

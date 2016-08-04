@@ -176,7 +176,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     @Test
     public void processPerformanceState() {
         PerformanceStateOperation operation = new PerformanceStateOperation();
-        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 33.0d, 23, 42));
+        operation.addPerformanceState("testId", new PerformanceState(1000, 50.0, 1234.56, 33000.0d, 23000, 42000));
 
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);

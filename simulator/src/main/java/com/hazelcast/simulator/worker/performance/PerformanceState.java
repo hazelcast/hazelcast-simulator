@@ -19,7 +19,7 @@ import static java.lang.Math.max;
 
 /**
  * Container to transfer performance statistics for some time window.
- *
+ * <p>
  * Has methods to combine {@link PerformanceState} instances by adding or setting maximum values.
  */
 public class PerformanceState {
@@ -33,9 +33,9 @@ public class PerformanceState {
     private double intervalThroughput;
     private double totalThroughput;
 
-    private double intervalAvgLatency;
-    private long intervalMaxLatency;
-    private long intervalPercentileLatency;
+    private double intervalLatencyAvgNanos;
+    private long intervalLatencyMaxNanos;
+    private long intervalLatency999PercentileNanos;
 
     /**
      * Creates an empty {@link PerformanceState} instance.
@@ -48,22 +48,27 @@ public class PerformanceState {
     /**
      * Creates a {@link PerformanceState} instance with values.
      *
-     * @param operationCount            Operation count value.
-     * @param intervalThroughput        Throughput value for an interval.
-     * @param totalThroughput           Total throughput value.
-     * @param intervalAvgLatency        Average latency for an interval.
-     * @param intervalPercentileLatency Percentile latency for an interval ({@link PerformanceState#INTERVAL_LATENCY_PERCENTILE}).
-     * @param intervalMaxLatency        Maximum latency for an interval.
+     * @param operationCount                    Operation count value.
+     * @param intervalThroughput                Throughput value for an interval.
+     * @param totalThroughput                   Total throughput value.
+     * @param intervalLatencyAvgNanos           Average latency for an interval.
+     * @param intervalLatency999PercentileNanos 99.9 Percentile latency for an interval
+     *                                          ({@link PerformanceState#INTERVAL_LATENCY_PERCENTILE}).
+     * @param intervalLatencyMaxNanos           Maximum latency for an interval.
      */
-    public PerformanceState(long operationCount, double intervalThroughput, double totalThroughput,
-                            double intervalAvgLatency, long intervalPercentileLatency, long intervalMaxLatency) {
+    public PerformanceState(long operationCount,
+                            double intervalThroughput,
+                            double totalThroughput,
+                            double intervalLatencyAvgNanos,
+                            long intervalLatency999PercentileNanos,
+                            long intervalLatencyMaxNanos) {
         this.operationCount = operationCount;
         this.intervalThroughput = intervalThroughput;
         this.totalThroughput = totalThroughput;
 
-        this.intervalAvgLatency = intervalAvgLatency;
-        this.intervalPercentileLatency = intervalPercentileLatency;
-        this.intervalMaxLatency = intervalMaxLatency;
+        this.intervalLatencyAvgNanos = intervalLatencyAvgNanos;
+        this.intervalLatency999PercentileNanos = intervalLatency999PercentileNanos;
+        this.intervalLatencyMaxNanos = intervalLatencyMaxNanos;
     }
 
     /**
@@ -77,14 +82,14 @@ public class PerformanceState {
 
     /**
      * Combines {@link PerformanceState} instances, e.g. from different Simulator Workers.
-     *
+     * <p>
      * For the real-time performance monitor during the {@link com.hazelcast.simulator.test.TestPhase#RUN} the maximum values
      * should be set, so we get the maximum operation count and throughput values of all {@link PerformanceState} instances of
      * the last interval.
-     *
+     * <p>
      * For the total performance number and the performance per Simulator Agent, the added values should be set, so we get the
      * summed up operation count and throughput values.
-     *
+     * <p>
      * The method always sets the maximum values for latency.
      *
      * @param other                          {@link PerformanceState} which should be added to this instance
@@ -101,9 +106,9 @@ public class PerformanceState {
             intervalThroughput = other.intervalThroughput;
             totalThroughput = other.totalThroughput;
 
-            intervalAvgLatency = other.intervalAvgLatency;
-            intervalPercentileLatency = other.intervalPercentileLatency;
-            intervalMaxLatency = other.intervalMaxLatency;
+            intervalLatencyAvgNanos = other.intervalLatencyAvgNanos;
+            intervalLatency999PercentileNanos = other.intervalLatency999PercentileNanos;
+            intervalLatencyMaxNanos = other.intervalLatencyMaxNanos;
         } else {
             if (addOperationCountAndThroughput) {
                 operationCount += other.operationCount;
@@ -115,9 +120,9 @@ public class PerformanceState {
                 totalThroughput = max(totalThroughput, other.totalThroughput);
             }
 
-            intervalAvgLatency = max(intervalAvgLatency, other.intervalAvgLatency);
-            intervalPercentileLatency = max(intervalPercentileLatency, other.intervalPercentileLatency);
-            intervalMaxLatency = max(intervalMaxLatency, other.intervalMaxLatency);
+            intervalLatencyAvgNanos = max(intervalLatencyAvgNanos, other.intervalLatencyAvgNanos);
+            intervalLatency999PercentileNanos = max(intervalLatency999PercentileNanos, other.intervalLatency999PercentileNanos);
+            intervalLatencyMaxNanos = max(intervalLatencyMaxNanos, other.intervalLatencyMaxNanos);
         }
     }
 
@@ -142,16 +147,16 @@ public class PerformanceState {
         return intervalThroughput;
     }
 
-    public double getIntervalAvgLatency() {
-        return intervalAvgLatency;
+    public double getIntervalLatencyAvgNanos() {
+        return intervalLatencyAvgNanos;
     }
 
-    public long getIntervalPercentileLatency() {
-        return intervalPercentileLatency;
+    public long getIntervalLatency999PercentileNanos() {
+        return intervalLatency999PercentileNanos;
     }
 
-    public long getIntervalMaxLatency() {
-        return intervalMaxLatency;
+    public long getIntervalLatencyMaxNanos() {
+        return intervalLatencyMaxNanos;
     }
 
     @Override
@@ -160,9 +165,9 @@ public class PerformanceState {
                 + "operationCount=" + operationCount
                 + ", intervalThroughput=" + intervalThroughput
                 + ", totalThroughput=" + totalThroughput
-                + ", intervalAvgLatency=" + intervalAvgLatency
-                + ", intervalPercentileLatency=" + intervalPercentileLatency
-                + ", intervalMaxLatency=" + intervalMaxLatency
+                + ", intervalAvgLatencyNanos=" + intervalLatencyAvgNanos
+                + ", intervalLatency999PercentileNanos=" + intervalLatency999PercentileNanos
+                + ", intervalMaxLatencyNanos=" + intervalLatencyMaxNanos
                 + '}';
     }
 }

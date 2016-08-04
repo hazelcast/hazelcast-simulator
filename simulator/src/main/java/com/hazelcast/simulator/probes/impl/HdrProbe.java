@@ -19,18 +19,29 @@ import com.hazelcast.simulator.probes.Probe;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.Recorder;
 
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * Measures the latency distribution of a test.
  */
 public class HdrProbe implements Probe {
 
-    public static final long MAXIMUM_LATENCY = SECONDS.toMicros(60);
-    public static final int LATENCY_PRECISION = 5;
+    // we care only about microsecond accuracy.
+    public static final long LOWEST_DISCERNIBLE_VALUE = MICROSECONDS.toNanos(1);
 
-    private final Recorder recorder = new Recorder(MAXIMUM_LATENCY, LATENCY_PRECISION);
+    // we want to track up to an hour.
+    public static final long HIGHEST_TRACKABLE_VALUE = HOURS.toNanos(1);
+
+    // since we care about us, the value should be 1000 according to the javadoc of Recorder.
+    public static final int NUMBER_OF_SIGNIFICANT_VALUE_DIGITS = 3;
+
+    // these settings come the website; just above the following link
+    //https://github.com/HdrHistogram/HdrHistogram#histogram-variants-and-internal-representation
+    private final Recorder recorder = new Recorder(
+            LOWEST_DISCERNIBLE_VALUE,
+            HIGHEST_TRACKABLE_VALUE,
+            NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     private final boolean partOfTotalThroughput;
 
@@ -55,8 +66,10 @@ public class HdrProbe implements Probe {
 
     @Override
     public void recordValue(long latencyNanos) {
-        int latencyMicros = (int) NANOSECONDS.toMicros(latencyNanos);
-        recorder.recordValue(latencyMicros > MAXIMUM_LATENCY ? MAXIMUM_LATENCY : (latencyMicros < 0 ? 0 : latencyMicros));
+        if (latencyNanos > HIGHEST_TRACKABLE_VALUE) {
+            latencyNanos = HIGHEST_TRACKABLE_VALUE;
+        }
+        recorder.recordValue(latencyNanos);
     }
 
     public Histogram getIntervalHistogram() {

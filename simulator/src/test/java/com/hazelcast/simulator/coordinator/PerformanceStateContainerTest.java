@@ -8,8 +8,9 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -67,7 +68,8 @@ public class PerformanceStateContainerTest {
         SimulatorAddress worker = new SimulatorAddress(AddressLevel.WORKER, 3, 1, 0);
 
         Map<String, PerformanceState> performanceStates = new HashMap<String, PerformanceState>();
-        performanceStates.put(TEST_CASE_ID_1, new PerformanceState(800, 100, 300, TimeUnit.SECONDS.toMicros(3), 2400, 2500));
+        performanceStates.put(TEST_CASE_ID_1, new PerformanceState(
+                800, 100, 300, SECONDS.toNanos(3), MICROSECONDS.toNanos(2400), MICROSECONDS.toNanos(2500)));
 
         performanceStateContainer.update(worker, performanceStates);
 
@@ -94,9 +96,9 @@ public class PerformanceStateContainerTest {
         assertEquals(2300, performanceState.getOperationCount());
         assertEquals(300.0, performanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(850.0, performanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2400, performanceState.getIntervalPercentileLatency());
-        assertEquals(2200.0d, performanceState.getIntervalAvgLatency(), 0.001);
-        assertEquals(2800, performanceState.getIntervalMaxLatency());
+        assertEquals(2400, performanceState.getIntervalLatency999PercentileNanos());
+        assertEquals(2200.0d, performanceState.getIntervalLatencyAvgNanos(), 0.001);
+        assertEquals(2800, performanceState.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -135,22 +137,22 @@ public class PerformanceStateContainerTest {
         assertEquals(3500, performanceStateAgent1.getOperationCount());
         assertEquals(1100, performanceStateAgent1.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(1400, performanceStateAgent1.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2100, performanceStateAgent1.getIntervalPercentileLatency());
-        assertEquals(2800, performanceStateAgent1.getIntervalMaxLatency());
+        assertEquals(2100, performanceStateAgent1.getIntervalLatency999PercentileNanos());
+        assertEquals(2800, performanceStateAgent1.getIntervalLatencyMaxNanos());
 
         PerformanceState performanceStateAgent2 = agentPerformanceStateMap.get(agentAddress2);
         assertEquals(2000, performanceStateAgent2.getOperationCount());
         assertEquals(800, performanceStateAgent2.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(900, performanceStateAgent2.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2600, performanceStateAgent2.getIntervalPercentileLatency());
-        assertEquals(2900, performanceStateAgent2.getIntervalMaxLatency());
+        assertEquals(2600, performanceStateAgent2.getIntervalLatency999PercentileNanos());
+        assertEquals(2900, performanceStateAgent2.getIntervalLatencyMaxNanos());
 
         assertFalse(totalPerformanceState.isEmpty());
         assertEquals(5500, totalPerformanceState.getOperationCount());
         assertEquals(1900, totalPerformanceState.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
         assertEquals(2300, totalPerformanceState.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2600, totalPerformanceState.getIntervalPercentileLatency());
-        assertEquals(2900, totalPerformanceState.getIntervalMaxLatency());
+        assertEquals(2600, totalPerformanceState.getIntervalLatency999PercentileNanos());
+        assertEquals(2900, totalPerformanceState.getIntervalLatencyMaxNanos());
     }
 
     @Test

@@ -1,14 +1,18 @@
 package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
+import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramIterationValue;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.probes.ProbeTestUtils.assertHistogram;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
+import java.util.concurrent.TimeUnit;
+
+import static com.hazelcast.simulator.probes.impl.HdrProbe.HIGHEST_TRACKABLE_VALUE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class HdrProbeTest {
 
@@ -26,16 +30,19 @@ public class HdrProbeTest {
         assertFalse(tmpProbe.isPartOfTotalThroughput());
     }
 
+    // this test is fragile and can easily fail if there is some kind of pausing going on
     @Test
-    public void testDone_withExternalStarted() {
-        int expectedCount = 1;
-        long expectedLatency = 150;
+    public void testDone_withExternalStarted() throws InterruptedException {
+        long expectedLatency = TimeUnit.SECONDS.toNanos(2);
 
         long started = System.nanoTime();
-        sleepNanos(MILLISECONDS.toNanos(expectedLatency));
+
+        TimeUnit.NANOSECONDS.sleep(expectedLatency);
+
         probe.done(started);
 
-        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedLatency, expectedLatency, expectedLatency);
+        Histogram histogram = probe.getIntervalHistogram();
+        assertHistogramContent(histogram, expectedLatency);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -50,21 +57,56 @@ public class HdrProbeTest {
 
     @Test
     public void testRecordValues() {
-        int expectedCount = 3;
-        long latencyValue = 500;
-        long expectedMinValue = 200;
-        long expectedMaxValue = 1000;
-        long expectedMeanValue = (long) ((latencyValue + expectedMinValue + expectedMaxValue) / (double) expectedCount);
+        long value1 = MILLISECONDS.toNanos(200);
+        long value2 = MILLISECONDS.toNanos(500);
+        long value3 = MILLISECONDS.toNanos(1000);
 
-        probe.recordValue(MILLISECONDS.toNanos(latencyValue));
-        probe.recordValue(MILLISECONDS.toNanos(expectedMinValue));
-        probe.recordValue(MILLISECONDS.toNanos(expectedMaxValue));
+        probe.recordValue(value1);
+        probe.recordValue(value2);
+        probe.recordValue(value3);
 
-        assertHistogram(probe.getIntervalHistogram(), expectedCount, expectedMinValue, expectedMaxValue, expectedMeanValue);
+        Histogram histogram = probe.getIntervalHistogram();
+        assertHistogramContent(histogram, value1, value2, value3);
     }
 
     @Test
-    public void testGet()  {
+    public void testRecord_whenTooLarge() {
+        long value = HIGHEST_TRACKABLE_VALUE * 2;
+        probe.recordValue(value);
+
+        Histogram histogram = probe.getIntervalHistogram();
+        assertHistogramContent(histogram, HIGHEST_TRACKABLE_VALUE);
+    }
+
+    private void assertHistogramContent(Histogram histogram, long... requiredValues) {
+        assertEquals(histogram.getTotalCount(), requiredValues.length);
+
+        for (long requiredValue : requiredValues) {
+            if (!contains(histogram, requiredValue)) {
+                fail("Value:" + requiredValue + " not found in histogram");
+            }
+        }
+    }
+
+    private boolean contains(Histogram histogram, long value) {
+        for (HistogramIterationValue iterationValue : histogram.allValues()) {
+            if (iterationValue.getTotalCountToThisValue() == 0) {
+                continue;
+            }
+
+            long max = iterationValue.getValueIteratedTo();
+            long min = iterationValue.getValueIteratedFrom();
+
+            if (value >= min && value <= max) {
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    @Test
+    public void testGet() {
         probe.recordValue(1);
         probe.recordValue(2);
         probe.recordValue(3);

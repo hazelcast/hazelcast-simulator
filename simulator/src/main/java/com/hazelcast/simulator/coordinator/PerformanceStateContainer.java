@@ -39,6 +39,7 @@ import static com.hazelcast.simulator.worker.performance.PerformanceState.INTERV
 import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * Responsible for storing and formatting performance metrics from Simulator workers.
@@ -86,24 +87,26 @@ public class PerformanceStateContainer {
             return "";
         }
         String latencyUnit = "µs";
-        long avgLatencyValue = round(performanceState.getIntervalAvgLatency());
-        long percentileLatencyValue = performanceState.getIntervalPercentileLatency();
-        long maxLatencyValue = performanceState.getIntervalMaxLatency();
-        if (avgLatencyValue > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
+        long latencyAvg = NANOSECONDS.toMicros(round(performanceState.getIntervalLatencyAvgNanos()));
+        long latency999Percentile = NANOSECONDS.toMicros(performanceState.getIntervalLatency999PercentileNanos());
+        long latencyMax = NANOSECONDS.toMicros(performanceState.getIntervalLatencyMaxNanos());
+
+        if (latencyAvg > DISPLAY_LATENCY_AS_MICROS_MAX_VALUE) {
             latencyUnit = "ms";
-            avgLatencyValue = MICROSECONDS.toMillis(avgLatencyValue);
-            percentileLatencyValue = MICROSECONDS.toMillis(percentileLatencyValue);
-            maxLatencyValue = MICROSECONDS.toMillis(maxLatencyValue);
+            latencyAvg = MICROSECONDS.toMillis(latencyAvg);
+            latency999Percentile = MICROSECONDS.toMillis(latency999Percentile);
+            latencyMax = MICROSECONDS.toMillis(latencyMax);
         }
+
         return String.format("%s ops %s ops/s %s %s (avg) %s %s (%sth) %s %s (max)",
                 formatLong(performanceState.getOperationCount(), OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(performanceState.getIntervalThroughput(), THROUGHPUT_FORMAT_LENGTH),
-                formatLong(avgLatencyValue, LATENCY_FORMAT_LENGTH),
+                formatLong(latencyAvg, LATENCY_FORMAT_LENGTH),
                 latencyUnit,
-                formatLong(percentileLatencyValue, LATENCY_FORMAT_LENGTH),
+                formatLong(latency999Percentile, LATENCY_FORMAT_LENGTH),
                 latencyUnit,
                 INTERVAL_LATENCY_PERCENTILE,
-                formatLong(maxLatencyValue, LATENCY_FORMAT_LENGTH),
+                formatLong(latencyMax, LATENCY_FORMAT_LENGTH),
                 latencyUnit
         );
     }
@@ -156,7 +159,6 @@ public class PerformanceStateContainer {
                 formatPercentage(1, 1),
                 formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(totalOperationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));
-
 
         for (SimulatorAddress address : sort(agentPerformanceStateMap.keySet())) {
             PerformanceState performanceState = agentPerformanceStateMap.get(address);
