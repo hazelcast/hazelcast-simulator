@@ -15,22 +15,12 @@
  */
 package com.hazelcast.simulator.test;
 
-import com.hazelcast.core.HazelcastInstance;
-
 public interface TestContext {
 
     /**
      * Default IP address which is used if no public IP address is defined.
      */
     String LOCALHOST = "127.0.0.1";
-
-    /**
-     * Returns the {@link HazelcastInstance} of the Test.
-     *
-     * @return The {@link HazelcastInstance} of the Test.
-     * @deprecated since 0.8. Use {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}.
-     */
-    HazelcastInstance getTargetInstance();
 
     String getTestId();
 
