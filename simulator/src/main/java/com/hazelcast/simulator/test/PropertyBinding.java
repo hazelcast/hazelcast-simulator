@@ -70,7 +70,7 @@ public class PropertyBinding {
 
     private final Class<? extends Probe> probeClass;
     private final Class<? extends Metronome> metronomeClass;
-    private TestContext testContext;
+    private TestContextImpl testContext;
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<String>();
@@ -87,7 +87,7 @@ public class PropertyBinding {
         this.probeClass = loadProbeClass();
     }
 
-    public PropertyBinding setTestContext(TestContext testContext) {
+    public PropertyBinding setTestContext(TestContextImpl testContext) {
         this.testContext = testContext;
         return this;
     }

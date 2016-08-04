@@ -39,7 +39,6 @@ public class TestContextImpl implements TestContext {
         this.publicIpAddress = publicIpAddress;
     }
 
-    @Override
     public HazelcastInstance getTargetInstance() {
         return hazelcastInstance;
     }
