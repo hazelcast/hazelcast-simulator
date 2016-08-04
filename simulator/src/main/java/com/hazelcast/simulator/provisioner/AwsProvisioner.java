@@ -182,7 +182,6 @@ public class AwsProvisioner {
             if (waitForInstanceStatusRunning(instance)) {
                 addInstanceToAgentsFile(instance);
                 checkedInstances.add(instance);
-                componentRegistry.addAgent(instance.getPublicIpAddress(), instance.getPrivateIpAddress());
             } else {
                 LOGGER.warn("Timeout waiting for running status id=" + instance.getInstanceId());
             }
