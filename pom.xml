@@ -59,8 +59,6 @@
         <!-- cannot update due to some test failures, need to check this -->
         <gson.version>2.6.2</gson.version>
         <hdr-histogram.version>2.1.9</hdr-histogram.version>
-        <!-- cannot update to 4.x, since they dropped Java 6 support -->
-        <jgit.version>3.7.1.201504261725-r</jgit.version>
         <!-- cannot update to 5.x, since they dropped Java 6 support -->
         <jopt.version>4.9</jopt.version>
         <xstream.version>1.4.9</xstream.version>

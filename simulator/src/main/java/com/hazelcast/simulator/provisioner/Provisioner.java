@@ -22,7 +22,6 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -78,42 +77,25 @@ public class Provisioner {
     private final SimulatorProperties properties;
     private final ComputeService computeService;
     private final Bash bash;
-    private final HazelcastJARs hazelcastJARs;
 
     private final int machineWarmupSeconds;
 
     private final ComponentRegistry componentRegistry;
     private final File initScriptFile;
 
-    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, HazelcastJARs hazelcastJARs,
-                       boolean enterpriseEnabled) {
-        this(properties, computeService, bash, hazelcastJARs, enterpriseEnabled, MACHINE_WARMUP_WAIT_SECONDS);
+    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash) {
+        this(properties, computeService, bash, MACHINE_WARMUP_WAIT_SECONDS);
     }
 
-    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, HazelcastJARs hazelcastJARs,
-                       boolean enterpriseEnabled, int machineWarmupSeconds) {
+    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, int machineWarmupSeconds) {
         this.properties = properties;
         this.computeService = computeService;
         this.bash = bash;
-        this.hazelcastJARs = hazelcastJARs;
 
         this.machineWarmupSeconds = machineWarmupSeconds;
 
         this.componentRegistry = loadComponentRegister(agentsFile, false);
         this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
-
-        if (hazelcastJARs != null) {
-            echo("Preparing Hazelcast JARs...");
-            hazelcastJARs.prepare(enterpriseEnabled);
-        } else if (enterpriseEnabled) {
-            String hazelcastVersionSpec = properties.getHazelcastVersionSpec();
-            echoImportant("WARNING: Hazelcast Enterprise JARs will not be uploaded for %s!", hazelcastVersionSpec);
-        }
-    }
-
-    // just for testing
-    HazelcastJARs getHazelcastJARs() {
-        return hazelcastJARs;
     }
 
     // just for testing
@@ -302,10 +284,6 @@ public class Provisioner {
             computeService.getContext().close();
         }
 
-        if (hazelcastJARs != null) {
-            hazelcastJARs.shutdown();
-        }
-
         echo("Done!");
     }
 
@@ -469,12 +447,6 @@ public class Provisioner {
 
         // purge Hazelcast JARs
         bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", simulatorVersion));
-
-        // upload Hazelcast JARs if configured
-        if (hazelcastJARs != null) {
-            echo("Uploading Hazelcast JARs on %s", ip);
-            hazelcastJARs.upload(ip, SIMULATOR_HOME);
-        }
 
         String initScript = loadInitScript();
         bash.ssh(ip, initScript);

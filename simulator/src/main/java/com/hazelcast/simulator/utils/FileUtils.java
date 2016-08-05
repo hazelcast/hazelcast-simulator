@@ -418,4 +418,13 @@ public final class FileUtils {
                     targetFile.getAbsolutePath()), e);
         }
     }
+
+    public static File getConfigurationFile(String filename) {
+        File file = new File(filename).getAbsoluteFile();
+        if (file.exists()) {
+            return file;
+        } else {
+            return newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
+        }
+    }
 }

@@ -4,7 +4,6 @@ import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -44,7 +43,7 @@ public class ClusterLayoutTest {
         }
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.OUT_OF_THE_BOX);
+        when(workerParameters.getHazelcastVersionSpec()).thenReturn("outofthebox");
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
@@ -53,6 +52,6 @@ public class ClusterLayoutTest {
 
         ClusterLayout clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
-        assertEquals(singleton(HazelcastJARs.OUT_OF_THE_BOX), clusterLayout.getVersionSpecs());
+        assertEquals(singleton("outofthebox"), clusterLayout.getVersionSpecs());
     }
 }

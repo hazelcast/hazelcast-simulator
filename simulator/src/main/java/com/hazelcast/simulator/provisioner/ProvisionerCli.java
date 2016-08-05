@@ -17,7 +17,6 @@ package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
-import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -28,8 +27,6 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isCloudProvider;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.isPrepareRequired;
-import static java.util.Collections.singleton;
 
 final class ProvisionerCli {
 
@@ -45,13 +42,6 @@ final class ProvisionerCli {
 
     private final OptionSpec installSpec = parser.accepts("install",
             "Installs Simulator on all provisioned machines.");
-
-    private final OptionSpec uploadHazelcastSpec = parser.accepts("uploadHazelcast",
-            "If defined --install will upload the Hazelcast JARs as well.");
-
-    private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
-            "Use JARs of Hazelcast Enterprise Edition.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
     private final OptionSpec<String> downloadSpec = parser.accepts("download",
             "Download all files from the remote Worker directories. Use --clean to delete all Worker directories.")
@@ -85,16 +75,7 @@ final class ProvisionerCli {
         ComputeService computeService = (isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null);
         Bash bash = new Bash(properties);
 
-        HazelcastJARs hazelcastJARs = null;
-        boolean enterpriseEnabled = options.valueOf(cli.enterpriseEnabledSpec);
-        if (options.has(cli.uploadHazelcastSpec)) {
-            String hazelcastVersionSpec = properties.getHazelcastVersionSpec();
-            if (isPrepareRequired(hazelcastVersionSpec) || !enterpriseEnabled) {
-                hazelcastJARs = HazelcastJARs.newInstance(bash, properties, singleton(hazelcastVersionSpec));
-            }
-        }
-
-        return new Provisioner(properties, computeService, bash, hazelcastJARs, enterpriseEnabled);
+        return new Provisioner(properties, computeService, bash);
     }
 
     static void run(String[] args, Provisioner provisioner) {
