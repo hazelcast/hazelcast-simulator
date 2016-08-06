@@ -31,7 +31,7 @@ done
 
 # Convert all hdr files to hgrm files so they can easily be plot usingdist/src/main/dist/conf/after-completion.sh:31
 # http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
-hdr_files=($(find $dir | grep .hdr))
+hdr_files=($(find $dir -name *.hdr))
 for hdr_file in "${hdr_files[@]}"
 do
     file_name="${hdr_file%.*}"
