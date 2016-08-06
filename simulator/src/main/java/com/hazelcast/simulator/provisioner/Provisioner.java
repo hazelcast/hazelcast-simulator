@@ -443,7 +443,6 @@ public class Provisioner {
 
         // upload Simulator JARs
         uploadLibraryJar(ip, "simulator-*");
-        uploadLibraryJar(ip, "utils-*");
 
         // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
         uploadLibraryJar(ip, "cache-api*");
