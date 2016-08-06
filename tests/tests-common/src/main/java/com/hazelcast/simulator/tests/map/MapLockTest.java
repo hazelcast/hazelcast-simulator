@@ -19,14 +19,18 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 /**
  * Test for the {@link IMap#lock(Object)} method.
- *
+ * <p>
  * We use {@link IMap#lock(Object)} to control concurrent access to map key/value pairs. There are a total of {@link #keyCount}
  * keys stored in a map which are initialized to zero, we concurrently increment the value of a random key. We keep track of all
  * increments to each key and verify the value in the map for each key is equal to the total increments done on each key.

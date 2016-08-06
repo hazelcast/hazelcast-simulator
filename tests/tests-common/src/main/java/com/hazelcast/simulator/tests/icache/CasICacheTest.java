@@ -18,7 +18,12 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.core.IList;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
@@ -30,10 +35,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the cas method {@link Cache#replace(Object, Object, Object)} for optimistic concurrency control.
- *
+ * <p>
  * With a collection of predefined keys we concurrently increment the value.
  * We protect ourselves against lost updates using the cas method {@link Cache#replace(Object, Object, Object)}.
- *
+ * <p>
  * Locally we keep track of all increments. We verify if the sum of these local increments matches the global increment.
  */
 public class CasICacheTest extends AbstractTest {

@@ -18,7 +18,9 @@ package com.hazelcast.simulator.worker.metronome;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.BUSY_SPINNING;
 import static java.lang.Math.round;
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MetronomeBuilder {
 

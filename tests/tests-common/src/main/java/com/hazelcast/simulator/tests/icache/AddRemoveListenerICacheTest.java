@@ -18,7 +18,11 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.core.IList;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryEventFilter;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheEntryListener;
 import com.hazelcast.simulator.tests.icache.helpers.ICacheListenerOperationCounter;
@@ -32,7 +36,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 
 /**
  * In this test we concurrently add remove cache listeners while putting and getting from the cache.
- *
+ * <p>
  * This test is out side of normal usage, however has found problems where put operations hang.
  * This type of test could uncover memory leaks in the process of adding and removing listeners.
  * The max size of the cache used in this test is keyCount int key/value pairs.

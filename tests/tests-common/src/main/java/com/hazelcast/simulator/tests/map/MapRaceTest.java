@@ -18,7 +18,13 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This test verifies that there are race problems if the {@link IMap} is not used correctly.
- *
+ * <p>
  * This test is expected to fail.
  */
 public class MapRaceTest extends AbstractTest {

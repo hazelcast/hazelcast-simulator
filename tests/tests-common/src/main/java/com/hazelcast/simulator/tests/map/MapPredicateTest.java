@@ -17,7 +17,12 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.query.*;
+import com.hazelcast.query.EntryObject;
+import com.hazelcast.query.PagingPredicate;
+import com.hazelcast.query.Predicate;
+import com.hazelcast.query.PredicateBuilder;
+import com.hazelcast.query.Predicates;
+import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -31,7 +36,11 @@ import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * In this test we are using different predicate methods to execute a query on a map of {@link Employee} objects.
- *
+ * <p>
  * This test also concurrently updates and modifies the employee objects in the map while the predicate queries are executing. The
  * test may also destroy the map while while predicate are executing. We verify the result of every query to ensure that the
  * objects returned fit the requirements of the query.

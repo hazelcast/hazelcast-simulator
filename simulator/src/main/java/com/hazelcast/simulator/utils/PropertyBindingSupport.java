@@ -26,7 +26,9 @@ import java.util.Set;
 
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue0;
 import static java.lang.String.format;
-import static java.lang.reflect.Modifier.*;
+import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isPublic;
+import static java.lang.reflect.Modifier.isStatic;
 
 /**
  * Contains support functionality for binding properties.
@@ -40,7 +42,7 @@ public final class PropertyBindingSupport {
 
     /**
      * Binds a single property contained in the {@link TestCase} instance onto the object instance.
-     *
+     * <p>
      * There will be no warning if the property is not defined in the {@link TestCase}.
      * There will be no exception if the property will not be found in the object instance, just a warning.
      *
@@ -76,7 +78,7 @@ public final class PropertyBindingSupport {
 
     /**
      * Returns a single property contained in the {@link TestCase} instance.
-     *
+     * <p>
      * There will be no warning if the property is not defined in the {@link TestCase}.
      *
      * @param testCase     TestCase which contains

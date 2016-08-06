@@ -19,7 +19,13 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.test.annotations.*;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Prepare;
+import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Verify;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,10 +35,10 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This tests the cas method: replace. So for optimistic concurrency control.
- *
+ * <p>
  * We have a bunch of predefined keys, and we are going to concurrently increment the value and we protect ourselves against lost
  * updates using cas method replace.
- *
+ * <p>
  * Locally we keep track of all increments, and if the sum of these local increments matches the global increment, we are done.
  */
 public class MapCasTest extends AbstractTest {
