@@ -15,20 +15,10 @@
  */
 package com.hazelcast.simulator.utils;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
-
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static java.lang.String.format;
 
 public final class NativeUtils {
 
@@ -38,45 +28,13 @@ public final class NativeUtils {
     }
 
     public static StringBuilder execute(String command) {
-        return execute(command, false);
+        return new BashCommand(command).execute();
     }
 
     public static StringBuilder execute(String command, boolean throwException) {
-        StringBuilder sb = new StringBuilder();
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Executing bash command: " + command);
-        }
-
-        try {
-            // create a process for the shell
-            ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
-            pb = pb.redirectErrorStream(true);
-
-            Process shell = pb.start();
-            new BashStreamGobbler(shell.getInputStream(), sb).start();
-
-            // wait for the shell to finish and get the return code
-            int shellExitStatus = shell.waitFor();
-
-            if (shellExitStatus != 0) {
-                if (throwException) {
-                    throw new CommandLineExitException(format("Failed to execute [%s]", command),
-                            new CommandLineExitException(sb.toString()));
-                }
-                LOGGER.error(format("Failed to execute [%s]", command));
-                LOGGER.error(sb.toString());
-                exitWithError();
-            } else {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Bash output: " + NEW_LINE + sb);
-                }
-            }
-
-            return sb;
-        } catch (Exception e) {
-            throw rethrow(e);
-        }
+        return new BashCommand(command)
+                .setThrowsException(throwException)
+                .execute();
     }
 
     public static void kill(int pid) {
@@ -137,35 +95,6 @@ public final class NativeUtils {
         } catch (Exception e) {
             LOGGER.warn(e);
             return null;
-        }
-    }
-
-    private static class BashStreamGobbler extends Thread {
-
-        private final InputStreamReader inputStreamReader;
-        private final BufferedReader reader;
-        private final StringBuilder stringBuilder;
-
-        @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-        public BashStreamGobbler(InputStream in, StringBuilder stringBuilder) {
-            this.inputStreamReader = new InputStreamReader(in);
-            this.reader = new BufferedReader(inputStreamReader);
-            this.stringBuilder = stringBuilder;
-        }
-
-        @Override
-        public void run() {
-            try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line).append(NEW_LINE);
-                }
-            } catch (IOException ignored) {
-                EmptyStatement.ignore(ignored);
-            } finally {
-                closeQuietly(reader);
-                closeQuietly(inputStreamReader);
-            }
         }
     }
 }
