@@ -34,7 +34,7 @@ public class Bash {
     }
 
     public StringBuilder execute(String command) {
-        return NativeUtils.execute(command);
+        return new BashCommand(command).execute();
     }
 
     public StringBuilder executeQuiet(String command) {
@@ -47,7 +47,7 @@ public class Bash {
 
     public StringBuilder ssh(String ip, String command, boolean throwException) {
         String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
-        return NativeUtils.execute(sshCommand, throwException);
+        return new BashCommand(sshCommand).setThrowsException(throwException).execute();
     }
 
     public void sshQuiet(String ip, String command) {
@@ -87,3 +87,4 @@ public class Bash {
         execute(command);
     }
 }
+

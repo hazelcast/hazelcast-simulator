@@ -188,10 +188,7 @@ public class ComplexDomainObject implements Portable {
                                int num_instruction_approval_not_performed,
                                long download_speed, int mismatch, boolean mismatch_ignored,
                                int invoice_account_demand) {
-        super();
-
         this.UUID = UUID;
-
         this.locality_id = locality_id;
         this.locality_name = locality_name;
         this.division_id = division_id;
