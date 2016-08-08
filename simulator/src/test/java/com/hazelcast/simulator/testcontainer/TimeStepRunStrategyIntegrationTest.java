@@ -22,6 +22,7 @@ import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
 import static com.hazelcast.simulator.testcontainer.TestPhase.SETUP;
 import static com.hazelcast.simulator.testcontainer.TestPhase.WARMUP;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -53,7 +54,7 @@ public class TimeStepRunStrategyIntegrationTest {
                 return null;
             }
         });
-        Thread.sleep(5000);
+        sleepSeconds(5);
         testContext.stop();
         runFuture.get();
 
@@ -138,12 +139,10 @@ public class TimeStepRunStrategyIntegrationTest {
         System.out.println("done");
     }
 
-
     public static class TestWithAllRunPhasesAndWarmup {
 
-        public final ConcurrentHashMap<Thread, ThreadState> states = new ConcurrentHashMap<Thread, ThreadState>();
-
-        public final AtomicLong afterWarmupCalled = new AtomicLong();
+        final ConcurrentHashMap<Thread, ThreadState> states = new ConcurrentHashMap<Thread, ThreadState>();
+        final AtomicLong afterWarmupCalled = new AtomicLong();
 
         @AfterWarmup(global = false)
         public void afterWarmup() {
@@ -153,7 +152,7 @@ public class TimeStepRunStrategyIntegrationTest {
 
         @BeforeRun
         public void beforeRun(ThreadState state) {
-            System.out.println("beforeRun:" + Thread.currentThread() + " state:" + state);
+            System.out.println("beforeRun: " + Thread.currentThread() + " state: " + state);
 
             state.beforeRunCount++;
 
@@ -163,8 +162,8 @@ public class TimeStepRunStrategyIntegrationTest {
         }
 
         @TimeStep
-        public void timestep(ThreadState state) throws InterruptedException {
-            System.out.println("timeStep:" + Thread.currentThread() + " state:" + state);
+        public void timeStep(ThreadState state) throws InterruptedException {
+            System.out.println("timeStep: " + Thread.currentThread() + " state: " + state);
 
             Thread.sleep(1000);
 
@@ -177,7 +176,7 @@ public class TimeStepRunStrategyIntegrationTest {
 
         @AfterRun
         public void afterRun(ThreadState state) {
-            System.out.println("afterRun:" + Thread.currentThread() + " state:" + state);
+            System.out.println("afterRun: " + Thread.currentThread() + " state: " + state);
 
             state.afterRunCount++;
 
@@ -187,7 +186,6 @@ public class TimeStepRunStrategyIntegrationTest {
         }
 
         public static class ThreadState {
-            Thread thread = Thread.currentThread();
             int beforeRunCount;
             int afterRunCount;
             int timeStepCount;
@@ -223,7 +221,7 @@ public class TimeStepRunStrategyIntegrationTest {
 
         assertEquals(threadCount, testInstance.map.size());
 
-        // each context should be unique.
+        // each context should be unique
         Set<BaseThreadState> contexts = new HashSet<BaseThreadState>(testInstance.map.values());
         assertEquals(threadCount, contexts.size());
     }
