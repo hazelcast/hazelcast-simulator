@@ -168,18 +168,6 @@ final class CoordinatorCli {
                     PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<String> memberHzConfigFileSpec = parser.accepts("hzFile",
-            "The Hazelcast XML configuration file for the Worker. If no file is explicitly configured,"
-                    + " first the 'hazelcast.xml' in the working directory is loaded."
-                    + " If that doesn't exist then SIMULATOR_HOME/conf/hazelcast.xml is loaded.")
-            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultConfigurationFile("hazelcast.xml"));
-
-    private final OptionSpec<String> clientHzConfigFileSpec = parser.accepts("clientHzFile",
-            "The client Hazelcast XML configuration file for the Worker. If no file is explicitly configured,"
-                    + " first the 'client-hazelcast.xml' in the working directory is loaded."
-                    + " If that doesn't exist then SIMULATOR_HOME/conf/client-hazelcast.xml is loaded.")
-            .withRequiredArg().ofType(String.class).defaultsTo(getDefaultConfigurationFile("client-hazelcast.xml"));
-
     private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
             "The startup timeout in seconds for a Worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
@@ -250,8 +238,6 @@ final class CoordinatorCli {
                 getDefaultConfigurationFile("after-completion.sh")
         );
 
-        String memberHzConfig = loadMemberHzConfig(options, cli);
-        String clientHzConfig = loadClientHzConfig(options, cli);
         int defaultHzPort = simulatorProperties.getHazelcastPort();
         String licenseKey = options.valueOf(cli.licenseKeySpec);
 
@@ -261,8 +247,8 @@ final class CoordinatorCli {
                 options.valueOf(cli.workerStartupTimeoutSpec),
                 options.valueOf(cli.workerVmOptionsSpec),
                 options.valueOf(cli.clientWorkerVmOptionsSpec),
-                initMemberHzConfig(memberHzConfig, componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
-                initClientHzConfig(clientHzConfig, componentRegistry, defaultHzPort, licenseKey),
+                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
+                initClientHzConfig(loadClientHzConfig(), componentRegistry, defaultHzPort, licenseKey),
                 loadLog4jConfig(),
                 loadWorkerScript(),
                 options.has(cli.monitorPerformanceSpec)
@@ -350,8 +336,8 @@ final class CoordinatorCli {
         return file;
     }
 
-    private static String loadMemberHzConfig(OptionSet options, CoordinatorCli cli) {
-        File file = getFileOrExit(cli.memberHzConfigFileSpec, options, "Hazelcast member configuration for Worker");
+    private static String loadMemberHzConfig() {
+        File file = new File(getDefaultConfigurationFile("hazelcast.xml"));
         LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
@@ -362,8 +348,8 @@ final class CoordinatorCli {
         return fileAsText(file);
     }
 
-    private static String loadClientHzConfig(OptionSet options, CoordinatorCli cli) {
-        File file = getFileOrExit(cli.clientHzConfigFileSpec, options, "Hazelcast client configuration for Worker");
+    private static String loadClientHzConfig() {
+        File file = new File(getDefaultConfigurationFile("client-hazelcast.xml"));
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
