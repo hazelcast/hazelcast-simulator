@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -83,9 +82,6 @@ public abstract class ShutdownThread extends Thread {
             // ensures that log4j will always flush the log buffers
             LOGGER.info("Stopping log4j...");
             LogManager.shutdown();
-
-            // ensures that the JVM will be killed, regardless of any unresponsive threads
-            CommonUtils.exit(0);
         }
     }
 
