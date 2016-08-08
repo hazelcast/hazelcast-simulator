@@ -2,9 +2,6 @@ package com.hazelcast.simulator.testcontainer;
 
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
-import com.hazelcast.simulator.testcontainer.AbstractTestContainerTest;
-import com.hazelcast.simulator.testcontainer.IllegalTestException;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -19,7 +16,7 @@ public class TestContainer_InjectTestContextTest extends AbstractTestContainerTe
         testContainer = createTestContainer(test);
 
         assertNotNull(test.testContext);
-        Assert.assertEquals(testContext, test.testContext);
+        assertEquals(testContext, test.testContext);
     }
 
     @Test
