@@ -335,9 +335,14 @@ public class TestCaseRunnerTest {
             }
         }
         if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
-            // no StartTestPhaseOperation for global and local verify phase are sent
+            // no StartTestPhaseOperation for GLOBAL_VERIFY and LOCAL_VERIFY phase are sent
             sendToTestOnFirstWorkerTimes--;
             sendToTestOnAllWorkersTimes--;
+        }
+        if (testSuite.getWarmupDurationSeconds() == 0) {
+            // no StartTestPhaseOperation for WARMUP, LOCAL_AFTER_WARMUP and GLOBAL_AFTER_WARMUP phase are sent
+            sendToTestOnFirstWorkerTimes--;
+            sendToTestOnAllWorkersTimes -= 2;
         }
         if (testSuite.getDurationSeconds() == 0) {
             // no StopTestOperation is sent
@@ -365,7 +370,7 @@ public class TestCaseRunnerTest {
         if (verifyExecuteOnAllWorkersWithRange) {
             VerificationMode atLeast = atLeast((sendToTestOnAllWorkersTimes - 1) * numberOfTests);
             VerificationMode atMost = atMost(sendToTestOnAllWorkersTimes * numberOfTests);
-//            verify(remoteClient, atLeast).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
+            verify(remoteClient, atLeast).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
             verify(remoteClient, atMost).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
 
             atLeast = atLeast((sendToTestOnFirstWorkerTimes - 1) * numberOfTests);
@@ -373,13 +378,11 @@ public class TestCaseRunnerTest {
             verify(remoteClient, atLeast).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
             verify(remoteClient, atMost).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
         } else {
-            System.out.println("number of tests:"+numberOfTests);
-            System.out.println("sendToTestOnAllWorkersTimes:"+sendToTestOnAllWorkersTimes);
             VerificationMode times = times(sendToTestOnAllWorkersTimes * numberOfTests);
-            //verify(remoteClient, times).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
+            verify(remoteClient, times).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
 
             times = times(sendToTestOnFirstWorkerTimes * numberOfTests);
-            //verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
+            verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
         }
         verify(remoteClient, times(1)).terminateWorkers(true);
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
