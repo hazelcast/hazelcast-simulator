@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.common.TestSuite;
 
 public class InitTestSuiteOperation implements SimulatorOperation {
 

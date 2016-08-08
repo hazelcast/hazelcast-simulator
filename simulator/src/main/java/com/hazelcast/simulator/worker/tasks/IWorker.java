@@ -21,7 +21,7 @@ package com.hazelcast.simulator.worker.tasks;
  *
  * The reason this class is prefixed with I, is that the name 'Worker' can be used in the actual tests.
  *
- * The {@link com.hazelcast.simulator.test.TestContainer} supports the following injections for your implementation:
+ * The {@link com.hazelcast.simulator.testcontainer.TestContainer} supports the following injections for your implementation:
  * {@link com.hazelcast.simulator.test.annotations.InjectTestContext}
  * {@link com.hazelcast.simulator.test.annotations.InjectHazelcastInstance}
  * {@link com.hazelcast.simulator.test.annotations.InjectProbe}
@@ -32,7 +32,7 @@ public interface IWorker {
 
     /**
      * Name for the default {@link com.hazelcast.simulator.probes.Probe} which will be injected to the worker by the
-     * {@link com.hazelcast.simulator.test.TestContainer}.
+     * {@link com.hazelcast.simulator.testcontainer.TestContainer}.
      */
     String DEFAULT_WORKER_PROBE_NAME = "workerProbe";
 
@@ -62,8 +62,9 @@ public interface IWorker {
     /**
      * Implement this method if you need to execute code once after all workers have finished their run phase.
      *
-     * Will always be called by the {@link com.hazelcast.simulator.test.TestContainer}, regardless of errors in the run phase.
-     * Will be executed after {@link com.hazelcast.simulator.utils.ThreadSpawner#awaitCompletion()} on a single worker instance.
+     * Will always be called by the {@link com.hazelcast.simulator.testcontainer.TestContainer}, regardless of errors in the
+     * run phase. Will be executed after {@link com.hazelcast.simulator.utils.ThreadSpawner#awaitCompletion()} on a single
+     * worker instance.
      *
      * @throws Exception is allowed to throw exceptions which are automatically reported as failure
      */

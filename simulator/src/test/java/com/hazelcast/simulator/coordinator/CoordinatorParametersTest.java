@@ -4,7 +4,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.test.TestPhase.LOCAL_TEARDOWN;
+import static com.hazelcast.simulator.testcontainer.TestPhase.LOCAL_TEARDOWN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

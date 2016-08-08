@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.testcontainer.TestPhase;
 
 /**
  * Signals the Coordinator which {@link TestPhase} of a Simulator Test is completed.

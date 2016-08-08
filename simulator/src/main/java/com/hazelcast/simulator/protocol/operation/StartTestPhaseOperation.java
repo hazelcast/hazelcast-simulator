@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.test.TestPhase;
+import com.hazelcast.simulator.testcontainer.TestPhase;
 
 /**
  * Starts a {@link TestPhase} of the addressed Simulator Test.

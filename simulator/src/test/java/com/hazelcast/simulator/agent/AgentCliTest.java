@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Test;

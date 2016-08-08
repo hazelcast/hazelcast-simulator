@@ -21,7 +21,7 @@ import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.common.TestSuite;
 import org.apache.log4j.Logger;
 
 import java.io.File;

@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.test.TestCase;
+import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.test.TestException;
 import org.junit.Before;
 import org.junit.Test;

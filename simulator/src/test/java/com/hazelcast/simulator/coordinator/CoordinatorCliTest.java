@@ -2,8 +2,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.TestPhase;
-import com.hazelcast.simulator.test.TestSuite;
+import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;

@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Starts the {@link com.hazelcast.simulator.test.TestPhase#RUN} phase of a Simulator Test.
+ * Starts the {@link com.hazelcast.simulator.testcontainer.TestPhase#RUN} phase of a Simulator Test.
  */
 public class StartTestOperation implements SimulatorOperation {
 
