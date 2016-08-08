@@ -27,11 +27,11 @@ import static org.junit.Assert.fail;
 
 public class SPMCLongArrayQueueTest {
 
-    static final int CAPACITY = 128;
-    static final int ENQUEUE_COUNT = 10 * 1000 * 1000;
-    static final int CONSUMER_COUNT = Runtime.getRuntime().availableProcessors() - 1;
-    static final int CONSUMER_CAPACITY_HEADROOM = 10000;
+    private static final int CAPACITY = 128;
     private static final long NULL_SENTINEL = 0;
+    private static final int CONSUMER_COUNT = Runtime.getRuntime().availableProcessors() - 1;
+    private static final int ENQUEUE_COUNT = 10 * 1000 * 1000;
+    private static final int CONSUMER_CAPACITY_HEADROOM = 10000;
 
     private final SPMCLongArrayQueue queue = new SPMCLongArrayQueue(CAPACITY, NULL_SENTINEL);
 
@@ -47,7 +47,9 @@ public class SPMCLongArrayQueueTest {
         System.out.format("Producing %,d items%n", ENQUEUE_COUNT);
         final long start = System.nanoTime();
         for (long val = 1; val <= ENQUEUE_COUNT; val++) {
-            while (!queue.offer(val));
+            while (!queue.offer(val)) {
+                ;
+            }
         }
         final double elapsedSeconds = (System.nanoTime() - start) / (double) SECONDS.toNanos(1);
         System.out.format("Production done, %,.0f items/sec%n", ENQUEUE_COUNT / elapsedSeconds);
@@ -77,6 +79,7 @@ public class SPMCLongArrayQueueTest {
     }
 
     class Worker implements Runnable {
+
         private final long[] dequeued = new long[ENQUEUE_COUNT / CONSUMER_COUNT + CONSUMER_CAPACITY_HEADROOM];
         int insertionPoint;
 
