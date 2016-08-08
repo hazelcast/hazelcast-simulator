@@ -171,7 +171,56 @@ final class TestCaseRunner implements TestPhaseListener {
         }
     }
 
-    private void executeRun() throws Exception {
+    private void createTest() {
+        echo("Starting Test initialization");
+        remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
+        echo("Completed Test initialization");
+    }
+
+    private void executePhase(TestPhase testPhase) {
+        if (hasFailure()) {
+            throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
+        }
+
+        echo("Starting Test " + testPhase.desc());
+        if (testPhase.isGlobal()) {
+            remoteClient.sendToTestOnFirstWorker(testCaseId, new StartTestPhaseOperation(testPhase));
+        } else {
+            remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestPhaseOperation(testPhase));
+        }
+        waitForPhaseCompletion(testPhase);
+        echo("Completed Test " + testPhase.desc());
+        waitForGlobalTestPhaseCompletion(testPhase);
+    }
+
+    private void executeWarmup() {
+        echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
+        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
+        echo("Completed Test warmup start");
+
+        StopThread stopThread = null;
+        if (testSuite.getDurationSeconds() > 0) {
+            stopThread = new StopThread(true);
+            stopThread.start();
+        }
+
+        if (testSuite.isWaitForTestCase()) {
+            echo("Test will run warmup until it stops");
+            waitForPhaseCompletion(WARMUP);
+            echo("Test finished running warmup");
+
+            if (stopThread != null) {
+                stopThread.shutdown();
+            }
+        }
+
+        joinThread(stopThread);
+
+        waitForGlobalTestPhaseCompletion(WARMUP);
+    }
+
+    private void executeRun() {
         echo(format("Starting Test start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
         remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
@@ -196,55 +245,6 @@ final class TestCaseRunner implements TestPhaseListener {
         joinThread(stopThread);
 
         waitForGlobalTestPhaseCompletion(RUN);
-    }
-
-    private void executeWarmup() throws Exception {
-        echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
-        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
-        echo("Completed Test warmup start");
-
-        StopThread stopThread = null;
-        if (testSuite.getDurationSeconds() > 0) {
-            stopThread = new StopThread(true);
-            stopThread.start();
-        }
-
-        if (testSuite.isWaitForTestCase()) {
-            echo("Test will run warmup until it stops");
-            waitForPhaseCompletion(WARMUP);
-            echo("Test finished warmup");
-
-            if (stopThread != null) {
-                stopThread.shutdown();
-            }
-        }
-
-        joinThread(stopThread);
-
-        waitForGlobalTestPhaseCompletion(WARMUP);
-    }
-
-    private void createTest() {
-        echo("Starting Test initialization");
-        remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
-        echo("Completed Test initialization");
-    }
-
-    private void executePhase(TestPhase testPhase) {
-        if (hasFailure()) {
-            throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
-        }
-
-        echo("Starting Test " + testPhase.desc());
-        if (testPhase.isGlobal()) {
-            remoteClient.sendToTestOnFirstWorker(testCaseId, new StartTestPhaseOperation(testPhase));
-        } else {
-            remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestPhaseOperation(testPhase));
-        }
-        waitForPhaseCompletion(testPhase);
-        echo("Completed Test " + testPhase.desc());
-        waitForGlobalTestPhaseCompletion(testPhase);
     }
 
     private void waitForPhaseCompletion(TestPhase testPhase) {
@@ -334,7 +334,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
         private final boolean warmup;
 
-        public StopThread(boolean warmup) {
+        StopThread(boolean warmup) {
             this.warmup = warmup;
             this.durationSeconds = warmup ? testSuite.getWarmupDurationSeconds() : testSuite.getDurationSeconds();
         }
