@@ -86,7 +86,7 @@ public class HdrProbeTest {
 
         for (long requiredValue : requiredValues) {
             if (!contains(histogram, requiredValue)) {
-                fail("Value:" + requiredValue + " not found in histogram");
+                fail("Value " + requiredValue + " not found in histogram");
             }
         }
     }

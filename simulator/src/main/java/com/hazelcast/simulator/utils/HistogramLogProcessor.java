@@ -194,7 +194,7 @@ public class HistogramLogProcessor extends Thread {
                     nullTagFound = true;
                 }
             }
-            System.out.println("Tags found in input file:");
+            System.out.println("Tags found in input file: ");
             if (nullTagFound) {
                 System.out.println("[NO TAG (default)]");
             }

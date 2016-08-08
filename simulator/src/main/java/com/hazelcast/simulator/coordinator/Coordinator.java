@@ -231,7 +231,7 @@ public final class Coordinator {
 
     private void executeAfterCompletion() {
         if (coordinatorParameters.getAfterCompletionFile() != null) {
-            echoLocal("Executing after-completion script:" + coordinatorParameters.getAfterCompletionFile());
+            echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
             bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
             echoLocal("Finished after-completion script");
         }

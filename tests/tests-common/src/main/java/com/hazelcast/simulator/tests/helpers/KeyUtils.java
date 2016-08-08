@@ -295,13 +295,13 @@ public final class KeyUtils {
                 for (Partition partition : partitionService.getPartitions()) {
                     Member owner = partition.getOwner();
                     if (owner == null) {
-                        throw new IllegalStateException("Owner is null for partition:" + partition);
+                        throw new IllegalStateException("Owner is null for partition: " + partition);
                     }
                     Integer value = partitionsPerMember.get(owner);
                     Integer result = value == null ? 1 : value + 1;
                     partitionsPerMember.put(owner, result);
                 }
-                throw new IllegalStateException("No partitions found, partitionsPerMember:" + partitionsPerMember);
+                throw new IllegalStateException("No partitions found, partitionsPerMember: " + partitionsPerMember);
             }
         }
 
