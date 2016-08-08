@@ -181,6 +181,20 @@ public class TestCaseRunnerTest {
     }
 
     @Test
+    public void runTestSuiteParallel_withWarmup_waitForTestCase() {
+        testSuite.setWaitForTestCase(true);
+        testSuite.setDurationSeconds(0);
+        testSuite.setWarmupDurationSeconds(1);
+        parallel = true;
+        verifyEnabled = false;
+
+        Coordinator coordinator = createCoordinator();
+        coordinator.runTestSuite();
+
+        verifyRemoteClient(coordinator);
+    }
+
+    @Test
     public void runTestSuiteSequential_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 

@@ -324,7 +324,8 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private boolean hasFailure() {
-        return failureContainer.hasCriticalFailure(testCaseId) || failureContainer.hasCriticalFailure() && testSuite.isFailFast();
+        return failureContainer.hasCriticalFailure(testCaseId)
+                || failureContainer.hasCriticalFailure() && testSuite.isFailFast();
     }
 
     private final class StopThread extends Thread {
