@@ -42,7 +42,6 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-
 public class WorkerProcessFailureMonitor {
 
     private static final int DEFAULT_CHECK_INTERVAL_MILLIS = (int) SECONDS.toMillis(1);
