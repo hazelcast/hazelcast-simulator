@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.probes.Probe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

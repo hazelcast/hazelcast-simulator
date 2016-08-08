@@ -18,6 +18,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -32,7 +33,6 @@ import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.WorkerType;

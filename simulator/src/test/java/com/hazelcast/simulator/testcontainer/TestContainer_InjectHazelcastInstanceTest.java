@@ -2,8 +2,6 @@ package com.hazelcast.simulator.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
-import com.hazelcast.simulator.testcontainer.AbstractTestContainerTest;
-import com.hazelcast.simulator.testcontainer.IllegalTestException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

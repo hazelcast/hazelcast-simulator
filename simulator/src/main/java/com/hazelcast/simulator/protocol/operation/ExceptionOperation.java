@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.protocol.exception.ExceptionType;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.protocol.exception.ExceptionType;
 
 import java.util.Date;
 

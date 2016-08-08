@@ -1,15 +1,15 @@
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.test.TestException;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;

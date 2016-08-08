@@ -5,8 +5,6 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.testcontainer.TestContainer;
-import com.hazelcast.simulator.testcontainer.TestContextImpl;
 
 import static org.mockito.Mockito.mock;
 

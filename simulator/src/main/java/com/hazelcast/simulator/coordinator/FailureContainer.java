@@ -15,10 +15,10 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 

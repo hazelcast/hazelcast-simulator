@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.testcontainer;
 
-import com.hazelcast.simulator.testcontainer.TimeStepRunnerCodeGenerator;
 import org.junit.Test;
 
 import javax.tools.JavaFileObject;

@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -19,7 +20,6 @@ import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;

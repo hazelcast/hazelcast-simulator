@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Test;

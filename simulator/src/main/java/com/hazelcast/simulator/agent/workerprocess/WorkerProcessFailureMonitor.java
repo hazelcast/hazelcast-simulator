@@ -16,13 +16,13 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.common.FailureType;
 import org.apache.log4j.Logger;
 
 import java.io.File;

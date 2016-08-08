@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
@@ -15,7 +16,6 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.TestUtils;
@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.LATENCY_FORMAT_LENGTH;
 import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.OPERATION_COUNT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.THROUGHPUT_FORMAT_LENGTH;
@@ -45,7 +46,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;

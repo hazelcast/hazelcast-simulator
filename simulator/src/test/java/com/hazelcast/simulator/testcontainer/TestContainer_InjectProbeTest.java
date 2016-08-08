@@ -5,9 +5,6 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.testcontainer.AbstractTestContainerTest;
-import com.hazelcast.simulator.testcontainer.IllegalTestException;
-import com.hazelcast.simulator.testcontainer.TestPhase;
 import org.junit.Test;
 
 import java.util.Map;

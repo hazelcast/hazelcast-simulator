@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -11,7 +12,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,12 +23,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.common.FailureType.NETTY_EXCEPTION;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNBLOCKED_BY_FAILURE;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.common.FailureType.NETTY_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;

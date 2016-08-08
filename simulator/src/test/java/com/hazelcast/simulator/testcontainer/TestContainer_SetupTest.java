@@ -3,9 +3,6 @@ package com.hazelcast.simulator.testcontainer;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.testcontainer.AbstractTestContainerTest;
-import com.hazelcast.simulator.testcontainer.IllegalTestException;
-import com.hazelcast.simulator.testcontainer.TestPhase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

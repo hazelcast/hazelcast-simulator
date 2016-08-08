@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -13,7 +14,6 @@ import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.testcontainer.IllegalTestException;
-import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;

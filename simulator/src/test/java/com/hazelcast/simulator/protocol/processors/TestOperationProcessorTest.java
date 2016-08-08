@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -12,10 +13,9 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
-import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.testcontainer.TestContextImpl;
-import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;

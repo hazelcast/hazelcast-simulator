@@ -19,12 +19,12 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
+import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 

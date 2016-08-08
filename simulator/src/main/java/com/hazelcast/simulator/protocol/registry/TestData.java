@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.protocol.registry;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 public class TestData {
 

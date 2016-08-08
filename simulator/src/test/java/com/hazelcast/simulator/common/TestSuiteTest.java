@@ -1,8 +1,5 @@
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;

@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -28,7 +29,6 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.testcontainer.TestContextImpl;
 import com.hazelcast.simulator.worker.Worker;

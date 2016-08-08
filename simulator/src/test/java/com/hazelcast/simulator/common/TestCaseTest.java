@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.common.TestCase;
 import org.junit.Test;
 
 import java.util.HashMap;

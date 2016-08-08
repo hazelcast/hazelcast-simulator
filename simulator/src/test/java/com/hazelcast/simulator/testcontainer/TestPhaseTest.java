@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.testcontainer;
 
-import com.hazelcast.simulator.testcontainer.TestPhase;
 import org.junit.Test;
 
 import java.util.Map;

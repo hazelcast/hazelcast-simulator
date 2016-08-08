@@ -5,9 +5,6 @@ import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.testcontainer.TestContainer;
-import com.hazelcast.simulator.testcontainer.TestContextImpl;
-import com.hazelcast.simulator.testcontainer.TestPhase;
 import org.junit.After;
 import org.junit.Test;
 

@@ -1,11 +1,11 @@
 package com.hazelcast.simulator.worker.performance;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
-import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.testcontainer.TestContextImpl;
 import com.hazelcast.simulator.testcontainer.TestPhase;

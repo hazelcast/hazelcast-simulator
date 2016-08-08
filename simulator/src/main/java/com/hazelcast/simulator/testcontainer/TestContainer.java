@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.testcontainer;
 
-import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Prepare;

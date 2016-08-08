@@ -2,8 +2,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Before;

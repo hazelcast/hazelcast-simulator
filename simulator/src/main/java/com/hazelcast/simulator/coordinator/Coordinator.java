@@ -17,6 +17,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
@@ -25,9 +27,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
-import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.testcontainer.TestPhase;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;

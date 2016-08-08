@@ -2,7 +2,6 @@ package com.hazelcast.simulator.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.testcontainer.AbstractTestContainerTest;
 import com.hazelcast.simulator.utils.BindException;
 import org.junit.Test;
 
