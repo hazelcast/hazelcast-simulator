@@ -46,7 +46,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDi
 import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
@@ -172,14 +171,6 @@ final class CoordinatorCli {
             "The startup timeout in seconds for a Worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
-    private final OptionSpec<String> gitSpec = parser.accepts("git",
-            "Overrides the HAZELCAST_VERSION_SPEC property and forces Provisioner to build Hazelcast JARs from a given Git"
-                    + " version. This makes it easier to run a test with different versions of Hazelcast, e.g." + NEW_LINE
-                    + "     --git f0288f713                to use the Git revision f0288f713" + NEW_LINE
-                    + "     --git myRepository/myBranch    to use branch myBranch from a repository myRepository." + NEW_LINE
-                    + "You can specify custom repositories in 'simulator.properties'.")
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSpec<Boolean> uploadHazelcastJARsSpec = parser.accepts("uploadHazelcastJARs",
             "Defines if the Hazelcast JARs should be uploaded.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
@@ -216,9 +207,6 @@ final class CoordinatorCli {
         TestSuite testSuite = getTestSuite(cli, options);
 
         SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-        if (options.has(cli.gitSpec)) {
-            simulatorProperties.forceGit(options.valueOf(cli.gitSpec));
-        }
 
         ComponentRegistry componentRegistry = getComponentRegistry(cli, options, testSuite, simulatorProperties);
 

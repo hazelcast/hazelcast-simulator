@@ -28,14 +28,13 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.GIT_VERSION_PREFIX;
 import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
 /**
  * Loads the Hazelcast Simulator properties file.
- *
+ * <p>
  * This class will always load the properties in the <tt>${SIMULATOR_HOME}/conf/simulator.properties</tt> as defaults. If an
  * explicit {$value #PROPERTIES_FILE_NAME} file is configured or {$value #PROPERTIES_FILE_NAME} is available in the working dir,
  * it will override the properties from the default.
@@ -54,8 +53,6 @@ public class SimulatorProperties {
 
     private final Properties properties = new Properties();
     private final File propertiesFile;
-
-    private String forcedHazelcastVersionSpec;
 
     public SimulatorProperties() {
         propertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
@@ -110,13 +107,6 @@ public class SimulatorProperties {
         return properties.containsKey(name);
     }
 
-    public void forceGit(String gitRevision) {
-        if (gitRevision != null && !gitRevision.isEmpty()) {
-            forcedHazelcastVersionSpec = GIT_VERSION_PREFIX + gitRevision;
-            LOGGER.info("Overriding Hazelcast version to Git revision " + gitRevision);
-        }
-    }
-
     public String getSshOptions() {
         return get("SSH_OPTIONS", "");
     }
@@ -134,11 +124,7 @@ public class SimulatorProperties {
     }
 
     public String getHazelcastVersionSpec() {
-        if (forcedHazelcastVersionSpec == null) {
-            return get("HAZELCAST_VERSION_SPEC", OUT_OF_THE_BOX);
-        } else {
-            return forcedHazelcastVersionSpec;
-        }
+        return get("HAZELCAST_VERSION_SPEC", OUT_OF_THE_BOX);
     }
 
     public int getWorkerPingIntervalSeconds() {

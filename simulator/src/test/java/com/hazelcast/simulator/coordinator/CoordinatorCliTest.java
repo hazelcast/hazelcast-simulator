@@ -339,16 +339,6 @@ public class CoordinatorCliTest {
     }
 
     @Test
-    public void testInit_git() {
-        args.add("--git");
-        args.add("sha123456");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertEquals("git=sha123456", coordinator.getCoordinatorParameters().getSimulatorProperties().getHazelcastVersionSpec());
-    }
-
-    @Test
     public void testInit_memberConfigFileInWorkDir() {
         File memberConfigFile = new File("hazelcast.xml").getAbsoluteFile();
         writeText(HAZELCAST_XML, memberConfigFile);
