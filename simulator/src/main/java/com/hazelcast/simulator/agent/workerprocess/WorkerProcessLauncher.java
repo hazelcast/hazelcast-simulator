@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.SpawnWorkerFailedException;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.WorkerType;

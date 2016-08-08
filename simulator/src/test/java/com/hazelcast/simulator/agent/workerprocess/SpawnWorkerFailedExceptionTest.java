@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.agent;
+package com.hazelcast.simulator.agent.workerprocess;
 
 import org.junit.Test;
 
