@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.AbstractTest;
 
 import java.util.concurrent.TimeUnit;
 

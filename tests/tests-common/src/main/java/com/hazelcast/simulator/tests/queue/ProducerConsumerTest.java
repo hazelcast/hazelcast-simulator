@@ -17,11 +17,11 @@ package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
+import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.io.Serializable;

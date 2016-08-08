@@ -51,7 +51,6 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.VersionUtils.isMinVersion;
 import static java.lang.String.format;
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.name;
 import static org.junit.Assert.fail;
 
 public final class HazelcastTestUtils {

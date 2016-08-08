@@ -13,7 +13,9 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTo
 import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 public class AnnotationReflectionUtilsTest {
 

@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.harakiri;
 
-import com.hazelcast.simulator.harakiri.HarakiriMonitor;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusOneException;

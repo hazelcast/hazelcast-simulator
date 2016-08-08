@@ -12,7 +12,10 @@ import org.junit.Test;
 import static com.hazelcast.simulator.TestSupport.assertInstanceOf;
 import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest {
 

@@ -25,7 +25,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
-
 import javax.cache.CacheManager;
 import java.io.Serializable;
 import java.util.HashMap;

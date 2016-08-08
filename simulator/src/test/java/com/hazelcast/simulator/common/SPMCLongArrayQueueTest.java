@@ -17,13 +17,9 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.util.collection.LongHashSet;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
-
 import static java.lang.Thread.currentThread;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

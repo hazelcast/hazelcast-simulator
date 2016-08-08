@@ -58,7 +58,7 @@ public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
         assertNull(test.notAnnotatedProbe);
     }
 
-    public static class ProbeTest  {
+    public static class ProbeTest {
 
         @InjectTestContext
         private TestContext context;
