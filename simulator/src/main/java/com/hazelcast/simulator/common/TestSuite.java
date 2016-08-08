@@ -49,10 +49,6 @@ public class TestSuite {
 
     private Set<FailureType> tolerableFailures = Collections.emptySet();
 
-    public TestSuite() {
-        this(null);
-    }
-
     public TestSuite(String testSuiteId) {
         id = (testSuiteId == null) ? createId() : testSuiteId;
     }

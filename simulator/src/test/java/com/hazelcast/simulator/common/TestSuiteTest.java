@@ -38,15 +38,6 @@ public class TestSuiteTest {
 
     @Test
     public void testConstructor() {
-        TestSuite testSuite = new TestSuite();
-
-        assertNotNull(testSuite.getId());
-        assertTrue(testSuite.getTestCaseList().isEmpty());
-        assertEquals(0, testSuite.getMaxTestCaseIdLength());
-    }
-
-    @Test
-    public void testConstructor_withTestSuiteId() {
         TestSuite testSuite = new TestSuite("TestSuiteTest");
 
         assertEquals("TestSuiteTest", testSuite.getId());
@@ -56,7 +47,7 @@ public class TestSuiteTest {
 
     @Test
     public void testSetter() {
-        TestSuite testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite("TestSuiteTest");
 
         assertEquals(0, testSuite.getDurationSeconds());
         assertFalse(testSuite.isWaitForTestCase());
@@ -205,7 +196,7 @@ public class TestSuiteTest {
 
     @Test
     public void testMaxCaseIdLength() {
-        TestSuite testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite("TestSuiteTest");
         testSuite.addTest(new TestCase("abc"));
         testSuite.addTest(new TestCase("88888888"));
         testSuite.addTest(new TestCase(null));

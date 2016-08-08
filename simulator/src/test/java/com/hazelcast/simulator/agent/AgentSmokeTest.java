@@ -165,7 +165,7 @@ public class AgentSmokeTest implements FailureListener {
     private void executeTestCase(TestCase testCase) throws Exception {
         try {
             String testId = testCase.getId();
-            TestSuite testSuite = new TestSuite();
+            TestSuite testSuite = new TestSuite("AgentSmokeTest-" + testId);
             remoteClient.initTestSuite(testSuite);
             testSuite.addTest(testCase);
 

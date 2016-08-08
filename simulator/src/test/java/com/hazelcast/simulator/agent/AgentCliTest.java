@@ -42,7 +42,7 @@ public class AgentCliTest {
         assertEquals("127.0.0.1", agent.getPublicAddress());
         assertNull(agent.getTestSuiteDir());
 
-        TestSuite testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite("AgentCliTest");
         agent.setTestSuite(testSuite);
         assertNotNull(agent.getTestSuiteDir());
     }

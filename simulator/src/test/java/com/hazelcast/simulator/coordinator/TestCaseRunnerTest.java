@@ -160,7 +160,7 @@ public class TestCaseRunnerTest {
     public void runTestSuiteSequential_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 
-        testSuite = new TestSuite();
+        testSuite = new TestSuite("TestCaseRunnerTest");
         testSuite.addTest(testCase);
         testSuite.setDurationSeconds(1);
 
@@ -174,7 +174,7 @@ public class TestCaseRunnerTest {
     public void runTestSuiteParallel_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 
-        testSuite = new TestSuite();
+        testSuite = new TestSuite("TestCaseRunnerTest");
         testSuite.addTest(testCase);
         testSuite.setDurationSeconds(1);
 

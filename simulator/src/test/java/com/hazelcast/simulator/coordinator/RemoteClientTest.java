@@ -67,7 +67,7 @@ public class RemoteClientTest {
 
         TestCase testCase = new TestCase(DEFAULT_TEST_ID);
 
-        TestSuite testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite("RemoteClientTest");
         testSuite.addTest(testCase);
 
         componentRegistry.addTests(testSuite);
@@ -153,7 +153,7 @@ public class RemoteClientTest {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
 
-        TestSuite testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite("RemoteClientTest");
         remoteClient.initTestSuite(testSuite);
 
         verify(coordinatorConnector).write(eq(ALL_AGENTS), any(InitTestSuiteOperation.class));
