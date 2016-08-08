@@ -6,8 +6,12 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartTestOperation;
+import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
+import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
@@ -17,11 +21,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockito.verification.VerificationMode;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -30,18 +38,21 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDi
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
+import static com.hazelcast.simulator.testcontainer.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -194,8 +205,6 @@ public class TestCaseRunnerTest {
         Coordinator coordinator = createCoordinator();
         coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
-
-        verifyRemoteClient(coordinator, true);
     }
 
     @Test
@@ -207,8 +216,6 @@ public class TestCaseRunnerTest {
         Coordinator coordinator = createCoordinator();
         coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
-
-        verifyRemoteClient(coordinator, true);
     }
 
     @Test
@@ -219,8 +226,6 @@ public class TestCaseRunnerTest {
         Coordinator coordinator = createCoordinator();
         coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
-
-        verifyRemoteClient(coordinator, true);
     }
 
     @Test
@@ -232,8 +237,6 @@ public class TestCaseRunnerTest {
         Coordinator coordinator = createCoordinator();
         coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
         coordinator.runTestSuite();
-
-        verifyRemoteClient(coordinator, true);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -315,77 +318,76 @@ public class TestCaseRunnerTest {
     }
 
     private void verifyRemoteClient(Coordinator coordinator) {
-        verifyRemoteClient(coordinator, false);
-    }
-
-    private void verifyRemoteClient(Coordinator coordinator, boolean hasCriticalFailures) {
-        boolean verifyExecuteOnAllWorkersWithRange = false;
         int numberOfTests = testSuite.size();
-        int createTestCount = numberOfTests;
-        // there are no default operations sent to the first Worker
-        int sendToTestOnFirstWorkerTimes = 0;
-        // there are default operations sent to all Workers: StopTestOperation
-        int sendToTestOnAllWorkersTimes = 1;
+        boolean isStopTestOperation = (testSuite.getDurationSeconds() > 0);
+        List<TestPhase> expectedTestPhases = getExpectedTestPhases(coordinator);
+
+        // calculate how many remote calls we will have to the first and to all workers
+        int expectedStartTestPhaseOnFirstWorker = 0;
+        int expectedStartTestPhaseOnAllWorkers = 0;
+        int expectedStartTest = 0;
         // increase expected counters for each TestPhase
-        for (TestPhase testPhase : TestPhase.values()) {
-            if (testPhase.isGlobal()) {
-                sendToTestOnFirstWorkerTimes++;
+        for (TestPhase testPhase : expectedTestPhases) {
+            if (testPhase == WARMUP || testPhase == RUN) {
+                expectedStartTest++;
+            } else if (testPhase.isGlobal()) {
+                expectedStartTestPhaseOnFirstWorker++;
             } else {
-                sendToTestOnAllWorkersTimes++;
+                expectedStartTestPhaseOnAllWorkers++;
             }
         }
-        if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
-            // no StartTestPhaseOperation for GLOBAL_VERIFY and LOCAL_VERIFY phase are sent
-            sendToTestOnFirstWorkerTimes--;
-            sendToTestOnAllWorkersTimes--;
-        }
-        if (testSuite.getWarmupDurationSeconds() == 0) {
-            // no StartTestPhaseOperation for WARMUP, LOCAL_AFTER_WARMUP and GLOBAL_AFTER_WARMUP phase are sent
-            sendToTestOnFirstWorkerTimes--;
-            sendToTestOnAllWorkersTimes -= 2;
-        }
-        if (testSuite.getDurationSeconds() == 0) {
-            // no StopTestOperation is sent
-            sendToTestOnAllWorkersTimes--;
-        } else if (testSuite.isWaitForTestCase()) {
-            // has duration and waitForTestCase
-            verifyExecuteOnAllWorkersWithRange = true;
-        }
-        if (hasCriticalFailures) {
-            // adjust expected counters if test has critical failures
-            verifyExecuteOnAllWorkersWithRange = true;
-            if (testSuite.isFailFast()) {
-                if (!parallel) {
-                    createTestCount = 1;
-                }
-                sendToTestOnFirstWorkerTimes = 1;
-                sendToTestOnAllWorkersTimes = 1;
-            } else {
-                sendToTestOnFirstWorkerTimes = 2;
-                sendToTestOnAllWorkersTimes = 4;
-            }
-        }
+        int expectedStopTest = (isStopTestOperation ? expectedStartTest : 0);
 
-        verify(remoteClient, times(createTestCount)).sendToAllWorkers(any(SimulatorOperation.class));
-        if (verifyExecuteOnAllWorkersWithRange) {
-            VerificationMode atLeast = atLeast((sendToTestOnAllWorkersTimes - 1) * numberOfTests);
-            VerificationMode atMost = atMost(sendToTestOnAllWorkersTimes * numberOfTests);
-            verify(remoteClient, atLeast).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
-            verify(remoteClient, atMost).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
-
-            atLeast = atLeast((sendToTestOnFirstWorkerTimes - 1) * numberOfTests);
-            atMost = atMost(sendToTestOnFirstWorkerTimes * numberOfTests);
-            verify(remoteClient, atLeast).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
-            verify(remoteClient, atMost).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
-        } else {
-            VerificationMode times = times(sendToTestOnAllWorkersTimes * numberOfTests);
-            verify(remoteClient, times).sendToTestOnAllWorkers(anyString(), any(SimulatorOperation.class));
-
-            times = times(sendToTestOnFirstWorkerTimes * numberOfTests);
-            verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(SimulatorOperation.class));
-        }
+        // verify RemoteClient calls
+        verify(remoteClient, times(numberOfTests)).sendToAllWorkers(any(CreateTestOperation.class));
+        VerificationMode times = times(expectedStartTestPhaseOnFirstWorker * numberOfTests);
+        verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
+        ArgumentCaptor<SimulatorOperation> args = ArgumentCaptor.forClass(SimulatorOperation.class);
+        int expectedTimes = expectedStartTestPhaseOnAllWorkers + expectedStartTest + expectedStopTest;
+        verify(remoteClient, times(expectedTimes * numberOfTests)).sendToTestOnAllWorkers(anyString(), args.capture());
         verify(remoteClient, times(1)).terminateWorkers(true);
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
+
+        // assert captured arguments
+        int verifyStartTestOperation = 0;
+        int verifyStartTestPhaseOperation = 0;
+        int verifyStopTestOperation = 0;
+        for (SimulatorOperation operation : args.getAllValues()) {
+            if (operation instanceof StartTestOperation) {
+                verifyStartTestOperation++;
+            } else if (operation instanceof StartTestPhaseOperation) {
+                verifyStartTestPhaseOperation++;
+                TestPhase actual = ((StartTestPhaseOperation) operation).getTestPhase();
+                assertTrue(format("expected TestPhases should contain %s, but where %s", actual, expectedTestPhases),
+                        expectedTestPhases.contains(actual));
+            } else if (operation instanceof StopTestOperation) {
+                verifyStopTestOperation++;
+            } else {
+                fail("Unwanted SimulatorOperation: " + operation.getClass().getSimpleName());
+            }
+        }
+        assertEquals(expectedStartTest * numberOfTests, verifyStartTestOperation);
+        assertEquals(expectedStartTestPhaseOnAllWorkers * numberOfTests, verifyStartTestPhaseOperation);
+        if (isStopTestOperation) {
+            assertEquals(expectedStopTest * numberOfTests, verifyStopTestOperation);
+        }
+    }
+
+    private List<TestPhase> getExpectedTestPhases(Coordinator coordinator) {
+        // per default we expected all test phases to be called
+        List<TestPhase> expectedTestPhases = new ArrayList<TestPhase>(Arrays.asList(TestPhase.values()));
+        if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
+            // exclude verify test phases
+            expectedTestPhases.remove(TestPhase.GLOBAL_VERIFY);
+            expectedTestPhases.remove(TestPhase.LOCAL_VERIFY);
+        }
+        if (testSuite.getWarmupDurationSeconds() == 0) {
+            // exclude warmup test phases
+            expectedTestPhases.remove(WARMUP);
+            expectedTestPhases.remove(TestPhase.LOCAL_AFTER_WARMUP);
+            expectedTestPhases.remove(TestPhase.GLOBAL_AFTER_WARMUP);
+        }
+        return expectedTestPhases;
     }
 
     private class TestPhaseCompleter extends Thread {
