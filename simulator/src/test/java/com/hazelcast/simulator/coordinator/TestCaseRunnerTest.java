@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.mockito.verification.VerificationMode;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -366,12 +365,12 @@ public class TestCaseRunnerTest {
         int expectedStopTest = (isStopTestOperation ? expectedStartTest : 0);
 
         // verify RemoteClient calls
+        ArgumentCaptor<SimulatorOperation> argumentCaptor = ArgumentCaptor.forClass(SimulatorOperation.class);
         verify(remoteClient, times(numberOfTests)).sendToAllWorkers(any(CreateTestOperation.class));
-        VerificationMode times = times(expectedStartTestPhaseOnFirstWorker * numberOfTests);
-        verify(remoteClient, times).sendToTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
-        ArgumentCaptor<SimulatorOperation> args = ArgumentCaptor.forClass(SimulatorOperation.class);
-        int expectedTimes = expectedStartTestPhaseOnAllWorkers + expectedStartTest + expectedStopTest;
-        verify(remoteClient, times(expectedTimes * numberOfTests)).sendToTestOnAllWorkers(anyString(), args.capture());
+        int expectedTimes = numberOfTests * expectedStartTestPhaseOnFirstWorker;
+        verify(remoteClient, times(expectedTimes)).sendToTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
+        expectedTimes = numberOfTests * (expectedStartTestPhaseOnAllWorkers + expectedStartTest + expectedStopTest);
+        verify(remoteClient, times(expectedTimes)).sendToTestOnAllWorkers(anyString(), argumentCaptor.capture());
         verify(remoteClient, times(1)).terminateWorkers(true);
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
 
@@ -379,7 +378,7 @@ public class TestCaseRunnerTest {
         int verifyStartTestOperation = 0;
         int verifyStartTestPhaseOperation = 0;
         int verifyStopTestOperation = 0;
-        for (SimulatorOperation operation : args.getAllValues()) {
+        for (SimulatorOperation operation : argumentCaptor.getAllValues()) {
             if (operation instanceof StartTestOperation) {
                 verifyStartTestOperation++;
             } else if (operation instanceof StartTestPhaseOperation) {
