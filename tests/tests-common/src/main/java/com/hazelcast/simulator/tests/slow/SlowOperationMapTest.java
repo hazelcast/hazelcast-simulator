@@ -47,7 +47,7 @@ import static org.junit.Assert.fail;
 
 /**
  * This test invokes slowed down map operations on a Hazelcast instance to provoke slow operation logs.
- * <p>
+ *
  * In the verification phase we check for the correct number of slow operation logs (one per operation type).
  *
  * @since Hazelcast 3.5

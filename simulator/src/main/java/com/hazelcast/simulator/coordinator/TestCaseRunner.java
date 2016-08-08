@@ -59,7 +59,7 @@ import static java.util.Collections.synchronizedList;
 
 /**
  * Responsible for running a single {@link TestCase}.
- * <p>
+ *
  * Multiple TestCases can be run in parallel, by having multiple TestCaseRunners in parallel.
  */
 final class TestCaseRunner implements TestPhaseListener {

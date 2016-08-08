@@ -39,12 +39,12 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * This tests concurrent load all calls to {@link javax.cache.integration.CacheLoader}.
- * <p>
+ *
  * We can configure a delay in {@link javax.cache.integration.CacheLoader#loadAll(Iterable)} or to wait for completion.
- * <p>
+ *
  * A large delay and high concurrent calls to {@link javax.cache.integration.CacheLoader#loadAll(Iterable)} could overflow some
  * internal queues. The same can happen if {@link #waitForLoadAllFutureCompletion} is false.
- * <p>
+ *
  * We verify that the cache contains all keys and that the keys have been loaded through a the cache instance.
  */
 public class CacheLoaderTest extends AbstractTest {
