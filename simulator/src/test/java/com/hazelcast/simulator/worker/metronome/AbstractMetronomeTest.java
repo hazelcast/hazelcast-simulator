@@ -61,6 +61,9 @@ public abstract class AbstractMetronomeTest {
     }
 
     private void testMetronome(int intervalMs) {
+        // we don't want to measure the first invocation, since it has a random delay
+        metronome.waitForNext();
+
         long lastTimestamp = 0;
         for (int i = 0; i < 10; i++) {
             long startTimestamp = System.currentTimeMillis();
