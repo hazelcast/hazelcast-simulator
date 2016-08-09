@@ -26,7 +26,6 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -190,7 +189,7 @@ public final class Coordinator {
             checkInstallation(bash, simulatorProperties, componentRegistry);
             new InstallVendorTask(
                     simulatorProperties,
-                    componentRegistry.getAgentIps() ,
+                    componentRegistry.getAgentIps(),
                     clusterLayout.getVersionSpecs(),
                     testSuite).run();
             isPrePhaseDone = true;
@@ -199,7 +198,7 @@ public final class Coordinator {
                 startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 startCoordinatorConnector();
                 startRemoteClient();
-                startWorkers();
+                new StartWorkersTask(clusterLayout, remoteClient, componentRegistry).run();
 
                 runTestSuite();
             } catch (CommandLineExitException e) {
@@ -274,33 +273,6 @@ public final class Coordinator {
         remoteClient.initTestSuite(testSuite);
     }
 
-    private void startWorkers() {
-        try {
-            long started = System.nanoTime();
-
-            echo(HORIZONTAL_RULER);
-            echo("Starting Workers...");
-            echo(HORIZONTAL_RULER);
-
-            int totalWorkerCount = clusterLayout.getTotalWorkerCount();
-            echo("Starting %d Workers (%d members, %d clients)...", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
-                    clusterLayout.getClientWorkerCount());
-            remoteClient.createWorkers(clusterLayout, true);
-
-            if (componentRegistry.workerCount() > 0) {
-                WorkerData firstWorker = componentRegistry.getFirstWorker();
-                echo("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
-                        firstWorker.getSettings().getWorkerType());
-            }
-
-            long elapsed = getElapsedSeconds(started);
-            echo(HORIZONTAL_RULER);
-            echo("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed);
-            echo(HORIZONTAL_RULER);
-        } catch (Exception e) {
-            throw new CommandLineExitException("Failed to start Workers", e);
-        }
-    }
 
     void runTestSuite() {
         try {
@@ -386,7 +358,7 @@ public final class Coordinator {
             }
             // restart Workers if needed, but not after last test
             if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
-                startWorkers();
+                new StartWorkersTask(clusterLayout, remoteClient, componentRegistry).run();
             }
         }
     }
