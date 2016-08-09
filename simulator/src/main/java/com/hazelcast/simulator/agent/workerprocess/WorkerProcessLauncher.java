@@ -18,6 +18,7 @@ package com.hazelcast.simulator.agent.workerprocess;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
@@ -36,7 +37,6 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.directoryForVersionSpec;
 import static java.lang.String.format;
 
 /**
@@ -68,6 +68,16 @@ public class WorkerProcessLauncher {
         this.agent = agent;
         this.workerProcessManager = workerProcessManager;
         this.workerProcessSettings = workerProcessSettings;
+    }
+
+    public static String directoryForVersionSpec(String versionSpec) {
+        if ("bringmyown".equals(versionSpec)) {
+            return null;
+        }
+        if ("outofthebox".equals(versionSpec)) {
+            return "outofthebox";
+        }
+        return versionSpec.replace('=', '-');
     }
 
     public void launch() {

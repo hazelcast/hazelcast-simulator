@@ -9,6 +9,9 @@
 # Automatic exit on script failure.
 set -e
 
+# Printing the command being executed (useful for debugging)
+#set -x
+
 # redirecting output/error to the right logfiles.
 exec > worker.out
 exec 2>worker.err

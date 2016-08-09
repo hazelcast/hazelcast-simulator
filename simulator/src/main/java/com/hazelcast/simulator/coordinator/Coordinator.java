@@ -29,9 +29,9 @@ import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.Bash;
+import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -55,6 +55,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -62,7 +63,6 @@ import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -92,7 +92,6 @@ public final class Coordinator {
     private final Bash bash;
 
     private final ClusterLayout clusterLayout;
-    private final HazelcastJARs hazelcastJARs;
     private final TestPhase lastTestPhaseToSync;
 
     private RemoteClient remoteClient;
@@ -128,7 +127,6 @@ public final class Coordinator {
         this.bash = new Bash(simulatorProperties);
 
         this.clusterLayout = clusterLayout;
-        this.hazelcastJARs = HazelcastJARs.newInstance(bash, simulatorProperties, clusterLayout.getVersionSpecs());
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
 
         logConfiguration();
@@ -219,8 +217,6 @@ public final class Coordinator {
                 }
             }
         } finally {
-            hazelcastJARs.shutdown();
-
             if (isPrePhaseDone) {
                 download();
                 executeAfterCompletion();
@@ -239,21 +235,26 @@ public final class Coordinator {
     }
 
     void uploadFiles() {
-        if (isLocal(simulatorProperties) && !simulatorProperties.getHazelcastVersionSpec().equals(OUT_OF_THE_BOX)) {
-            throw new CommandLineExitException("Local mode doesn't support custom Hazelcast versions!");
+        StringBuilder agentPublicIps = new StringBuilder();
+        if (!isLocal(simulatorProperties)) {
+            List<AgentData> agents = componentRegistry.getAgents();
+            for (AgentData agentData : agents) {
+                agentPublicIps.append(agentData.getPublicAddress()).append(',');
+            }
         }
 
-        Uploader uploader = new Uploader(
-                isLocal(simulatorProperties),
-                bash,
-                componentRegistry,
-                clusterLayout,
-                hazelcastJARs,
-                coordinatorParameters.isUploadHazelcastJARs(),
-                coordinatorParameters.isEnterpriseEnabled(),
-                coordinatorParameters.getWorkerClassPath(),
-                testSuite.getId());
-        uploader.run();
+        String vendor = simulatorProperties.get("VENDOR");
+        String installFile = getConfigurationFile("install-" + vendor + ".sh").getPath();
+
+        for (String versionSpec : clusterLayout.getVersionSpecs()) {
+            LOGGER.info("Installing '" + vendor + "' '" + versionSpec + "' on Agents using " + installFile);
+            new BashCommand(installFile)
+                    .addParams(testSuite.getId(), agentPublicIps.toString(), versionSpec)
+                    .addEnvironment(simulatorProperties.asMap())
+                    .execute();
+
+            LOGGER.info("Successfully installed '" + vendor + "'");
+        }
     }
 
     private void startCoordinatorConnector() {

@@ -20,7 +20,6 @@ public class CoordinatorParametersTest {
                 properties,
                 "workerClassPath",
                 false,
-                true,
                 false,
                 true,
                 false,
@@ -34,7 +33,6 @@ public class CoordinatorParametersTest {
         assertEquals(properties, coordinatorParameters.getSimulatorProperties());
         assertEquals("workerClassPath", coordinatorParameters.getWorkerClassPath());
         assertFalse(coordinatorParameters.isUploadHazelcastJARs());
-        assertTrue(coordinatorParameters.isEnterpriseEnabled());
         assertFalse(coordinatorParameters.isVerifyEnabled());
         assertTrue(coordinatorParameters.isParallel());
         assertFalse(coordinatorParameters.isRefreshJvm());

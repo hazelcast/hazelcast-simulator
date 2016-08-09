@@ -223,7 +223,7 @@ public class AgentSmokeTest implements FailureListener {
                 fileAsText("simulator/src/test/resources/hazelcast.xml"),
                 "",
                 fileAsText("dist/src/main/dist/conf/worker-log4j.xml"),
-                fileAsText("dist/src/main/dist/conf/worker.sh"),
+                fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"),
                 false
         );
         ClusterLayout clusterLayout = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);

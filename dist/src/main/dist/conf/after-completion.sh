@@ -11,6 +11,9 @@
 # exit on failure
 set -e
 
+# Printing the command being executed (useful for debugging)
+#set -x
+
 dir=$1
 if [ ! -d "${dir}" ]; then
     echo Directory $dir does not exist. Exiting silently.

@@ -18,7 +18,6 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
-import com.hazelcast.simulator.utils.jars.HazelcastJARs;
 import com.hazelcast.simulator.worker.WorkerType;
 import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
@@ -182,8 +181,8 @@ public class AgentOperationProcessorTest {
         when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
         when(workerProcessSettings.getHazelcastConfig()).thenReturn("");
         when(workerProcessSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        when(workerProcessSettings.getWorkerScript()).thenReturn(withStartupException ? null : fileAsText("dist/src/main/dist/conf/worker.sh"));
-        when(workerProcessSettings.getHazelcastVersionSpec()).thenReturn(HazelcastJARs.BRING_MY_OWN);
+        when(workerProcessSettings.getWorkerScript()).thenReturn(withStartupException ? null : fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"));
+        when(workerProcessSettings.getHazelcastVersionSpec()).thenReturn("bringmyown");
         when(workerProcessSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
         when(workerProcessSettings.getJvmOptions()).thenReturn("-verbose:gc");
 

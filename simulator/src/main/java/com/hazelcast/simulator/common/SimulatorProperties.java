@@ -21,6 +21,8 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -28,7 +30,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
@@ -60,6 +61,15 @@ public class SimulatorProperties {
         LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, propertiesFile.getAbsolutePath()));
         check(propertiesFile);
         load(propertiesFile);
+    }
+
+    public Map<String, String> asMap() {
+        Map<String, String> map = new HashMap<String, String>();
+        for (Map.Entry entry : properties.entrySet()) {
+            String key = (String) entry.getKey();
+            map.put(key, get(key));
+        }
+        return map;
     }
 
     /**
@@ -124,7 +134,7 @@ public class SimulatorProperties {
     }
 
     public String getHazelcastVersionSpec() {
-        return get("HAZELCAST_VERSION_SPEC", OUT_OF_THE_BOX);
+        return get("VERSION_SPEC", "outofthebox");
     }
 
     public int getWorkerPingIntervalSeconds() {

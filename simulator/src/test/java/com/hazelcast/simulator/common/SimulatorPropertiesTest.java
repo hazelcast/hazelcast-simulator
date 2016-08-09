@@ -16,7 +16,6 @@ import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -149,7 +148,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGetHazelcastVersionSpec() {
-        assertEquals(OUT_OF_THE_BOX, simulatorProperties.getHazelcastVersionSpec());
+        assertEquals("outofthebox", simulatorProperties.getHazelcastVersionSpec());
     }
 
     @Test

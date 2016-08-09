@@ -4,7 +4,6 @@ import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,8 +15,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDi
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.BRING_MY_OWN;
-import static com.hazelcast.simulator.utils.jars.HazelcastJARs.OUT_OF_THE_BOX;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +55,7 @@ public class CoordinatorTest {
     @Test
     public void testRun() {
         when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
-        when(properties.getHazelcastVersionSpec()).thenReturn(OUT_OF_THE_BOX);
+        when(properties.getHazelcastVersionSpec()).thenReturn("outofthebox");
 
         coordinator.run();
     }
@@ -73,15 +70,7 @@ public class CoordinatorTest {
     @Test
     public void testUploadFiles_whenLocalMode_thenReturn() {
         when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
-        when(properties.getHazelcastVersionSpec()).thenReturn(OUT_OF_THE_BOX);
-
-        coordinator.uploadFiles();
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testUploadFiles_whenLocalModeAndVersionSpec_thenThrowException() {
-        when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
-        when(properties.getHazelcastVersionSpec()).thenReturn(BRING_MY_OWN);
+        when(properties.getHazelcastVersionSpec()).thenReturn("outofthebox");
 
         coordinator.uploadFiles();
     }

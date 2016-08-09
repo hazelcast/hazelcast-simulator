@@ -42,10 +42,10 @@ import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzC
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
@@ -71,7 +71,6 @@ final class CoordinatorCli {
     private final OptionSpec<String> warmupDurationSpec = parser.accepts("warmupDuration",
             "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_WARMUP_DURATION_SECONDS));
-
 
     private final OptionSpec waitForTestCaseSpec = parser.accepts("waitForTestCaseCompletion",
             "Wait for the TestCase to finish its RUN phase. Can be combined with --duration to limit runtime.");
@@ -175,10 +174,6 @@ final class CoordinatorCli {
             "Defines if the Hazelcast JARs should be uploaded.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-    private final OptionSpec<Boolean> enterpriseEnabledSpec = parser.accepts("enterpriseEnabled",
-            "Use JARs of Hazelcast Enterprise Edition.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
             "Sets the license key for Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(String.class);
@@ -187,15 +182,6 @@ final class CoordinatorCli {
             "Prevents downloading of the created worker artifacts.");
 
     private CoordinatorCli() {
-    }
-
-    private static String getDefaultConfigurationFile(String filename) {
-        File file = new File(filename).getAbsoluteFile();
-        if (file.exists()) {
-            return file.getAbsolutePath();
-        } else {
-            return newFile(getSimulatorHome(), "conf", filename).getAbsolutePath();
-        }
     }
 
     static Coordinator init(String[] args) {
@@ -214,7 +200,6 @@ final class CoordinatorCli {
                 simulatorProperties,
                 options.valueOf(cli.workerClassPathSpec),
                 options.valueOf(cli.uploadHazelcastJARsSpec),
-                options.valueOf(cli.enterpriseEnabledSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.workerRefreshSpec),
@@ -223,7 +208,7 @@ final class CoordinatorCli {
                 options.valueOf(cli.syncToTestPhaseSpec),
                 options.valueOf(cli.workerVmStartupDelayMsSpec),
                 options.has(cli.skipDownloadSpec),
-                getDefaultConfigurationFile("after-completion.sh")
+                getConfigurationFile("after-completion.sh").getAbsolutePath()
         );
 
         int defaultHzPort = simulatorProperties.getHazelcastPort();
@@ -238,7 +223,7 @@ final class CoordinatorCli {
                 initMemberHzConfig(loadMemberHzConfig(), componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
                 initClientHzConfig(loadClientHzConfig(), componentRegistry, defaultHzPort, licenseKey),
                 loadLog4jConfig(),
-                loadWorkerScript(),
+                loadWorkerScript(simulatorProperties.get("VENDOR")),
                 options.has(cli.monitorPerformanceSpec)
         );
 
@@ -325,19 +310,19 @@ final class CoordinatorCli {
     }
 
     private static String loadMemberHzConfig() {
-        File file = new File(getDefaultConfigurationFile("hazelcast.xml"));
+        File file = getConfigurationFile("hazelcast.xml");
         LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
-    private static String loadWorkerScript() {
-        File file = new File(getDefaultConfigurationFile("worker.sh"));
+    private static String loadWorkerScript(String vendor) {
+        File file = getConfigurationFile("worker-" + vendor + ".sh");
         LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
     private static String loadClientHzConfig() {
-        File file = new File(getDefaultConfigurationFile("client-hazelcast.xml"));
+        File file = getConfigurationFile("client-hazelcast.xml");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
