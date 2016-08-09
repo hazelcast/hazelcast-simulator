@@ -14,6 +14,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
 public class TestEnvironmentUtils {
@@ -68,11 +69,11 @@ public class TestEnvironmentUtils {
     }
 
     public static void setDistributionUserDir() {
-        originalUserDir = System.getProperty("user.dir");
+        originalUserDir = getUserDir().getAbsolutePath();
         System.setProperty("user.dir", originalUserDir + "/dist/src/main/dist");
 
         LOGGER.info("original userDir: " + originalUserDir);
-        LOGGER.info("actual userDir: " + System.getProperty("user.dir"));
+        LOGGER.info("actual userDir: " + getUserDir().getAbsolutePath());
         LOGGER.info("SIMULATOR_HOME: " + getSimulatorHome().getAbsolutePath());
     }
 
@@ -155,5 +156,20 @@ public class TestEnvironmentUtils {
             deleteQuiet(i + ".exception");
         }
         ExceptionReporter.reset();
+    }
+
+    public static void deleteGeneratedRunners() {
+        File[] files = getUserDir().listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            String name = file.getName();
+            if (name.endsWith(".java") || name.endsWith(".class")) {
+                if (name.contains("Runner")) {
+                    deleteQuiet(file);
+                }
+            }
+        }
     }
 }

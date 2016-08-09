@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.TestSupport.deleteGeneratedRunners;
+import static com.hazelcast.simulator.TestEnvironmentUtils.deleteGeneratedRunners;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
 import static com.hazelcast.simulator.testcontainer.TestPhase.SETUP;
