@@ -14,7 +14,6 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.getField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue0;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getFields;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFirstField;
 import static com.hazelcast.simulator.utils.ReflectionUtils.getMethodByName;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokeMethod;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -31,19 +30,6 @@ public class ReflectionUtilsTest {
     @Test
     public void testConstructor() throws Exception {
         invokePrivateConstructor(ReflectionUtils.class);
-    }
-
-    @Test
-    public void testGetFirstField() {
-        Field field = getFirstField(GetFieldByAnnotationTest.class, InjectTest.class);
-        assertNotNull(field);
-        assertEquals("firstField", field.getName());
-    }
-
-    @Test
-    public void testGetFirstField_notFound() {
-        Field field = getFirstField(GetFieldTest.class, InjectTest.class);
-        assertNull(field);
     }
 
     @Test
