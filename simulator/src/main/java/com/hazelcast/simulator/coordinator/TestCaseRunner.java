@@ -95,27 +95,35 @@ final class TestCaseRunner implements TestPhaseListener {
     private final int logPerformanceIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
 
-    TestCaseRunner(int testIndex, TestCase testCase, Coordinator coordinator, int paddingLength,
-                   Map<TestPhase, CountDownLatch> testPhaseSyncMap) {
+    @SuppressWarnings("checkstyle:parameternumber")
+    TestCaseRunner(int testIndex,
+                   TestCase testCase,
+                   TestSuite testSuite,
+                   RemoteClient remoteClient,
+                   int paddingLength,
+                   Map<TestPhase, CountDownLatch> testPhaseSyncMap,
+                   FailureContainer failureContainer,
+                   ComponentRegistry componentRegistry,
+                   CoordinatorParameters coordinatorParameters,
+                   WorkerParameters workerParameters,
+                   PerformanceStatsContainer performanceStatsContainer) {
         this.testIndex = testIndex;
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
-        this.testSuite = coordinator.getTestSuite();
+        this.testSuite = testSuite;
 
-        this.remoteClient = coordinator.getRemoteClient();
-        this.failureContainer = coordinator.getFailureContainer();
-        this.performanceStatsContainer = coordinator.getPerformanceStatsContainer();
-        this.componentRegistry = coordinator.getComponentRegistry();
+        this.remoteClient = remoteClient;
+        this.failureContainer = failureContainer;
+        this.performanceStatsContainer = performanceStatsContainer;
+        this.componentRegistry = componentRegistry;
 
         this.prefix = padRight(testCaseId, paddingLength + 1);
         this.testPhaseSyncMap = testPhaseSyncMap;
 
-        CoordinatorParameters coordinatorParameters = coordinator.getCoordinatorParameters();
         this.isVerifyEnabled = coordinatorParameters.isVerifyEnabled();
         this.targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
         this.targetCount = coordinatorParameters.getTargetCount();
 
-        WorkerParameters workerParameters = coordinator.getWorkerParameters();
         this.monitorPerformance = workerParameters.isMonitorPerformance();
         this.logPerformanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
         this.logRunPhaseIntervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(RUN_PHASE_LOG_INTERVAL_SECONDS);
