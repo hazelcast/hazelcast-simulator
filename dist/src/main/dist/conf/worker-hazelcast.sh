@@ -3,8 +3,6 @@
 # Script to start up a Simulator Worker. To customize the behavior of the worker, including Java configuration,
 # copy this file into the 'work dir' of simulator. See the end of this file for examples for different profilers.
 #
-# External variables have a @ symbol in front to distinguish them from regular bash variables.
-#
 
 # Automatic exit on script failure.
 set -e
@@ -16,33 +14,34 @@ set -e
 exec > worker.out
 exec 2>worker.err
 
+echo $LOG4j_CONFIG>log4j.xml
+echo $HAZELCAST_CONFIG>hazelcast.xml
+
 JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
           -Dhazelcast.logging.type=log4j \
-          -Dlog4j.configuration=file:@LOG4J_FILE \
-          -DSIMULATOR_HOME=@SIMULATOR_HOME \
-          -DpublicAddress=@PUBLIC_ADDRESS \
-          -DagentIndex=@AGENT_INDEX \
-          -DworkerType=@WORKER_TYPE \
-          -DworkerId=@WORKER_ID \
-          -DworkerIndex=@WORKER_INDEX \
-          -DworkerPort=@WORKER_PORT \
-          -DworkerPerformanceMonitorIntervalSeconds=@WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS \
-          -DautoCreateHzInstance=@AUTO_CREATE_HZ_INSTANCE \
-          -DhzConfigFile=@HZ_CONFIG_FILE"
+          -Dlog4j.configuration=file:log4j.xml \
+          -DSIMULATOR_HOME=$SIMULATOR_HOME \
+          -DpublicAddress=$PUBLIC_ADDRESS \
+          -DagentIndex=$AGENT_INDEX \
+          -DworkerType=$WORKER_TYPE \
+          -DworkerId=$WORKER_ID \
+          -DworkerIndex=$WORKER_INDEX \
+          -DworkerPort=$WORKER_PORT \
+          -DworkerPerformanceMonitorIntervalSeconds=$WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS \
+          -DautoCreateHzInstance=$AUTOCREATE_HAZELCAST_INSTANCE \
+          -DhzConfigFile=hazelcast.xml"
 
 # Include the member/client-worker jvm options
-JVM_ARGS="@JVM_OPTIONS ${JVM_ARGS}"
-
-CLASSPATH=@CLASSPATH
+JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
 
 MAIN=
-case "@WORKER_TYPE" in
-    CLIENT )        MAIN=com.hazelcast.simulator.worker.ClientWorker;;
-    MEMBER )        MAIN=com.hazelcast.simulator.worker.MemberWorker;;
-    INTEGRATION_TEST )   MAIN=com.hazelcast.simulator.worker.IntegrationTestWorker;;
+case "$WORKER_TYPE" in
+    CLIENT )            MAIN=com.hazelcast.simulator.worker.ClientWorker;;
+    MEMBER )            MAIN=com.hazelcast.simulator.worker.MemberWorker;;
+    INTEGRATION_TEST )  MAIN=com.hazelcast.simulator.worker.IntegrationTestWorker;;
 esac
 
-java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+java -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 
 #########################################################################
