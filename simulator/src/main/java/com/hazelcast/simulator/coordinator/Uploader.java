@@ -36,6 +36,7 @@ import static com.hazelcast.simulator.utils.FileUtils.copyFileToDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
@@ -46,7 +47,7 @@ import static java.lang.String.format;
  */
 class Uploader {
 
-    private static final File WORKING_DIRECTORY = new File(System.getProperty("user.dir"));
+    private static final File WORKING_DIRECTORY = getUserDir();
     private static final File UPLOAD_DIRECTORY = new File(WORKING_DIRECTORY, "upload");
 
     private static final Logger LOGGER = Logger.getLogger(Uploader.class);

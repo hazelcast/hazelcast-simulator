@@ -56,6 +56,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
@@ -113,7 +114,7 @@ public final class Coordinator {
                 ClusterLayoutParameters clusterLayoutParameters,
                 ClusterLayout clusterLayout) {
 
-        this.outputDirectory = ensureExistingDirectory(new File(System.getProperty("user.dir"), testSuite.getId()));
+        this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), testSuite.getId()));
 
         this.testSuite = testSuite;
         this.componentRegistry = componentRegistry;

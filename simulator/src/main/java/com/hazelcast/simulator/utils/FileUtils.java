@@ -330,9 +330,13 @@ public final class FileUtils {
         }
     }
 
+    public static File getUserDir() {
+        return new File(System.getProperty("user.dir"));
+    }
+
     public static File getSimulatorHome() {
         String home = System.getenv("SIMULATOR_HOME");
-        return new File((home != null) ? home : System.getProperty("user.dir"));
+        return (home != null) ? new File(home) : getUserDir();
     }
 
     /**

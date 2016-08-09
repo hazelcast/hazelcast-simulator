@@ -25,6 +25,7 @@ import joptsimple.OptionSpec;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.wizard.WizardUtils.getProfileFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getSimulatorPath;
 import static java.lang.String.format;
@@ -74,7 +75,7 @@ final class WizardCli {
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
         if (options.has(cli.installSpec)) {
-            String homeDir = System.getProperty("user.dir");
+            String homeDir = getUserDir().getAbsolutePath();
             wizard.install(getSimulatorPath(), getProfileFile(homeDir));
         } else if (options.has(cli.createWorkDirSpec)) {
             SimulatorProperties simulatorProperties = getSimulatorProperties(false);
