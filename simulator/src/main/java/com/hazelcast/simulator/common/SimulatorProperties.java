@@ -35,7 +35,7 @@ import static java.lang.String.format;
 
 /**
  * Loads the Hazelcast Simulator properties file.
- * <p>
+ *
  * This class will always load the properties in the <tt>${SIMULATOR_HOME}/conf/simulator.properties</tt> as defaults. If an
  * explicit {$value #PROPERTIES_FILE_NAME} file is configured or {$value #PROPERTIES_FILE_NAME} is available in the working dir,
  * it will override the properties from the default.
