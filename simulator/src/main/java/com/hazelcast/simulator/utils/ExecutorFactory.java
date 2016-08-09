@@ -35,16 +35,8 @@ public final class ExecutorFactory {
         return Executors.newFixedThreadPool(poolSize, createThreadFactory(namePrefix));
     }
 
-    public static ExecutorService createCachedThreadPool(Class classType) {
-        return createCachedThreadPool(getName(classType));
-    }
-
     public static ExecutorService createCachedThreadPool(String namePrefix) {
         return Executors.newCachedThreadPool(createThreadFactory(namePrefix));
-    }
-
-    public static ScheduledExecutorService createScheduledThreadPool(int poolSize, Class classType) {
-        return createScheduledThreadPool(poolSize, getName(classType));
     }
 
     public static ScheduledExecutorService createScheduledThreadPool(int poolSize, String namePrefix) {

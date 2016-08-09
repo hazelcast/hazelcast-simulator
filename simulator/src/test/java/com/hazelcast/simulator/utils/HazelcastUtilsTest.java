@@ -36,7 +36,7 @@ public class HazelcastUtilsTest {
     private static final int DELAY_SECONDS = 1;
     private static final InetSocketAddress SOCKET_ADDRESS = new InetSocketAddress("127.0.0.1", 5701);
 
-    private static final ScheduledExecutorService executor = createScheduledThreadPool(1, HazelcastUtilsTest.class);
+    private static final ScheduledExecutorService executor = createScheduledThreadPool(1, HazelcastUtilsTest.class.getName());
 
     private HazelcastInstance hazelcastInstance;
 

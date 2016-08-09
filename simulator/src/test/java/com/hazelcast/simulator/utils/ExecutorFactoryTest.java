@@ -9,7 +9,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.utils.ExecutorFactory.createCachedThreadPool;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
@@ -39,25 +38,6 @@ public class ExecutorFactoryTest {
         assertNotNull(executorService);
 
         Future<Boolean> future = executorService.submit(new ExecutorCallable());
-        assertTrue(future.get());
-    }
-
-    @Test
-    public void testCachedThreadPool() throws Exception {
-        executorService = createCachedThreadPool(ExecutorFactoryTest.class);
-        assertNotNull(executorService);
-
-        Future<Boolean> future = executorService.submit(new ExecutorCallable());
-        assertTrue(future.get());
-    }
-
-    @Test
-    public void testScheduledThreadPool() throws Exception {
-        ScheduledExecutorService scheduledExecutorService = createScheduledThreadPool(1, ExecutorFactoryTest.class);
-        executorService = scheduledExecutorService;
-        assertNotNull(scheduledExecutorService);
-
-        Future<Boolean> future = scheduledExecutorService.schedule(new ExecutorCallable(), 500, TimeUnit.MILLISECONDS);
         assertTrue(future.get());
     }
 
