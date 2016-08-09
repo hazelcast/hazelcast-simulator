@@ -23,8 +23,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecur
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
 import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
