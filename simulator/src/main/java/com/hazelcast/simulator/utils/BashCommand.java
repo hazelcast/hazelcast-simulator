@@ -33,26 +33,27 @@ import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 
 public class BashCommand {
     private static final Logger LOGGER = Logger.getLogger(BashCommand.class);
 
     private final String command;
     private final List<Object> params = new LinkedList<Object>();
-    private Map<String, Object> environment = new HashMap<String, Object>();
+    private Map<String,  Object> environment = new HashMap<String, Object>();
     private boolean throwException;
 
     public BashCommand(String command) {
         this.command = checkNotNull(command, "command can't be null");
     }
 
-    public BashCommand addParam(Object param) {
-        params.add(checkNotNull(param, "param can't be null"));
+    public BashCommand addParams(Object... param) {
+        params.addAll(asList(param));
         return this;
     }
 
-    public BashCommand setEnvironment(Map<String, Object> environment) {
-        this.environment = checkNotNull(environment, "environment can't be null");
+    public BashCommand addEnvironment(Map<String, ? extends Object> environment) {
+        this.environment.putAll(environment);
         return this;
     }
 
