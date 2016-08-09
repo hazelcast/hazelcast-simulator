@@ -34,8 +34,8 @@
 . $SIMULATOR_HOME/conf/install-hazelcast-support.sh
 
 testsuite_id=$1
-public_ips=$2
-version_spec=$3
+version_spec=$2
+public_ips=$3
 
 # building of hazelcast using mvn/git if needed
 prepare()
