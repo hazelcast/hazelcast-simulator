@@ -114,6 +114,6 @@ public class HdrProbeTest {
         probe.recordValue(2);
         probe.recordValue(3);
 
-        assertEquals(3, probe.get());
+        assertEquals(3, probe.getIntervalHistogram().getTotalCount());
     }
 }

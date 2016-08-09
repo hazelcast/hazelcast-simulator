@@ -75,8 +75,4 @@ public class HdrProbe implements Probe {
     public Histogram getIntervalHistogram() {
         return recorder.getIntervalHistogram();
     }
-
-    public long get() {
-        return getIntervalHistogram().getTotalCount();
-    }
 }

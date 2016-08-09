@@ -169,7 +169,7 @@ public class TestContainer_RunTest extends AbstractTestContainerTest {
         long totalCount = 0;
         for (Probe probe : probeMap.values()) {
             HdrProbe hdrProbe = (HdrProbe)probe;
-            totalCount += hdrProbe.get();
+            totalCount += hdrProbe.getIntervalHistogram().getTotalCount();
         }
         assertEquals(THREAD_COUNT * ITERATION_COUNT, totalCount);
     }
