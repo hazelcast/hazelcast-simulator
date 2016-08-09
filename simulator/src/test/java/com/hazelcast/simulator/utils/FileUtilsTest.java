@@ -30,7 +30,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
 import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
 import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
-import static com.hazelcast.simulator.utils.FileUtils.getText;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
@@ -160,18 +159,6 @@ public class FileUtilsTest {
     @Test(expected = UncheckedIOException.class)
     public void testAppendText_withInvalidFilename() {
         appendText("ignored", INVALID_FILE);
-    }
-
-    @Test
-    public void testGetText() throws Exception {
-        String fileContent = getText(EXAMPLE_FILE.toURI().toURL().toExternalForm());
-
-        assertEquals(EXAMPLE_CONTENT, fileContent);
-    }
-
-    @Test(expected = UncheckedIOException.class)
-    public void testGetText_fileNotFound() throws Exception {
-        getText(FILE_NOT_FOUND.toURI().toURL().toExternalForm());
     }
 
     @Test

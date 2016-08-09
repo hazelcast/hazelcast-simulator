@@ -142,32 +142,6 @@ public final class FileUtils {
         }
     }
 
-    public static String getText(String url) {
-        try {
-            URL website = new URL(url);
-            URLConnection connection = website.openConnection();
-
-            InputStreamReader streamReader = null;
-            BufferedReader reader = null;
-            try {
-                streamReader = new InputStreamReader(connection.getInputStream());
-                reader = new BufferedReader(streamReader);
-
-                StringBuilder response = new StringBuilder();
-                String inputLine;
-                while ((inputLine = reader.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                return response.toString();
-            } finally {
-                closeQuietly(reader);
-                closeQuietly(streamReader);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
     public static String getResourceFile(String fileName) {
         try {
             URL url = Resources.getResource(fileName);
