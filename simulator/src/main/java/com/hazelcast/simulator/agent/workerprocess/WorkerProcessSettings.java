@@ -18,6 +18,9 @@ package com.hazelcast.simulator.agent.workerprocess;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.worker.WorkerType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 
 /**
@@ -71,6 +74,15 @@ public class WorkerProcessSettings {
 
     public int getWorkerIndex() {
         return workerIndex;
+    }
+
+    public Map<String, String> getEnvironment() {
+        Map<String, String> environment = new HashMap<String, String>();
+        environment.put("HAZELCAST_CONFIG", hazelcastConfig);
+        environment.put("LOG4j_CONFIG", log4jConfig);
+        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", Boolean.toString(autoCreateHzInstance));
+        environment.put("JVM_OPTIONS", jvmOptions);
+        return environment;
     }
 
     public WorkerType getWorkerType() {

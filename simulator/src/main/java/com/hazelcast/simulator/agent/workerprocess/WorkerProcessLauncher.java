@@ -31,7 +31,6 @@ import static com.hazelcast.simulator.utils.BuildInfoUtils.getHazelcastVersionFr
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -58,8 +57,6 @@ public class WorkerProcessLauncher {
     private final WorkerProcessManager workerProcessManager;
     private final WorkerProcessSettings workerProcessSettings;
 
-    private File hzConfigFile;
-    private File log4jFile;
     private File testSuiteDir;
 
     public WorkerProcessLauncher(Agent agent, WorkerProcessManager workerProcessManager,
@@ -109,13 +106,6 @@ public class WorkerProcessLauncher {
 
         copyResourcesToWorkerHome(workerId);
 
-        String hzConfigFileName = (type == WorkerType.MEMBER) ? "hazelcast" : "client-hazelcast";
-        hzConfigFile = ensureExistingFile(workerHome, hzConfigFileName + ".xml");
-        writeText(workerProcessSettings.getHazelcastConfig(), hzConfigFile);
-
-        log4jFile = ensureExistingFile(workerHome, "log4j.xml");
-        writeText(workerProcessSettings.getLog4jConfig(), log4jFile);
-
         WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerId, workerHome);
 
         generateWorkerStartScript(workerProcess);
@@ -128,6 +118,17 @@ public class WorkerProcessLauncher {
         String path = javaHome + "/bin:" + environment.get("PATH");
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
+        environment.putAll(workerProcessSettings.getEnvironment());
+        environment.put("CLASSPATH", getClasspath());
+        environment.put("SIMULATOR_HOME", getSimulatorHome().getAbsolutePath());
+        environment.put("WORKER_ID", workerProcess.getId());
+        environment.put("WORKER_TYPE", workerProcessSettings.getWorkerType().toString());
+        environment.put("PUBLIC_ADDRESS", agent.getPublicAddress());
+        environment.put("AGENT_INDEX", Integer.toString(agent.getAddressIndex()));
+        environment.put("WORKER_INDEX", Integer.toString(workerProcessSettings.getWorkerIndex()));
+        environment.put("WORKER_PORT", Integer.toString(agent.getPort() + workerProcessSettings.getWorkerIndex()));
+        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(workerProcessSettings.getPerformanceMonitorIntervalSeconds()));
 
         Process process = processBuilder.start();
 
@@ -171,28 +172,8 @@ public class WorkerProcessLauncher {
 
     private void generateWorkerStartScript(WorkerProcess workerProcess) {
         File startScript = new File(workerProcess.getWorkerHome(), "worker.sh");
-
         String script = workerProcessSettings.getWorkerScript();
-        script = replaceAll(script, "CLASSPATH", getClasspath());
-        script = replaceAll(script, "JVM_OPTIONS", workerProcessSettings.getJvmOptions());
-        script = replaceAll(script, "LOG4J_FILE", log4jFile.getAbsolutePath());
-        script = replaceAll(script, "SIMULATOR_HOME", getSimulatorHome());
-        script = replaceAll(script, "WORKER_ID", workerProcess.getId());
-        script = replaceAll(script, "WORKER_TYPE", workerProcessSettings.getWorkerType());
-        script = replaceAll(script, "PUBLIC_ADDRESS", agent.getPublicAddress());
-        script = replaceAll(script, "AGENT_INDEX", agent.getAddressIndex());
-        script = replaceAll(script, "WORKER_INDEX", workerProcessSettings.getWorkerIndex());
-        script = replaceAll(script, "WORKER_PORT", agent.getPort() + workerProcessSettings.getWorkerIndex());
-        script = replaceAll(script, "AUTO_CREATE_HZ_INSTANCE", workerProcessSettings.isAutoCreateHzInstance());
-        script = replaceAll(script, "WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                workerProcessSettings.getPerformanceMonitorIntervalSeconds());
-        script = replaceAll(script, "HZ_CONFIG_FILE", hzConfigFile.getAbsolutePath());
-
         writeText(script, startScript);
-    }
-
-    private String replaceAll(String script, String variable, Object value) {
-        return script.replaceAll("@" + variable, "" + value);
     }
 
     private void copyResourcesToWorkerHome(String workerId) {
