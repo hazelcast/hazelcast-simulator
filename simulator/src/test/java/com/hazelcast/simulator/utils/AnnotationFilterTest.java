@@ -11,19 +11,9 @@ import org.junit.Test;
 
 import java.lang.reflect.Method;
 
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.ALWAYS_FILTER;
 import static org.junit.Assert.assertEquals;
 
 public class AnnotationFilterTest {
-
-    @Test
-    public void testAlwaysFilter() {
-        Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Setup.class)
-                .withVoidReturnType()
-                .withFilter(ALWAYS_FILTER)
-                .find();
-        assertEquals("setupMethod", method.getName());
-    }
 
     @Test
     public void testLocalTeardownFilter() {

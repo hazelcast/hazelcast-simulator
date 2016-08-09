@@ -11,7 +11,6 @@ import org.junit.Test;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.ALWAYS_FILTER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -38,7 +37,6 @@ public class AnnotatedMethodRetrieverTest {
     @Test
     public void testGetAtMostOneVoidMethodWithoutArgs_AnnotationFilter() {
         Method method = new AnnotatedMethodRetriever(AnnotationTestClass.class, Prepare.class)
-                .withFilter(ALWAYS_FILTER)
                 .withVoidReturnType()
                 .withoutArgs()
                 .find();
