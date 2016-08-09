@@ -26,15 +26,6 @@ public interface ExceptionLogger {
     int MAX_EXCEPTION_COUNT = 1000;
 
     /**
-     * Returns the number of log method invocations.
-     *
-     * This value can be higher than {@value #MAX_EXCEPTION_COUNT}.
-     *
-     * @return the log invocation count.
-     */
-    long getLogInvocationCount();
-
-    /**
      * Logs an exception.
      *
      * @param cause the {@link Throwable} that should be logged.
