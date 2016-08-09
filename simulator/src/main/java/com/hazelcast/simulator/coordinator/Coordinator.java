@@ -249,7 +249,7 @@ public final class Coordinator {
         for (String versionSpec : clusterLayout.getVersionSpecs()) {
             LOGGER.info("Installing '" + vendor + "' '" + versionSpec + "' on Agents using " + installFile);
             new BashCommand(installFile)
-                    .addParams(testSuite.getId(), agentPublicIps.toString(), versionSpec)
+                    .addParams(testSuite.getId(), versionSpec, agentPublicIps.toString())
                     .addEnvironment(simulatorProperties.asMap())
                     .execute();
 
