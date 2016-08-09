@@ -138,18 +138,6 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
-    public void testForceGit_null() {
-        simulatorProperties.forceGit(null);
-    }
-
-    @Test
-    public void testForceGit() {
-        simulatorProperties.forceGit("hazelcast/master");
-
-        assertEquals("git=hazelcast/master", simulatorProperties.getHazelcastVersionSpec());
-    }
-
-    @Test
     public void testGetSshOptions() {
         assertNotNull(simulatorProperties.getSshOptions());
     }
