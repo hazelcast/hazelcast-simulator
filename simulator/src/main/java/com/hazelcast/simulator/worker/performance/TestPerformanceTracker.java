@@ -18,7 +18,6 @@ package com.hazelcast.simulator.worker.performance;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import org.HdrHistogram.Histogram;
-import org.HdrHistogram.HistogramLogReader;
 import org.HdrHistogram.HistogramLogWriter;
 
 import java.io.File;
@@ -171,15 +170,6 @@ final class TestPerformanceTracker {
             return histogramLogWriter;
         } catch (IOException e) {
             throw new TestException("Could not initialize HistogramLogWriter for test " + testId, e);
-        }
-    }
-
-    static HistogramLogReader createHistogramLogReader(String testName, String probeName) {
-        try {
-            File latencyFile = getLatencyFile(testName, probeName);
-            return new HistogramLogReader(latencyFile);
-        } catch (IOException e) {
-            throw new TestException("Could not initialize HistogramLogReader for test " + testName, e);
         }
     }
 

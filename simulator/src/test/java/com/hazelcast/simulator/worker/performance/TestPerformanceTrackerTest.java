@@ -9,9 +9,4 @@ public class TestPerformanceTrackerTest {
     public void testCreateHistogramLogWriter_withInvalidFilename() {
         TestPerformanceTracker.createHistogramLogWriter("invalidFileName", ":\\//", System.currentTimeMillis());
     }
-
-    @Test(expected = TestException.class)
-    public void testCreateHistogramLogReader_withInvalidFilename() {
-        TestPerformanceTracker.createHistogramLogReader("invalidFileName", ":\\//");
-    }
 }
