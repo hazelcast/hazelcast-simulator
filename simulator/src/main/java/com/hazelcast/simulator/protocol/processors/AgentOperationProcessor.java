@@ -42,9 +42,12 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
+import static org.apache.log4j.Level.DEBUG;
+import static org.apache.log4j.Level.FATAL;
 
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Agent.
@@ -57,7 +60,9 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
     private final WorkerProcessManager workerProcessManager;
     private final ScheduledExecutorService executorService;
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger, Agent agent, WorkerProcessManager workerProcessManager,
+    public AgentOperationProcessor(ExceptionLogger exceptionLogger,
+                                   Agent agent,
+                                   WorkerProcessManager workerProcessManager,
                                    ScheduledExecutorService executorService) {
         super(exceptionLogger);
         this.agent = agent;
@@ -107,12 +112,12 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 return response.getFirstErrorResponseType();
             case DEEP_NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync deep nested integration test message");
-                response = agent.getAgentConnector().write(SimulatorAddress.COORDINATOR, nestedOperation);
+                response = agent.getAgentConnector().write(COORDINATOR, nestedOperation);
                 LOGGER.debug("Got response for sync deep nested message: " + response);
                 return response.getFirstErrorResponseType();
             case DEEP_NESTED_ASYNC:
                 nestedOperation = new LogOperation("Sync deep nested integration test message");
-                future = agent.getAgentConnector().submit(SimulatorAddress.COORDINATOR, nestedOperation);
+                future = agent.getAgentConnector().submit(COORDINATOR, nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async deep nested message: " + response);
                 return response.getFirstErrorResponseType();
@@ -174,12 +179,16 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 SimulatorAddress workerAddress = agent.getAgentConnector().addWorker(workerIndex, "127.0.0.1", workerPort);
 
                 WorkerType workerType = workerProcessSettings.getWorkerType();
-                agent.getCoordinatorLogger().debug(format("Created %s Worker %s", workerType, workerAddress));
+
+                LogOperation logOperation = new LogOperation(format("Created %s Worker %s", workerType, workerAddress), DEBUG);
+                agent.getAgentConnector().submit(COORDINATOR, logOperation);
 
                 return true;
             } catch (Exception e) {
                 LOGGER.error("Failed to start Worker", e);
-                agent.getCoordinatorLogger().fatal("Failed to start Worker: " + e.getMessage());
+
+                LogOperation logOperation = new LogOperation("Failed to start Worker: " + e.getMessage(), FATAL);
+                agent.getAgentConnector().submit(COORDINATOR, logOperation);
 
                 return false;
             }
