@@ -31,14 +31,6 @@ public final class ReflectionUtils {
     private ReflectionUtils() {
     }
 
-    public static Field getFirstField(Class classType, Class<? extends Annotation> annotationClass) {
-        List<Field> fields = getFields(classType, annotationClass);
-        if (fields.isEmpty()) {
-            return null;
-        }
-        return fields.get(0);
-    }
-
     public static List<Field> getFields(Class classType, Class<? extends Annotation> annotationClass) {
         List<Field> fields = new ArrayList<Field>();
         do {
