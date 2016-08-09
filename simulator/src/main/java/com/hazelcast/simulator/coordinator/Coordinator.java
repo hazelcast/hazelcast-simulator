@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.agent.workerprocess.WorkerProcessLauncher.WORKERS_HOME_NAME;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
@@ -46,7 +45,6 @@ import static com.hazelcast.simulator.testcontainer.TestPhase.getTestPhaseSyncMa
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -55,11 +53,8 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
-import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -219,7 +214,9 @@ public final class Coordinator {
             }
         } finally {
             if (isPrePhaseDone) {
-                download();
+                if (!coordinatorParameters.skipDownload()) {
+                    new DownloadTask(testSuite, simulatorProperties, outputDirectory, componentRegistry, bash).run();
+                }
                 executeAfterCompletion();
 
                 OperationTypeCounter.printStatistics();
@@ -363,85 +360,6 @@ public final class Coordinator {
         }
     }
 
-    private void download() {
-        if (!coordinatorParameters.skipDownload()) {
-            if (isLocal(simulatorProperties)) {
-                downloadLocal();
-            } else {
-                downloadRemote();
-            }
-        }
-    }
-
-    private void downloadLocal() {
-        echoLocal("Retrieving artifacts of local machine");
-
-        File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
-        String workerPath = workerHome.getAbsolutePath();
-
-        execute(format("mv %s/%s/* %s || true", workerPath, testSuite.getId(), outputDirectory.getAbsolutePath()));
-        execute(format("rmdir %s/%s || true", workerPath, testSuite.getId()));
-        execute(format("rmdir %s || true", workerPath));
-        execute(format("mv ./agent.err %s/ || true", outputDirectory.getAbsolutePath()));
-        execute(format("mv ./agent.out %s/ || true", outputDirectory.getAbsolutePath()));
-    }
-
-    private void downloadRemote() {
-        long started = System.nanoTime();
-        echoLocal("Download artifacts of %s machines...", componentRegistry.agentCount());
-
-        ThreadSpawner spawner = new ThreadSpawner("download", true);
-
-        final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
-        final String sshOptions = simulatorProperties.getSshOptions();
-        final String sshUser = simulatorProperties.getUser();
-
-        // download Worker logs
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    String ip = agentData.getPublicAddress();
-                    String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), testSuite.getId());
-
-                    String rsyncCommand = format(baseCommand, "", sshOptions, sshUser,
-                            outputDirectory.getParentFile().getAbsolutePath());
-
-                    echoLocal("Downloading Worker logs from %s", ip);
-                    bash.executeQuiet(format(rsyncCommand, ip, workersPath));
-                }
-            });
-        }
-
-        // download Agent logs
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                for (final AgentData agentData : componentRegistry.getAgents()) {
-                    String ip = agentData.getPublicAddress();
-                    String agentAddress = agentData.getAddress().toString();
-
-                    echoLocal("Downloading Agent logs from %s", ip);
-                    String rsyncCommand = format(
-                            baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, outputDirectory.getAbsolutePath());
-
-                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.out"));
-                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.err"));
-
-                    File agentOut = new File(outputDirectory.getAbsolutePath(), "agent.out");
-                    File agentErr = new File(outputDirectory.getAbsolutePath(), "agent.err");
-
-                    rename(agentOut, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.out"));
-                    rename(agentErr, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.err"));
-                }
-            }
-        });
-
-        spawner.awaitCompletion();
-
-        long elapsed = getElapsedSeconds(started);
-        echoLocal("Finished downloading artifacts of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
-    }
 
     private void echoTestSuiteStart(int testCount, boolean isParallel) {
         echo(HORIZONTAL_RULER);
