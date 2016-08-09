@@ -5,7 +5,6 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -76,7 +75,6 @@ public class AgentOperationProcessorTest {
         testSuiteDir = new File(workersDir, testSuite.getId()).getAbsoluteFile();
 
         AgentConnector agentConnector = mock(AgentConnector.class);
-        CoordinatorLogger coordinatorLogger = mock(CoordinatorLogger.class);
 
         Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(1);
@@ -84,7 +82,6 @@ public class AgentOperationProcessorTest {
         when(agent.getTestSuite()).thenReturn(testSuite);
         when(agent.getTestSuiteDir()).thenReturn(testSuiteDir);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
-        when(agent.getCoordinatorLogger()).thenReturn(coordinatorLogger);
         when(agent.getWorkerProcessFailureMonitor()).thenReturn(failureMonitor);
 
         processor = new AgentOperationProcessor(exceptionLogger, agent, workerProcessManager, scheduler);

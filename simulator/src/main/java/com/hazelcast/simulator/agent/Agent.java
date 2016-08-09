@@ -17,7 +17,6 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
-import com.hazelcast.simulator.common.CoordinatorLogger;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -57,7 +56,6 @@ public class Agent {
 
     private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
     private final AgentConnector agentConnector;
-    private final CoordinatorLogger coordinatorLogger;
 
     private volatile TestSuite testSuite;
 
@@ -76,7 +74,6 @@ public class Agent {
         this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
                 this, workerProcessManager, workerLastSeenTimeoutSeconds);
         this.agentConnector = AgentConnector.createInstance(this, workerProcessManager, port, threadPoolSize);
-        this.coordinatorLogger = new CoordinatorLogger(agentConnector);
 
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
 
@@ -104,10 +101,6 @@ public class Agent {
 
     public AgentConnector getAgentConnector() {
         return agentConnector;
-    }
-
-    public CoordinatorLogger getCoordinatorLogger() {
-        return coordinatorLogger;
     }
 
     public WorkerProcessFailureMonitor getWorkerProcessFailureMonitor() {
