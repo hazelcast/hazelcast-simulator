@@ -23,23 +23,6 @@ public class CommonUtils_CloseableTest {
         closeQuietly((Socket) null);
     }
 
-    @Test
-    public void testCloseQuietlySocket() throws Exception {
-        Socket socket = mock(Socket.class);
-
-        closeQuietly(socket);
-
-        verify(socket).close();
-        verifyNoMoreInteractions(socket);
-    }
-
-    @Test
-    public void testCloseQuietlySocketException() throws Exception {
-        Socket socket = mock(Socket.class);
-        doThrow(new IOException("Expected exception")).when(socket).close();
-
-        closeQuietly(socket);
-    }
 
     @Test
     public void testCloseQuietlyCloseableNull() {
@@ -107,28 +90,5 @@ public class CommonUtils_CloseableTest {
         doThrow(new IOException("Expected exception")).when(jarFile).close();
 
         closeQuietly(jarFile);
-    }
-
-    @Test
-    public void testCloseQuietlyXMLStreamWriterNull() {
-        closeQuietly((XMLStreamWriter) null);
-    }
-
-    @Test
-    public void testCloseQuietlyXMLStreamWriter() throws Exception {
-        XMLStreamWriter xmlStreamWriter = mock(XMLStreamWriter.class);
-
-        closeQuietly(xmlStreamWriter);
-
-        verify(xmlStreamWriter).close();
-        verifyNoMoreInteractions(xmlStreamWriter);
-    }
-
-    @Test
-    public void testCloseQuietlyXMLStreamWriterException() throws Exception {
-        XMLStreamWriter xmlStreamWriter = mock(XMLStreamWriter.class);
-        doThrow(new XMLStreamException("Expected exception")).when(xmlStreamWriter).close();
-
-        closeQuietly(xmlStreamWriter);
     }
 }
