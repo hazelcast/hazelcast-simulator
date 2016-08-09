@@ -63,6 +63,7 @@ import static org.junit.Assert.assertTrue;
 public class AgentSmokeTest implements FailureListener {
 
     private static final String AGENT_IP_ADDRESS = "127.0.0.1";
+    private static final int COORDINATOR_PORT = 0;
     private static final int AGENT_PORT = 10000 + new Random().nextInt(1000);
     private static final int TEST_RUNTIME_SECONDS = 3;
 
@@ -98,8 +99,10 @@ public class AgentSmokeTest implements FailureListener {
         outputDirectory = TestUtils.createTmpDirectory();
         failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
 
-        coordinatorConnector = new CoordinatorConnector(failureContainer, testPhaseListeners, performanceStatsContainer);
+        coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureContainer, testPhaseListeners,
+                performanceStatsContainer, COORDINATOR_PORT);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
+        coordinatorConnector.start();
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0, 0);
     }

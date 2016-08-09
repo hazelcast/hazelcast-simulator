@@ -21,7 +21,7 @@ import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperatio
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class BasicOperationProcessorTest {
+public class AbstractOperationProcessorTest {
 
     private LocalExceptionLogger exceptionLogger;
     private IntegrationTestOperationProcessor processor;
@@ -93,12 +93,12 @@ public class BasicOperationProcessorTest {
         assertEquals(processor.operationType, OperationType.TERMINATE_WORKER);
     }
 
-    private final class IntegrationTestOperationProcessor extends OperationProcessor {
+    private final class IntegrationTestOperationProcessor extends AbstractOperationProcessor {
 
         private OperationType operationType;
 
         IntegrationTestOperationProcessor() {
-            super(BasicOperationProcessorTest.this.exceptionLogger);
+            super(AbstractOperationProcessorTest.this.exceptionLogger);
         }
 
         @Override

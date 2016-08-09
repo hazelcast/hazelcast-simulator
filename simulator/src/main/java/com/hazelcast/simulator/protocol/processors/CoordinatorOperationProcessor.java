@@ -26,6 +26,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
+import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Logger;
 
@@ -38,7 +39,7 @@ import static java.lang.String.format;
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Coordinator.
  */
-public class CoordinatorOperationProcessor extends OperationProcessor {
+public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
@@ -46,15 +47,18 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
     private final FailureContainer failureContainer;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsContainer performanceStatsContainer;
+    private final CoordinatorRemoteControllerProcessor remoteControllerProcessor;
 
-    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger,
-                                         FailureContainer failureContainer, TestPhaseListeners testPhaseListeners,
-                                         PerformanceStatsContainer performanceStatsContainer) {
+    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, FailureContainer failureContainer,
+                                         TestPhaseListeners testPhaseListeners,
+                                         PerformanceStatsContainer performanceStatsContainer,
+                                         CoordinatorRemoteControllerProcessor remoteControllerProcessor) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
         this.failureContainer = failureContainer;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStatsContainer = performanceStatsContainer;
+        this.remoteControllerProcessor = remoteControllerProcessor;
     }
 
     @Override
@@ -71,6 +75,9 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
                 return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
             case PERFORMANCE_STATE:
                 processPerformanceStats((PerformanceStatsOperation) operation, sourceAddress);
+                break;
+            case REMOTE_CONTROLLER:
+                processRemoteController((RemoteControllerOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -99,5 +106,9 @@ public class CoordinatorOperationProcessor extends OperationProcessor {
 
     private void processPerformanceStats(PerformanceStatsOperation operation, SimulatorAddress sourceAddress) {
         performanceStatsContainer.update(sourceAddress, operation.getPerformanceStats());
+    }
+
+    private void processRemoteController(RemoteControllerOperation operation) {
+        remoteControllerProcessor.process(operation.getType());
     }
 }

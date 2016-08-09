@@ -51,7 +51,7 @@ import static java.lang.String.format;
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Worker.
  */
-public class WorkerOperationProcessor extends OperationProcessor {
+public class WorkerOperationProcessor extends AbstractOperationProcessor {
 
     private static final String DASHES = "---------------------------";
 

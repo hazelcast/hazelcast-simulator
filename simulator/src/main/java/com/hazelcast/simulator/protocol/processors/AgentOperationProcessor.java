@@ -49,7 +49,7 @@ import static java.lang.String.format;
 /**
  * An {@link OperationProcessor} implementation to process {@link SimulatorOperation} instances on a Simulator Agent.
  */
-public class AgentOperationProcessor extends OperationProcessor {
+public class AgentOperationProcessor extends AbstractOperationProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(AgentOperationProcessor.class);
 

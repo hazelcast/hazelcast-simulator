@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -23,6 +24,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -42,27 +44,38 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
+import static java.lang.Math.max;
+import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Abstract {@link ServerConnector} class for Simulator Agent and Worker.
  */
 abstract class AbstractServerConnector implements ServerConnector {
 
+    private static final int MIN_THREAD_POOL_SIZE = 10;
+    private static final int DEFAULT_THREAD_POOL_SIZE = max(MIN_THREAD_POOL_SIZE, getRuntime().availableProcessors() * 2);
+
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
+
+    private final AtomicBoolean isStarted = new AtomicBoolean();
+    private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
     private final AtomicLong messageIds = new AtomicLong();
     private final ConcurrentMap<String, ResponseFuture> messageQueueFutures = new ConcurrentHashMap<String, ResponseFuture>();
@@ -81,14 +94,15 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize) {
-        this(futureMap, localAddress, port, threadPoolSize, createScheduledThreadPool(threadPoolSize, "AbstractServerConnector"));
+        this(futureMap, localAddress, port, threadPoolSize,
+                createScheduledThreadPool(threadPoolSize, "AbstractServerConnector"));
     }
 
     AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
                             int threadPoolSize, ScheduledExecutorService executorService) {
         this.futureMap = futureMap;
         this.localAddress = localAddress;
-        this.addressIndex = localAddress.getAddressIndex();
+        this.addressIndex = (COORDINATOR.equals(localAddress) ? 0 : localAddress.getAddressIndex());
         this.port = port;
         this.group = new NioEventLoopGroup(threadPoolSize);
         this.executorService = executorService;
@@ -100,13 +114,19 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void start() {
-        messageQueueThread.start();
+        if (!isStarted.compareAndSet(false, true)) {
+            throw new SimulatorProtocolException("ServerConnector cannot be started twice or after shutdown!");
+        }
 
-        ServerBootstrap bootstrap = getServerBootstrap();
-        ChannelFuture future = bootstrap.bind().syncUninterruptibly();
-        channel = future.channel();
+        if (port > 0) {
+            messageQueueThread.start();
 
-        LOGGER.info(format("ServerConnector %s listens on %s", localAddress, channel.localAddress()));
+            ServerBootstrap bootstrap = getServerBootstrap();
+            ChannelFuture future = bootstrap.bind().syncUninterruptibly();
+            channel = future.channel();
+
+            LOGGER.info(format("ServerConnector %s listens on %s", localAddress, channel.localAddress()));
+        }
     }
 
     private ServerBootstrap getServerBootstrap() {
@@ -125,9 +145,26 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void shutdown() {
-        messageQueueThread.shutdown();
-        channel.close().syncUninterruptibly();
-        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+        if (!isStarted.compareAndSet(true, false)) {
+            throw new SimulatorProtocolException("ServerConnector cannot be shutdown twice or if not been started!");
+        }
+
+        ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors", true);
+        for (final ClientConnector client : clientConnectorManager.getClientConnectors()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    client.shutdown();
+                }
+            });
+        }
+        spawner.awaitCompletion();
+
+        if (port > 0) {
+            messageQueueThread.shutdown();
+            channel.close().syncUninterruptibly();
+        }
+        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, SECONDS).syncUninterruptibly();
 
         executorService.shutdown();
         awaitTermination(executorService, 1, TimeUnit.MINUTES);
@@ -178,6 +215,14 @@ abstract class AbstractServerConnector implements ServerConnector {
         return writeAsync(message);
     }
 
+    static int getDefaultThreadPoolSize() {
+        return DEFAULT_THREAD_POOL_SIZE;
+    }
+
+    ClientConnectorManager getClientConnectorManager() {
+        return clientConnectorManager;
+    }
+
     EventLoopGroup getEventLoopGroup() {
         return group;
     }
@@ -198,7 +243,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         return responseFuture;
     }
 
-    private SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
+    SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
         return new SimulatorMessage(dst, src, messageIds.incrementAndGet(), getOperationType(op), toJson(op));
     }
 

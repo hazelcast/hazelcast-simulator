@@ -12,11 +12,11 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
-import static com.hazelcast.simulator.protocol.ProtocolUtil.AGENT_START_PORT;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_OPERATION;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertSingleTarget;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentConnector;
+import static com.hazelcast.simulator.protocol.ProtocolUtil.getAgentStartPort;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getCoordinatorConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.getWorkerConnector;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
@@ -73,7 +73,7 @@ public class ProtocolReconnectTest {
         LOGGER.info("Starting new connection...");
         LOGGER.info("--------------------------");
 
-        CoordinatorConnector newConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, 1);
+        CoordinatorConnector newConnector = startCoordinator("127.0.0.1", getAgentStartPort(), 1);
 
         // assert that new connection is working downstream
         response = newConnector.write(testAddress, DEFAULT_OPERATION);
@@ -103,7 +103,7 @@ public class ProtocolReconnectTest {
         LOGGER.info("Starting second connection...");
         LOGGER.info("-------------------------------");
 
-        CoordinatorConnector secondConnector = startCoordinator("127.0.0.1", AGENT_START_PORT, 1);
+        CoordinatorConnector secondConnector = startCoordinator("127.0.0.1", getAgentStartPort(), 1);
 
         // assert that first connection is still working downstream
         response = sendFromCoordinator(testAddress);
@@ -118,7 +118,7 @@ public class ProtocolReconnectTest {
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         // shutdown first connection
-        getCoordinatorConnector().shutdown();
+        shutdownCoordinatorConnector();
 
         // assert that the connections are working upstream
         response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
