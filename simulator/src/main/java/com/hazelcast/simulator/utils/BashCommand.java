@@ -48,6 +48,8 @@ public class BashCommand {
         for (Object param : params) {
             if (param == null) {
                 this.params.add("null");
+            } else if ("".equals(param)) {
+                this.params.add("\"\"");
             } else {
                 this.params.add(param.toString());
             }
