@@ -21,6 +21,7 @@ import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.NativeUtils;
 import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -150,6 +151,11 @@ public final class MemberWorker implements Worker {
     }
 
     public static void main(String[] args) {
+        int pid = NativeUtils.getPID();
+        LOGGER.info("PID: " + pid);
+        File pidFile = new File("worker.pid");
+        writeText("" + pid, pidFile);
+
         try {
             startWorker();
         } catch (Exception e) {

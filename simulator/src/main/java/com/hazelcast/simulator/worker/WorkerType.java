@@ -20,7 +20,6 @@ package com.hazelcast.simulator.worker;
  */
 public enum WorkerType {
 
-    INTEGRATION_TEST(false),
     MEMBER(true),
     CLIENT(false);
 
