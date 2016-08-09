@@ -269,7 +269,7 @@ public final class MemberWorker implements Worker {
                 workerConnector.shutdown();
             }
 
-            OperationTypeCounter.printStatistics(Level.INFO);
+            OperationTypeCounter.printStatistics(Level.DEBUG);
         }
     }
 }
