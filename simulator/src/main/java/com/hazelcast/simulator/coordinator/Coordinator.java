@@ -236,7 +236,10 @@ public final class Coordinator {
 
     void uploadFiles() {
         StringBuilder agentPublicIps = new StringBuilder();
-        if (!isLocal(simulatorProperties)) {
+        if (isLocal(simulatorProperties)) {
+            // to prevent passing a empty string, and all arguments shifting, we just add a comma
+            agentPublicIps.append(",");
+        } else {
             List<AgentData> agents = componentRegistry.getAgents();
             for (AgentData agentData : agents) {
                 agentPublicIps.append(agentData.getPublicAddress()).append(',');
