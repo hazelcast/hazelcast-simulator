@@ -66,6 +66,14 @@ public class ComponentRegistry {
         return unmodifiableList(agents);
     }
 
+    public Set<String> getAgentIps() {
+        Set<String> set = new HashSet<String>();
+        for (AgentData agent : agents) {
+            set.add(agent.getPublicAddress());
+        }
+        return set;
+    }
+
     public List<AgentData> getAgents(int count) {
         int size = agents.size();
         return unmodifiableList(agents.subList(size - count, size));
