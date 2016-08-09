@@ -177,7 +177,7 @@ public class AgentOperationProcessorTest {
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
         WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
-        when(workerProcessSettings.getWorkerType()).thenReturn(WorkerType.INTEGRATION_TEST);
+        when(workerProcessSettings.getWorkerType()).thenReturn(WorkerType.MEMBER);
         when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
         when(workerProcessSettings.getHazelcastConfig()).thenReturn("");
         when(workerProcessSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
