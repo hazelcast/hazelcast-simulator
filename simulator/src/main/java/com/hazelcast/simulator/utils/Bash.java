@@ -20,7 +20,6 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import java.io.File;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
 public class Bash {
@@ -56,24 +55,6 @@ public class Bash {
 
     public void killAllJavaProcesses(String ip) {
         sshQuiet(ip, "killall -9 java");
-    }
-
-    /**
-     * Downloads the content of the url to the target path.
-     *
-     * @param url    the url that is downloaded
-     * @param target the directory where the content will be stored
-     */
-    public void download(String url, String target) {
-        execute("if type \"wget\" > /dev/null;" + NEW_LINE
-                + "then" + NEW_LINE
-                + "\twget --no-verbose --directory-prefix=" + target + ' ' + url + NEW_LINE
-                + "else" + NEW_LINE
-                + "\tpushd ." + NEW_LINE
-                + "\tcd " + target + NEW_LINE
-                + "\tcurl -O " + url + NEW_LINE
-                + "\tpopd" + NEW_LINE
-                + "fi");
     }
 
     public void uploadToRemoteSimulatorDir(String ip, String src, String target) {
