@@ -29,7 +29,6 @@ import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.Bash;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
@@ -55,7 +54,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -190,7 +188,11 @@ public final class Coordinator {
         boolean isPrePhaseDone = false;
         try {
             checkInstallation(bash, simulatorProperties, componentRegistry);
-            uploadFiles();
+            new InstallVendorTask(
+                    simulatorProperties,
+                    componentRegistry.getAgentIps() ,
+                    clusterLayout.getVersionSpecs(),
+                    testSuite).run();
             isPrePhaseDone = true;
 
             try {
@@ -231,29 +233,6 @@ public final class Coordinator {
             echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
             bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
             echoLocal("Finished after-completion script");
-        }
-    }
-
-    void uploadFiles() {
-        StringBuilder agentPublicIps = new StringBuilder();
-        if (!isLocal(simulatorProperties)) {
-            List<AgentData> agents = componentRegistry.getAgents();
-            for (AgentData agentData : agents) {
-                agentPublicIps.append(agentData.getPublicAddress()).append(',');
-            }
-        }
-
-        String vendor = simulatorProperties.get("VENDOR");
-        String installFile = getConfigurationFile("install-" + vendor + ".sh").getPath();
-
-        for (String versionSpec : clusterLayout.getVersionSpecs()) {
-            LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
-            new BashCommand(installFile)
-                    .addParams(testSuite.getId(), versionSpec, agentPublicIps.toString())
-                    .addEnvironment(simulatorProperties.asMap())
-                    .execute();
-
-            LOGGER.info("Successfully installed '" + vendor + "'");
         }
     }
 

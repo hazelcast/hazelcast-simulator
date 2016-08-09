@@ -35,7 +35,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
