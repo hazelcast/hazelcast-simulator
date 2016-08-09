@@ -37,7 +37,6 @@ abstract class AbstractExceptionLogger implements ExceptionLogger {
         this.exceptionType = exceptionType;
     }
 
-    @Override
     public long getLogInvocationCount() {
         return exceptionCount.get();
     }
