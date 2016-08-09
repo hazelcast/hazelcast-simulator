@@ -39,11 +39,6 @@ public abstract class ShutdownThread extends Thread {
         this(name, shutdownStarted, ensureProcessShutdown, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
     }
 
-    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
-                             CountDownLatch shutdownComplete) {
-        this(name, shutdownStarted, ensureProcessShutdown, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS, shutdownComplete);
-    }
-
     ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
                    long waitForShutdownTimeoutMillis) {
         this(name, shutdownStarted, ensureProcessShutdown, waitForShutdownTimeoutMillis, new CountDownLatch(1));
