@@ -69,7 +69,7 @@ prepare()
             cp $jar $local_install_dir/outofthebox
         done
     else
-        echo "Aborting, invalid VERSION_SPEC $version_spec"
+        echo "Aborting, invalid VERSION_SPEC [$version_spec]"
         exit 1
     fi
 }

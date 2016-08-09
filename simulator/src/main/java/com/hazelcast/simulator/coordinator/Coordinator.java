@@ -236,10 +236,7 @@ public final class Coordinator {
 
     void uploadFiles() {
         StringBuilder agentPublicIps = new StringBuilder();
-        if (isLocal(simulatorProperties)) {
-            // to prevent passing a empty string, and all arguments shifting, we just add a comma
-            agentPublicIps.append(",");
-        } else {
+        if (!isLocal(simulatorProperties)) {
             List<AgentData> agents = componentRegistry.getAgents();
             for (AgentData agentData : agents) {
                 agentPublicIps.append(agentData.getPublicAddress()).append(',');
@@ -252,7 +249,7 @@ public final class Coordinator {
         for (String versionSpec : clusterLayout.getVersionSpecs()) {
             LOGGER.info("Installing '" + vendor + "' '" + versionSpec + "' on Agents using " + installFile);
             new BashCommand(installFile)
-                    .addParams(testSuite.getId(), versionSpec, agentPublicIps.toString())
+                    .addParams(testSuite.getId(), agentPublicIps.toString(), versionSpec)
                     .addEnvironment(simulatorProperties.asMap())
                     .execute();
 

@@ -31,7 +31,7 @@ prepare()
         echo "Aborting, ENTERPRISE_VERSION_SPEC 'outofthebox' is not supported for hazelcast-enterprise"
         exit 1
     else
-        echo "Aborting, invalid ENTERPRISE_VERSION_SPEC $version_spec"
+        echo "Aborting, invalid ENTERPRISE_VERSION_SPEC [$version_spec]"
         exit 1
     fi
 }

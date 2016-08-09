@@ -22,8 +22,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,24 +31,27 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 
 public class BashCommand {
     private static final Logger LOGGER = Logger.getLogger(BashCommand.class);
 
-    private final String command;
-    private final List<Object> params = new LinkedList<Object>();
-    private Map<String,  Object> environment = new HashMap<String, Object>();
+    private final List<String> params = new ArrayList<String>();
+    private final Map<String, Object> environment = new HashMap<String, Object>();
     private boolean throwException;
 
     public BashCommand(String command) {
-        this.command = checkNotNull(command, "command can't be null");
+        params.add(command);
     }
 
-    public BashCommand addParams(Object... param) {
-        params.addAll(asList(param));
+    public BashCommand addParams(Object... params) {
+        for (Object param : params) {
+            if (param == null) {
+                this.params.add("null");
+            } else {
+                this.params.add(param.toString());
+            }
+        }
         return this;
     }
 
@@ -62,10 +65,19 @@ public class BashCommand {
         return this;
     }
 
+    private String command() {
+        StringBuilder sb = new StringBuilder();
+        for (String param : params) {
+            sb.append(param).append(' ');
+        }
+        return sb.toString();
+    }
+
     public StringBuilder execute() {
         StringBuilder sb = new StringBuilder();
 
-        String command = getCommand();
+        String command = command();
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Executing bash command: " + command);
         }
@@ -104,18 +116,6 @@ public class BashCommand {
         } catch (Exception e) {
             throw rethrow(e);
         }
-    }
-
-    private String getCommand() {
-        if (params.isEmpty()) {
-            return command;
-        }
-
-        StringBuilder sb = new StringBuilder(command);
-        for (Object param : params) {
-            sb.append(' ').append(param);
-        }
-        return sb.toString();
     }
 
     private static class BashStreamGobbler extends Thread {
