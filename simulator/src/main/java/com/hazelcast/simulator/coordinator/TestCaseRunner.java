@@ -100,7 +100,6 @@ final class TestCaseRunner implements TestPhaseListener {
                    TestCase testCase,
                    TestSuite testSuite,
                    RemoteClient remoteClient,
-                   int paddingLength,
                    Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                    FailureContainer failureContainer,
                    ComponentRegistry componentRegistry,
@@ -117,7 +116,7 @@ final class TestCaseRunner implements TestPhaseListener {
         this.performanceStatsContainer = performanceStatsContainer;
         this.componentRegistry = componentRegistry;
 
-        this.prefix = padRight(testCaseId, paddingLength + 1);
+        this.prefix = padRight(testCaseId, testSuite.getMaxTestCaseIdLength() + 1);
         this.testPhaseSyncMap = testPhaseSyncMap;
 
         this.isVerifyEnabled = coordinatorParameters.isVerifyEnabled();

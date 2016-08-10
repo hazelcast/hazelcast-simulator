@@ -82,7 +82,6 @@ public class RunSuiteTask {
         try {
             int testCount = testSuite.size();
             boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
-            int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
             Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
                     coordinatorParameters.getLastTestPhaseToSync());
 
@@ -99,7 +98,6 @@ public class RunSuiteTask {
                         testCase,
                         testSuite,
                         remoteClient,
-                        maxTestCaseIdLength,
                         testPhaseSyncMap,
                         failureContainer,
                         componentRegistry,
