@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
@@ -30,7 +30,6 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.TestUtils;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -49,8 +48,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
-import static com.hazelcast.simulator.cluster.ClusterLayout.createSingleInstanceClusterLayout;
+import static com.hazelcast.simulator.cluster.DeploymentPlan.createSingleInstanceClusterLayout;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -228,8 +226,8 @@ public class AgentSmokeTest implements FailureListener {
                 fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"),
                 false
         );
-        ClusterLayout clusterLayout = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);
-        new StartWorkersTask(clusterLayout, remoteClient, componentRegistry, 0).run();
+        DeploymentPlan deploymentPlan = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);
+        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
 
     private void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {

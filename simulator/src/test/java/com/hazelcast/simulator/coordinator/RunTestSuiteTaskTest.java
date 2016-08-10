@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
@@ -355,10 +355,10 @@ public class RunTestSuiteTaskTest {
         when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        ClusterLayout clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        DeploymentPlan deploymentPlan = new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters);
 
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureContainer,
-                testPhaseListeners, simulatorProperties, remoteClient, clusterLayout, performanceStatsContainer,
+                testPhaseListeners, simulatorProperties, remoteClient, deploymentPlan, performanceStatsContainer,
                 workerParameters);
 
         new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureContainer).start();

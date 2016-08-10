@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -56,20 +56,20 @@ public class StartWorkersTaskTest {
     @Test
     public void testCreateWorkers_withClients() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 3);
+        DeploymentPlan deploymentPlan = getClusterLayout(0, 6, 3);
 
         RemoteClient remoteClient= new RemoteClient(
                 coordinatorConnector, componentRegistry,
                 WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
-        new StartWorkersTask(clusterLayout, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
 
 //    @Test
 //    public void testCreateWorkers_noClients() {
 //        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-//        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
+//        DeploymentPlan clusterLayout = getClusterLayout(0, 6, 0);
 //
 //        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
 //                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
@@ -79,29 +79,29 @@ public class StartWorkersTaskTest {
     @Test(expected = CommandLineExitException.class)
     public void testCreateWorkers_withErrorResponse() {
         initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
+        DeploymentPlan deploymentPlan = getClusterLayout(0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
-        new StartWorkersTask(clusterLayout, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
 
     @Test(expected = SimulatorProtocolException.class)
     public void testCreateWorkers_withExceptionOnWrite() {
         initMockForCreateWorkerOperation(null);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
+        DeploymentPlan deploymentPlan = getClusterLayout(0, 6, 0);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
-        new StartWorkersTask(clusterLayout, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
 
 //    @Test
 //    public void testCreateWorkersAndTerminateWorkers_withPokeThread() {
 //        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-//        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
+//        DeploymentPlan clusterLayout = getClusterLayout(0, 6, 0);
 //
 //        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
 //                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS, 0);
@@ -113,12 +113,12 @@ public class StartWorkersTaskTest {
 //    }
 
 
-    private ClusterLayout getClusterLayout(int dedicatedMemberMachineCount, int memberWorkerCount, int clientWorkerCount) {
+    private DeploymentPlan getClusterLayout(int dedicatedMemberMachineCount, int memberWorkerCount, int clientWorkerCount) {
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(dedicatedMemberMachineCount);
         when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(memberWorkerCount);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(clientWorkerCount);
 
-        return new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        return new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters);
     }
 
     private void initMockForCreateWorkerOperation(ResponseType responseType) {

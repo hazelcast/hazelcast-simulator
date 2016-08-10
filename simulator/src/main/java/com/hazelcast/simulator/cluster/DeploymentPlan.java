@@ -34,11 +34,11 @@ import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
 import static java.lang.String.format;
 
-public class ClusterLayout {
+public class DeploymentPlan {
 
     private static final int WORKER_MODE_LENGTH = 6;
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterLayout.class);
+    private static final Logger LOGGER = Logger.getLogger(DeploymentPlan.class);
 
     private final Set<String> versionSpecs = new HashSet<String>();
 
@@ -47,8 +47,8 @@ public class ClusterLayout {
     private int memberWorkerCount;
     private int clientWorkerCount;
 
-    public ClusterLayout(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
-                         ClusterLayoutParameters clusterLayoutParameters) {
+    public DeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
+                          ClusterLayoutParameters clusterLayoutParameters) {
         agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
         LOGGER.info(HORIZONTAL_RULER);
@@ -85,22 +85,22 @@ public class ClusterLayout {
         }
     }
 
-    private ClusterLayout() {
+    private DeploymentPlan() {
         this.agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
     }
 
-    public static ClusterLayout createSingleInstanceClusterLayout(String agentIpAddress, WorkerParameters workerParameters) {
+    public static DeploymentPlan createSingleInstanceClusterLayout(String agentIpAddress, WorkerParameters workerParameters) {
         AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress);
         AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, AgentWorkerMode.MEMBER);
         agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
 
-        ClusterLayout clusterLayout = new ClusterLayout();
-        clusterLayout.versionSpecs.addAll(agentWorkerLayout.getVersionSpecs());
-        clusterLayout.agentWorkerLayouts.add(agentWorkerLayout);
-        clusterLayout.memberWorkerCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
-        clusterLayout.clientWorkerCount += agentWorkerLayout.getCount(WorkerType.CLIENT);
+        DeploymentPlan deploymentPlan = new DeploymentPlan();
+        deploymentPlan.versionSpecs.addAll(agentWorkerLayout.getVersionSpecs());
+        deploymentPlan.agentWorkerLayouts.add(agentWorkerLayout);
+        deploymentPlan.memberWorkerCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
+        deploymentPlan.clientWorkerCount += agentWorkerLayout.getCount(WorkerType.CLIENT);
 
-        return clusterLayout;
+        return deploymentPlan;
     }
 
     public Set<String> getVersionSpecs() {

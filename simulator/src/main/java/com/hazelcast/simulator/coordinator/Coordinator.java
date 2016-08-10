@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -69,7 +69,7 @@ public final class Coordinator {
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
 
-    private final ClusterLayout clusterLayout;
+    private final DeploymentPlan deploymentPlan;
     private final TestPhase lastTestPhaseToSync;
 
     private RemoteClient remoteClient;
@@ -81,7 +81,7 @@ public final class Coordinator {
                        WorkerParameters workerParameters,
                        ClusterLayoutParameters clusterLayoutParameters) {
         this(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters,
-                new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters));
+                new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters));
     }
 
     Coordinator(TestSuite testSuite,
@@ -89,7 +89,7 @@ public final class Coordinator {
                 CoordinatorParameters coordinatorParameters,
                 WorkerParameters workerParameters,
                 ClusterLayoutParameters clusterLayoutParameters,
-                ClusterLayout clusterLayout) {
+                DeploymentPlan deploymentPlan) {
 
         this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), testSuite.getId()));
 
@@ -104,7 +104,7 @@ public final class Coordinator {
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
 
-        this.clusterLayout = clusterLayout;
+        this.deploymentPlan = deploymentPlan;
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
 
         logConfiguration();
@@ -136,8 +136,8 @@ public final class Coordinator {
 
     private void logConfiguration() {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
-        echoLocal("Total number of Hazelcast member workers: %s", clusterLayout.getMemberWorkerCount());
-        echoLocal("Total number of Hazelcast client workers: %s", clusterLayout.getClientWorkerCount());
+        echoLocal("Total number of Hazelcast member workers: %s", deploymentPlan.getMemberWorkerCount());
+        echoLocal("Total number of Hazelcast client workers: %s", deploymentPlan.getClientWorkerCount());
         echoLocal("Last TestPhase to sync: %s", lastTestPhaseToSync);
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
@@ -153,7 +153,7 @@ public final class Coordinator {
             new InstallVendorTask(
                     simulatorProperties,
                     componentRegistry.getAgentIps(),
-                    clusterLayout.getVersionSpecs(),
+                    deploymentPlan.getVersionSpecs(),
                     testSuite.getId()).run();
             isPrePhaseDone = true;
 
@@ -162,7 +162,7 @@ public final class Coordinator {
                 startCoordinatorConnector();
                 startRemoteClient();
                 new StartWorkersTask(
-                        clusterLayout,
+                        deploymentPlan,
                         remoteClient,
                         componentRegistry,
                         coordinatorParameters.getWorkerVmStartupDelayMs()).run();
@@ -205,7 +205,7 @@ public final class Coordinator {
                 testPhaseListeners,
                 simulatorProperties,
                 remoteClient,
-                clusterLayout,
+                deploymentPlan,
                 performanceStatsContainer,
                 workerParameters).run();
     }
