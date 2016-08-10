@@ -19,6 +19,7 @@ import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -250,6 +251,8 @@ public final class Coordinator {
                 componentRegistry,
                 workerPingIntervalMillis,
                 shutdownDelaySeconds);
+
+        remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
     }
 
     private void echo(String message, Object... args) {
