@@ -15,13 +15,11 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
-import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -93,10 +91,6 @@ public class RemoteClient {
 
         int shutdownDelaySeconds = (componentRegistry.hasClientWorkers() ? memberWorkerShutdownDelaySeconds : 0);
         sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
-    }
-
-    public void initTestSuite(TestSuite testSuite) {
-        sendToAllAgents(new InitTestSuiteOperation(testSuite));
     }
 
     public void sendToAllAgents(SimulatorOperation operation) {

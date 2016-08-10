@@ -18,6 +18,7 @@ import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
@@ -167,7 +168,7 @@ public class AgentSmokeTest implements FailureListener {
         try {
             String testId = testCase.getId();
             TestSuite testSuite = new TestSuite("AgentSmokeTest-" + testId);
-            remoteClient.initTestSuite(testSuite);
+            remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
             testSuite.addTest(testCase);
 
             componentRegistry.addTests(testSuite);

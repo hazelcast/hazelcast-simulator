@@ -93,20 +93,6 @@ public class RemoteClientTest {
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
-
-    @Test
-    public void testInitTestSuite() {
-        initMock(ResponseType.SUCCESS);
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
-
-        TestSuite testSuite = new TestSuite("RemoteClientTest");
-        remoteClient.initTestSuite(testSuite);
-
-        verify(coordinatorConnector).write(eq(ALL_AGENTS), any(InitTestSuiteOperation.class));
-        verifyNoMoreInteractions(coordinatorConnector);
-    }
-
     @Test
     public void testSendToAllAgents() {
         initMock(ResponseType.SUCCESS);
