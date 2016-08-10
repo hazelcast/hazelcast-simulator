@@ -11,15 +11,15 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ComponentRegistryTest {
 
@@ -338,11 +338,9 @@ public class ComponentRegistryTest {
 
     private List<WorkerProcessSettings> getWorkerProcessSettingsList(int workerCount, WorkerType workerType) {
         List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
+        Map<String, String> env = new HashMap<String, String>();
         for (int i = 1; i <= workerCount; i++) {
-            WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
-            when(workerProcessSettings.getWorkerIndex()).thenReturn(i);
-            when(workerProcessSettings.getWorkerType()).thenReturn(workerType);
-
+            WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(i, workerType, "", "exit 0", 0, env);
             settingsList.add(workerProcessSettings);
         }
         return settingsList;
