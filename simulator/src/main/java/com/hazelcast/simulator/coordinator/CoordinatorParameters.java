@@ -28,7 +28,6 @@ class CoordinatorParameters {
     private final String workerClassPath;
 
     private final boolean skipDownload;
-    private final boolean uploadHazelcastJARs;
     private final boolean verifyEnabled;
     private final boolean parallel;
     private final boolean refreshJvm;
@@ -43,7 +42,6 @@ class CoordinatorParameters {
     @SuppressWarnings("checkstyle:parameternumber")
     CoordinatorParameters(SimulatorProperties properties,
                           String workerClassPath,
-                          boolean uploadHazelcastJARs,
                           boolean verifyEnabled,
                           boolean parallel,
                           boolean refreshJvm,
@@ -55,7 +53,6 @@ class CoordinatorParameters {
                           String afterCompletionFile) {
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
-        this.uploadHazelcastJARs = uploadHazelcastJARs;
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
         this.refreshJvm = refreshJvm;
@@ -77,10 +74,6 @@ class CoordinatorParameters {
 
     String getWorkerClassPath() {
         return workerClassPath;
-    }
-
-    boolean isUploadHazelcastJARs() {
-        return uploadHazelcastJARs;
     }
 
     boolean isVerifyEnabled() {

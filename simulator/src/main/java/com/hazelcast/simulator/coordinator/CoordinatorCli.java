@@ -174,10 +174,6 @@ final class CoordinatorCli {
             "The startup timeout in seconds for a Worker.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(60);
 
-    private final OptionSpec<Boolean> uploadHazelcastJARsSpec = parser.accepts("uploadHazelcastJARs",
-            "Defines if the Hazelcast JARs should be uploaded.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
             "Sets the license key for Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(String.class);
@@ -203,7 +199,6 @@ final class CoordinatorCli {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
                 options.valueOf(cli.workerClassPathSpec),
-                options.valueOf(cli.uploadHazelcastJARsSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
                 options.valueOf(cli.workerRefreshSpec),
