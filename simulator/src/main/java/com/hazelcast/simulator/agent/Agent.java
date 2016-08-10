@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.agent.workerprocess.FailureSenderImpl;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.common.ShutdownThread;
@@ -54,8 +55,9 @@ public class Agent {
     private final String cloudIdentity;
     private final String cloudCredential;
 
-    private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
     private final AgentConnector agentConnector;
+    private final FailureSenderImpl failureSender;
+    private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
 
     private volatile TestSuite testSuite;
 
@@ -71,9 +73,10 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
-                this, workerProcessManager, workerLastSeenTimeoutSeconds);
         this.agentConnector = AgentConnector.createInstance(this, workerProcessManager, port, threadPoolSize);
+        this.failureSender = new FailureSenderImpl(publicAddress, agentConnector);
+        this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
+                workerLastSeenTimeoutSeconds);
 
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
 
@@ -109,6 +112,7 @@ public class Agent {
 
     public void setTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
+        this.failureSender.setTestSuite(testSuite);
     }
 
     public TestSuite getTestSuite() {

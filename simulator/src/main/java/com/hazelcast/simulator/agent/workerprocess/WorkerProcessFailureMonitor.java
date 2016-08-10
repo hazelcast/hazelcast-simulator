@@ -15,14 +15,7 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.protocol.connector.AgentConnector;
-import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseType;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -50,17 +43,17 @@ public class WorkerProcessFailureMonitor {
 
     private final MonitorThread monitorThread;
 
-    private int failureCount;
-
-    public WorkerProcessFailureMonitor(Agent agent, WorkerProcessManager workerProcessManager, int lastSeenTimeoutSeconds) {
-        this(agent, workerProcessManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
+    public WorkerProcessFailureMonitor(FailureSender failureSender,
+                                       WorkerProcessManager workerProcessManager,
+                                       int lastSeenTimeoutSeconds) {
+        this(failureSender, workerProcessManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
     }
 
-    WorkerProcessFailureMonitor(Agent agent,
+    WorkerProcessFailureMonitor(FailureSender failureSender,
                                 WorkerProcessManager workerProcessManager,
                                 int lastSeenTimeoutSeconds,
                                 int checkIntervalMillis) {
-        monitorThread = new MonitorThread(agent, workerProcessManager, lastSeenTimeoutSeconds, checkIntervalMillis);
+        monitorThread = new MonitorThread(failureSender, workerProcessManager, lastSeenTimeoutSeconds, checkIntervalMillis);
     }
 
     public void start() {
@@ -89,7 +82,7 @@ public class WorkerProcessFailureMonitor {
 
     private final class MonitorThread extends Thread {
 
-        private final Agent agent;
+        private final FailureSender failureSender;
         private final WorkerProcessManager workerProcessManager;
         private final int lastSeenTimeoutSeconds;
         private final int checkIntervalMillis;
@@ -97,12 +90,14 @@ public class WorkerProcessFailureMonitor {
         private volatile boolean running = true;
         private volatile boolean detectTimeouts;
 
-        private MonitorThread(Agent agent, WorkerProcessManager workerProcessManager, int lastSeenTimeoutSeconds,
+        private MonitorThread(FailureSender failureSender,
+                              WorkerProcessManager workerProcessManager,
+                              int lastSeenTimeoutSeconds,
                               int checkIntervalMillis) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
 
-            this.agent = agent;
+            this.failureSender = failureSender;
             this.workerProcessManager = workerProcessManager;
             this.lastSeenTimeoutSeconds = lastSeenTimeoutSeconds;
             this.checkIntervalMillis = checkIntervalMillis;
@@ -162,7 +157,7 @@ public class WorkerProcessFailureMonitor {
                 }
 
                 // we delete or rename the exception file so that we don't detect the same exception again
-                boolean send = sendFailureOperation(
+                boolean send = failureSender.sendFailureOperation(
                         "Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess, testId, cause);
 
                 if (send) {
@@ -230,48 +225,7 @@ public class WorkerProcessFailureMonitor {
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess) {
-            sendFailureOperation(message, type, workerProcess, null, null);
-        }
-
-        private boolean sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess,
-                                             String testId, String cause) {
-            boolean sentSuccessfully = true;
-            boolean isFailure = type != WORKER_FINISHED;
-            SimulatorAddress workerAddress = workerProcess.getAddress();
-            FailureOperation operation = new FailureOperation(message, type, workerAddress, agent.getPublicAddress(),
-                    workerProcess.getHazelcastAddress(), workerProcess.getId(), testId, agent.getTestSuite(), cause);
-
-            if (isFailure) {
-                LOGGER.error(format("Detected failure on Worker %s (%s): %s", workerProcess.getId(), workerProcess.getAddress(),
-                        operation.getLogMessage(++failureCount)));
-            } else {
-                LOGGER.info(format("Worker %s (%s) finished.", workerProcess.getId(), workerProcess.getAddress()));
-            }
-
-            AgentConnector agentConnector = agent.getAgentConnector();
-            try {
-                Response response = agentConnector.write(SimulatorAddress.COORDINATOR, operation);
-                ResponseType firstErrorResponseType = response.getFirstErrorResponseType();
-                if (firstErrorResponseType != ResponseType.SUCCESS) {
-                    LOGGER.error(format("Could not send failure to coordinator: %s", firstErrorResponseType));
-                    sentSuccessfully = false;
-                } else if (isFailure) {
-                    LOGGER.info("Failure successfully sent to Coordinator!");
-                }
-            } catch (SimulatorProtocolException e) {
-                if (!isInterrupted() && !(e.getCause() instanceof InterruptedException)) {
-                    LOGGER.error(format("Could not send failure to coordinator! %s", operation.getFileMessage()), e);
-                    sentSuccessfully = false;
-                }
-            }
-
-            if (type.isWorkerFinishedFailure()) {
-                String finishedType = (isFailure) ? "failed" : "finished";
-                LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
-                agentConnector.removeWorker(workerAddress.getWorkerIndex());
-            }
-
-            return sentSuccessfully;
+            failureSender.sendFailureOperation(message, type, workerProcess, null, null);
         }
     }
 
