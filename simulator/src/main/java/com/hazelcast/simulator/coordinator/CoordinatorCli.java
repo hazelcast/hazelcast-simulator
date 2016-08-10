@@ -49,6 +49,10 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 final class CoordinatorCli {
 
@@ -346,13 +350,13 @@ final class CoordinatorCli {
         String value = options.valueOf(optionSpec);
         try {
             if (value.endsWith("s")) {
-                duration = parseDurationWithoutLastChar(TimeUnit.SECONDS, value);
+                duration = parseDurationWithoutLastChar(SECONDS, value);
             } else if (value.endsWith("m")) {
-                duration = parseDurationWithoutLastChar(TimeUnit.MINUTES, value);
+                duration = parseDurationWithoutLastChar(MINUTES, value);
             } else if (value.endsWith("h")) {
-                duration = parseDurationWithoutLastChar(TimeUnit.HOURS, value);
+                duration = parseDurationWithoutLastChar(HOURS, value);
             } else if (value.endsWith("d")) {
-                duration = parseDurationWithoutLastChar(TimeUnit.DAYS, value);
+                duration = parseDurationWithoutLastChar(DAYS, value);
             } else {
                 duration = Integer.parseInt(value);
             }
