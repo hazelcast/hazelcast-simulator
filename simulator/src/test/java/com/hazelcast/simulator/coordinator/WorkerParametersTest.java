@@ -46,7 +46,7 @@ public class WorkerParametersTest {
     @Test
     public void testConstructor() {
         WorkerParameters workerParameters = new WorkerParameters(properties, true, 2342, "memberJvmOptions", "clientJvmOptions",
-                memberConfig, clientConfig, "log4jConfig", "worker.sh", false);
+                memberConfig, clientConfig, "log4jConfig", "worker.sh", true);
 
         assertTrue(workerParameters.isAutoCreateHzInstance());
         assertEquals(2342, workerParameters.getWorkerStartupTimeout());
@@ -59,7 +59,7 @@ public class WorkerParametersTest {
         assertEquals(memberConfig, workerParameters.getMemberHzConfig());
         assertEquals(clientConfig, workerParameters.getClientHzConfig());
         assertEquals("log4jConfig", workerParameters.getLog4jConfig());
-        assertFalse(workerParameters.isMonitorPerformance());
+        assertTrue(workerParameters.isMonitorPerformance());
 
         assertEquals("worker.sh", workerParameters.getWorkerScript());
     }

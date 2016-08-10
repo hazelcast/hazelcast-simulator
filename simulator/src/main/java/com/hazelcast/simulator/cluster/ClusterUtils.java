@@ -79,7 +79,7 @@ final class ClusterUtils {
             for (WorkerGroup workerGroup : nodeConfiguration.getWorkerGroups()) {
                 WorkerConfiguration workerConfig = clusterConfiguration.getWorkerConfiguration(workerGroup.getConfiguration());
                 for (int i = 0; i < workerGroup.getCount(); i++) {
-                    agentWorkerLayout.addWorker(workerConfig.getType(), parameters, workerConfig);
+                    agentWorkerLayout.addWorker(workerConfig.getType(), parameters);
                 }
             }
             agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);

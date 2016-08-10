@@ -127,8 +127,6 @@ public class WorkerProcessLauncher {
         environment.put("AGENT_INDEX", Integer.toString(agent.getAddressIndex()));
         environment.put("WORKER_INDEX", Integer.toString(workerProcessSettings.getWorkerIndex()));
         environment.put("WORKER_PORT", Integer.toString(agent.getPort() + workerProcessSettings.getWorkerIndex()));
-        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(workerProcessSettings.getPerformanceMonitorIntervalSeconds()));
 
         Process process = processBuilder.start();
 

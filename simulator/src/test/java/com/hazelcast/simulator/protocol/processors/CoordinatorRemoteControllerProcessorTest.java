@@ -12,10 +12,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.hazelcast.simulator.protocol.operation.RemoteControllerOperation.Type.INTEGRATION_TEST;
 import static com.hazelcast.simulator.protocol.operation.RemoteControllerOperation.Type.LIST_COMPONENTS;
+import static com.hazelcast.simulator.worker.WorkerType.CLIENT;
+import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,11 +34,9 @@ public class CoordinatorRemoteControllerProcessorTest {
     public void setUp() {
         SimulatorAddress agent = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
 
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-
         List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
-        settingsList.add(new WorkerProcessSettings(1, WorkerType.MEMBER, workerParameters));
-        settingsList.add(new WorkerProcessSettings(2, WorkerType.CLIENT, workerParameters));
+        settingsList.add(new WorkerProcessSettings(1, MEMBER, "outofthebox","somescript",0,new HashMap<String, String>()));
+        settingsList.add(new WorkerProcessSettings(2, CLIENT, "outofthebox","somescript",0,new HashMap<String, String>()));
 
         serverConnector = mock(CoordinatorConnector.class);
 
