@@ -133,7 +133,7 @@ public class SimulatorProperties {
         return get("JDK_VERSION", "7");
     }
 
-    public String getHazelcastVersionSpec() {
+    public String getVersionSpec() {
         return get("VERSION_SPEC", "outofthebox");
     }
 

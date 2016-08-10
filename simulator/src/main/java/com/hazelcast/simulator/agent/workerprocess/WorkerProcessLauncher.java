@@ -217,7 +217,7 @@ public class WorkerProcessLauncher {
 
     private String getClasspath() {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getHazelcastVersionSpec());
+        String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
 

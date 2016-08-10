@@ -60,12 +60,12 @@ public final class AgentWorkerLayout {
         return agentData.getPrivateAddress();
     }
 
-    public Set<String> getHazelcastVersionSpecs() {
-        Set<String> hazelcastVersionSpecs = new HashSet<String>();
+    public Set<String> getVersionSpecs() {
+        Set<String> result = new HashSet<String>();
         for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
-            hazelcastVersionSpecs.add(workerProcessSettings.getHazelcastVersionSpec());
+            result.add(workerProcessSettings.getVersionSpec());
         }
-        return hazelcastVersionSpecs;
+        return result;
     }
 
     void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {

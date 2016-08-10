@@ -30,7 +30,7 @@ public class WorkerProcessSettings {
 
     private final int workerIndex;
     private final String workerType;
-    private final String hazelcastVersionSpec;
+    private final String versionSpec;
 
     private final String jvmOptions;
     private final String hazelcastConfig;
@@ -43,16 +43,16 @@ public class WorkerProcessSettings {
     private final String workerScript;
 
     public WorkerProcessSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters) {
-        this(workerIndex, workerType, workerParameters, workerParameters.getHazelcastVersionSpec(),
+        this(workerIndex, workerType, workerParameters, workerParameters.getVersionSpec(),
                 (workerType == MEMBER) ? workerParameters.getMemberJvmOptions() : workerParameters.getClientJvmOptions(),
                 (workerType == MEMBER) ? workerParameters.getMemberHzConfig() : workerParameters.getClientHzConfig());
     }
 
     public WorkerProcessSettings(int workerIndex, WorkerType workerType, WorkerParameters workerParameters,
-                                 String hazelcastVersionSpec, String jvmOptions, String hazelcastConfig) {
+                                 String versionSpec, String jvmOptions, String hazelcastConfig) {
         this.workerIndex = workerIndex;
         this.workerType = workerType.name();
-        this.hazelcastVersionSpec = hazelcastVersionSpec;
+        this.versionSpec = versionSpec;
 
         this.jvmOptions = jvmOptions;
         this.hazelcastConfig = hazelcastConfig;
@@ -89,8 +89,8 @@ public class WorkerProcessSettings {
         return WorkerType.valueOf(workerType);
     }
 
-    public String getHazelcastVersionSpec() {
-        return hazelcastVersionSpec;
+    public String getVersionSpec() {
+        return versionSpec;
     }
 
     public String getJvmOptions() {
@@ -132,6 +132,7 @@ public class WorkerProcessSettings {
                 + ", autoCreateHzInstance=" + autoCreateHzInstance
                 + ", workerStartupTimeout=" + workerStartupTimeout
                 + ", performanceMonitorIntervalSeconds=" + performanceMonitorIntervalSeconds
+                + ", versionSpec='" + versionSpec + '\''
                 + ", workerScript='" + workerScript + '\''
                 + '}';
     }

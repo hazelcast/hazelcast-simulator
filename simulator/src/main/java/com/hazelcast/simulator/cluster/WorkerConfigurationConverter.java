@@ -81,7 +81,7 @@ public class WorkerConfigurationConverter implements Converter {
 
         WorkerType workerType = WorkerType.valueOf(type);
         if (hzVersion == null) {
-            hzVersion = workerParameters.getHazelcastVersionSpec();
+            hzVersion = workerParameters.getVersionSpec();
         }
         hzConfig = getHzConfig(hzConfig, hzConfigFile, workerType);
         if (jvmOptions == null) {
