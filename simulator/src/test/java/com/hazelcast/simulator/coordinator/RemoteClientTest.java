@@ -76,7 +76,7 @@ public class RemoteClientTest {
     @Test
     public void testLogOnAllAgents() {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         remoteClient.logOnAllAgents("test");
 
         verify(coordinatorConnector).write(eq(ALL_AGENTS), any(LogOperation.class));
@@ -86,72 +86,19 @@ public class RemoteClientTest {
     @Test
     public void testLogOnAllWorkers() {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         remoteClient.logOnAllWorkers("test");
 
         verify(coordinatorConnector).write(eq(ALL_WORKERS), any(LogOperation.class));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
-    @Test
-    public void testCreateWorkers_withClients() {
-        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 3);
-
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
-        remoteClient.createWorkers(clusterLayout, false);
-    }
-
-    @Test
-    public void testCreateWorkers_noClients() {
-        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
-
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
-        remoteClient.createWorkers(clusterLayout, false);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testCreateWorkers_withErrorResponse() {
-        initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
-
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
-        remoteClient.createWorkers(clusterLayout, false);
-    }
-
-    @Test(expected = SimulatorProtocolException.class)
-    public void testCreateWorkers_withExceptionOnWrite() {
-        initMockForCreateWorkerOperation(null);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
-
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
-        remoteClient.createWorkers(clusterLayout, false);
-    }
-
-    @Test
-    public void testCreateWorkersAndTerminateWorkers_withPokeThread() {
-        initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-        ClusterLayout clusterLayout = getClusterLayout(0, 6, 0);
-
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
-        remoteClient.createWorkers(clusterLayout, true);
-
-        sleepSeconds(1);
-
-        remoteClient.terminateWorkers(true);
-    }
 
     @Test
     public void testInitTestSuite() {
         initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         TestSuite testSuite = new TestSuite("RemoteClientTest");
         remoteClient.initTestSuite(testSuite);
@@ -164,7 +111,7 @@ public class RemoteClientTest {
     public void testSendToAllAgents() {
         initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         remoteClient.sendToAllAgents(DEFAULT_OPERATION);
 
@@ -176,7 +123,7 @@ public class RemoteClientTest {
     public void testSendToAllAgents_withFailureResponse() {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         remoteClient.sendToAllAgents(DEFAULT_OPERATION);
 
@@ -188,7 +135,7 @@ public class RemoteClientTest {
     public void testSendToAllAgents_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         try {
             remoteClient.sendToAllAgents(DEFAULT_OPERATION);
@@ -202,7 +149,7 @@ public class RemoteClientTest {
     public void testSendToAllWorkers() {
         initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         remoteClient.sendToAllWorkers(DEFAULT_OPERATION);
 
@@ -214,7 +161,7 @@ public class RemoteClientTest {
     public void testSendToAllWorkers_withFailureResponse() {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         remoteClient.sendToAllWorkers(DEFAULT_OPERATION);
 
@@ -226,7 +173,7 @@ public class RemoteClientTest {
     public void testSendToAllWorkers_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         try {
             remoteClient.sendToAllWorkers(DEFAULT_OPERATION);
@@ -240,7 +187,7 @@ public class RemoteClientTest {
     public void testSendToFirstWorker() {
         initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
         remoteClient.sendToFirstWorker(DEFAULT_OPERATION);
@@ -253,7 +200,7 @@ public class RemoteClientTest {
     public void testSendToFirstWorker_withFailureResponse() {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
         remoteClient.sendToFirstWorker(DEFAULT_OPERATION);
@@ -266,7 +213,7 @@ public class RemoteClientTest {
     public void testSendToFirstWorker_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
         try {
@@ -281,7 +228,7 @@ public class RemoteClientTest {
     public void testSendToTestOnAllWorkers() {
         initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         remoteClient.sendToTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
 
@@ -293,7 +240,7 @@ public class RemoteClientTest {
     public void testSendToTestOnAllWorkers_withFailureResponse() {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         remoteClient.sendToTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
 
@@ -305,7 +252,7 @@ public class RemoteClientTest {
     public void testSendToTestOnAllWorkers_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
         try {
             remoteClient.sendToTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
@@ -319,7 +266,7 @@ public class RemoteClientTest {
     public void testSendToTestOnFirstWorker() {
         initMock(ResponseType.SUCCESS);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
         remoteClient.sendToTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
@@ -332,7 +279,7 @@ public class RemoteClientTest {
     public void testSendToTestOnFirstWorker_withFailureResponse() {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
         remoteClient.sendToTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
@@ -345,7 +292,7 @@ public class RemoteClientTest {
     public void testSendToTestOnFirstWorker_withErrorResponse() {
         initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
         try {
@@ -366,7 +313,7 @@ public class RemoteClientTest {
                 .thenReturn(response);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 50,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         remoteClient.startWorkerPingThread();
 
         sleepMillis(300);
@@ -387,7 +334,7 @@ public class RemoteClientTest {
                 .thenReturn(response);
 
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 50,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         remoteClient.startWorkerPingThread();
 
         sleepMillis(300);
@@ -401,7 +348,7 @@ public class RemoteClientTest {
     @Test
     public void testPingWorkerThread_shouldDoNothingIfDisabled() {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, -1,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS,0);
+                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
         remoteClient.startWorkerPingThread();
 
         sleepMillis(300);

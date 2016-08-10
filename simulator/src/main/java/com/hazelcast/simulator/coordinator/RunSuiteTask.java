@@ -176,7 +176,11 @@ public class RunSuiteTask {
             }
             // restart Workers if needed, but not after last test
             if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
-                new StartWorkersTask(clusterLayout, remoteClient, componentRegistry).run();
+                new StartWorkersTask(
+                        clusterLayout,
+                        remoteClient,
+                        componentRegistry,
+                        coordinatorParameters.getWorkerVmStartupDelayMs()).run();
             }
         }
     }

@@ -10,6 +10,7 @@ import com.hazelcast.simulator.coordinator.FailureContainer;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
 import com.hazelcast.simulator.coordinator.RemoteClient;
+import com.hazelcast.simulator.coordinator.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
@@ -104,7 +105,7 @@ public class AgentSmokeTest implements FailureListener {
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
         coordinatorConnector.start();
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0, 0);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0);
     }
 
     @AfterClass
@@ -230,7 +231,7 @@ public class AgentSmokeTest implements FailureListener {
                 false
         );
         ClusterLayout clusterLayout = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);
-        remoteClient.createWorkers(clusterLayout, false);
+        new StartWorkersTask(clusterLayout, remoteClient, componentRegistry, 0).run();
     }
 
     private static void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {

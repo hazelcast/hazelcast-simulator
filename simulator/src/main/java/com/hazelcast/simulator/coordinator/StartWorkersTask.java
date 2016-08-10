@@ -15,27 +15,46 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.cluster.AgentWorkerLayout;
 import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.WorkerType;
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
+import static java.lang.String.format;
 
 public class StartWorkersTask {
+    private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
     private final ClusterLayout clusterLayout;
     private final RemoteClient remoteClient;
     private final ComponentRegistry componentRegistry;
     private final Echoer echoer;
+    private final int workerVmStartupDelayMs;
 
     public StartWorkersTask(
             ClusterLayout clusterLayout,
             RemoteClient remoteClient,
-            ComponentRegistry componentRegistry) {
+            ComponentRegistry componentRegistry,
+            int workerVmStartupDelayMs) {
         this.clusterLayout = clusterLayout;
         this.remoteClient = remoteClient;
         this.componentRegistry = componentRegistry;
+        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
         this.echoer = new Echoer(remoteClient);
     }
 
@@ -51,7 +70,7 @@ public class StartWorkersTask {
                 totalWorkerCount,
                 clusterLayout.getMemberWorkerCount(),
                 clusterLayout.getClientWorkerCount());
-        remoteClient.createWorkers(clusterLayout, true);
+        startWorkers(true);
 
         if (componentRegistry.workerCount() > 0) {
             WorkerData firstWorker = componentRegistry.getFirstWorker();
@@ -63,5 +82,85 @@ public class StartWorkersTask {
         echoer.echo(HORIZONTAL_RULER);
         echoer.echo("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed);
         echoer.echo(HORIZONTAL_RULER);
+    }
+
+    private void startWorkers(boolean startPokeThread) {
+        startWorkersByType(true);
+        startWorkersByType(false);
+
+        remoteClient.sendToAllAgents(new StartTimeoutDetectionOperation());
+        if (startPokeThread) {
+            remoteClient.startWorkerPingThread();
+        }
+    }
+
+    private void startWorkersByType(boolean isMemberType) {
+        ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
+        int workerIndex = 0;
+        for (AgentWorkerLayout agentWorkerLayout : clusterLayout.getAgentWorkerLayouts()) {
+            List<WorkerProcessSettings> settingsList = makeSettingsList(isMemberType, agentWorkerLayout);
+
+            int workerCount = settingsList.size();
+            if (workerCount == 0) {
+                continue;
+            }
+
+            SimulatorAddress agentAddress = agentWorkerLayout.getSimulatorAddress();
+            String workerType = (isMemberType) ? "member" : "client";
+
+            int startupDelayMs = workerVmStartupDelayMs * workerIndex;
+            spawner.spawn(new StartWorker(settingsList, startupDelayMs, agentAddress, workerCount, workerType));
+
+            if (isMemberType) {
+                workerIndex++;
+            }
+        }
+        spawner.awaitCompletion();
+    }
+
+    private List<WorkerProcessSettings> makeSettingsList(boolean isMemberType, AgentWorkerLayout agentWorkerLayout) {
+        List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
+        for (WorkerProcessSettings workerProcessSettings : agentWorkerLayout.getWorkerJvmSettings()) {
+            WorkerType workerType = workerProcessSettings.getWorkerType();
+            if (workerType.isMember() == isMemberType) {
+                settingsList.add(workerProcessSettings);
+            }
+        }
+        return settingsList;
+    }
+
+    private class StartWorker implements Runnable {
+        private final List<WorkerProcessSettings> settingsList;
+        private final SimulatorAddress agentAddress;
+        private final int workerCount;
+        private final String workerType;
+        private final int startupDelayMs;
+
+        public StartWorker(List<WorkerProcessSettings> settingsList,
+                           int startupDelaysMs,
+                           SimulatorAddress agentAddress,
+                           int workerCount,
+                           String workerType) {
+            this.startupDelayMs = startupDelaysMs;
+            this.settingsList = settingsList;
+            this.agentAddress = agentAddress;
+            this.workerCount = workerCount;
+            this.workerType = workerType;
+        }
+
+        @Override
+        public void run() {
+            CreateWorkerOperation operation = new CreateWorkerOperation(settingsList, startupDelayMs);
+            Response response = remoteClient.getCoordinatorConnector().write(agentAddress, operation);
+
+            ResponseType responseType = response.getFirstErrorResponseType();
+            if (responseType != ResponseType.SUCCESS) {
+                throw new CommandLineExitException(format("Could not create %d %s Worker on %s (%s)",
+                        workerCount, workerType, agentAddress, responseType));
+            }
+
+            LOGGER.info(format("Created %d %s Worker on %s", workerCount, workerType, agentAddress));
+            componentRegistry.addWorkers(agentAddress, settingsList);
+        }
     }
 }

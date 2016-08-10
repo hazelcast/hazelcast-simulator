@@ -172,7 +172,11 @@ public final class Coordinator {
                 startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 startCoordinatorConnector();
                 startRemoteClient();
-                new StartWorkersTask(clusterLayout, remoteClient, componentRegistry).run();
+                new StartWorkersTask(
+                        clusterLayout,
+                        remoteClient,
+                        componentRegistry,
+                        coordinatorParameters.getWorkerVmStartupDelayMs()).run();
 
                 runTestSuite();
 
@@ -257,9 +261,7 @@ public final class Coordinator {
                 coordinatorConnector,
                 componentRegistry,
                 workerPingIntervalMillis,
-                shutdownDelaySeconds,
-                coordinatorParameters.getWorkerVmStartupDelayMs()
-        );
+                shutdownDelaySeconds);
         remoteClient.initTestSuite(testSuite);
     }
 
