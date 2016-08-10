@@ -93,7 +93,7 @@ public class AgentSmokeTest implements FailureListener {
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
         outputDirectory = TestUtils.createTmpDirectory();
-        failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
+        failureContainer = new FailureContainer(outputDirectory, new HashSet<FailureType>());
 
         coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureContainer, testPhaseListeners,
                 performanceStatsContainer, COORDINATOR_PORT);
@@ -124,8 +124,8 @@ public class AgentSmokeTest implements FailureListener {
     }
 
     @Override
-    public void onFailure(FailureOperation operation, boolean isFinishedFailure, boolean isCritical) {
-        failureOperations.add(operation);
+    public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
+        failureOperations.add(failure);
     }
 
     @Test

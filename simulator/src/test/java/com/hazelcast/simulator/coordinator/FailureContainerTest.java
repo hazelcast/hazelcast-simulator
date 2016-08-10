@@ -31,7 +31,6 @@ public class FailureContainerTest {
 
     private final static int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
 
-    private ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
     private FailureContainer failureContainer;
 
     private FailureOperation exceptionOperation;
@@ -44,7 +43,7 @@ public class FailureContainerTest {
     public void setUp() {
         outputDirectory = TestUtils.createTmpDirectory();
         failureContainer = new FailureContainer(
-                outputDirectory, componentRegistry, singleton(WORKER_TIMEOUT));
+                outputDirectory, singleton(WORKER_TIMEOUT));
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
         String agentAddress = workerAddress.getParent().toString();
@@ -109,7 +108,8 @@ public class FailureContainerTest {
     @Test
     public void testHasCriticalFailure_withNonCriticalFailures() {
         Set<FailureType> nonCriticalFailures = singleton(exceptionOperation.getType());
-        failureContainer = new FailureContainer(outputDirectory, componentRegistry, nonCriticalFailures);
+
+        failureContainer = new FailureContainer(outputDirectory, nonCriticalFailures);
 
         failureContainer.addFailureOperation(exceptionOperation);
         assertFalse(failureContainer.hasCriticalFailure());
