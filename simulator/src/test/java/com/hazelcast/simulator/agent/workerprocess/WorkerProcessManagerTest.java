@@ -10,14 +10,13 @@ import java.util.Collection;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 public class WorkerProcessManagerTest {
 
@@ -34,15 +33,11 @@ public class WorkerProcessManagerTest {
         firstWorkerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
         secondWorkerAddress = new SimulatorAddress(WORKER, 1, 2, 0);
 
-        Process process = mock(Process.class);
+        firstWorkerProcess = new WorkerProcess(firstWorkerAddress, firstWorkerAddress.toString(), null);
+        firstWorkerProcess.setProcess(mock(Process.class));
 
-        firstWorkerProcess = mock(WorkerProcess.class);
-        when(firstWorkerProcess.getAddress()).thenReturn(firstWorkerAddress);
-        when(firstWorkerProcess.getProcess()).thenReturn(process);
-
-        secondWorkerProcess = mock(WorkerProcess.class);
-        when(secondWorkerProcess.getAddress()).thenReturn(secondWorkerAddress);
-        when(secondWorkerProcess.getProcess()).thenReturn(process);
+        secondWorkerProcess = new WorkerProcess(secondWorkerAddress, secondWorkerAddress.toString(), null);
+        secondWorkerProcess.setProcess(mock(Process.class));
 
         workerProcessManager = new WorkerProcessManager();
         workerProcessManager.add(firstWorkerAddress, firstWorkerProcess);
@@ -59,56 +54,76 @@ public class WorkerProcessManagerTest {
     }
 
     @Test
-    public void testUpdateLastSeenTimestamp_withResponse() {
-        Response response = new Response(1L, COORDINATOR, secondWorkerAddress, ResponseType.SUCCESS);
+    public void testUpdateLastSeenTimestamp_whenFromResponse_thenUpdate() {
+        long firstLastSeen = firstWorkerProcess.getLastSeen();
+        long secondLastSeen = secondWorkerProcess.getLastSeen();
 
+        sleepMillis(100);
+        Response response = new Response(1L, COORDINATOR, secondWorkerAddress, ResponseType.SUCCESS);
         workerProcessManager.updateLastSeenTimestamp(response);
 
-        verify(secondWorkerProcess).updateLastSeen();
-        verifyNoMoreInteractions(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
+        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
+        assertNotEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
-    public void testUpdateLastSeenTimestamp_withSimulatorAddress_fromCoordinator() {
+    public void testUpdateLastSeenTimestamp_whenSimulatorAddressFromCoordinator_thenDoNotUpdate() {
+        long firstLastSeen = firstWorkerProcess.getLastSeen();
+        long secondLastSeen = secondWorkerProcess.getLastSeen();
+
+        sleepMillis(100);
         workerProcessManager.updateLastSeenTimestamp(COORDINATOR);
 
-        verifyNoMoreInteractions(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
+        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
+        assertEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
-    public void testUpdateLastSeenTimestamp_withSimulatorAddress_fromAgent() {
+    public void testUpdateLastSeenTimestamp_whenSimulatorAddressFromAgent_thenDoNotUpdate() {
+        long firstLastSeen = firstWorkerProcess.getLastSeen();
+        long secondLastSeen = secondWorkerProcess.getLastSeen();
+
+        sleepMillis(100);
         workerProcessManager.updateLastSeenTimestamp(firstWorkerAddress.getParent());
 
-        verifyNoMoreInteractions(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
+        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
+        assertEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
-    public void testUpdateLastSeenTimestamp_withSimulatorAddress_fromWorker() {
+    public void testUpdateLastSeenTimestamp_whenSimulatorAddressFromWorker_thenUpdate() {
+        long firstLastSeen = firstWorkerProcess.getLastSeen();
+        long secondLastSeen = secondWorkerProcess.getLastSeen();
+
+        sleepMillis(100);
         workerProcessManager.updateLastSeenTimestamp(firstWorkerAddress);
 
-        verify(firstWorkerProcess).updateLastSeen();
-        verifyNoMoreInteractions(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
+        assertNotEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
+        assertEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
-    public void testUpdateLastSeenTimestamp_withSimulatorAddress_fromUnknownWorker() {
+    public void testUpdateLastSeenTimestamp_whenSimulatorAddressFromUnknownWorker_thenDoNotUpdate() {
+        long firstLastSeen = firstWorkerProcess.getLastSeen();
+        long secondLastSeen = secondWorkerProcess.getLastSeen();
+
+        sleepMillis(100);
         workerProcessManager.updateLastSeenTimestamp(new SimulatorAddress(WORKER, 2, 1, 0));
 
-        verifyNoMoreInteractions(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
+        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
+        assertEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
-    public void testUpdateLastSeenTimestamp_withSimulatorAddress_fromTest() {
+    public void testUpdateLastSeenTimestamp_whenSimulatorAddressFromTest_thenUpdate() {
+        long firstLastSeen = firstWorkerProcess.getLastSeen();
+        long secondLastSeen = secondWorkerProcess.getLastSeen();
+
+        sleepMillis(100);
         workerProcessManager.updateLastSeenTimestamp(secondWorkerAddress.getChild(1));
 
-        verify(secondWorkerProcess).updateLastSeen();
-        verifyNoMoreInteractions(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
+        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
+        assertNotEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
@@ -126,24 +141,21 @@ public class WorkerProcessManagerTest {
 
         assertEquals(1, workerProcessManager.getWorkerProcesses().size());
         verifyShutdownOfWorkerJvm(firstWorkerProcess);
-        verifyNoMoreInteractions(secondWorkerProcess);
     }
 
     @Test
     public void testShutdown_withWorkerJVM_withException() {
-        when(secondWorkerProcess.getProcess()).thenThrow(new RuntimeException("expected exception"));
+        Process process = secondWorkerProcess.getProcess();
+        doThrow(new RuntimeException("expected exception")).when(process).destroy();
 
         workerProcessManager.shutdown(secondWorkerProcess);
 
         assertEquals(1, workerProcessManager.getWorkerProcesses().size());
-        verifyNoMoreInteractions(firstWorkerProcess);
         verifyShutdownOfWorkerJvm(secondWorkerProcess);
     }
 
     private static void verifyShutdownOfWorkerJvm(WorkerProcess workerProcess) {
-        verify(workerProcess).getAddress();
-        verify(workerProcess, atLeastOnce()).getProcess();
-        verify(workerProcess, atMost(2)).getProcess();
-        verifyNoMoreInteractions(workerProcess);
+        Process process = workerProcess.getProcess();
+        verify(process).destroy();
     }
 }
