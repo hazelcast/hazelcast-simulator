@@ -209,7 +209,7 @@ public final class Coordinator {
     }
 
     void runTestSuite() {
-        new RunSuiteTask(testSuite,
+        new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
                 componentRegistry,
                 failureContainer,

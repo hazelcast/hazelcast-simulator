@@ -40,8 +40,8 @@ import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.String.format;
 
-public class RunSuiteTask {
-    private static final Logger LOGGER = Logger.getLogger(RunSuiteTask.class);
+public class RunTestSuiteTask {
+    private static final Logger LOGGER = Logger.getLogger(RunTestSuiteTask.class);
 
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;
@@ -55,16 +55,16 @@ public class RunSuiteTask {
     private final PerformanceStatsContainer performanceStatsContainer;
     private final WorkerParameters workerParameters;
 
-    public RunSuiteTask(TestSuite testSuite,
-                        CoordinatorParameters coordinatorParameters,
-                        ComponentRegistry componentRegistry,
-                        FailureContainer failureContainer,
-                        TestPhaseListeners testPhaseListeners,
-                        SimulatorProperties simulatorProperties,
-                        RemoteClient remoteClient,
-                        ClusterLayout clusterLayout,
-                        PerformanceStatsContainer performanceStatsContainer,
-                        WorkerParameters workerParameters) {
+    public RunTestSuiteTask(TestSuite testSuite,
+                            CoordinatorParameters coordinatorParameters,
+                            ComponentRegistry componentRegistry,
+                            FailureContainer failureContainer,
+                            TestPhaseListeners testPhaseListeners,
+                            SimulatorProperties simulatorProperties,
+                            RemoteClient remoteClient,
+                            ClusterLayout clusterLayout,
+                            PerformanceStatsContainer performanceStatsContainer,
+                            WorkerParameters workerParameters) {
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinatorParameters;
         this.componentRegistry = componentRegistry;
