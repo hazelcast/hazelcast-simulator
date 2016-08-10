@@ -262,7 +262,6 @@ public final class Coordinator {
                 componentRegistry,
                 workerPingIntervalMillis,
                 shutdownDelaySeconds);
-        remoteClient.initTestSuite(testSuite);
     }
 
     private void echo(String message, Object... args) {

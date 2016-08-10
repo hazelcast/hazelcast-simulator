@@ -80,6 +80,8 @@ public class RunTestSuiteTask {
 
     public void run() {
         try {
+            remoteClient.initTestSuite(testSuite);
+
             int testCount = testSuite.size();
             boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
             Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
