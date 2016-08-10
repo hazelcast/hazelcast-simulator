@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.cluster;
+package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
@@ -10,8 +10,8 @@ import org.junit.Test;
 
 import java.util.Iterator;
 
-import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.fromXml;
-import static com.hazelcast.simulator.cluster.ClusterConfigurationUtils.toXml;
+import static com.hazelcast.simulator.coordinator.deployment.ClusterConfigurationUtils.fromXml;
+import static com.hazelcast.simulator.coordinator.deployment.ClusterConfigurationUtils.toXml;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.worker.WorkerType.CLIENT;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;

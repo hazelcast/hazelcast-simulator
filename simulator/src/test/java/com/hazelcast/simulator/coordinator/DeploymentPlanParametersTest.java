@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
+import com.hazelcast.simulator.coordinator.deployment.WorkerConfigurationConverter;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

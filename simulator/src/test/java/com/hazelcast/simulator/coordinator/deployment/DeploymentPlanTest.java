@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.cluster;
+package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;

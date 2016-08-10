@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.junit.After;
 import org.junit.Before;

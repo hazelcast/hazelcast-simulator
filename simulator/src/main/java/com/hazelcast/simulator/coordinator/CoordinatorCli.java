@@ -15,12 +15,12 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.coordinator.deployment.WorkerConfigurationConverter;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestPhase;

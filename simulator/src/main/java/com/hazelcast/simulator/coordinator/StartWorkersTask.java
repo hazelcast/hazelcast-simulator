@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.cluster.AgentWorkerLayout;
-import com.hazelcast.simulator.cluster.DeploymentPlan;
+import com.hazelcast.simulator.coordinator.deployment.AgentWorkerLayout;
+import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;

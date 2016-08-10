@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.cluster;
+package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
@@ -12,11 +12,11 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static com.hazelcast.simulator.cluster.AgentWorkerMode.CLIENT;
-import static com.hazelcast.simulator.cluster.AgentWorkerMode.CUSTOM;
-import static com.hazelcast.simulator.cluster.AgentWorkerMode.MEMBER;
-import static com.hazelcast.simulator.cluster.AgentWorkerMode.MIXED;
-import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.CLIENT;
+import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.CUSTOM;
+import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MEMBER;
+import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MIXED;
+import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;

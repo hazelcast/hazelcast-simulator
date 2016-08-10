@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.WorkerConfigurationConverter;
+import com.hazelcast.simulator.coordinator.deployment.WorkerConfigurationConverter;
 
 /**
  * Parameters for the layout of a Simulator cluster.

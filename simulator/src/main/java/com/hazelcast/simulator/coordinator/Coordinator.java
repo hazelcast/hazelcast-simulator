@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;

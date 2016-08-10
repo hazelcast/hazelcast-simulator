@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.cluster;
+package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
@@ -27,8 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.hazelcast.simulator.cluster.ClusterUtils.formatIpAddresses;
-import static com.hazelcast.simulator.cluster.ClusterUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.formatIpAddresses;
+import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.initMemberLayout;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.padLeft;

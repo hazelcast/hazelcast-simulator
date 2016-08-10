@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.cluster;
+package com.hazelcast.simulator.coordinator.deployment;
 
-enum AgentWorkerMode {
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
-    MEMBER,
-    CLIENT,
-    MIXED,
-    CUSTOM
+import java.util.ArrayList;
+import java.util.List;
+
+class NodeConfiguration {
+
+    @XStreamImplicit(itemFieldName = "workerGroup")
+    private final List<WorkerGroup> workerGroups = new ArrayList<WorkerGroup>();
+
+    void addWorkerConfiguration(String workerConfiguration, int workerCount) {
+        workerGroups.add(new WorkerGroup(workerConfiguration, workerCount));
+    }
+
+    List<WorkerGroup> getWorkerGroups() {
+        return workerGroups;
+    }
 }
