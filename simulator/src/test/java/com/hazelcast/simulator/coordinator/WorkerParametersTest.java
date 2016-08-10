@@ -33,7 +33,7 @@ public class WorkerParametersTest {
     @Before
     public void setUp() {
         properties = mock(SimulatorProperties.class);
-        when(properties.getHazelcastVersionSpec()).thenReturn("outofthebox");
+        when(properties.getVersionSpec()).thenReturn("outofthebox");
         when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");
         when(properties.get(eq("JAVA_CMD"), anyString())).thenReturn("java");
 
@@ -51,7 +51,7 @@ public class WorkerParametersTest {
         assertTrue(workerParameters.isAutoCreateHzInstance());
         assertEquals(2342, workerParameters.getWorkerStartupTimeout());
         assertEquals(1234, workerParameters.getWorkerPerformanceMonitorIntervalSeconds());
-        assertEquals("outofthebox", workerParameters.getHazelcastVersionSpec());
+        assertEquals("outofthebox", workerParameters.getVersionSpec());
 
         assertEquals("memberJvmOptions", workerParameters.getMemberJvmOptions());
         assertEquals("clientJvmOptions", workerParameters.getClientJvmOptions());

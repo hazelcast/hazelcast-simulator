@@ -34,7 +34,7 @@ public class ClusterConfigurationUtilsTest {
     @Before
     public void setUp() {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getHazelcastVersionSpec()).thenReturn("defaultHzVersion");
+        when(workerParameters.getVersionSpec()).thenReturn("defaultHzVersion");
         when(workerParameters.getMemberHzConfig()).thenReturn("defaultMemberHzConfig");
         when(workerParameters.getMemberJvmOptions()).thenReturn("defaultMemberJvmOptions");
 

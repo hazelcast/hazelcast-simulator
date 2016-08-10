@@ -147,8 +147,8 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
-    public void testGetHazelcastVersionSpec() {
-        assertEquals("outofthebox", simulatorProperties.getHazelcastVersionSpec());
+    public void testGetVersionSpec() {
+        assertEquals("outofthebox", simulatorProperties.getVersionSpec());
     }
 
     @Test

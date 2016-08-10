@@ -43,7 +43,7 @@ public class ClusterLayoutTest {
         }
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getHazelcastVersionSpec()).thenReturn("outofthebox");
+        when(workerParameters.getVersionSpec()).thenReturn("outofthebox");
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
         when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);

@@ -58,12 +58,12 @@ public class ClusterLayout {
         String layoutType = (clusterLayoutParameters.getClusterConfiguration() == null) ? "arguments" : "cluster.xml";
         LOGGER.info(format("Created via %s: ", layoutType));
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            Set<String> agentHazelcastVersionSpecs = agentWorkerLayout.getHazelcastVersionSpecs();
+            Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
             int agentClientWorkerCount = agentWorkerLayout.getCount(WorkerType.CLIENT);
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
 
-            versionSpecs.addAll(agentHazelcastVersionSpecs);
+            versionSpecs.addAll(agentVersionSpecs);
 
             memberWorkerCount += agentMemberWorkerCount;
             clientWorkerCount += agentClientWorkerCount;
@@ -80,7 +80,7 @@ public class ClusterLayout {
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
                     padLeft(agentWorkerLayout.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
-                    agentHazelcastVersionSpecs
+                    agentVersionSpecs
             ));
         }
     }
@@ -95,7 +95,7 @@ public class ClusterLayout {
         agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
 
         ClusterLayout clusterLayout = new ClusterLayout();
-        clusterLayout.versionSpecs.addAll(agentWorkerLayout.getHazelcastVersionSpecs());
+        clusterLayout.versionSpecs.addAll(agentWorkerLayout.getVersionSpecs());
         clusterLayout.agentWorkerLayouts.add(agentWorkerLayout);
         clusterLayout.memberWorkerCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
         clusterLayout.clientWorkerCount += agentWorkerLayout.getCount(WorkerType.CLIENT);

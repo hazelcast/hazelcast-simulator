@@ -54,7 +54,7 @@ public class CoordinatorTest {
     @Test
     public void testRun() {
         when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
-        when(properties.getHazelcastVersionSpec()).thenReturn("outofthebox");
+        when(properties.getVersionSpec()).thenReturn("outofthebox");
 
         coordinator.run();
     }

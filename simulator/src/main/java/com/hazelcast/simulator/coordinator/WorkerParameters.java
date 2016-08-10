@@ -32,7 +32,7 @@ public class WorkerParameters {
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
 
-    private final String hazelcastVersionSpec;
+    private final String versionSpec;
 
     private final String memberJvmOptions;
     private final String clientJvmOptions;
@@ -59,7 +59,7 @@ public class WorkerParameters {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
 
-        this.hazelcastVersionSpec = properties.getHazelcastVersionSpec();
+        this.versionSpec = properties.getVersionSpec();
 
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
@@ -89,8 +89,8 @@ public class WorkerParameters {
         return workerStartupTimeout;
     }
 
-    public String getHazelcastVersionSpec() {
-        return hazelcastVersionSpec;
+    public String getVersionSpec() {
+        return versionSpec;
     }
 
     public String getMemberJvmOptions() {

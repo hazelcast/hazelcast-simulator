@@ -181,7 +181,7 @@ public class AgentOperationProcessorTest {
         when(workerProcessSettings.getWorkerScript()).thenReturn(withStartupException
                 ? null
                 : fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"));
-        when(workerProcessSettings.getHazelcastVersionSpec()).thenReturn("bringmyown");
+        when(workerProcessSettings.getVersionSpec()).thenReturn("bringmyown");
         when(workerProcessSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
         when(workerProcessSettings.getJvmOptions()).thenReturn("-verbose:gc");
 
