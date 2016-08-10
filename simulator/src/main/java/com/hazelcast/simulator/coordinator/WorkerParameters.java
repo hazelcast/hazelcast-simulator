@@ -118,7 +118,11 @@ public class WorkerParameters {
     }
 
     public int getWorkerPerformanceMonitorIntervalSeconds() {
-        return workerPerformanceMonitorIntervalSeconds;
+        if (monitorPerformance) {
+            return workerPerformanceMonitorIntervalSeconds;
+        } else {
+            return -1;
+        }
     }
 
     public int getRunPhaseLogIntervalSeconds(int runPhaseLogIntervalSeconds) {

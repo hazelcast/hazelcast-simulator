@@ -22,8 +22,10 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -76,23 +78,40 @@ public final class AgentWorkerLayout {
         return agentWorkerMode;
     }
 
-    void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
-        workerProcessSettingsList.add(
-                new WorkerProcessSettings(
-                        currentWorkerIndex.incrementAndGet(),
-                        type,
-                        parameters,
-                        workerConfiguration.getHzVersion(),
-                        workerConfiguration.getJvmOptions(),
-                        workerConfiguration.getHzConfig()));
-    }
+//    void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
+//        Map<String, String> environment = new HashMap<String, String>();
+//        environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions(): parameters.getClientJvmOptions());
+//        environment.put("HAZELCAST_CONFIG", type.isMember() ? parameters.getMemberHzConfig(): parameters.getClientHzConfig());
+//        environment.put("LOG4j_CONFIG", parameters.getLog4jConfig());
+//        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", Boolean.toString(parameters.isAutoCreateHzInstance()));
+//
+//        WorkerProcessSettings settings = new WorkerProcessSettings(
+//                currentWorkerIndex.incrementAndGet(),
+//                type,
+//                workerConfiguration.getHzVersion(),
+//                parameters.getWorkerScript(),
+//                parameters.getWorkerStartupTimeout(),
+//                environment);
+//        workerProcessSettingsList.add(settings);
+//    }
 
     void addWorker(WorkerType type, WorkerParameters parameters) {
-        workerProcessSettingsList.add(
-                new WorkerProcessSettings(
-                        currentWorkerIndex.incrementAndGet(),
-                        type,
-                        parameters));
+        Map<String, String> environment = new HashMap<String, String>();
+        environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions() : parameters.getClientJvmOptions());
+        environment.put("HAZELCAST_CONFIG", type.isMember() ? parameters.getMemberHzConfig() : parameters.getClientHzConfig());
+        environment.put("LOG4j_CONFIG", parameters.getLog4jConfig());
+        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", Boolean.toString(parameters.isAutoCreateHzInstance()));
+        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(parameters.getWorkerPerformanceMonitorIntervalSeconds()));
+
+        WorkerProcessSettings settings = new WorkerProcessSettings(
+                currentWorkerIndex.incrementAndGet(),
+                type,
+                parameters.getVersionSpec(),
+                parameters.getWorkerScript(),
+                parameters.getWorkerStartupTimeout(),
+                environment);
+        workerProcessSettingsList.add(settings);
     }
 
     int getCount(WorkerType type) {

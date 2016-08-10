@@ -24,6 +24,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -173,17 +175,17 @@ public class AgentOperationProcessorTest {
     }
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
-        WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
-        when(workerProcessSettings.getWorkerType()).thenReturn(WorkerType.MEMBER);
-        when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
-        when(workerProcessSettings.getHazelcastConfig()).thenReturn("");
-        when(workerProcessSettings.getLog4jConfig()).thenReturn(fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        when(workerProcessSettings.getWorkerScript()).thenReturn(withStartupException
-                ? null
-                : fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"));
-        when(workerProcessSettings.getVersionSpec()).thenReturn("bringmyown");
-        when(workerProcessSettings.getWorkerStartupTimeout()).thenReturn(startupTimeout);
-        when(workerProcessSettings.getJvmOptions()).thenReturn("-verbose:gc");
+        Map<String, String> environment = new HashMap<String, String>();
+        environment.put("HAZELCAST_CONFIG","");
+        environment.put("LOG4j_CONFIG",fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
+        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS","1");
+        WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(
+                1,
+                WorkerType.MEMBER,
+                "bringmyown",
+                withStartupException ? null : fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"),
+                startupTimeout,
+                environment);
 
         SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerProcessSettings), 0);
         return processor.processOperation(getOperationType(operation), operation, COORDINATOR);
