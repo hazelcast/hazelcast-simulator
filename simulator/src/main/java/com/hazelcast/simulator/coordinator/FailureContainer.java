@@ -70,13 +70,13 @@ public class FailureContainer {
         listenerMap.put(listener, true);
     }
 
-    public void addFailureOperation(FailureOperation operation) {
+    public void addFailureOperation(FailureOperation failure) {
         boolean isFinishedFailure = false;
         boolean isCriticalFailure;
 
-        FailureType failureType = operation.getType();
+        FailureType failureType = failure.getType();
         if (failureType.isWorkerFinishedFailure()) {
-            SimulatorAddress workerAddress = operation.getWorkerAddress();
+            SimulatorAddress workerAddress = failure.getWorkerAddress();
             finishedWorkers.put(workerAddress, failureType);
             componentRegistry.removeWorker(workerAddress);
             isFinishedFailure = true;
@@ -92,29 +92,29 @@ public class FailureContainer {
             failureCount = nonCriticalFailureCounter.incrementAndGet();
         } else {
             failureCount = criticalFailureCounter.incrementAndGet();
-            String testId = operation.getTestId();
+            String testId = failure.getTestId();
             if (testId != null) {
                 hasCriticalFailuresMap.put(testId, true);
             }
             isCriticalFailure = true;
         }
 
-        logFailure(operation, failureCount, isCriticalFailure);
+        logFailure(failure, failureCount, isCriticalFailure);
 
-        appendText(operation.getFileMessage(), file);
+        appendText(failure.getFileMessage(), file);
 
         for (FailureListener failureListener : listenerMap.keySet()) {
-            failureListener.onFailure(operation, isFinishedFailure, isCriticalFailure);
+            failureListener.onFailure(failure, isFinishedFailure, isCriticalFailure);
         }
     }
 
-    private void logFailure(FailureOperation operation, long failureCount, boolean isCriticalFailure) {
+    private void logFailure(FailureOperation failure, long failureCount, boolean isCriticalFailure) {
         int failureNumber = failureNumberGenerator.incrementAndGet();
         if (failureCount < MAX_CONSOLE_FAILURE_COUNT) {
             if (isCriticalFailure) {
-                LOGGER.error(operation.getLogMessage(failureNumber));
+                LOGGER.error(failure.getLogMessage(failureNumber));
             } else {
-                LOGGER.info(operation.getLogMessage(failureNumber));
+                LOGGER.info(failure.getLogMessage(failureNumber));
             }
         } else if (failureNumber == MAX_CONSOLE_FAILURE_COUNT) {
             if (isCriticalFailure) {
