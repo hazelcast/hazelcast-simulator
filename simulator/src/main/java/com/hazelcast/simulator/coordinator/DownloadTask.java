@@ -103,7 +103,7 @@ public class DownloadTask {
                 componentRegistry.agentCount(), elapsed));
     }
 
-    private class DownloadWorkerLogs implements Runnable {
+    private final class DownloadWorkerLogs implements Runnable {
         private final String ip;
 
         private DownloadWorkerLogs(String ip) {
@@ -122,7 +122,7 @@ public class DownloadTask {
         }
     }
 
-    private class DownloadAgentLogs implements Runnable {
+    private final class DownloadAgentLogs implements Runnable {
         private final AgentData agentData;
 
         private DownloadAgentLogs(AgentData agentData) {
