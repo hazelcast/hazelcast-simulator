@@ -25,7 +25,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -175,17 +174,13 @@ public class AgentOperationProcessorTest {
     }
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
-        Map<String, String> environment = new HashMap<String, String>();
-        environment.put("HAZELCAST_CONFIG", "");
-        environment.put("LOG4j_CONFIG", fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "1");
         WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(
                 1,
                 WorkerType.MEMBER,
                 "bringmyown",
                 withStartupException ? "exit 1" : "echo $$ > worker.pid; echo '127.0.0.1:5701' > worker.address; sleep 5;",
                 startupTimeout,
-                environment);
+                new HashMap<String, String>());
 
         SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerProcessSettings), 0);
         return processor.processOperation(getOperationType(operation), operation, COORDINATOR);
