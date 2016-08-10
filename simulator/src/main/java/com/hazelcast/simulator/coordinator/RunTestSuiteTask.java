@@ -21,6 +21,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
@@ -80,7 +81,7 @@ public class RunTestSuiteTask {
 
     public void run() {
         try {
-            remoteClient.initTestSuite(testSuite);
+            remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
 
             int testCount = testSuite.size();
             boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
