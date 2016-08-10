@@ -12,7 +12,6 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.mockito.Mockito.mock;
@@ -58,20 +57,5 @@ public class CoordinatorTest {
         when(properties.getHazelcastVersionSpec()).thenReturn("outofthebox");
 
         coordinator.run();
-    }
-
-    @Test
-    public void testUploadFiles() {
-        when(properties.getCloudProvider()).thenReturn(PROVIDER_EC2);
-
-        coordinator.uploadFiles();
-    }
-
-    @Test
-    public void testUploadFiles_whenLocalMode_thenReturn() {
-        when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
-        when(properties.getHazelcastVersionSpec()).thenReturn("outofthebox");
-
-        coordinator.uploadFiles();
     }
 }

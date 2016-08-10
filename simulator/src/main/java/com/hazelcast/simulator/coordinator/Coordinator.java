@@ -17,52 +17,31 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.cluster.ClusterLayout;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.TargetType;
-import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.Bash;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.agent.workerprocess.WorkerProcessLauncher.WORKERS_HOME_NAME;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
-import static com.hazelcast.simulator.testcontainer.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.FileUtils.rename;
-import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
-import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
-import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -156,14 +135,6 @@ public final class Coordinator {
         return failureContainer;
     }
 
-    PerformanceStatsContainer getPerformanceStatsContainer() {
-        return performanceStatsContainer;
-    }
-
-    RemoteClient getRemoteClient() {
-        return remoteClient;
-    }
-
     // just for testing
     void setRemoteClient(RemoteClient remoteClient) {
         this.remoteClient = remoteClient;
@@ -190,16 +161,21 @@ public final class Coordinator {
         boolean isPrePhaseDone = false;
         try {
             checkInstallation(bash, simulatorProperties, componentRegistry);
-            uploadFiles();
+            new InstallVendorTask(
+                    simulatorProperties,
+                    componentRegistry.getAgentIps(),
+                    clusterLayout.getVersionSpecs(),
+                    testSuite).run();
             isPrePhaseDone = true;
 
             try {
                 startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 startCoordinatorConnector();
                 startRemoteClient();
-                startWorkers();
+                new StartWorkersTask(clusterLayout, remoteClient, componentRegistry).run();
 
                 runTestSuite();
+
             } catch (CommandLineExitException e) {
                 for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
                     sleepSeconds(1);
@@ -218,7 +194,9 @@ public final class Coordinator {
             }
         } finally {
             if (isPrePhaseDone) {
-                download();
+                if (!coordinatorParameters.skipDownload()) {
+                    new DownloadTask(testSuite, simulatorProperties, outputDirectory, componentRegistry, bash).run();
+                }
                 executeAfterCompletion();
 
                 OperationTypeCounter.printStatistics();
@@ -226,34 +204,24 @@ public final class Coordinator {
         }
     }
 
+    void runTestSuite() {
+        new RunSuiteTask(testSuite,
+                coordinatorParameters,
+                componentRegistry,
+                failureContainer,
+                testPhaseListeners,
+                simulatorProperties,
+                remoteClient,
+                clusterLayout,
+                performanceStatsContainer,
+                workerParameters).run();
+    }
+
     private void executeAfterCompletion() {
         if (coordinatorParameters.getAfterCompletionFile() != null) {
             echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
             bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
             echoLocal("Finished after-completion script");
-        }
-    }
-
-    void uploadFiles() {
-        StringBuilder agentPublicIps = new StringBuilder();
-        if (!isLocal(simulatorProperties)) {
-            List<AgentData> agents = componentRegistry.getAgents();
-            for (AgentData agentData : agents) {
-                agentPublicIps.append(agentData.getPublicAddress()).append(',');
-            }
-        }
-
-        String vendor = simulatorProperties.get("VENDOR");
-        String installFile = getConfigurationFile("install-" + vendor + ".sh").getPath();
-
-        for (String versionSpec : clusterLayout.getVersionSpecs()) {
-            LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
-            new BashCommand(installFile)
-                    .addParams(testSuite.getId(), versionSpec, agentPublicIps.toString())
-                    .addEnvironment(simulatorProperties.asMap())
-                    .execute();
-
-            LOGGER.info("Successfully installed '" + vendor + "'");
         }
     }
 
@@ -293,230 +261,6 @@ public final class Coordinator {
                 coordinatorParameters.getWorkerVmStartupDelayMs()
         );
         remoteClient.initTestSuite(testSuite);
-    }
-
-    private void startWorkers() {
-        try {
-            long started = System.nanoTime();
-
-            echo(HORIZONTAL_RULER);
-            echo("Starting Workers...");
-            echo(HORIZONTAL_RULER);
-
-            int totalWorkerCount = clusterLayout.getTotalWorkerCount();
-            echo("Starting %d Workers (%d members, %d clients)...", totalWorkerCount, clusterLayout.getMemberWorkerCount(),
-                    clusterLayout.getClientWorkerCount());
-            remoteClient.createWorkers(clusterLayout, true);
-
-            if (componentRegistry.workerCount() > 0) {
-                WorkerData firstWorker = componentRegistry.getFirstWorker();
-                echo("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
-                        firstWorker.getSettings().getWorkerType());
-            }
-
-            long elapsed = getElapsedSeconds(started);
-            echo(HORIZONTAL_RULER);
-            echo("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed);
-            echo(HORIZONTAL_RULER);
-        } catch (Exception e) {
-            throw new CommandLineExitException("Failed to start Workers", e);
-        }
-    }
-
-    void runTestSuite() {
-        try {
-            int testCount = testSuite.size();
-            boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
-            int maxTestCaseIdLength = testSuite.getMaxTestCaseIdLength();
-            Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel, lastTestPhaseToSync);
-
-            echo("Starting TestSuite: %s", testSuite.getId());
-            logTestSuiteDuration(parallel);
-
-            for (TestData testData : componentRegistry.getTests()) {
-                int testIndex = testData.getTestIndex();
-                TestCase testCase = testData.getTestCase();
-                echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
-                TestCaseRunner runner = new TestCaseRunner(testIndex, testCase, this, maxTestCaseIdLength, testPhaseSyncMap);
-                testPhaseListeners.addListener(testIndex, runner);
-            }
-
-            echoTestSuiteStart(testCount, parallel);
-            long started = System.nanoTime();
-            if (parallel) {
-                runParallel();
-            } else {
-                runSequential();
-            }
-            echoTestSuiteEnd(testCount, started);
-        } finally {
-            int runningWorkerCount = componentRegistry.workerCount();
-            echo("Terminating %d Workers...", runningWorkerCount);
-            remoteClient.terminateWorkers(true);
-
-            int waitForWorkerShutdownTimeoutSeconds = simulatorProperties.getWaitForWorkerShutdownTimeoutSeconds();
-            if (!failureContainer.waitForWorkerShutdown(runningWorkerCount, waitForWorkerShutdownTimeoutSeconds)) {
-                Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
-                LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
-            }
-
-            performanceStatsContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
-        }
-    }
-
-    private void logTestSuiteDuration(boolean isParallel) {
-        int testDuration = testSuite.getDurationSeconds();
-        if (testDuration > 0) {
-            echo("Running time per test: %s", secondsToHuman(testDuration));
-            int totalDuration = (isParallel ? testDuration : testDuration * testSuite.size());
-            if (testSuite.isWaitForTestCase()) {
-                echo("Testsuite will run until tests are finished for a maximum time of: %s", secondsToHuman(totalDuration));
-            } else {
-                echo("Expected total TestSuite time: %s", secondsToHuman(totalDuration));
-            }
-        } else if (testSuite.isWaitForTestCase()) {
-            echo("Testsuite will run until tests are finished");
-        }
-    }
-
-    private void runParallel() {
-        ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
-        for (final TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        ((TestCaseRunner) testCaseRunner).run();
-                    } catch (Exception e) {
-                        throw rethrow(e);
-                    }
-                }
-            });
-        }
-        spawner.awaitCompletion();
-    }
-
-    private void runSequential() {
-        int testIndex = 0;
-        for (TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
-            ((TestCaseRunner) testCaseRunner).run();
-            boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
-            if (hasCriticalFailure && testSuite.isFailFast()) {
-                echo("Aborting TestSuite due to critical failure");
-                break;
-            }
-            // restart Workers if needed, but not after last test
-            if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
-                startWorkers();
-            }
-        }
-    }
-
-    private void download() {
-        if (!coordinatorParameters.skipDownload()) {
-            if (isLocal(simulatorProperties)) {
-                downloadLocal();
-            } else {
-                downloadRemote();
-            }
-        }
-    }
-
-    private void downloadLocal() {
-        echoLocal("Retrieving artifacts of local machine");
-
-        File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
-        String workerPath = workerHome.getAbsolutePath();
-
-        execute(format("mv %s/%s/* %s || true", workerPath, testSuite.getId(), outputDirectory.getAbsolutePath()));
-        execute(format("rmdir %s/%s || true", workerPath, testSuite.getId()));
-        execute(format("rmdir %s || true", workerPath));
-        execute(format("mv ./agent.err %s/ || true", outputDirectory.getAbsolutePath()));
-        execute(format("mv ./agent.out %s/ || true", outputDirectory.getAbsolutePath()));
-    }
-
-    private void downloadRemote() {
-        long started = System.nanoTime();
-        echoLocal("Download artifacts of %s machines...", componentRegistry.agentCount());
-
-        ThreadSpawner spawner = new ThreadSpawner("download", true);
-
-        final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
-        final String sshOptions = simulatorProperties.getSshOptions();
-        final String sshUser = simulatorProperties.getUser();
-
-        // download Worker logs
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    String ip = agentData.getPublicAddress();
-                    String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), testSuite.getId());
-
-                    String rsyncCommand = format(baseCommand, "", sshOptions, sshUser,
-                            outputDirectory.getParentFile().getAbsolutePath());
-
-                    echoLocal("Downloading Worker logs from %s", ip);
-                    bash.executeQuiet(format(rsyncCommand, ip, workersPath));
-                }
-            });
-        }
-
-        // download Agent logs
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                for (final AgentData agentData : componentRegistry.getAgents()) {
-                    String ip = agentData.getPublicAddress();
-                    String agentAddress = agentData.getAddress().toString();
-
-                    echoLocal("Downloading Agent logs from %s", ip);
-                    String rsyncCommand = format(
-                            baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, outputDirectory.getAbsolutePath());
-
-                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.out"));
-                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.err"));
-
-                    File agentOut = new File(outputDirectory.getAbsolutePath(), "agent.out");
-                    File agentErr = new File(outputDirectory.getAbsolutePath(), "agent.err");
-
-                    rename(agentOut, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.out"));
-                    rename(agentErr, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.err"));
-                }
-            }
-        });
-
-        spawner.awaitCompletion();
-
-        long elapsed = getElapsedSeconds(started);
-        echoLocal("Finished downloading artifacts of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
-    }
-
-    private void echoTestSuiteStart(int testCount, boolean isParallel) {
-        echo(HORIZONTAL_RULER);
-        if (testCount == 1) {
-            echo("Running test...");
-        } else {
-            echo("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially");
-        }
-        echo(HORIZONTAL_RULER);
-
-        int targetCount = coordinatorParameters.getTargetCount();
-        if (targetCount > 0) {
-            TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
-            List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-            echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
-        }
-    }
-
-    private void echoTestSuiteEnd(int testCount, long started) {
-        echo(HORIZONTAL_RULER);
-        if (testCount == 1) {
-            echo("Finished running of test (%s)", secondsToHuman(getElapsedSeconds(started)));
-        } else {
-            echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
-        }
-        echo(HORIZONTAL_RULER);
     }
 
     private void echo(String message, Object... args) {

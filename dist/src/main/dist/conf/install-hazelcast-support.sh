@@ -26,7 +26,9 @@ local_build_cache=$git_build_dir/build-cache
 simulator_basename=($(basename $SIMULATOR_HOME))
 
 # we create a tmp directory for all the artifacts
-tmp_dir=`mktemp -d`
+# for more info about this command see:
+# http://unix.stackexchange.com/questions/30091/fix-or-alternative-for-mktemp-in-os-x
+tmp_dir=`mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir'`
 local_install_dir="$tmp_dir/lib"
 
 download()
