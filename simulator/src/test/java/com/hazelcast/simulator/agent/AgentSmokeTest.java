@@ -31,8 +31,8 @@ import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
@@ -58,6 +57,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -70,21 +70,17 @@ public class AgentSmokeTest implements FailureListener {
 
     private static final Logger LOGGER = Logger.getLogger(AgentSmokeTest.class);
 
-    private static ComponentRegistry componentRegistry;
-    private static AgentStarter agentStarter;
-
-    private static FailureContainer failureContainer;
-
-    private static TestPhaseListeners testPhaseListeners;
-    private static CoordinatorConnector coordinatorConnector;
-    private static RemoteClient remoteClient;
-    private static File outputDirectory;
-
+    private ComponentRegistry componentRegistry;
+    private AgentStarter agentStarter;
+    private FailureContainer failureContainer;
+    private TestPhaseListeners testPhaseListeners;
+    private CoordinatorConnector coordinatorConnector;
+    private RemoteClient remoteClient;
+    private File outputDirectory;
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        setLogLevel(Level.TRACE);
+    @Before
+    public void before() throws Exception {
         setDistributionUserDir();
 
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
@@ -105,11 +101,11 @@ public class AgentSmokeTest implements FailureListener {
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
         coordinatorConnector.start();
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) TimeUnit.SECONDS.toMillis(10), 0);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10), 0);
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void after() {
         try {
             LOGGER.info("Shutdown of CoordinatorConnector...");
             coordinatorConnector.shutdown();
@@ -135,6 +131,7 @@ public class AgentSmokeTest implements FailureListener {
 
     @Test
     public void testSuccess() throws Exception {
+
         TestCase testCase = new TestCase("testSuccess");
         testCase.setProperty("class", SuccessTest.class.getName());
         executeTestCase(testCase);
@@ -217,7 +214,7 @@ public class AgentSmokeTest implements FailureListener {
         }
     }
 
-    private static void createWorkers() {
+    private void createWorkers() {
         WorkerParameters workerParameters = new WorkerParameters(
                 new SimulatorProperties(),
                 true,
@@ -234,7 +231,7 @@ public class AgentSmokeTest implements FailureListener {
         new StartWorkersTask(clusterLayout, remoteClient, componentRegistry, 0).run();
     }
 
-    private static void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
+    private void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
         if (testPhase.isGlobal()) {
             remoteClient.sendToTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));

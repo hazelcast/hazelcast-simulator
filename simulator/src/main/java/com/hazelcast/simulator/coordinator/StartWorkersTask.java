@@ -98,10 +98,9 @@ public class StartWorkersTask {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
         int workerIndex = 0;
         for (AgentWorkerLayout agentWorkerLayout : clusterLayout.getAgentWorkerLayouts()) {
-            List<WorkerProcessSettings> settingsList = makeSettingsList(isMemberType, agentWorkerLayout);
+            List<WorkerProcessSettings> workersSettings = makeWorkersProcessSettings(isMemberType, agentWorkerLayout);
 
-            int workerCount = settingsList.size();
-            if (workerCount == 0) {
+            if (workersSettings.isEmpty()) {
                 continue;
             }
 
@@ -109,7 +108,7 @@ public class StartWorkersTask {
             String workerType = (isMemberType) ? "member" : "client";
 
             int startupDelayMs = workerVmStartupDelayMs * workerIndex;
-            spawner.spawn(new StartWorker(settingsList, startupDelayMs, agentAddress, workerCount, workerType));
+            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs, agentAddress, workerType));
 
             if (isMemberType) {
                 workerIndex++;
@@ -118,49 +117,46 @@ public class StartWorkersTask {
         spawner.awaitCompletion();
     }
 
-    private List<WorkerProcessSettings> makeSettingsList(boolean isMemberType, AgentWorkerLayout agentWorkerLayout) {
-        List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
+    private List<WorkerProcessSettings> makeWorkersProcessSettings(boolean isMemberType, AgentWorkerLayout agentWorkerLayout) {
+        List<WorkerProcessSettings> result = new ArrayList<WorkerProcessSettings>();
         for (WorkerProcessSettings workerProcessSettings : agentWorkerLayout.getWorkerJvmSettings()) {
             WorkerType workerType = workerProcessSettings.getWorkerType();
             if (workerType.isMember() == isMemberType) {
-                settingsList.add(workerProcessSettings);
+                result.add(workerProcessSettings);
             }
         }
-        return settingsList;
+        return result;
     }
 
-    private class StartWorker implements Runnable {
-        private final List<WorkerProcessSettings> settingsList;
+    private final class StartWorkersOnAgentTask implements Runnable {
+        private final List<WorkerProcessSettings> workersSettings;
         private final SimulatorAddress agentAddress;
-        private final int workerCount;
         private final String workerType;
         private final int startupDelayMs;
 
-        public StartWorker(List<WorkerProcessSettings> settingsList,
-                           int startupDelaysMs,
-                           SimulatorAddress agentAddress,
-                           int workerCount,
-                           String workerType) {
+        private StartWorkersOnAgentTask(List<WorkerProcessSettings> workersSettings,
+                                        int startupDelaysMs,
+                                        SimulatorAddress agentAddress,
+                                        String workerType) {
             this.startupDelayMs = startupDelaysMs;
-            this.settingsList = settingsList;
+            this.workersSettings = workersSettings;
             this.agentAddress = agentAddress;
-            this.workerCount = workerCount;
             this.workerType = workerType;
         }
 
         @Override
         public void run() {
-            CreateWorkerOperation operation = new CreateWorkerOperation(settingsList, startupDelayMs);
+            CreateWorkerOperation operation = new CreateWorkerOperation(workersSettings, startupDelayMs);
             Response response = remoteClient.getCoordinatorConnector().write(agentAddress, operation);
 
             ResponseType responseType = response.getFirstErrorResponseType();
             if (responseType != ResponseType.SUCCESS) {
                 throw new CommandLineExitException(format("Could not create %d %s Worker on %s (%s)",
-                        workerCount, workerType, agentAddress, responseType));
+                        workersSettings.size(), workerType, agentAddress, responseType));
             }
 
-            LOGGER.info(format("Created %d %s Worker on %s", workerCount, workerType, agentAddress));
-            componentRegistry.addWorkers(agentAddress, settingsList);
+            LOGGER.info(format("Created %d %s Worker on %s", workersSettings.size(), workerType, agentAddress));
+            componentRegistry.addWorkers(agentAddress, workersSettings);
         }
     }
 }
