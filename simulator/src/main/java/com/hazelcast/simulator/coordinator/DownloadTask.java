@@ -38,7 +38,7 @@ import static java.lang.String.format;
 public class DownloadTask {
 
     private static final Logger LOGGER = Logger.getLogger(DownloadTask.class);
-    final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
+    private static final String RSYNC_COMMAND = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
 
     private final TestSuite testSuite;
     private final SimulatorProperties simulatorProperties;
@@ -51,16 +51,14 @@ public class DownloadTask {
     public DownloadTask(TestSuite testSuite,
                         SimulatorProperties simulatorProperties,
                         File outputDirectory,
-                        ComponentRegistry componentRegistry,
-                        Bash bash) {
+                        ComponentRegistry componentRegistry) {
         this.testSuite = testSuite;
         this.simulatorProperties = simulatorProperties;
         this.outputDirectory = outputDirectory;
         this.componentRegistry = componentRegistry;
-        this.bash = bash;
+        this.bash = new Bash(simulatorProperties);
         this.sshOptions = simulatorProperties.getSshOptions();
         this.sshUser = simulatorProperties.getUser();
-
     }
 
     public void run() {
@@ -90,47 +88,13 @@ public class DownloadTask {
 
         ThreadSpawner spawner = new ThreadSpawner("download", true);
 
-
-        // download Worker logs
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    String ip = agentData.getPublicAddress();
-                    String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), testSuite.getId());
-
-                    String rsyncCommand = format(baseCommand, "", sshOptions, sshUser,
-                            outputDirectory.getParentFile().getAbsolutePath());
-
-                    LOGGER.info(format("Downloading Worker logs from %s", ip));
-                    bash.executeQuiet(format(rsyncCommand, ip, workersPath));
-                }
-            });
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new DownloadWorkerLogs(agentData.getPublicAddress()));
         }
 
-        // download Agent logs
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                for (final AgentData agentData : componentRegistry.getAgents()) {
-                    String ip = agentData.getPublicAddress();
-                    String agentAddress = agentData.getAddress().toString();
-
-                    LOGGER.info(format("Downloading Agent logs from %s", ip));
-                    String rsyncCommand = format(
-                            baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, outputDirectory.getAbsolutePath());
-
-                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.out"));
-                    bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.err"));
-
-                    File agentOut = new File(outputDirectory.getAbsolutePath(), "agent.out");
-                    File agentErr = new File(outputDirectory.getAbsolutePath(), "agent.err");
-
-                    rename(agentOut, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.out"));
-                    rename(agentErr, new File(outputDirectory.getAbsolutePath(), agentAddress + '-' + ip + "-agent.err"));
-                }
-            }
-        });
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            spawner.spawn(new DownloadAgentLogs(agentData));
+        }
 
         spawner.awaitCompletion();
 
@@ -139,4 +103,49 @@ public class DownloadTask {
                 componentRegistry.agentCount(), elapsed));
     }
 
+    private class DownloadWorkerLogs implements Runnable {
+        private final String ip;
+
+        private DownloadWorkerLogs(String ip) {
+            this.ip = ip;
+        }
+
+        @Override
+        public void run() {
+            String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), testSuite.getId());
+
+            String rsyncCommand = format(RSYNC_COMMAND, "", sshOptions, sshUser,
+                    outputDirectory.getParentFile().getAbsolutePath());
+
+            LOGGER.info(format("Downloading Worker logs from %s", ip));
+            bash.executeQuiet(format(rsyncCommand, ip, workersPath));
+        }
+    }
+
+    private class DownloadAgentLogs implements Runnable {
+        private final AgentData agentData;
+
+        private DownloadAgentLogs(AgentData agentData) {
+            this.agentData = agentData;
+        }
+
+        @Override
+        public void run() {
+            String ip = agentData.getPublicAddress();
+            String agentAddress = agentData.getAddress().toString();
+
+            LOGGER.info(format("Downloading Agent logs from %s", ip));
+            String outputPath = outputDirectory.getAbsolutePath();
+            String rsyncCommand = format(RSYNC_COMMAND, "--backup --suffix=-%s ", sshOptions, sshUser, outputPath);
+
+            bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.out"));
+            bash.executeQuiet(format(rsyncCommand, ip, ip, "agent.err"));
+
+            File agentOut = new File(outputPath, "agent.out");
+            File agentErr = new File(outputPath, "agent.err");
+
+            rename(agentOut, new File(outputPath, agentAddress + '-' + ip + "-agent.out"));
+            rename(agentErr, new File(outputPath, agentAddress + '-' + ip + "-agent.err"));
+        }
+    }
 }
