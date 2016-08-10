@@ -36,18 +36,16 @@ public class InstallVendorTask {
     private final Set<String> publicIps;
     private final Set<String> versionSpecs;
 
-    // todo: the placement of testSuite here is no good. Insallation will be done before
-    // a test suite is even selected.
-    private final String testSuiteId;
+    private final String sessionId;
 
     public InstallVendorTask(SimulatorProperties simulatorProperties,
                              Set<String> publicIps,
                              Set<String> versionSpecs,
-                             String testSuiteId) {
+                             String sessionId) {
         this.simulatorProperties = simulatorProperties;
         this.publicIps = publicIps;
         this.versionSpecs = versionSpecs;
-        this.testSuiteId = testSuiteId;
+        this.sessionId = sessionId;
     }
 
     public void run() {
@@ -63,7 +61,7 @@ public class InstallVendorTask {
             LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
 
             new BashCommand(installFile)
-                    .addParams(testSuiteId, versionSpec, ipString)
+                    .addParams(sessionId, versionSpec, ipString)
                     .addParams()
                     .addEnvironment(simulatorProperties.asMap())
                     .execute();

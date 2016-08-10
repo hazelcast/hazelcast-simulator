@@ -172,7 +172,7 @@ upload_to_single_agent(){
     public_ip=$1
 
     remote_hz_lib=$simulator_basename/hz-lib
-    remote_run_dir=$simulator_basename/workers/$testsuite_id
+    remote_run_dir=$simulator_basename/workers/$session_id
     remote_lib_dir=$remote_run_dir/lib/
     remote_upload_dir=$remote_run_dir/upload
 
@@ -200,8 +200,8 @@ upload()
     # if there are no provided public ip's, then it is a local install
     if [ -z "$public_ips" ] ; then
         echo "Local install"
-        mkdir -p $SIMULATOR_HOME/workers/$testsuite_id/lib
-        cp -r $local_install_dir $SIMULATOR_HOME/workers/$testsuite_id/lib
+        mkdir -p $SIMULATOR_HOME/workers/$session_id/lib
+        cp -r $local_install_dir $SIMULATOR_HOME/workers/$session_id/lib
         return
     fi
 

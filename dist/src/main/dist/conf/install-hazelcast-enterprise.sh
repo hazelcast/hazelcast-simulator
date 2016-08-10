@@ -2,7 +2,7 @@
 
 . $SIMULATOR_HOME/conf/install-hazelcast-support.sh
 
-testsuite_id=$1
+session_id=$1
 version_spec=$2
 public_ips=$3
 

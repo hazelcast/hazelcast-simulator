@@ -39,7 +39,7 @@ public class DownloadTask {
     private static final Logger LOGGER = Logger.getLogger(DownloadTask.class);
     private static final String RSYNC_COMMAND = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
 
-    private final String testSuiteId;
+    private final String sessionId;
     private final SimulatorProperties simulatorProperties;
     private final File outputDirectory;
     private final ComponentRegistry componentRegistry;
@@ -47,11 +47,11 @@ public class DownloadTask {
     private final String sshOptions;
     private final String sshUser;
 
-    public DownloadTask(String testSuiteId,
+    public DownloadTask(String sessionId,
                         SimulatorProperties simulatorProperties,
                         File outputDirectory,
                         ComponentRegistry componentRegistry) {
-        this.testSuiteId = testSuiteId;
+        this.sessionId = sessionId;
         this.simulatorProperties = simulatorProperties;
         this.outputDirectory = outputDirectory;
         this.componentRegistry = componentRegistry;
@@ -74,8 +74,8 @@ public class DownloadTask {
         File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
         String workerPath = workerHome.getAbsolutePath();
 
-        execute(format("mv %s/%s/* %s || true", workerPath, testSuiteId, outputDirectory.getAbsolutePath()));
-        execute(format("rmdir %s/%s || true", workerPath, testSuiteId));
+        execute(format("mv %s/%s/* %s || true", workerPath, sessionId, outputDirectory.getAbsolutePath()));
+        execute(format("rmdir %s/%s || true", workerPath, sessionId));
         execute(format("rmdir %s || true", workerPath));
         execute(format("mv ./agent.err %s/ || true", outputDirectory.getAbsolutePath()));
         execute(format("mv ./agent.out %s/ || true", outputDirectory.getAbsolutePath()));
@@ -111,7 +111,7 @@ public class DownloadTask {
 
         @Override
         public void run() {
-            String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), testSuiteId);
+            String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), sessionId);
 
             String rsyncCommand = format(RSYNC_COMMAND, "", sshOptions, sshUser,
                     outputDirectory.getParentFile().getAbsolutePath());
