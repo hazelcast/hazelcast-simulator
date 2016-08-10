@@ -104,11 +104,11 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     }
 
     @Override
-    public void onFailure(FailureOperation operation, boolean isFinishedFailure, boolean isCritical) {
+    public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
         if (!isFinishedFailure) {
             return;
         }
-        SimulatorAddress workerAddress = operation.getWorkerAddress();
+        SimulatorAddress workerAddress = failure.getWorkerAddress();
         if (workerAddress == null) {
             return;
         }

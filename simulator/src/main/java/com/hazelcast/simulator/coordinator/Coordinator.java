@@ -15,10 +15,13 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.registry.AgentData;
@@ -46,6 +49,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
@@ -85,7 +89,7 @@ public final class Coordinator {
     }
 
     Coordinator(TestSuite testSuite,
-                ComponentRegistry componentRegistry,
+                final ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
                 WorkerParameters workerParameters,
                 ClusterLayoutParameters clusterLayoutParameters,
@@ -99,7 +103,18 @@ public final class Coordinator {
         this.workerParameters = workerParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
 
-        this.failureContainer = new FailureContainer(outputDirectory, componentRegistry, testSuite.getTolerableFailures());
+        this.failureContainer = new FailureContainer(outputDirectory, testSuite.getTolerableFailures());
+        this.failureContainer.addListener(new FailureListener() {
+            @Override
+            public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
+                FailureType failureType = failure.getType();
+
+                if (failureType.isWorkerFinishedFailure()) {
+                    SimulatorAddress workerAddress = failure.getWorkerAddress();
+                    componentRegistry.removeWorker(workerAddress);
+                }
+            }
+        });
 
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);

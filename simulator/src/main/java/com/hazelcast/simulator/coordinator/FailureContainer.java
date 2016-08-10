@@ -18,7 +18,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -55,14 +54,10 @@ public class FailureContainer {
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
-    private final ComponentRegistry componentRegistry;
     private final Set<FailureType> nonCriticalFailures;
 
-    public FailureContainer(File outputDirectory,
-                            ComponentRegistry componentRegistry,
-                            Set<FailureType> nonCriticalFailures) {
+    public FailureContainer(File outputDirectory, Set<FailureType> nonCriticalFailures) {
         this.file = new File(outputDirectory, "failures.txt");
-        this.componentRegistry = componentRegistry;
         this.nonCriticalFailures = nonCriticalFailures;
     }
 
@@ -78,7 +73,6 @@ public class FailureContainer {
         if (failureType.isWorkerFinishedFailure()) {
             SimulatorAddress workerAddress = failure.getWorkerAddress();
             finishedWorkers.put(workerAddress, failureType);
-            componentRegistry.removeWorker(workerAddress);
             isFinishedFailure = true;
         }
 

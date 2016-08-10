@@ -333,7 +333,7 @@ public class RunTestSuiteTaskTest {
         componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerProcessSettings));
         componentRegistry.addTests(testSuite);
 
-        failureContainer = new FailureContainer(outputDirectory, componentRegistry, Collections.<FailureType>emptySet());
+        failureContainer = new FailureContainer(outputDirectory, Collections.<FailureType>emptySet());
         PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 

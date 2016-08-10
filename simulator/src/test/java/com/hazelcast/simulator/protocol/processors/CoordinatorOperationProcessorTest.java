@@ -96,7 +96,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         performanceStatsContainer = new PerformanceStatsContainer();
 
         outputDirectory = TestUtils.createTmpDirectory();
-        failureContainer = new FailureContainer(outputDirectory, componentRegistry, new HashSet<FailureType>());
+        failureContainer = new FailureContainer(outputDirectory, new HashSet<FailureType>());
 
         processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
                 performanceStatsContainer, remoteControllerProcessor);
@@ -108,8 +108,8 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     }
 
     @Override
-    public void onFailure(FailureOperation operation, boolean isFinishedFailure, boolean isCritical) {
-        failureOperations.add(operation);
+    public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
+        failureOperations.add(failure);
     }
 
     @Test

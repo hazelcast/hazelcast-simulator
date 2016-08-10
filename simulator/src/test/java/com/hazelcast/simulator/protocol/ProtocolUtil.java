@@ -171,7 +171,7 @@ class ProtocolUtil {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
         File outputDirectory = TestUtils.createTmpDirectory();
-        FailureContainer failureContainer = new FailureContainer(outputDirectory, null, new HashSet<FailureType>());
+        FailureContainer failureContainer = new FailureContainer(outputDirectory, new HashSet<FailureType>());
         CoordinatorConnector coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureContainer,
                 testPhaseListeners, performanceStatsContainer, coordinatorPort);
         for (int i = 1; i <= numberOfAgents; i++) {
