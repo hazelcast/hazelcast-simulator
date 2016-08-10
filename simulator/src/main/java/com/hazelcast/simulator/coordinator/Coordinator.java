@@ -165,7 +165,7 @@ public final class Coordinator {
                     simulatorProperties,
                     componentRegistry.getAgentIps(),
                     clusterLayout.getVersionSpecs(),
-                    testSuite).run();
+                    testSuite.getId()).run();
             isPrePhaseDone = true;
 
             try {

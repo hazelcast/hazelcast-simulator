@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.BashCommand;
 import org.apache.log4j.Logger;
 
@@ -39,16 +38,16 @@ public class InstallVendorTask {
 
     // todo: the placement of testSuite here is no good. Insallation will be done before
     // a test suite is even selected.
-    private final TestSuite testSuite;
+    private final String testSuiteId;
 
     public InstallVendorTask(SimulatorProperties simulatorProperties,
                              Set<String> publicIps,
                              Set<String> versionSpecs,
-                             TestSuite testSuite) {
+                             String testSuiteId) {
         this.simulatorProperties = simulatorProperties;
         this.publicIps = publicIps;
         this.versionSpecs = versionSpecs;
-        this.testSuite = testSuite;
+        this.testSuiteId = testSuiteId;
     }
 
     public void run() {
@@ -64,7 +63,7 @@ public class InstallVendorTask {
             LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
 
             new BashCommand(installFile)
-                    .addParams(testSuite.getId(), versionSpec, ipString)
+                    .addParams(testSuiteId, versionSpec, ipString)
                     .addParams()
                     .addEnvironment(simulatorProperties.asMap())
                     .execute();
