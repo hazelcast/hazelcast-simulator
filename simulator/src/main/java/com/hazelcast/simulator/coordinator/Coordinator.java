@@ -45,12 +45,10 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-@SuppressWarnings("checkstyle:methodcount")
 public final class Coordinator {
 
-    static final String SIMULATOR_VERSION = getSimulatorVersion();
-
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
+    private static final String SIMULATOR_VERSION = getSimulatorVersion();
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -135,16 +133,6 @@ public final class Coordinator {
         return failureContainer;
     }
 
-    // just for testing
-    void setRemoteClient(RemoteClient remoteClient) {
-        this.remoteClient = remoteClient;
-    }
-
-    // just for testing
-    TestPhaseListeners getTestPhaseListeners() {
-        return testPhaseListeners;
-    }
-
     private void logConfiguration() {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Total number of Hazelcast member workers: %s", clusterLayout.getMemberWorkerCount());
@@ -208,7 +196,7 @@ public final class Coordinator {
         }
     }
 
-    void runTestSuite() {
+    private void runTestSuite() {
         new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
                 componentRegistry,

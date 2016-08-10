@@ -177,6 +177,7 @@ public class RunTestSuiteTask {
             }
             // restart Workers if needed, but not after last test
             if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
+                remoteClient.terminateWorkers(false);
                 new StartWorkersTask(
                         clusterLayout,
                         remoteClient,

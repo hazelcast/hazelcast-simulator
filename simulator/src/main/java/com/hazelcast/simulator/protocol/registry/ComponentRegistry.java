@@ -94,6 +94,10 @@ public class ComponentRegistry {
         }
     }
 
+    public void removeWorkers() {
+        workers.clear();
+    }
+
     public synchronized void removeWorker(SimulatorAddress workerAddress) {
         for (WorkerData workerData : workers) {
             if (workerData.getAddress().equals(workerAddress)) {
