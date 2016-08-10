@@ -1,12 +1,8 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,10 +11,14 @@ import org.mockito.verification.VerificationMode;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.common.FailureType.WORKER_OOM;
+import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_COORDINATOR_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -31,13 +31,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class WorkerProcessFailureMonitorTest {
@@ -50,10 +51,7 @@ public class WorkerProcessFailureMonitorTest {
 
     private static int addressIndex;
 
-    private Response response;
-
-    private AgentConnector agentConnector;
-    private Agent agent;
+    private FailureSender failureSender;
     private WorkerProcessManager workerProcessManager;
 
     private WorkerProcess workerProcess;
@@ -63,14 +61,10 @@ public class WorkerProcessFailureMonitorTest {
 
     @Before
     public void setUp() {
-        response = mock(Response.class);
-        when(response.getFirstErrorResponseType()).thenReturn(SUCCESS);
-
-        agentConnector = mock(AgentConnector.class);
-        when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
-
-        agent = mock(Agent.class);
-        when(agent.getAgentConnector()).thenReturn(agentConnector);
+        failureSender = mock(FailureSender.class);
+        when(failureSender.sendFailureOperation(
+                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
+                .thenReturn(true);
 
         workerProcessManager = new WorkerProcessManager();
 
@@ -79,8 +73,8 @@ public class WorkerProcessFailureMonitorTest {
 
         workerHome = workerProcess.getWorkerHome();
 
-        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(agent, workerProcessManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
-                DEFAULT_CHECK_INTERVAL);
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
+                DEFAULT_LAST_SEEN_TIMEOUT_SECONDS, DEFAULT_CHECK_INTERVAL);
         workerProcessFailureMonitor.start();
     }
 
@@ -97,15 +91,18 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testConstructor() {
-        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(agent, workerProcessManager, DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
+                DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
         workerProcessFailureMonitor.start();
+
+        verifyZeroInteractions(failureSender);
     }
 
     @Test
     public void testRun_shouldSendNoFailures() {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyNoMoreInteractions(agentConnector);
+        verifyZeroInteractions(failureSender);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
@@ -118,37 +115,38 @@ public class WorkerProcessFailureMonitorTest {
             sleepMillis(DEFAULT_SLEEP_TIME);
         } while (!exceptionWorker.isFinished());
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        assertThatWorkerHasBeenRemoved(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureType(failureSender, WORKER_FINISHED);
     }
 
     @Test
     public void testRun_shouldContinueAfterErrorResponse() {
         Response failOnceResponse = mock(Response.class);
         when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
-        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class))).thenReturn(failOnceResponse);
+        when(failureSender.sendFailureOperation(
+                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
+                .thenReturn(false);
 
         workerProcessFailureMonitor.startTimeoutDetection();
         workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_TIMEOUT);
     }
 
     @Test
-    public void testRun_shouldContinueAfterProtocolError() {
-        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class)))
-                .thenThrow(new SimulatorProtocolException("expected exception"))
-                .thenReturn(response);
+    public void testRun_shouldContinueAfterSendFailure() {
+        when(failureSender.sendFailureOperation(
+                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
+                .thenReturn(false)
+                .thenReturn(true);
 
         workerProcessFailureMonitor.startTimeoutDetection();
         workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_TIMEOUT);
     }
 
     @Test
@@ -158,8 +156,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
@@ -170,8 +167,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
@@ -182,41 +178,39 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
     @Test
-    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withErrorResponse() {
-        Response failOnceResponse = mock(Response.class);
-        when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
-        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class))).thenReturn(failOnceResponse);
+    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withSingleErrorResponse() {
+        when(failureSender.sendFailureOperation(
+                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
+                .thenReturn(false)
+                .thenReturn(true);
 
         String cause = throwableToString(new RuntimeException());
         File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
         assertThatRenamedExceptionFileExists(exceptionFile);
     }
 
     @Test
-    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withException() {
-        when(agentConnector.write(eq(COORDINATOR), any(FailureOperation.class)))
-                .thenThrow(new SimulatorProtocolException("expected exception"))
-                .thenReturn(response);
+    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withContinuousErrorResponse() {
+        when(failureSender.sendFailureOperation(
+                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
+                .thenReturn(false);
 
         String cause = throwableToString(new RuntimeException());
         File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
         assertThatRenamedExceptionFileExists(exceptionFile);
     }
@@ -227,9 +221,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        assertThatWorkerHasBeenRemoved(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureType(failureSender, WORKER_OOM);
     }
 
     @Test
@@ -238,9 +230,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        assertThatWorkerHasBeenRemoved(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertFailureType(failureSender, WORKER_OOM);
     }
 
     @Test
@@ -250,12 +240,13 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSentAtLeastOnce(agentConnector);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_TIMEOUT);
     }
 
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionDisabled() {
-        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(agent, workerProcessManager, -1, DEFAULT_CHECK_INTERVAL);
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager, -1,
+                DEFAULT_CHECK_INTERVAL);
         workerProcessFailureMonitor.start();
 
         workerProcessFailureMonitor.startTimeoutDetection();
@@ -268,7 +259,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyNoMoreInteractions(agentConnector);
+        verifyZeroInteractions(failureSender);
     }
 
     @Test
@@ -277,7 +268,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyNoMoreInteractions(agentConnector);
+        verifyZeroInteractions(failureSender);
     }
 
     @Test
@@ -291,11 +282,11 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyNoMoreInteractions(agentConnector);
+        verifyZeroInteractions(failureSender);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
-    public void testRun_shouldDetectUnexpectedExit_whenExitValueIsZero() {
+    public void testRun_shouldDetectWorkerFinished_whenExitValueIsZero() {
         Process process = mock(Process.class);
         when(process.exitValue()).thenReturn(0);
         WorkerProcess exitWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
@@ -304,9 +295,8 @@ public class WorkerProcessFailureMonitorTest {
             sleepMillis(DEFAULT_SLEEP_TIME);
         } while (!exitWorker.isFinished());
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        assertThatWorkerHasBeenRemoved(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
+        assertTrue(exitWorker.isFinished());
+        assertFailureType(failureSender, WORKER_FINISHED);
     }
 
     @Test
@@ -317,10 +307,8 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertThatFailureOperationHasBeenSent(agentConnector, 1);
-        assertThatWorkerHasBeenRemoved(agentConnector, 1);
-        verifyNoMoreInteractions(agentConnector);
         assertFalse(exitWorker.isFinished());
+        assertFailureType(failureSender, WORKER_EXIT);
     }
 
     @Test
@@ -341,14 +329,16 @@ public class WorkerProcessFailureMonitorTest {
         return new SimulatorAddress(WORKER, 1, ++addressIndex, 0);
     }
 
-    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address, boolean createWorkerHome) {
+    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address,
+                                              boolean createWorkerHome) {
         Process process = mock(Process.class);
         when(process.exitValue()).thenThrow(new IllegalThreadStateException("process is still running"));
 
         return addWorkerJvm(workerProcessManager, address, createWorkerHome, process);
     }
 
-    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address, boolean createWorkerHome,
+    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address,
+                                              boolean createWorkerHome,
                                               Process process) {
         int addressIndex = address.getAddressIndex();
         File workerHome = new File("worker" + address.getAddressIndex());
@@ -376,24 +366,21 @@ public class WorkerProcessFailureMonitorTest {
         return exceptionFile;
     }
 
-    private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, int times) {
-        assertThatFailureOperationHasBeenSent(agentConnector, times(times));
+    private void assertFailureType(FailureSender failureSender, FailureType failureType) {
+        assertFailureTypeAtLeastOnce(failureSender, failureType, times(1));
     }
 
-    private static void assertThatFailureOperationHasBeenSentAtLeastOnce(AgentConnector agentConnector) {
-        assertThatFailureOperationHasBeenSent(agentConnector, atLeastOnce());
+    private void assertFailureTypeAtLeastOnce(FailureSender failureSender, FailureType failureType) {
+        assertFailureTypeAtLeastOnce(failureSender, failureType, atLeastOnce());
     }
 
-    private static void assertThatFailureOperationHasBeenSent(AgentConnector agentConnector, VerificationMode mode) {
-        verify(agentConnector, mode).write(eq(COORDINATOR), any(FailureOperation.class));
-    }
-
-    private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, int times) {
-        assertThatWorkerHasBeenRemoved(agentConnector, times(times));
-    }
-
-    private static void assertThatWorkerHasBeenRemoved(AgentConnector agentConnector, VerificationMode mode) {
-        verify(agentConnector, mode).removeWorker(anyInt());
+    private void assertFailureTypeAtLeastOnce(FailureSender failureSender, FailureType failureType, VerificationMode mode) {
+        verify(failureSender, mode).sendFailureOperation(anyString(),
+                eq(failureType),
+                any(WorkerProcess.class),
+                any(String.class),
+                any(String.class));
+        verifyNoMoreInteractions(failureSender);
     }
 
     private static void assertThatExceptionFileDoesNotExist(File firstExceptionFile) {
