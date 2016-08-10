@@ -15,15 +15,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class PerformanceStatsContainerTest {
+public class PerformanceStatsCollectorTest {
 
     private static final double ASSERT_EQUALS_DELTA = 0.1;
 
     private static final String TEST_CASE_ID_1 = "testCase1";
     private static final String TEST_CASE_ID_2 = "testCase2";
 
-    private PerformanceStatsContainer emptyPerformanceStatsContainer;
-    private PerformanceStatsContainer performanceStatsContainer;
+    private PerformanceStatsCollector emptyPerformanceStatsCollector;
+    private PerformanceStatsCollector performanceStatsCollector;
 
     private SimulatorAddress worker1;
     private SimulatorAddress worker2;
@@ -33,8 +33,8 @@ public class PerformanceStatsContainerTest {
 
     @Before
     public void setUp() {
-        emptyPerformanceStatsContainer = new PerformanceStatsContainer();
-        performanceStatsContainer = new PerformanceStatsContainer();
+        emptyPerformanceStatsCollector = new PerformanceStatsCollector();
+        performanceStatsCollector = new PerformanceStatsCollector();
 
         worker1 = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
         worker2 = new SimulatorAddress(AddressLevel.WORKER, 2, 1, 0);
@@ -47,19 +47,19 @@ public class PerformanceStatsContainerTest {
     public void testFormatPerformanceNumbers() {
         update(worker1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
 
-        String performance = performanceStatsContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = performanceStatsCollector.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ops"));
     }
 
     @Test
     public void testFormatPerformanceNumbers_testCaseNotFound() {
-        String performance = performanceStatsContainer.formatPerformanceNumbers("notFound");
+        String performance = performanceStatsCollector.formatPerformanceNumbers("notFound");
         assertFalse(performance.contains("ops"));
     }
 
     @Test
     public void testFormatPerformanceNumbers_onEmptyContainer() {
-        String performance = emptyPerformanceStatsContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = emptyPerformanceStatsCollector.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertFalse(performance.contains("ops"));
     }
 
@@ -71,9 +71,9 @@ public class PerformanceStatsContainerTest {
         performanceStats.put(TEST_CASE_ID_1, new PerformanceStats(
                 800, 100, 300, SECONDS.toNanos(3), MICROSECONDS.toNanos(2400), MICROSECONDS.toNanos(2500)));
 
-        performanceStatsContainer.update(worker, performanceStats);
+        performanceStatsCollector.update(worker, performanceStats);
 
-        String performance = performanceStatsContainer.formatPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = performanceStatsCollector.formatPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ms"));
         assertFalse(performance.contains("µs"));
     }
@@ -81,7 +81,7 @@ public class PerformanceStatsContainerTest {
     private void update(SimulatorAddress address, String testId, PerformanceStats performanceStats) {
         Map<String, PerformanceStats> performanceStatsMap = new HashMap<String, PerformanceStats>();
         performanceStatsMap.put(testId, performanceStats);
-        performanceStatsContainer.update(address, performanceStatsMap);
+        performanceStatsCollector.update(address, performanceStatsMap);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class PerformanceStatsContainerTest {
         update(worker1, TEST_CASE_ID_1, new PerformanceStats(1500, 150, 550, 1600.0d, 1700, 2400));
         update(worker2, TEST_CASE_ID_1, new PerformanceStats(800, 100, 300, 2200.0d, 2400, 2800));
 
-        PerformanceStats performanceStats = performanceStatsContainer.get(TEST_CASE_ID_1);
+        PerformanceStats performanceStats = performanceStatsCollector.get(TEST_CASE_ID_1);
 
         assertFalse(performanceStats.isEmpty());
         assertEquals(2300, performanceStats.getOperationCount());
@@ -103,14 +103,14 @@ public class PerformanceStatsContainerTest {
 
     @Test
     public void testGet_testCaseNotFound() {
-        PerformanceStats performanceStats = performanceStatsContainer.get("notFound");
+        PerformanceStats performanceStats = performanceStatsCollector.get("notFound");
 
         assertTrue(performanceStats.isEmpty());
     }
 
     @Test
     public void testGet_onEmptyContainer() {
-        PerformanceStats performanceStats = emptyPerformanceStatsContainer.get(TEST_CASE_ID_1);
+        PerformanceStats performanceStats = emptyPerformanceStatsCollector.get(TEST_CASE_ID_1);
 
         assertTrue(performanceStats.isEmpty());
     }
@@ -129,7 +129,7 @@ public class PerformanceStatsContainerTest {
         PerformanceStats totalPerformanceStats = new PerformanceStats();
         Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
 
-        performanceStatsContainer.calculatePerformanceStats(totalPerformanceStats, agentPerformanceStatsMap);
+        performanceStatsCollector.calculatePerformanceStats(totalPerformanceStats, agentPerformanceStatsMap);
 
         assertEquals(2, agentPerformanceStatsMap.size());
 
@@ -160,7 +160,7 @@ public class PerformanceStatsContainerTest {
         PerformanceStats totalPerformanceStats = new PerformanceStats();
         Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
 
-        emptyPerformanceStatsContainer.calculatePerformanceStats(totalPerformanceStats, agentPerformanceStatsMap);
+        emptyPerformanceStatsCollector.calculatePerformanceStats(totalPerformanceStats, agentPerformanceStatsMap);
 
         assertEquals(0, agentPerformanceStatsMap.size());
         assertTrue(totalPerformanceStats.isEmpty());

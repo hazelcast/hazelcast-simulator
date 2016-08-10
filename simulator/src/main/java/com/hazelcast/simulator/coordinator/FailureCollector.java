@@ -38,12 +38,12 @@ import static java.lang.String.format;
 /**
  * Responsible for storing and formatting failures from Simulator workers.
  */
-public class FailureContainer {
+public class FailureCollector {
 
     private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
     private static final int MAX_CONSOLE_FAILURE_COUNT = 25;
 
-    private static final Logger LOGGER = Logger.getLogger(FailureContainer.class);
+    private static final Logger LOGGER = Logger.getLogger(FailureCollector.class);
 
     private final AtomicInteger failureNumberGenerator = new AtomicInteger();
     private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkers
@@ -58,7 +58,7 @@ public class FailureContainer {
     private final ComponentRegistry componentRegistry;
     private final Set<FailureType> nonCriticalFailures;
 
-    public FailureContainer(File outputDirectory,
+    public FailureCollector(File outputDirectory,
                             ComponentRegistry componentRegistry,
                             Set<FailureType> nonCriticalFailures) {
         this.file = new File(outputDirectory, "failures.txt");

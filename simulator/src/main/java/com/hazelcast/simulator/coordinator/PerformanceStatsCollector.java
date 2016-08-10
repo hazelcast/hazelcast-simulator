@@ -44,7 +44,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 /**
  * Responsible for storing and formatting performance metrics from Simulator workers.
  */
-public class PerformanceStatsContainer {
+public class PerformanceStatsCollector {
 
     public static final int OPERATION_COUNT_FORMAT_LENGTH = 14;
     public static final int THROUGHPUT_FORMAT_LENGTH = 12;
@@ -52,7 +52,7 @@ public class PerformanceStatsContainer {
 
     private static final long DISPLAY_LATENCY_AS_MICROS_MAX_VALUE = TimeUnit.SECONDS.toMicros(1);
 
-    private static final Logger LOGGER = Logger.getLogger(PerformanceStatsContainer.class);
+    private static final Logger LOGGER = Logger.getLogger(PerformanceStatsCollector.class);
 
     // holds a map per Worker SimulatorAddress which contains the last PerformanceStats per testCaseId
     private final ConcurrentMap<SimulatorAddress, ConcurrentMap<String, PerformanceStats>> workerLastPerformanceStatsMap

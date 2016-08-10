@@ -47,34 +47,34 @@ public class RunTestSuiteTask {
     private final CoordinatorParameters coordinatorParameters;
     private final ComponentRegistry componentRegistry;
     private final Echoer echoer;
-    private final FailureContainer failureContainer;
+    private final FailureCollector failureCollector;
     private final TestPhaseListeners testPhaseListeners;
     private final SimulatorProperties simulatorProperties;
     private final RemoteClient remoteClient;
     private final DeploymentPlan deploymentPlan;
-    private final PerformanceStatsContainer performanceStatsContainer;
+    private final PerformanceStatsCollector performanceStatsCollector;
     private final WorkerParameters workerParameters;
 
     public RunTestSuiteTask(TestSuite testSuite,
                             CoordinatorParameters coordinatorParameters,
                             ComponentRegistry componentRegistry,
-                            FailureContainer failureContainer,
+                            FailureCollector failureCollector,
                             TestPhaseListeners testPhaseListeners,
                             SimulatorProperties simulatorProperties,
                             RemoteClient remoteClient,
                             DeploymentPlan deploymentPlan,
-                            PerformanceStatsContainer performanceStatsContainer,
+                            PerformanceStatsCollector performanceStatsCollector,
                             WorkerParameters workerParameters) {
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinatorParameters;
         this.componentRegistry = componentRegistry;
         this.echoer = new Echoer(remoteClient);
-        this.failureContainer = failureContainer;
+        this.failureCollector = failureCollector;
         this.testPhaseListeners = testPhaseListeners;
         this.simulatorProperties = simulatorProperties;
         this.remoteClient = remoteClient;
         this.deploymentPlan = deploymentPlan;
-        this.performanceStatsContainer = performanceStatsContainer;
+        this.performanceStatsCollector = performanceStatsCollector;
         this.workerParameters = workerParameters;
     }
 
@@ -99,11 +99,11 @@ public class RunTestSuiteTask {
                         testSuite,
                         remoteClient,
                         testPhaseSyncMap,
-                        failureContainer,
+                        failureCollector,
                         componentRegistry,
                         coordinatorParameters,
                         workerParameters,
-                        performanceStatsContainer);
+                        performanceStatsCollector);
                 testPhaseListeners.addListener(testIndex, runner);
             }
 
@@ -121,12 +121,12 @@ public class RunTestSuiteTask {
             remoteClient.terminateWorkers(true);
 
             int waitForWorkerShutdownTimeoutSeconds = simulatorProperties.getWaitForWorkerShutdownTimeoutSeconds();
-            if (!failureContainer.waitForWorkerShutdown(runningWorkerCount, waitForWorkerShutdownTimeoutSeconds)) {
-                Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
+            if (!failureCollector.waitForWorkerShutdown(runningWorkerCount, waitForWorkerShutdownTimeoutSeconds)) {
+                Set<SimulatorAddress> finishedWorkers = failureCollector.getFinishedWorkers();
                 LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
             }
 
-            performanceStatsContainer.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
+            performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
     }
 
@@ -167,7 +167,7 @@ public class RunTestSuiteTask {
         int testIndex = 0;
         for (TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
             ((TestCaseRunner) testCaseRunner).run();
-            boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
+            boolean hasCriticalFailure = failureCollector.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
                 echoer.echo("Aborting TestSuite due to critical failure");
                 break;

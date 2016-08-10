@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.coordinator.FailureContainer;
-import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
+import com.hazelcast.simulator.coordinator.FailureCollector;
+import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -44,20 +44,20 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
     private final LocalExceptionLogger exceptionLogger;
-    private final FailureContainer failureContainer;
+    private final FailureCollector failureCollector;
     private final TestPhaseListeners testPhaseListeners;
-    private final PerformanceStatsContainer performanceStatsContainer;
+    private final PerformanceStatsCollector performanceStatsCollector;
     private final CoordinatorRemoteControllerProcessor remoteControllerProcessor;
 
-    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, FailureContainer failureContainer,
+    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, FailureCollector failureCollector,
                                          TestPhaseListeners testPhaseListeners,
-                                         PerformanceStatsContainer performanceStatsContainer,
+                                         PerformanceStatsCollector performanceStatsCollector,
                                          CoordinatorRemoteControllerProcessor remoteControllerProcessor) {
         super(exceptionLogger);
         this.exceptionLogger = exceptionLogger;
-        this.failureContainer = failureContainer;
+        this.failureCollector = failureCollector;
         this.testPhaseListeners = testPhaseListeners;
-        this.performanceStatsContainer = performanceStatsContainer;
+        this.performanceStatsCollector = performanceStatsCollector;
         this.remoteControllerProcessor = remoteControllerProcessor;
     }
 
@@ -90,7 +90,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processFailure(FailureOperation operation) {
-        failureContainer.addFailureOperation(operation);
+        failureCollector.addFailureOperation(operation);
     }
 
     private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
@@ -105,7 +105,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processPerformanceStats(PerformanceStatsOperation operation, SimulatorAddress sourceAddress) {
-        performanceStatsContainer.update(sourceAddress, operation.getPerformanceStats());
+        performanceStatsCollector.update(sourceAddress, operation.getPerformanceStats());
     }
 
     private void processRemoteController(RemoteControllerOperation operation) {

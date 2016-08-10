@@ -27,12 +27,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class FailureContainerTest {
+public class FailureCollectorTest {
 
     private final static int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
 
     private ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
-    private FailureContainer failureContainer;
+    private FailureCollector failureCollector;
 
     private FailureOperation exceptionOperation;
     private FailureOperation oomOperation;
@@ -43,7 +43,7 @@ public class FailureContainerTest {
     @Before
     public void setUp() {
         outputDirectory = TestUtils.createTmpDirectory();
-        failureContainer = new FailureContainer(
+        failureCollector = new FailureCollector(
                 outputDirectory, componentRegistry, singleton(WORKER_TIMEOUT));
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
@@ -69,50 +69,50 @@ public class FailureContainerTest {
 
     @Test
     public void testAddFailureOperation_withException() {
-        assertEquals(0, failureContainer.getFailureCount());
-        assertEquals(0, failureContainer.getFinishedWorkers().size());
+        assertEquals(0, failureCollector.getFailureCount());
+        assertEquals(0, failureCollector.getFinishedWorkers().size());
 
-        failureContainer.addFailureOperation(exceptionOperation);
+        failureCollector.addFailureOperation(exceptionOperation);
 
-        assertEquals(1, failureContainer.getFailureCount());
-        assertEquals(0, failureContainer.getFinishedWorkers().size());
+        assertEquals(1, failureCollector.getFailureCount());
+        assertEquals(0, failureCollector.getFinishedWorkers().size());
     }
 
     @Test
     public void testAddFailureOperation_withWorkerFinishedFailure() {
-        assertEquals(0, failureContainer.getFailureCount());
-        assertEquals(0, failureContainer.getFinishedWorkers().size());
+        assertEquals(0, failureCollector.getFailureCount());
+        assertEquals(0, failureCollector.getFinishedWorkers().size());
 
-        failureContainer.addFailureOperation(oomOperation);
+        failureCollector.addFailureOperation(oomOperation);
 
-        assertEquals(1, failureContainer.getFailureCount());
-        assertEquals(1, failureContainer.getFinishedWorkers().size());
+        assertEquals(1, failureCollector.getFailureCount());
+        assertEquals(1, failureCollector.getFinishedWorkers().size());
     }
 
     @Test
     public void testAddFailureOperation_withPoisonPill() {
-        assertEquals(0, failureContainer.getFailureCount());
-        assertEquals(0, failureContainer.getFinishedWorkers().size());
+        assertEquals(0, failureCollector.getFailureCount());
+        assertEquals(0, failureCollector.getFinishedWorkers().size());
 
-        failureContainer.addFailureOperation(finishedOperation);
+        failureCollector.addFailureOperation(finishedOperation);
 
-        assertEquals(0, failureContainer.getFailureCount());
-        assertEquals(1, failureContainer.getFinishedWorkers().size());
+        assertEquals(0, failureCollector.getFailureCount());
+        assertEquals(1, failureCollector.getFinishedWorkers().size());
     }
 
     @Test
     public void testHasCriticalFailure() {
-        failureContainer.addFailureOperation(exceptionOperation);
-        assertTrue(failureContainer.hasCriticalFailure());
+        failureCollector.addFailureOperation(exceptionOperation);
+        assertTrue(failureCollector.hasCriticalFailure());
     }
 
     @Test
     public void testHasCriticalFailure_withNonCriticalFailures() {
         Set<FailureType> nonCriticalFailures = singleton(exceptionOperation.getType());
-        failureContainer = new FailureContainer(outputDirectory, componentRegistry, nonCriticalFailures);
+        failureCollector = new FailureCollector(outputDirectory, componentRegistry, nonCriticalFailures);
 
-        failureContainer.addFailureOperation(exceptionOperation);
-        assertFalse(failureContainer.hasCriticalFailure());
+        failureCollector.addFailureOperation(exceptionOperation);
+        assertFalse(failureCollector.hasCriticalFailure());
     }
 
     @Test(timeout = 10000)
@@ -130,7 +130,7 @@ public class FailureContainerTest {
             }
         });
 
-        boolean success = failureContainer.waitForWorkerShutdown(3, FINISHED_WORKER_TIMEOUT_SECONDS);
+        boolean success = failureCollector.waitForWorkerShutdown(3, FINISHED_WORKER_TIMEOUT_SECONDS);
         assertTrue(success);
     }
 
@@ -138,30 +138,30 @@ public class FailureContainerTest {
     public void testWaitForWorkerShutdown_withTimeout() {
         addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0));
 
-        boolean success = failureContainer.waitForWorkerShutdown(3, 1);
+        boolean success = failureCollector.waitForWorkerShutdown(3, 1);
         assertFalse(success);
     }
 
     @Test
     public void testLogFailureInfo_noFailures() {
-        failureContainer.logFailureInfo();
+        failureCollector.logFailureInfo();
     }
 
     @Test
     public void testLogFailureInfo_withNonCriticalFailures() {
-        failureContainer.addFailureOperation(nonCriticalOperation);
-        failureContainer.logFailureInfo();
+        failureCollector.addFailureOperation(nonCriticalOperation);
+        failureCollector.logFailureInfo();
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testLogFailureInfo_withFailures() {
-        failureContainer.addFailureOperation(exceptionOperation);
-        failureContainer.logFailureInfo();
+        failureCollector.addFailureOperation(exceptionOperation);
+        failureCollector.logFailureInfo();
     }
 
     private void addFinishedWorker(SimulatorAddress workerAddress) {
         FailureOperation operation = new FailureOperation("finished", WORKER_FINISHED, workerAddress,
                 workerAddress.getParent().toString(), "127.0.0.1:5701", "workerId", "testId", null, null);
-        failureContainer.addFailureOperation(operation);
+        failureCollector.addFailureOperation(operation);
     }
 }
