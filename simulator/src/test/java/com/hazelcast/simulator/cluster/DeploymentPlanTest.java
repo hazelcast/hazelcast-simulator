@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ClusterLayoutTest {
+public class DeploymentPlanTest {
 
     @Test
     public void testGetVersionSpecs() {
@@ -50,8 +50,8 @@ public class ClusterLayoutTest {
         when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(memberCount);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(clientCount);
 
-        ClusterLayout clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        DeploymentPlan deploymentPlan = new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters);
 
-        assertEquals(singleton("outofthebox"), clusterLayout.getVersionSpecs());
+        assertEquals(singleton("outofthebox"), deploymentPlan.getVersionSpecs());
     }
 }

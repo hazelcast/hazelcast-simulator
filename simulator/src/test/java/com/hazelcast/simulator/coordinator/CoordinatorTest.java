@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -39,10 +39,10 @@ public class CoordinatorTest {
 
         ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
 
-        ClusterLayout clusterLayout = mock(ClusterLayout.class);
+        DeploymentPlan deploymentPlan = mock(DeploymentPlan.class);
 
         coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters,
-                clusterLayoutParameters, clusterLayout);
+                clusterLayoutParameters, deploymentPlan);
     }
 
     @After

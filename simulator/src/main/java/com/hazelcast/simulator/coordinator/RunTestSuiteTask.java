@@ -16,7 +16,7 @@
 
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
@@ -51,7 +51,7 @@ public class RunTestSuiteTask {
     private final TestPhaseListeners testPhaseListeners;
     private final SimulatorProperties simulatorProperties;
     private final RemoteClient remoteClient;
-    private final ClusterLayout clusterLayout;
+    private final DeploymentPlan deploymentPlan;
     private final PerformanceStatsContainer performanceStatsContainer;
     private final WorkerParameters workerParameters;
 
@@ -62,7 +62,7 @@ public class RunTestSuiteTask {
                             TestPhaseListeners testPhaseListeners,
                             SimulatorProperties simulatorProperties,
                             RemoteClient remoteClient,
-                            ClusterLayout clusterLayout,
+                            DeploymentPlan deploymentPlan,
                             PerformanceStatsContainer performanceStatsContainer,
                             WorkerParameters workerParameters) {
         this.testSuite = testSuite;
@@ -73,7 +73,7 @@ public class RunTestSuiteTask {
         this.testPhaseListeners = testPhaseListeners;
         this.simulatorProperties = simulatorProperties;
         this.remoteClient = remoteClient;
-        this.clusterLayout = clusterLayout;
+        this.deploymentPlan = deploymentPlan;
         this.performanceStatsContainer = performanceStatsContainer;
         this.workerParameters = workerParameters;
     }
@@ -176,7 +176,7 @@ public class RunTestSuiteTask {
             if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
                 remoteClient.terminateWorkers(false);
                 new StartWorkersTask(
-                        clusterLayout,
+                        deploymentPlan,
                         remoteClient,
                         componentRegistry,
                         coordinatorParameters.getWorkerVmStartupDelayMs()).run();

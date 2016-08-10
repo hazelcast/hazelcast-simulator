@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.cluster.AgentWorkerLayout;
-import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.cluster.DeploymentPlan;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -40,18 +40,18 @@ import static java.lang.String.format;
 public class StartWorkersTask {
     private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
-    private final ClusterLayout clusterLayout;
+    private final DeploymentPlan deploymentPlan;
     private final RemoteClient remoteClient;
     private final ComponentRegistry componentRegistry;
     private final Echoer echoer;
     private final int workerVmStartupDelayMs;
 
     public StartWorkersTask(
-            ClusterLayout clusterLayout,
+            DeploymentPlan deploymentPlan,
             RemoteClient remoteClient,
             ComponentRegistry componentRegistry,
             int workerVmStartupDelayMs) {
-        this.clusterLayout = clusterLayout;
+        this.deploymentPlan = deploymentPlan;
         this.remoteClient = remoteClient;
         this.componentRegistry = componentRegistry;
         this.workerVmStartupDelayMs = workerVmStartupDelayMs;
@@ -65,11 +65,11 @@ public class StartWorkersTask {
         echoer.echo("Starting Workers...");
         echoer.echo(HORIZONTAL_RULER);
 
-        int totalWorkerCount = clusterLayout.getTotalWorkerCount();
+        int totalWorkerCount = deploymentPlan.getTotalWorkerCount();
         echoer.echo("Starting %d Workers (%d members, %d clients)...",
                 totalWorkerCount,
-                clusterLayout.getMemberWorkerCount(),
-                clusterLayout.getClientWorkerCount());
+                deploymentPlan.getMemberWorkerCount(),
+                deploymentPlan.getClientWorkerCount());
         startWorkers(true);
 
         if (componentRegistry.workerCount() > 0) {
@@ -97,7 +97,7 @@ public class StartWorkersTask {
     private void startWorkersByType(boolean isMemberType) {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
         int workerIndex = 0;
-        for (AgentWorkerLayout agentWorkerLayout : clusterLayout.getAgentWorkerLayouts()) {
+        for (AgentWorkerLayout agentWorkerLayout : deploymentPlan.getAgentWorkerLayouts()) {
             List<WorkerProcessSettings> workersSettings = makeWorkersProcessSettings(isMemberType, agentWorkerLayout);
 
             if (workersSettings.isEmpty()) {

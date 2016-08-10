@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
-public class ClusterLayoutParametersTest {
+public class DeploymentPlanParametersTest {
 
     private WorkerConfigurationConverter converter = mock(WorkerConfigurationConverter.class);
 
