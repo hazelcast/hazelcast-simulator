@@ -131,18 +131,6 @@ public class AgentOperationProcessorTest {
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withStartupException() throws Exception {
-        ResponseType responseType = testCreateWorkerOperation(true, DEFAULT_STARTUP_TIMEOUT);
-        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testCreateWorkerOperation_withStartupTimeout() throws Exception {
-        ResponseType responseType = testCreateWorkerOperation(false, 0);
-        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCreateWorkerOperation_withUploadDirectory() throws Exception {
         File uploadDir = ensureExistingDirectory(testSuiteDir, "upload");
         ensureExistingFile(uploadDir, "testFile");
@@ -152,6 +140,18 @@ public class AgentOperationProcessorTest {
 
         assertThatFileExistsInWorkerHomes("testFile");
         assertWorkerLifecycle();
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCreateWorkerOperation_withoutStartupTimeout() throws Exception {
+        ResponseType responseType = testCreateWorkerOperation(false, 0);
+        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCreateWorkerOperation_withStartupException() throws Exception {
+        ResponseType responseType = testCreateWorkerOperation(true, DEFAULT_STARTUP_TIMEOUT);
+        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
     }
 
     @Test
@@ -176,14 +176,14 @@ public class AgentOperationProcessorTest {
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
         Map<String, String> environment = new HashMap<String, String>();
-        environment.put("HAZELCAST_CONFIG","");
-        environment.put("LOG4j_CONFIG",fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
-        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS","1");
+        environment.put("HAZELCAST_CONFIG", "");
+        environment.put("LOG4j_CONFIG", fileAsText("dist/src/main/dist/conf/worker-log4j.xml"));
+        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "1");
         WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(
                 1,
                 WorkerType.MEMBER,
                 "bringmyown",
-                withStartupException ? null : fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"),
+                withStartupException ? "exit 1" : "echo $$ > worker.pid; echo '127.0.0.1:5701' > worker.address; sleep 5;",
                 startupTimeout,
                 environment);
 
