@@ -30,7 +30,6 @@ class CoordinatorParameters {
     private final boolean skipDownload;
     private final boolean verifyEnabled;
     private final boolean parallel;
-    private final boolean refreshJvm;
 
     private final TargetType targetType;
     private final int targetCount;
@@ -44,7 +43,6 @@ class CoordinatorParameters {
                           String workerClassPath,
                           boolean verifyEnabled,
                           boolean parallel,
-                          boolean refreshJvm,
                           TargetType targetType,
                           int targetCount,
                           TestPhase lastTestPhaseToSync,
@@ -55,7 +53,6 @@ class CoordinatorParameters {
         this.workerClassPath = workerClassPath;
         this.verifyEnabled = verifyEnabled;
         this.parallel = parallel;
-        this.refreshJvm = refreshJvm;
         this.targetType = targetType;
         this.targetCount = targetCount;
         this.lastTestPhaseToSync = lastTestPhaseToSync;
@@ -82,10 +79,6 @@ class CoordinatorParameters {
 
     boolean isParallel() {
         return parallel;
-    }
-
-    boolean isRefreshJvm() {
-        return refreshJvm;
     }
 
     TargetType getTargetType(boolean hasClientWorkers) {

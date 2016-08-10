@@ -19,7 +19,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
@@ -51,7 +50,6 @@ public class RunTestSuiteTask {
     private final TestPhaseListeners testPhaseListeners;
     private final SimulatorProperties simulatorProperties;
     private final RemoteClient remoteClient;
-    private final DeploymentPlan deploymentPlan;
     private final PerformanceStatsContainer performanceStatsContainer;
     private final WorkerParameters workerParameters;
 
@@ -62,7 +60,6 @@ public class RunTestSuiteTask {
                             TestPhaseListeners testPhaseListeners,
                             SimulatorProperties simulatorProperties,
                             RemoteClient remoteClient,
-                            DeploymentPlan deploymentPlan,
                             PerformanceStatsContainer performanceStatsContainer,
                             WorkerParameters workerParameters) {
         this.testSuite = testSuite;
@@ -73,7 +70,6 @@ public class RunTestSuiteTask {
         this.testPhaseListeners = testPhaseListeners;
         this.simulatorProperties = simulatorProperties;
         this.remoteClient = remoteClient;
-        this.deploymentPlan = deploymentPlan;
         this.performanceStatsContainer = performanceStatsContainer;
         this.workerParameters = workerParameters;
     }
@@ -164,22 +160,12 @@ public class RunTestSuiteTask {
     }
 
     private void runSequential() {
-        int testIndex = 0;
         for (TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
             ((TestCaseRunner) testCaseRunner).run();
             boolean hasCriticalFailure = failureContainer.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
                 echoer.echo("Aborting TestSuite due to critical failure");
                 break;
-            }
-            // restart Workers if needed, but not after last test
-            if ((hasCriticalFailure || coordinatorParameters.isRefreshJvm()) && ++testIndex < testSuite.size()) {
-                remoteClient.terminateWorkers(false);
-                new StartWorkersTask(
-                        deploymentPlan,
-                        remoteClient,
-                        componentRegistry,
-                        coordinatorParameters.getWorkerVmStartupDelayMs()).run();
             }
         }
     }
