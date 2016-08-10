@@ -78,23 +78,6 @@ public final class AgentWorkerLayout {
         return agentWorkerMode;
     }
 
-//    void addWorker(WorkerType type, WorkerParameters parameters, WorkerConfiguration workerConfiguration) {
-//        Map<String, String> environment = new HashMap<String, String>();
-//        environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions(): parameters.getClientJvmOptions());
-//        environment.put("HAZELCAST_CONFIG", type.isMember() ? parameters.getMemberHzConfig(): parameters.getClientHzConfig());
-//        environment.put("LOG4j_CONFIG", parameters.getLog4jConfig());
-//        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", Boolean.toString(parameters.isAutoCreateHzInstance()));
-//
-//        WorkerProcessSettings settings = new WorkerProcessSettings(
-//                currentWorkerIndex.incrementAndGet(),
-//                type,
-//                workerConfiguration.getHzVersion(),
-//                parameters.getWorkerScript(),
-//                parameters.getWorkerStartupTimeout(),
-//                environment);
-//        workerProcessSettingsList.add(settings);
-//    }
-
     void addWorker(WorkerType type, WorkerParameters parameters) {
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions() : parameters.getClientJvmOptions());
