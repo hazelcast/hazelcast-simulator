@@ -1,7 +1,8 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.AgentsFile;
+import com.hazelcast.simulator.cluster.ClusterLayout;
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
@@ -30,7 +31,7 @@ import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -45,7 +46,9 @@ import static com.hazelcast.simulator.testcontainer.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -66,10 +69,13 @@ public class RunTestSuiteTaskTest {
 
     private CountDownLatch finishWorkerLatch = new CountDownLatch(1);
 
+    private File outputDirectory;
     private TestSuite testSuite;
     private FailureOperation criticalFailureOperation;
 
     private SimulatorProperties simulatorProperties;
+    private ComponentRegistry componentRegistry;
+    private FailureContainer failureContainer;
     private RemoteClient remoteClient;
 
     private boolean parallel = false;
@@ -91,9 +97,11 @@ public class RunTestSuiteTaskTest {
         TestCase testCase1 = new TestCase("CoordinatorTest1");
         TestCase testCase2 = new TestCase("CoordinatorTest2");
 
-        testSuite = new TestSuite("testrun-" + System.currentTimeMillis());
+        testSuite = new TestSuite("RunTestSuiteTaskTest");
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);
+
+        outputDirectory = ensureExistingDirectory(testSuite.getId());
 
         SimulatorAddress address = new SimulatorAddress(WORKER, 1, 1, 0);
         criticalFailureOperation = new FailureOperation("expected critical failure", WORKER_EXCEPTION, address, "127.0.0.1",
@@ -122,8 +130,7 @@ public class RunTestSuiteTaskTest {
 
     @After
     public void cleanUp() {
-        deleteQuiet(new File(testSuite.getId()).getAbsoluteFile());
-        deleteQuiet(AgentsFile.NAME);
+        deleteQuiet(outputDirectory);
     }
 
     @Test
@@ -132,10 +139,10 @@ public class RunTestSuiteTaskTest {
         testSuite.setDurationSeconds(3);
         parallel = true;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -145,10 +152,10 @@ public class RunTestSuiteTaskTest {
         parallel = true;
         verifyEnabled = false;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -157,10 +164,10 @@ public class RunTestSuiteTaskTest {
         parallel = true;
         monitorPerformance = true;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -170,10 +177,10 @@ public class RunTestSuiteTaskTest {
         parallel = true;
         verifyEnabled = false;
 
-        Coordinator coordinator = createCoordinator(1);
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask(1);
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -183,10 +190,10 @@ public class RunTestSuiteTaskTest {
         parallel = true;
         verifyEnabled = false;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -197,10 +204,10 @@ public class RunTestSuiteTaskTest {
         parallel = true;
         verifyEnabled = false;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -211,10 +218,10 @@ public class RunTestSuiteTaskTest {
         testSuite.addTest(testCase);
         testSuite.setDurationSeconds(1);
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -227,10 +234,10 @@ public class RunTestSuiteTaskTest {
 
         parallel = true;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
     @Test
@@ -238,9 +245,9 @@ public class RunTestSuiteTaskTest {
         testSuite.setDurationSeconds(4);
         parallel = false;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        failureContainer.addFailureOperation(criticalFailureOperation);
+        task.run();
     }
 
     @Test
@@ -249,9 +256,9 @@ public class RunTestSuiteTaskTest {
         testSuite.setFailFast(false);
         parallel = true;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        failureContainer.addFailureOperation(criticalFailureOperation);
+        task.run();
     }
 
     @Test
@@ -259,9 +266,9 @@ public class RunTestSuiteTaskTest {
         testSuite.setDurationSeconds(1);
         testSuite.setFailFast(true);
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        failureContainer.addFailureOperation(criticalFailureOperation);
+        task.run();
     }
 
     @Test
@@ -270,9 +277,9 @@ public class RunTestSuiteTaskTest {
         testSuite.setFailFast(true);
         parallel = true;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.getFailureContainer().addFailureOperation(criticalFailureOperation);
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        failureContainer.addFailureOperation(criticalFailureOperation);
+        task.run();
     }
 
     @Test(expected = IllegalStateException.class)
@@ -281,8 +288,8 @@ public class RunTestSuiteTaskTest {
         testSuite.setDurationSeconds(1);
         parallel = false;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
     }
 
     @Test(expected = IllegalStateException.class)
@@ -291,8 +298,8 @@ public class RunTestSuiteTaskTest {
         testSuite.setDurationSeconds(1);
         parallel = true;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
     }
 
     @Test
@@ -301,30 +308,34 @@ public class RunTestSuiteTaskTest {
         testSuite.setDurationSeconds(1);
         finishWorkerLatch = null;
 
-        Coordinator coordinator = createCoordinator();
-        coordinator.runTestSuite();
+        RunTestSuiteTask task = createRunTestSuiteTask();
+        task.run();
 
-        Set<SimulatorAddress> finishedWorkers = coordinator.getFailureContainer().getFinishedWorkers();
+        Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
         assertEquals(0, finishedWorkers.size());
 
-        Set<SimulatorAddress> missingWorkers = coordinator.getComponentRegistry().getMissingWorkers(finishedWorkers);
+        Set<SimulatorAddress> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
         assertEquals(1, missingWorkers.size());
 
-        verifyRemoteClient(coordinator);
+        verifyRemoteClient();
     }
 
-    private Coordinator createCoordinator() {
-        return createCoordinator(0);
+    private RunTestSuiteTask createRunTestSuiteTask() {
+        return createRunTestSuiteTask(0);
     }
 
-    private Coordinator createCoordinator(int targetCount) {
+    private RunTestSuiteTask createRunTestSuiteTask(int targetCount) {
         WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
         when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
 
-        ComponentRegistry componentRegistry = new ComponentRegistry();
+        componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
         componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerProcessSettings));
         componentRegistry.addTests(testSuite);
+
+        failureContainer = new FailureContainer(outputDirectory, componentRegistry, Collections.<FailureType>emptySet());
+        PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
+        TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
@@ -334,34 +345,40 @@ public class RunTestSuiteTaskTest {
         when(coordinatorParameters.getTargetType(anyBoolean())).thenReturn(TargetType.ALL);
         when(coordinatorParameters.getTargetCount()).thenReturn(targetCount);
 
-        ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
-
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
 
-        Coordinator coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters,
-                clusterLayoutParameters);
-        coordinator.setRemoteClient(remoteClient);
+        ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
+        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
+        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
+        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        new TestPhaseCompleter(coordinator).start();
+        ClusterLayout clusterLayout = new ClusterLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
-        return coordinator;
+        RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureContainer,
+                testPhaseListeners, simulatorProperties, remoteClient, clusterLayout, performanceStatsContainer,
+                workerParameters);
+
+        new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureContainer).start();
+
+        return task;
     }
 
-    private void verifyRemoteClient(Coordinator coordinator) {
+    private void verifyRemoteClient() {
         int numberOfTests = testSuite.size();
         boolean isStopTestOperation = (testSuite.getDurationSeconds() > 0);
-        List<TestPhase> expectedTestPhases = getExpectedTestPhases(coordinator);
+        List<TestPhase> expectedTestPhases = getExpectedTestPhases();
 
-        // calculate how many remote calls we will have to the first and to all workers
+        // calculate how many remote calls we expect:
+        // - StartTestOperations
+        // - StopTestOperations
+        // - StarTestPhaseOperation the first worker
+        // - StarTestPhaseOperation to all workers
+        int expectedStartTest = 0;
         int expectedStartTestPhaseOnFirstWorker = 0;
         int expectedStartTestPhaseOnAllWorkers = 0;
-        int expectedStartTest = 0;
         // increase expected counters for each TestPhase
         for (TestPhase testPhase : expectedTestPhases) {
             if (testPhase == WARMUP || testPhase == RUN) {
@@ -374,7 +391,7 @@ public class RunTestSuiteTaskTest {
         }
         int expectedStopTest = (isStopTestOperation ? expectedStartTest : 0);
 
-        // verify RemoteClient calls
+        // verify number of remote calls
         ArgumentCaptor<SimulatorOperation> argumentCaptor = ArgumentCaptor.forClass(SimulatorOperation.class);
         verify(remoteClient, times(numberOfTests)).sendToAllWorkers(any(CreateTestOperation.class));
         int expectedTimes = numberOfTests * expectedStartTestPhaseOnFirstWorker;
@@ -385,34 +402,34 @@ public class RunTestSuiteTaskTest {
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
 
         // assert captured arguments
-        int verifyStartTestOperation = 0;
-        int verifyStartTestPhaseOperation = 0;
-        int verifyStopTestOperation = 0;
+        int actualStartTestOperations = 0;
+        int actualStopTestOperation = 0;
+        int actualStartTestPhaseOperations = 0;
         for (SimulatorOperation operation : argumentCaptor.getAllValues()) {
             if (operation instanceof StartTestOperation) {
-                verifyStartTestOperation++;
+                actualStartTestOperations++;
+            } else if (operation instanceof StopTestOperation) {
+                actualStopTestOperation++;
             } else if (operation instanceof StartTestPhaseOperation) {
-                verifyStartTestPhaseOperation++;
+                actualStartTestPhaseOperations++;
                 TestPhase actual = ((StartTestPhaseOperation) operation).getTestPhase();
                 assertTrue(format("expected TestPhases should contain %s, but where %s", actual, expectedTestPhases),
                         expectedTestPhases.contains(actual));
-            } else if (operation instanceof StopTestOperation) {
-                verifyStopTestOperation++;
             } else {
                 fail("Unwanted SimulatorOperation: " + operation.getClass().getSimpleName());
             }
         }
-        assertEquals(expectedStartTest * numberOfTests, verifyStartTestOperation);
-        assertEquals(expectedStartTestPhaseOnAllWorkers * numberOfTests, verifyStartTestPhaseOperation);
+        assertEquals(expectedStartTest * numberOfTests, actualStartTestOperations);
+        assertEquals(expectedStartTestPhaseOnAllWorkers * numberOfTests, actualStartTestPhaseOperations);
         if (isStopTestOperation) {
-            assertEquals(expectedStopTest * numberOfTests, verifyStopTestOperation);
+            assertEquals(expectedStopTest * numberOfTests, actualStopTestOperation);
         }
     }
 
-    private List<TestPhase> getExpectedTestPhases(Coordinator coordinator) {
+    private List<TestPhase> getExpectedTestPhases() {
         // per default we expected all test phases to be called
-        List<TestPhase> expectedTestPhases = new ArrayList<TestPhase>(Arrays.asList(TestPhase.values()));
-        if (!coordinator.getCoordinatorParameters().isVerifyEnabled()) {
+        List<TestPhase> expectedTestPhases = new ArrayList<TestPhase>(asList(TestPhase.values()));
+        if (!verifyEnabled) {
             // exclude verify test phases
             expectedTestPhases.remove(TestPhase.GLOBAL_VERIFY);
             expectedTestPhases.remove(TestPhase.LOCAL_VERIFY);
@@ -432,12 +449,13 @@ public class RunTestSuiteTaskTest {
         private final TestPhaseListeners testPhaseListeners;
         private final FailureContainer failureContainer;
 
-        private TestPhaseCompleter(Coordinator coordinator) {
+        private TestPhaseCompleter(ComponentRegistry componentRegistry, TestPhaseListeners testPhaseListeners,
+                                   FailureContainer failureContainer) {
             super("TestPhaseCompleter");
 
-            this.componentRegistry = coordinator.getComponentRegistry();
-            this.testPhaseListeners = coordinator.getTestPhaseListeners();
-            this.failureContainer = coordinator.getFailureContainer();
+            this.componentRegistry = componentRegistry;
+            this.testPhaseListeners = testPhaseListeners;
+            this.failureContainer = failureContainer;
 
             setDaemon(true);
         }
