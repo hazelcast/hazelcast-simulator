@@ -199,7 +199,7 @@ public final class Coordinator {
         } finally {
             if (isPrePhaseDone) {
                 if (!coordinatorParameters.skipDownload()) {
-                    new DownloadTask(testSuite, simulatorProperties, outputDirectory, componentRegistry).run();
+                    new DownloadTask(testSuite.getId(), simulatorProperties, outputDirectory, componentRegistry).run();
                 }
                 executeAfterCompletion();
 
