@@ -63,7 +63,7 @@ public class OperationCodecTest {
         LOGGER.info(json);
 
         CreateWorkerOperation decoded = (CreateWorkerOperation) fromJson(json, CreateWorkerOperation.class);
-        WorkerProcessSettings decodedSettings = decoded.getWorkerJvmSettings().get(0);
+        WorkerProcessSettings decodedSettings = decoded.getWorkerProcessSettings().get(0);
         assertEquals(originalSettings.getWorkerIndex(), decodedSettings.getWorkerIndex());
         assertEquals(originalSettings.getWorkerType(), decodedSettings.getWorkerType());
         assertEquals(originalSettings.getEnvironment(), decodedSettings.getEnvironment());

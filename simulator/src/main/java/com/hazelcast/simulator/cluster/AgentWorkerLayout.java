@@ -46,7 +46,7 @@ public final class AgentWorkerLayout {
         this.agentWorkerMode = agentWorkerMode;
     }
 
-    public List<WorkerProcessSettings> getWorkerJvmSettings() {
+    public List<WorkerProcessSettings> getWorkerProcessSettings() {
         return workerProcessSettingsList;
     }
 

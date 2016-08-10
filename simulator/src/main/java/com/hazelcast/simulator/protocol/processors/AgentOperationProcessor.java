@@ -136,7 +136,7 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
 
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
-        for (WorkerProcessSettings workerProcessSettings : operation.getWorkerJvmSettings()) {
+        for (WorkerProcessSettings workerProcessSettings : operation.getWorkerProcessSettings()) {
             WorkerProcessLauncher launcher = new WorkerProcessLauncher(agent, workerProcessManager, workerProcessSettings);
             LaunchWorkerCallable task = new LaunchWorkerCallable(launcher, workerProcessSettings);
             Future<Boolean> future = executorService.schedule(task, operation.getDelayMs(), TimeUnit.MILLISECONDS);

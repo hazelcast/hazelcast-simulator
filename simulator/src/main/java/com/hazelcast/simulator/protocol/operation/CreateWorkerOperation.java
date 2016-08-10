@@ -39,7 +39,7 @@ public class CreateWorkerOperation implements SimulatorOperation {
         return delayMs;
     }
 
-    public List<WorkerProcessSettings> getWorkerJvmSettings() {
+    public List<WorkerProcessSettings> getWorkerProcessSettings() {
         return settingsList;
     }
 }

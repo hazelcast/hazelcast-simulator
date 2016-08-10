@@ -119,7 +119,7 @@ public class StartWorkersTask {
 
     private List<WorkerProcessSettings> makeWorkersProcessSettings(boolean isMemberType, AgentWorkerLayout agentWorkerLayout) {
         List<WorkerProcessSettings> result = new ArrayList<WorkerProcessSettings>();
-        for (WorkerProcessSettings workerProcessSettings : agentWorkerLayout.getWorkerJvmSettings()) {
+        for (WorkerProcessSettings workerProcessSettings : agentWorkerLayout.getWorkerProcessSettings()) {
             WorkerType workerType = workerProcessSettings.getWorkerType();
             if (workerType.isMember() == isMemberType) {
                 result.add(workerProcessSettings);
