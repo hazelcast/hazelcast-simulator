@@ -6,6 +6,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
@@ -21,7 +23,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
@@ -61,7 +62,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class TestCaseRunnerTest {
+public class RunTestSuiteTaskTest {
 
     private CountDownLatch finishWorkerLatch = new CountDownLatch(1);
 
@@ -100,8 +101,14 @@ public class TestCaseRunnerTest {
 
         simulatorProperties = new SimulatorProperties();
 
+        Response response = new Response(1, SimulatorAddress.COORDINATOR, address, ResponseType.SUCCESS);
+
+        CoordinatorConnector connector = mock(CoordinatorConnector.class);
+        when(connector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
+
         remoteClient = mock(RemoteClient.class);
-        when(remoteClient.getCoordinatorConnector()).thenReturn(mock(CoordinatorConnector.class));
+        when(remoteClient.getCoordinatorConnector()).thenReturn(connector);
+
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -226,7 +233,6 @@ public class TestCaseRunnerTest {
         verifyRemoteClient(coordinator);
     }
 
-    @Ignore
     @Test
     public void runTestSuiteSequential_hasCriticalFailures() {
         testSuite.setDurationSeconds(4);

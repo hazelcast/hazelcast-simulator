@@ -91,6 +91,10 @@ public class RemoteClient {
 
         int shutdownDelaySeconds = (componentRegistry.hasClientWorkers() ? memberWorkerShutdownDelaySeconds : 0);
         sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
+
+        // cleanup the registry (important for serial TestSuite execution)
+        componentRegistry.removeTests();
+        componentRegistry.removeWorkers();
     }
 
     public void sendToAllAgents(SimulatorOperation operation) {
