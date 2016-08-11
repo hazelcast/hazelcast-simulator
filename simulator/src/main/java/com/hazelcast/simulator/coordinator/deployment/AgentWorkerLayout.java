@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The layout of workers for a given Simulator Agent.
+ * The layout of Simulator Workers for a given Simulator Agent.
  */
 final class AgentWorkerLayout {
 
@@ -44,27 +44,27 @@ final class AgentWorkerLayout {
         this.agentWorkerMode = agentWorkerMode;
     }
 
-    public List<WorkerProcessSettings> getWorkerProcessSettings() {
+    List<WorkerProcessSettings> getWorkerProcessSettings() {
         return workerProcessSettingsList;
     }
 
-    public SimulatorAddress getSimulatorAddress() {
+    SimulatorAddress getSimulatorAddress() {
         return agentData.getAddress();
     }
 
-    public String getPublicAddress() {
+    String getPublicAddress() {
         return agentData.getPublicAddress();
     }
 
-    public String getPrivateAddress() {
+    String getPrivateAddress() {
         return agentData.getPrivateAddress();
     }
 
-    public AgentData getAgentData() {
+    AgentData getAgentData() {
         return agentData;
     }
 
-    public Set<String> getVersionSpecs() {
+    Set<String> getVersionSpecs() {
         Set<String> result = new HashSet<String>();
         for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
             result.add(workerProcessSettings.getVersionSpec());
