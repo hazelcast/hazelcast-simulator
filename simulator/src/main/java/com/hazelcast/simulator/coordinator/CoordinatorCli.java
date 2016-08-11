@@ -129,10 +129,6 @@ final class CoordinatorCli {
             "Defines if tests are verified.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-    private final OptionSpec<Boolean> workerRefreshSpec = parser.accepts("workerRefresh",
-            "Defines if the Worker JVMs should be restarted after every test (in serial execution).")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
     private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
             "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
@@ -201,7 +197,6 @@ final class CoordinatorCli {
                 options.valueOf(cli.workerClassPathSpec),
                 options.valueOf(cli.verifyEnabledSpec),
                 options.has(cli.parallelSpec),
-                options.valueOf(cli.workerRefreshSpec),
                 options.valueOf(cli.targetTypeSpec),
                 options.valueOf(cli.targetCountSpec),
                 options.valueOf(cli.syncToTestPhaseSpec),

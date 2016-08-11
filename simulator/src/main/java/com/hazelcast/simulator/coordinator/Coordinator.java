@@ -220,7 +220,6 @@ public final class Coordinator {
                 testPhaseListeners,
                 simulatorProperties,
                 remoteClient,
-                deploymentPlan,
                 performanceStatsContainer,
                 workerParameters).run();
     }

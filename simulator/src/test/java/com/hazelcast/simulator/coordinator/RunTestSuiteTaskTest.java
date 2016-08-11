@@ -341,7 +341,6 @@ public class RunTestSuiteTaskTest {
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
         when(coordinatorParameters.isVerifyEnabled()).thenReturn(verifyEnabled);
         when(coordinatorParameters.isParallel()).thenReturn(parallel);
-        when(coordinatorParameters.isRefreshJvm()).thenReturn(false);
         when(coordinatorParameters.getTargetType(anyBoolean())).thenReturn(TargetType.ALL);
         when(coordinatorParameters.getTargetCount()).thenReturn(targetCount);
 
@@ -355,10 +354,8 @@ public class RunTestSuiteTaskTest {
         when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters);
-
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureContainer,
-                testPhaseListeners, simulatorProperties, remoteClient, deploymentPlan, performanceStatsContainer,
+                testPhaseListeners, simulatorProperties, remoteClient, performanceStatsContainer,
                 workerParameters);
 
         new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureContainer).start();

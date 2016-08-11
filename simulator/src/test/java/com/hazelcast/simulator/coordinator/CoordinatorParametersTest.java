@@ -21,7 +21,6 @@ public class CoordinatorParametersTest {
                 "workerClassPath",
                 false,
                 true,
-                false,
                 TargetType.PREFER_CLIENT,
                 5,
                 LOCAL_TEARDOWN,
@@ -33,7 +32,6 @@ public class CoordinatorParametersTest {
         assertEquals("workerClassPath", coordinatorParameters.getWorkerClassPath());
         assertFalse(coordinatorParameters.isVerifyEnabled());
         assertTrue(coordinatorParameters.isParallel());
-        assertFalse(coordinatorParameters.isRefreshJvm());
         assertEquals(TargetType.CLIENT, coordinatorParameters.getTargetType(true));
         assertEquals(TargetType.MEMBER, coordinatorParameters.getTargetType(false));
         assertEquals(5, coordinatorParameters.getTargetCount());
