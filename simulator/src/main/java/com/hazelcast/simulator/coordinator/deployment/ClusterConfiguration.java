@@ -32,15 +32,15 @@ class ClusterConfiguration {
     @XStreamImplicit(itemFieldName = "nodeConfiguration")
     private final List<NodeConfiguration> nodeConfigurations = new ArrayList<NodeConfiguration>();
 
-    public int size() {
+    int size() {
         return nodeConfigurations.size();
     }
 
-    public List<NodeConfiguration> getNodeConfigurations() {
+    List<NodeConfiguration> getNodeConfigurations() {
         return nodeConfigurations;
     }
 
-    public WorkerConfiguration getWorkerConfiguration(String name) {
+    WorkerConfiguration getWorkerConfiguration(String name) {
         return workerConfigurations.get(name);
     }
 

@@ -166,9 +166,9 @@ public class CoordinatorCliTest {
         assertEquals(TimeUnit.DAYS.toSeconds(23), testSuite.getDurationSeconds());
     }
 
-    // we are fine with a zero time execution; useful for a dry run.
     @Test
     public void testInit_duration_withZero() {
+        // we are fine with a zero time execution, since it's useful for a dry run
         args.add("--duration");
         args.add("0s");
 
@@ -176,6 +176,14 @@ public class CoordinatorCliTest {
         TestSuite testSuite = coordinator.getTestSuite();
         assertFalse(testSuite.isWaitForTestCase());
         assertEquals(0, testSuite.getDurationSeconds());
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testInit_duration_withNegativeTime() {
+        args.add("--duration");
+        args.add("-1");
+
+        createCoordinator();
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -250,24 +258,6 @@ public class CoordinatorCliTest {
         Coordinator coordinator = createCoordinator();
 
         assertEquals("*.jar", coordinator.getCoordinatorParameters().getWorkerClassPath());
-    }
-
-    @Test
-    public void testInit_dedicatedMemberMachines() {
-        args.add("--dedicatedMemberMachines");
-        args.add("1");
-
-        Coordinator coordinator = createCoordinator();
-
-        assertEquals(1, coordinator.getClusterLayoutParameters().getDedicatedMemberMachineCount());
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testInit_dedicatedMemberMachines_negativeValue() {
-        args.add("--dedicatedMemberMachines");
-        args.add("-1");
-
-        createCoordinator();
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -370,8 +360,7 @@ public class CoordinatorCliTest {
         writeText(CLUSTER_XML, clusterConfigFile);
 
         try {
-            Coordinator coordinator = createCoordinator();
-            assertEquals(CLUSTER_XML, coordinator.getClusterLayoutParameters().getClusterConfiguration());
+            createCoordinator();
         } finally {
             deleteQuiet(clusterConfigFile);
         }

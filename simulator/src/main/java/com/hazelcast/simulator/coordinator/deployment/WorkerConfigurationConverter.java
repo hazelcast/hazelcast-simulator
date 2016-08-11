@@ -34,7 +34,7 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static java.lang.String.format;
 
-public class WorkerConfigurationConverter implements Converter {
+class WorkerConfigurationConverter implements Converter {
 
     private final int defaultHzPort;
     private final String licenseKey;
@@ -44,8 +44,8 @@ public class WorkerConfigurationConverter implements Converter {
     private final SimulatorProperties simulatorProperties;
     private final ComponentRegistry componentRegistry;
 
-    public WorkerConfigurationConverter(int defaultHzPort, String licenseKey, WorkerParameters workerParameters,
-                                        SimulatorProperties simulatorProperties, ComponentRegistry componentRegistry) {
+    WorkerConfigurationConverter(int defaultHzPort, String licenseKey, WorkerParameters workerParameters,
+                                 SimulatorProperties simulatorProperties, ComponentRegistry componentRegistry) {
         this.defaultHzPort = defaultHzPort;
         this.licenseKey = licenseKey;
         this.workerParameters = workerParameters;

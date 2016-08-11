@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
+import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
@@ -31,14 +31,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.formatIpAddresses;
-import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.formatIpAddresses;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.generateFromArguments;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.generateFromXml;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
 import static java.lang.String.format;
 
-public class DeploymentPlan {
+public final class DeploymentPlan {
 
     private static final int WORKER_MODE_LENGTH = 6;
 
@@ -47,31 +48,80 @@ public class DeploymentPlan {
     private final Set<String> versionSpecs = new HashSet<String>();
 
     private final List<AgentWorkerLayout> agentWorkerLayouts;
+    private final int memberWorkerCount;
+    private final int clientWorkerCount;
 
-    private int memberWorkerCount;
-    private int clientWorkerCount;
+    private DeploymentPlan(List<AgentWorkerLayout> agentWorkerLayouts) {
+        int tmpMemberWorkerCount = 0;
+        int tmpClientWorkerCount = 0;
+        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
+            Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
+            int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
+            int agentClientWorkerCount = agentWorkerLayout.getCount(WorkerType.CLIENT);
 
-    public DeploymentPlan(ComponentRegistry componentRegistry,
-                          WorkerParameters workerParameters,
-                          ClusterLayoutParameters clusterLayoutParameters) {
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+            versionSpecs.addAll(agentVersionSpecs);
+            tmpMemberWorkerCount += agentMemberWorkerCount;
+            tmpClientWorkerCount += agentClientWorkerCount;
+        }
 
+        this.agentWorkerLayouts = agentWorkerLayouts;
+        this.memberWorkerCount = tmpMemberWorkerCount;
+        this.clientWorkerCount = tmpClientWorkerCount;
+    }
+
+    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
+                                                      int memberWorker, int clientWorker, int dedicatedMemberWorker) {
+        List<AgentWorkerLayout> agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters,
+                memberWorker, clientWorker, dedicatedMemberWorker);
+
+        printLayout(agentWorkerLayouts, "arguments");
+
+        return new DeploymentPlan(agentWorkerLayouts);
+    }
+
+    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
+                                                      SimulatorProperties properties, int defaultHzPort, String licenseKey,
+                                                      String clusterXml) {
+        WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(
+                defaultHzPort, licenseKey, workerParameters, properties, componentRegistry);
+
+        List<AgentWorkerLayout> agentWorkerLayouts = generateFromXml(componentRegistry, workerParameters,
+                workerConfigurationConverter, clusterXml);
+
+        printLayout(agentWorkerLayouts, "cluster.xml");
+
+        return new DeploymentPlan(agentWorkerLayouts);
+    }
+
+    // just for testing
+    public static DeploymentPlan createSingleInstanceDeploymentPlan(String agentIpAddress, WorkerParameters workerParameters) {
+        AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress);
+        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, AgentWorkerMode.MEMBER);
+        agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
+
+        ArrayList<AgentWorkerLayout> agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
+        agentWorkerLayouts.add(agentWorkerLayout);
+
+        return new DeploymentPlan(agentWorkerLayouts);
+    }
+
+    // just for testing
+    public static DeploymentPlan createEmptyDeploymentPlan() {
+        ArrayList<AgentWorkerLayout> agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
+        return new DeploymentPlan(agentWorkerLayouts);
+    }
+
+    private static void printLayout(List<AgentWorkerLayout> agentWorkerLayouts, String layoutType) {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("Cluster layout");
         LOGGER.info(HORIZONTAL_RULER);
 
-        String layoutType = (clusterLayoutParameters.getClusterConfiguration() == null) ? "arguments" : "cluster.xml";
         LOGGER.info(format("Created via %s: ", layoutType));
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
             int agentClientWorkerCount = agentWorkerLayout.getCount(WorkerType.CLIENT);
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
-
-            versionSpecs.addAll(agentVersionSpecs);
-
-            memberWorkerCount += agentMemberWorkerCount;
-            clientWorkerCount += agentClientWorkerCount;
 
             String message = "    Agent %s (%s) members: %s, clients: %s";
             if (totalWorkerCount > 0) {
@@ -90,40 +140,17 @@ public class DeploymentPlan {
         }
     }
 
-    private DeploymentPlan() {
-        this.agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
-    }
-
-    public static Map<SimulatorAddress, List<WorkerProcessSettings>> createSingleInstancePlan(String agentIpAddress,
-                                                                                              WorkerParameters workerParameters) {
-        AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress);
-        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, AgentWorkerMode.MEMBER);
-        agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
-
-        DeploymentPlan deploymentPlan = new DeploymentPlan();
-        deploymentPlan.versionSpecs.addAll(agentWorkerLayout.getVersionSpecs());
-        deploymentPlan.agentWorkerLayouts.add(agentWorkerLayout);
-        deploymentPlan.memberWorkerCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
-        deploymentPlan.clientWorkerCount += agentWorkerLayout.getCount(WorkerType.CLIENT);
-
-        return deploymentPlan.asMap();
-    }
-
-    public Set<String> getVersionSpecs() {
-        return versionSpecs;
-    }
-
     public Map<SimulatorAddress, List<WorkerProcessSettings>> asMap() {
         Map<SimulatorAddress, List<WorkerProcessSettings>> result = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
-        for (AgentWorkerLayout layout : getAgentWorkerLayouts()) {
+        for (AgentWorkerLayout layout : agentWorkerLayouts) {
             result.put(layout.getAgentData().getAddress(), layout.getWorkerProcessSettings());
         }
 
         return result;
     }
 
-    private List<AgentWorkerLayout> getAgentWorkerLayouts() {
-        return agentWorkerLayouts;
+    public Set<String> getVersionSpecs() {
+        return versionSpecs;
     }
 
     public int getMemberWorkerCount() {

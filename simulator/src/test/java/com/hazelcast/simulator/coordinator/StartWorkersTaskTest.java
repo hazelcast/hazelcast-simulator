@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -92,15 +93,10 @@ public class StartWorkersTaskTest {
     private Map<SimulatorAddress, List<WorkerProcessSettings>> getClusterLayout(int dedicatedMemberMachineCount,
                                                                                 int memberWorkerCount,
                                                                                 int clientWorkerCount) {
-        ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(
-                null,
-                null,
-                memberWorkerCount,
-                clientWorkerCount,
-                dedicatedMemberMachineCount,
-                componentRegistry.agentCount());
+        DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParameters,
+                memberWorkerCount, clientWorkerCount, dedicatedMemberMachineCount);
 
-        return new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters).asMap();
+        return deploymentPlan.asMap();
     }
 
     private void initMockForCreateWorkerOperation(ResponseType responseType) {

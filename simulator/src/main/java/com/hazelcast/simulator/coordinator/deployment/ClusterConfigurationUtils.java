@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator.deployment;
 
-import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
@@ -24,18 +23,18 @@ final class ClusterConfigurationUtils {
     private ClusterConfigurationUtils() {
     }
 
-    static String toXml(ClusterLayoutParameters clusterLayoutParameters, ClusterConfiguration clusterConfiguration) {
+    static String toXml(WorkerConfigurationConverter converter, ClusterConfiguration clusterConfiguration) {
         XStream xStream = getXStream();
-        xStream.registerConverter(clusterLayoutParameters.getWorkerConfigurationConverter());
+        xStream.registerConverter(converter);
 
         return xStream.toXML(clusterConfiguration);
     }
 
-    static ClusterConfiguration fromXml(ClusterLayoutParameters clusterLayoutParameters) {
+    static ClusterConfiguration fromXml(WorkerConfigurationConverter converter, String clusterConfiguration) {
         XStream xStream = getXStream();
-        xStream.registerConverter(clusterLayoutParameters.getWorkerConfigurationConverter());
+        xStream.registerConverter(converter);
 
-        return (ClusterConfiguration) xStream.fromXML(clusterLayoutParameters.getClusterConfiguration());
+        return (ClusterConfiguration) xStream.fromXML(clusterConfiguration);
     }
 
     private static XStream getXStream() {

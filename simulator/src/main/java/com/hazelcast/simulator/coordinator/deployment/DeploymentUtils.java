@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator.deployment;
 
-import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -31,9 +30,9 @@ import static com.hazelcast.simulator.coordinator.deployment.ClusterConfiguratio
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static java.lang.String.format;
 
-final class ClusterUtils {
+final class DeploymentUtils {
 
-    private ClusterUtils() {
+    private DeploymentUtils() {
     }
 
     static String formatIpAddresses(AgentWorkerLayout agentWorkerLayout) {
@@ -45,29 +44,11 @@ final class ClusterUtils {
         return publicIp + " " + privateIp;
     }
 
-    static List<AgentWorkerLayout> initMemberLayout(ComponentRegistry registry, WorkerParameters parameters,
-                                                    ClusterLayoutParameters clusterLayoutParameters) {
-        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(registry);
-        if (clusterLayoutParameters.getClusterConfiguration() != null) {
-            generateFromXml(agentWorkerLayouts, registry.agentCount(), parameters, clusterLayoutParameters);
-        } else {
-            generateFromArguments(agentWorkerLayouts, registry.agentCount(), parameters, clusterLayoutParameters);
-        }
-        return agentWorkerLayouts;
-    }
-
-    private static List<AgentWorkerLayout> initAgentWorkerLayouts(ComponentRegistry componentRegistry) {
-        List<AgentWorkerLayout> agentWorkerLayouts = new LinkedList<AgentWorkerLayout>();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            AgentWorkerLayout layout = new AgentWorkerLayout(agentData, AgentWorkerMode.MIXED);
-            agentWorkerLayouts.add(layout);
-        }
-        return agentWorkerLayouts;
-    }
-
-    private static void generateFromXml(List<AgentWorkerLayout> agentWorkerLayouts, int agentCount, WorkerParameters parameters,
-                                        ClusterLayoutParameters clusterLayoutParameters) {
-        ClusterConfiguration clusterConfiguration = getClusterConfiguration(clusterLayoutParameters);
+    static List<AgentWorkerLayout> generateFromXml(ComponentRegistry componentRegistry, WorkerParameters parameters,
+                                                   WorkerConfigurationConverter converter, String clusterXml) {
+        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(componentRegistry);
+        int agentCount = componentRegistry.agentCount();
+        ClusterConfiguration clusterConfiguration = getClusterConfiguration(converter, clusterXml);
         if (clusterConfiguration.size() != agentCount) {
             throw new CommandLineExitException(format("Found %d node configurations for %d agents (number must be equal)",
                     clusterConfiguration.size(), agentCount));
@@ -84,23 +65,26 @@ final class ClusterUtils {
             }
             agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);
         }
+
+        return agentWorkerLayouts;
     }
 
-    private static ClusterConfiguration getClusterConfiguration(ClusterLayoutParameters clusterLayoutParameters) {
+    private static ClusterConfiguration getClusterConfiguration(WorkerConfigurationConverter converter,
+                                                                String clusterConfiguration) {
         try {
-            return fromXml(clusterLayoutParameters);
+            return fromXml(converter, clusterConfiguration);
         } catch (Exception e) {
             throw new CommandLineExitException("Could not parse cluster configuration", e);
         }
     }
 
-    private static void generateFromArguments(List<AgentWorkerLayout> agentWorkerLayouts, int agentCount,
-                                              WorkerParameters parameters, ClusterLayoutParameters clusterLayoutParameters) {
-        int dedicatedMemberMachineCount = clusterLayoutParameters.getDedicatedMemberMachineCount();
-        int memberWorkerCount = clusterLayoutParameters.getMemberWorkerCount();
-        int clientWorkerCount = clusterLayoutParameters.getClientWorkerCount();
+    static List<AgentWorkerLayout> generateFromArguments(ComponentRegistry componentRegistry, WorkerParameters parameters,
+                                                         int memberWorkerCount, int clientWorkerCount,
+                                                         int dedicatedMemberMachineCount) {
+        checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
 
-        checkParameters(agentCount, dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
+        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(componentRegistry);
+        int agentCount = componentRegistry.agentCount();
 
         assignDedicatedMemberMachines(agentCount, agentWorkerLayouts, dedicatedMemberMachineCount);
 
@@ -115,6 +99,8 @@ final class ClusterUtils {
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
             agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
         }
+
+        return agentWorkerLayouts;
     }
 
     private static void checkParameters(int agentCount, int dedicatedMemberMachineCount,
@@ -122,6 +108,9 @@ final class ClusterUtils {
         if (agentCount == 0) {
             throw new CommandLineExitException("You need at least one agent in your cluster!"
                     + " Please configure your agents.txt or run Provisioner.");
+        }
+        if (dedicatedMemberMachineCount < 0) {
+            throw new CommandLineExitException("dedicatedMemberMachineCount can't be smaller than 0");
         }
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
@@ -133,6 +122,15 @@ final class ClusterUtils {
         if (memberWorkerCount == 0 && clientWorkerCount == 0) {
             throw new CommandLineExitException("No workers have been defined!");
         }
+    }
+
+    private static List<AgentWorkerLayout> initAgentWorkerLayouts(ComponentRegistry componentRegistry) {
+        List<AgentWorkerLayout> agentWorkerLayouts = new LinkedList<AgentWorkerLayout>();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            AgentWorkerLayout layout = new AgentWorkerLayout(agentData, AgentWorkerMode.MIXED);
+            agentWorkerLayouts.add(layout);
+        }
+        return agentWorkerLayouts;
     }
 
     private static void assignDedicatedMemberMachines(int agentCount, List<AgentWorkerLayout> agentWorkerLayouts,

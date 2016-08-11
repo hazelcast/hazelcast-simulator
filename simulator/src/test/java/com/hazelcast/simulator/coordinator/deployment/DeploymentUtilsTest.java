@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -16,7 +15,8 @@ import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.CLI
 import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.CUSTOM;
 import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MEMBER;
 import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MIXED;
-import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.initMemberLayout;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.generateFromArguments;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.generateFromXml;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
@@ -25,13 +25,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ClusterUtilsTest {
+public class DeploymentUtilsTest {
 
-    private final ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
     private final WorkerParameters workerParameters = mock(WorkerParameters.class);
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private List<AgentWorkerLayout> agentWorkerLayouts;
+    private WorkerConfigurationConverter converter;
 
     @Before
     public void setUp() {
@@ -42,22 +42,20 @@ public class ClusterUtilsTest {
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
 
-        WorkerConfigurationConverter converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParameters,
-                simulatorProperties, componentRegistry);
-
-        when(clusterLayoutParameters.getWorkerConfigurationConverter()).thenReturn(converter);
+        converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParameters, simulatorProperties,
+                componentRegistry);
     }
 
     @Test
     public void testConstructor() throws Exception {
-        invokePrivateConstructor(ClusterUtils.class);
+        invokePrivateConstructor(DeploymentUtils.class);
     }
 
     @Test
     public void testFormatIpAddresses_sameAddresses() {
         AgentData agentData = new AgentData(1, "192.168.0.1", "192.168.0.1");
         AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, MIXED);
-        String ipAddresses = ClusterUtils.formatIpAddresses(agentWorkerLayout);
+        String ipAddresses = DeploymentUtils.formatIpAddresses(agentWorkerLayout);
         assertTrue(ipAddresses.contains("192.168.0.1"));
     }
 
@@ -65,13 +63,13 @@ public class ClusterUtilsTest {
     public void testFormatIpAddresses_differentAddresses() {
         AgentData agentData = new AgentData(1, "192.168.0.1", "172.16.16.1");
         AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, MIXED);
-        String ipAddresses = ClusterUtils.formatIpAddresses(agentWorkerLayout);
+        String ipAddresses = DeploymentUtils.formatIpAddresses(agentWorkerLayout);
         assertTrue(ipAddresses.contains("192.168.0.1"));
         assertTrue(ipAddresses.contains("172.16.16.1"));
     }
 
     @Test
-    public void testInitMemberLayout_fromXml() {
+    public void testGenerateFromXml() {
         String xml = "<clusterConfiguration>"
                 + NEW_LINE + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>"
                 + NEW_LINE + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>"
@@ -87,16 +85,14 @@ public class ClusterUtilsTest {
                 + NEW_LINE + "  </nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
-
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        agentWorkerLayouts = generateFromXml(componentRegistry, workerParameters, converter, xml);
         assertAgentWorkerLayout(0, CUSTOM, 1, 0);
         assertAgentWorkerLayout(1, CUSTOM, 0, 2);
         assertAgentWorkerLayout(2, CUSTOM, 3, 4);
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testInitMemberLayout_fromXml_countMismatch() {
+    public void testGenerateFromXml_countMismatch() {
         String xml = "<clusterConfiguration>"
                 + NEW_LINE + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>"
                 + NEW_LINE + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>"
@@ -108,13 +104,11 @@ public class ClusterUtilsTest {
                 + NEW_LINE + "  </nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
-
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        generateFromXml(componentRegistry, workerParameters, converter, xml);
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testInitMemberLayout_fromXml_hzConfigFileNotExists() {
+    public void testGenerateFromXml_hzConfigFileNotExists() {
         String xml = "<clusterConfiguration>"
                 + NEW_LINE + "\t<workerConfiguration name=\"memberWorker\" type=\"MEMBER\" hzConfigFile=\"notExists\"/>"
                 + NEW_LINE + "\t<nodeConfiguration>"
@@ -122,130 +116,103 @@ public class ClusterUtilsTest {
                 + NEW_LINE + "\t</nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
-
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        generateFromXml(componentRegistry, workerParameters, converter, xml);
     }
 
     @Test
-    public void testInitMemberLayout_dedicatedMemberCountEqualsAgentCount() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(3);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
+    public void testGenerateFromArguments_dedicatedMemberCountEqualsAgentCount() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 1, 0, 3);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 1, 0);
         assertAgentWorkerLayout(1, MEMBER, 0, 0);
         assertAgentWorkerLayout(2, MEMBER, 0, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testInitMemberLayout_dedicatedMemberCountHigherThanAgentCount() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(5);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
+    public void testGenerateFromArguments_noAgents() {
+        generateFromArguments(new ComponentRegistry(), workerParameters, 0, 0, 0);
+    }
 
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+    @Test(expected = CommandLineExitException.class)
+    public void testGenerateFromArguments_dedicatedMemberCountNegative() {
+        generateFromArguments(componentRegistry, workerParameters, 0, 0, -1);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void testGenerateFromArguments_dedicatedMemberCountHigherThanAgentCount() {
+        generateFromArguments(componentRegistry, workerParameters, 1, 0, 5);
     }
 
     @Test
-    public void testInitMemberLayout_agentCountSufficientForDedicatedMembersAndClientWorkers() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(2);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
+    public void testGenerateFromArguments_agentCountSufficientForDedicatedMembersAndClientWorkers() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 0, 1, 2);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 0, 0);
         assertAgentWorkerLayout(1, MEMBER, 0, 0);
         assertAgentWorkerLayout(2, CLIENT, 0, 1);
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testInitMemberLayout_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(3);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
-
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+    public void testGenerateFromArguments_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
+        generateFromArguments(componentRegistry, workerParameters, 0, 1, 3);
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testInitMemberLayout_noWorkersDefined() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
-
-        initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+    public void testGenerateFromArguments_noWorkersDefined() {
+        generateFromArguments(componentRegistry, workerParameters, 0, 0, 0);
     }
 
     @Test
-    public void testInitMemberLayout_singleMemberWorker() {
+    public void testGenerateFromArguments_singleMemberWorker() {
         when(workerParameters.isMonitorPerformance()).thenReturn(true);
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 1, 0, 0);
+
         assertAgentWorkerLayout(0, MIXED, 1, 0);
         assertAgentWorkerLayout(1, MIXED, 0, 0);
         assertAgentWorkerLayout(2, MIXED, 0, 0);
     }
 
     @Test
-    public void testInitMemberLayout_memberWorkerOverflow() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(4);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
+    public void testGenerateFromArguments_memberWorkerOverflow() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 4, 0, 0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 2, 0);
         assertAgentWorkerLayout(1, MIXED, 1, 0);
         assertAgentWorkerLayout(2, MIXED, 1, 0);
     }
 
     @Test
-    public void testInitMemberLayout_singleClientWorker() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(1);
+    public void testGenerateFromArguments_singleClientWorker() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 0, 1, 0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 0, 1);
         assertAgentWorkerLayout(1, MIXED, 0, 0);
         assertAgentWorkerLayout(2, MIXED, 0, 0);
     }
 
     @Test
-    public void testClientWorkerOverflow() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(0);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(5);
+    public void testGenerateFromArguments_clientWorkerOverflow() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 0, 5, 0);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MIXED, 0, 2);
         assertAgentWorkerLayout(1, MIXED, 0, 2);
         assertAgentWorkerLayout(2, MIXED, 0, 1);
     }
 
     @Test
-    public void testInitMemberLayout_dedicatedAndMixedWorkers1() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(1);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(2);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(3);
+    public void testGenerateFromArguments_dedicatedAndMixedWorkers1() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 2, 3, 1);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 2, 0);
         assertAgentWorkerLayout(1, CLIENT, 0, 2);
         assertAgentWorkerLayout(2, CLIENT, 0, 1);
     }
 
     @Test
-    public void testInitMemberLayout_dedicatedAndMixedWorkers2() {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(2);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(2);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(3);
+    public void testGenerateFromArguments_dedicatedAndMixedWorkers2() {
+        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 2, 3, 2);
 
-        agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
         assertAgentWorkerLayout(0, MEMBER, 1, 0);
         assertAgentWorkerLayout(1, MEMBER, 1, 0);
         assertAgentWorkerLayout(2, CLIENT, 0, 3);

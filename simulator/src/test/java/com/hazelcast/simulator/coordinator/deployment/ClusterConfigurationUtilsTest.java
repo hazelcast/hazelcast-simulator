@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.apache.log4j.Logger;
@@ -24,12 +23,13 @@ import static org.mockito.Mockito.when;
 
 public class ClusterConfigurationUtilsTest {
 
+    private static final int DEFAULT_HZ_PORT = 5701;
     private static final String MEMBER_HZ_CONFIG_FILE = "dist/src/main/dist/conf/hazelcast.xml";
     private static final String CLIENT_HZ_CONFIG_FILE = "dist/src/main/dist/conf/client-hazelcast.xml";
 
     private static final Logger LOGGER = Logger.getLogger(ClusterConfigurationUtilsTest.class);
 
-    private ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
+    private WorkerConfigurationConverter converter;
 
     @Before
     public void setUp() {
@@ -43,10 +43,8 @@ public class ClusterConfigurationUtilsTest {
 
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
-        WorkerConfigurationConverter converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParameters,
-                simulatorProperties, componentRegistry);
-
-        when(clusterLayoutParameters.getWorkerConfigurationConverter()).thenReturn(converter);
+        converter = new WorkerConfigurationConverter(DEFAULT_HZ_PORT, "defaultLicenseKey", workerParameters, simulatorProperties,
+                componentRegistry);
     }
 
     @Test
@@ -81,12 +79,10 @@ public class ClusterConfigurationUtilsTest {
         expectedClusterConfiguration.addNodeConfiguration(node2);
         expectedClusterConfiguration.addNodeConfiguration(node3);
 
-        String xml = toXml(clusterLayoutParameters, expectedClusterConfiguration);
+        String xml = toXml(converter, expectedClusterConfiguration);
         LOGGER.info(xml);
 
-        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
-
-        ClusterConfiguration actualClusterConfiguration = fromXml(clusterLayoutParameters);
+        ClusterConfiguration actualClusterConfiguration = fromXml(converter, xml);
 
         assertClusterConfiguration(expectedClusterConfiguration, actualClusterConfiguration);
     }
@@ -94,19 +90,17 @@ public class ClusterConfigurationUtilsTest {
     @Test
     public void testFromXml_withMissingAttributes() {
         String xml = format("<clusterConfiguration>%n"
-                + "  <workerConfiguration name=\"withHzVersion\" type=\"MEMBER\" hzVersion=\"hzVersion\"/>%n"
-                + "  <workerConfiguration name=\"withHzConfigFile\" type=\"MEMBER\" hzConfigFile=\"%s\"/>%n"
-                + "  <workerConfiguration name=\"withHzConfig\" type=\"MEMBER\" hzConfig=\"hzConfig\"/>%n"
-                + "  <workerConfiguration name=\"withJvmOptions\" type=\"MEMBER\" jvmOptions=\"jvmOptions\"/>%n"
-                + "  <nodeConfiguration>%n"
-                + "    <workerGroup configuration=\"withHzVersion\" count=\"1\"/>%n"
-                + "  </nodeConfiguration>%n"
-                + "</clusterConfiguration>",
+                        + "  <workerConfiguration name=\"withHzVersion\" type=\"MEMBER\" hzVersion=\"hzVersion\"/>%n"
+                        + "  <workerConfiguration name=\"withHzConfigFile\" type=\"MEMBER\" hzConfigFile=\"%s\"/>%n"
+                        + "  <workerConfiguration name=\"withHzConfig\" type=\"MEMBER\" hzConfig=\"hzConfig\"/>%n"
+                        + "  <workerConfiguration name=\"withJvmOptions\" type=\"MEMBER\" jvmOptions=\"jvmOptions\"/>%n"
+                        + "  <nodeConfiguration>%n"
+                        + "    <workerGroup configuration=\"withHzVersion\" count=\"1\"/>%n"
+                        + "  </nodeConfiguration>%n"
+                        + "</clusterConfiguration>",
                 MEMBER_HZ_CONFIG_FILE);
 
-        when(clusterLayoutParameters.getClusterConfiguration()).thenReturn(xml);
-
-        ClusterConfiguration clusterConfiguration = fromXml(clusterLayoutParameters);
+        ClusterConfiguration clusterConfiguration = fromXml(converter, xml);
 
         WorkerConfiguration withHzVersion = clusterConfiguration.getWorkerConfiguration("withHzVersion");
         assertEquals(MEMBER, withHzVersion.getType());

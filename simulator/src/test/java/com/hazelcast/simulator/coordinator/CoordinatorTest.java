@@ -12,6 +12,7 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createEmptyDeploymentPlan;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.mockito.Mockito.mock;
@@ -37,12 +38,9 @@ public class CoordinatorTest {
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
 
-        ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
+        DeploymentPlan deploymentPlan = createEmptyDeploymentPlan();
 
-        DeploymentPlan deploymentPlan = mock(DeploymentPlan.class);
-
-        coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters,
-                clusterLayoutParameters, deploymentPlan);
+        coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
     }
 
     @After
