@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator.deployment;
 
-import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -45,12 +44,8 @@ public class DeploymentPlanTest {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.getVersionSpec()).thenReturn("outofthebox");
 
-        ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(memberCount);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(clientCount);
-
-        DeploymentPlan deploymentPlan = new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters);
+        DeploymentPlan deploymentPlan = DeploymentPlan.createDeploymentPlan(componentRegistry, workerParameters,
+                memberCount, clientCount, 0);
 
         assertEquals(singleton("outofthebox"), deploymentPlan.getVersionSpecs());
     }

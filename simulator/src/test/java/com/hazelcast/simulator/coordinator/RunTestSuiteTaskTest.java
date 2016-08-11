@@ -348,11 +348,6 @@ public class RunTestSuiteTaskTest {
         when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
 
-        ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(0);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
-
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureCollector,
                 testPhaseListeners, simulatorProperties, remoteClient, performanceStatsCollector,
                 workerParameters);

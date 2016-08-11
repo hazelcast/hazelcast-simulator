@@ -20,7 +20,7 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.deployment.WorkerConfigurationConverter;
+import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestPhase;
@@ -39,6 +39,7 @@ import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE
 import static com.hazelcast.simulator.common.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -221,26 +222,14 @@ final class CoordinatorCli {
                 options.has(cli.monitorPerformanceSpec)
         );
 
-        WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(defaultHzPort, licenseKey,
-                workerParameters, simulatorProperties, componentRegistry);
+        DeploymentPlan deploymentPlan = getDeploymentPlan(options, cli, simulatorProperties, componentRegistry,
+                workerParameters, defaultHzPort, licenseKey);
 
-        ClusterLayoutParameters clusterLayoutParameters = new ClusterLayoutParameters(
-                loadClusterConfig(),
-                workerConfigurationConverter,
-                options.valueOf(cli.memberWorkerCountSpec),
-                options.valueOf(cli.clientWorkerCountSpec),
-                options.valueOf(cli.dedicatedMemberMachinesSpec),
-                componentRegistry.agentCount()
-        );
-        if (clusterLayoutParameters.getDedicatedMemberMachineCount() < 0) {
-            throw new CommandLineExitException("--dedicatedMemberMachines can't be smaller than 0");
-        }
-
-        return new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters);
+        return new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
     }
 
     private static TestSuite getTestSuite(CoordinatorCli cli, OptionSet options) {
-        int durationSeconds = getDurationSeconds(options, cli.durationSpec, cli);
+        int durationSeconds = getDurationSeconds(options, cli.durationSpec);
         boolean hasWaitForTestCase = options.has(cli.waitForTestCaseSpec);
         if (!options.has(cli.durationSpec) && hasWaitForTestCase) {
             durationSeconds = 0;
@@ -250,12 +239,12 @@ final class CoordinatorCli {
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
                 options.valueOf(cli.testSuiteIdSpec));
         testSuite.setDurationSeconds(durationSeconds);
-        testSuite.setWarmupDurationSeconds(getDurationSeconds(options, cli.warmupDurationSpec, cli));
+        testSuite.setWarmupDurationSeconds(getDurationSeconds(options, cli.warmupDurationSpec));
         testSuite.setWaitForTestCase(hasWaitForTestCase);
         testSuite.setFailFast(options.valueOf(cli.failFastSpec));
         testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
 
-        // if the coordinator is not monitoring performance, we don't care for measuring latencies.
+        // if the coordinator is not monitoring performance, we don't care for measuring latencies
         if (!options.has(cli.monitorPerformanceSpec)) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
@@ -276,6 +265,31 @@ final class CoordinatorCli {
         }
         componentRegistry.addTests(testSuite);
         return componentRegistry;
+    }
+
+    private static DeploymentPlan getDeploymentPlan(OptionSet options, CoordinatorCli cli,
+                                                    SimulatorProperties simulatorProperties,
+                                                    ComponentRegistry componentRegistry,
+                                                    WorkerParameters workerParameters,
+                                                    int defaultHzPort,
+                                                    String licenseKey) {
+        String clusterXml = loadClusterXml();
+        if (clusterXml == null) {
+            return createDeploymentPlan(
+                    componentRegistry,
+                    workerParameters,
+                    options.valueOf(cli.memberWorkerCountSpec),
+                    options.valueOf(cli.clientWorkerCountSpec),
+                    options.valueOf(cli.dedicatedMemberMachinesSpec));
+        }
+        return createDeploymentPlan(
+                componentRegistry,
+                workerParameters,
+                simulatorProperties,
+                defaultHzPort,
+                licenseKey,
+                clusterXml
+        );
     }
 
     private static File getTestSuiteFile(OptionSet options) {
@@ -325,7 +339,7 @@ final class CoordinatorCli {
         return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
     }
 
-    private static String loadClusterConfig() {
+    private static String loadClusterXml() {
         File file = new File("cluster.xml").getAbsoluteFile();
         if (file.exists()) {
             LOGGER.info("Loading cluster configuration: " + file.getAbsolutePath());
@@ -335,7 +349,7 @@ final class CoordinatorCli {
         }
     }
 
-    private static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec, CoordinatorCli cli) {
+    private static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec) {
         int duration;
         String value = options.valueOf(optionSpec);
         try {

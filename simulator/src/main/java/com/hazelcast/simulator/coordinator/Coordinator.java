@@ -49,7 +49,6 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
@@ -66,7 +65,6 @@ public final class Coordinator {
     private final ComponentRegistry componentRegistry;
     private final CoordinatorParameters coordinatorParameters;
     private final WorkerParameters workerParameters;
-    private final ClusterLayoutParameters clusterLayoutParameters;
 
     private final FailureCollector failureCollector;
 
@@ -79,20 +77,10 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    public Coordinator(TestSuite testSuite,
-                       ComponentRegistry componentRegistry,
-                       CoordinatorParameters coordinatorParameters,
-                       WorkerParameters workerParameters,
-                       ClusterLayoutParameters clusterLayoutParameters) {
-        this(testSuite, componentRegistry, coordinatorParameters, workerParameters, clusterLayoutParameters,
-                new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters));
-    }
-
     Coordinator(TestSuite testSuite,
-                final ComponentRegistry componentRegistry,
+                ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
                 WorkerParameters workerParameters,
-                ClusterLayoutParameters clusterLayoutParameters,
                 DeploymentPlan deploymentPlan) {
 
         this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), testSuite.getId()));
@@ -101,20 +89,9 @@ public final class Coordinator {
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
         this.workerParameters = workerParameters;
-        this.clusterLayoutParameters = clusterLayoutParameters;
 
         this.failureCollector = new FailureCollector(outputDirectory, testSuite.getTolerableFailures());
-        this.failureCollector.addListener(new FailureListener() {
-            @Override
-            public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
-                FailureType failureType = failure.getType();
-
-                if (failureType.isWorkerFinishedFailure()) {
-                    SimulatorAddress workerAddress = failure.getWorkerAddress();
-                    componentRegistry.removeWorker(workerAddress);
-                }
-            }
-        });
+        this.failureCollector.addListener(new ComponentRegistryFailureListener(componentRegistry));
 
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
@@ -133,20 +110,12 @@ public final class Coordinator {
         return workerParameters;
     }
 
-    ClusterLayoutParameters getClusterLayoutParameters() {
-        return clusterLayoutParameters;
-    }
-
     TestSuite getTestSuite() {
         return testSuite;
     }
 
     ComponentRegistry getComponentRegistry() {
         return componentRegistry;
-    }
-
-    FailureCollector getFailureCollector() {
-        return failureCollector;
     }
 
     private void logConfiguration() {
@@ -288,5 +257,24 @@ public final class Coordinator {
         String log = message == null ? "null" : format(message, args);
         LOGGER.info(log);
         return log;
+    }
+
+    private static class ComponentRegistryFailureListener implements FailureListener {
+
+        private final ComponentRegistry componentRegistry;
+
+        ComponentRegistryFailureListener(ComponentRegistry componentRegistry) {
+            this.componentRegistry = componentRegistry;
+        }
+
+        @Override
+        public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
+            FailureType failureType = failure.getType();
+
+            if (failureType.isWorkerFinishedFailure()) {
+                SimulatorAddress workerAddress = failure.getWorkerAddress();
+                componentRegistry.removeWorker(workerAddress);
+            }
+        }
     }
 }
