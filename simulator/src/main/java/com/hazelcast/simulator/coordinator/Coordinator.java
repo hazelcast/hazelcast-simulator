@@ -162,16 +162,14 @@ public final class Coordinator {
     }
 
     void run() {
-        boolean isPrePhaseDone = false;
-        try {
-            checkInstallation(bash, simulatorProperties, componentRegistry);
-            new InstallVendorTask(
-                    simulatorProperties,
-                    componentRegistry.getAgentIps(),
-                    deploymentPlan.getVersionSpecs(),
-                    testSuite.getId()).run();
-            isPrePhaseDone = true;
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+        new InstallVendorTask(
+                simulatorProperties,
+                componentRegistry.getAgentIps(),
+                deploymentPlan.getVersionSpecs(),
+                testSuite.getId()).run();
 
+        try {
             try {
                 startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
                 startCoordinatorConnector();
@@ -201,14 +199,12 @@ public final class Coordinator {
                 }
             }
         } finally {
-            if (isPrePhaseDone) {
-                if (!coordinatorParameters.skipDownload()) {
-                    new DownloadTask(testSuite.getId(), simulatorProperties, outputDirectory, componentRegistry).run();
-                }
-                executeAfterCompletion();
-
-                OperationTypeCounter.printStatistics();
+            if (!coordinatorParameters.skipDownload()) {
+                new DownloadTask(testSuite.getId(), simulatorProperties, outputDirectory, componentRegistry).run();
             }
+            executeAfterCompletion();
+
+            OperationTypeCounter.printStatistics();
         }
     }
 
