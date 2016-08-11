@@ -38,15 +38,16 @@ import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
 
 /**
- * Starts all workers.
- * <p>
- * It receives a map with key the address of the agent to start workers on. And the value is a List of WorkerSettings; where
- * each item in this list corresponds to a single worker to create.
- * <p>
- * The workers will be created in order; first all member workers are started, and then all client workers are started. This
- * is done to prevent clients running into a non existing cluster.
+ * Starts all Simulator Workers.
+ *
+ * It receives a map with {@link SimulatorAddress} of the Agent to start the Workers on as key.
+ * The value is a list of {@link WorkerProcessSettings}, where each item corresponds to a single Worker to create.
+ *
+ * The Workers will be created in order: First all member Workers are started, then all client Workers.
+ * This is done to prevent clients running into a non existing cluster.
  */
 public class StartWorkersTask {
+
     private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
     private final RemoteClient remoteClient;
@@ -55,6 +56,7 @@ public class StartWorkersTask {
     private final int startupDelayMs;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> memberDeploymentPlan;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> clientDeploymentPlan;
+
     private long started;
 
     public StartWorkersTask(
@@ -64,8 +66,8 @@ public class StartWorkersTask {
             int startupDelayMs) {
         this.remoteClient = remoteClient;
         this.componentRegistry = componentRegistry;
-        this.startupDelayMs = startupDelayMs;
         this.echoer = new Echoer(remoteClient);
+        this.startupDelayMs = startupDelayMs;
 
         this.memberDeploymentPlan = filterByWorkerType(true, deploymentPlan);
         this.clientDeploymentPlan = filterByWorkerType(false, deploymentPlan);
@@ -84,8 +86,8 @@ public class StartWorkersTask {
 
         if (componentRegistry.workerCount() > 0) {
             WorkerData firstWorker = componentRegistry.getFirstWorker();
-            echoer.echo("Worker for global test phases will be %s (%s)", firstWorker.getAddress(),
-                    firstWorker.getSettings().getWorkerType());
+            echoer.echo("Worker for global test phases will be %s (%s)",
+                    firstWorker.getAddress(), firstWorker.getSettings().getWorkerType());
         }
 
         echoStartComplete();
@@ -110,6 +112,23 @@ public class StartWorkersTask {
         echoer.echo(HORIZONTAL_RULER);
     }
 
+    private void startWorkers(boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
+        ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
+        int workerIndex = 0;
+        String workerType = isMember ? "member" : "client";
+        for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : deploymentPlan.entrySet()) {
+            SimulatorAddress agentAddress = entry.getKey();
+            List<WorkerProcessSettings> workersSettings = entry.getValue();
+
+            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agentAddress, workerType));
+
+            if (isMember) {
+                workerIndex++;
+            }
+        }
+        spawner.awaitCompletion();
+    }
+
     private static Map<SimulatorAddress, List<WorkerProcessSettings>> filterByWorkerType(
             boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
 
@@ -131,7 +150,7 @@ public class StartWorkersTask {
         return result;
     }
 
-    private int count(Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
+    private static int count(Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
         int result = 0;
         for (List<WorkerProcessSettings> settings : deploymentPlan.values()) {
             result += settings.size();
@@ -139,26 +158,8 @@ public class StartWorkersTask {
         return result;
     }
 
-    private void startWorkers(boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
-        ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
-        int workerIndex = 0;
-        for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : deploymentPlan.entrySet()) {
-            List<WorkerProcessSettings> workersSettings = entry.getValue();
-
-            SimulatorAddress agentAddress = entry.getKey();
-            String workerType = isMember ? "member" : "client";
-
-            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agentAddress, workerType));
-
-            if (isMember) {
-                workerIndex++;
-            }
-        }
-        spawner.awaitCompletion();
-    }
-
-
     private final class StartWorkersOnAgentTask implements Runnable {
+
         private final List<WorkerProcessSettings> workersSettings;
         private final SimulatorAddress agentAddress;
         private final String workerType;
