@@ -6,6 +6,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -19,6 +20,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -44,6 +46,7 @@ import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
 import static com.hazelcast.simulator.testcontainer.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static java.lang.String.format;
@@ -115,16 +118,6 @@ public class RunTestSuiteTaskTest {
 
         remoteClient = mock(RemoteClient.class);
         when(remoteClient.getCoordinatorConnector()).thenReturn(connector);
-
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                if (finishWorkerLatch != null) {
-                    finishWorkerLatch.countDown();
-                }
-                return null;
-            }
-        }).when(remoteClient).terminateWorkers(anyBoolean());
     }
 
     @After
@@ -310,12 +303,6 @@ public class RunTestSuiteTaskTest {
         RunTestSuiteTask task = createRunTestSuiteTask();
         task.run();
 
-        Set<SimulatorAddress> finishedWorkers = failureCollector.getFinishedWorkers();
-        assertEquals(0, finishedWorkers.size());
-
-        Set<SimulatorAddress> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
-        assertEquals(1, missingWorkers.size());
-
         verifyRemoteClient();
     }
 
@@ -349,7 +336,7 @@ public class RunTestSuiteTaskTest {
         when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
 
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureCollector,
-                testPhaseListeners, simulatorProperties, remoteClient, performanceStatsCollector,
+                testPhaseListeners, remoteClient, performanceStatsCollector,
                 workerParameters);
 
         new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureCollector).start();
@@ -389,7 +376,6 @@ public class RunTestSuiteTaskTest {
         verify(remoteClient, times(expectedTimes)).sendToTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
         expectedTimes = numberOfTests * (expectedStartTestPhaseOnAllWorkers + expectedStartTest + expectedStopTest);
         verify(remoteClient, times(expectedTimes)).sendToTestOnAllWorkers(anyString(), argumentCaptor.capture());
-        verify(remoteClient, times(1)).terminateWorkers(true);
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
 
         // assert captured arguments

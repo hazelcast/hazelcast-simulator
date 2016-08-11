@@ -16,20 +16,16 @@
 
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import static com.hazelcast.simulator.testcontainer.TestPhase.getTestPhaseSyncMap;
@@ -37,18 +33,15 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
-import static java.lang.String.format;
 
 public class RunTestSuiteTask {
-    private static final Logger LOGGER = Logger.getLogger(RunTestSuiteTask.class);
-
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;
     private final ComponentRegistry componentRegistry;
     private final Echoer echoer;
     private final FailureCollector failureCollector;
+    //todo: should this argument be passed or is it part of the RunTestSuiteTask?
     private final TestPhaseListeners testPhaseListeners;
-    private final SimulatorProperties simulatorProperties;
     private final RemoteClient remoteClient;
     private final PerformanceStatsCollector performanceStatsCollector;
     private final WorkerParameters workerParameters;
@@ -58,7 +51,6 @@ public class RunTestSuiteTask {
                             ComponentRegistry componentRegistry,
                             FailureCollector failureCollector,
                             TestPhaseListeners testPhaseListeners,
-                            SimulatorProperties simulatorProperties,
                             RemoteClient remoteClient,
                             PerformanceStatsCollector performanceStatsCollector,
                             WorkerParameters workerParameters) {
@@ -68,7 +60,6 @@ public class RunTestSuiteTask {
         this.echoer = new Echoer(remoteClient);
         this.failureCollector = failureCollector;
         this.testPhaseListeners = testPhaseListeners;
-        this.simulatorProperties = simulatorProperties;
         this.remoteClient = remoteClient;
         this.performanceStatsCollector = performanceStatsCollector;
         this.workerParameters = workerParameters;
@@ -76,6 +67,7 @@ public class RunTestSuiteTask {
 
     public void run() {
         try {
+            componentRegistry.addTests(testSuite);
             int testCount = testSuite.size();
             boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
             Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
@@ -112,16 +104,7 @@ public class RunTestSuiteTask {
             }
             echoTestSuiteEnd(testCount, started);
         } finally {
-            int runningWorkerCount = componentRegistry.workerCount();
-            echoer.echo("Terminating %d Workers...", runningWorkerCount);
-            remoteClient.terminateWorkers(true);
-
-            int waitForWorkerShutdownTimeoutSeconds = simulatorProperties.getWaitForWorkerShutdownTimeoutSeconds();
-            if (!failureCollector.waitForWorkerShutdown(runningWorkerCount, waitForWorkerShutdownTimeoutSeconds)) {
-                Set<SimulatorAddress> finishedWorkers = failureCollector.getFinishedWorkers();
-                LOGGER.warn(format("Unfinished workers: %s", componentRegistry.getMissingWorkers(finishedWorkers).toString()));
-            }
-
+            componentRegistry.removeTests();
             performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
     }
@@ -196,5 +179,4 @@ public class RunTestSuiteTask {
         }
         echoer.echo(HORIZONTAL_RULER);
     }
-
 }

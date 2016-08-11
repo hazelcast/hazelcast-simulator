@@ -139,6 +139,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processTerminateWorker(TerminateWorkerOperation operation) {
+        LOGGER.warn("Terminating worker");
         if (type == WorkerType.MEMBER) {
             sleepSeconds(operation.getMemberWorkerShutdownDelaySeconds());
         }

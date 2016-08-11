@@ -16,20 +16,17 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
@@ -39,14 +36,11 @@ import static java.lang.String.format;
  */
 public class FailureCollector {
 
-    private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
     private static final int MAX_CONSOLE_FAILURE_COUNT = 25;
 
     private static final Logger LOGGER = Logger.getLogger(FailureCollector.class);
 
     private final AtomicInteger failureNumberGenerator = new AtomicInteger();
-    private final ConcurrentMap<SimulatorAddress, FailureType> finishedWorkers
-            = new ConcurrentHashMap<SimulatorAddress, FailureType>();
     private final ConcurrentMap<FailureListener, Boolean> listenerMap = new ConcurrentHashMap<FailureListener, Boolean>();
 
     private final AtomicInteger nonCriticalFailureCounter = new AtomicInteger();
@@ -62,7 +56,11 @@ public class FailureCollector {
     }
 
     public void addListener(FailureListener listener) {
-        listenerMap.put(listener, true);
+        addListener(false, listener);
+    }
+
+    public void addListener(boolean includingPoisonPill, FailureListener listener) {
+        listenerMap.put(listener, includingPoisonPill);
     }
 
     public void notify(FailureOperation failure) {
@@ -71,12 +69,15 @@ public class FailureCollector {
 
         FailureType failureType = failure.getType();
         if (failureType.isWorkerFinishedFailure()) {
-            SimulatorAddress workerAddress = failure.getWorkerAddress();
-            finishedWorkers.put(workerAddress, failureType);
             isFinishedFailure = true;
         }
 
         if (failureType.isPoisonPill()) {
+            for (Map.Entry<FailureListener, Boolean> entry : listenerMap.entrySet()) {
+                if (entry.getValue()) {
+                    entry.getKey().onFailure(failure, isFinishedFailure, false);
+                }
+            }
             return;
         }
 
@@ -131,26 +132,6 @@ public class FailureCollector {
 
     boolean hasCriticalFailure(String testId) {
         return hasCriticalFailuresMap.containsKey(testId);
-    }
-
-    Set<SimulatorAddress> getFinishedWorkers() {
-        return finishedWorkers.keySet();
-    }
-
-    boolean waitForWorkerShutdown(int expectedWorkerCount, int timeoutSeconds) {
-        long started = System.nanoTime();
-        LOGGER.info(format("Waiting up to %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedWorkerCount));
-        long timeoutTimestamp = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
-        while (finishedWorkers.size() < expectedWorkerCount && System.currentTimeMillis() < timeoutTimestamp) {
-            sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
-        }
-        int remainingWorkers = expectedWorkerCount - finishedWorkers.size();
-        if (remainingWorkers > 0) {
-            LOGGER.warn(format("Aborted waiting for shutdown of all Workers (%d still running)...", remainingWorkers));
-            return false;
-        }
-        LOGGER.info(format("Finished shutdown of all Workers (%d seconds)", getElapsedSeconds(started)));
-        return true;
     }
 
     void logFailureInfo() {

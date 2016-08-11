@@ -78,11 +78,11 @@ public class StartWorkersTask {
 
         // first create all members
         startWorkers(true, memberDeploymentPlan);
+
         // then create all clients
         startWorkers(false, clientDeploymentPlan);
 
         remoteClient.sendToAllAgents(new StartTimeoutDetectionOperation());
-        remoteClient.startWorkerPingThread();
 
         if (componentRegistry.workerCount() > 0) {
             WorkerData firstWorker = componentRegistry.getFirstWorker();

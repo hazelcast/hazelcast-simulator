@@ -9,6 +9,7 @@ import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.RemoteClient;
+import com.hazelcast.simulator.coordinator.TerminateWorkersTask;
 import com.hazelcast.simulator.coordinator.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -77,6 +78,7 @@ public class AgentSmokeTest implements FailureListener {
     private RemoteClient remoteClient;
     private File outputDirectory;
     private final BlockingQueue<FailureOperation> failureOperations = new LinkedBlockingQueue<FailureOperation>();
+    private SimulatorProperties simulatorProperties;
 
     @Before
     public void before() throws Exception {
@@ -90,6 +92,8 @@ public class AgentSmokeTest implements FailureListener {
 
         agentStarter = new AgentStarter();
 
+        simulatorProperties = new SimulatorProperties();
+
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         outputDirectory = TestUtils.createTmpDirectory();
@@ -100,7 +104,7 @@ public class AgentSmokeTest implements FailureListener {
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
         coordinatorConnector.start();
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10), 0);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10));
     }
 
     @After
@@ -162,6 +166,7 @@ public class AgentSmokeTest implements FailureListener {
         assertExceptionClassInFailure(failure, AssertionError.class);
     }
 
+    // todo: we don't we use the testsuite runner for this? This is just fragile and duplication
     private void executeTestCase(TestCase testCase) throws Exception {
         try {
             String testId = testCase.getId();
@@ -207,7 +212,7 @@ public class AgentSmokeTest implements FailureListener {
             componentRegistry.removeTests();
 
             LOGGER.info("Terminating workers...");
-            remoteClient.terminateWorkers(false);
+            new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
 
             LOGGER.info("Testcase done!");
         }

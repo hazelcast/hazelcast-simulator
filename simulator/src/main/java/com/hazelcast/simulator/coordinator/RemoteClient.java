@@ -23,12 +23,10 @@ import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
-import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.apache.log4j.Logger;
 
+import java.io.Closeable;
 import java.util.Map;
 
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
@@ -37,25 +35,26 @@ import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
-// TODO: The remote client needs to be dumbed down. It should just ship operations and have no other knowlege.
-// pinging, shutdown etc.. Is not part of its responsibilities.
-public class RemoteClient {
-
-    private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
+/**
+ * The Remote client is responsible for communication with agents/workers. Its logic should be kept simple and
+ * it should not contain any logic apart from shipping something to the right place.
+ */
+public class RemoteClient implements Closeable {
 
     private final CoordinatorConnector coordinatorConnector;
     private final ComponentRegistry componentRegistry;
     private final WorkerPingThread workerPingThread;
-    private final int memberWorkerShutdownDelaySeconds;
 
     public RemoteClient(CoordinatorConnector coordinatorConnector,
                         ComponentRegistry componentRegistry,
-                        int workerPingIntervalMillis,
-                        int memberWorkerShutdownDelaySeconds) {
+                        int workerPingIntervalMillis) {
         this.coordinatorConnector = coordinatorConnector;
         this.componentRegistry = componentRegistry;
         this.workerPingThread = new WorkerPingThread(workerPingIntervalMillis);
-        this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
+
+        if (workerPingThread.pingIntervalMillis > 0) {
+            workerPingThread.start();
+        }
     }
 
     public CoordinatorConnector getCoordinatorConnector() {
@@ -68,33 +67,6 @@ public class RemoteClient {
 
     public void logOnAllWorkers(String message) {
         coordinatorConnector.write(ALL_WORKERS, new LogOperation(message));
-    }
-
-    void startWorkerPingThread() {
-        if (workerPingThread.pingIntervalMillis > 0) {
-            workerPingThread.start();
-        }
-    }
-
-    void stopWorkerPingThread() {
-        workerPingThread.running = false;
-        workerPingThread.interrupt();
-        joinThread(workerPingThread);
-    }
-
-    public void terminateWorkers(boolean stopPokeThread) {
-        if (stopPokeThread) {
-            sendToAllAgents(new StopTimeoutDetectionOperation());
-
-            stopWorkerPingThread();
-        }
-
-        int shutdownDelaySeconds = (componentRegistry.hasClientWorkers() ? memberWorkerShutdownDelaySeconds : 0);
-        sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
-
-        // cleanup the registry (important for serial TestSuite execution)
-        componentRegistry.removeTests();
-        componentRegistry.removeWorkers();
     }
 
     public void sendToAllAgents(SimulatorOperation operation) {
@@ -134,10 +106,16 @@ public class RemoteClient {
         }
     }
 
+    @Override
+    public void close() {
+        workerPingThread.running = false;
+        workerPingThread.interrupt();
+        joinThread(workerPingThread);
+    }
+
     private final class WorkerPingThread extends Thread {
 
         private final int pingIntervalMillis;
-
         private volatile boolean running = true;
 
         private WorkerPingThread(int pingIntervalMillis) {
@@ -158,7 +136,6 @@ public class RemoteClient {
                     if (e.getCause() instanceof InterruptedException) {
                         break;
                     }
-                    LOGGER.error("Exception in WorkerPingThread", e);
                 }
             }
         }

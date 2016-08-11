@@ -94,10 +94,6 @@ public class ComponentRegistry {
         }
     }
 
-    public void removeWorkers() {
-        workers.clear();
-    }
-
     public synchronized void removeWorker(SimulatorAddress workerAddress) {
         for (WorkerData workerData : workers) {
             if (workerData.getAddress().equals(workerAddress)) {
@@ -126,7 +122,7 @@ public class ComponentRegistry {
     }
 
     public List<WorkerData> getWorkers() {
-        return unmodifiableList(workers);
+        return new ArrayList<WorkerData>(workers);
     }
 
     public List<WorkerData> getWorkers(TargetType targetType, int targetCount) {
@@ -183,18 +179,8 @@ public class ComponentRegistry {
         if (workers.size() == 0) {
             throw new CommandLineExitException("No workers running!");
         }
+        //todo: this is racy because the worker could have died.
         return workers.get(0);
-    }
-
-    public Set<SimulatorAddress> getMissingWorkers(Set<SimulatorAddress> finishedWorkers) {
-        Set<SimulatorAddress> missingWorkers = new HashSet<SimulatorAddress>();
-        for (WorkerData worker : workers) {
-            SimulatorAddress workerAddress = worker.getAddress();
-            if (!finishedWorkers.contains(workerAddress)) {
-                missingWorkers.add(workerAddress);
-            }
-        }
-        return missingWorkers;
     }
 
     public synchronized void addTests(TestSuite testSuite) {
@@ -215,7 +201,7 @@ public class ComponentRegistry {
     }
 
     public Collection<TestData> getTests() {
-        return tests.values();
+        return new ArrayList<TestData>(tests.values());
     }
 
     public TestData getTest(String testId) {

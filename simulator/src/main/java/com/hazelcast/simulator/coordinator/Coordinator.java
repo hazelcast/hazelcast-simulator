@@ -20,7 +20,6 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
@@ -40,6 +39,7 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -49,6 +49,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
@@ -91,8 +92,7 @@ public final class Coordinator {
         this.workerParameters = workerParameters;
 
         this.failureCollector = new FailureCollector(outputDirectory, testSuite.getTolerableFailures());
-        this.failureCollector.addListener(new ComponentRegistryFailureListener(componentRegistry));
-
+        this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
 
@@ -149,14 +149,21 @@ public final class Coordinator {
                         componentRegistry,
                         coordinatorParameters.getWorkerVmStartupDelayMs()).run();
 
-                runTestSuite();
-
+                new RunTestSuiteTask(testSuite,
+                        coordinatorParameters,
+                        componentRegistry,
+                        failureCollector,
+                        testPhaseListeners,
+                        remoteClient,
+                        performanceStatsCollector,
+                        workerParameters).run();
             } catch (CommandLineExitException e) {
                 for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureCollector.getFailureCount() == 0; i++) {
                     sleepSeconds(1);
                 }
                 throw e;
             } finally {
+                new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
                 try {
                     failureCollector.logFailureInfo();
                 } finally {
@@ -168,6 +175,8 @@ public final class Coordinator {
                 }
             }
         } finally {
+            closeQuietly(remoteClient);
+
             if (!coordinatorParameters.skipDownload()) {
                 new DownloadTask(testSuite.getId(), simulatorProperties, outputDirectory, componentRegistry).run();
             }
@@ -175,18 +184,6 @@ public final class Coordinator {
 
             OperationTypeCounter.printStatistics();
         }
-    }
-
-    private void runTestSuite() {
-        new RunTestSuiteTask(testSuite,
-                coordinatorParameters,
-                componentRegistry,
-                failureCollector,
-                testPhaseListeners,
-                simulatorProperties,
-                remoteClient,
-                performanceStatsCollector,
-                workerParameters).run();
     }
 
     private void executeAfterCompletion() {
@@ -223,14 +220,10 @@ public final class Coordinator {
 
     private void startRemoteClient() {
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
-        int shutdownDelaySeconds = simulatorProperties.getMemberWorkerShutdownDelaySeconds();
 
-        remoteClient = new RemoteClient(
-                coordinatorConnector,
-                componentRegistry,
-                workerPingIntervalMillis,
-                shutdownDelaySeconds);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
 
+        // todo: this needs to be moved in the RunTestSuite.
         remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
     }
 
@@ -272,8 +265,7 @@ public final class Coordinator {
             FailureType failureType = failure.getType();
 
             if (failureType.isWorkerFinishedFailure()) {
-                SimulatorAddress workerAddress = failure.getWorkerAddress();
-                componentRegistry.removeWorker(workerAddress);
+                componentRegistry.removeWorker(failure.getWorkerAddress());
             }
         }
     }
