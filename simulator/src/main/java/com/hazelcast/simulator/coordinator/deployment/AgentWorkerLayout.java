@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * The layout of workers for a given Simulator Agent.
  */
-public final class AgentWorkerLayout {
+final class AgentWorkerLayout {
 
     private final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
@@ -60,6 +60,10 @@ public final class AgentWorkerLayout {
 
     public String getPrivateAddress() {
         return agentData.getPrivateAddress();
+    }
+
+    public AgentData getAgentData() {
+        return agentData;
     }
 
     public Set<String> getVersionSpecs() {

@@ -16,8 +16,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.coordinator.deployment.AgentWorkerLayout;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -27,50 +25,62 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
 
+/**
+ * Starts all workers.
+ * <p>
+ * It receives a map with key the address of the agent to start workers on. And the value is a List of WorkerSettings; where
+ * each item in this list corresponds to a single worker to create.
+ * <p>
+ * The workers will be created in order; first all member workers are started, and then all client workers are started. This
+ * is done to prevent clients running into a non existing cluster.
+ */
 public class StartWorkersTask {
     private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
-    private final DeploymentPlan deploymentPlan;
     private final RemoteClient remoteClient;
     private final ComponentRegistry componentRegistry;
     private final Echoer echoer;
-    private final int workerVmStartupDelayMs;
+    private final int startupDelayMs;
+    private final Map<SimulatorAddress, List<WorkerProcessSettings>> memberDeploymentPlan;
+    private final Map<SimulatorAddress, List<WorkerProcessSettings>> clientDeploymentPlan;
+    private long started;
 
     public StartWorkersTask(
-            DeploymentPlan deploymentPlan,
+            Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
             RemoteClient remoteClient,
             ComponentRegistry componentRegistry,
-            int workerVmStartupDelayMs) {
-        this.deploymentPlan = deploymentPlan;
+            int startupDelayMs) {
         this.remoteClient = remoteClient;
         this.componentRegistry = componentRegistry;
-        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
+        this.startupDelayMs = startupDelayMs;
         this.echoer = new Echoer(remoteClient);
+
+        this.memberDeploymentPlan = filterByWorkerType(true, deploymentPlan);
+        this.clientDeploymentPlan = filterByWorkerType(false, deploymentPlan);
     }
 
     public void run() {
-        long started = System.nanoTime();
+        echoStartWorkers();
 
-        echoer.echo(HORIZONTAL_RULER);
-        echoer.echo("Starting Workers...");
-        echoer.echo(HORIZONTAL_RULER);
+        // first create all members
+        startWorkers(true, memberDeploymentPlan);
+        // then create all clients
+        startWorkers(false, clientDeploymentPlan);
 
-        int totalWorkerCount = deploymentPlan.getTotalWorkerCount();
-        echoer.echo("Starting %d Workers (%d members, %d clients)...",
-                totalWorkerCount,
-                deploymentPlan.getMemberWorkerCount(),
-                deploymentPlan.getClientWorkerCount());
-        startWorkers(true);
+        remoteClient.sendToAllAgents(new StartTimeoutDetectionOperation());
+        remoteClient.startWorkerPingThread();
 
         if (componentRegistry.workerCount() > 0) {
             WorkerData firstWorker = componentRegistry.getFirstWorker();
@@ -78,55 +88,75 @@ public class StartWorkersTask {
                     firstWorker.getSettings().getWorkerType());
         }
 
-        long elapsed = getElapsedSeconds(started);
+        echoStartComplete();
+    }
+
+    private void echoStartWorkers() {
+        started = System.nanoTime();
         echoer.echo(HORIZONTAL_RULER);
-        echoer.echo("Finished starting of %s Worker JVMs (%s seconds)", totalWorkerCount, elapsed);
+        echoer.echo("Starting Workers...");
+        echoer.echo(HORIZONTAL_RULER);
+
+        echoer.echo("Starting %d Workers (%d members, %d clients)...",
+                count(memberDeploymentPlan) + count(clientDeploymentPlan),
+                count(memberDeploymentPlan), count(clientDeploymentPlan));
+    }
+
+    private void echoStartComplete() {
+        long elapsedSeconds = getElapsedSeconds(started);
+        echoer.echo(HORIZONTAL_RULER);
+        echoer.echo("Finished starting of %s Worker JVMs (%s seconds)",
+                count(memberDeploymentPlan) + count(clientDeploymentPlan), elapsedSeconds);
         echoer.echo(HORIZONTAL_RULER);
     }
 
-    private void startWorkers(boolean startPokeThread) {
-        startWorkersByType(true);
-        startWorkersByType(false);
+    private static Map<SimulatorAddress, List<WorkerProcessSettings>> filterByWorkerType(
+            boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
 
-        remoteClient.sendToAllAgents(new StartTimeoutDetectionOperation());
-        if (startPokeThread) {
-            remoteClient.startWorkerPingThread();
-        }
-    }
+        Map<SimulatorAddress, List<WorkerProcessSettings>> result = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
 
-    private void startWorkersByType(boolean isMemberType) {
-        ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
-        int workerIndex = 0;
-        for (AgentWorkerLayout agentWorkerLayout : deploymentPlan.getAgentWorkerLayouts()) {
-            List<WorkerProcessSettings> workersSettings = makeWorkersProcessSettings(isMemberType, agentWorkerLayout);
+        for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : deploymentPlan.entrySet()) {
+            List<WorkerProcessSettings> filtered = new LinkedList<WorkerProcessSettings>();
 
-            if (workersSettings.isEmpty()) {
-                continue;
+            for (WorkerProcessSettings settings : entry.getValue()) {
+                if (settings.getWorkerType().isMember() == isMember) {
+                    filtered.add(settings);
+                }
             }
 
-            SimulatorAddress agentAddress = agentWorkerLayout.getSimulatorAddress();
-            String workerType = (isMemberType) ? "member" : "client";
+            if (!filtered.isEmpty()) {
+                result.put(entry.getKey(), filtered);
+            }
+        }
+        return result;
+    }
 
-            int startupDelayMs = workerVmStartupDelayMs * workerIndex;
-            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs, agentAddress, workerType));
+    private int count(Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
+        int result = 0;
+        for (List<WorkerProcessSettings> settings : deploymentPlan.values()) {
+            result += settings.size();
+        }
+        return result;
+    }
 
-            if (isMemberType) {
+    private void startWorkers(boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
+        ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
+        int workerIndex = 0;
+        for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : deploymentPlan.entrySet()) {
+            List<WorkerProcessSettings> workersSettings = entry.getValue();
+
+            SimulatorAddress agentAddress = entry.getKey();
+            String workerType = isMember ? "member" : "client";
+
+            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agentAddress, workerType));
+
+            if (isMember) {
                 workerIndex++;
             }
         }
         spawner.awaitCompletion();
     }
 
-    private List<WorkerProcessSettings> makeWorkersProcessSettings(boolean isMemberType, AgentWorkerLayout agentWorkerLayout) {
-        List<WorkerProcessSettings> result = new ArrayList<WorkerProcessSettings>();
-        for (WorkerProcessSettings workerProcessSettings : agentWorkerLayout.getWorkerProcessSettings()) {
-            WorkerType workerType = workerProcessSettings.getWorkerType();
-            if (workerType.isMember() == isMemberType) {
-                result.add(workerProcessSettings);
-            }
-        }
-        return result;
-    }
 
     private final class StartWorkersOnAgentTask implements Runnable {
         private final List<WorkerProcessSettings> workersSettings;
@@ -150,7 +180,7 @@ public class StartWorkersTask {
             Response response = remoteClient.getCoordinatorConnector().write(agentAddress, operation);
 
             ResponseType responseType = response.getFirstErrorResponseType();
-            if (responseType != ResponseType.SUCCESS) {
+            if (responseType != SUCCESS) {
                 throw new CommandLineExitException(format("Could not create %d %s Worker on %s (%s)",
                         workersSettings.size(), workerType, agentAddress, responseType));
             }
