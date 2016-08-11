@@ -51,6 +51,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createSingleInstanceDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -109,6 +110,8 @@ public class AgentSmokeTest implements FailureListener {
 
     @After
     public void after() {
+        closeQuietly(remoteClient);
+
         try {
             LOGGER.info("Shutdown of CoordinatorConnector...");
             coordinatorConnector.shutdown();
