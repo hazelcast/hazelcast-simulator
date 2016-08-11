@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The layout of workers for a given Simulator Agent.
@@ -35,7 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class AgentWorkerLayout {
 
     private final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
-    private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
     private final AgentData agentData;
 
@@ -92,7 +90,7 @@ final class AgentWorkerLayout {
                 Integer.toString(parameters.getWorkerPerformanceMonitorIntervalSeconds()));
 
         WorkerProcessSettings settings = new WorkerProcessSettings(
-                currentWorkerIndex.incrementAndGet(),
+                agentData.getNextWorkerIndex(),
                 type,
                 parameters.getVersionSpec(),
                 parameters.getWorkerScript(),
