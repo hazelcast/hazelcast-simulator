@@ -1,9 +1,9 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
@@ -38,9 +38,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.LATENCY_FORMAT_LENGTH;
-import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.OPERATION_COUNT_FORMAT_LENGTH;
-import static com.hazelcast.simulator.coordinator.PerformanceStatsContainer.THROUGHPUT_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStatsCollector.LATENCY_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStatsCollector.OPERATION_COUNT_FORMAT_LENGTH;
+import static com.hazelcast.simulator.coordinator.PerformanceStatsCollector.THROUGHPUT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
@@ -66,8 +66,8 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     private LocalExceptionLogger exceptionLogger;
     private TestPhaseListeners testPhaseListeners;
-    private PerformanceStatsContainer performanceStatsContainer;
-    private FailureContainer failureContainer;
+    private PerformanceStatsCollector performanceStatsCollector;
+    private FailureCollector failureCollector;
 
     private CoordinatorOperationProcessor processor;
     private File outputDirectory;
@@ -93,13 +93,13 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
-        performanceStatsContainer = new PerformanceStatsContainer();
+        performanceStatsCollector = new PerformanceStatsCollector();
 
         outputDirectory = TestUtils.createTmpDirectory();
-        failureContainer = new FailureContainer(outputDirectory, new HashSet<FailureType>());
+        failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
 
-        processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStatsContainer, remoteControllerProcessor);
+        processor = new CoordinatorOperationProcessor(exceptionLogger, failureCollector, testPhaseListeners,
+                performanceStatsCollector, remoteControllerProcessor);
     }
 
     @After
@@ -133,7 +133,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     @Test
     public void processFailureOperation() {
-        failureContainer.addListener(this);
+        failureCollector.addListener(this);
 
         TestException exception = new TestException("expected exception");
         FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOM,
@@ -188,7 +188,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         ResponseType responseType = processor.process(operation, workerAddress);
         assertEquals(SUCCESS, responseType);
 
-        String performanceNumbers = performanceStatsContainer.formatPerformanceNumbers("testId");
+        String performanceNumbers = performanceStatsCollector.formatPerformanceNumbers("testId");
         assertTrue(performanceNumbers.contains(formatLong(1000, OPERATION_COUNT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatDouble(50, THROUGHPUT_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));

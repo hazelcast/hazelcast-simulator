@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -66,9 +66,9 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     private final ConnectionManager connectionManager;
 
     CoordinatorConnector(ComponentRegistry componentRegistry,
-                         FailureContainer failureContainer,
+                         FailureCollector failureCollector,
                          TestPhaseListeners testPhaseListeners,
-                         PerformanceStatsContainer performanceStatsContainer,
+                         PerformanceStatsCollector performanceStatsCollector,
                          int port,
                          ConnectionManager connectionManager,
                          ConcurrentMap<String, ResponseFuture> futureMap) {
@@ -77,8 +77,8 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         CoordinatorRemoteControllerProcessor remoteControllerProcessor = new CoordinatorRemoteControllerProcessor(this,
                 componentRegistry);
 
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureContainer, testPhaseListeners,
-                performanceStatsContainer, remoteControllerProcessor);
+        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureCollector, testPhaseListeners,
+                performanceStatsCollector, remoteControllerProcessor);
         this.connectionManager = connectionManager;
     }
 
@@ -86,20 +86,20 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
      * Creates a {@link CoordinatorConnector} instance.
      *
      * @param componentRegistry         {@link ComponentRegistry} for this connector
-     * @param failureContainer          {@link FailureContainer} for this connector
+     * @param failureCollector          {@link FailureCollector} for this connector
      * @param testPhaseListeners        {@link TestPhaseListeners} for this connector
-     * @param performanceStatsContainer {@link PerformanceStatsContainer} for this connector
+     * @param performanceStatsCollector {@link PerformanceStatsCollector} for this connector
      * @param port                      the port for incoming connections
      */
     public static CoordinatorConnector createInstance(ComponentRegistry componentRegistry,
-                                                      FailureContainer failureContainer,
+                                                      FailureCollector failureCollector,
                                                       TestPhaseListeners testPhaseListeners,
-                                                      PerformanceStatsContainer performanceStatsContainer,
+                                                      PerformanceStatsCollector performanceStatsCollector,
                                                       int port) {
         ConnectionManager connectionManager = new ConnectionManager();
         ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
-        return new CoordinatorConnector(componentRegistry, failureContainer, testPhaseListeners, performanceStatsContainer,
+        return new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners, performanceStatsCollector,
                 port, connectionManager, futureMap);
     }
 

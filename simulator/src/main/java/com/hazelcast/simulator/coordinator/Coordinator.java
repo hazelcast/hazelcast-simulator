@@ -60,7 +60,7 @@ public final class Coordinator {
     private final File outputDirectory;
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
-    private final PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
+    private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
     private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
@@ -68,7 +68,7 @@ public final class Coordinator {
     private final WorkerParameters workerParameters;
     private final ClusterLayoutParameters clusterLayoutParameters;
 
-    private final FailureContainer failureContainer;
+    private final FailureCollector failureCollector;
 
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
@@ -103,8 +103,8 @@ public final class Coordinator {
         this.workerParameters = workerParameters;
         this.clusterLayoutParameters = clusterLayoutParameters;
 
-        this.failureContainer = new FailureContainer(outputDirectory, testSuite.getTolerableFailures());
-        this.failureContainer.addListener(new FailureListener() {
+        this.failureCollector = new FailureCollector(outputDirectory, testSuite.getTolerableFailures());
+        this.failureCollector.addListener(new FailureListener() {
             @Override
             public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
                 FailureType failureType = failure.getType();
@@ -145,8 +145,8 @@ public final class Coordinator {
         return componentRegistry;
     }
 
-    FailureContainer getFailureContainer() {
-        return failureContainer;
+    FailureCollector getFailureCollector() {
+        return failureCollector;
     }
 
     private void logConfiguration() {
@@ -185,13 +185,13 @@ public final class Coordinator {
                 runTestSuite();
 
             } catch (CommandLineExitException e) {
-                for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureContainer.getFailureCount() == 0; i++) {
+                for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureCollector.getFailureCount() == 0; i++) {
                     sleepSeconds(1);
                 }
                 throw e;
             } finally {
                 try {
-                    failureContainer.logFailureInfo();
+                    failureCollector.logFailureInfo();
                 } finally {
                     if (coordinatorConnector != null) {
                         echo("Shutdown of ClientConnector...");
@@ -216,11 +216,11 @@ public final class Coordinator {
         new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
                 componentRegistry,
-                failureContainer,
+                failureCollector,
                 testPhaseListeners,
                 simulatorProperties,
                 remoteClient,
-                performanceStatsContainer,
+                performanceStatsCollector,
                 workerParameters).run();
     }
 
@@ -235,10 +235,10 @@ public final class Coordinator {
     private void startCoordinatorConnector() {
         try {
             int coordinatorPort = simulatorProperties.getCoordinatorPort();
-            coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureContainer,
-                    testPhaseListeners, performanceStatsContainer, coordinatorPort);
+            coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureCollector,
+                    testPhaseListeners, performanceStatsCollector, coordinatorPort);
             coordinatorConnector.start();
-            failureContainer.addListener(coordinatorConnector);
+            failureCollector.addListener(coordinatorConnector);
 
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
             for (final AgentData agentData : componentRegistry.getAgents()) {

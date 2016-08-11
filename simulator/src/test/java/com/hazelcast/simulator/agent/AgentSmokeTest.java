@@ -5,9 +5,9 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.FailureContainer;
+import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStatsContainer;
+import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
@@ -71,7 +71,7 @@ public class AgentSmokeTest implements FailureListener {
 
     private ComponentRegistry componentRegistry;
     private AgentStarter agentStarter;
-    private FailureContainer failureContainer;
+    private FailureCollector failureCollector;
     private TestPhaseListeners testPhaseListeners;
     private CoordinatorConnector coordinatorConnector;
     private RemoteClient remoteClient;
@@ -91,12 +91,12 @@ public class AgentSmokeTest implements FailureListener {
         agentStarter = new AgentStarter();
 
         testPhaseListeners = new TestPhaseListeners();
-        PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
+        PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         outputDirectory = TestUtils.createTmpDirectory();
-        failureContainer = new FailureContainer(outputDirectory, new HashSet<FailureType>());
+        failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
 
-        coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureContainer, testPhaseListeners,
-                performanceStatsContainer, COORDINATOR_PORT);
+        coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureCollector, testPhaseListeners,
+                performanceStatsCollector, COORDINATOR_PORT);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
         coordinatorConnector.start();
 
@@ -138,7 +138,7 @@ public class AgentSmokeTest implements FailureListener {
 
     @Test
     public void testThrowingFailures() throws Exception {
-        failureContainer.addListener(this);
+        failureCollector.addListener(this);
 
         TestCase testCase = new TestCase("testThrowingFailures");
         testCase.setProperty("class", FailingTest.class.getName());

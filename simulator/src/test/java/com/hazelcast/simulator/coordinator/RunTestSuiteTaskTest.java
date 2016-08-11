@@ -5,7 +5,6 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -75,7 +74,7 @@ public class RunTestSuiteTaskTest {
 
     private SimulatorProperties simulatorProperties;
     private ComponentRegistry componentRegistry;
-    private FailureContainer failureContainer;
+    private FailureCollector failureCollector;
     private RemoteClient remoteClient;
 
     private boolean parallel = false;
@@ -246,7 +245,7 @@ public class RunTestSuiteTaskTest {
         parallel = false;
 
         RunTestSuiteTask task = createRunTestSuiteTask();
-        failureContainer.addFailureOperation(criticalFailureOperation);
+        failureCollector.notify(criticalFailureOperation);
         task.run();
     }
 
@@ -257,7 +256,7 @@ public class RunTestSuiteTaskTest {
         parallel = true;
 
         RunTestSuiteTask task = createRunTestSuiteTask();
-        failureContainer.addFailureOperation(criticalFailureOperation);
+        failureCollector.notify(criticalFailureOperation);
         task.run();
     }
 
@@ -267,7 +266,7 @@ public class RunTestSuiteTaskTest {
         testSuite.setFailFast(true);
 
         RunTestSuiteTask task = createRunTestSuiteTask();
-        failureContainer.addFailureOperation(criticalFailureOperation);
+        failureCollector.notify(criticalFailureOperation);
         task.run();
     }
 
@@ -278,7 +277,7 @@ public class RunTestSuiteTaskTest {
         parallel = true;
 
         RunTestSuiteTask task = createRunTestSuiteTask();
-        failureContainer.addFailureOperation(criticalFailureOperation);
+        failureCollector.notify(criticalFailureOperation);
         task.run();
     }
 
@@ -311,7 +310,7 @@ public class RunTestSuiteTaskTest {
         RunTestSuiteTask task = createRunTestSuiteTask();
         task.run();
 
-        Set<SimulatorAddress> finishedWorkers = failureContainer.getFinishedWorkers();
+        Set<SimulatorAddress> finishedWorkers = failureCollector.getFinishedWorkers();
         assertEquals(0, finishedWorkers.size());
 
         Set<SimulatorAddress> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
@@ -333,8 +332,8 @@ public class RunTestSuiteTaskTest {
         componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerProcessSettings));
         componentRegistry.addTests(testSuite);
 
-        failureContainer = new FailureContainer(outputDirectory, Collections.<FailureType>emptySet());
-        PerformanceStatsContainer performanceStatsContainer = new PerformanceStatsContainer();
+        failureCollector = new FailureCollector(outputDirectory, Collections.<FailureType>emptySet());
+        PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
@@ -354,11 +353,11 @@ public class RunTestSuiteTaskTest {
         when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(1);
         when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(0);
 
-        RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureContainer,
-                testPhaseListeners, simulatorProperties, remoteClient, performanceStatsContainer,
+        RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureCollector,
+                testPhaseListeners, simulatorProperties, remoteClient, performanceStatsCollector,
                 workerParameters);
 
-        new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureContainer).start();
+        new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureCollector).start();
 
         return task;
     }
@@ -444,15 +443,15 @@ public class RunTestSuiteTaskTest {
 
         private final ComponentRegistry componentRegistry;
         private final TestPhaseListeners testPhaseListeners;
-        private final FailureContainer failureContainer;
+        private final FailureCollector failureCollector;
 
         private TestPhaseCompleter(ComponentRegistry componentRegistry, TestPhaseListeners testPhaseListeners,
-                                   FailureContainer failureContainer) {
+                                   FailureCollector failureCollector) {
             super("TestPhaseCompleter");
 
             this.componentRegistry = componentRegistry;
             this.testPhaseListeners = testPhaseListeners;
-            this.failureContainer = failureContainer;
+            this.failureCollector = failureCollector;
 
             setDaemon(true);
         }
@@ -472,7 +471,7 @@ public class RunTestSuiteTaskTest {
                 await(finishWorkerLatch);
                 FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
                         "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
-                failureContainer.addFailureOperation(operation);
+                failureCollector.notify(operation);
             }
         }
     }

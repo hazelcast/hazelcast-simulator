@@ -80,8 +80,8 @@ final class TestCaseRunner implements TestPhaseListener {
     private final TestSuite testSuite;
 
     private final RemoteClient remoteClient;
-    private final FailureContainer failureContainer;
-    private final PerformanceStatsContainer performanceStatsContainer;
+    private final FailureCollector failureCollector;
+    private final PerformanceStatsCollector performanceStatsCollector;
     private final ComponentRegistry componentRegistry;
 
     private final String prefix;
@@ -101,19 +101,19 @@ final class TestCaseRunner implements TestPhaseListener {
                    TestSuite testSuite,
                    RemoteClient remoteClient,
                    Map<TestPhase, CountDownLatch> testPhaseSyncMap,
-                   FailureContainer failureContainer,
+                   FailureCollector failureCollector,
                    ComponentRegistry componentRegistry,
                    CoordinatorParameters coordinatorParameters,
                    WorkerParameters workerParameters,
-                   PerformanceStatsContainer performanceStatsContainer) {
+                   PerformanceStatsCollector performanceStatsCollector) {
         this.testIndex = testIndex;
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
         this.testSuite = testSuite;
 
         this.remoteClient = remoteClient;
-        this.failureContainer = failureContainer;
-        this.performanceStatsContainer = performanceStatsContainer;
+        this.failureCollector = failureCollector;
+        this.performanceStatsCollector = performanceStatsCollector;
         this.componentRegistry = componentRegistry;
 
         this.prefix = padRight(testCaseId, testSuite.getMaxTestCaseIdLength() + 1);
@@ -331,8 +331,8 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private boolean hasFailure() {
-        return failureContainer.hasCriticalFailure(testCaseId)
-                || failureContainer.hasCriticalFailure() && testSuite.isFailFast();
+        return failureCollector.hasCriticalFailure(testCaseId)
+                || failureCollector.hasCriticalFailure() && testSuite.isFailFast();
     }
 
     private final class StopThread extends Thread {
@@ -390,7 +390,7 @@ final class TestCaseRunner implements TestPhaseListener {
                     secondsToHuman(elapsed),
                     formatPercentage(elapsed, sleepSeconds));
             if (monitorPerformance && elapsed % logPerformanceIntervalSeconds == 0) {
-                msg += performanceStatsContainer.formatPerformanceNumbers(testCaseId);
+                msg += performanceStatsCollector.formatPerformanceNumbers(testCaseId);
             }
 
             LOGGER.info(prefix + msg);
