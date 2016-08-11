@@ -77,15 +77,15 @@ public class AgentData {
         return currentWorkerIndex.incrementAndGet();
     }
 
+    public Collection<WorkerData> getWorkers() {
+        return workers;
+    }
+
     void addWorker(WorkerData workerData) {
         workers.add(workerData);
     }
 
     void removeWorker(WorkerData workerData) {
         workers.remove(workerData);
-    }
-
-    Collection<WorkerData> getWorkers() {
-        return workers;
     }
 }

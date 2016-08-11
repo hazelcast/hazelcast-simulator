@@ -92,7 +92,7 @@ public class StartWorkersTaskTest {
         DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParameters,
                 memberWorkerCount, clientWorkerCount, dedicatedMemberMachineCount);
 
-        return deploymentPlan.asMap();
+        return deploymentPlan.getWorkerDeployment();
     }
 
     private void initMockForCreateWorkerOperation(ResponseType responseType) {

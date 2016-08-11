@@ -60,10 +60,6 @@ final class AgentWorkerLayout {
         return agentData.getPrivateAddress();
     }
 
-    AgentData getAgentData() {
-        return agentData;
-    }
-
     Set<String> getVersionSpecs() {
         Set<String> result = new HashSet<String>();
         for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
@@ -80,7 +76,7 @@ final class AgentWorkerLayout {
         return agentWorkerMode;
     }
 
-    void addWorker(WorkerType type, WorkerParameters parameters) {
+    WorkerProcessSettings addWorker(WorkerType type, WorkerParameters parameters) {
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions() : parameters.getClientJvmOptions());
         environment.put("HAZELCAST_CONFIG", type.isMember() ? parameters.getMemberHzConfig() : parameters.getClientHzConfig());
@@ -96,6 +92,13 @@ final class AgentWorkerLayout {
                 parameters.getWorkerScript(),
                 parameters.getWorkerStartupTimeout(),
                 environment);
+        workerProcessSettingsList.add(settings);
+
+        return settings;
+    }
+
+    void addWorker(WorkerProcessSettings settings) {
+        agentData.getNextWorkerIndex();
         workerProcessSettingsList.add(settings);
     }
 

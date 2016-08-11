@@ -49,9 +49,11 @@ public class ComponentRegistry {
     private final List<WorkerData> workers = synchronizedList(new ArrayList<WorkerData>());
     private final ConcurrentMap<String, TestData> tests = new ConcurrentHashMap<String, TestData>();
 
-    public void addAgent(String publicAddress, String privateAddress) {
+    public AgentData addAgent(String publicAddress, String privateAddress) {
         AgentData agentData = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress);
         agents.add(agentData);
+
+        return agentData;
     }
 
     public void removeAgent(AgentData agentData) {
