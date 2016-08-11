@@ -94,7 +94,8 @@ public class DeploymentPlan {
         this.agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
     }
 
-    public static DeploymentPlan createSingleInstanceClusterLayout(String agentIpAddress, WorkerParameters workerParameters) {
+    public static Map<SimulatorAddress, List<WorkerProcessSettings>> createSingleInstancePlan(String agentIpAddress,
+                                                                                              WorkerParameters workerParameters) {
         AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress);
         AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, AgentWorkerMode.MEMBER);
         agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
@@ -105,7 +106,7 @@ public class DeploymentPlan {
         deploymentPlan.memberWorkerCount += agentWorkerLayout.getCount(WorkerType.MEMBER);
         deploymentPlan.clientWorkerCount += agentWorkerLayout.getCount(WorkerType.CLIENT);
 
-        return deploymentPlan;
+        return deploymentPlan.asMap();
     }
 
     public Set<String> getVersionSpecs() {
