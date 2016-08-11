@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
@@ -13,7 +14,6 @@ import com.hazelcast.simulator.coordinator.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -37,6 +37,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +50,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createSingleInstanceClusterLayout;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createSingleInstancePlan;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -226,8 +228,8 @@ public class AgentSmokeTest implements FailureListener {
                 fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"),
                 false
         );
-        DeploymentPlan deploymentPlan = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);
-        new StartWorkersTask(deploymentPlan.asMap(), remoteClient, componentRegistry, 0).run();
+        Map<SimulatorAddress, List<WorkerProcessSettings>> plan = createSingleInstancePlan(AGENT_IP_ADDRESS, workerParameters);
+        new StartWorkersTask(plan, remoteClient, componentRegistry, 0).run();
     }
 
     private void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
