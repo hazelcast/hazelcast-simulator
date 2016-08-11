@@ -177,7 +177,7 @@ public final class Coordinator {
                 startCoordinatorConnector();
                 startRemoteClient();
                 new StartWorkersTask(
-                        deploymentPlan,
+                        deploymentPlan.asMap(),
                         remoteClient,
                         componentRegistry,
                         coordinatorParameters.getWorkerVmStartupDelayMs()).run();

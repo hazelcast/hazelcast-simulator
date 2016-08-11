@@ -227,7 +227,7 @@ public class AgentSmokeTest implements FailureListener {
                 false
         );
         DeploymentPlan deploymentPlan = createSingleInstanceClusterLayout(AGENT_IP_ADDRESS, workerParameters);
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan.asMap(), remoteClient, componentRegistry, 0).run();
     }
 
     private void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {

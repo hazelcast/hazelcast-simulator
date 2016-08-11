@@ -63,7 +63,7 @@ public class StartWorkersTaskTest {
                 WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan.asMap(), remoteClient, componentRegistry, 0).run();
     }
 
 //    @Test
@@ -84,7 +84,7 @@ public class StartWorkersTaskTest {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan.asMap(), remoteClient, componentRegistry, 0).run();
     }
 
     @Test(expected = SimulatorProtocolException.class)
@@ -95,7 +95,7 @@ public class StartWorkersTaskTest {
         RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
                 MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan.asMap(), remoteClient, componentRegistry, 0).run();
     }
 
 //    @Test

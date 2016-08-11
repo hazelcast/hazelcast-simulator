@@ -15,16 +15,20 @@
  */
 package com.hazelcast.simulator.coordinator.deployment;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.coordinator.ClusterLayoutParameters;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.coordinator.deployment.ClusterUtils.formatIpAddresses;
@@ -47,7 +51,8 @@ public class DeploymentPlan {
     private int memberWorkerCount;
     private int clientWorkerCount;
 
-    public DeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
+    public DeploymentPlan(ComponentRegistry componentRegistry,
+                          WorkerParameters workerParameters,
                           ClusterLayoutParameters clusterLayoutParameters) {
         agentWorkerLayouts = initMemberLayout(componentRegistry, workerParameters, clusterLayoutParameters);
 
@@ -107,7 +112,16 @@ public class DeploymentPlan {
         return versionSpecs;
     }
 
-    public List<AgentWorkerLayout> getAgentWorkerLayouts() {
+    public Map<SimulatorAddress, List<WorkerProcessSettings>> asMap() {
+        Map<SimulatorAddress, List<WorkerProcessSettings>> result = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
+        for (AgentWorkerLayout layout : getAgentWorkerLayouts()) {
+            result.put(layout.getAgentData().getAddress(), layout.getWorkerProcessSettings());
+        }
+
+        return result;
+    }
+
+    private List<AgentWorkerLayout> getAgentWorkerLayouts() {
         return agentWorkerLayouts;
     }
 
@@ -117,9 +131,5 @@ public class DeploymentPlan {
 
     public int getClientWorkerCount() {
         return clientWorkerCount;
-    }
-
-    public int getTotalWorkerCount() {
-        return memberWorkerCount + clientWorkerCount;
     }
 }
