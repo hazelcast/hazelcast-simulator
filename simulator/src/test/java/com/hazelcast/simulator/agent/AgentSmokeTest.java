@@ -9,8 +9,8 @@ import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.RemoteClient;
-import com.hazelcast.simulator.coordinator.TerminateWorkersTask;
 import com.hazelcast.simulator.coordinator.StartWorkersTask;
+import com.hazelcast.simulator.coordinator.TerminateWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
@@ -106,6 +106,18 @@ public class AgentSmokeTest implements FailureListener {
         coordinatorConnector.start();
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10));
+
+
+        failureCollector.addListener(true, new FailureListener() {
+            @Override
+            public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
+                FailureType failureType = failure.getType();
+
+                if (failureType.isWorkerFinishedFailure()) {
+                    componentRegistry.removeWorker(failure.getWorkerAddress());
+                }
+            }
+        });
     }
 
     @After
@@ -118,6 +130,7 @@ public class AgentSmokeTest implements FailureListener {
 
             LOGGER.info("Shutdown of Agent...");
             agentStarter.shutdown();
+            LOGGER.info("Finally shutdown agent");
         } finally {
             Hazelcast.shutdownAll();
 
