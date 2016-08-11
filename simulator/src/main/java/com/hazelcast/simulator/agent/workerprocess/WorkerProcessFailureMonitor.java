@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
+import com.hazelcast.simulator.agent.FailureSender;
 import com.hazelcast.simulator.common.FailureType;
 import org.apache.log4j.Logger;
 

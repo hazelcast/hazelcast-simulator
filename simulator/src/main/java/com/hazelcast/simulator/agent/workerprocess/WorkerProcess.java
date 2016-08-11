@@ -34,7 +34,7 @@ public class WorkerProcess {
     private volatile Process process;
     private volatile String hzAddress;
 
-    WorkerProcess(SimulatorAddress address, String id, File workerHome) {
+    public WorkerProcess(SimulatorAddress address, String id, File workerHome) {
         this.address = address;
         this.id = id;
         this.workerHome = workerHome;

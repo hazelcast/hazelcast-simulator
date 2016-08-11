@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent.workerprocess;
+package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -28,7 +29,7 @@ import org.apache.log4j.Logger;
 import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
 import static java.lang.String.format;
 
-public class FailureSenderImpl implements FailureSender {
+class FailureSenderImpl implements FailureSender {
 
     private static final Logger LOGGER = Logger.getLogger(FailureSenderImpl.class);
 
@@ -39,7 +40,7 @@ public class FailureSenderImpl implements FailureSender {
 
     private int failureCount;
 
-    public FailureSenderImpl(String agentAddress, AgentConnector agentConnector) {
+    FailureSenderImpl(String agentAddress, AgentConnector agentConnector) {
         this.agentAddress = agentAddress;
         this.agentConnector = agentConnector;
     }

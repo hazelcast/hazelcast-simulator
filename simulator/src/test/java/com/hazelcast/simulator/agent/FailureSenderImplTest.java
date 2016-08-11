@@ -1,5 +1,6 @@
-package com.hazelcast.simulator.agent.workerprocess;
+package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;

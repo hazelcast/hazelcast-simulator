@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.workerprocess.FailureSenderImpl;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.common.ShutdownThread;

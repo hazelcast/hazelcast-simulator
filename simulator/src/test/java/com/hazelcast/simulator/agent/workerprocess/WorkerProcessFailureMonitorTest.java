@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
+import com.hazelcast.simulator.agent.FailureSender;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
