@@ -39,6 +39,10 @@ public class WorkerProcessManager {
         workerProcesses.put(workerAddress, workerProcess);
     }
 
+    public void remove(WorkerProcess process) {
+        workerProcesses.remove(process.getAddress());
+    }
+
     public Collection<WorkerProcess> getWorkerProcesses() {
         return workerProcesses.values();
     }

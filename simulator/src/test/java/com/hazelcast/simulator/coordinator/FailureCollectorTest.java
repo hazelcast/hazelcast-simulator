@@ -6,7 +6,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TestUtils;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +17,6 @@ import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOM;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
@@ -26,8 +24,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class FailureCollectorTest {
-
-    private final static int FINISHED_WORKER_TIMEOUT_SECONDS = 120;
 
     private FailureCollector failureCollector;
 
@@ -67,34 +63,28 @@ public class FailureCollectorTest {
     @Test
     public void testAddFailureOperation_withException() {
         assertEquals(0, failureCollector.getFailureCount());
-        assertEquals(0, failureCollector.getFinishedWorkers().size());
 
         failureCollector.notify(exceptionOperation);
 
         assertEquals(1, failureCollector.getFailureCount());
-        assertEquals(0, failureCollector.getFinishedWorkers().size());
     }
 
     @Test
     public void testAddFailureOperation_withWorkerFinishedFailure() {
         assertEquals(0, failureCollector.getFailureCount());
-        assertEquals(0, failureCollector.getFinishedWorkers().size());
 
         failureCollector.notify(oomOperation);
 
         assertEquals(1, failureCollector.getFailureCount());
-        assertEquals(1, failureCollector.getFinishedWorkers().size());
     }
 
     @Test
     public void testAddFailureOperation_withPoisonPill() {
         assertEquals(0, failureCollector.getFailureCount());
-        assertEquals(0, failureCollector.getFinishedWorkers().size());
 
         failureCollector.notify(finishedOperation);
 
         assertEquals(0, failureCollector.getFailureCount());
-        assertEquals(1, failureCollector.getFinishedWorkers().size());
     }
 
     @Test
@@ -111,33 +101,6 @@ public class FailureCollectorTest {
 
         failureCollector.notify(exceptionOperation);
         assertFalse(failureCollector.hasCriticalFailure());
-    }
-
-    @Test(timeout = 10000)
-    public void testWaitForWorkerShutdown() {
-        addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0));
-
-        ThreadSpawner spawner = new ThreadSpawner("testWaitForFinishedWorker", true);
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                sleepSeconds(1);
-                addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0));
-                sleepSeconds(1);
-                addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0));
-            }
-        });
-
-        boolean success = failureCollector.waitForWorkerShutdown(3, FINISHED_WORKER_TIMEOUT_SECONDS);
-        assertTrue(success);
-    }
-
-    @Test(timeout = 10000)
-    public void testWaitForWorkerShutdown_withTimeout() {
-        addFinishedWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0));
-
-        boolean success = failureCollector.waitForWorkerShutdown(3, 1);
-        assertFalse(success);
     }
 
     @Test

@@ -252,27 +252,6 @@ public class ComponentRegistryTest {
     }
 
     @Test
-    public void testGetMissingWorkers() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(5);
-
-        componentRegistry.addWorkers(parentAddress, settingsList);
-        assertEquals(5, componentRegistry.workerCount());
-
-        Set<SimulatorAddress> finishedWorkers = new HashSet<SimulatorAddress>();
-        for (WorkerProcessSettings workerProcessSettings : settingsList) {
-            SimulatorAddress workerAddress = parentAddress.getChild(workerProcessSettings.getWorkerIndex());
-            finishedWorkers.add(workerAddress);
-            if (finishedWorkers.size() == 3) {
-                break;
-            }
-        }
-
-        Set<SimulatorAddress> missingWorkers = componentRegistry.getMissingWorkers(finishedWorkers);
-        assertEquals(2, missingWorkers.size());
-    }
-
-    @Test
     public void testAddTests() {
         TestSuite testSuite = new TestSuite("ComponentRegistryTest");
         testSuite.addTest(new TestCase("Test1"));

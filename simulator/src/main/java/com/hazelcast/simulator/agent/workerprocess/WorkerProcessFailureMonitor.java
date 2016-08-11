@@ -110,6 +110,10 @@ public class WorkerProcessFailureMonitor {
                 try {
                     for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
                         detectFailures(workerProcess);
+
+                        if (workerProcess.isFinished()) {
+                            workerProcessManager.remove(workerProcess);
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.fatal("Failed to scan for failures", e);
@@ -125,11 +129,8 @@ public class WorkerProcessFailureMonitor {
         }
 
         private void detectFailures(WorkerProcess workerProcess) {
-            if (workerProcess.isFinished()) {
-                return;
-            }
-
             detectExceptions(workerProcess);
+
             if (workerProcess.isOomeDetected()) {
                 return;
             }

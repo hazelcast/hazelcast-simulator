@@ -47,8 +47,7 @@ public class StartWorkersTaskTest {
 
         RemoteClient remoteClient = new RemoteClient(
                 coordinatorConnector, componentRegistry,
-                WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
+                WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
 
@@ -60,8 +59,7 @@ public class StartWorkersTaskTest {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
+        RemoteClient remoteClient= new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
 
@@ -73,8 +71,7 @@ public class StartWorkersTaskTest {
         initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
@@ -84,8 +81,7 @@ public class StartWorkersTaskTest {
         initMockForCreateWorkerOperation(null);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS,
-                MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS);
+        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
