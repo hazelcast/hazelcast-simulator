@@ -3,14 +3,12 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
-import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
@@ -48,8 +46,6 @@ public class RemoteClientTest {
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
-    private final ClusterLayoutParameters clusterLayoutParameters = mock(ClusterLayoutParameters.class);
-    private final WorkerParameters workerParameters = mock(WorkerParameters.class);
 
     @Before
     public void setUp() {
@@ -342,18 +338,6 @@ public class RemoteClientTest {
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
-    private void initMockForCreateWorkerOperation(ResponseType responseType) {
-        if (responseType != null) {
-            Response response = mock(Response.class);
-            when(response.getFirstErrorResponseType()).thenReturn(responseType);
-
-            when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenReturn(response);
-        } else {
-            Exception exception = new SimulatorProtocolException("expected exception");
-            when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenThrow(exception);
-        }
-    }
-
     private void initMock(ResponseType responseType) {
         Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
         responseTypes.put(COORDINATOR, responseType);
@@ -362,13 +346,5 @@ public class RemoteClientTest {
         when(response.entrySet()).thenReturn(responseTypes.entrySet());
 
         when(coordinatorConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
-    }
-
-    private DeploymentPlan getClusterLayout(int dedicatedMemberMachineCount, int memberWorkerCount, int clientWorkerCount) {
-        when(clusterLayoutParameters.getDedicatedMemberMachineCount()).thenReturn(dedicatedMemberMachineCount);
-        when(clusterLayoutParameters.getMemberWorkerCount()).thenReturn(memberWorkerCount);
-        when(clusterLayoutParameters.getClientWorkerCount()).thenReturn(clientWorkerCount);
-
-        return new DeploymentPlan(componentRegistry, workerParameters, clusterLayoutParameters);
     }
 }
