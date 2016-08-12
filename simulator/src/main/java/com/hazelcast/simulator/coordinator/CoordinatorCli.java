@@ -122,9 +122,9 @@ final class CoordinatorCli {
                     + " Use ';' as separator for multiple entries. The wildcard '*' can also be used.")
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<String> sessionIdSpec = parser.accepts("sessionIdSpec",
-            "Defines the ID of the Session. If not set the actual date will be used. The session id is used for creating"
-                    + "the working directory")
+    private final OptionSpec<String> sessionIdSpec = parser.accepts("sessionId",
+            "Defines the ID of the Session. If not set the actual date will be used."
+                    + " The session ID is used for creating the working directory")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
