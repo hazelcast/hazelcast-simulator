@@ -86,7 +86,9 @@ public class WorkerProcessFailureMonitorTest {
         for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
             deleteQuiet(workerProcess.getWorkerHome());
         }
+        deleteQuiet("worker37");
         deleteQuiet("worker3");
+        deleteQuiet("worker6");
         deleteQuiet("1.exception.sendFailure");
     }
 
