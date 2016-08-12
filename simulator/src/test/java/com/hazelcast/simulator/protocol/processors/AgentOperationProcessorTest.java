@@ -175,7 +175,7 @@ public class AgentOperationProcessorTest {
 
     private ResponseType testCreateWorkerOperation(boolean withStartupException, int startupTimeout) throws Exception {
         WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(
-                1,
+                23,
                 WorkerType.MEMBER,
                 "bringmyown",
                 withStartupException ? "exit 1" : "echo $$ > worker.pid; echo '127.0.0.1:5701' > worker.address; sleep 5;",
