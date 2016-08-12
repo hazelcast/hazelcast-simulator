@@ -107,7 +107,6 @@ public class AgentSmokeTest implements FailureListener {
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10));
 
-
         failureCollector.addListener(true, new FailureListener() {
             @Override
             public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
