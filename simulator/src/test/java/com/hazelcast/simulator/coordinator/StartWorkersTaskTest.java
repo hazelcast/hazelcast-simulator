@@ -11,6 +11,7 @@ import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -27,11 +29,11 @@ import static org.mockito.Mockito.when;
 public class StartWorkersTaskTest {
 
     private static final int WORKER_PING_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
-    private static final int MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS = 0;
 
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
     private final WorkerParameters workerParameters = mock(WorkerParameters.class);
+    private RemoteClient remoteClient;
 
     @Before
     public void setup() {
@@ -40,12 +42,17 @@ public class StartWorkersTaskTest {
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
     }
 
+    @After
+    public void tearDown() {
+        closeQuietly(remoteClient);
+    }
+
     @Test
     public void testCreateWorkers_withClients() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 3);
 
-        RemoteClient remoteClient = new RemoteClient(
+        remoteClient = new RemoteClient(
                 coordinatorConnector, componentRegistry,
                 WORKER_PING_INTERVAL_MILLIS);
 
@@ -59,7 +66,7 @@ public class StartWorkersTaskTest {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient= new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
 
@@ -71,7 +78,7 @@ public class StartWorkersTaskTest {
         initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
@@ -81,7 +88,7 @@ public class StartWorkersTaskTest {
         initMockForCreateWorkerOperation(null);
         Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        RemoteClient remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
         new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
     }
