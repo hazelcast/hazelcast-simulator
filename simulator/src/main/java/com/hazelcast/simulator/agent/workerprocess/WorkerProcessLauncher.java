@@ -57,7 +57,7 @@ public class WorkerProcessLauncher {
     private final WorkerProcessManager workerProcessManager;
     private final WorkerProcessSettings workerProcessSettings;
 
-    private File testSuiteDir;
+    private File sessionDir;
 
     public WorkerProcessLauncher(Agent agent, WorkerProcessManager workerProcessManager,
                                  WorkerProcessSettings workerProcessSettings) {
@@ -66,20 +66,10 @@ public class WorkerProcessLauncher {
         this.workerProcessSettings = workerProcessSettings;
     }
 
-    public static String directoryForVersionSpec(String versionSpec) {
-        if ("bringmyown".equals(versionSpec)) {
-            return null;
-        }
-        if ("outofthebox".equals(versionSpec)) {
-            return "outofthebox";
-        }
-        return versionSpec.replace('=', '-');
-    }
-
     public void launch() {
         try {
-            testSuiteDir = agent.getSessionDirectory();
-            ensureExistingDirectory(testSuiteDir);
+            sessionDir = agent.getSessionDirectory();
+            ensureExistingDirectory(sessionDir);
 
             WorkerType type = workerProcessSettings.getWorkerType();
             int workerIndex = workerProcessSettings.getWorkerIndex();
@@ -102,7 +92,7 @@ public class WorkerProcessLauncher {
         SimulatorAddress workerAddress = new SimulatorAddress(
                 AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
         String workerId = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + type.toLowerCase();
-        File workerHome = ensureExistingDirectory(testSuiteDir, workerId);
+        File workerHome = ensureExistingDirectory(sessionDir, workerId);
 
         copyResourcesToWorkerHome(workerId);
 
@@ -226,5 +216,15 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + CLASSPATH_SEPARATOR + CLASSPATH;
+    }
+
+    private static String directoryForVersionSpec(String versionSpec) {
+        if ("bringmyown".equals(versionSpec)) {
+            return null;
+        }
+        if ("outofthebox".equals(versionSpec)) {
+            return "outofthebox";
+        }
+        return versionSpec.replace('=', '-');
     }
 }
