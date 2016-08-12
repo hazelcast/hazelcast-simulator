@@ -107,7 +107,7 @@ public class AgentSmokeTest implements FailureListener {
         coordinatorConnector.start();
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10));
-        remoteClient.sendToAllAgents(new InitSessionOperation("foo"));
+        remoteClient.sendToAllAgents(new InitSessionOperation("AgentSmokeTest"));
 
         failureCollector.addListener(true, new FailureListener() {
             @Override
