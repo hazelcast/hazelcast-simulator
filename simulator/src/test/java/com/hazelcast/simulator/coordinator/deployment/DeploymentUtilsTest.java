@@ -1,7 +1,9 @@
 package com.hazelcast.simulator.coordinator.deployment;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -9,16 +11,16 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.CLIENT;
-import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.CUSTOM;
-import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MEMBER;
 import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MIXED;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.generateFromArguments;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentUtils.generateFromXml;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -30,14 +32,18 @@ public class DeploymentUtilsTest {
     private final WorkerParameters workerParameters = mock(WorkerParameters.class);
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
-    private List<AgentWorkerLayout> agentWorkerLayouts;
+    private SimulatorAddress firstAgent;
+    private SimulatorAddress secondAgent;
+    private SimulatorAddress thirdAgent;
+
+    private Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment;
     private WorkerConfigurationConverter converter;
 
     @Before
     public void setUp() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
-        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+        firstAgent = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
+        secondAgent = componentRegistry.addAgent("192.168.0.2", "192.168.0.2").getAddress();
+        thirdAgent = componentRegistry.addAgent("192.168.0.3", "192.168.0.3").getAddress();
 
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
@@ -85,10 +91,10 @@ public class DeploymentUtilsTest {
                 + NEW_LINE + "  </nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        agentWorkerLayouts = generateFromXml(componentRegistry, workerParameters, converter, xml);
-        assertAgentWorkerLayout(0, CUSTOM, 1, 0);
-        assertAgentWorkerLayout(1, CUSTOM, 0, 2);
-        assertAgentWorkerLayout(2, CUSTOM, 3, 4);
+        workerDeployment = generateFromXml(componentRegistry, workerParameters, converter, xml);
+        assertWorkerDeployment(firstAgent, 1, 0);
+        assertWorkerDeployment(secondAgent, 0, 2);
+        assertWorkerDeployment(thirdAgent, 3, 4);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -121,11 +127,11 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_dedicatedMemberCountEqualsAgentCount() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 1, 0, 3);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 1, 0, 3);
 
-        assertAgentWorkerLayout(0, MEMBER, 1, 0);
-        assertAgentWorkerLayout(1, MEMBER, 0, 0);
-        assertAgentWorkerLayout(2, MEMBER, 0, 0);
+        assertWorkerDeployment(firstAgent, 1, 0);
+        assertWorkerDeployment(secondAgent, 0, 0);
+        assertWorkerDeployment(thirdAgent, 0, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -145,11 +151,11 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_agentCountSufficientForDedicatedMembersAndClientWorkers() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 0, 1, 2);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 1, 2);
 
-        assertAgentWorkerLayout(0, MEMBER, 0, 0);
-        assertAgentWorkerLayout(1, MEMBER, 0, 0);
-        assertAgentWorkerLayout(2, CLIENT, 0, 1);
+        assertWorkerDeployment(firstAgent, 0, 0);
+        assertWorkerDeployment(secondAgent, 0, 0);
+        assertWorkerDeployment(thirdAgent, 0, 1);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -166,70 +172,147 @@ public class DeploymentUtilsTest {
     public void testGenerateFromArguments_singleMemberWorker() {
         when(workerParameters.isMonitorPerformance()).thenReturn(true);
 
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 1, 0, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 1, 0, 0);
 
-        assertAgentWorkerLayout(0, MIXED, 1, 0);
-        assertAgentWorkerLayout(1, MIXED, 0, 0);
-        assertAgentWorkerLayout(2, MIXED, 0, 0);
+        assertWorkerDeployment(firstAgent, 1, 0);
+        assertWorkerDeployment(secondAgent, 0, 0);
+        assertWorkerDeployment(thirdAgent, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_memberWorkerOverflow() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 4, 0, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 4, 0, 0);
 
-        assertAgentWorkerLayout(0, MIXED, 2, 0);
-        assertAgentWorkerLayout(1, MIXED, 1, 0);
-        assertAgentWorkerLayout(2, MIXED, 1, 0);
+        assertWorkerDeployment(firstAgent, 2, 0);
+        assertWorkerDeployment(secondAgent, 1, 0);
+        assertWorkerDeployment(thirdAgent, 1, 0);
     }
 
     @Test
     public void testGenerateFromArguments_singleClientWorker() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 0, 1, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 1, 0);
 
-        assertAgentWorkerLayout(0, MIXED, 0, 1);
-        assertAgentWorkerLayout(1, MIXED, 0, 0);
-        assertAgentWorkerLayout(2, MIXED, 0, 0);
+        assertWorkerDeployment(firstAgent, 0, 1);
+        assertWorkerDeployment(secondAgent, 0, 0);
+        assertWorkerDeployment(thirdAgent, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_clientWorkerOverflow() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 0, 5, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 5, 0);
 
-        assertAgentWorkerLayout(0, MIXED, 0, 2);
-        assertAgentWorkerLayout(1, MIXED, 0, 2);
-        assertAgentWorkerLayout(2, MIXED, 0, 1);
+        assertWorkerDeployment(firstAgent, 0, 2);
+        assertWorkerDeployment(secondAgent, 0, 2);
+        assertWorkerDeployment(thirdAgent, 0, 1);
     }
 
     @Test
     public void testGenerateFromArguments_dedicatedAndMixedWorkers1() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 2, 3, 1);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 2, 3, 1);
 
-        assertAgentWorkerLayout(0, MEMBER, 2, 0);
-        assertAgentWorkerLayout(1, CLIENT, 0, 2);
-        assertAgentWorkerLayout(2, CLIENT, 0, 1);
+        assertWorkerDeployment(firstAgent, 2, 0);
+        assertWorkerDeployment(secondAgent, 0, 2);
+        assertWorkerDeployment(thirdAgent, 0, 1);
     }
 
     @Test
     public void testGenerateFromArguments_dedicatedAndMixedWorkers2() {
-        agentWorkerLayouts = generateFromArguments(componentRegistry, workerParameters, 2, 3, 2);
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 2, 3, 2);
 
-        assertAgentWorkerLayout(0, MEMBER, 1, 0);
-        assertAgentWorkerLayout(1, MEMBER, 1, 0);
-        assertAgentWorkerLayout(2, CLIENT, 0, 3);
+        assertWorkerDeployment(firstAgent, 1, 0);
+        assertWorkerDeployment(secondAgent, 1, 0);
+        assertWorkerDeployment(thirdAgent, 0, 3);
     }
 
-    private void assertAgentWorkerLayout(int index, AgentWorkerMode mode, int memberCount, int clientCount) {
-        AgentWorkerLayout layout = agentWorkerLayouts.get(index);
-        assertNotNull("Could not find AgentWorkerLayout at index " + index, layout);
+    @Test
+    public void testGenerateFromArguments_withIncrementalDeployment_addFirstClientWorkerToLeastCrowdedAgent() {
+        WorkerProcessSettings firstWorker = new WorkerProcessSettings(
+                1,
+                WorkerType.MEMBER,
+                "any version",
+                "any script",
+                0,
+                new HashMap<String, String>()
+        );
+        WorkerProcessSettings secondWorker = new WorkerProcessSettings(
+                1,
+                WorkerType.MEMBER,
+                "any version",
+                "any script",
+                0,
+                new HashMap<String, String>()
+        );
 
-        String prefix = String.format("Agent %s members: %d clients: %d mode: %s",
-                layout.getPublicAddress(),
-                layout.getCount(WorkerType.MEMBER),
-                layout.getCount(WorkerType.CLIENT),
-                layout.getAgentWorkerMode());
+        componentRegistry.addWorkers(firstAgent, singletonList(firstWorker));
+        componentRegistry.addWorkers(secondAgent, singletonList(secondWorker));
 
-        assertEquals(prefix + " (agentWorkerMode)", mode, layout.getAgentWorkerMode());
-        assertEquals(prefix + " (memberWorkerCount)", memberCount, layout.getCount(WorkerType.MEMBER));
-        assertEquals(prefix + " (clientWorkerCount)", clientCount, layout.getCount(WorkerType.CLIENT));
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 4, 0);
+
+        assertWorkerDeployment(firstAgent, 0, 1);
+        assertWorkerDeployment(secondAgent, 0, 1);
+        assertWorkerDeployment(thirdAgent, 0, 2);
+    }
+
+    @Test
+    public void testGenerateFromArguments_withIncrementalDeployment_withDedicatedMembers_addClientsToCorrectAgents() {
+        WorkerProcessSettings firstWorker = new WorkerProcessSettings(
+                1,
+                WorkerType.MEMBER,
+                "any version",
+                "any script",
+                0,
+                new HashMap<String, String>()
+        );
+        WorkerProcessSettings secondWorker = new WorkerProcessSettings(
+                1,
+                WorkerType.CLIENT,
+                "any version",
+                "any script",
+                0,
+                new HashMap<String, String>()
+        );
+        WorkerProcessSettings thirdWorker = new WorkerProcessSettings(
+                2,
+                WorkerType.CLIENT,
+                "any version",
+                "any script",
+                0,
+                new HashMap<String, String>()
+        );
+
+        componentRegistry.addWorkers(firstAgent, singletonList(firstWorker));
+        componentRegistry.addWorkers(secondAgent, singletonList(secondWorker));
+        componentRegistry.addWorkers(secondAgent, singletonList(thirdWorker));
+        componentRegistry.addWorkers(thirdAgent, singletonList(secondWorker));
+        componentRegistry.addWorkers(thirdAgent, singletonList(thirdWorker));
+
+        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 3, 1);
+
+        assertWorkerDeployment(firstAgent, 0, 0);
+        assertWorkerDeployment(secondAgent, 0, 2);
+        assertWorkerDeployment(thirdAgent, 0, 1);
+    }
+
+    private void assertWorkerDeployment(SimulatorAddress agentAddress, int memberCount, int clientCount) {
+        List<WorkerProcessSettings> settingsList = workerDeployment.get(agentAddress);
+        assertNotNull("Could not find WorkerProcessSettings at index " + agentAddress
+                + ", workerDeployment: " + workerDeployment, settingsList);
+
+        int actualMemberWorkerCount = 0;
+        int actualClientWorkerCount = 0;
+        for (WorkerProcessSettings workerProcessSettings : settingsList) {
+            if (workerProcessSettings.getWorkerType().isMember()) {
+                actualMemberWorkerCount++;
+            } else {
+                actualClientWorkerCount++;
+            }
+        }
+        String prefix = String.format("Agent %s members: %d clients: %d",
+                agentAddress,
+                actualMemberWorkerCount,
+                actualClientWorkerCount);
+
+        assertEquals(prefix + " (memberWorkerCount)", memberCount, actualMemberWorkerCount);
+        assertEquals(prefix + " (clientWorkerCount)", clientCount, actualClientWorkerCount);
     }
 }

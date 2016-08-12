@@ -27,15 +27,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * The layout of workers for a given Simulator Agent.
+ * The layout of Simulator Workers for a given Simulator Agent.
  */
 final class AgentWorkerLayout {
 
     private final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
-    private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
     private final AgentData agentData;
 
@@ -46,27 +44,23 @@ final class AgentWorkerLayout {
         this.agentWorkerMode = agentWorkerMode;
     }
 
-    public List<WorkerProcessSettings> getWorkerProcessSettings() {
+    List<WorkerProcessSettings> getWorkerProcessSettings() {
         return workerProcessSettingsList;
     }
 
-    public SimulatorAddress getSimulatorAddress() {
+    SimulatorAddress getSimulatorAddress() {
         return agentData.getAddress();
     }
 
-    public String getPublicAddress() {
+    String getPublicAddress() {
         return agentData.getPublicAddress();
     }
 
-    public String getPrivateAddress() {
+    String getPrivateAddress() {
         return agentData.getPrivateAddress();
     }
 
-    public AgentData getAgentData() {
-        return agentData;
-    }
-
-    public Set<String> getVersionSpecs() {
+    Set<String> getVersionSpecs() {
         Set<String> result = new HashSet<String>();
         for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
             result.add(workerProcessSettings.getVersionSpec());
@@ -82,7 +76,7 @@ final class AgentWorkerLayout {
         return agentWorkerMode;
     }
 
-    void addWorker(WorkerType type, WorkerParameters parameters) {
+    WorkerProcessSettings addWorker(WorkerType type, WorkerParameters parameters) {
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions() : parameters.getClientJvmOptions());
         environment.put("HAZELCAST_CONFIG", type.isMember() ? parameters.getMemberHzConfig() : parameters.getClientHzConfig());
@@ -92,12 +86,19 @@ final class AgentWorkerLayout {
                 Integer.toString(parameters.getWorkerPerformanceMonitorIntervalSeconds()));
 
         WorkerProcessSettings settings = new WorkerProcessSettings(
-                currentWorkerIndex.incrementAndGet(),
+                agentData.getNextWorkerIndex(),
                 type,
                 parameters.getVersionSpec(),
                 parameters.getWorkerScript(),
                 parameters.getWorkerStartupTimeout(),
                 environment);
+        workerProcessSettingsList.add(settings);
+
+        return settings;
+    }
+
+    void addWorker(WorkerProcessSettings settings) {
+        agentData.getNextWorkerIndex();
         workerProcessSettingsList.add(settings);
     }
 

@@ -15,22 +15,37 @@
  */
 package com.hazelcast.simulator.coordinator.deployment;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.worker.WorkerType;
+import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.coordinator.deployment.ClusterConfigurationUtils.fromXml;
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
+import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
 import static java.lang.String.format;
 
 final class DeploymentUtils {
+
+    private static final int WORKER_MODE_LENGTH = 6;
+
+    private static final Logger LOGGER = Logger.getLogger(DeploymentPlan.class);
 
     private DeploymentUtils() {
     }
@@ -44,9 +59,14 @@ final class DeploymentUtils {
         return publicIp + " " + privateIp;
     }
 
-    static List<AgentWorkerLayout> generateFromXml(ComponentRegistry componentRegistry, WorkerParameters parameters,
-                                                   WorkerConfigurationConverter converter, String clusterXml) {
-        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(componentRegistry);
+    static Map<SimulatorAddress, List<WorkerProcessSettings>> generateFromXml(ComponentRegistry componentRegistry,
+                                                                              WorkerParameters parameters,
+                                                                              WorkerConfigurationConverter converter,
+                                                                              String clusterXml) {
+        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
+                = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
+
+        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(componentRegistry, workerDeployment);
         int agentCount = componentRegistry.agentCount();
         ClusterConfiguration clusterConfiguration = getClusterConfiguration(converter, clusterXml);
         if (clusterConfiguration.size() != agentCount) {
@@ -57,16 +77,20 @@ final class DeploymentUtils {
         Iterator<AgentWorkerLayout> iterator = agentWorkerLayouts.iterator();
         for (NodeConfiguration nodeConfiguration : clusterConfiguration.getNodeConfigurations()) {
             AgentWorkerLayout agentWorkerLayout = iterator.next();
+            SimulatorAddress agentAddress = agentWorkerLayout.getSimulatorAddress();
             for (WorkerGroup workerGroup : nodeConfiguration.getWorkerGroups()) {
                 WorkerConfiguration workerConfig = clusterConfiguration.getWorkerConfiguration(workerGroup.getConfiguration());
                 for (int i = 0; i < workerGroup.getCount(); i++) {
-                    agentWorkerLayout.addWorker(workerConfig.getType(), parameters);
+                    WorkerProcessSettings settings = agentWorkerLayout.addWorker(workerConfig.getType(), parameters);
+                    workerDeployment.get(agentAddress).add(settings);
                 }
             }
             agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);
         }
 
-        return agentWorkerLayouts;
+        printLayout(agentWorkerLayouts, "cluster.xml");
+
+        return workerDeployment;
     }
 
     private static ClusterConfiguration getClusterConfiguration(WorkerConfigurationConverter converter,
@@ -78,29 +102,38 @@ final class DeploymentUtils {
         }
     }
 
-    static List<AgentWorkerLayout> generateFromArguments(ComponentRegistry componentRegistry, WorkerParameters parameters,
-                                                         int memberWorkerCount, int clientWorkerCount,
-                                                         int dedicatedMemberMachineCount) {
+    static Map<SimulatorAddress, List<WorkerProcessSettings>> generateFromArguments(ComponentRegistry componentRegistry,
+                                                                                    WorkerParameters parameters,
+                                                                                    int memberWorkerCount,
+                                                                                    int clientWorkerCount,
+                                                                                    int dedicatedMemberMachineCount) {
         checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
 
-        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(componentRegistry);
+        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
+                = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
+
+        List<AgentWorkerLayout> agentWorkerLayouts = initAgentWorkerLayouts(componentRegistry, workerDeployment);
         int agentCount = componentRegistry.agentCount();
 
         assignDedicatedMemberMachines(agentCount, agentWorkerLayouts, dedicatedMemberMachineCount);
 
-        AtomicInteger currentIndex = new AtomicInteger(0);
+        AtomicInteger currentIndex = new AtomicInteger(getStartIndex(agentWorkerLayouts));
         for (int i = 0; i < memberWorkerCount; i++) {
             // assign members
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.CLIENT);
-            agentWorkerLayout.addWorker(WorkerType.MEMBER, parameters);
+            WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(WorkerType.MEMBER, parameters);
+            workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
         }
         for (int i = 0; i < clientWorkerCount; i++) {
             // assign clients
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
-            agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
+            WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
+            workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
         }
 
-        return agentWorkerLayouts;
+        printLayout(agentWorkerLayouts, "arguments");
+
+        return workerDeployment;
     }
 
     private static void checkParameters(int agentCount, int dedicatedMemberMachineCount,
@@ -117,20 +150,43 @@ final class DeploymentUtils {
                     dedicatedMemberMachineCount, agentCount));
         }
         if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
-            throw new CommandLineExitException("dedicatedMemberMachineCount is too big, there are no machines left for clients!");
+            throw new CommandLineExitException(
+                    "dedicatedMemberMachineCount is too big, there are no machines left for clients!");
         }
         if (memberWorkerCount == 0 && clientWorkerCount == 0) {
             throw new CommandLineExitException("No workers have been defined!");
         }
     }
 
-    private static List<AgentWorkerLayout> initAgentWorkerLayouts(ComponentRegistry componentRegistry) {
+    private static List<AgentWorkerLayout> initAgentWorkerLayouts(ComponentRegistry componentRegistry,
+                                                                  Map<SimulatorAddress, List<WorkerProcessSettings>>
+                                                                          workerDeployment) {
         List<AgentWorkerLayout> agentWorkerLayouts = new LinkedList<AgentWorkerLayout>();
         for (AgentData agentData : componentRegistry.getAgents()) {
             AgentWorkerLayout layout = new AgentWorkerLayout(agentData, AgentWorkerMode.MIXED);
+            for (WorkerData workerData : agentData.getWorkers()) {
+                layout.addWorker(workerData.getSettings());
+            }
             agentWorkerLayouts.add(layout);
+
+            workerDeployment.put(agentData.getAddress(), new ArrayList<WorkerProcessSettings>());
         }
         return agentWorkerLayouts;
+    }
+
+    private static int getStartIndex(List<AgentWorkerLayout> agentWorkerLayouts) {
+        int currentIndex = 0;
+        int lastIndex = 0;
+        int lastSize = Integer.MAX_VALUE;
+        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
+            int workerCount = agentWorkerLayout.getWorkerProcessSettings().size();
+            if (workerCount < lastSize) {
+                lastSize = workerCount;
+                lastIndex = currentIndex;
+            }
+            currentIndex++;
+        }
+        return lastIndex;
     }
 
     private static void assignDedicatedMemberMachines(int agentCount, List<AgentWorkerLayout> agentWorkerLayouts,
@@ -156,6 +212,35 @@ final class DeploymentUtils {
             if (agentLayout.getAgentWorkerMode() != excludedAgentWorkerMode) {
                 return agentLayout;
             }
+        }
+    }
+
+    private static void printLayout(List<AgentWorkerLayout> agentWorkerLayouts, String layoutType) {
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("Cluster layout");
+        LOGGER.info(HORIZONTAL_RULER);
+
+        LOGGER.info(format("Created via %s: ", layoutType));
+        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
+            Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
+            int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
+            int agentClientWorkerCount = agentWorkerLayout.getCount(WorkerType.CLIENT);
+            int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
+
+            String message = "    Agent %s (%s) members: %s, clients: %s";
+            if (totalWorkerCount > 0) {
+                message += ", mode: %s, version specs: %s";
+            } else {
+                message += " (no workers)";
+            }
+            LOGGER.info(format(message,
+                    formatIpAddresses(agentWorkerLayout),
+                    agentWorkerLayout.getSimulatorAddress(),
+                    formatLong(agentMemberWorkerCount, 2),
+                    formatLong(agentClientWorkerCount, 2),
+                    padLeft(agentWorkerLayout.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
+                    agentVersionSpecs
+            ));
         }
     }
 }

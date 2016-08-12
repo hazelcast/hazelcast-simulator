@@ -20,6 +20,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
@@ -38,6 +39,7 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 public class AgentData {
 
     private final Collection<WorkerData> workers = new ArrayList<WorkerData>();
+    private final AtomicInteger currentWorkerIndex = new AtomicInteger();
 
     private final int addressIndex;
     private final SimulatorAddress address;
@@ -71,15 +73,19 @@ public class AgentData {
         return privateAddress;
     }
 
+    public int getNextWorkerIndex() {
+        return currentWorkerIndex.incrementAndGet();
+    }
+
+    public Collection<WorkerData> getWorkers() {
+        return workers;
+    }
+
     void addWorker(WorkerData workerData) {
         workers.add(workerData);
     }
 
     void removeWorker(WorkerData workerData) {
         workers.remove(workerData);
-    }
-
-    Collection<WorkerData> getWorkers() {
-        return workers;
     }
 }
