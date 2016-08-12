@@ -1,13 +1,12 @@
 target/
+vtune/
 *.iml
 .idea/
-.project
-.classpath
 .settings/
+.classpath
 .patch
+.project
 .DS_Store
 *.class
-simulator-git.properties
 *.csv
-vtune/
-agent.pid
+simulator-git.properties
