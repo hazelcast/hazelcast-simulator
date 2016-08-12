@@ -12,6 +12,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -22,6 +23,7 @@ import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import sun.management.resources.agent;
 
 import java.io.File;
 import java.util.HashMap;
@@ -48,6 +50,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,25 +66,28 @@ public class AgentOperationProcessorTest {
     private final ScheduledExecutorService scheduler = createScheduledThreadPool(3, "AgentOperationProcessorTest");
 
     private TestSuite testSuite;
-    private File testSuiteDir;
+    private File sessionDir;
 
     private AgentOperationProcessor processor;
+    private String sessionId = "AgentOperationProcessorTest";
+    private Agent agent;
 
     @Before
     public void setUp() {
         setDistributionUserDir();
 
         File workersDir = new File(getSimulatorHome(), "workers");
-        testSuite = new TestSuite("AgentOperationProcessorTest");
-        testSuiteDir = new File(workersDir, testSuite.getId()).getAbsoluteFile();
+        testSuite = new TestSuite();
+        sessionDir = new File(workersDir, sessionId).getAbsoluteFile();
 
         AgentConnector agentConnector = mock(AgentConnector.class);
 
-        Agent agent = mock(Agent.class);
+        agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(1);
         when(agent.getPublicAddress()).thenReturn("127.0.0.1");
         when(agent.getTestSuite()).thenReturn(testSuite);
-        when(agent.getTestSuiteDir()).thenReturn(testSuiteDir);
+        when(agent.getSessionId()).thenReturn(sessionId);
+        when(agent.getSessionDirectory()).thenReturn(sessionDir);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
         when(agent.getWorkerProcessFailureMonitor()).thenReturn(failureMonitor);
 
@@ -119,7 +125,8 @@ public class AgentOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
-        assertTrue(testSuiteDir.exists());
+
+        verify(agent).setTestSuite(any(TestSuite.class));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -131,7 +138,7 @@ public class AgentOperationProcessorTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testCreateWorkerOperation_withUploadDirectory() throws Exception {
-        File uploadDir = ensureExistingDirectory(testSuiteDir, "upload");
+        File uploadDir = ensureExistingDirectory(sessionDir, "upload");
         ensureExistingFile(uploadDir, "testFile");
 
         ResponseType responseType = testCreateWorkerOperation(false, DEFAULT_STARTUP_TIMEOUT);
@@ -188,7 +195,7 @@ public class AgentOperationProcessorTest {
 
     private void assertWorkerLifecycle() throws InterruptedException {
         for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
-            File workerDir = new File(testSuiteDir, workerProcess.getId());
+            File workerDir = new File(sessionDir, workerProcess.getId());
             assertTrue(workerDir.exists());
 
             try {
@@ -211,7 +218,7 @@ public class AgentOperationProcessorTest {
 
     private void assertThatFileExistsInWorkerHomes(String fileName) {
         for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
-            File workerHome = new File(testSuiteDir, workerProcess.getId()).getAbsoluteFile();
+            File workerHome = new File(sessionDir, workerProcess.getId()).getAbsoluteFile();
             assertTrue(format("WorkerHome %s should exist", workerHome), workerHome.exists());
 
             File file = new File(workerHome, fileName);

@@ -78,7 +78,7 @@ public class WorkerProcessLauncher {
 
     public void launch() {
         try {
-            testSuiteDir = agent.getTestSuiteDir();
+            testSuiteDir = agent.getSessionDirectory();
             ensureExistingDirectory(testSuiteDir);
 
             WorkerType type = workerProcessSettings.getWorkerType();
@@ -176,17 +176,17 @@ public class WorkerProcessLauncher {
 
     private void copyResourcesToWorkerHome(String workerId) {
         File workerHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
-        String testSuiteId = agent.getTestSuite().getId();
-        File uploadDirectory = new File(workerHome, testSuiteId + "/upload/").getAbsoluteFile();
+        String sessionId = agent.getSessionId();
+        File uploadDirectory = new File(workerHome, sessionId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
         String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
                 workerHome,
-                testSuiteId,
+                sessionId,
                 workerHome,
-                testSuiteId,
+                sessionId,
                 workerId);
         execute(copyCommand);
         LOGGER.info(format("Finished copying '%s' to Worker", workerHome));
@@ -220,7 +220,7 @@ public class WorkerProcessLauncher {
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
 
         // we have to reverse the classpath to monkey patch version specific classes
-        return new File(agent.getTestSuiteDir(), "lib/*").getAbsolutePath()
+        return new File(agent.getSessionDirectory(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"

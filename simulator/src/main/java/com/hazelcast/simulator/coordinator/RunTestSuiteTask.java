@@ -18,6 +18,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
@@ -67,46 +68,52 @@ public class RunTestSuiteTask {
 
     public void run() {
         try {
-            componentRegistry.addTests(testSuite);
-            int testCount = testSuite.size();
-            boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
-            Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
-                    coordinatorParameters.getLastTestPhaseToSync());
-
-            echoer.echo("Starting TestSuite: %s", testSuite.getId());
-            logTestSuiteDuration(parallel);
-
-            for (TestData testData : componentRegistry.getTests()) {
-                int testIndex = testData.getTestIndex();
-                TestCase testCase = testData.getTestCase();
-                echoer.echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
-
-                TestCaseRunner runner = new TestCaseRunner(
-                        testIndex,
-                        testCase,
-                        testSuite,
-                        remoteClient,
-                        testPhaseSyncMap,
-                        failureCollector,
-                        componentRegistry,
-                        coordinatorParameters,
-                        workerParameters,
-                        performanceStatsCollector);
-                testPhaseListeners.addListener(testIndex, runner);
-            }
-
-            echoTestSuiteStart(testCount, parallel);
-            long started = System.nanoTime();
-            if (parallel) {
-                runParallel();
-            } else {
-                runSequential();
-            }
-            echoTestSuiteEnd(testCount, started);
+            run0();
         } finally {
             componentRegistry.removeTests();
             performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
+    }
+
+    private void run0() {
+        remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
+
+        componentRegistry.addTests(testSuite);
+        int testCount = testSuite.size();
+        boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
+        Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
+                coordinatorParameters.getLastTestPhaseToSync());
+
+        echoer.echo("Starting TestSuite");
+        logTestSuiteDuration(parallel);
+
+        for (TestData testData : componentRegistry.getTests()) {
+            int testIndex = testData.getTestIndex();
+            TestCase testCase = testData.getTestCase();
+            echoer.echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
+
+            TestCaseRunner runner = new TestCaseRunner(
+                    testIndex,
+                    testCase,
+                    testSuite,
+                    remoteClient,
+                    testPhaseSyncMap,
+                    failureCollector,
+                    componentRegistry,
+                    coordinatorParameters,
+                    workerParameters,
+                    performanceStatsCollector);
+            testPhaseListeners.addListener(testIndex, runner);
+        }
+
+        echoTestSuiteStart(testCount, parallel);
+        long started = System.nanoTime();
+        if (parallel) {
+            runParallel();
+        } else {
+            runSequential();
+        }
+        echoTestSuiteEnd(testCount, started);
     }
 
     private void logTestSuiteDuration(boolean isParallel) {

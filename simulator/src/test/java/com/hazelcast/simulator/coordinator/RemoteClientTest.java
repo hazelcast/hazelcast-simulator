@@ -40,7 +40,6 @@ import static org.mockito.Mockito.when;
 
 public class RemoteClientTest {
 
-    private static final int WORKER_PING_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
     private static final IntegrationTestOperation DEFAULT_OPERATION = new IntegrationTestOperation();
     private static final String DEFAULT_TEST_ID = "RemoteClientTest";
 
@@ -63,7 +62,7 @@ public class RemoteClientTest {
 
         TestCase testCase = new TestCase(DEFAULT_TEST_ID);
 
-        TestSuite testSuite = new TestSuite("RemoteClientTest");
+        TestSuite testSuite = new TestSuite();
         testSuite.addTest(testCase);
 
         componentRegistry.addTests(testSuite);

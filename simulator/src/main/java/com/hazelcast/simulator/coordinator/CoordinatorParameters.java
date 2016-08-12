@@ -19,6 +19,9 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Parameters for Simulator Coordinator.
  */
@@ -38,8 +41,11 @@ class CoordinatorParameters {
     private final int workerVmStartupDelayMs;
     private final String afterCompletionFile;
 
+    private final String sessionId;
+
     @SuppressWarnings("checkstyle:parameternumber")
-    CoordinatorParameters(SimulatorProperties properties,
+    CoordinatorParameters(String sessionId,
+                          SimulatorProperties properties,
                           String workerClassPath,
                           boolean verifyEnabled,
                           boolean parallel,
@@ -49,6 +55,7 @@ class CoordinatorParameters {
                           int workerVmStartupDelayMs,
                           boolean skipDownload,
                           String afterCompletionFile) {
+        this.sessionId = sessionId == null ? createSessionId() : sessionId;
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
         this.verifyEnabled = verifyEnabled;
@@ -59,6 +66,10 @@ class CoordinatorParameters {
         this.workerVmStartupDelayMs = workerVmStartupDelayMs;
         this.skipDownload = skipDownload;
         this.afterCompletionFile = afterCompletionFile;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 
     public int getWorkerVmStartupDelayMs() {
@@ -99,5 +110,9 @@ class CoordinatorParameters {
 
     public String getAfterCompletionFile() {
         return afterCompletionFile;
+    }
+
+    private static String createSessionId() {
+        return new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
     }
 }

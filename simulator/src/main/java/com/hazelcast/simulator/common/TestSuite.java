@@ -22,9 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,11 +34,11 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
+import static org.bouncycastle.asn1.x509.X509ObjectIdentifiers.id;
 
 public class TestSuite {
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
-    private final String id;
 
     private int durationSeconds;
     private int warmupDurationSeconds;
@@ -48,14 +46,6 @@ public class TestSuite {
     private boolean failFast;
 
     private Set<FailureType> tolerableFailures = Collections.emptySet();
-
-    public TestSuite(String testSuiteId) {
-        id = (testSuiteId == null) ? createId() : testSuiteId;
-    }
-
-    public String getId() {
-        return id;
-    }
 
     public List<TestCase> getTestCaseList() {
         return testCaseList;
@@ -144,7 +134,7 @@ public class TestSuite {
                 + '}';
     }
 
-    public static TestSuite loadTestSuite(File testPropertiesFile, String propertiesOverrideString, String testSuiteId) {
+    public static TestSuite loadTestSuite(File testPropertiesFile, String propertiesOverrideString) {
         Properties properties = loadProperties(testPropertiesFile);
 
         Map<String, TestCase> testCases = createTestCases(properties);
@@ -158,7 +148,7 @@ public class TestSuite {
             }
         }
 
-        return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString, testSuiteId);
+        return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
     }
 
     @SuppressFBWarnings("DM_DEFAULT_ENCODING")
@@ -216,11 +206,10 @@ public class TestSuite {
         return testCase;
     }
 
-    private static TestSuite createTestSuite(File file, Map<String, TestCase> testCases, String propertiesOverrideString,
-                                             String testSuiteId) {
+    private static TestSuite createTestSuite(File file, Map<String, TestCase> testCases, String propertiesOverrideString) {
         Map<String, String> propertiesOverride = parseProperties(propertiesOverrideString);
 
-        TestSuite testSuite = new TestSuite(testSuiteId);
+        TestSuite testSuite = new TestSuite();
         for (String testCaseId : getTestCaseIds(testCases)) {
             TestCase testCase = testCases.get(testCaseId);
             testCase.override(propertiesOverride);
@@ -263,7 +252,4 @@ public class TestSuite {
         return testCaseIds;
     }
 
-    private static String createId() {
-        return new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
-    }
 }
