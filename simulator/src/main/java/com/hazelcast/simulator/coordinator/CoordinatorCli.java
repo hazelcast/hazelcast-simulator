@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
@@ -45,7 +44,6 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
-import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
@@ -156,10 +154,6 @@ final class CoordinatorCli {
             "Client Worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
-    private final OptionSpec<String> agentsFileSpec = parser.accepts("agentsFile",
-            "The file containing the list of Agent machines.")
-            .withRequiredArg().ofType(String.class).defaultsTo(AgentsFile.NAME);
-
     private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
             format("The file containing the simulator properties. If no file is explicitly configured,"
                             + " first the working directory is checked for a file '%s'."
@@ -191,7 +185,7 @@ final class CoordinatorCli {
 
         SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
 
-        ComponentRegistry componentRegistry = getComponentRegistry(cli, options, testSuite, simulatorProperties);
+        ComponentRegistry componentRegistry = getComponentRegistry(testSuite, simulatorProperties);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
@@ -254,14 +248,14 @@ final class CoordinatorCli {
         return testSuite;
     }
 
-    private static ComponentRegistry getComponentRegistry(CoordinatorCli cli, OptionSet options, TestSuite testSuite,
+    private static ComponentRegistry getComponentRegistry(TestSuite testSuite,
                                                           SimulatorProperties simulatorProperties) {
         ComponentRegistry componentRegistry;
         if (isLocal(simulatorProperties)) {
             componentRegistry = new ComponentRegistry();
             componentRegistry.addAgent("localhost", "localhost");
         } else {
-            componentRegistry = loadComponentRegister(getAgentsFile(cli, options));
+            componentRegistry = loadComponentRegister(getAgentsFile());
         }
         componentRegistry.addTests(testSuite);
         return componentRegistry;
@@ -311,8 +305,11 @@ final class CoordinatorCli {
         return testSuiteFile;
     }
 
-    private static File getAgentsFile(CoordinatorCli cli, OptionSet options) {
-        File file = getFileOrExit(cli.agentsFileSpec, options, "Agents file");
+    private static File getAgentsFile() {
+        File file = new File("agents.txt");
+        if (!file.exists()) {
+            throw new CommandLineExitException(format("Agents file [%s] does not exist", file));
+        }
         LOGGER.info("Loading Agents file: " + file.getAbsolutePath());
         return file;
     }
