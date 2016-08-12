@@ -21,18 +21,6 @@ public class WorkerConnectorTest {
         assertWorkerConnector(connector);
     }
 
-    @Test
-    public void testCreateInstance_withRemoteExceptionLogger_explicit() {
-        WorkerConnector connector = createInstance(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null, false);
-        assertWorkerConnector(connector);
-    }
-
-    @Test
-    public void testCreateInstance_withRemoteExceptionLogger() {
-        WorkerConnector connector = createInstance(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null, true);
-        assertWorkerConnector(connector);
-    }
-
     private void assertWorkerConnector(WorkerConnector connector) {
         SimulatorAddress address = connector.getAddress();
         assertEquals(AddressLevel.WORKER, address.getAddressLevel());

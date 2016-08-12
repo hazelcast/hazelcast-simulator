@@ -9,8 +9,6 @@ import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
-import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
@@ -64,7 +62,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     private SimulatorAddress workerAddress;
 
-    private LocalExceptionLogger exceptionLogger;
     private TestPhaseListeners testPhaseListeners;
     private PerformanceStatsCollector performanceStatsCollector;
     private FailureCollector failureCollector;
@@ -91,14 +88,13 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         CoordinatorRemoteControllerProcessor remoteControllerProcessor
                 = new CoordinatorRemoteControllerProcessor(serverConnector, componentRegistry);
 
-        exceptionLogger = new LocalExceptionLogger();
         testPhaseListeners = new TestPhaseListeners();
         performanceStatsCollector = new PerformanceStatsCollector();
 
         outputDirectory = TestUtils.createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
 
-        processor = new CoordinatorOperationProcessor(exceptionLogger, failureCollector, testPhaseListeners,
+        processor = new CoordinatorOperationProcessor(failureCollector, testPhaseListeners,
                 performanceStatsCollector, remoteControllerProcessor);
     }
 
@@ -118,17 +114,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-    }
-
-    @Test
-    public void processException() {
-        TestException exception = new TestException("expected exception");
-        ExceptionOperation operation = new ExceptionOperation(WORKER_EXCEPTION.name(), "C_A1_W1", "FailingTest", exception);
-
-        ResponseType responseType = processor.process(operation, workerAddress);
-
-        assertEquals(SUCCESS, responseType);
-        assertEquals(1, exceptionLogger.getExceptionCount());
     }
 
     @Test

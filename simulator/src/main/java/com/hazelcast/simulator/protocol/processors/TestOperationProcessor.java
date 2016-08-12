@@ -19,7 +19,6 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -30,6 +29,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -55,7 +55,6 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
     private final AtomicReference<TestPhase> testPhaseReference = new AtomicReference<TestPhase>(null);
 
-    private final ExceptionLogger exceptionLogger;
     private final Worker worker;
     private final WorkerType type;
 
@@ -63,10 +62,8 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
     private final TestContainer testContainer;
     private final SimulatorAddress testAddress;
 
-    public TestOperationProcessor(ExceptionLogger exceptionLogger, Worker worker, WorkerType type, TestContainer testContainer,
+    public TestOperationProcessor(Worker worker, WorkerType type, TestContainer testContainer,
                                   SimulatorAddress testAddress) {
-        super(exceptionLogger);
-        this.exceptionLogger = exceptionLogger;
         this.worker = worker;
         this.type = type;
 
@@ -89,6 +86,11 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
     public SimulatorAddress getTestAddress() {
         return testAddress;
+    }
+
+    @Override
+    public void onException(Throwable e) {
+        ExceptionReporter.report(testId, e);
     }
 
     @Override
@@ -218,7 +220,7 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
                 doRun();
             } catch (Throwable t) {
                 LOGGER.error("Error while executing test phase", t);
-                exceptionLogger.log(t, testId);
+                ExceptionReporter.report(testId, t);
             } finally {
                 sendPhaseCompletedOperation(testPhaseReference.getAndSet(null));
             }

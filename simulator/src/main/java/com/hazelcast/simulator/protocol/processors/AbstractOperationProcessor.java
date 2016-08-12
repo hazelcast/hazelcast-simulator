@@ -17,7 +17,6 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.ChaosMonkeyOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
@@ -39,12 +38,6 @@ import static java.lang.String.format;
 abstract class AbstractOperationProcessor implements OperationProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractOperationProcessor.class);
-
-    private final ExceptionLogger exceptionLogger;
-
-    AbstractOperationProcessor(ExceptionLogger exceptionLogger) {
-        this.exceptionLogger = exceptionLogger;
-    }
 
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
@@ -68,10 +61,14 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
                     return processOperation(operationType, operation, sourceAddress);
             }
         } catch (Throwable e) {
-            exceptionLogger.log(e);
+            onException(e);
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
         return SUCCESS;
+    }
+
+    public void onException(Throwable e) {
+        LOGGER.warn(e);
     }
 
     private ResponseType processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
