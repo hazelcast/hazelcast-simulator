@@ -33,18 +33,12 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
-import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.coordinator.CoordinatorCli.init;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -53,7 +47,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
-    private static final String SIMULATOR_VERSION = getSimulatorVersion();
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
@@ -230,20 +223,6 @@ public final class Coordinator {
     private void echo(String message, Object... args) {
         String log = echoLocal(message, args);
         remoteClient.logOnAllAgents(log);
-    }
-
-    public static void main(String[] args) {
-        try {
-            init(args).run();
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Failed to run Coordinator", e);
-        }
-    }
-
-    static void logHeader() {
-        echoLocal("Hazelcast Simulator Coordinator");
-        echoLocal("Version: %s, Commit: %s, Build Time: %s", SIMULATOR_VERSION, getCommitIdAbbrev(), getBuildTime());
-        echoLocal("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
     }
 
     private static String echoLocal(String message, Object... args) {

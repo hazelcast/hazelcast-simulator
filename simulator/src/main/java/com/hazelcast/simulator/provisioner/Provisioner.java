@@ -37,17 +37,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
-import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
-import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
-import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
@@ -465,19 +460,6 @@ public class Provisioner {
         return initScript;
     }
 
-    public static void main(String[] args) {
-        try {
-            run(args, init(args));
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Could not execute command", e);
-        }
-    }
-
-    static void logHeader() {
-        echo("Hazelcast Simulator Provisioner");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-        echo("SIMULATOR_HOME: %s", SIMULATOR_HOME);
-    }
 
     private static void echo(String message, Object... args) {
         LOGGER.info(message == null ? "null" : format(message, args));

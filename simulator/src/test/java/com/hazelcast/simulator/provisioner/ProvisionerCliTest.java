@@ -20,8 +20,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
-import static com.hazelcast.simulator.provisioner.ProvisionerCli.init;
-import static com.hazelcast.simulator.provisioner.ProvisionerCli.run;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -54,22 +53,22 @@ public class ProvisionerCliTest {
 
     @Test
     public void testInit() {
-        provisioner = init(getArgs());
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
 
-        ComponentRegistry componentRegistry = provisioner.getComponentRegistry();
+        ComponentRegistry componentRegistry = cli.provisioner.getComponentRegistry();
         assertEquals(1, componentRegistry.agentCount());
         assertEquals("127.0.0.1", componentRegistry.getFirstAgent().getPublicAddress());
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withoutArguments() {
-        run(getArgs(), provisioner);
+        new ProvisionerCli(getArgs()).run();
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withHelp() {
         args.add("--help");
-        run(getArgs(), provisioner);
+        new ProvisionerCli(getArgs());
     }
 
     @Test
@@ -77,7 +76,9 @@ public class ProvisionerCliTest {
         args.add("--scale");
         args.add("0");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).scale(0);
         verify(provisioner).shutdown();
@@ -89,7 +90,9 @@ public class ProvisionerCliTest {
         args.add("--scale");
         args.add("10");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).scale(10);
         verify(provisioner).shutdown();
@@ -100,7 +103,10 @@ public class ProvisionerCliTest {
     public void testRun_install() {
         args.add("--install");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
+
 
         verify(provisioner).installSimulator();
         verify(provisioner).shutdown();
@@ -111,7 +117,9 @@ public class ProvisionerCliTest {
     public void testRun_download_defaultDirectory() {
         args.add("--download");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).download("workers");
         verify(provisioner).shutdown();
@@ -123,7 +131,10 @@ public class ProvisionerCliTest {
         args.add("--download");
         args.add("outputDir");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
+
 
         verify(provisioner).download("outputDir");
         verify(provisioner).shutdown();
@@ -134,7 +145,10 @@ public class ProvisionerCliTest {
     public void testRun_clean() {
         args.add("--clean");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
+
 
         verify(provisioner).clean();
         verify(provisioner).shutdown();
@@ -145,7 +159,9 @@ public class ProvisionerCliTest {
     public void testRun_kill() {
         args.add("--kill");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).killJavaProcesses();
         verify(provisioner).shutdown();
@@ -156,7 +172,9 @@ public class ProvisionerCliTest {
     public void testRun_terminate() {
         args.add("--terminate");
 
-        run(getArgs(), provisioner);
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).terminate();
         verify(provisioner).shutdown();
@@ -164,8 +182,6 @@ public class ProvisionerCliTest {
     }
 
     private String[] getArgs() {
-        String[] argsArray = new String[args.size()];
-        args.toArray(argsArray);
-        return argsArray;
+        return args.toArray(new String[0]);
     }
 }

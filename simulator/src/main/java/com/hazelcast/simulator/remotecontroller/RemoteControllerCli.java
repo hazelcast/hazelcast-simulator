@@ -24,10 +24,20 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static java.lang.String.format;
 
 final class RemoteControllerCli {
+    private static final Logger LOGGER = Logger.getLogger(RemoteControllerCli.class);
+
+    // open for testing purposes
+    RemoteController remoteController;
 
     private final OptionParser parser = new OptionParser();
 
@@ -43,46 +53,53 @@ final class RemoteControllerCli {
     private final OptionSpec listComponentsSpec = parser.accepts("listComponents",
             "Lists all running Simulator Components");
 
-    private RemoteControllerCli() {
-    }
+    private final OptionSet options;
 
-    static RemoteController init(String[] args) {
-        RemoteControllerCli cli = new RemoteControllerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
+    RemoteControllerCli(String[] args) {
+        options = initOptionsWithHelp(parser, args);
 
-        boolean isQuiet = options.has(cli.quietSpec);
+        boolean isQuiet = options.has(quietSpec);
         if (isQuiet) {
             Logger.getRootLogger().setLevel(Level.WARN);
         }
 
-        RemoteController.logHeader();
-
         SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.init(getPropertiesFile(cli, options));
+        simulatorProperties.init(getPropertiesFile());
 
-        return new RemoteController(simulatorProperties, isQuiet);
+        this.remoteController = new RemoteController(simulatorProperties, isQuiet);
     }
 
-    static void run(String[] args, RemoteController remoteController) {
-        RemoteControllerCli cli = new RemoteControllerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
-
+    void run() {
         try {
             remoteController.start();
-            if (options.has(cli.listComponentsSpec)) {
+            if (options.has(listComponentsSpec)) {
                 remoteController.listComponents();
             } else {
-                printHelpAndExit(cli.parser);
+                printHelpAndExit(parser);
             }
         } finally {
             remoteController.shutdown();
         }
     }
 
-    private static File getPropertiesFile(RemoteControllerCli cli, OptionSet options) {
-        if (options.has(cli.propertiesFileSpec)) {
+    public static void main(String[] args) {
+        LOGGER.info("Hazelcast Simulator Remote Controller");
+        LOGGER.info(
+                format("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath()));
+
+        try {
+            RemoteControllerCli cli = new RemoteControllerCli(args);
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Error during execution of Remote Controller!", e);
+        }
+    }
+
+    private File getPropertiesFile() {
+        if (options.has(propertiesFileSpec)) {
             // a file was explicitly configured
-            return new File(options.valueOf(cli.propertiesFileSpec));
+            return new File(options.valueOf(propertiesFileSpec));
         } else {
             return null;
         }
