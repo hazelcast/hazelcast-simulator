@@ -123,8 +123,6 @@ public class AgentSmokeTest implements FailureListener {
 
     @After
     public void after() {
-        closeQuietly(remoteClient);
-
         try {
             LOGGER.info("Shutdown of CoordinatorConnector...");
             coordinatorConnector.shutdown();
@@ -141,6 +139,7 @@ public class AgentSmokeTest implements FailureListener {
             resetLogLevel();
         }
 
+        closeQuietly(remoteClient);
         deleteQuiet(outputDirectory);
     }
 
