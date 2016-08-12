@@ -31,28 +31,28 @@ public enum OperationType {
     CHAOS_MONKEY(ChaosMonkeyOperation.class, 2),
 
     // CoordinatorOperationProcessor
-    EXCEPTION(ExceptionOperation.class, 3),
-    FAILURE(FailureOperation.class, 4),
-    PHASE_COMPLETED(PhaseCompletedOperation.class, 5),
-    PERFORMANCE_STATE(PerformanceStatsOperation.class, 6),
-    REMOTE_CONTROLLER(RemoteControllerOperation.class, 7),
+    EXCEPTION(ExceptionOperation.class, 100),
+    FAILURE(FailureOperation.class, 101),
+    PHASE_COMPLETED(PhaseCompletedOperation.class, 102),
+    PERFORMANCE_STATE(PerformanceStatsOperation.class, 103),
+    REMOTE_CONTROLLER(RemoteControllerOperation.class, 104),
 
     // AgentOperationProcessor
-    INIT_TEST_SUITE(InitTestSuiteOperation.class, 8),
-    CREATE_WORKER(CreateWorkerOperation.class, 9),
-    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 10),
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 11),
-    INIT_SESSION(InitSessionOperation.class, 18),
+    INIT_SESSION(InitSessionOperation.class, 200),
+    INIT_TEST_SUITE(InitTestSuiteOperation.class, 201),
+    CREATE_WORKER(CreateWorkerOperation.class, 202),
+    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 203),
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 204),
 
     // WorkerOperationProcessor
-    PING(PingOperation.class, 12),
-    TERMINATE_WORKER(TerminateWorkerOperation.class, 13),
-    CREATE_TEST(CreateTestOperation.class, 14),
+    PING(PingOperation.class, 300),
+    TERMINATE_WORKER(TerminateWorkerOperation.class, 301),
+    CREATE_TEST(CreateTestOperation.class, 302),
 
     // TestOperationProcessor
-    START_TEST_PHASE(StartTestPhaseOperation.class, 15),
-    START_TEST(StartTestOperation.class, 16),
-    STOP_TEST(StopTestOperation.class, 17);
+    START_TEST_PHASE(StartTestPhaseOperation.class, 400),
+    START_TEST(StartTestOperation.class, 401),
+    STOP_TEST(StopTestOperation.class, 402);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;
