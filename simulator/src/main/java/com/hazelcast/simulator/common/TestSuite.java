@@ -34,7 +34,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
-import static org.bouncycastle.asn1.x509.X509ObjectIdentifiers.id;
 
 public class TestSuite {
 
@@ -128,7 +127,6 @@ public class TestSuite {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
                 + ", waitForTestCase=" + waitForTestCase
-                + ", id='" + id + '\''
                 + ", testCaseList=" + testCaseList
                 + ", failFast=" + failFast
                 + '}';
