@@ -74,6 +74,9 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
         switch (operationType) {
             case INTEGRATION_TEST:
                 return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
+            case INIT_SESSION:
+                agent.setSessionId(((InitSessionOperation) operation).getSessionId());
+                break;
             case INIT_TEST_SUITE:
                 agent.setTestSuite(((InitTestSuiteOperation) operation).getTestSuite());
                 break;
@@ -84,9 +87,6 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 break;
             case STOP_TIMEOUT_DETECTION:
                 processStopTimeoutDetection();
-                break;
-            case INIT_SESSION:
-                agent.setSessionId(((InitSessionOperation) operation).getSessionId());
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
