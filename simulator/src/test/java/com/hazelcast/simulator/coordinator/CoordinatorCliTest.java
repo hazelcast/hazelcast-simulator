@@ -52,7 +52,7 @@ public class CoordinatorCliTest {
     private static File propertiesFile;
 
     private final List<String> args = new ArrayList<String>();
-    private String testSuiteId;
+    private String sessionId;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -68,8 +68,8 @@ public class CoordinatorCliTest {
     @Before
     public void before(){
         args.add("--sessionId");
-        testSuiteId = "CoordinatorCliTest-" + System.currentTimeMillis();
-        args.add(testSuiteId);
+        sessionId = "CoordinatorCliTest-" + System.currentTimeMillis();
+        args.add(sessionId);
     }
 
     @AfterClass
@@ -83,7 +83,7 @@ public class CoordinatorCliTest {
 
     @After
     public void after() {
-        deleteQuiet(new File(testSuiteId).getAbsoluteFile());
+        deleteQuiet(new File(sessionId).getAbsoluteFile());
     }
 
     @Test
