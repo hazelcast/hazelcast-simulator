@@ -20,16 +20,15 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorTest {
 
-    private String sessionId = "testrun-" + System.currentTimeMillis();
+    private String sessionId = "CoordinatorTest-" + System.currentTimeMillis();
     private SimulatorProperties properties;
     private Coordinator coordinator;
-    private TestSuite testSuite;
 
     @Before
     public void setUp() {
         setDistributionUserDir();
 
-        testSuite = new TestSuite();
+        TestSuite testSuite = new TestSuite();
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
         properties = mock(SimulatorProperties.class);
