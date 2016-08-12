@@ -9,7 +9,6 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
@@ -58,7 +57,6 @@ public class AgentOperationProcessorTest {
     private static final int DEFAULT_TEST_TIMEOUT = 30000;
     private static final int DEFAULT_STARTUP_TIMEOUT = 10;
 
-    private final ExceptionLogger exceptionLogger = mock(ExceptionLogger.class);
     private final WorkerProcessFailureMonitor failureMonitor = mock(WorkerProcessFailureMonitor.class);
     private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
     private final ScheduledExecutorService scheduler = createScheduledThreadPool(3, "AgentOperationProcessorTest");
@@ -88,7 +86,7 @@ public class AgentOperationProcessorTest {
         when(agent.getAgentConnector()).thenReturn(agentConnector);
         when(agent.getWorkerProcessFailureMonitor()).thenReturn(failureMonitor);
 
-        processor = new AgentOperationProcessor(exceptionLogger, agent, workerProcessManager, scheduler);
+        processor = new AgentOperationProcessor(agent, workerProcessManager, scheduler);
     }
 
     @After

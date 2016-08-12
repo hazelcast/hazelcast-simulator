@@ -31,7 +31,6 @@ public enum OperationType {
     CHAOS_MONKEY(ChaosMonkeyOperation.class, 2),
 
     // CoordinatorOperationProcessor
-    EXCEPTION(ExceptionOperation.class, 100),
     FAILURE(FailureOperation.class, 101),
     PHASE_COMPLETED(PhaseCompletedOperation.class, 102),
     PERFORMANCE_STATE(PerformanceStatsOperation.class, 103),

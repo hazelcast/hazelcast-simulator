@@ -20,8 +20,6 @@ import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
-import com.hazelcast.simulator.protocol.operation.ExceptionOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
@@ -43,18 +41,15 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
-    private final LocalExceptionLogger exceptionLogger;
     private final FailureCollector failureCollector;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsCollector performanceStatsCollector;
     private final CoordinatorRemoteControllerProcessor remoteControllerProcessor;
 
-    public CoordinatorOperationProcessor(LocalExceptionLogger exceptionLogger, FailureCollector failureCollector,
+    public CoordinatorOperationProcessor(FailureCollector failureCollector,
                                          TestPhaseListeners testPhaseListeners,
                                          PerformanceStatsCollector performanceStatsCollector,
                                          CoordinatorRemoteControllerProcessor remoteControllerProcessor) {
-        super(exceptionLogger);
-        this.exceptionLogger = exceptionLogger;
         this.failureCollector = failureCollector;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStatsCollector = performanceStatsCollector;
@@ -65,9 +60,6 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
                                             SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
-            case EXCEPTION:
-                processException((ExceptionOperation) operation);
-                break;
             case FAILURE:
                 processFailure((FailureOperation) operation);
                 break;
@@ -83,10 +75,6 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
         return SUCCESS;
-    }
-
-    private void processException(ExceptionOperation operation) {
-        exceptionLogger.logOperation(operation);
     }
 
     private void processFailure(FailureOperation operation) {
