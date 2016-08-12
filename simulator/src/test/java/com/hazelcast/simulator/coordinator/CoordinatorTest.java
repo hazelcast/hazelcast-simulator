@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 
 public class CoordinatorTest {
 
+    private String sessionId = "testrun-" + System.currentTimeMillis();
     private SimulatorProperties properties;
     private Coordinator coordinator;
     private TestSuite testSuite;
@@ -28,12 +29,13 @@ public class CoordinatorTest {
     public void setUp() {
         setDistributionUserDir();
 
-        testSuite = new TestSuite("testrun-" + System.currentTimeMillis());
+        testSuite = new TestSuite();
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
         properties = mock(SimulatorProperties.class);
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
+        when(coordinatorParameters.getSessionId()).thenReturn(sessionId);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(properties);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
@@ -45,7 +47,7 @@ public class CoordinatorTest {
 
     @After
     public void tearDown() {
-        deleteQuiet(new File(testSuite.getId()).getAbsoluteFile());
+        deleteQuiet(new File(sessionId).getAbsoluteFile());
         resetUserDir();
     }
 

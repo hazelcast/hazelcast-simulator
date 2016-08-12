@@ -38,16 +38,15 @@ public class TestSuiteTest {
 
     @Test
     public void testConstructor() {
-        TestSuite testSuite = new TestSuite("TestSuiteTest");
+        TestSuite testSuite = new TestSuite();
 
-        assertEquals("TestSuiteTest", testSuite.getId());
         assertTrue(testSuite.getTestCaseList().isEmpty());
         assertEquals(0, testSuite.getMaxTestCaseIdLength());
     }
 
     @Test
     public void testSetter() {
-        TestSuite testSuite = new TestSuite("TestSuiteTest");
+        TestSuite testSuite = new TestSuite();
 
         assertEquals(0, testSuite.getDurationSeconds());
         assertFalse(testSuite.isWaitForTestCase());
@@ -169,7 +168,7 @@ public class TestSuiteTest {
 
     @Test(expected = CommandLineExitException.class)
     public void propertiesNotFound() throws Exception {
-        loadTestSuite(new File("notFound"), "", null);
+        loadTestSuite(new File("notFound"), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -196,7 +195,7 @@ public class TestSuiteTest {
 
     @Test
     public void testMaxCaseIdLength() {
-        TestSuite testSuite = new TestSuite("TestSuiteTest");
+        TestSuite testSuite = new TestSuite();
         testSuite.addTest(new TestCase("abc"));
         testSuite.addTest(new TestCase("88888888"));
         testSuite.addTest(new TestCase(null));
@@ -214,6 +213,6 @@ public class TestSuiteTest {
     private TestSuite createTestSuite(String txt, String overrideProperties) throws Exception {
         writeText(txt, testSuiteFile);
 
-        return loadTestSuite(testSuiteFile, overrideProperties, null);
+        return loadTestSuite(testSuiteFile, overrideProperties);
     }
 }

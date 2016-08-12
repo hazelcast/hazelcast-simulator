@@ -253,7 +253,7 @@ public class ComponentRegistryTest {
 
     @Test
     public void testAddTests() {
-        TestSuite testSuite = new TestSuite("ComponentRegistryTest");
+        TestSuite testSuite = new TestSuite();
         testSuite.addTest(new TestCase("Test1"));
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));
@@ -265,7 +265,7 @@ public class ComponentRegistryTest {
 
     @Test
     public void testRemoveTests() {
-        TestSuite testSuite = new TestSuite("ComponentRegistryTest");
+        TestSuite testSuite = new TestSuite();
         testSuite.addTest(new TestCase("Test1"));
         componentRegistry.addTests(testSuite);
 
@@ -276,7 +276,7 @@ public class ComponentRegistryTest {
 
     @Test
     public void testGetTests() {
-        TestSuite testSuite = new TestSuite("ComponentRegistryTest");
+        TestSuite testSuite = new TestSuite();
         testSuite.addTest(new TestCase("Test1"));
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));
@@ -293,7 +293,7 @@ public class ComponentRegistryTest {
 
     @Test
     public void testGetTest() {
-        TestSuite testSuite = new TestSuite("ComponentRegistryTest");
+        TestSuite testSuite = new TestSuite();
         testSuite.addTest(new TestCase("Test1"));
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));

@@ -122,8 +122,9 @@ final class CoordinatorCli {
                     + " Use ';' as separator for multiple entries. The wildcard '*' can also be used.")
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<String> testSuiteIdSpec = parser.accepts("testSuiteId",
-            "Defines the ID of the TestSuite. If not set the actual date will be used.")
+    private final OptionSpec<String> sessionIdSpec = parser.accepts("sessionIdSpec",
+            "Defines the ID of the Session. If not set the actual date will be used. The session id is used for creating"
+                    + "the working directory")
             .withRequiredArg().ofType(String.class);
 
     private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
@@ -190,6 +191,7 @@ final class CoordinatorCli {
         ComponentRegistry componentRegistry = getComponentRegistry(testSuite, simulatorProperties);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
+                options.valueOf(sessionIdSpec),
                 simulatorProperties,
                 options.valueOf(workerClassPathSpec),
                 options.valueOf(verifyEnabledSpec),
@@ -242,8 +244,7 @@ final class CoordinatorCli {
             durationSeconds = 0;
         }
 
-        TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec),
-                options.valueOf(testSuiteIdSpec));
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
         testSuite.setDurationSeconds(durationSeconds);
         testSuite.setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec));
         testSuite.setWaitForTestCase(hasWaitForTestCase);

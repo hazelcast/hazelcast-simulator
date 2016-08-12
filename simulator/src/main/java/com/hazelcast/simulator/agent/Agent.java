@@ -59,6 +59,7 @@ public class Agent {
     private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
 
     private volatile TestSuite testSuite;
+    private volatile String sessionId;
 
     public Agent(int addressIndex, String publicAddress, int port, String cloudProvider, String cloudIdentity,
                  String cloudCredential, int threadPoolSize, int workerLastSeenTimeoutSeconds) {
@@ -109,22 +110,27 @@ public class Agent {
         return workerProcessFailureMonitor;
     }
 
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
     public void setTestSuite(TestSuite testSuite) {
         this.testSuite = testSuite;
-        this.failureSender.setTestSuite(testSuite);
+        failureSender.setTestSuite(testSuite);
     }
 
     public TestSuite getTestSuite() {
         return testSuite;
     }
 
-    public File getTestSuiteDir() {
-        if (testSuite == null) {
-            return null;
+    public File getSessionDirectory() {
+        String sessionId = this.sessionId;
+        if (sessionId == null) {
+            throw new IllegalStateException("no session active");
         }
 
         File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
-        return new File(workersDir, testSuite.getId());
+        return ensureExistingDirectory(workersDir, sessionId);
     }
 
     void start() {
@@ -187,6 +193,10 @@ public class Agent {
 
     private static void echo(String message, Object... args) {
         LOGGER.info(message == null ? "null" : format(message, args));
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 
     private final class AgentShutdownThread extends ShutdownThread {

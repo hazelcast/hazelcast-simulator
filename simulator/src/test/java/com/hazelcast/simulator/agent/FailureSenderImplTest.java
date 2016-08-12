@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 public class FailureSenderImplTest {
 
     private static final String FAILURE_MESSAGE = "failure message";
-    private static final String TEST_ID = "FailureSenderImplTest";
+    private static final String SESSION_ID = "FailureSenderImplTest";
     private static final String CAUSE = "any stacktrace";
 
     private SimulatorAddress workerAddress;
@@ -44,7 +44,7 @@ public class FailureSenderImplTest {
         agentConnector = mock(AgentConnector.class);
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
 
-        TestSuite testSuite = new TestSuite(TEST_ID);
+        TestSuite testSuite = new TestSuite();
 
         failureSender = new FailureSenderImpl("127.0.0.1", agentConnector);
         failureSender.setTestSuite(testSuite);
@@ -52,14 +52,14 @@ public class FailureSenderImplTest {
 
     @Test
     public void testSendFailureOperation() {
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, TEST_ID, CAUSE);
+        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
 
         assertTrue(success);
     }
 
     @Test
     public void testSendFailureOperation_withWorkerFinished() {
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, TEST_ID, CAUSE);
+        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, SESSION_ID, CAUSE);
 
         assertTrue(success);
     }
@@ -69,7 +69,7 @@ public class FailureSenderImplTest {
         Response failureResponse = new Response(1, SimulatorAddress.COORDINATOR, workerAddress, FAILURE_COORDINATOR_NOT_FOUND);
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(failureResponse);
 
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, TEST_ID, CAUSE);
+        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, SESSION_ID, CAUSE);
 
         assertFalse(success);
     }
@@ -79,7 +79,7 @@ public class FailureSenderImplTest {
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception"));
 
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, TEST_ID, CAUSE);
+        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, SESSION_ID, CAUSE);
 
         assertFalse(success);
     }

@@ -30,7 +30,7 @@ public class FailureOperationTest {
 
     @Before
     public void setUp() {
-        testSuite = new TestSuite("FailureTestOperation");
+        testSuite = new TestSuite();
 
         cause = new TestException("expected exception");
         operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, cause);

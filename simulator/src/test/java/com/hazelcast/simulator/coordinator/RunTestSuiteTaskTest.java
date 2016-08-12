@@ -99,11 +99,11 @@ public class RunTestSuiteTaskTest {
         TestCase testCase1 = new TestCase("CoordinatorTest1");
         TestCase testCase2 = new TestCase("CoordinatorTest2");
 
-        testSuite = new TestSuite("RunTestSuiteTaskTest");
+        testSuite = new TestSuite();
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);
 
-        outputDirectory = ensureExistingDirectory(testSuite.getId());
+        outputDirectory = ensureExistingDirectory("RunTestSuiteTaskTest");
 
         SimulatorAddress address = new SimulatorAddress(WORKER, 1, 1, 0);
         criticalFailureOperation = new FailureOperation("expected critical failure", WORKER_EXCEPTION, address, "127.0.0.1",
@@ -206,7 +206,7 @@ public class RunTestSuiteTaskTest {
     public void runTestSuiteSequential_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 
-        testSuite = new TestSuite("TestCaseRunnerTest");
+        testSuite = new TestSuite();
         testSuite.addTest(testCase);
         testSuite.setDurationSeconds(1);
 
@@ -220,7 +220,7 @@ public class RunTestSuiteTaskTest {
     public void runTestSuiteParallel_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 
-        testSuite = new TestSuite("TestCaseRunnerTest");
+        testSuite = new TestSuite();
         testSuite.addTest(testCase);
         testSuite.setDurationSeconds(1);
 

@@ -21,7 +21,7 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
+import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -77,7 +77,7 @@ final class Coordinator {
                 WorkerParameters workerParameters,
                 DeploymentPlan deploymentPlan) {
 
-        this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), testSuite.getId()));
+        this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
 
         this.testSuite = testSuite;
         this.componentRegistry = componentRegistry;
@@ -129,7 +129,7 @@ final class Coordinator {
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
                 deploymentPlan.getVersionSpecs(),
-                testSuite.getId()).run();
+                coordinatorParameters.getSessionId()).run();
 
         try {
             try {
@@ -171,7 +171,11 @@ final class Coordinator {
             closeQuietly(remoteClient);
 
             if (!coordinatorParameters.skipDownload()) {
-                new DownloadTask(testSuite.getId(), simulatorProperties, outputDirectory, componentRegistry).run();
+                new DownloadTask(
+                        coordinatorParameters.getSessionId(),
+                        simulatorProperties,
+                        outputDirectory,
+                        componentRegistry).run();
             }
             executeAfterCompletion();
 
@@ -215,9 +219,7 @@ final class Coordinator {
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
-
-        // todo: this needs to be moved in the RunTestSuite.
-        remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
+        remoteClient.sendToAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
     }
 
     private void echo(String message, Object... args) {

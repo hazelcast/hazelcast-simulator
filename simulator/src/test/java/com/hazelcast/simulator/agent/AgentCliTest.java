@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Test;
@@ -9,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -40,11 +40,14 @@ public class AgentCliTest {
 
         assertEquals(5, agent.getAddressIndex());
         assertEquals("127.0.0.1", agent.getPublicAddress());
-        assertNull(agent.getTestSuiteDir());
+        try {
+            assertNull(agent.getSessionDirectory());
+            fail();
+        } catch (IllegalStateException ignore) {
+        }
 
-        TestSuite testSuite = new TestSuite("AgentCliTest");
-        agent.setTestSuite(testSuite);
-        assertNotNull(agent.getTestSuiteDir());
+        agent.setSessionId("AgentCliTest");
+        assertNotNull(agent.getSessionDirectory());
     }
 
     @Test(expected = CommandLineExitException.class)

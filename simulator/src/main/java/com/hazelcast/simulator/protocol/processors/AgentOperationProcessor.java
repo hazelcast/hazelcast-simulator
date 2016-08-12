@@ -25,6 +25,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
@@ -33,7 +34,6 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -43,8 +43,6 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 import static org.apache.log4j.Level.DEBUG;
 import static org.apache.log4j.Level.FATAL;
@@ -77,7 +75,7 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
             case INTEGRATION_TEST:
                 return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
             case INIT_TEST_SUITE:
-                processInitTestSuite((InitTestSuiteOperation) operation);
+                agent.setTestSuite(((InitTestSuiteOperation) operation).getTestSuite());
                 break;
             case CREATE_WORKER:
                 return processCreateWorker((CreateWorkerOperation) operation);
@@ -86,6 +84,9 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 break;
             case STOP_TIMEOUT_DETECTION:
                 processStopTimeoutDetection();
+                break;
+            case INIT_SESSION:
+                agent.setSessionId(((InitSessionOperation) operation).getSessionId());
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -124,14 +125,6 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
-    }
-
-    private void processInitTestSuite(InitTestSuiteOperation operation) {
-        agent.setTestSuite(operation.getTestSuite());
-
-        File workersHome = ensureExistingDirectory(getSimulatorHome(), "workers");
-        File testSuiteDir = ensureExistingDirectory(workersHome, operation.getTestSuite().getId());
-        ensureExistingDirectory(testSuiteDir, "lib");
     }
 
     private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {

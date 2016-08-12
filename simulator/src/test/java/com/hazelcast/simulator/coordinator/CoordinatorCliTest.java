@@ -66,8 +66,8 @@ public class CoordinatorCliTest {
     }
 
     @Before
-    public void before() {
-        args.add("--testSuiteId");
+    public void before(){
+        args.add("--sessionId");
         testSuiteId = "testrun-" + System.currentTimeMillis();
         args.add(testSuiteId);
     }

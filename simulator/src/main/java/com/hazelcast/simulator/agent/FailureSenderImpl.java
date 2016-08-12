@@ -50,8 +50,11 @@ class FailureSenderImpl implements FailureSender {
     }
 
     @Override
-    public boolean sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess,
-                                        String testId, String cause) {
+    public boolean sendFailureOperation(String message,
+                                        FailureType type,
+                                        WorkerProcess workerProcess,
+                                        String testId,
+                                        String cause) {
         boolean sentSuccessfully = true;
         boolean isFailure = type != WORKER_FINISHED;
         SimulatorAddress workerAddress = workerProcess.getAddress();

@@ -17,6 +17,7 @@ public class CoordinatorParametersTest {
         SimulatorProperties properties = mock(SimulatorProperties.class);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
+                null,
                 properties,
                 "workerClassPath",
                 false,
