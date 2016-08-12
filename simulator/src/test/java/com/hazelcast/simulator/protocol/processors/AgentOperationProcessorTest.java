@@ -12,7 +12,6 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
-import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -23,7 +22,6 @@ import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import sun.management.resources.agent;
 
 import java.io.File;
 import java.util.HashMap;
@@ -69,7 +67,6 @@ public class AgentOperationProcessorTest {
     private File sessionDir;
 
     private AgentOperationProcessor processor;
-    private String sessionId = "AgentOperationProcessorTest";
     private Agent agent;
 
     @Before
@@ -78,7 +75,7 @@ public class AgentOperationProcessorTest {
 
         File workersDir = new File(getSimulatorHome(), "workers");
         testSuite = new TestSuite();
-        sessionDir = new File(workersDir, sessionId).getAbsoluteFile();
+        sessionDir = new File(workersDir, "AgentOperationProcessorTest").getAbsoluteFile();
 
         AgentConnector agentConnector = mock(AgentConnector.class);
 
@@ -86,7 +83,7 @@ public class AgentOperationProcessorTest {
         when(agent.getAddressIndex()).thenReturn(1);
         when(agent.getPublicAddress()).thenReturn("127.0.0.1");
         when(agent.getTestSuite()).thenReturn(testSuite);
-        when(agent.getSessionId()).thenReturn(sessionId);
+        when(agent.getSessionId()).thenReturn("AgentOperationProcessorTest");
         when(agent.getSessionDirectory()).thenReturn(sessionDir);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
         when(agent.getWorkerProcessFailureMonitor()).thenReturn(failureMonitor);
