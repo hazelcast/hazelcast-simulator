@@ -389,7 +389,7 @@ public class CoordinatorCliTest {
     }
 
     private Coordinator createCoordinator() {
-        return new CoordinatorCli(getArgs()).coordinator;
+        return new CoordinatorCli(getArgs()).getCoordinator();
     }
 
     private String[] getArgs() {

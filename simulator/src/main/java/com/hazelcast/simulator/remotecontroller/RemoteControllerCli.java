@@ -33,11 +33,10 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
+@SuppressWarnings("FieldCanBeLocal")
 final class RemoteControllerCli {
-    private static final Logger LOGGER = Logger.getLogger(RemoteControllerCli.class);
 
-    // open for testing purposes
-    RemoteController remoteController;
+    private static final Logger LOGGER = Logger.getLogger(RemoteControllerCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -54,6 +53,8 @@ final class RemoteControllerCli {
             "Lists all running Simulator Components");
 
     private final OptionSet options;
+
+    private RemoteController remoteController;
 
     RemoteControllerCli(String[] args) {
         options = initOptionsWithHelp(parser, args);
@@ -80,6 +81,11 @@ final class RemoteControllerCli {
         } finally {
             remoteController.shutdown();
         }
+    }
+
+    // just for testing
+    void setRemoteController(RemoteController remoteController) {
+        this.remoteController = remoteController;
     }
 
     public static void main(String[] args) {

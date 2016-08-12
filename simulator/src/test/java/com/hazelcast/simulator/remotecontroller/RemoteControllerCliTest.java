@@ -71,8 +71,7 @@ public class RemoteControllerCliTest {
             args.add("--propertiesFile");
             args.add(simulatorProperties.getAbsolutePath());
 
-            RemoteControllerCli cli = new RemoteControllerCli(getArgs());
-
+            new RemoteControllerCli(getArgs());
         } finally {
             deleteQuiet(simulatorProperties);
         }
@@ -81,7 +80,7 @@ public class RemoteControllerCliTest {
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withoutArguments() {
         RemoteControllerCli cli = new RemoteControllerCli(getArgs());
-        cli.remoteController = remoteController;
+        cli.setRemoteController(remoteController);
         cli.run();
     }
 
@@ -89,7 +88,7 @@ public class RemoteControllerCliTest {
     public void testRun_withHelp() {
         args.add("--help");
         RemoteControllerCli cli = new RemoteControllerCli(getArgs());
-        cli.remoteController = remoteController;
+        cli.setRemoteController(remoteController);
         cli.run();
     }
 
@@ -98,7 +97,7 @@ public class RemoteControllerCliTest {
         args.add("--listComponents");
 
         RemoteControllerCli cli = new RemoteControllerCli(getArgs());
-        cli.remoteController = remoteController;
+        cli.setRemoteController(remoteController);
         cli.run();
 
         verify(remoteController).start();
@@ -106,7 +105,6 @@ public class RemoteControllerCliTest {
         verify(remoteController).shutdown();
         verifyNoMoreInteractions(remoteController);
     }
-
 
     private String[] getArgs() {
         return args.toArray(new String[0]);

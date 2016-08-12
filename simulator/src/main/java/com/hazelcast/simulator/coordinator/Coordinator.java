@@ -44,7 +44,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
-public final class Coordinator {
+final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 

@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.harakiri;
+package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import org.junit.AfterClass;
@@ -11,13 +11,13 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
-import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
-import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.isHarakiriMonitorEnabled;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
+import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.isHarakiriMonitorEnabled;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

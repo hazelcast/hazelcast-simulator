@@ -35,11 +35,10 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
 
+@SuppressWarnings("FieldCanBeLocal")
 final class ProvisionerCli {
-    private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
 
-    // open for testing
-    Provisioner provisioner;
+    private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -75,6 +74,8 @@ final class ProvisionerCli {
 
     private final OptionSet options;
 
+    private Provisioner provisioner;
+
     ProvisionerCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
 
@@ -85,7 +86,7 @@ final class ProvisionerCli {
         this.provisioner = new Provisioner(properties, computeService, bash);
     }
 
-    public void run() {
+    void run() {
         try {
             if (options.has(scaleSpec)) {
                 int size = options.valueOf(scaleSpec);
@@ -109,6 +110,16 @@ final class ProvisionerCli {
         } finally {
             provisioner.shutdown();
         }
+    }
+
+    // just for testing
+    Provisioner getProvisioner() {
+        return provisioner;
+    }
+
+    // just for testing
+    void setProvisioner(Provisioner provisioner) {
+        this.provisioner = provisioner;
     }
 
     public static void main(String[] args) {

@@ -26,7 +26,7 @@ import static java.lang.String.format;
 /**
  * Responsible for terminating EC2 instances if they are not used to prevent running into a high bill.
  */
-public class HarakiriMonitor {
+class HarakiriMonitor {
 
     private static final Logger LOGGER = Logger.getLogger(HarakiriMonitor.class);
 

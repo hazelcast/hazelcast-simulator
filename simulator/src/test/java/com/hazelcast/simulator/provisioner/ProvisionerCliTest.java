@@ -20,7 +20,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -55,7 +54,7 @@ public class ProvisionerCliTest {
     public void testInit() {
         ProvisionerCli cli = new ProvisionerCli(getArgs());
 
-        ComponentRegistry componentRegistry = cli.provisioner.getComponentRegistry();
+        ComponentRegistry componentRegistry = cli.getProvisioner().getComponentRegistry();
         assertEquals(1, componentRegistry.agentCount());
         assertEquals("127.0.0.1", componentRegistry.getFirstAgent().getPublicAddress());
     }
@@ -77,7 +76,7 @@ public class ProvisionerCliTest {
         args.add("0");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
 
         verify(provisioner).scale(0);
@@ -91,7 +90,7 @@ public class ProvisionerCliTest {
         args.add("10");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
 
         verify(provisioner).scale(10);
@@ -104,9 +103,8 @@ public class ProvisionerCliTest {
         args.add("--install");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
-
 
         verify(provisioner).installSimulator();
         verify(provisioner).shutdown();
@@ -118,7 +116,7 @@ public class ProvisionerCliTest {
         args.add("--download");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
 
         verify(provisioner).download("workers");
@@ -132,9 +130,8 @@ public class ProvisionerCliTest {
         args.add("outputDir");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
-
 
         verify(provisioner).download("outputDir");
         verify(provisioner).shutdown();
@@ -146,9 +143,8 @@ public class ProvisionerCliTest {
         args.add("--clean");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
-
 
         verify(provisioner).clean();
         verify(provisioner).shutdown();
@@ -160,7 +156,7 @@ public class ProvisionerCliTest {
         args.add("--kill");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
 
         verify(provisioner).killJavaProcesses();
@@ -173,7 +169,7 @@ public class ProvisionerCliTest {
         args.add("--terminate");
 
         ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.provisioner = provisioner;
+        cli.setProvisioner(provisioner);
         cli.run();
 
         verify(provisioner).terminate();

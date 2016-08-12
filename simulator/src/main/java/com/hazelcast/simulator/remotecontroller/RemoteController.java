@@ -30,7 +30,7 @@ import static java.lang.String.format;
  * Commandline tool to send {@link RemoteControllerOperation} to the Coordinator.
  */
 @SuppressWarnings("checkstyle:hideutilityclassconstructor")
-public class RemoteController {
+class RemoteController {
 
     private static final Logger LOGGER = Logger.getLogger(RemoteController.class);
 

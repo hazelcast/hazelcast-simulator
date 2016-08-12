@@ -57,15 +57,13 @@ import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
 
     static final int DEFAULT_DURATION_SECONDS = 60;
     static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
-
-    // open for testing
-    Coordinator coordinator;
 
     private final OptionParser parser = new OptionParser();
 
@@ -180,14 +178,14 @@ final class CoordinatorCli {
             "Prevents downloading of the created worker artifacts.");
 
     private final OptionSet options;
-    private final SimulatorProperties simulatorProperties;
+    private final Coordinator coordinator;
 
     CoordinatorCli(String[] args) {
         options = initOptionsWithHelp(parser, args);
 
         TestSuite testSuite = getTestSuite();
 
-        simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
+        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
 
         ComponentRegistry componentRegistry = getComponentRegistry(testSuite, simulatorProperties);
 
@@ -228,8 +226,13 @@ final class CoordinatorCli {
 
     }
 
-    public void run() {
+    void run() {
         coordinator.run();
+    }
+
+    // just for testing
+    Coordinator getCoordinator() {
+        return coordinator;
     }
 
     private TestSuite getTestSuite() {
@@ -238,7 +241,6 @@ final class CoordinatorCli {
         if (!options.has(durationSpec) && hasWaitForTestCase) {
             durationSeconds = 0;
         }
-
 
         TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec),
                 options.valueOf(testSuiteIdSpec));
@@ -256,6 +258,31 @@ final class CoordinatorCli {
         }
 
         return testSuite;
+    }
+
+    private int getDurationSeconds(OptionSpec<String> optionSpec) {
+        int duration;
+        String value = options.valueOf(optionSpec);
+        try {
+            if (value.endsWith("s")) {
+                duration = parseDurationWithoutLastChar(SECONDS, value);
+            } else if (value.endsWith("m")) {
+                duration = parseDurationWithoutLastChar(MINUTES, value);
+            } else if (value.endsWith("h")) {
+                duration = parseDurationWithoutLastChar(HOURS, value);
+            } else if (value.endsWith("d")) {
+                duration = parseDurationWithoutLastChar(DAYS, value);
+            } else {
+                duration = Integer.parseInt(value);
+            }
+        } catch (NumberFormatException e) {
+            throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
+        }
+
+        if (duration < 0) {
+            throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
+        }
+        return duration;
     }
 
     private ComponentRegistry getComponentRegistry(TestSuite testSuite, SimulatorProperties simulatorProperties) {
@@ -355,36 +382,10 @@ final class CoordinatorCli {
         }
     }
 
-    private int getDurationSeconds(OptionSpec<String> optionSpec) {
-        int duration;
-        String value = options.valueOf(optionSpec);
-        try {
-            if (value.endsWith("s")) {
-                duration = parseDurationWithoutLastChar(SECONDS, value);
-            } else if (value.endsWith("m")) {
-                duration = parseDurationWithoutLastChar(MINUTES, value);
-            } else if (value.endsWith("h")) {
-                duration = parseDurationWithoutLastChar(HOURS, value);
-            } else if (value.endsWith("d")) {
-                duration = parseDurationWithoutLastChar(DAYS, value);
-            } else {
-                duration = Integer.parseInt(value);
-            }
-        } catch (NumberFormatException e) {
-            throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
-        }
-
-        if (duration < 0) {
-            throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
-        }
-        return duration;
-    }
-
     private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
         String sub = value.substring(0, value.length() - 1);
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
-
 
     public static void main(String[] args) {
         LOGGER.info("Hazelcast Simulator Coordinator");
@@ -399,5 +400,4 @@ final class CoordinatorCli {
             exitWithError(LOGGER, "Failed to run Coordinator", e);
         }
     }
-
 }

@@ -26,8 +26,9 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 
-@SuppressWarnings("checkstyle:hideutilityclassconstructor")
+@SuppressWarnings({"checkstyle:hideutilityclassconstructor", "FieldCanBeLocal"})
 final class HarakiriMonitorCli {
+
     private static final Logger LOGGER = Logger.getLogger(HarakiriMonitorCli.class);
 
     private final OptionParser parser = new OptionParser();
@@ -49,7 +50,7 @@ final class HarakiriMonitorCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo((int) TimeUnit.HOURS.toSeconds(2));
     private final HarakiriMonitor harakiriMonitor;
 
-    public HarakiriMonitorCli(String[] args) {
+    HarakiriMonitorCli(String[] args) {
         OptionSet options = CliUtils.initOptionsWithHelp(parser, args);
 
         if (!options.has(cloudProviderSpec)) {
