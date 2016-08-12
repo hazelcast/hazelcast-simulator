@@ -19,7 +19,6 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
@@ -66,14 +65,5 @@ public class HarakiriMonitor {
     private static String getHarakiriCommand(String cloudIdentity, String cloudCredential) {
         return format("ec2-terminate-instances $(curl -s http://169.254.169.254/latest/meta-data/instance-id)"
                 + " --aws-access-key %s --aws-secret-key %s", cloudIdentity, cloudCredential);
-    }
-
-    public static void main(String[] args) {
-        try {
-            HarakiriMonitor harakiriMonitor = HarakiriMonitorCli.createHarakiriMonitor(args);
-            harakiriMonitor.start();
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Could not start HarakiriMonitor!", e);
-        }
     }
 }

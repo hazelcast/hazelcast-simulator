@@ -20,15 +20,26 @@ import com.hazelcast.simulator.utils.Bash;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isCloudProvider;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
+import static java.lang.String.format;
 
 final class ProvisionerCli {
+    private static final Logger LOGGER = Logger.getLogger(ProvisionerCli.class);
+
+    // open for testing
+    Provisioner provisioner;
 
     private final OptionParser parser = new OptionParser();
 
@@ -62,48 +73,55 @@ final class ProvisionerCli {
                     + " '$SIMULATOR_HOME/conf/" + PROPERTIES_FILE_NAME + "'.")
             .withRequiredArg().ofType(String.class);
 
-    private ProvisionerCli() {
-    }
+    private final OptionSet options;
 
-    static Provisioner init(String[] args) {
-        Provisioner.logHeader();
+    ProvisionerCli(String[] args) {
+        this.options = initOptionsWithHelp(parser, args);
 
-        ProvisionerCli cli = new ProvisionerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
-
-        SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-        ComputeService computeService = (isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null);
+        SimulatorProperties properties = loadSimulatorProperties(options, propertiesFileSpec);
+        ComputeService computeService = isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null;
         Bash bash = new Bash(properties);
 
-        return new Provisioner(properties, computeService, bash);
+        this.provisioner = new Provisioner(properties, computeService, bash);
     }
 
-    static void run(String[] args, Provisioner provisioner) {
-        ProvisionerCli cli = new ProvisionerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
-
+    public void run() {
         try {
-            if (options.has(cli.scaleSpec)) {
-                int size = options.valueOf(cli.scaleSpec);
+            if (options.has(scaleSpec)) {
+                int size = options.valueOf(scaleSpec);
                 provisioner.scale(size);
-            } else if (options.has(cli.installJavaSpec)) {
+            } else if (options.has(installJavaSpec)) {
                 provisioner.installJava();
-            } else if (options.has(cli.installSpec)) {
+            } else if (options.has(installSpec)) {
                 provisioner.installSimulator();
-            } else if (options.has(cli.downloadSpec)) {
-                String dir = options.valueOf(cli.downloadSpec);
+            } else if (options.has(downloadSpec)) {
+                String dir = options.valueOf(downloadSpec);
                 provisioner.download(dir);
-            } else if (options.has(cli.cleanSpec)) {
+            } else if (options.has(cleanSpec)) {
                 provisioner.clean();
-            } else if (options.has(cli.killSpec)) {
+            } else if (options.has(killSpec)) {
                 provisioner.killJavaProcesses();
-            } else if (options.has(cli.terminateSpec)) {
+            } else if (options.has(terminateSpec)) {
                 provisioner.terminate();
             } else {
-                printHelpAndExit(cli.parser);
+                printHelpAndExit(parser);
             }
         } finally {
             provisioner.shutdown();
+        }
+    }
+
+    public static void main(String[] args) {
+        LOGGER.info("Hazelcast Simulator Provisioner");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome()));
+
+        try {
+            ProvisionerCli cli = new ProvisionerCli(args);
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not execute command", e);
         }
     }
 }

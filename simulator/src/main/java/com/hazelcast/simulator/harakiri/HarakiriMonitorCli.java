@@ -20,10 +20,15 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+
+@SuppressWarnings("checkstyle:hideutilityclassconstructor")
 final class HarakiriMonitorCli {
+    private static final Logger LOGGER = Logger.getLogger(HarakiriMonitorCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -42,28 +47,38 @@ final class HarakiriMonitorCli {
     private final OptionSpec<Integer> timeoutSpec = parser.accepts("waitSeconds",
             "The number of seconds the HarakiriMonitor will wait until it kills the machine.")
             .withRequiredArg().ofType(Integer.class).defaultsTo((int) TimeUnit.HOURS.toSeconds(2));
+    private final HarakiriMonitor harakiriMonitor;
 
-    private HarakiriMonitorCli() {
-    }
+    public HarakiriMonitorCli(String[] args) {
+        OptionSet options = CliUtils.initOptionsWithHelp(parser, args);
 
-    static HarakiriMonitor createHarakiriMonitor(String[] args) {
-        HarakiriMonitorCli harakiriCli = new HarakiriMonitorCli();
-        OptionSet options = CliUtils.initOptionsWithHelp(harakiriCli.parser, args);
-
-        if (!options.has(harakiriCli.cloudProviderSpec)) {
+        if (!options.has(cloudProviderSpec)) {
             throw new CommandLineExitException("You have to provide --cloudProvider");
         }
-        if (!options.has(harakiriCli.cloudIdentitySpec)) {
+        if (!options.has(cloudIdentitySpec)) {
             throw new CommandLineExitException("You have to provide --cloudIdentity");
         }
-        if (!options.has(harakiriCli.cloudCredentialSpec)) {
+        if (!options.has(cloudCredentialSpec)) {
             throw new CommandLineExitException("You have to provide --cloudCredential");
         }
 
-        return new HarakiriMonitor(
-                options.valueOf(harakiriCli.cloudProviderSpec),
-                options.valueOf(harakiriCli.cloudIdentitySpec),
-                options.valueOf(harakiriCli.cloudCredentialSpec),
-                options.valueOf(harakiriCli.timeoutSpec));
+        harakiriMonitor = new HarakiriMonitor(
+                options.valueOf(cloudProviderSpec),
+                options.valueOf(cloudIdentitySpec),
+                options.valueOf(cloudCredentialSpec),
+                options.valueOf(timeoutSpec));
+    }
+
+    private void run() {
+        harakiriMonitor.start();
+    }
+
+    public static void main(String[] args) {
+        try {
+            HarakiriMonitorCli cli = new HarakiriMonitorCli(args);
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not start HarakiriMonitor!", e);
+        }
     }
 }

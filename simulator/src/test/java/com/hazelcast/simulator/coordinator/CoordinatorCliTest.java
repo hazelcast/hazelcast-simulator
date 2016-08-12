@@ -66,7 +66,7 @@ public class CoordinatorCliTest {
     }
 
     @Before
-    public void before(){
+    public void before() {
         args.add("--testSuiteId");
         testSuiteId = "testrun-" + System.currentTimeMillis();
         args.add(testSuiteId);
@@ -82,7 +82,7 @@ public class CoordinatorCliTest {
     }
 
     @After
-    public void after(){
+    public void after() {
         deleteQuiet(new File(testSuiteId).getAbsoluteFile());
     }
 
@@ -389,12 +389,10 @@ public class CoordinatorCliTest {
     }
 
     private Coordinator createCoordinator() {
-        return CoordinatorCli.init(getArgs());
+        return new CoordinatorCli(getArgs()).coordinator;
     }
 
     private String[] getArgs() {
-        String[] argsArray = new String[args.size()];
-        args.toArray(argsArray);
-        return argsArray;
+        return args.toArray(new String[0]);
     }
 }

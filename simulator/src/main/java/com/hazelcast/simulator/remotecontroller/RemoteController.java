@@ -23,14 +23,7 @@ import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
-import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
-import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.protocol.operation.RemoteControllerOperation.Type;
-import static com.hazelcast.simulator.remotecontroller.RemoteControllerCli.init;
-import static com.hazelcast.simulator.remotecontroller.RemoteControllerCli.run;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 /**
@@ -86,20 +79,6 @@ public class RemoteController {
         } else {
             echo(message);
         }
-    }
-
-    public static void main(String[] args) {
-        try {
-            run(args, init(args));
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Error during execution of Remote Controller!", e);
-        }
-    }
-
-    static void logHeader() {
-        echo("Hazelcast Simulator Remote Controller");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-        echo("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
     }
 
     private static void echo(String message, Object... args) {

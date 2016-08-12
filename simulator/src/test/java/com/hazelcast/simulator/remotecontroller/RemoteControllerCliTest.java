@@ -15,7 +15,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
-import static com.hazelcast.simulator.remotecontroller.RemoteControllerCli.run;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -50,16 +49,17 @@ public class RemoteControllerCliTest {
         deleteQuiet(propertiesFile);
     }
 
+    // todo: test only causes coverage; doesn't test behavior
     @Test
     public void testInit() {
-        createRemoteController();
+        new RemoteControllerCli(getArgs());
     }
 
+    // todo: test only causes coverage; doesn't test behavior
     @Test
     public void testInit_whenQuiet() {
         args.add("--quiet");
-
-        createRemoteController();
+        new RemoteControllerCli(getArgs());
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -71,7 +71,8 @@ public class RemoteControllerCliTest {
             args.add("--propertiesFile");
             args.add(simulatorProperties.getAbsolutePath());
 
-            createRemoteController();
+            RemoteControllerCli cli = new RemoteControllerCli(getArgs());
+
         } finally {
             deleteQuiet(simulatorProperties);
         }
@@ -79,20 +80,26 @@ public class RemoteControllerCliTest {
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withoutArguments() {
-        run(getArgs(), remoteController);
+        RemoteControllerCli cli = new RemoteControllerCli(getArgs());
+        cli.remoteController = remoteController;
+        cli.run();
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withHelp() {
         args.add("--help");
-        run(getArgs(), remoteController);
+        RemoteControllerCli cli = new RemoteControllerCli(getArgs());
+        cli.remoteController = remoteController;
+        cli.run();
     }
 
     @Test
     public void testRun_listComponents() {
         args.add("--listComponents");
 
-        run(getArgs(), remoteController);
+        RemoteControllerCli cli = new RemoteControllerCli(getArgs());
+        cli.remoteController = remoteController;
+        cli.run();
 
         verify(remoteController).start();
         verify(remoteController).listComponents();
@@ -100,13 +107,8 @@ public class RemoteControllerCliTest {
         verifyNoMoreInteractions(remoteController);
     }
 
-    private RemoteController createRemoteController() {
-        return RemoteControllerCli.init(getArgs());
-    }
 
     private String[] getArgs() {
-        String[] argsArray = new String[args.size()];
-        args.toArray(argsArray);
-        return argsArray;
+        return args.toArray(new String[0]);
     }
 }

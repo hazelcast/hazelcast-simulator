@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.FailureType.fromPropertyValue;
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.common.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
@@ -41,6 +43,8 @@ import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzC
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
@@ -59,6 +63,9 @@ final class CoordinatorCli {
     static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
+
+    // open for testing
+    Coordinator coordinator;
 
     private final OptionParser parser = new OptionParser();
 
@@ -172,74 +179,77 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
-    private CoordinatorCli() {
-    }
+    private final OptionSet options;
+    private final SimulatorProperties simulatorProperties;
 
-    static Coordinator init(String[] args) {
-        Coordinator.logHeader();
+    CoordinatorCli(String[] args) {
+        options = initOptionsWithHelp(parser, args);
 
-        CoordinatorCli cli = new CoordinatorCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
+        TestSuite testSuite = getTestSuite();
 
-        TestSuite testSuite = getTestSuite(cli, options);
-
-        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+        simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
 
         ComponentRegistry componentRegistry = getComponentRegistry(testSuite, simulatorProperties);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
                 simulatorProperties,
-                options.valueOf(cli.workerClassPathSpec),
-                options.valueOf(cli.verifyEnabledSpec),
-                options.has(cli.parallelSpec),
-                options.valueOf(cli.targetTypeSpec),
-                options.valueOf(cli.targetCountSpec),
-                options.valueOf(cli.syncToTestPhaseSpec),
-                options.valueOf(cli.workerVmStartupDelayMsSpec),
-                options.has(cli.skipDownloadSpec),
+                options.valueOf(workerClassPathSpec),
+                options.valueOf(verifyEnabledSpec),
+                options.has(parallelSpec),
+                options.valueOf(targetTypeSpec),
+                options.valueOf(targetCountSpec),
+                options.valueOf(syncToTestPhaseSpec),
+                options.valueOf(workerVmStartupDelayMsSpec),
+                options.has(skipDownloadSpec),
                 getConfigurationFile("after-completion.sh").getAbsolutePath()
         );
 
         int defaultHzPort = simulatorProperties.getHazelcastPort();
-        String licenseKey = options.valueOf(cli.licenseKeySpec);
+        String licenseKey = options.valueOf(licenseKeySpec);
 
         WorkerParameters workerParameters = new WorkerParameters(
                 simulatorProperties,
-                options.valueOf(cli.autoCreateHzInstanceSpec),
-                options.valueOf(cli.workerStartupTimeoutSpec),
-                options.valueOf(cli.workerVmOptionsSpec),
-                options.valueOf(cli.clientWorkerVmOptionsSpec),
+                options.valueOf(autoCreateHzInstanceSpec),
+                options.valueOf(workerStartupTimeoutSpec),
+                options.valueOf(workerVmOptionsSpec),
+                options.valueOf(clientWorkerVmOptionsSpec),
                 initMemberHzConfig(loadMemberHzConfig(), componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
                 initClientHzConfig(loadClientHzConfig(), componentRegistry, defaultHzPort, licenseKey),
                 loadLog4jConfig(),
                 loadWorkerScript(simulatorProperties.get("VENDOR")),
-                options.has(cli.monitorPerformanceSpec)
+                options.has(monitorPerformanceSpec)
         );
 
-        DeploymentPlan deploymentPlan = getDeploymentPlan(options, cli, simulatorProperties, componentRegistry,
+        DeploymentPlan deploymentPlan = getDeploymentPlan(simulatorProperties, componentRegistry,
                 workerParameters, defaultHzPort, licenseKey);
 
-        return new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
+        coordinator = new Coordinator(
+                testSuite, componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
+
     }
 
-    private static TestSuite getTestSuite(CoordinatorCli cli, OptionSet options) {
-        int durationSeconds = getDurationSeconds(options, cli.durationSpec);
-        boolean hasWaitForTestCase = options.has(cli.waitForTestCaseSpec);
-        if (!options.has(cli.durationSpec) && hasWaitForTestCase) {
+    public void run() {
+        coordinator.run();
+    }
+
+    private TestSuite getTestSuite() {
+        int durationSeconds = getDurationSeconds(durationSpec);
+        boolean hasWaitForTestCase = options.has(waitForTestCaseSpec);
+        if (!options.has(durationSpec) && hasWaitForTestCase) {
             durationSeconds = 0;
         }
 
 
-        TestSuite testSuite = loadTestSuite(getTestSuiteFile(options), options.valueOf(cli.overridesSpec),
-                options.valueOf(cli.testSuiteIdSpec));
+        TestSuite testSuite = loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec),
+                options.valueOf(testSuiteIdSpec));
         testSuite.setDurationSeconds(durationSeconds);
-        testSuite.setWarmupDurationSeconds(getDurationSeconds(options, cli.warmupDurationSpec));
+        testSuite.setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec));
         testSuite.setWaitForTestCase(hasWaitForTestCase);
-        testSuite.setFailFast(options.valueOf(cli.failFastSpec));
-        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(cli.tolerableFailureSpec)));
+        testSuite.setFailFast(options.valueOf(failFastSpec));
+        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(tolerableFailureSpec)));
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
-        if (!options.has(cli.monitorPerformanceSpec)) {
+        if (!options.has(monitorPerformanceSpec)) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
             }
@@ -248,8 +258,7 @@ final class CoordinatorCli {
         return testSuite;
     }
 
-    private static ComponentRegistry getComponentRegistry(TestSuite testSuite,
-                                                          SimulatorProperties simulatorProperties) {
+    private ComponentRegistry getComponentRegistry(TestSuite testSuite, SimulatorProperties simulatorProperties) {
         ComponentRegistry componentRegistry;
         if (isLocal(simulatorProperties)) {
             componentRegistry = new ComponentRegistry();
@@ -261,32 +270,31 @@ final class CoordinatorCli {
         return componentRegistry;
     }
 
-    private static DeploymentPlan getDeploymentPlan(OptionSet options, CoordinatorCli cli,
-                                                    SimulatorProperties simulatorProperties,
-                                                    ComponentRegistry componentRegistry,
-                                                    WorkerParameters workerParameters,
-                                                    int defaultHzPort,
-                                                    String licenseKey) {
+    private DeploymentPlan getDeploymentPlan(SimulatorProperties simulatorProperties,
+                                             ComponentRegistry componentRegistry,
+                                             WorkerParameters workerParameters,
+                                             int defaultHzPort,
+                                             String licenseKey) {
         String clusterXml = loadClusterXml();
         if (clusterXml == null) {
             return createDeploymentPlan(
                     componentRegistry,
                     workerParameters,
-                    options.valueOf(cli.memberWorkerCountSpec),
-                    options.valueOf(cli.clientWorkerCountSpec),
-                    options.valueOf(cli.dedicatedMemberMachinesSpec));
+                    options.valueOf(memberWorkerCountSpec),
+                    options.valueOf(clientWorkerCountSpec),
+                    options.valueOf(dedicatedMemberMachinesSpec));
         }
+
         return createDeploymentPlan(
                 componentRegistry,
                 workerParameters,
                 simulatorProperties,
                 defaultHzPort,
                 licenseKey,
-                clusterXml
-        );
+                clusterXml);
     }
 
-    private static File getTestSuiteFile(OptionSet options) {
+    private File getTestSuiteFile() {
         File testSuiteFile;
 
         List testsuiteFiles = options.nonOptionArguments();
@@ -310,6 +318,7 @@ final class CoordinatorCli {
         if (!file.exists()) {
             throw new CommandLineExitException(format("Agents file [%s] does not exist", file));
         }
+
         LOGGER.info("Loading Agents file: " + file.getAbsolutePath());
         return file;
     }
@@ -346,7 +355,7 @@ final class CoordinatorCli {
         }
     }
 
-    private static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec) {
+    private int getDurationSeconds(OptionSpec<String> optionSpec) {
         int duration;
         String value = options.valueOf(optionSpec);
         try {
@@ -375,4 +384,20 @@ final class CoordinatorCli {
         String sub = value.substring(0, value.length() - 1);
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
+
+
+    public static void main(String[] args) {
+        LOGGER.info("Hazelcast Simulator Coordinator");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath()));
+
+        try {
+            CoordinatorCli cli = new CoordinatorCli(args);
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Failed to run Coordinator", e);
+        }
+    }
+
 }

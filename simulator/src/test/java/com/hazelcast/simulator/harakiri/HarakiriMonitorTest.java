@@ -1,24 +1,18 @@
 package com.hazelcast.simulator.harakiri;
 
 import com.hazelcast.simulator.utils.CloudProviderUtils;
-import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManager;
-import static com.hazelcast.simulator.harakiri.HarakiriMonitorCli.createHarakiriMonitor;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class HarakiriMonitorTest {
 
@@ -27,8 +21,6 @@ public class HarakiriMonitorTest {
     private static final String CLOUD_IDENTITY = "someIdentity";
     private static final String CLOUD_CREDENTIALS = "someCredentials";
     private static final int WAIT_SECONDS = 1;
-
-    private final List<String> args = new ArrayList<String>();
 
     private HarakiriMonitor harakiriMonitor;
 
@@ -40,40 +32,6 @@ public class HarakiriMonitorTest {
     @AfterClass
     public static void tearDown() {
         resetSecurityManager();
-    }
-
-    @Test
-    public void testCreateHarakiriMonitor() {
-        addCloudProviderArgs();
-        addCloudIdentityArgs();
-        addCloudCredentialArgs();
-
-        HarakiriMonitor harakiriMonitor = createHarakiriMonitor(getArgs());
-        assertNotNull(harakiriMonitor);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testCreateHarakiriMonitor_noCloudProvider() {
-        addCloudIdentityArgs();
-        addCloudCredentialArgs();
-
-        createHarakiriMonitor(getArgs());
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testCreateHarakiriMonitor_noCloudIdentity() {
-        addCloudProviderArgs();
-        addCloudCredentialArgs();
-
-        createHarakiriMonitor(getArgs());
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testCreateHarakiriMonitor_noCloudCredential() {
-        addCloudProviderArgs();
-        addCloudIdentityArgs();
-
-        createHarakiriMonitor(getArgs());
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -116,49 +74,5 @@ public class HarakiriMonitorTest {
         assertEquals(1, countDownLatch.getCount());
     }
 
-    @Test
-    public void testMain() {
-        addCloudProviderArgs();
-        addCloudIdentityArgs();
-        addCloudCredentialArgs();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                HarakiriMonitor.main(getArgs());
-                countDownLatch.countDown();
-            }
-        };
-        thread.start();
-        joinThread(thread, TimeUnit.SECONDS.toMillis(1));
-
-        assertEquals(1, countDownLatch.getCount());
-    }
-
-    @Test(expected = ExitStatusOneException.class)
-    public void testMain_withException() {
-        HarakiriMonitor.main(getArgs());
-    }
-
-    private void addCloudProviderArgs() {
-        args.add("--cloudProvider");
-        args.add(CLOUD_PROVIDER);
-    }
-
-    private void addCloudIdentityArgs() {
-        args.add("--cloudIdentity");
-        args.add(CLOUD_IDENTITY);
-    }
-
-    private void addCloudCredentialArgs() {
-        args.add("--cloudCredential");
-        args.add(CLOUD_CREDENTIALS);
-    }
-
-    private String[] getArgs() {
-        String[] argsArray = new String[args.size()];
-        args.toArray(argsArray);
-        return argsArray;
-    }
 }
