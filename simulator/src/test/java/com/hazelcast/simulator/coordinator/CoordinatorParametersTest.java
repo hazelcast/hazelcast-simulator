@@ -17,7 +17,7 @@ public class CoordinatorParametersTest {
         SimulatorProperties properties = mock(SimulatorProperties.class);
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters(
-                null,
+                "CoordinatorParametersTest",
                 properties,
                 "workerClassPath",
                 false,
@@ -29,6 +29,7 @@ public class CoordinatorParametersTest {
                 true,
                 null);
 
+        assertEquals("CoordinatorParametersTest", coordinatorParameters.getSessionId());
         assertEquals(properties, coordinatorParameters.getSimulatorProperties());
         assertEquals("workerClassPath", coordinatorParameters.getWorkerClassPath());
         assertFalse(coordinatorParameters.isVerifyEnabled());
