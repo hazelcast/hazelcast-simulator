@@ -4,7 +4,6 @@ import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.utils.helper.ExitStatusOneException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -105,16 +104,6 @@ public class WizardTest {
 
         deleteQuiet(Wizard.AGENTS_FILE);
         deleteQuiet(Wizard.SSH_COPY_ID_FILE);
-    }
-
-    @Test
-    public void testMain() {
-        Wizard.main(new String[]{"--createWorkDir", workDir.getName()});
-    }
-
-    @Test(expected = ExitStatusOneException.class)
-    public void testMain_withException() {
-        Wizard.main(new String[]{});
     }
 
     @Test

@@ -21,16 +21,23 @@ import com.hazelcast.simulator.utils.Bash;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.wizard.WizardUtils.getProfileFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getSimulatorPath;
 import static java.lang.String.format;
 
 final class WizardCli {
+
+    private static final Logger LOGGER = Logger.getLogger(WizardCli.class);
 
     private final OptionParser parser = new OptionParser();
 
@@ -61,36 +68,36 @@ final class WizardCli {
             format("Compares the %s file in your working directory with the default property values.",
                     SimulatorProperties.PROPERTIES_FILE_NAME));
 
-    private WizardCli() {
+    private final OptionSet options;
+
+    // open for testing
+    Wizard wizard;
+
+    WizardCli(String[] args) {
+        options = initOptionsWithHelp(parser, args);
+        wizard = new Wizard();
     }
 
-    static Wizard init() {
-        Wizard.logHeader();
-
-        return new Wizard();
-    }
-
-    static void run(String[] args, Wizard wizard) {
-        WizardCli cli = new WizardCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
-
-        if (options.has(cli.installSpec)) {
+    public void run() {
+        if (options.has(installSpec)) {
             String homeDir = getUserDir().getAbsolutePath();
             wizard.install(getSimulatorPath(), getProfileFile(homeDir));
-        } else if (options.has(cli.createWorkDirSpec)) {
+        } else if (options.has(createWorkDirSpec)) {
             SimulatorProperties simulatorProperties = getSimulatorProperties(false);
-            wizard.createWorkDir(simulatorProperties, cli.createWorkDirSpec.value(options), cli.cloudProvider.value(options));
-        } else if (options.has(cli.listCloudProvidersSpec)) {
+            wizard.createWorkDir(simulatorProperties,
+                    createWorkDirSpec.value(options),
+                    cloudProvider.value(options));
+        } else if (options.has(listCloudProvidersSpec)) {
             wizard.listCloudProviders();
-        } else if (options.has(cli.createSshCopyIdScriptSpec)) {
+        } else if (options.has(createSshCopyIdScriptSpec)) {
             wizard.createSshCopyIdScript(getSimulatorProperties());
-        } else if (options.has(cli.sshConnectionCheckSpec)) {
+        } else if (options.has(sshConnectionCheckSpec)) {
             SimulatorProperties simulatorProperties = getSimulatorProperties();
-            wizard.sshConnectionCheck(simulatorProperties, getBash(simulatorProperties));
-        } else if (options.has(cli.compareSimulatorPropertiesSpec)) {
+            wizard.sshConnectionCheck(simulatorProperties, newBash(simulatorProperties));
+        } else if (options.has(compareSimulatorPropertiesSpec)) {
             wizard.compareSimulatorProperties();
         } else {
-            printHelpAndExit(cli.parser);
+            printHelpAndExit(parser);
         }
     }
 
@@ -106,7 +113,21 @@ final class WizardCli {
         return simulatorProperties;
     }
 
-    private static Bash getBash(SimulatorProperties simulatorProperties) {
+    private static Bash newBash(SimulatorProperties simulatorProperties) {
         return new Bash(simulatorProperties);
     }
+
+    public static void main(String[] args) {
+        LOGGER.info("Hazelcast Simulator Wizard");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+
+        try {
+            WizardCli cli = new WizardCli(args);
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not execute command", e);
+        }
+    }
 }
+

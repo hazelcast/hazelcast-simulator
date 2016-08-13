@@ -18,8 +18,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDi
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
-import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static com.hazelcast.simulator.wizard.WizardCli.run;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -43,7 +41,7 @@ public class WizardCliTest {
         setDistributionUserDir();
 
         bashrc = new File(".bashrc").getAbsoluteFile();
-        deleteFile = (!bashrc.exists());
+        deleteFile = !bashrc.exists();
         ensureExistingFile(bashrc);
     }
 
@@ -58,33 +56,34 @@ public class WizardCliTest {
     }
 
     @Test
-    public void testConstructor() throws Exception {
-        invokePrivateConstructor(WizardCli.class);
-    }
-
-    @Test
     public void testInit() {
-        wizard = WizardCli.init();
+        wizard = new WizardCli(new String[0]).wizard;
 
         assertNotNull(wizard);
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withoutArguments() {
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.run();
+
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withHelp() {
         args.add("--help");
-        run(getArgs(), wizard);
+
+        WizardCli cli = new WizardCli(getArgs());
+        cli.run();
     }
 
     @Test
     public void testRun_install() {
         args.add("--install");
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).install(anyString(), any(File.class));
         verifyNoMoreInteractions(wizard);
@@ -95,7 +94,9 @@ public class WizardCliTest {
         args.add("--createWorkDir");
         args.add("tests");
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).createWorkDir(any(SimulatorProperties.class), eq("tests"), eq(CloudProviderUtils.PROVIDER_LOCAL));
         verifyNoMoreInteractions(wizard);
@@ -108,7 +109,9 @@ public class WizardCliTest {
         args.add("--cloudProvider");
         args.add(CloudProviderUtils.PROVIDER_GCE);
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).createWorkDir(any(SimulatorProperties.class), eq("tests"), eq(CloudProviderUtils.PROVIDER_GCE));
         verifyNoMoreInteractions(wizard);
@@ -118,7 +121,9 @@ public class WizardCliTest {
     public void testRun_listCloudProviders() {
         args.add("--list");
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).listCloudProviders();
         verifyNoMoreInteractions(wizard);
@@ -128,7 +133,9 @@ public class WizardCliTest {
     public void testRun_createSshCopyIdScript() {
         args.add("--createSshCopyIdScript");
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).createSshCopyIdScript(any(SimulatorProperties.class));
         verifyNoMoreInteractions(wizard);
@@ -138,7 +145,9 @@ public class WizardCliTest {
     public void testRun_sshConnectionCheck() {
         args.add("--sshConnectionCheck");
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).sshConnectionCheck(any(SimulatorProperties.class), any(Bash.class));
         verifyNoMoreInteractions(wizard);
@@ -148,15 +157,15 @@ public class WizardCliTest {
     public void testRun_compareSimulatorProperties() {
         args.add("--compareSimulatorProperties");
 
-        run(getArgs(), wizard);
+        WizardCli cli = new WizardCli(getArgs());
+        cli.wizard = wizard;
+        cli.run();
 
         verify(wizard).compareSimulatorProperties();
         verifyNoMoreInteractions(wizard);
     }
 
     private String[] getArgs() {
-        String[] argsArray = new String[args.size()];
-        args.toArray(argsArray);
-        return argsArray;
+        return args.toArray(new String[0]);
     }
 }
