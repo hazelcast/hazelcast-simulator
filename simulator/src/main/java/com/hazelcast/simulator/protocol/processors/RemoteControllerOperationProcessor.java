@@ -17,7 +17,6 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
@@ -32,10 +31,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 public class RemoteControllerOperationProcessor extends AbstractOperationProcessor {
 
     private volatile String response;
-
-    public RemoteControllerOperationProcessor(ExceptionLogger exceptionLogger) {
-        super(exceptionLogger);
-    }
 
     public String getResponse() {
         return response;

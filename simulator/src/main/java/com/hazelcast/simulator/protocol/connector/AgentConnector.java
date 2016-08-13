@@ -21,7 +21,6 @@ import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
@@ -42,7 +41,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.exception.ExceptionType.AGENT_EXCEPTION;
 import static java.lang.Math.max;
 
 /**
@@ -64,12 +62,9 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
                    int threadPoolSize) {
         super(localAddress, port, threadPoolSize);
 
-        RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
-        this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerProcessManager, getScheduledExecutor());
-
+        this.processor = new AgentOperationProcessor(agent, workerProcessManager, getScheduledExecutor());
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
-
         this.workerProcessManager = workerProcessManager;
     }
 

@@ -16,7 +16,6 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
@@ -61,8 +60,6 @@ class ProtocolUtil {
 
     private static final AddressLevel MIN_ADDRESS_LEVEL = AddressLevel.AGENT;
     private static final int MIN_ADDRESS_LEVEL_VALUE = MIN_ADDRESS_LEVEL.toInt();
-
-    private static final ExceptionLogger EXCEPTION_LOGGER = mock(ExceptionLogger.class);
 
     private static CoordinatorConnector coordinatorConnector;
     private static List<AgentConnector> agentConnectors = new ArrayList<AgentConnector>();
@@ -128,14 +125,14 @@ class ProtocolUtil {
     private static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
         Worker worker = mock(Worker.class);
         WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port, MEMBER, null,
-                worker, true);
+                worker);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
         TestContainer testContainer = mock(TestContainer.class, RETURNS_DEEP_STUBS);
         when(testContainer.getTestContext().getTestId()).thenReturn("ProtocolUtilTest");
 
         for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
-            TestOperationProcessor processor = new TestOperationProcessor(EXCEPTION_LOGGER, worker, MEMBER, testContainer,
+            TestOperationProcessor processor = new TestOperationProcessor(worker, MEMBER, testContainer,
                     workerConnector.getAddress().getChild(testIndex));
             workerConnector.addTest(testIndex, processor);
         }

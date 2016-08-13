@@ -13,16 +13,20 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import com.hazelcast.simulator.testcontainer.IllegalTestException;
+import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,7 +51,6 @@ public class WorkerOperationProcessorTest {
     private static final String DEFAULT_TEST_ID = DEFAULT_TEST.getSimpleName();
 
     private final TestCase defaultTestCase = mock(TestCase.class);
-    private final TestExceptionLogger exceptionLogger = new TestExceptionLogger();
     private final HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
     private final Worker worker = mock(Worker.class);
     private final SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
@@ -73,7 +76,12 @@ public class WorkerOperationProcessorTest {
 
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.MEMBER, hazelcastInstance, worker, workerAddress);
+        processor = new WorkerOperationProcessor(WorkerType.MEMBER, hazelcastInstance, worker, workerAddress);
+    }
+
+    @AfterClass
+    public static void after() {
+        new BashCommand("rm *.exception").execute();
     }
 
     @Test
@@ -82,7 +90,6 @@ public class WorkerOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-        exceptionLogger.assertNoException();
     }
 
     @Test
@@ -91,12 +98,12 @@ public class WorkerOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-        exceptionLogger.assertNoException();
     }
 
     @Test
     public void process_Ping() {
         PingOperation operation = new PingOperation();
+
         ResponseType responseType = processor.process(operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
@@ -107,6 +114,7 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_TerminateWorkers_onMemberWorker() {
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
+
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown(false);
@@ -115,9 +123,9 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_TerminateWorkers_onClientWorker() {
-        processor = new WorkerOperationProcessor(exceptionLogger, WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
-
+        processor = new WorkerOperationProcessor(WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
+
         processor.process(operation, COORDINATOR);
 
         verify(worker).shutdown(false);
@@ -130,45 +138,48 @@ public class WorkerOperationProcessorTest {
 
         assertEquals(SUCCESS, responseType);
         assertEquals(1, processor.getTests().size());
-        exceptionLogger.assertNoException();
     }
 
     @Test
     public void process_CreateTest_sameTestIndexTwice() throws Exception {
-        ResponseType responseType = runCreateTestOperation(defaultTestCase, 1);
-        assertEquals(SUCCESS, responseType);
+        runCreateTestOperation(defaultTestCase, 1);
+        List<TestContainer> original = new LinkedList<TestContainer>(processor.getTests());
 
-        responseType = runCreateTestOperation(defaultTestCase, 1);
+        ResponseType responseType = runCreateTestOperation(defaultTestCase, 1);
+
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        exceptionLogger.assertException(IllegalStateException.class);
+        assertEquals(original, new LinkedList<TestContainer>(processor.getTests()));
     }
 
     @Test
     public void process_CreateTest_sameTestIdTwice() throws Exception {
-        ResponseType responseType = runCreateTestOperation(defaultTestCase, 1);
-        assertEquals(SUCCESS, responseType);
+        runCreateTestOperation(defaultTestCase, 1);
+        List<TestContainer> original = new LinkedList<TestContainer>(processor.getTests());
 
-        responseType = runCreateTestOperation(defaultTestCase, 2);
+        ResponseType responseType = runCreateTestOperation(defaultTestCase, 2);
+
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        exceptionLogger.assertException(IllegalStateException.class);
+        assertEquals(original, new LinkedList<TestContainer>(processor.getTests()));
     }
 
     @Test
     public void process_CreateTest_invalidTestId() {
         TestCase testCase = createTestCase(SuccessTest.class, "%&/?!");
+
         ResponseType responseType = runCreateTestOperation(testCase);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        exceptionLogger.assertException(IllegalArgumentException.class);
+        assertEquals(0, processor.getTests().size());
     }
 
     @Test
     public void process_CreateTest_invalidClassPath() {
         setTestCaseClass("not.found.SuccessTest");
+
         ResponseType responseType = runCreateTestOperation(defaultTestCase);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        exceptionLogger.assertException(IllegalTestException.class);
+        assertEquals(0, processor.getTests().size());
     }
 
     private void setTestCaseClass(String className) {
@@ -188,11 +199,9 @@ public class WorkerOperationProcessorTest {
         return runCreateTestOperation(testCase, 1);
     }
 
-
     private ResponseType runCreateTestOperation(TestCase testCase, int testIndex) {
         SimulatorOperation operation = new CreateTestOperation(testIndex, testCase);
         LOGGER.debug("Serialized operation: " + toJson(operation));
-
         return processor.process(operation, COORDINATOR);
     }
 }

@@ -25,7 +25,6 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
-import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
@@ -59,7 +58,6 @@ import static java.util.Collections.unmodifiableCollection;
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class CoordinatorConnector extends AbstractServerConnector implements ClientPipelineConfigurator, FailureListener {
 
-    private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
     private final CoordinatorOperationProcessor processor;
     private final ConnectionManager connectionManager = new ConnectionManager();
 
@@ -73,7 +71,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         CoordinatorRemoteControllerProcessor remoteControllerProcessor = new CoordinatorRemoteControllerProcessor(this,
                 componentRegistry);
 
-        this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureCollector, testPhaseListeners,
+        this.processor = new CoordinatorOperationProcessor(failureCollector, testPhaseListeners,
                 performanceStatsCollector, remoteControllerProcessor);
     }
 
@@ -184,15 +182,6 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
 
     public Response writeToRemoteController(SimulatorOperation operation) {
         return super.write(REMOTE, operation);
-    }
-
-    /**
-     * Returns the number of collected exceptions.
-     *
-     * @return the number of exceptions.
-     */
-    public int getExceptionCount() {
-        return exceptionLogger.getExceptionCount();
     }
 
     // just for testing

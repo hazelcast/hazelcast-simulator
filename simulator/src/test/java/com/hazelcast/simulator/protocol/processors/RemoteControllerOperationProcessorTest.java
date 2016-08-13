@@ -2,7 +2,6 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
@@ -18,14 +17,11 @@ import static org.junit.Assert.assertNull;
 
 public class RemoteControllerOperationProcessorTest {
 
-    private LocalExceptionLogger exceptionLogger;
     private RemoteControllerOperationProcessor processor;
 
     @Before
     public void setUp() {
-        exceptionLogger = new LocalExceptionLogger();
-
-        processor = new RemoteControllerOperationProcessor(exceptionLogger);
+        processor = new RemoteControllerOperationProcessor();
     }
 
     @Test
@@ -43,7 +39,7 @@ public class RemoteControllerOperationProcessorTest {
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 
         assertEquals(ResponseType.SUCCESS, responseType);
-        assertEquals(0, exceptionLogger.getExceptionCount());
+//        assertEquals(0, exceptionLogger.getExceptionCount());
         assertEquals("testPayload", processor.getResponse());
     }
 
@@ -54,7 +50,7 @@ public class RemoteControllerOperationProcessorTest {
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 
         assertEquals(ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-        assertEquals(0, exceptionLogger.getExceptionCount());
+    //    assertEquals(0, exceptionLogger.getExceptionCount());
         assertNull(processor.getResponse());
     }
 }

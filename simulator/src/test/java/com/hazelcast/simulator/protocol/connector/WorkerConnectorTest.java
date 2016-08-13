@@ -9,6 +9,7 @@ import org.junit.Test;
 import static com.hazelcast.simulator.protocol.connector.WorkerConnector.createInstance;
 import static org.junit.Assert.assertEquals;
 
+// this test is without value. It tests the construction of the object, but not that it does anything.
 public class WorkerConnectorTest {
 
     private static final int WORKER_INDEX = 1;
@@ -16,20 +17,8 @@ public class WorkerConnectorTest {
     private static final int PORT = 11111;
 
     @Test
-    public void testCreateInstance_withFileExceptionLogger_implicit() {
+    public void testCreateInstance_withFileExceptionLogger() {
         WorkerConnector connector = createInstance(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null);
-        assertWorkerConnector(connector);
-    }
-
-    @Test
-    public void testCreateInstance_withRemoteExceptionLogger_explicit() {
-        WorkerConnector connector = createInstance(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null, false);
-        assertWorkerConnector(connector);
-    }
-
-    @Test
-    public void testCreateInstance_withRemoteExceptionLogger() {
-        WorkerConnector connector = createInstance(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null, true);
         assertWorkerConnector(connector);
     }
 

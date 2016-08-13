@@ -78,6 +78,7 @@ public final class ExceptionReporter {
         writeText(testId + NEW_LINE + throwableToString(cause), tmpFile);
 
         File file = new File(targetFileName);
+        LOGGER.info(file.getAbsolutePath());
         rename(tmpFile, file);
     }
 
