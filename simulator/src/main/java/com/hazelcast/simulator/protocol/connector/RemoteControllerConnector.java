@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.protocol.connector.ServerConnector.DEFAULT_SHUTDOWN_QUIET_PERIOD;
@@ -50,6 +49,8 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Connector which connects to remote Simulator Coordinator instances.
@@ -97,10 +98,10 @@ public class RemoteControllerConnector implements ClientPipelineConfigurator {
     public void shutdown() {
         clientConnectorManager.removeClient(COORDINATOR_INDEX);
 
-        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS).syncUninterruptibly();
+        group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, SECONDS).syncUninterruptibly();
 
         executorService.shutdown();
-        awaitTermination(executorService, 1, TimeUnit.MINUTES);
+        awaitTermination(executorService, 1, MINUTES);
     }
 
     /**
