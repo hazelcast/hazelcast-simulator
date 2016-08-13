@@ -39,6 +39,9 @@ final class WizardCli {
 
     private static final Logger LOGGER = Logger.getLogger(WizardCli.class);
 
+    // open for testing
+    Wizard wizard;
+
     private final OptionParser parser = new OptionParser();
 
     private final OptionSpec installSpec = parser.accepts("install",
@@ -69,9 +72,6 @@ final class WizardCli {
                     SimulatorProperties.PROPERTIES_FILE_NAME));
 
     private final OptionSet options;
-
-    // open for testing
-    Wizard wizard;
 
     WizardCli(String[] args) {
         options = initOptionsWithHelp(parser, args);

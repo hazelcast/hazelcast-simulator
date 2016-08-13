@@ -153,8 +153,7 @@ public final class MemberWorker implements Worker {
     public static void main(String[] args) {
         int pid = NativeUtils.getPID();
         LOGGER.info("PID: " + pid);
-        File pidFile = new File("worker.pid");
-        writeText("" + pid, pidFile);
+        writeText("" + pid, new File("worker.pid"));
 
         try {
             startWorker();
