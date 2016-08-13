@@ -57,13 +57,13 @@ public class AbstractServerConnectorTest {
     public void setUp() {
         setLogLevel(Level.TRACE);
 
-        futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         connectorAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
         executorService = mock(ScheduledExecutorService.class);
         channelGroup = mock(ChannelGroup.class);
 
-        testServerConnector = new TestServerConnector(futureMap, connectorAddress, PORT, THREAD_POOL_SIZE, executorService,
+        testServerConnector = new TestServerConnector(connectorAddress, PORT, THREAD_POOL_SIZE, executorService,
                 channelGroup);
+        this.futureMap = testServerConnector.futureMap;
     }
 
     @After
@@ -212,9 +212,9 @@ public class AbstractServerConnectorTest {
 
         private final ChannelGroup channelGroup;
 
-        TestServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+        TestServerConnector(SimulatorAddress localAddress, int port,
                             int threadPoolSize, ScheduledExecutorService executorService, ChannelGroup channelGroup) {
-            super(futureMap, localAddress, port, threadPoolSize, executorService);
+            super(localAddress, port, threadPoolSize, executorService);
 
             this.channelGroup = channelGroup;
         }

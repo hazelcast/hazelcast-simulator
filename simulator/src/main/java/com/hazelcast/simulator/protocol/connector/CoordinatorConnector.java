@@ -46,7 +46,6 @@ import io.netty.channel.group.ChannelGroup;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
@@ -70,9 +69,8 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
                          TestPhaseListeners testPhaseListeners,
                          PerformanceStatsCollector performanceStatsCollector,
                          int port,
-                         ConnectionManager connectionManager,
-                         ConcurrentMap<String, ResponseFuture> futureMap) {
-        super(futureMap, COORDINATOR, port, getDefaultThreadPoolSize());
+                         ConnectionManager connectionManager) {
+        super(COORDINATOR, port, getDefaultThreadPoolSize());
 
         CoordinatorRemoteControllerProcessor remoteControllerProcessor = new CoordinatorRemoteControllerProcessor(this,
                 componentRegistry);
@@ -97,10 +95,9 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
                                                       PerformanceStatsCollector performanceStatsCollector,
                                                       int port) {
         ConnectionManager connectionManager = new ConnectionManager();
-        ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
         return new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners, performanceStatsCollector,
-                port, connectionManager, futureMap);
+                port, connectionManager);
     }
 
     @Override

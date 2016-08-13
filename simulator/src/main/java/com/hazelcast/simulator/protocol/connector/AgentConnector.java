@@ -38,7 +38,6 @@ import com.hazelcast.simulator.protocol.processors.AgentOperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
@@ -53,7 +52,6 @@ import static java.lang.Math.max;
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
     private final AgentOperationProcessor processor;
-    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
     private final SimulatorAddress localAddress;
     private final int addressIndex;
@@ -61,14 +59,12 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     private final ConnectionManager connectionManager;
     private final WorkerProcessManager workerProcessManager;
 
-    AgentConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port, Agent agent,
+    AgentConnector(SimulatorAddress localAddress, int port, Agent agent,
                    WorkerProcessManager workerProcessManager, ConnectionManager connectionManager, int threadPoolSize) {
-        super(futureMap, localAddress, port, threadPoolSize);
+        super(localAddress, port, threadPoolSize);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
         this.processor = new AgentOperationProcessor(exceptionLogger, agent, workerProcessManager, getScheduledExecutor());
-
-        this.futureMap = futureMap;
 
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
@@ -88,13 +84,12 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      */
     public static AgentConnector createInstance(Agent agent, WorkerProcessManager workerProcessManager,
                                                 int port, int threadPoolSize) {
-        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
         ConnectionManager connectionManager = new ConnectionManager();
 
         threadPoolSize = max(getDefaultThreadPoolSize(), threadPoolSize);
 
-        return new AgentConnector(futureMap, localAddress, port, agent, workerProcessManager, connectionManager, threadPoolSize);
+        return new AgentConnector(localAddress, port, agent, workerProcessManager, connectionManager, threadPoolSize);
     }
 
     @Override

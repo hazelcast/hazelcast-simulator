@@ -74,6 +74,8 @@ abstract class AbstractServerConnector implements ServerConnector {
     private static final Logger LOGGER = Logger.getLogger(AbstractServerConnector.class);
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
 
+    protected final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+
     private final AtomicBoolean isStarted = new AtomicBoolean();
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
@@ -82,7 +84,6 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
-    private final ConcurrentMap<String, ResponseFuture> futureMap;
     private final SimulatorAddress localAddress;
     private final int addressIndex;
     private final int port;
@@ -92,15 +93,12 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     private Channel channel;
 
-    AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
-                            int threadPoolSize) {
-        this(futureMap, localAddress, port, threadPoolSize,
-                createScheduledThreadPool(threadPoolSize, "AbstractServerConnector"));
+    AbstractServerConnector(SimulatorAddress localAddress, int port, int threadPoolSize) {
+        this(localAddress, port, threadPoolSize, createScheduledThreadPool(threadPoolSize, "AbstractServerConnector"));
     }
 
-    AbstractServerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+    AbstractServerConnector(SimulatorAddress localAddress, int port,
                             int threadPoolSize, ScheduledExecutorService executorService) {
-        this.futureMap = futureMap;
         this.localAddress = localAddress;
         this.addressIndex = (COORDINATOR.equals(localAddress) ? 0 : localAddress.getAddressIndex());
         this.port = port;

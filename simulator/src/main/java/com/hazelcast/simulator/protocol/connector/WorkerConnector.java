@@ -42,9 +42,6 @@ import com.hazelcast.simulator.worker.WorkerType;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.exception.ExceptionType.WORKER_EXCEPTION;
 
@@ -63,12 +60,11 @@ public class WorkerConnector extends AbstractServerConnector {
 
     private final ConnectionManager connectionManager;
     private final TestProcessorManager testProcessorManager;
-    private final ConcurrentMap<String, ResponseFuture> futureMap;
 
-    WorkerConnector(ConcurrentMap<String, ResponseFuture> futureMap, SimulatorAddress localAddress, int port,
+    WorkerConnector(SimulatorAddress localAddress, int port,
                     boolean useRemoteLogger, WorkerType type, HazelcastInstance hazelcastInstance, Worker worker,
                     ConnectionManager connectionManager) {
-        super(futureMap, localAddress, port, DEFAULT_THREAD_POOL_SIZE);
+        super(localAddress, port, DEFAULT_THREAD_POOL_SIZE);
 
         ExceptionLogger exceptionLogger = createExceptionLogger(localAddress, useRemoteLogger);
         this.processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker, localAddress);
@@ -78,7 +74,6 @@ public class WorkerConnector extends AbstractServerConnector {
 
         this.connectionManager = connectionManager;
         this.testProcessorManager = new TestProcessorManager(localAddress);
-        this.futureMap = futureMap;
     }
 
     @Override
@@ -132,12 +127,10 @@ public class WorkerConnector extends AbstractServerConnector {
      */
     public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
                                                  HazelcastInstance hazelcastInstance, Worker worker, boolean useRemoteLogger) {
-        ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
         ConnectionManager connectionManager = new ConnectionManager();
 
-        return new WorkerConnector(futureMap, localAddress, port, useRemoteLogger, type, hazelcastInstance, worker,
-                connectionManager);
+        return new WorkerConnector(localAddress, port, useRemoteLogger, type, hazelcastInstance, worker, connectionManager);
     }
 
     /**
@@ -173,7 +166,7 @@ public class WorkerConnector extends AbstractServerConnector {
 
     /**
      * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     *
+     * <p>
      * The {@link SimulatorOperation} is put on a queue. The {@link com.hazelcast.simulator.protocol.core.Response} is not
      * returned.
      *
