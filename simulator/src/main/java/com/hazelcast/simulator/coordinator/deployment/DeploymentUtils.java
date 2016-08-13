@@ -109,6 +109,13 @@ final class DeploymentUtils {
                                                                                     int dedicatedMemberMachineCount) {
         checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
 
+        // if the memberCount has not been specified; we need to calculate it on the fly.
+        if (memberWorkerCount == -1) {
+            memberWorkerCount = dedicatedMemberMachineCount == 0
+                    ? componentRegistry.agentCount()
+                    : dedicatedMemberMachineCount;
+        }
+
         Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
                 = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
 
@@ -117,16 +124,18 @@ final class DeploymentUtils {
 
         assignDedicatedMemberMachines(agentCount, agentWorkerLayouts, dedicatedMemberMachineCount);
 
-        AtomicInteger currentIndex = new AtomicInteger(getStartIndex(agentWorkerLayouts));
+        AtomicInteger agentIndex = new AtomicInteger(getStartIndex(agentWorkerLayouts));
+
+        // assign members
         for (int i = 0; i < memberWorkerCount; i++) {
-            // assign members
-            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.CLIENT);
+            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, agentWorkerLayouts, AgentWorkerMode.CLIENT);
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(WorkerType.MEMBER, parameters);
             workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
         }
+
+        // assign clients
         for (int i = 0; i < clientWorkerCount; i++) {
-            // assign clients
-            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(currentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
+            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
             workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
         }

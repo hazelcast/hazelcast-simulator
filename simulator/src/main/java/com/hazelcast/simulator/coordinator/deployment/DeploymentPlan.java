@@ -64,15 +64,15 @@ public final class DeploymentPlan {
                                                       String clusterXml) {
         WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(
                 defaultHzPort, licenseKey, workerParameters, properties, componentRegistry);
-
         return new DeploymentPlan(
                 generateFromXml(componentRegistry, workerParameters, workerConfigurationConverter, clusterXml));
     }
 
     public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
                                                       int memberWorker, int clientWorker, int dedicatedMemberWorker) {
-        return new DeploymentPlan(
-                generateFromArguments(componentRegistry, workerParameters, memberWorker, clientWorker, dedicatedMemberWorker));
+        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment = generateFromArguments(
+                componentRegistry, workerParameters, memberWorker, clientWorker, dedicatedMemberWorker);
+        return new DeploymentPlan(workerDeployment);
     }
 
     // just for testing
