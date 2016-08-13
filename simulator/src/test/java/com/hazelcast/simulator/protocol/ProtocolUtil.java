@@ -172,7 +172,7 @@ class ProtocolUtil {
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureCollector failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
-        CoordinatorConnector coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureCollector,
+        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector,
                 testPhaseListeners, performanceStatsCollector, coordinatorPort);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);

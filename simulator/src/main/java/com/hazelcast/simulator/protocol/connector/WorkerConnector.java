@@ -58,12 +58,14 @@ public class WorkerConnector extends AbstractServerConnector {
     private final SimulatorAddress localAddress;
     private final int addressIndex;
 
-    private final ConnectionManager connectionManager;
+    private final ConnectionManager connectionManager = new ConnectionManager();
     private final TestProcessorManager testProcessorManager;
 
     WorkerConnector(SimulatorAddress localAddress, int port,
-                    boolean useRemoteLogger, WorkerType type, HazelcastInstance hazelcastInstance, Worker worker,
-                    ConnectionManager connectionManager) {
+                    boolean useRemoteLogger,
+                    WorkerType type,
+                    HazelcastInstance hazelcastInstance,
+                    Worker worker) {
         super(localAddress, port, DEFAULT_THREAD_POOL_SIZE);
 
         ExceptionLogger exceptionLogger = createExceptionLogger(localAddress, useRemoteLogger);
@@ -72,7 +74,6 @@ public class WorkerConnector extends AbstractServerConnector {
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
 
-        this.connectionManager = connectionManager;
         this.testProcessorManager = new TestProcessorManager(localAddress);
     }
 
@@ -128,9 +129,8 @@ public class WorkerConnector extends AbstractServerConnector {
     public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
                                                  HazelcastInstance hazelcastInstance, Worker worker, boolean useRemoteLogger) {
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
-        ConnectionManager connectionManager = new ConnectionManager();
 
-        return new WorkerConnector(localAddress, port, useRemoteLogger, type, hazelcastInstance, worker, connectionManager);
+        return new WorkerConnector(localAddress, port, useRemoteLogger, type, hazelcastInstance, worker);
     }
 
     /**

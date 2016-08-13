@@ -58,7 +58,7 @@ public class CoordinatorConnectorTest {
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureCollector failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
 
-        coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureCollector, testPhaseListeners,
+        coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners,
                 performanceStatsCollector, COORDINATOR_PORT);
         coordinatorConnector.start();
     }

@@ -101,7 +101,7 @@ public class AgentSmokeTest implements FailureListener {
         outputDirectory = TestUtils.createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
 
-        coordinatorConnector = CoordinatorConnector.createInstance(componentRegistry, failureCollector, testPhaseListeners,
+        coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners,
                 performanceStatsCollector, COORDINATOR_PORT);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
         coordinatorConnector.start();

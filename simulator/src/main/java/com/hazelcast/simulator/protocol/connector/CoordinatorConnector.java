@@ -60,16 +60,14 @@ import static java.util.Collections.unmodifiableCollection;
 public class CoordinatorConnector extends AbstractServerConnector implements ClientPipelineConfigurator, FailureListener {
 
     private final LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
-
     private final CoordinatorOperationProcessor processor;
-    private final ConnectionManager connectionManager;
+    private final ConnectionManager connectionManager = new ConnectionManager();
 
-    CoordinatorConnector(ComponentRegistry componentRegistry,
+    public CoordinatorConnector(ComponentRegistry componentRegistry,
                          FailureCollector failureCollector,
                          TestPhaseListeners testPhaseListeners,
                          PerformanceStatsCollector performanceStatsCollector,
-                         int port,
-                         ConnectionManager connectionManager) {
+                         int port) {
         super(COORDINATOR, port, getDefaultThreadPoolSize());
 
         CoordinatorRemoteControllerProcessor remoteControllerProcessor = new CoordinatorRemoteControllerProcessor(this,
@@ -77,27 +75,6 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
 
         this.processor = new CoordinatorOperationProcessor(exceptionLogger, failureCollector, testPhaseListeners,
                 performanceStatsCollector, remoteControllerProcessor);
-        this.connectionManager = connectionManager;
-    }
-
-    /**
-     * Creates a {@link CoordinatorConnector} instance.
-     *
-     * @param componentRegistry         {@link ComponentRegistry} for this connector
-     * @param failureCollector          {@link FailureCollector} for this connector
-     * @param testPhaseListeners        {@link TestPhaseListeners} for this connector
-     * @param performanceStatsCollector {@link PerformanceStatsCollector} for this connector
-     * @param port                      the port for incoming connections
-     */
-    public static CoordinatorConnector createInstance(ComponentRegistry componentRegistry,
-                                                      FailureCollector failureCollector,
-                                                      TestPhaseListeners testPhaseListeners,
-                                                      PerformanceStatsCollector performanceStatsCollector,
-                                                      int port) {
-        ConnectionManager connectionManager = new ConnectionManager();
-
-        return new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners, performanceStatsCollector,
-                port, connectionManager);
     }
 
     @Override

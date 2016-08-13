@@ -56,11 +56,12 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     private final SimulatorAddress localAddress;
     private final int addressIndex;
 
-    private final ConnectionManager connectionManager;
+    private final ConnectionManager connectionManager = new ConnectionManager();
     private final WorkerProcessManager workerProcessManager;
 
     AgentConnector(SimulatorAddress localAddress, int port, Agent agent,
-                   WorkerProcessManager workerProcessManager, ConnectionManager connectionManager, int threadPoolSize) {
+                   WorkerProcessManager workerProcessManager,
+                   int threadPoolSize) {
         super(localAddress, port, threadPoolSize);
 
         RemoteExceptionLogger exceptionLogger = new RemoteExceptionLogger(localAddress, AGENT_EXCEPTION, this);
@@ -69,7 +70,6 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
 
-        this.connectionManager = connectionManager;
         this.workerProcessManager = workerProcessManager;
     }
 
@@ -85,11 +85,10 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     public static AgentConnector createInstance(Agent agent, WorkerProcessManager workerProcessManager,
                                                 int port, int threadPoolSize) {
         SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
-        ConnectionManager connectionManager = new ConnectionManager();
 
         threadPoolSize = max(getDefaultThreadPoolSize(), threadPoolSize);
 
-        return new AgentConnector(localAddress, port, agent, workerProcessManager, connectionManager, threadPoolSize);
+        return new AgentConnector(localAddress, port, agent, workerProcessManager, threadPoolSize);
     }
 
     @Override
