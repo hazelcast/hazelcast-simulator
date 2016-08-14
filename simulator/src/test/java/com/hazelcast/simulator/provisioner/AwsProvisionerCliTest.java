@@ -16,8 +16,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
-import static com.hazelcast.simulator.provisioner.AwsProvisionerCli.init;
-import static com.hazelcast.simulator.provisioner.AwsProvisionerCli.run;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
@@ -53,7 +51,7 @@ public class AwsProvisionerCliTest {
     public void testInit() {
         createAwsCredentialsFile();
         try {
-            provisioner = init(getArgs());
+            provisioner = new AwsProvisionerCli(getArgs()).provisioner;
         } finally {
             deleteQuiet(awsCredentials);
         }
@@ -61,18 +59,21 @@ public class AwsProvisionerCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_withException() {
-        provisioner = init(getArgs());
+        new AwsProvisionerCli(getArgs());
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withoutArguments() {
-        run(getArgs(), provisioner);
+        AwsProvisionerCli cli = new AwsProvisionerCli(getArgs());
+        cli.run();
+
     }
 
     @Test(expected = ExitStatusZeroException.class)
     public void testRun_withHelp() {
         args.add("--help");
-        run(getArgs(), provisioner);
+        AwsProvisionerCli cli = new AwsProvisionerCli(getArgs());
+        cli.run();
     }
 
     @Test
@@ -80,7 +81,9 @@ public class AwsProvisionerCliTest {
         args.add("--scale");
         args.add("23");
 
-        run(getArgs(), provisioner);
+        AwsProvisionerCli cli = new AwsProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).scaleInstanceCountTo(eq(23));
         verify(provisioner).shutdown();
@@ -92,7 +95,9 @@ public class AwsProvisionerCliTest {
         args.add("--newLb");
         args.add("loadBalancerName");
 
-        run(getArgs(), provisioner);
+        AwsProvisionerCli cli = new AwsProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).createLoadBalancer(eq("loadBalancerName"));
         verify(provisioner).shutdown();
@@ -104,7 +109,9 @@ public class AwsProvisionerCliTest {
         args.add("--addToLb");
         args.add("172.16.16.1");
 
-        run(getArgs(), provisioner);
+        AwsProvisionerCli cli = new AwsProvisionerCli(getArgs());
+        cli.provisioner = provisioner;
+        cli.run();
 
         verify(provisioner).addAgentsToLoadBalancer(eq("172.16.16.1"));
         verify(provisioner).shutdown();
@@ -118,8 +125,6 @@ public class AwsProvisionerCliTest {
     }
 
     private String[] getArgs() {
-        String[] argsArray = new String[args.size()];
-        args.toArray(argsArray);
-        return argsArray;
+        return args.toArray(new String[0]);
     }
 }
