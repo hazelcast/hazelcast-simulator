@@ -20,9 +20,6 @@ import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.TestProcessorManager;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
-import com.hazelcast.simulator.protocol.exception.FileExceptionLogger;
-import com.hazelcast.simulator.protocol.exception.RemoteExceptionLogger;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
@@ -43,7 +40,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
-import static com.hazelcast.simulator.protocol.exception.ExceptionType.WORKER_EXCEPTION;
 
 /**
  * Connector which listens for incoming Simulator Agent connections and manages Simulator Test instances.
@@ -62,18 +58,14 @@ public class WorkerConnector extends AbstractServerConnector {
     private final TestProcessorManager testProcessorManager;
 
     WorkerConnector(SimulatorAddress localAddress, int port,
-                    boolean useRemoteLogger,
                     WorkerType type,
                     HazelcastInstance hazelcastInstance,
                     Worker worker) {
         super(localAddress, port, DEFAULT_THREAD_POOL_SIZE);
 
-        ExceptionLogger exceptionLogger = createExceptionLogger(localAddress, useRemoteLogger);
-        this.processor = new WorkerOperationProcessor(exceptionLogger, type, hazelcastInstance, worker, localAddress);
-
+        this.processor = new WorkerOperationProcessor(type, hazelcastInstance, worker, localAddress);
         this.localAddress = localAddress;
         this.addressIndex = localAddress.getAddressIndex();
-
         this.testProcessorManager = new TestProcessorManager(localAddress);
     }
 
@@ -111,26 +103,9 @@ public class WorkerConnector extends AbstractServerConnector {
      */
     public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
                                                  HazelcastInstance hazelcastInstance, Worker worker) {
-        return createInstance(parentAddressIndex, addressIndex, port, type, hazelcastInstance, worker, false);
-    }
-
-    /**
-     * Creates a {@link WorkerConnector} instance.
-     *
-     * @param parentAddressIndex the index of the parent Simulator Agent
-     * @param addressIndex       the index of this Simulator Worker
-     * @param port               the port for incoming connections
-     * @param type               the {@link WorkerType} of this Simulator Worker
-     * @param hazelcastInstance  the {@link HazelcastInstance} for this Simulator Worker
-     * @param worker             the {@link Worker} instance of this Simulator Worker
-     * @param useRemoteLogger    determines if the {@link RemoteExceptionLogger} or {@link FileExceptionLogger} should be used
-     * @return the {@link WorkerConnector} instance
-     */
-    public static WorkerConnector createInstance(int parentAddressIndex, int addressIndex, int port, WorkerType type,
-                                                 HazelcastInstance hazelcastInstance, Worker worker, boolean useRemoteLogger) {
         SimulatorAddress localAddress = new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0);
 
-        return new WorkerConnector(localAddress, port, useRemoteLogger, type, hazelcastInstance, worker);
+        return new WorkerConnector(localAddress, port, type, hazelcastInstance, worker);
     }
 
     /**
@@ -191,13 +166,5 @@ public class WorkerConnector extends AbstractServerConnector {
 
     public OperationProcessor getProcessor() {
         return processor;
-    }
-
-    private ExceptionLogger createExceptionLogger(SimulatorAddress localAddress, boolean useRemoteLogger) {
-        if (useRemoteLogger) {
-            return new RemoteExceptionLogger(localAddress, WORKER_EXCEPTION, this);
-        } else {
-            return new FileExceptionLogger(localAddress, WORKER_EXCEPTION);
-        }
     }
 }

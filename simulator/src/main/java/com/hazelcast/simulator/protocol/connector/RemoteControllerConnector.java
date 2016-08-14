@@ -21,7 +21,6 @@ import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
-import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
@@ -70,10 +69,8 @@ public class RemoteControllerConnector implements ClientPipelineConfigurator {
     private final RemoteControllerOperationProcessor processor;
 
     public RemoteControllerConnector(String coordinatorHost, int coordinatorPort) {
-        LocalExceptionLogger exceptionLogger = new LocalExceptionLogger();
-
         client = new ClientConnector(this, group, futureMap, REMOTE, COORDINATOR, 1, coordinatorHost, coordinatorPort);
-        processor = new RemoteControllerOperationProcessor(exceptionLogger);
+        processor = new RemoteControllerOperationProcessor();
     }
 
     @Override

@@ -23,7 +23,6 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.exception.ExceptionLogger;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
@@ -58,11 +57,9 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
     private final WorkerProcessManager workerProcessManager;
     private final ScheduledExecutorService executorService;
 
-    public AgentOperationProcessor(ExceptionLogger exceptionLogger,
-                                   Agent agent,
+    public AgentOperationProcessor(Agent agent,
                                    WorkerProcessManager workerProcessManager,
                                    ScheduledExecutorService executorService) {
-        super(exceptionLogger);
         this.agent = agent;
         this.workerProcessManager = workerProcessManager;
         this.executorService = executorService;
