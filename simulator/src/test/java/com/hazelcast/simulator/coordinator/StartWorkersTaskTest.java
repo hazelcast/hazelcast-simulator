@@ -17,10 +17,10 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 public class StartWorkersTaskTest {
 
-    private static final int WORKER_PING_INTERVAL_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int WORKER_PING_INTERVAL_MILLIS = (int) SECONDS.toMillis(10);
 
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
