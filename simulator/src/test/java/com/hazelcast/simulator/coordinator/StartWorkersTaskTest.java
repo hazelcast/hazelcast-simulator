@@ -85,12 +85,17 @@ public class StartWorkersTaskTest {
 
     @Test(expected = SimulatorProtocolException.class)
     public void testCreateWorkers_withExceptionOnWrite() {
-        initMockForCreateWorkerOperation(null);
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
+        try {
+            initMockForCreateWorkerOperation(null);
+            Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
+            remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+            new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        }catch (RuntimeException e){
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private Map<SimulatorAddress, List<WorkerProcessSettings>> getClusterLayout(int dedicatedMemberMachineCount,
