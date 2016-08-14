@@ -32,6 +32,7 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.HashSet;
 
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
@@ -55,7 +56,6 @@ final class Coordinator {
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
-    private final TestSuite testSuite;
     private final ComponentRegistry componentRegistry;
     private final CoordinatorParameters coordinatorParameters;
     private final WorkerParameters workerParameters;
@@ -71,20 +71,18 @@ final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    Coordinator(TestSuite testSuite,
-                ComponentRegistry componentRegistry,
+    Coordinator(ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
                 WorkerParameters workerParameters,
                 DeploymentPlan deploymentPlan) {
 
         this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
 
-        this.testSuite = testSuite;
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
         this.workerParameters = workerParameters;
 
-        this.failureCollector = new FailureCollector(outputDirectory, testSuite.getTolerableFailures());
+        this.failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
         this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
@@ -95,16 +93,8 @@ final class Coordinator {
         logConfiguration();
     }
 
-    CoordinatorParameters getCoordinatorParameters() {
-        return coordinatorParameters;
-    }
-
     WorkerParameters getWorkerParameters() {
         return workerParameters;
-    }
-
-    TestSuite getTestSuite() {
-        return testSuite;
     }
 
     ComponentRegistry getComponentRegistry() {
@@ -123,7 +113,7 @@ final class Coordinator {
         echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
     }
 
-    void run() {
+    void run(TestSuite testSuite) {
         checkInstallation(bash, simulatorProperties, componentRegistry);
         new InstallVendorTask(
                 simulatorProperties,

@@ -23,12 +23,13 @@ public class CoordinatorTest {
     private String sessionId = "CoordinatorTest-" + System.currentTimeMillis();
     private SimulatorProperties properties;
     private Coordinator coordinator;
+    private TestSuite testSuite;
 
     @Before
     public void setUp() {
         setDistributionUserDir();
 
-        TestSuite testSuite = new TestSuite();
+        testSuite = new TestSuite();
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
         properties = mock(SimulatorProperties.class);
@@ -41,7 +42,7 @@ public class CoordinatorTest {
 
         DeploymentPlan deploymentPlan = createEmptyDeploymentPlan();
 
-        coordinator = new Coordinator(testSuite, componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
+        coordinator = new Coordinator(componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
     }
 
     @After
@@ -50,11 +51,12 @@ public class CoordinatorTest {
         resetUserDir();
     }
 
+    // todo: this test tests nothing; it just triggers code to be touched.
     @Test
     public void testRun() {
         when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
         when(properties.getVersionSpec()).thenReturn("outofthebox");
 
-        coordinator.run();
+        coordinator.run(testSuite);
     }
 }
