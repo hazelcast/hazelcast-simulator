@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
@@ -21,7 +22,8 @@ import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +32,7 @@ public class AbstractAsyncWorkerTest {
 
     private static final int THREAD_COUNT = 3;
     private static final int DEFAULT_TEST_TIMEOUT = 30000;
+    private File userDir;
 
     private enum Operation {
         EXCEPTION,
@@ -43,6 +46,7 @@ public class AbstractAsyncWorkerTest {
 
     @Before
     public void setUp() {
+        userDir = setupFakeUserDir();
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractAsyncWorkerTest");
         TestCase testCase = new TestCase(testContext.getTestId()).setProperty("threadCount", THREAD_COUNT);
@@ -52,11 +56,8 @@ public class AbstractAsyncWorkerTest {
 
     @After
     public void tearDown() {
-        try {
-            deleteExceptionLogs(THREAD_COUNT);
-        } finally {
-            test.executor.shutdown();
-        }
+        teardownFakeUserDir();
+        test.executor.shutdown();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -75,7 +76,7 @@ public class AbstractAsyncWorkerTest {
         testContainer.invoke(TestPhase.RUN);
 
         for (int i = 1; i <= THREAD_COUNT; i++) {
-            assertTrue(new File(i + ".exception").exists());
+            assertTrue(new File(userDir, i + ".exception").exists());
         }
         assertEquals(THREAD_COUNT, test.workerCreated);
     }
@@ -98,7 +99,7 @@ public class AbstractAsyncWorkerTest {
         test.failureLatch.await();
 
         for (int i = 1; i <= THREAD_COUNT; i++) {
-            assertTrue(new File(i + ".exception").exists());
+            assertTrue(new File(userDir, i + ".exception").exists());
         }
         assertEquals(THREAD_COUNT, test.workerCreated);
     }

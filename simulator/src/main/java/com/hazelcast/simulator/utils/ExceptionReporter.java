@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -65,7 +66,8 @@ public final class ExceptionReporter {
 
         String targetFileName = exceptionCount + ".exception";
 
-        File tmpFile = new File(targetFileName + ".tmp");
+        File dir = getUserDir();
+        File tmpFile = new File(dir, targetFileName + ".tmp");
         try {
             if (!tmpFile.createNewFile()) {
                 throw new IOException("Could not create tmp file: " + tmpFile.getAbsolutePath());
@@ -77,7 +79,7 @@ public final class ExceptionReporter {
 
         writeText(testId + NEW_LINE + throwableToString(cause), tmpFile);
 
-        File file = new File(targetFileName);
+        File file = new File(dir, targetFileName);
         LOGGER.info(file.getAbsolutePath());
         rename(tmpFile, file);
     }

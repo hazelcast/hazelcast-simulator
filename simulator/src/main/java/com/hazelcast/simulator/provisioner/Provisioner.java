@@ -49,6 +49,7 @@ import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPoo
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -64,9 +65,9 @@ class Provisioner {
     private static final String INDENTATION = "    ";
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
-    private static final String SIMULATOR_HOME = getSimulatorHome().getAbsolutePath();
+    private final String simulatorPath = getSimulatorHome().getAbsolutePath();
 
-    private final File agentsFile = new File(AgentsFile.NAME);
+    private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
     private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
 
     private final SimulatorProperties properties;
@@ -90,7 +91,7 @@ class Provisioner {
         this.machineWarmupSeconds = machineWarmupSeconds;
 
         this.componentRegistry = loadComponentRegister(agentsFile, false);
-        this.initScriptFile = getInitScriptFile(SIMULATOR_HOME);
+        this.initScriptFile = getInitScriptFile(simulatorPath);
     }
 
     // just for testing
@@ -394,12 +395,12 @@ class Provisioner {
         String version = properties.getJdkVersion();
 
         String script = "jdk-" + flavor + '-' + version + "-64.sh";
-        File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
+        File scriptDir = new File(simulatorPath, "jdk-install");
         return new File(scriptDir, script);
     }
 
     private File getJavaSupportScript() {
-        File scriptDir = new File(SIMULATOR_HOME, "jdk-install");
+        File scriptDir = new File(simulatorPath, "jdk-install");
         return new File(scriptDir, "jdk-support.sh");
     }
 
@@ -433,12 +434,12 @@ class Provisioner {
         uploadLibraryJar(ip, "slf4j-log4j12-*");
 
         // upload remaining files
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/bin/", "bin");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/conf/", "conf");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/jdk-install/", "jdk-install");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/tests/", "tests");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/test-lib/", "test-lib/");
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/user-lib/", "user-lib/");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/bin/", "bin");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/conf/", "conf");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/jdk-install/", "jdk-install");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/tests/", "tests");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/test-lib/", "test-lib/");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/user-lib/", "user-lib/");
 
         // purge Hazelcast JARs
         bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", simulatorVersion));
@@ -448,7 +449,7 @@ class Provisioner {
     }
 
     private void uploadLibraryJar(String ip, String jarName) {
-        bash.uploadToRemoteSimulatorDir(ip, SIMULATOR_HOME + "/lib/" + jarName, "lib");
+        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/lib/" + jarName, "lib");
     }
 
     private String loadInitScript() {

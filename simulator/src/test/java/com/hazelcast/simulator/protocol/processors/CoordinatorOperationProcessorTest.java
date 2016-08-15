@@ -20,11 +20,7 @@ import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
-import org.apache.log4j.Level;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -33,8 +29,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.coordinator.PerformanceStatsCollector.LATENCY_FORMAT_LENGTH;
 import static com.hazelcast.simulator.coordinator.PerformanceStatsCollector.OPERATION_COUNT_FORMAT_LENGTH;
 import static com.hazelcast.simulator.coordinator.PerformanceStatsCollector.THROUGHPUT_FORMAT_LENGTH;
@@ -46,7 +40,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
@@ -68,16 +61,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private CoordinatorOperationProcessor processor;
     private File outputDirectory;
 
-    @BeforeClass
-    public static void setUpEnvironment() {
-        setLogLevel(Level.TRACE);
-    }
-
-    @AfterClass
-    public static void resetEnvironment() {
-        resetLogLevel();
-    }
-
     @Before
     public void setUp() {
         workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
@@ -95,11 +78,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         processor = new CoordinatorOperationProcessor(failureCollector, testPhaseListeners,
                 performanceStatsCollector, remoteControllerProcessor);
-    }
-
-    @After
-    public void tearDown() {
-        deleteQuiet(outputDirectory);
     }
 
     @Override

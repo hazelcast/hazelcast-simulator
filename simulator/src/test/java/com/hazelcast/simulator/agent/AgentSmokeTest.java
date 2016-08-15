@@ -31,7 +31,6 @@ import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.CommonUtils;
-import com.hazelcast.simulator.utils.TestUtils;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -46,10 +45,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.internalDistPath;
+import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createSingleInstanceDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -58,6 +58,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static com.hazelcast.simulator.utils.TestUtils.createTmpDirectory;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -84,7 +85,7 @@ public class AgentSmokeTest implements FailureListener {
 
     @Before
     public void before() throws Exception {
-        setDistributionUserDir();
+        setupFakeEnvironment();
 
         LOGGER.info("Agent bind address for smoke test: " + AGENT_IP_ADDRESS);
         LOGGER.info("Test runtime for smoke test: " + TEST_RUNTIME_SECONDS + " seconds");
@@ -98,7 +99,7 @@ public class AgentSmokeTest implements FailureListener {
 
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
-        outputDirectory = TestUtils.createTmpDirectory();
+        outputDirectory = createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
 
         coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners,
@@ -126,18 +127,15 @@ public class AgentSmokeTest implements FailureListener {
         try {
             LOGGER.info("Shutdown of CoordinatorConnector...");
             coordinatorConnector.shutdown();
-
             LOGGER.info("Shutdown of Agent...");
             agentStarter.shutdown();
             LOGGER.info("Finally shutdown agent");
         } finally {
             Hazelcast.shutdownAll();
-
-            resetUserDir();
-            deleteLogs();
-
             resetLogLevel();
         }
+
+        tearDownFakeEnvironment();
 
         closeQuietly(remoteClient);
         deleteQuiet(outputDirectory);
@@ -150,7 +148,6 @@ public class AgentSmokeTest implements FailureListener {
 
     @Test
     public void testSuccess() throws Exception {
-
         TestCase testCase = new TestCase("testSuccess");
         testCase.setProperty("class", SuccessTest.class.getName());
         executeTestCase(testCase);
@@ -241,10 +238,10 @@ public class AgentSmokeTest implements FailureListener {
                 60000,
                 "",
                 "",
-                fileAsText("simulator/src/test/resources/hazelcast.xml"),
+                fileAsText(localResourceDirectory() + "/hazelcast.xml"),
                 "",
-                fileAsText("dist/src/main/dist/conf/worker-log4j.xml"),
-                fileAsText("dist/src/main/dist/conf/worker-hazelcast.sh"),
+                fileAsText(internalDistPath() + "/conf/worker-log4j.xml"),
+                fileAsText(internalDistPath() + "/conf/worker-hazelcast.sh"),
                 false
         );
         DeploymentPlan deploymentPlan = createSingleInstanceDeploymentPlan(AGENT_IP_ADDRESS, workerParameters);

@@ -1,18 +1,18 @@
 package com.hazelcast.simulator.protocol;
 
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.sendFromCoordinator;
@@ -44,16 +44,14 @@ public class ProtocolNestedTest {
 
     @Before
     public void setUp() {
-        setLogLevel(Level.TRACE);
-
+        setupFakeUserDir();
         startSimulatorComponents(2, 2, 2);
     }
 
     @After
     public void tearDown() {
         stopSimulatorComponents();
-
-        resetLogLevel();
+        teardownFakeUserDir();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)

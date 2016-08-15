@@ -55,6 +55,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
@@ -75,8 +76,8 @@ public class AwsProvisioner {
 
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
 
-    private final File agentsFile = new File(AgentsFile.NAME);
-    private final File elbFile = new File(AWS_ELB_FILE_NAME);
+    private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
+    private final File elbFile = new File(getUserDir(), AWS_ELB_FILE_NAME);
 
     private final AmazonEC2 ec2;
     private final AmazonElasticLoadBalancingClient elb;

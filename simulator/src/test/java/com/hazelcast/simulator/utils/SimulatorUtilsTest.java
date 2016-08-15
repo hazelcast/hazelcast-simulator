@@ -11,10 +11,10 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.SimulatorUtils.getPropertiesFile;
@@ -33,12 +33,13 @@ public class SimulatorUtilsTest {
 
     @Before
     public void setUp() throws IOException {
-        agentsFile = ensureExistingFile("SimulatorUtilsTest-agentsFile.txt");
+        setupFakeEnvironment();
+        agentsFile = ensureExistingFile(getUserDir(), "SimulatorUtilsTest-agentsFile.txt");
     }
 
     @After
     public void tearDown() {
-        deleteQuiet(agentsFile);
+        tearDownFakeEnvironment();
     }
 
     @Test
@@ -67,16 +68,11 @@ public class SimulatorUtilsTest {
 
     @Test
     public void testLoadSimulatorProperties() {
-        setDistributionUserDir();
-        try {
-            OptionSet options = mock(OptionSet.class);
-            when(options.has(any(OptionSpec.class))).thenReturn(false);
+        OptionSet options = mock(OptionSet.class);
+        when(options.has(any(OptionSpec.class))).thenReturn(false);
 
-            SimulatorProperties properties = loadSimulatorProperties(options, null);
-            assertNotNull(properties);
-        } finally {
-            resetUserDir();
-        }
+        SimulatorProperties properties = loadSimulatorProperties(options, null);
+        assertNotNull(properties);
     }
 
     @Test

@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_RunTest extends AbstractTestContainerTest {
+public class TestContainer_RunTest extends TestContainer_AbstractTest {
 
     private static final int THREAD_COUNT = 3;
     private static final int ITERATION_COUNT = 10;

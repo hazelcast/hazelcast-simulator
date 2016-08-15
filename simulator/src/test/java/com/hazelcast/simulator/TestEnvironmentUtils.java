@@ -1,7 +1,8 @@
 package com.hazelcast.simulator;
 
 import com.hazelcast.simulator.common.AgentsFile;
-import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -13,7 +14,6 @@ import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 
@@ -25,7 +25,7 @@ public class TestEnvironmentUtils {
 
     private static SecurityManager originalSecurityManager;
 
-    private static String originalUserDir;
+    private static String originalSimulatorHome;
 
     private static File agentsFile;
 
@@ -40,6 +40,39 @@ public class TestEnvironmentUtils {
 
     private static boolean deletePublicKey;
     private static boolean deletePrivateKey;
+
+    public static File setupFakeEnvironment() {
+        File dist = internalDistDirectory();
+        File simulatorHome = TestUtils.createTmpDirectory();
+        FileUtils.copyDirectory(dist, simulatorHome);
+
+        System.setProperty("user.dir.test", simulatorHome.getAbsolutePath());
+
+        originalSimulatorHome = System.getProperty("SIMULATOR_HOME");
+        System.setProperty("SIMULATOR_HOME", simulatorHome.getAbsolutePath());
+
+        return simulatorHome;
+    }
+
+    public static File setupFakeUserDir() {
+        File dir = TestUtils.createTmpDirectory();
+        System.setProperty("user.dir.test", dir.getAbsolutePath());
+        return dir;
+    }
+
+    public static void teardownFakeUserDir() {
+        System.clearProperty("user.dir.test");
+    }
+
+    public static void tearDownFakeEnvironment() {
+        if (originalSimulatorHome == null) {
+            System.clearProperty("SIMULATOR_HOME");
+        } else {
+            System.setProperty("SIMULATOR_HOME", originalSimulatorHome);
+        }
+
+        System.clearProperty("user.dir.test");
+    }
 
     public static void setLogLevel(Level level) {
         if (LOGGER_LEVEL.compareAndSet(null, ROOT_LOGGER.getLevel())) {
@@ -68,27 +101,24 @@ public class TestEnvironmentUtils {
         System.setSecurityManager(originalSecurityManager);
     }
 
-    public static void setDistributionUserDir() {
-        originalUserDir = getUserDir().getAbsolutePath();
-        System.setProperty("user.dir", originalUserDir + "/dist/src/main/dist");
-
-        LOGGER.info("original userDir: " + originalUserDir);
-        LOGGER.info("actual userDir: " + getUserDir().getAbsolutePath());
-        LOGGER.info("SIMULATOR_HOME: " + getSimulatorHome().getAbsolutePath());
+    public static File internalDistDirectory() {
+        File localResourceDir = localResourceDirectory();
+        File projectRoot = localResourceDir.getParentFile().getParentFile().getParentFile();
+        return new File(projectRoot, "dist/src/main/dist");
     }
 
-    public static void resetUserDir() {
-        System.setProperty("user.dir", originalUserDir);
+    public static String internalDistPath() {
+        return internalDistDirectory().getAbsolutePath();
     }
 
-    public static void deleteLogs() {
-        deleteQuiet("dist/src/main/dist/workers");
-        deleteQuiet("logs");
-        deleteQuiet("workers");
+    public static File localResourceDirectory() {
+        ClassLoader classLoader = TestEnvironmentUtils.class.getClassLoader();
+        File f = new File(classLoader.getResource("hazelcast.xml").getFile());
+        return f.getParentFile().getAbsoluteFile();
     }
 
     public static void createAgentsFileWithLocalhost() {
-        agentsFile = new File(AgentsFile.NAME);
+        agentsFile = new File(getUserDir(), AgentsFile.NAME);
         appendText("127.0.0.1", agentsFile);
     }
 
@@ -149,27 +179,5 @@ public class TestEnvironmentUtils {
 
     public static File getPrivateKeyFile() {
         return privateKeyFile;
-    }
-
-    public static void deleteExceptionLogs(int number) {
-        for (int i = 1; i <= number; i++) {
-            deleteQuiet(i + ".exception");
-        }
-        ExceptionReporter.reset();
-    }
-
-    public static void deleteGeneratedRunners() {
-        File[] files = getUserDir().listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File file : files) {
-            String name = file.getName();
-            if (name.endsWith(".java") || name.endsWith(".class")) {
-                if (name.contains("Runner")) {
-                    deleteQuiet(file);
-                }
-            }
-        }
     }
 }

@@ -2,20 +2,17 @@ package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,31 +22,18 @@ import static org.junit.Assert.assertTrue;
 
 public class SimulatorPropertiesTest {
 
-    private final SimulatorProperties simulatorProperties = new SimulatorProperties();
-
-    private File workingDirFile;
-    private File customFile;
-
-    @BeforeClass
-    public static void setUp() {
-        setDistributionUserDir();
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        resetUserDir();
-    }
+    private File simulatorHome;
+    private SimulatorProperties simulatorProperties;
 
     @Before
-    public void initFiles() {
-        workingDirFile = new File(SimulatorProperties.PROPERTIES_FILE_NAME);
-        customFile = new File("custom.properties");
+    public void setUp() {
+        this.simulatorHome = setupFakeEnvironment();
+        this.simulatorProperties = new SimulatorProperties();
     }
 
     @After
-    public void cleanup() {
-        deleteQuiet(customFile);
-        deleteQuiet(workingDirFile);
+    public void tearDown() {
+        tearDownFakeEnvironment();
     }
 
     @Test
@@ -59,34 +43,40 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testInit_workingDir() {
-        appendText("USER=workingDirUserName", workingDirFile);
+        File workingDirProperties = new File(simulatorHome, "simulator.properties");
 
-        simulatorProperties.init(null);
+        appendText("USER=workingDirUserName", workingDirProperties);
+
+        simulatorProperties.init(workingDirProperties);
 
         assertEquals("workingDirUserName", simulatorProperties.getUser());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_customFile_notExists() {
-        simulatorProperties.init(customFile);
+        File file = new File(simulatorHome, "simulator.properties");
+        simulatorProperties.init(file);
     }
 
     @Test
     public void testInit_customFile() {
-        appendText("USER=testUserName", customFile);
+        File file = new File(simulatorHome, "simulator.properties");
+        appendText("USER=testUserName", file);
 
-        simulatorProperties.init(customFile);
+        simulatorProperties.init(file);
 
         assertEquals("testUserName", simulatorProperties.getUser());
     }
 
     @Test(expected = RuntimeException.class)
     public void testLoad_notFound() {
-        simulatorProperties.load(workingDirFile);
+        simulatorProperties.load(new File("notexisting"));
     }
 
     @Test
     public void testLoad_emptyValue() {
+        File workingDirFile = new File(simulatorHome, "simulator.properties");
+
         appendText("FOO=", workingDirFile);
 
         simulatorProperties.load(workingDirFile);
@@ -96,6 +86,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testLoad_justKey() {
+        File workingDirFile = new File(simulatorHome, "simulator.properties");
         appendText("FOO", workingDirFile);
 
         simulatorProperties.load(workingDirFile);
@@ -105,6 +96,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testLoad_specialCharKey() {
+        File workingDirFile = new File(simulatorHome, "simulator.properties");
         appendText("%!)($!=value", workingDirFile);
 
         simulatorProperties.load(workingDirFile);
@@ -114,6 +106,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testLoad_UTFf8Key() {
+        File workingDirFile = new File(simulatorHome, "simulator.properties");
         appendText("周楳=value", workingDirFile);
 
         simulatorProperties.load(workingDirFile);
@@ -123,9 +116,10 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testLoad_comment() {
-        appendText("#ignoredMe=value", workingDirFile);
+        File workingDirProperties = new File(simulatorHome, "simulator.properties");
+        appendText("#ignoredMe=value", workingDirProperties);
 
-        simulatorProperties.load(workingDirFile);
+        simulatorProperties.load(workingDirProperties);
 
         assertNull(simulatorProperties.get("#ignoredMe"));
     }
@@ -213,36 +207,46 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGet_CLOUD_IDENTITY() {
-        appendText("testCloudIdentityString", customFile);
-        initProperty(PROPERTY_CLOUD_IDENTITY, customFile.getName());
+        File identityFile = new File(simulatorHome, "identity");
+        appendText("testCloudIdentityString", identityFile);
+
+        File customFile = new File(simulatorHome, "simulator.properties");
+        initProperty(customFile, PROPERTY_CLOUD_IDENTITY, identityFile.getAbsolutePath());
 
         assertEquals("testCloudIdentityString", simulatorProperties.getCloudIdentity());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGet_CLOUD_IDENTITY_notFound() {
-        initProperty(PROPERTY_CLOUD_IDENTITY, "notFound");
+        File customFile = new File(simulatorHome, "simulator.properties");
+
+        initProperty(customFile, PROPERTY_CLOUD_IDENTITY, "notFound");
 
         simulatorProperties.getCloudIdentity();
     }
 
     @Test
     public void testGet_CLOUD_CREDENTIAL() {
-        appendText("testCloudCredentialString", customFile);
-        initProperty(PROPERTY_CLOUD_CREDENTIAL, customFile.getName());
+        File credentialsFile = new File(simulatorHome, "credentials");
+        appendText("testIdentity", credentialsFile);
 
-        assertEquals("testCloudCredentialString", simulatorProperties.getCloudCredential());
+        File customFile = new File(simulatorHome, "simulator.properties");
+        initProperty(customFile, PROPERTY_CLOUD_CREDENTIAL, credentialsFile.getAbsolutePath());
+
+        assertEquals("testIdentity", simulatorProperties.getCloudCredential());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGet_CLOUD_CREDENTIAL_notFound() {
-        initProperty(PROPERTY_CLOUD_CREDENTIAL, "notFound");
+        File customFile = new File(simulatorHome, "simulator.properties");
+        initProperty(customFile, PROPERTY_CLOUD_CREDENTIAL, "notexist");
 
-        simulatorProperties.getCloudCredential();
+        assertEquals("testIdentity", simulatorProperties.getCloudCredential());
     }
 
-    private void initProperty(String key, String value) {
-        appendText(format("%s=%s", key, value), workingDirFile);
-        simulatorProperties.init(null);
+    private void initProperty(File file, String key, String value) {
+        System.out.println("writing value: " + value);
+        appendText(format("%s=%s", key, value), file);
+        simulatorProperties.init(file);
     }
 }

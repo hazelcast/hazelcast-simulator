@@ -3,8 +3,8 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -14,7 +14,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -42,15 +43,17 @@ public class AsyncCacheStreamerTest {
 
     @Before
     public void setUp() {
+        setupFakeUserDir();
+
         when(cache.putAsync(anyInt(), anyString())).thenReturn(future);
 
         StreamerFactory.enforceAsync(true);
         streamer = StreamerFactory.getInstance(cache);
     }
 
-    @After
+    @Teardown
     public void tearDown() {
-        deleteExceptionLogs(1);
+        teardownFakeUserDir();
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)

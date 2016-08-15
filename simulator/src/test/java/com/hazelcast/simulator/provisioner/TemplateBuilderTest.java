@@ -12,9 +12,8 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.provisioner.TemplateBuilder.CIDR_RANGE;
 import static com.hazelcast.simulator.provisioner.TemplateBuilder.SSH_PORT;
 import static java.util.Arrays.asList;
@@ -37,7 +36,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
 
     @Before
     public void setUp() {
-        setDistributionUserDir();
+        setupFakeEnvironment();
 
         simulatorProperties = new SimulatorProperties();
         simulatorProperties.setCloudProvider(CloudProviderUtils.PROVIDER_EC2);
@@ -53,8 +52,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
 
     @After
     public void tearDown() {
-        resetUserDir();
-        deleteLogs();
+        tearDownFakeEnvironment();
     }
 
     @Test

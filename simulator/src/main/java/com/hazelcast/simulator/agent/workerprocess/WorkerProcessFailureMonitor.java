@@ -142,6 +142,7 @@ public class WorkerProcessFailureMonitor {
 
         private void detectExceptions(WorkerProcess workerProcess) {
             File workerHome = workerProcess.getWorkerHome();
+
             if (!workerHome.exists()) {
                 return;
             }
@@ -165,7 +166,7 @@ public class WorkerProcessFailureMonitor {
                 if (send) {
                     deleteQuiet(exceptionFile);
                 } else {
-                    rename(exceptionFile, new File(exceptionFile.getName() + ".sendFailure"));
+                    rename(exceptionFile, new File(exceptionFile.getParentFile(), exceptionFile.getName() + ".sendFailure"));
                 }
             }
         }

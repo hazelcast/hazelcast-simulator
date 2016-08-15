@@ -2,7 +2,9 @@ package com.hazelcast.simulator.remotecontroller;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -10,13 +12,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static org.mockito.Mockito.mock;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 public class RemoteControllerCliTest {
 
-    private static File propertiesFile;
+    private File propertiesFile;
 
     private final List<String> args = new ArrayList<String>();
 
@@ -34,19 +34,24 @@ public class RemoteControllerCliTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         setExitExceptionSecurityManagerWithStatusZero();
-        setDistributionUserDir();
-
-        propertiesFile = ensureExistingFile("simulator.properties");
-        appendText("COORDINATOR_PORT=5555", propertiesFile);
     }
 
     @AfterClass
     public static void afterClass() {
         resetSecurityManager();
-        resetUserDir();
-        deleteAgentsFile();
+    }
 
-        deleteQuiet(propertiesFile);
+    @Before
+    public void before() {
+        setupFakeEnvironment();
+
+        propertiesFile = ensureExistingFile(getUserDir(), "simulator.properties");
+        appendText("COORDINATOR_PORT=5555", propertiesFile);
+    }
+
+    @After
+    public void after() {
+        tearDownFakeEnvironment();
     }
 
     // todo: test only causes coverage; doesn't test behavior
@@ -64,17 +69,13 @@ public class RemoteControllerCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_whenCoordinatorPortIsDisabled() {
-        File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
+        File simulatorProperties = new File(getUserDir(), "explicit-simulator.properties");
         ensureExistingFile(simulatorProperties);
 
-        try {
-            args.add("--propertiesFile");
-            args.add(simulatorProperties.getAbsolutePath());
+        args.add("--propertiesFile");
+        args.add(simulatorProperties.getAbsolutePath());
 
-            new RemoteControllerCli(getArgs());
-        } finally {
-            deleteQuiet(simulatorProperties);
-        }
+        new RemoteControllerCli(getArgs());
     }
 
     @Test(expected = ExitStatusZeroException.class)

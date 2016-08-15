@@ -2,24 +2,23 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.test.annotations.Teardown;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.mockito.Matchers.anyBoolean;
@@ -34,31 +33,17 @@ import static org.mockito.Mockito.when;
 
 public class AgentUtilsTest {
 
-    private static final File AGENT_PID_FILE = new File("agent.pid");
-
     private static final Logger LOGGER = Logger.getLogger(AgentUtilsTest.class);
 
     private Bash bash;
     private SimulatorProperties simulatorProperties;
     private ComponentRegistry componentRegistry;
 
-    @BeforeClass
-    public static void setupEnvironment() {
-        setDistributionUserDir();
-
-        ensureExistingFile(AGENT_PID_FILE);
-        writeText(String.valueOf(Integer.MAX_VALUE), AGENT_PID_FILE);
-    }
-
-    @AfterClass
-    public static void resetEnvironment() {
-        resetUserDir();
-
-        deleteQuiet(AGENT_PID_FILE);
-    }
-
     @Before
     public void setUp() {
+        setupFakeEnvironment();
+        writeText(String.valueOf(Integer.MAX_VALUE), new File(getUserDir(), "agent.pid"));
+
         bash = mock(Bash.class);
 
         simulatorProperties = mock(SimulatorProperties.class);
@@ -69,6 +54,11 @@ public class AgentUtilsTest {
 
         componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
+    }
+
+    @Teardown
+    public void after() {
+        tearDownFakeEnvironment();
     }
 
     @Test
@@ -104,8 +94,7 @@ public class AgentUtilsTest {
         setCloudProvider(PROVIDER_STATIC);
 
         when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenThrow(
-                new CommandLineExitException("expected exception", new CommandLineExitException("inner cause"))
-        );
+                new CommandLineExitException("expected exception", new CommandLineExitException("inner cause")));
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
     }
@@ -165,7 +154,6 @@ public class AgentUtilsTest {
     @Test
     public void testStopAgents_isEC2() {
         setCloudProvider(PROVIDER_EC2);
-
         stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/.kill-from-pid-file agent.pid"));

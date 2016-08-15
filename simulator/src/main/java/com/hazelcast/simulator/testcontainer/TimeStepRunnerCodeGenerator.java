@@ -45,8 +45,10 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static java.security.AccessController.doPrivileged;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 class TimeStepRunnerCodeGenerator {
@@ -77,7 +79,7 @@ class TimeStepRunnerCodeGenerator {
                 null,
                 null,
                 diagnostics,
-                null,
+                asList("-d", getUserDir().getAbsolutePath()),
                 null,
                 singletonList(file));
 
@@ -98,7 +100,7 @@ class TimeStepRunnerCodeGenerator {
             @Override
             public Object run() {
                 try {
-                    URLClassLoader classLoader = new URLClassLoader(new URL[]{new File("./").toURI().toURL()});
+                    URLClassLoader classLoader = new URLClassLoader(new URL[]{getUserDir().toURI().toURL()});
                     return (Class) classLoader.loadClass(className);
                 } catch (ClassNotFoundException e) {
                     throw new IllegalTestException(e.getMessage(), e);
@@ -138,7 +140,8 @@ class TimeStepRunnerCodeGenerator {
 
             String javaCode = out.toString();
 
-            File javaFile = new File(className + ".java");
+            File javaFile = new File(getUserDir(), className + ".java");
+
             writeText(javaCode, javaFile);
 
             return new JavaSourceFromString(className, javaCode);

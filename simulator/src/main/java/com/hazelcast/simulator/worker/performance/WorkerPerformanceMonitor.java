@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -104,7 +105,7 @@ public class WorkerPerformanceMonitor {
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
             this.intervalNanos = intervalNanos;
-            this.globalPerformanceLogWriter = new PerformanceLogWriter(new File("performance.csv"));
+            this.globalPerformanceLogWriter = new PerformanceLogWriter(new File(getUserDir(), "performance.csv"));
         }
 
         @Override

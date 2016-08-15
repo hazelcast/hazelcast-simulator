@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_TeardownTest extends AbstractTestContainerTest {
+public class TestContainer_TeardownTest extends TestContainer_AbstractTest {
 
     @Test
     public void testLocalTeardown() throws Exception {

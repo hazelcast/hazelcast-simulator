@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
@@ -10,8 +11,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createEmptyDeploymentPlan;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -27,7 +27,7 @@ public class CoordinatorTest {
 
     @Before
     public void setUp() {
-        setDistributionUserDir();
+        setupFakeEnvironment();
 
         testSuite = new TestSuite();
         ComponentRegistry componentRegistry = new ComponentRegistry();
@@ -48,7 +48,8 @@ public class CoordinatorTest {
     @After
     public void tearDown() {
         deleteQuiet(new File(sessionId).getAbsoluteFile());
-        resetUserDir();
+
+        TestEnvironmentUtils.tearDownFakeEnvironment();
     }
 
     // todo: this test tests nothing; it just triggers code to be touched.

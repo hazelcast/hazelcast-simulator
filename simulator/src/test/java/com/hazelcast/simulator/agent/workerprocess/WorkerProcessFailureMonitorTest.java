@@ -4,14 +4,16 @@ import com.hazelcast.simulator.agent.FailureSender;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.utils.AssertTask;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.verification.VerificationMode;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
@@ -23,11 +25,13 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.HOURS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,6 +40,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -55,13 +60,16 @@ public class WorkerProcessFailureMonitorTest {
     private FailureSender failureSender;
     private WorkerProcessManager workerProcessManager;
 
-    private WorkerProcess workerProcess;
-    private File workerHome;
 
     private WorkerProcessFailureMonitor workerProcessFailureMonitor;
+    private File simulatorHome;
+    private File workersHome;
 
     @Before
     public void setUp() {
+        simulatorHome = setupFakeEnvironment();
+        workersHome = new File(simulatorHome, "workers");
+
         failureSender = mock(FailureSender.class);
         when(failureSender.sendFailureOperation(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
@@ -69,13 +77,11 @@ public class WorkerProcessFailureMonitorTest {
 
         workerProcessManager = new WorkerProcessManager();
 
-        workerProcess = addWorkerJvm(workerProcessManager, getWorkerAddress(), true);
-        addWorkerJvm(workerProcessManager, getWorkerAddress(), false);
-
-        workerHome = workerProcess.getWorkerHome();
-
-        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
-                DEFAULT_LAST_SEEN_TIMEOUT_SECONDS, DEFAULT_CHECK_INTERVAL);
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
+                failureSender,
+                workerProcessManager,
+                DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
+                DEFAULT_CHECK_INTERVAL);
         workerProcessFailureMonitor.start();
     }
 
@@ -83,13 +89,7 @@ public class WorkerProcessFailureMonitorTest {
     public void tearDown() {
         workerProcessFailureMonitor.shutdown();
 
-        for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
-            deleteQuiet(workerProcess.getWorkerHome());
-        }
-        deleteQuiet("worker37");
-        deleteQuiet("worker3");
-        deleteQuiet("worker6");
-        deleteQuiet("1.exception.sendFailure");
+        tearDownFakeEnvironment();
     }
 
     @Test
@@ -110,15 +110,22 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test(timeout = DEFAULT_TIMEOUT)
     public void testRun_shouldContinueAfterExceptionDuringDetection() {
-        Process process = mock(Process.class);
-        when(process.exitValue()).thenThrow(new IllegalArgumentException("expected exception")).thenReturn(0);
-        WorkerProcess exceptionWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+        Process process = workerProcess.getProcess();
+        reset(process);
+        when(process.exitValue()).thenThrow(new IllegalArgumentException("expected exception"));
 
-        do {
-            sleepMillis(DEFAULT_SLEEP_TIME);
-        } while (!exceptionWorker.isFinished());
+        sleepMillis(5 * DEFAULT_SLEEP_TIME);
 
-        assertFailureType(failureSender, WORKER_FINISHED);
+        // when we place an oome file; the processing will stop
+        ensureExistingFile(workerProcess.getWorkerHome(), "worker.oome");
+
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertFailureType(failureSender, WORKER_OOM);
+            }
+        });
     }
 
     @Test
@@ -129,12 +136,11 @@ public class WorkerProcessFailureMonitorTest {
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false);
 
-        workerProcessFailureMonitor.startTimeoutDetection();
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        WorkerProcess workerProcess = addWorkerProcess(1);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_TIMEOUT);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXIT);
     }
 
     @Test
@@ -144,18 +150,21 @@ public class WorkerProcessFailureMonitorTest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        workerProcessFailureMonitor.startTimeoutDetection();
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        WorkerProcess workerProcess = addWorkerProcess(1);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_TIMEOUT);
+        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXIT);
     }
 
     @Test
     public void testRun_shouldDetectException_withTestId() {
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
+        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "WorkerProcessFailureMonitorTest", cause);
+
+        System.out.println("ExceptionFile:" + exceptionFile.getAbsolutePath());
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -165,8 +174,10 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectException_withEmptyTestId() {
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "", cause);
+        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -176,8 +187,10 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectException_withNullTestId() {
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "null", cause);
+        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "null", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -192,8 +205,10 @@ public class WorkerProcessFailureMonitorTest {
                 .thenReturn(false)
                 .thenReturn(true);
 
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
+        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -208,8 +223,9 @@ public class WorkerProcessFailureMonitorTest {
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false);
 
+        WorkerProcess workerProcess = addRunningWorkerProcess();
         String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerHome, "WorkerProcessFailureMonitorTest", cause);
+        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "WorkerProcessFailureMonitorTest", cause);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -220,7 +236,9 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure_withOomeFile() {
-        ensureExistingFile(workerHome, "worker.oome");
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
+        ensureExistingFile(workerProcess.getWorkerHome(), "worker.oome");
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -229,7 +247,9 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectOomeFailure_withHprofFile() {
-        ensureExistingFile(workerHome, "java_pid3140.hprof");
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
+        ensureExistingFile(workerProcess.getWorkerHome(), "java_pid3140.hprof");
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -238,8 +258,10 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldDetectInactivity() {
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         workerProcessFailureMonitor.startTimeoutDetection();
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcess.setLastSeen(currentTimeMillis() - HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -248,17 +270,19 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionDisabled() {
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager, -1,
                 DEFAULT_CHECK_INTERVAL);
         workerProcessFailureMonitor.start();
 
         workerProcessFailureMonitor.startTimeoutDetection();
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcess.setLastSeen(currentTimeMillis() - HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         workerProcessFailureMonitor.stopTimeoutDetection();
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcess.setLastSeen(currentTimeMillis() - HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -267,7 +291,9 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionNotStarted() {
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
+        workerProcess.setLastSeen(currentTimeMillis() - HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -276,12 +302,14 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testRun_shouldNotDetectInactivity_afterDetectionIsStopped() {
+        WorkerProcess workerProcess = addRunningWorkerProcess();
+
         workerProcessFailureMonitor.startTimeoutDetection();
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         workerProcessFailureMonitor.stopTimeoutDetection();
-        workerProcess.setLastSeen(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        workerProcess.setLastSeen(currentTimeMillis() - HOURS.toMillis(1));
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -290,27 +318,23 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test(timeout = DEFAULT_TIMEOUT)
     public void testRun_shouldDetectWorkerFinished_whenExitValueIsZero() {
-        Process process = mock(Process.class);
-        when(process.exitValue()).thenReturn(0);
-        WorkerProcess exitWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
+        WorkerProcess workerProcess = addWorkerProcess(0);
 
         do {
             sleepMillis(DEFAULT_SLEEP_TIME);
-        } while (!exitWorker.isFinished());
+        } while (!workerProcess.isFinished());
 
-        assertTrue(exitWorker.isFinished());
+        assertTrue(workerProcess.isFinished());
         assertFailureType(failureSender, WORKER_FINISHED);
     }
 
     @Test
     public void testRun_shouldDetectUnexpectedExit_whenExitValueIsNonZero() {
-        Process process = mock(Process.class);
-        when(process.exitValue()).thenReturn(134);
-        WorkerProcess exitWorker = addWorkerJvm(workerProcessManager, getWorkerAddress(), true, process);
+        WorkerProcess workerProcess = addWorkerProcess(34);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFalse(exitWorker.isFinished());
+        assertFalse(workerProcess.isFinished());
         assertFailureType(failureSender, WORKER_EXIT);
     }
 
@@ -328,31 +352,33 @@ public class WorkerProcessFailureMonitorTest {
         assertEquals(0, files.length);
     }
 
-    private static SimulatorAddress getWorkerAddress() {
+    private SimulatorAddress createWorkerAddress() {
         return new SimulatorAddress(WORKER, 1, ++addressIndex, 0);
     }
 
-    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address,
-                                              boolean createWorkerHome) {
-        Process process = mock(Process.class);
-        when(process.exitValue()).thenThrow(new IllegalThreadStateException("process is still running"));
-
-        return addWorkerJvm(workerProcessManager, address, createWorkerHome, process);
+    private WorkerProcess addRunningWorkerProcess() {
+        return addWorkerProcess(null);
     }
 
-    private static WorkerProcess addWorkerJvm(WorkerProcessManager workerProcessManager, SimulatorAddress address,
-                                              boolean createWorkerHome,
-                                              Process process) {
-        int addressIndex = address.getAddressIndex();
-        File workerHome = new File("worker" + address.getAddressIndex());
-        WorkerProcess workerProcess = new WorkerProcess(address, "WorkerProcessFailureMonitorTest" + addressIndex, workerHome);
-        workerProcess.setProcess(process);
+    private WorkerProcess addWorkerProcess(Integer exitCode) {
+        SimulatorAddress address = createWorkerAddress();
 
-        workerProcessManager.add(address, workerProcess);
+        File sessionHome = new File(workersHome, "sessions");
+        File workerHome = new File(sessionHome, "worker" + address.getAddressIndex());
+        ensureExistingDirectory(workerHome);
 
-        if (createWorkerHome) {
-            ensureExistingDirectory(workerHome);
+        WorkerProcess workerProcess = new WorkerProcess(address, "WorkerProcessFailureMonitorTest" + address.getAddressIndex(), workerHome);
+        Process process = mock(Process.class);
+
+        if (exitCode == null) {
+            // this is needed for the failure monitor to believe the process is still running.
+            when(process.exitValue()).thenThrow(new IllegalThreadStateException());
+        } else {
+            when(process.exitValue()).thenReturn(exitCode);
         }
+
+        workerProcess.setProcess(process);
+        workerProcessManager.add(address, workerProcess);
 
         return workerProcess;
     }
@@ -386,12 +412,18 @@ public class WorkerProcessFailureMonitorTest {
         verifyNoMoreInteractions(failureSender);
     }
 
-    private static void assertThatExceptionFileDoesNotExist(File firstExceptionFile) {
-        assertFalse("Exception file should be deleted: " + firstExceptionFile, firstExceptionFile.exists());
+    private static void assertThatExceptionFileDoesNotExist(final File firstExceptionFile) {
+        // we use assertTrueEventually because the deletion happens on another thread.
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertFalse("Exception file should be deleted: " + firstExceptionFile, firstExceptionFile.exists());
+            }
+        });
     }
 
     private static void assertThatRenamedExceptionFileExists(File exceptionFile) {
-        File expectedFile = new File(exceptionFile.getName() + ".sendFailure");
+        File expectedFile = new File(exceptionFile.getParentFile(), exceptionFile.getName() + ".sendFailure");
         assertTrue("Exception file should be renamed: " + expectedFile.getName(), expectedFile.exists());
     }
 }

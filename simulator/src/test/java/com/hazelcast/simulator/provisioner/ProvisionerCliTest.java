@@ -12,14 +12,12 @@ import java.util.List;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createPublicPrivateKeyFiles;
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deletePublicPrivateKeyFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -34,7 +32,8 @@ public class ProvisionerCliTest {
     @BeforeClass
     public static void setUp() {
         setExitExceptionSecurityManagerWithStatusZero();
-        setDistributionUserDir();
+        setupFakeEnvironment();
+
         createAgentsFileWithLocalhost();
         createCloudCredentialFiles();
         createPublicPrivateKeyFiles();
@@ -43,9 +42,7 @@ public class ProvisionerCliTest {
     @AfterClass
     public static void tearDown() {
         resetSecurityManager();
-        resetUserDir();
-        deleteLogs();
-        deleteAgentsFile();
+        tearDownFakeEnvironment();
         deleteCloudCredentialFiles();
         deletePublicPrivateKeyFiles();
     }

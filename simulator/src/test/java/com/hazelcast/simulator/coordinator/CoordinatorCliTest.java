@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -18,9 +19,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -29,6 +29,7 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -56,27 +57,27 @@ public class CoordinatorCliTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        setDistributionUserDir();
+        setupFakeEnvironment();
+
         createAgentsFileWithLocalhost();
 
         testSuiteFile = ensureExistingFile("test.properties");
+
         appendText("# CoordinatorCliTest", testSuiteFile);
 
         propertiesFile = ensureExistingFile("simulator.properties");
     }
 
     @Before
-    public void before(){
+    public void before() {
         args.add("--sessionId");
-        sessionId = "CoordinatorCliTest-" + System.currentTimeMillis();
+        sessionId = "CoordinatorCliTest-" + currentTimeMillis();
         args.add(sessionId);
     }
 
     @AfterClass
     public static void afterClass() {
-        resetUserDir();
-        deleteAgentsFile();
-
+        tearDownFakeEnvironment();
         deleteQuiet(testSuiteFile);
         deleteQuiet(propertiesFile);
     }

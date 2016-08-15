@@ -29,6 +29,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
@@ -56,7 +57,7 @@ public class SimulatorProperties {
     private final File propertiesFile;
 
     public SimulatorProperties() {
-        propertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
+        this.propertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
 
         LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, propertiesFile.getAbsolutePath()));
         check(propertiesFile);
@@ -83,7 +84,7 @@ public class SimulatorProperties {
     public void init(File file) {
         if (file == null) {
             // if no file is explicitly given, we look in the working directory
-            file = new File(PROPERTIES_FILE_NAME);
+            file = new File(getUserDir(), PROPERTIES_FILE_NAME);
             if (!file.exists()) {
                 LOGGER.info(format("Found no %s in working directory, relying on default properties", PROPERTIES_FILE_NAME));
                 return;

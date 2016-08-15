@@ -19,6 +19,8 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_OPERATION;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.DEFAULT_TEST_TIMEOUT_MILLIS;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.assertAllTargets;
@@ -49,16 +51,14 @@ public class ProtocolIntegrationTest {
 
     @BeforeClass
     public static void setUp() {
-        setLogLevel(Level.TRACE);
-
+        setupFakeUserDir();
         startSimulatorComponents(2, 2, 2);
     }
 
     @AfterClass
     public static void tearDown() {
         stopSimulatorComponents();
-
-        resetLogLevel();
+        teardownFakeUserDir();
     }
 
     @After

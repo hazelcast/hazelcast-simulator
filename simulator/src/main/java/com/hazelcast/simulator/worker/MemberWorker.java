@@ -37,6 +37,7 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
 import static com.hazelcast.simulator.utils.HazelcastUtils.createClientHazelcastInstance;
@@ -146,14 +147,14 @@ public final class MemberWorker implements Worker {
 
     private void signalStartToAgent() {
         String address = getHazelcastAddress(type, publicAddress, hazelcastInstance);
-        File file = new File("worker.address");
+        File file = new File(getUserDir(), "worker.address");
         writeText(address, file);
     }
 
     public static void main(String[] args) {
         int pid = NativeUtils.getPID();
         LOGGER.info("PID: " + pid);
-        writeText("" + pid, new File("worker.pid"));
+        writeText("" + pid, new File(getUserDir(), "worker.pid"));
 
         try {
             startWorker();

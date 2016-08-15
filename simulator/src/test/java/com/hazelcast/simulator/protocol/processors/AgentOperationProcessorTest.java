@@ -27,9 +27,8 @@ import java.util.HashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -69,7 +68,7 @@ public class AgentOperationProcessorTest {
 
     @Before
     public void setUp() {
-        setDistributionUserDir();
+        setupFakeEnvironment();
 
         File workersDir = new File(getSimulatorHome(), "workers");
         testSuite = new TestSuite();
@@ -91,8 +90,7 @@ public class AgentOperationProcessorTest {
 
     @After
     public void tearDown() throws Exception {
-        resetUserDir();
-        deleteLogs();
+        tearDownFakeEnvironment();
 
         scheduler.shutdown();
         scheduler.awaitTermination(10, TimeUnit.SECONDS);

@@ -304,12 +304,21 @@ public final class FileUtils {
     }
 
     public static File getUserDir() {
+        String userDirTest = System.getProperty("user.dir.test");
+        if (userDirTest != null) {
+            return new File(userDirTest);
+        }
         return new File(System.getProperty("user.dir"));
     }
 
     public static File getSimulatorHome() {
-        String home = System.getenv("SIMULATOR_HOME");
-        return (home != null) ? new File(home) : getUserDir();
+        String home = System.getProperty("SIMULATOR_HOME");
+        if (home != null) {
+            return new File(home);
+        }
+
+        home = System.getenv("SIMULATOR_HOME");
+        return home != null ? new File(home) : getUserDir();
     }
 
     /**
@@ -376,6 +385,24 @@ public final class FileUtils {
         return files;
     }
 
+    /**
+     * Copies a directory recursively.
+     *
+     * @param src
+     * @param target
+     */
+    public static void copyDirectory(File src, File target) {
+        for (File srcFile : src.listFiles()) {
+            if (srcFile.isDirectory()) {
+                File targetChild = new File(target, srcFile.getName());
+                ensureExistingDirectory(targetChild);
+                copyDirectory(srcFile, targetChild);
+            } else {
+                copyFileToDirectory(srcFile, target);
+            }
+        }
+    }
+
     public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
         for (File sourceFile : sourceFiles) {
             copyFileToDirectory(sourceFile, targetDirectory);
@@ -386,6 +413,9 @@ public final class FileUtils {
         File targetFile = newFile(targetDirectory, sourceFile.getName());
         try {
             Files.copy(sourceFile, targetFile);
+            if (sourceFile.canExecute()) {
+                 targetFile.setExecutable(true);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
                     targetFile.getAbsolutePath()), e);

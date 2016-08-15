@@ -5,7 +5,6 @@ import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import org.junit.After;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -16,19 +15,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteGeneratedRunners;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
 import static com.hazelcast.simulator.testcontainer.TestPhase.SETUP;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
-public class TestContainer_TimeStepTest {
-
-    @After
-    public void after() {
-        deleteGeneratedRunners();
-    }
+public class TestContainer_TimeStepTest extends TestContainer_AbstractTest {
 
     @Test
     public void testWithAllPhases() throws Exception {

@@ -18,14 +18,16 @@ import com.hazelcast.simulator.testcontainer.TestContextImpl;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.Worker;
-import org.junit.AfterClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -47,9 +49,14 @@ public class TestOperationProcessorTest {
 
     private TestOperationProcessor processor;
 
-    @AfterClass
-    public static void after() {
-        new BashCommand("rm *.exception").execute();
+    @Before
+    public void setup(){
+        setupFakeUserDir();
+    }
+
+    @After
+    public void tearDown(){
+        teardownFakeUserDir();
     }
 
     @Test

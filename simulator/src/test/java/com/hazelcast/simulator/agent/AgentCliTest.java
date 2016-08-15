@@ -2,12 +2,14 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -19,12 +21,18 @@ public class AgentCliTest {
 
     private Agent agent;
 
+    @Before
+    public void setup() {
+        setupFakeEnvironment();
+    }
+
     @After
     public void tearDown() {
         if (agent != null) {
             agent.shutdown();
         }
-        deleteLogs();
+
+        tearDownFakeEnvironment();
     }
 
     @Test

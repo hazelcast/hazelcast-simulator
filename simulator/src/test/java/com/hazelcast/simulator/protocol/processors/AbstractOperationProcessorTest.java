@@ -8,14 +8,9 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import org.apache.log4j.Level;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.EQUALS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -23,16 +18,6 @@ import static org.junit.Assert.assertNull;
 public class AbstractOperationProcessorTest {
 
     private IntegrationTestOperationProcessor processor;
-
-    @BeforeClass
-    public static void setUpEnvironment() {
-        setLogLevel(Level.TRACE);
-    }
-
-    @AfterClass
-    public static void resetEnvironment() {
-        resetLogLevel();
-    }
 
     @Before
     public void setUp() {

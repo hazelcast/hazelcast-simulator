@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -38,9 +39,9 @@ public class WizardCliTest {
     @BeforeClass
     public static void setUp() {
         setExitExceptionSecurityManagerWithStatusZero();
-        setDistributionUserDir();
+        setupFakeEnvironment();
 
-        bashrc = new File(".bashrc").getAbsoluteFile();
+        bashrc = new File(getUserDir(), ".bashrc").getAbsoluteFile();
         deleteFile = !bashrc.exists();
         ensureExistingFile(bashrc);
     }
@@ -48,7 +49,7 @@ public class WizardCliTest {
     @AfterClass
     public static void tearDown() {
         resetSecurityManager();
-        resetUserDir();
+        tearDownFakeEnvironment();
 
         if (deleteFile) {
             deleteQuiet(bashrc);

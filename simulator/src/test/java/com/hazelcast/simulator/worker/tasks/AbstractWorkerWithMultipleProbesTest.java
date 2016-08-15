@@ -19,7 +19,8 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -30,6 +31,7 @@ public class AbstractWorkerWithMultipleProbesTest {
     private static final int THREAD_COUNT = 3;
     private static final int ITERATION_COUNT = 10;
     private static final int DEFAULT_TEST_TIMEOUT = 30000;
+    private File userDir;
 
     private enum Operation {
         EXCEPTION,
@@ -45,6 +47,7 @@ public class AbstractWorkerWithMultipleProbesTest {
 
     @Before
     public void setUp() {
+        userDir = setupFakeEnvironment();
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerWithMultipleProbesTest");
         TestCase testCase = new TestCase(testContext.getTestId())
@@ -56,7 +59,7 @@ public class AbstractWorkerWithMultipleProbesTest {
 
     @After
     public void tearDown() {
-        deleteExceptionLogs(THREAD_COUNT);
+        tearDownFakeEnvironment();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -75,7 +78,7 @@ public class AbstractWorkerWithMultipleProbesTest {
         testContainer.invoke(TestPhase.RUN);
 
         for (int i = 1; i <= THREAD_COUNT; i++) {
-            assertTrue(new File(i + ".exception").exists());
+            assertTrue(new File(userDir, i + ".exception").exists());
         }
         assertEquals(THREAD_COUNT, test.workerCreated);
     }

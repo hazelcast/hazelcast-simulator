@@ -13,9 +13,9 @@ import java.util.List;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.provisioner.AwsProvisionerCli.init;
 import static com.hazelcast.simulator.provisioner.AwsProvisionerCli.run;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -38,14 +38,14 @@ public class AwsProvisionerCliTest {
     @BeforeClass
     public static void setUp() {
         setExitExceptionSecurityManagerWithStatusZero();
-        setDistributionUserDir();
+        setupFakeEnvironment();
         createAgentsFileWithLocalhost();
     }
 
     @AfterClass
     public static void tearDown() {
         resetSecurityManager();
-        resetUserDir();
+        tearDownFakeEnvironment();
         deleteAgentsFile();
     }
 

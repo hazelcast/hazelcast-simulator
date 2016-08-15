@@ -19,6 +19,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -32,8 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
@@ -42,7 +43,7 @@ import static com.hazelcast.simulator.testcontainer.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.TestUtils.createTmpDirectory;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -62,6 +63,7 @@ import static org.mockito.Mockito.when;
 
 public class RunTestSuiteTaskTest {
 
+    private static File userDir;
     private CountDownLatch finishWorkerLatch = new CountDownLatch(1);
 
     private File outputDirectory;
@@ -79,12 +81,12 @@ public class RunTestSuiteTaskTest {
 
     @BeforeClass
     public static void prepareEnvironment() {
-        setDistributionUserDir();
+        userDir = setupFakeEnvironment();
     }
 
     @AfterClass
     public static void resetEnvironment() {
-        resetUserDir();
+        tearDownFakeEnvironment();
     }
 
     @Before
@@ -96,7 +98,7 @@ public class RunTestSuiteTaskTest {
         testSuite.addTest(testCase1);
         testSuite.addTest(testCase2);
 
-        outputDirectory = ensureExistingDirectory("RunTestSuiteTaskTest");
+        outputDirectory = createTmpDirectory();
 
         SimulatorAddress address = new SimulatorAddress(WORKER, 1, 1, 0);
         criticalFailureOperation = new FailureOperation("expected critical failure", WORKER_EXCEPTION, address, "127.0.0.1",
@@ -119,7 +121,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_waitForTestCase_and_duration() {
+    public void runParallel_waitForTestCase_and_duration() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(3);
         parallel = true;
@@ -131,7 +133,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_waitForTestCase_noVerify() {
+    public void runParallel_waitForTestCase_noVerify() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         parallel = true;
@@ -144,7 +146,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_performanceMonitorEnabled() {
+    public void runParallel_performanceMonitorEnabled() {
         testSuite.setDurationSeconds(4);
         parallel = true;
         monitorPerformance = true;
@@ -156,7 +158,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_withTargetCount() {
+    public void runParallel_withTargetCount() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         parallel = true;
@@ -169,7 +171,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_withWarmup() {
+    public void runParallel_withWarmup() {
         testSuite.setDurationSeconds(1);
         testSuite.setWarmupDurationSeconds(1);
         parallel = true;
@@ -182,7 +184,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_withWarmup_waitForTestCase() {
+    public void runParallel_withWarmup_waitForTestCase() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         testSuite.setWarmupDurationSeconds(1);
@@ -196,7 +198,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteSequential_withSingleTest() {
+    public void runSequential_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 
         testSuite = new TestSuite();
@@ -210,7 +212,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_withSingleTest() {
+    public void runParallel_withSingleTest() {
         TestCase testCase = new TestCase("CoordinatorTest");
 
         testSuite = new TestSuite();
@@ -226,7 +228,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteSequential_hasCriticalFailures() {
+    public void runSequential_hasCriticalFailures() {
         testSuite.setDurationSeconds(4);
         parallel = false;
 
@@ -236,7 +238,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_hasCriticalFailures() {
+    public void runParallel_hasCriticalFailures() {
         testSuite.setDurationSeconds(4);
         testSuite.setFailFast(false);
         parallel = true;
@@ -247,7 +249,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteSequential_hasCriticalFailures_withFailFast() {
+    public void runSequential_hasCriticalFailures_withFailFast() {
         testSuite.setDurationSeconds(1);
         testSuite.setFailFast(true);
 
@@ -257,7 +259,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteParallel_hasCriticalFailures_withFailFast() {
+    public void runParallel_hasCriticalFailures_withFailFast() {
         testSuite.setDurationSeconds(1);
         testSuite.setFailFast(true);
         parallel = true;
@@ -268,7 +270,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void runTestSuiteSequential_withException() {
+    public void runSequential_withException() {
         doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
         parallel = false;
@@ -278,7 +280,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void runTestSuiteParallel_withException() {
+    public void runParallel_withException() {
         doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
         parallel = true;
@@ -288,7 +290,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Test
-    public void runTestSuiteSequential_withWorkerNotShuttingDown() {
+    public void runSequential_withWorkerNotShuttingDown() {
         simulatorProperties.set("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS", "1");
         testSuite.setDurationSeconds(1);
         finishWorkerLatch = null;

@@ -18,7 +18,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_InjectMetronomeTest extends AbstractTestContainerTest {
+public class TestContainer_InjectMetronomeTest extends TestContainer_AbstractTest {
 
     @Test
     public void testConstructor_withTestcase() throws Exception {
