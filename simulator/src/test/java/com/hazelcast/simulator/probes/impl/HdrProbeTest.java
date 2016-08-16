@@ -1,14 +1,13 @@
 package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.probes.ProbeTestUtils.assertHistogram;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class HdrProbeTest {
 
@@ -27,6 +26,7 @@ public class HdrProbeTest {
     }
 
     @Test
+    @Ignore
     public void testDone_withExternalStarted() {
         int expectedCount = 1;
         long expectedLatency = 150;
