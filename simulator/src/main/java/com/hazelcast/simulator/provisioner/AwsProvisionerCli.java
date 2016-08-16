@@ -27,17 +27,26 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
 
 final class AwsProvisionerCli {
+    private static final Logger LOGGER = Logger.getLogger(AwsProvisionerCli.class);
+
+    AwsProvisioner provisioner;
 
     private final OptionParser parser = new OptionParser();
 
@@ -59,17 +68,12 @@ final class AwsProvisionerCli {
     private final OptionSpec<String> addAgentsToLoadBalancer = parser.accepts("addToLb",
             "Adds the IP addresses in '" + AgentsFile.NAME + "' file to the load balancer.")
             .withRequiredArg().ofType(String.class);
+    private final OptionSet options;
 
-    private AwsProvisionerCli() {
-    }
+    AwsProvisionerCli(String[] args) {
+        options = initOptionsWithHelp(parser, args);
 
-    static AwsProvisioner init(String[] args) {
-        AwsProvisioner.logHeader();
-
-        AwsProvisionerCli cli = new AwsProvisionerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
-
-        SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+        SimulatorProperties properties = loadSimulatorProperties(options, propertiesFileSpec);
         ComponentRegistry componentRegistry = loadComponentRegister(new File(AgentsFile.NAME), false);
 
         try {
@@ -79,31 +83,42 @@ final class AwsProvisionerCli {
             AmazonEC2 ec2 = new AmazonEC2Client(credentials);
             AmazonElasticLoadBalancingClient elb = new AmazonElasticLoadBalancingClient(credentials);
 
-            return new AwsProvisioner(ec2, elb, componentRegistry, properties);
+            provisioner = new AwsProvisioner(ec2, elb, componentRegistry, properties);
         } catch (Exception e) {
             throw new CommandLineExitException("Credentials file could not be loaded", e);
         }
     }
 
-    static void run(String[] args, AwsProvisioner provisioner) {
-        AwsProvisionerCli cli = new AwsProvisionerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
-
+    void run() {
         try {
-            if (options.has(cli.scaleSpec)) {
-                int count = options.valueOf(cli.scaleSpec);
+            if (options.has(scaleSpec)) {
+                int count = options.valueOf(scaleSpec);
                 provisioner.scaleInstanceCountTo(count);
-            } else if (options.has(cli.createLoadBalancerSpec)) {
-                String name = options.valueOf(cli.createLoadBalancerSpec);
+            } else if (options.has(createLoadBalancerSpec)) {
+                String name = options.valueOf(createLoadBalancerSpec);
                 provisioner.createLoadBalancer(name);
-            } else if (options.has(cli.addAgentsToLoadBalancer)) {
-                String name = options.valueOf(cli.addAgentsToLoadBalancer);
+            } else if (options.has(addAgentsToLoadBalancer)) {
+                String name = options.valueOf(addAgentsToLoadBalancer);
                 provisioner.addAgentsToLoadBalancer(name);
             } else {
-                printHelpAndExit(cli.parser);
+                printHelpAndExit(parser);
             }
         } finally {
             provisioner.shutdown();
+        }
+    }
+
+    public static void main(String[] args) {
+        LOGGER.info("Hazelcast Simulator AWS Provisioner");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath()));
+
+        try {
+            AwsProvisionerCli cli = new AwsProvisionerCli(args);
+            cli.run();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not provision machines", e);
         }
     }
 }

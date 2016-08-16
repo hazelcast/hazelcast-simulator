@@ -46,15 +46,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
-import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.provisioner.AwsProvisionerCli.init;
-import static com.hazelcast.simulator.provisioner.AwsProvisionerCli.run;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 
@@ -304,20 +297,6 @@ public class AwsProvisioner {
         register.setLoadBalancerName(name);
         register.setInstances(ids);
         elb.registerInstancesWithLoadBalancer(register);
-    }
-
-    public static void main(String[] args) {
-        try {
-            run(args, init(args));
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Could not provision machines", e);
-        }
-    }
-
-    static void logHeader() {
-        echo("Hazelcast Simulator AWS Provisioner");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-        echo("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath());
     }
 
     private static void echo(String message, Object... args) {
