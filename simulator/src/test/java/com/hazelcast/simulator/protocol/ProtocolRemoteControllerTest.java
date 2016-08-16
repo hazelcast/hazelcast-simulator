@@ -38,7 +38,7 @@ public class ProtocolRemoteControllerTest {
 
     @AfterClass
     public static void tearDown() {
-        remoteControllerConnector.shutdown();
+        remoteControllerConnector.close();
         coordinatorConnector.shutdown();
 
         resetLogLevel();

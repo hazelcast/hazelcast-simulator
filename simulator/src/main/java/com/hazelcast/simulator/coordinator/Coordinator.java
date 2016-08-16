@@ -23,16 +23,29 @@ import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
+import com.hazelcast.simulator.protocol.operation.StartMembersOperation;
+import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadClientHzConfig;
+import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig;
+import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzConfig;
+import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
+import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
@@ -44,7 +57,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
-final class Coordinator {
+public final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 
@@ -145,19 +158,23 @@ final class Coordinator {
                 }
             }
         } finally {
-            closeQuietly(remoteClient);
-
-            if (!coordinatorParameters.skipDownload()) {
-                new DownloadTask(
-                        coordinatorParameters.getSessionId(),
-                        simulatorProperties,
-                        outputDirectory,
-                        componentRegistry).run();
-            }
-            executeAfterCompletion();
-
-            OperationTypeCounter.printStatistics();
+            close();
         }
+    }
+
+    private void close() {
+        closeQuietly(remoteClient);
+
+        if (!coordinatorParameters.skipDownload()) {
+            new DownloadTask(
+                    coordinatorParameters.getSessionId(),
+                    simulatorProperties,
+                    outputDirectory,
+                    componentRegistry).run();
+        }
+        executeAfterCompletion();
+
+        OperationTypeCounter.printStatistics();
     }
 
     private void executeAfterCompletion() {
@@ -168,13 +185,15 @@ final class Coordinator {
         }
     }
 
-    private void startCoordinatorConnector() {
+    void startCoordinatorConnector() {
         try {
-            int coordinatorPort = simulatorProperties.getCoordinatorPort();
-            coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector,
-                    testPhaseListeners, performanceStatsCollector, coordinatorPort);
+            CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
+                    this, failureCollector, testPhaseListeners, performanceStatsCollector);
+
+            coordinatorConnector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
 
             coordinatorConnector.start();
+
             failureCollector.addListener(coordinatorConnector);
 
             ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
@@ -193,6 +212,23 @@ final class Coordinator {
         }
     }
 
+    void start() {
+        LOGGER.info("Starting...");
+
+        checkInstallation(bash, simulatorProperties, componentRegistry);
+        new InstallVendorTask(
+                simulatorProperties,
+                componentRegistry.getAgentIps(),
+                deploymentPlan.getVersionSpecs(),
+                coordinatorParameters.getSessionId()).run();
+
+        startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+        startCoordinatorConnector();
+        startRemoteClient();
+
+        LOGGER.info("Start completed...");
+    }
+
     private void startRemoteClient() {
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
@@ -209,6 +245,94 @@ final class Coordinator {
         String log = message == null ? "null" : format(message, args);
         LOGGER.info(log);
         return log;
+    }
+
+    public void installVendor(String versionSpec) {
+        LOGGER.info("Installing versionSpec:" + versionSpec);
+        new InstallVendorTask(
+                simulatorProperties,
+                componentRegistry.getAgentIps(),
+                Collections.singleton(versionSpec),
+                coordinatorParameters.getSessionId()).run();
+        LOGGER.info("Install successfull");
+
+    }
+
+    public void shutdown() {
+        LOGGER.info("Shutting down");
+        close();
+        System.exit(0);
+    }
+
+    public void startWorkers(StartMembersOperation startMembersOperation) {
+        LOGGER.info("Starting workers: " + startMembersOperation.getCount());
+
+        WorkerType workerType = WorkerType.valueOf(startMembersOperation.getWorkerType());
+
+        Map<String, String> environment = new HashMap<String, String>();
+        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
+        environment.put("LOG4j_CONFIG", loadLog4jConfig());
+        environment.put("JVM_OPTIONS", startMembersOperation.getVmOptions());
+        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
+
+        String config;
+        switch (workerType) {
+            case MEMBER:
+                config = initMemberHzConfig(
+                        startMembersOperation.getHzConfig() == null
+                                ? loadMemberHzConfig()
+                                : startMembersOperation.getHzConfig(),
+                        componentRegistry,
+                        simulatorProperties.getHazelcastPort(),
+                        "",
+                        simulatorProperties);
+                break;
+            case CLIENT:
+                config = initClientHzConfig(
+                        startMembersOperation.getHzConfig() == null
+                                ? loadClientHzConfig()
+                                : startMembersOperation.getHzConfig(),
+                        componentRegistry,
+                        simulatorProperties.getHazelcastPort(),
+                        "");
+                break;
+            default:
+                throw new IllegalStateException("Unrecognized workerType:" + workerType);
+
+        }
+        environment.put("HAZELCAST_CONFIG", config);
+
+        WorkerParameters workerParameters = new WorkerParameters(
+                startMembersOperation.getVersionSpec(),
+                0,
+                loadWorkerScript(workerType, simulatorProperties.get("VENDOR")),
+                environment);
+
+        DeploymentPlan deploymentPlan = createDeploymentPlan(
+                componentRegistry,
+                workerParameters,
+                workerType,
+                startMembersOperation.getCount(),
+                0); //todo:dedicated machines.. we don't know here.
+
+        new StartWorkersTask(
+                deploymentPlan.getWorkerDeployment(),
+                remoteClient,
+                componentRegistry,
+                coordinatorParameters.getWorkerVmStartupDelayMs()).run();
+
+        LOGGER.info("Workers started");
+    }
+
+    public void runSuite(TestSuite testSuite) {
+        new RunTestSuiteTask(testSuite,
+                coordinatorParameters,
+                componentRegistry,
+                failureCollector,
+                testPhaseListeners,
+                remoteClient,
+                performanceStatsCollector).run();
     }
 
     private static class ComponentRegistryFailureListener implements FailureListener {

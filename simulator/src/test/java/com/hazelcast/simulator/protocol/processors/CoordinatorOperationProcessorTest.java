@@ -6,16 +6,13 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
-import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.TestUtils;
@@ -24,7 +21,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,7 +34,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
@@ -46,7 +41,6 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 public class CoordinatorOperationProcessorTest implements FailureListener {
 
@@ -65,19 +59,14 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     public void setUp() {
         workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
 
-        CoordinatorConnector serverConnector = mock(CoordinatorConnector.class);
-        ComponentRegistry componentRegistry = new ComponentRegistry();
-        CoordinatorRemoteControllerProcessor remoteControllerProcessor
-                = new CoordinatorRemoteControllerProcessor(serverConnector, componentRegistry);
-
         testPhaseListeners = new TestPhaseListeners();
         performanceStatsCollector = new PerformanceStatsCollector();
 
         outputDirectory = TestUtils.createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory);
 
-        processor = new CoordinatorOperationProcessor(failureCollector, testPhaseListeners,
-                performanceStatsCollector, remoteControllerProcessor);
+        processor = new CoordinatorOperationProcessor(null, failureCollector, testPhaseListeners,
+                performanceStatsCollector);
     }
 
     @Override
@@ -167,14 +156,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         assertTrue(performanceNumbers.contains(formatLong(23, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(33, LATENCY_FORMAT_LENGTH)));
         assertTrue(performanceNumbers.contains(formatLong(42, LATENCY_FORMAT_LENGTH)));
-    }
-
-    @Test
-    public void processRemoteController() {
-        RemoteControllerOperation operation = new RemoteControllerOperation(RemoteControllerOperation.Type.INTEGRATION_TEST);
-
-        ResponseType responseType = processor.process(operation, REMOTE);
-        assertEquals(SUCCESS, responseType);
     }
 
     private static void assertExceptionClassInFailure(FailureOperation failure, Class<? extends Throwable> failureClass) {

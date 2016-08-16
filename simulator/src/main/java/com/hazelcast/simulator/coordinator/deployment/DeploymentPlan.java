@@ -50,6 +50,7 @@ public final class DeploymentPlan {
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
             = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
     private final List<AgentWorkerLayout> agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
+    private final AtomicInteger agentIndex = new AtomicInteger();
 
     public DeploymentPlan() {
     }
@@ -103,14 +104,14 @@ public final class DeploymentPlan {
     public static DeploymentPlan createDeploymentPlan(
             ComponentRegistry componentRegistry,
             Map<WorkerType, WorkerParameters> workerParametersMap,
-            int memberWorkerCount,
-            int clientWorkerCount,
+            int memberCount,
+            int clientCount,
             int dedicatedMemberMachineCount) {
-        checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
+        checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberCount, clientCount);
 
         // if the memberCount has not been specified; we need to calculate it on the fly.
-        if (memberWorkerCount == -1) {
-            memberWorkerCount = dedicatedMemberMachineCount == 0
+        if (memberCount == -1) {
+            memberCount = dedicatedMemberMachineCount == 0
                     ? componentRegistry.agentCount()
                     : dedicatedMemberMachineCount;
         }
@@ -118,18 +119,40 @@ public final class DeploymentPlan {
         DeploymentPlan plan = new DeploymentPlan();
 
         plan.initAgentWorkerLayouts(componentRegistry);
-        int agentCount = componentRegistry.agentCount();
 
-        plan.assignDedicatedMemberMachines(agentCount, dedicatedMemberMachineCount);
+        plan.assignDedicatedMemberMachines(componentRegistry.agentCount(), dedicatedMemberMachineCount);
 
-        AtomicInteger agentIndex = new AtomicInteger(plan.getStartIndex());
-        plan.assign(memberWorkerCount, agentIndex, AgentWorkerMode.CLIENT,
-                WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
-        plan.assign(clientWorkerCount, agentIndex, AgentWorkerMode.MEMBER,
-                WorkerType.CLIENT, workerParametersMap.get(WorkerType.CLIENT));
+        plan.initAgentIndex();
+
+        plan.assign(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
+
+        plan.assign(clientCount, WorkerType.CLIENT, workerParametersMap.get(WorkerType.CLIENT));
+
         plan.printLayout("arguments");
+
         return plan;
     }
+
+    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry,
+                                                      WorkerParameters workerParameters,
+                                                      WorkerType workerType,
+                                                      int workerCount,
+                                                      int dedicatedMemberWorker) {
+        DeploymentPlan plan = new DeploymentPlan();
+
+        plan.initAgentWorkerLayouts(componentRegistry);
+
+        plan.assignDedicatedMemberMachines(componentRegistry.agentCount(), dedicatedMemberWorker);
+
+        plan.initAgentIndex();
+
+        plan.assign(workerCount, workerType, workerParameters);
+
+        plan.printLayout("arguments");
+
+        return plan;
+    }
+
 
     // just for testing
     public static DeploymentPlan createSingleInstanceDeploymentPlan(String agentIpAddress, WorkerParameters workerParameters) {
@@ -141,12 +164,14 @@ public final class DeploymentPlan {
         return deploymentPlan;
     }
 
-    private void assign(int workerCount, AtomicInteger agentIndex, AgentWorkerMode member,
-                        WorkerType workerType, WorkerParameters parameters) {
+    private void assign(int workerCount, WorkerType workerType, WorkerParameters parameters) {
+
         for (int i = 0; i < workerCount; i++) {
-            AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, member);
+            AgentWorkerLayout agentWorkerLayout = nextAgent(workerType);
+
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
                     workerType, parameters);
+
             List<WorkerProcessSettings> processSettingsList = workerDeployment.get(agentWorkerLayout.agentData.getAddress());
             processSettingsList.add(workerProcessSettings);
         }
@@ -186,7 +211,7 @@ public final class DeploymentPlan {
         }
     }
 
-    private int getStartIndex() {
+    private void initAgentIndex() {
         int currentIndex = 0;
         int lastIndex = 0;
         int lastSize = Integer.MAX_VALUE;
@@ -198,7 +223,8 @@ public final class DeploymentPlan {
             }
             currentIndex++;
         }
-        return lastIndex;
+
+        agentIndex.set(lastIndex);
     }
 
     private void assignDedicatedMemberMachines(int agentCount, int dedicatedMemberMachineCount) {
@@ -208,18 +234,17 @@ public final class DeploymentPlan {
         }
     }
 
-    private void assignAgentWorkerMode(int startIndex, int endIndex,
-                                       AgentWorkerMode agentWorkerMode) {
+    private void assignAgentWorkerMode(int startIndex, int endIndex, AgentWorkerMode agentWorkerMode) {
         for (int i = startIndex; i < endIndex; i++) {
             agentWorkerLayouts.get(i).agentWorkerMode = agentWorkerMode;
         }
     }
 
-    private AgentWorkerLayout findNextAgentLayout(AtomicInteger currentIndex, AgentWorkerMode excludedAgentWorkerMode) {
+    private AgentWorkerLayout nextAgent(WorkerType workerType) {
         int size = agentWorkerLayouts.size();
         while (true) {
-            AgentWorkerLayout agentLayout = agentWorkerLayouts.get(currentIndex.getAndIncrement() % size);
-            if (agentLayout.agentWorkerMode != excludedAgentWorkerMode) {
+            AgentWorkerLayout agentLayout = agentWorkerLayouts.get(agentIndex.getAndIncrement() % size);
+            if (agentLayout.allowed(workerType)) {
                 return agentLayout;
             }
         }
@@ -309,7 +334,7 @@ public final class DeploymentPlan {
 
         final AgentData agentData;
 
-        AgentWorkerMode agentWorkerMode;
+        AgentWorkerMode agentWorkerMode = AgentWorkerMode.MIXED;
 
         AgentWorkerLayout(AgentData agentData, AgentWorkerMode agentWorkerMode) {
             this.agentData = agentData;
@@ -324,6 +349,19 @@ public final class DeploymentPlan {
             return result;
         }
 
+        boolean allowed(WorkerType workerType) {
+            switch (agentWorkerMode) {
+                case MEMBER:
+                    return workerType.isMember();
+                case CLIENT:
+                    return !workerType.isMember();
+                case MIXED:
+                    return true;
+                default:
+                    throw new RuntimeException();
+            }
+        }
+
         WorkerProcessSettings addWorker(WorkerType type, WorkerParameters parameters) {
             WorkerProcessSettings settings = new WorkerProcessSettings(
                     agentData.getNextWorkerIndex(),
@@ -333,7 +371,6 @@ public final class DeploymentPlan {
                     parameters.getWorkerStartupTimeout(),
                     parameters.getEnvironment());
             workerProcessSettingsList.add(settings);
-
             return settings;
         }
 

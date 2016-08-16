@@ -148,6 +148,9 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
                         LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                         if (testPhase == getLastTestPhase()) {
                             worker.getWorkerConnector().removeTest(testAddress.getTestIndex());
+                            WorkerOperationProcessor processor =
+                                    (WorkerOperationProcessor) worker.getWorkerConnector().getProcessor();
+                            processor.remove(testContainer.getTestCase().getId());
                         }
                     }
                 }

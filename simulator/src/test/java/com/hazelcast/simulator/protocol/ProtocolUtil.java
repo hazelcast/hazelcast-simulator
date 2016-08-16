@@ -18,6 +18,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.testcontainer.TestContainer;
@@ -162,13 +163,13 @@ class ProtocolUtil {
     }
 
     static CoordinatorConnector startCoordinator(String agentHost, int agentStartPort, int numberOfAgents, int coordinatorPort) {
-        ComponentRegistry componentRegistry = new ComponentRegistry();
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureCollector failureCollector = new FailureCollector(outputDirectory);
-        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector,
-                testPhaseListeners, performanceStatsCollector, coordinatorPort);
+        CoordinatorOperationProcessor operationProcessor = new CoordinatorOperationProcessor(
+                null, failureCollector,testPhaseListeners,performanceStatsCollector);
+        CoordinatorConnector coordinatorConnector = new CoordinatorConnector(operationProcessor, coordinatorPort);
         for (int i = 1; i <= numberOfAgents; i++) {
             coordinatorConnector.addAgent(i, agentHost, agentStartPort + i);
         }

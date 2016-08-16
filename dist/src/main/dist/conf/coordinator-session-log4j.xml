@@ -8,8 +8,18 @@
         </layout>
     </appender>
 
+    <appender name="file" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="logs/coordinator-session.log"/>
+        <param name="Threshold" value="DEBUG"/>
+        <param name="MaxBackupIndex" value="10"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
+        </layout>
+    </appender>
+
     <root>
         <priority value="debug"/>
         <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
     </root>
 </log4j:configuration>

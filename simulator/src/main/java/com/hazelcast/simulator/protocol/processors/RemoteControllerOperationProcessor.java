@@ -18,14 +18,12 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.OperationType;
-import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 
 /**
- * An {@link OperationProcessor} implementation to process {@link RemoteControllerOperation} instances
+ * An {@link OperationProcessor} implementation to process Operations
  * from a Simulator Coordinator on a Simulator Remote Controller.
  */
 public class RemoteControllerOperationProcessor extends AbstractOperationProcessor {
@@ -40,21 +38,8 @@ public class RemoteControllerOperationProcessor extends AbstractOperationProcess
     public final ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
                                                SimulatorAddress sourceAddress) {
         switch (operationType) {
-            case REMOTE_CONTROLLER:
-                return processRemoteController((RemoteControllerOperation) operation);
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
-    }
-
-    private ResponseType processRemoteController(RemoteControllerOperation operation) {
-        switch (operation.getType()) {
-            case RESPONSE:
-                response = operation.getPayload();
-                break;
-            default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-        }
-        return SUCCESS;
     }
 }

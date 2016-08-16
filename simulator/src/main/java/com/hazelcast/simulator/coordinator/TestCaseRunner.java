@@ -77,7 +77,6 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private final int testIndex;
     private final TestCase testCase;
-    private final String testCaseId;
     private final TestSuite testSuite;
 
     private final RemoteClient remoteClient;
@@ -107,7 +106,6 @@ final class TestCaseRunner implements TestPhaseListener {
                    int performanceMonitorIntervalSeconds) {
         this.testIndex = testIndex;
         this.testCase = testCase;
-        this.testCaseId = testCase.getId();
         this.testSuite = testSuite;
 
         this.remoteClient = remoteClient;
@@ -115,11 +113,11 @@ final class TestCaseRunner implements TestPhaseListener {
         this.performanceStatsCollector = performanceStatsCollector;
         this.componentRegistry = componentRegistry;
 
-        this.prefix = padRight(testCaseId, testSuite.getMaxTestCaseIdLength() + 1);
+        this.prefix = padRight(testCase.getId(), testSuite.getMaxTestCaseIdLength() + 1);
         this.testPhaseSyncMap = testPhaseSyncMap;
 
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
-        this.targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
+        this.targetType = testSuite.getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
         this.targetCount = testSuite.getTargetCount();
 
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
@@ -195,11 +193,14 @@ final class TestCaseRunner implements TestPhaseListener {
             throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
         }
 
+        LOGGER.info(System.identityHashCode(this) + " executePhase:" + testCase.getId());
+
+
         echo("Starting Test " + testPhase.desc());
         if (testPhase.isGlobal()) {
-            remoteClient.sendToTestOnFirstWorker(testCaseId, new StartTestPhaseOperation(testPhase));
+            remoteClient.sendToTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
         } else {
-            remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestPhaseOperation(testPhase));
+            remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
         }
         waitForPhaseCompletion(testPhase);
         echo("Completed Test " + testPhase.desc());
@@ -209,7 +210,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void executeWarmup() {
         echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
+        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers));
         echo("Completed Test warmup start");
 
         StopThread stopThread = null;
@@ -236,7 +237,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void executeRun() {
         echo(format("Starting Test start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCaseId, new StartTestOperation(targetType, targetWorkers));
+        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers));
         echo("Completed Test start");
 
         StopThread stopThread = null;
@@ -337,16 +338,15 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     private boolean hasFailure() {
-        return failureCollector.hasCriticalFailure(testCaseId)
+        return failureCollector.hasCriticalFailure(testCase.getId())
                 || failureCollector.hasCriticalFailure() && testSuite.isFailFast();
     }
 
     private final class StopThread extends Thread {
 
+        private final boolean warmup;
         private final int durationSeconds;
         private volatile boolean isRunning = true;
-
-        private final boolean warmup;
 
         StopThread(boolean warmup) {
             this.warmup = warmup;
@@ -365,7 +365,7 @@ final class TestCaseRunner implements TestPhaseListener {
             echo(format("Test finished %s", warmup ? "warmup" : "running"));
 
             echo(warmup ? "Executing Test warmup stop" : "Executing Test stop");
-            remoteClient.sendToTestOnAllWorkers(testCaseId, new StopTestOperation());
+            remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StopTestOperation());
             waitForPhaseCompletion(RUN);
             echo(warmup ? "Completed Test warmup stop" : "Completed Test stop");
         }
@@ -396,7 +396,7 @@ final class TestCaseRunner implements TestPhaseListener {
                     secondsToHuman(elapsed),
                     formatPercentage(elapsed, sleepSeconds));
             if (performanceMonitorIntervalSeconds > 0 && elapsed % performanceMonitorIntervalSeconds == 0) {
-                msg += performanceStatsCollector.formatPerformanceNumbers(testCaseId);
+                msg += performanceStatsCollector.formatPerformanceNumbers(testCase.getId());
             }
 
             LOGGER.info(prefix + msg);

@@ -180,4 +180,8 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
             hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testContainer.getTestInstance());
         }
     }
+
+    public void remove(String id) {
+        tests.remove(id);
+    }
 }

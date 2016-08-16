@@ -34,7 +34,10 @@ public enum OperationType {
     FAILURE(FailureOperation.class, 100),
     PHASE_COMPLETED(PhaseCompletedOperation.class, 101),
     PERFORMANCE_STATE(PerformanceStatsOperation.class, 102),
-    REMOTE_CONTROLLER(RemoteControllerOperation.class, 103),
+    INSTALL_VENDOR(InstallVendorOperation.class, 103),
+    SHUTDOWN(ShutdownCoordinatorOperation.class, 104),
+    START_WORKERS(StartMembersOperation.class, 105),
+    RUN_SUITE(RunSuiteOperation.class, 106),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 200),

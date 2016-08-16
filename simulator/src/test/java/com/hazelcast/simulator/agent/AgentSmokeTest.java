@@ -24,6 +24,7 @@ import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
+import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestPhase;
@@ -102,8 +103,9 @@ public class AgentSmokeTest implements FailureListener {
         outputDirectory = createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory);
 
-        coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners,
-                performanceStatsCollector, COORDINATOR_PORT);
+        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
+                null, failureCollector, testPhaseListeners, performanceStatsCollector);
+        coordinatorConnector = new CoordinatorConnector(processor, COORDINATOR_PORT);
         coordinatorConnector.addAgent(1, AGENT_IP_ADDRESS, AGENT_PORT);
         coordinatorConnector.start();
 

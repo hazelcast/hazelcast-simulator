@@ -35,7 +35,7 @@ public class RemoteControllerConnectorTest {
 
     @After
     public void tearDown() {
-        connector.shutdown();
+        connector.close();
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)

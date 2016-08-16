@@ -34,6 +34,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,7 +56,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * Connector which connects to remote Simulator Coordinator instances.
  */
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
-public class RemoteControllerConnector implements ClientPipelineConfigurator {
+public class RemoteControllerConnector implements ClientPipelineConfigurator, Closeable {
 
     private static final int COORDINATOR_INDEX = 1;
 
@@ -92,7 +93,8 @@ public class RemoteControllerConnector implements ClientPipelineConfigurator {
     /**
      * Disconnects from all Simulator Coordinator instances.
      */
-    public void shutdown() {
+    @Override
+    public void close() {
         clientConnectorManager.removeClient(COORDINATOR_INDEX);
 
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, SECONDS).syncUninterruptibly();

@@ -12,6 +12,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
+import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
@@ -51,15 +52,14 @@ public class CoordinatorConnectorTest {
 
     @Before
     public void setUp() {
-        ComponentRegistry componentRegistry = new ComponentRegistry();
-        TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
+         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
         File outputDirectory = TestUtils.createTmpDirectory();
         FailureCollector failureCollector = new FailureCollector(outputDirectory);
 
-        coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners,
-                performanceStatsCollector, COORDINATOR_PORT);
+        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(null, failureCollector, testPhaseListeners, performanceStatsCollector);
+        coordinatorConnector = new CoordinatorConnector(processor, COORDINATOR_PORT);
         coordinatorConnector.start();
     }
 
