@@ -7,8 +7,8 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
@@ -30,12 +30,12 @@ public class HarakiriMonitorUtilsTest {
 
     @BeforeClass
     public static void setUp() {
-        setDistributionUserDir();
+        setupFakeEnvironment();
     }
 
     @AfterClass
     public static void tearDown() {
-        resetUserDir();
+        tearDownFakeEnvironment();
     }
 
     @Test

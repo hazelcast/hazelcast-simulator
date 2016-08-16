@@ -17,9 +17,9 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.deletePublicPrivateKe
 import static com.hazelcast.simulator.TestEnvironmentUtils.getPrivateKeyFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.getPublicKeyFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.provisioner.ComputeServiceBuilder.ensurePublicPrivateKeyExist;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -29,7 +29,7 @@ public class ComputeServiceBuilderTest {
     @BeforeClass
     public static void setUp() {
         setLogLevel(Level.DEBUG);
-        setDistributionUserDir();
+        setupFakeEnvironment();
         createCloudCredentialFiles();
         createPublicPrivateKeyFiles();
     }
@@ -37,7 +37,7 @@ public class ComputeServiceBuilderTest {
     @AfterClass
     public static void tearDown() {
         resetLogLevel();
-        resetUserDir();
+        tearDownFakeEnvironment();
         deleteCloudCredentialFiles();
         deletePublicPrivateKeyFiles();
     }

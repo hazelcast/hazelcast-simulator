@@ -16,8 +16,8 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithL
 import static com.hazelcast.simulator.TestEnvironmentUtils.createCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static java.util.Collections.singleton;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -37,7 +37,7 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
 
     @Before
     public void setUp() {
-        setDistributionUserDir();
+        setupFakeEnvironment();
         createAgentsFileWithLocalhost();
         createCloudCredentialFiles();
 
@@ -51,9 +51,9 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
 
     @After
     public void tearDown() {
+        tearDownFakeEnvironment();
         provisioner.shutdown();
 
-        resetUserDir();
         deleteAgentsFile();
         deleteCloudCredentialFiles();
     }

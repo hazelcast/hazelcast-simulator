@@ -42,6 +42,7 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -55,12 +56,13 @@ import static java.lang.String.format;
 public class Wizard {
 
     static final File SSH_COPY_ID_FILE = new File("ssh-copy-id-script").getAbsoluteFile();
-    static final File AGENTS_FILE = new File(AgentsFile.NAME).getAbsoluteFile();
 
     private static final String GCE_DEFAULT_MACHINE_SPEC = "osFamily=CENTOS,os64Bit=true";
     private static final String GCE_DEFAULT_SSH_OPTIONS = "-o CheckHostIP=no";
 
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
+
+    private final File agentFile = new File(getUserDir(), AgentsFile.NAME).getAbsoluteFile();
 
     Wizard() {
     }
@@ -152,7 +154,7 @@ public class Wizard {
     }
 
     void createSshCopyIdScript(SimulatorProperties simulatorProperties) {
-        ComponentRegistry componentRegistry = loadComponentRegister(AGENTS_FILE, true);
+        ComponentRegistry componentRegistry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
         ensureExistingFile(SSH_COPY_ID_FILE);
@@ -171,7 +173,7 @@ public class Wizard {
             throw new CommandLineExitException("SSH is not supported for local setups.");
         }
 
-        ComponentRegistry componentRegistry = loadComponentRegister(AGENTS_FILE, true);
+        ComponentRegistry componentRegistry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
         for (AgentData agentData : componentRegistry.getAgents()) {

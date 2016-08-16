@@ -14,7 +14,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_BasicTest extends AbstractTestContainerTest {
+public class TestContainer_BasicTest extends TestContainer_AbstractTest {
 
     @Test
     public void testConstructor_withTestcase() {

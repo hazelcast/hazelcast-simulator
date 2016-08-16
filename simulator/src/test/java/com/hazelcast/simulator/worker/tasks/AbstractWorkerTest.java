@@ -16,7 +16,8 @@ import org.junit.Test;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -27,6 +28,7 @@ public class AbstractWorkerTest {
     private static final int THREAD_COUNT = 3;
     private static final int ITERATION_COUNT = 10;
     private static final int DEFAULT_TEST_TIMEOUT = 30000;
+    private File userDir;
 
     private enum Operation {
         EXCEPTION,
@@ -42,6 +44,8 @@ public class AbstractWorkerTest {
 
     @Before
     public void setUp() {
+        userDir = setupFakeUserDir();
+
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractWorkerTest");
         TestCase testCase = new TestCase("foo")
@@ -53,7 +57,7 @@ public class AbstractWorkerTest {
 
     @After
     public void tearDown() {
-        deleteExceptionLogs(THREAD_COUNT);
+        teardownFakeUserDir();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -72,7 +76,7 @@ public class AbstractWorkerTest {
         testContainer.invoke(TestPhase.RUN);
 
         for (int i = 1; i <= THREAD_COUNT; i++) {
-            assertTrue(new File(i + ".exception").exists());
+            assertTrue(new File(userDir, i + ".exception").exists());
         }
         assertEquals(THREAD_COUNT, test.workerCreated);
     }

@@ -15,7 +15,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_InjectProbeTest extends AbstractTestContainerTest {
+public class TestContainer_InjectProbeTest extends TestContainer_AbstractTest {
 
     @Test
     public void testInjectProbe() throws Exception {

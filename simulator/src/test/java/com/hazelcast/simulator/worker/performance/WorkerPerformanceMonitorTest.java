@@ -13,7 +13,6 @@ import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
 import com.hazelcast.simulator.tests.PerformanceMonitorTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,11 +20,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -46,6 +46,8 @@ public class WorkerPerformanceMonitorTest {
 
     @Before
     public void setUp() {
+        setupFakeUserDir();
+
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
 
         serverConnector = mock(ServerConnector.class);
@@ -57,14 +59,8 @@ public class WorkerPerformanceMonitorTest {
     @After
     public void tearDown() {
         performanceMonitor.shutdown();
-    }
 
-    @AfterClass
-    public static void cleanUp() {
-        deleteQuiet("performance.csv");
-        deleteQuiet("performance-" + TEST_NAME + ".csv");
-        deleteQuiet(TEST_NAME + "-workerProbe.hdr");
-        deleteQuiet(TEST_NAME + "-aggregated.hdr");
+        teardownFakeUserDir();
     }
 
     @Test

@@ -8,7 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class TestContainer_NestedPropertyBindingTest extends AbstractTestContainerTest {
+public class TestContainer_NestedPropertyBindingTest extends TestContainer_AbstractTest {
 
     @Test
     public void testNestProperties() {

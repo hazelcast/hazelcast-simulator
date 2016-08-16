@@ -13,9 +13,9 @@ import org.junit.Test;
 import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
@@ -30,6 +30,7 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 import static org.junit.Assert.assertTrue;
@@ -61,21 +62,19 @@ public class WizardTest {
     private Wizard wizard;
 
     @BeforeClass
-    public static void setUpEnvironment() {
-        setDistributionUserDir();
-
+    public static  void beforeClass() {
         setExitExceptionSecurityManagerWithStatusZero();
     }
 
     @AfterClass
-    public static void resetEnvironment() {
-        resetUserDir();
-
+    public static void afterClass() {
         resetSecurityManager();
     }
 
     @Before
     public void setUp() {
+        setupFakeEnvironment();
+
         simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.getUser()).thenReturn(SSH_USERNAME);
         when(simulatorProperties.getSshOptions()).thenReturn("");
@@ -98,11 +97,12 @@ public class WizardTest {
 
     @After
     public void tearDown() {
+        tearDownFakeEnvironment();
+
         deleteQuiet(localSimulatorPropertiesFile);
         deleteQuiet(profileFile);
         deleteQuiet(workDir);
 
-        deleteQuiet(Wizard.AGENTS_FILE);
         deleteQuiet(Wizard.SSH_COPY_ID_FILE);
     }
 
@@ -228,7 +228,7 @@ public class WizardTest {
     }
 
     private void addIpAddressToAgentsFile(String ipAddress) {
-        appendText(ipAddress + NEW_LINE, Wizard.AGENTS_FILE);
+        appendText(ipAddress + NEW_LINE, new File(getUserDir(), "agents.txt"));
     }
 
     private void assertThatWorkingDirFilesHaveBeenCreated(String cloudProvider) {

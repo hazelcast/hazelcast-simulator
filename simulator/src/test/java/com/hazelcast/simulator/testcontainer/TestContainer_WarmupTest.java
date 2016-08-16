@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_WarmupTest extends AbstractTestContainerTest {
+public class TestContainer_WarmupTest extends TestContainer_AbstractTest {
 
     @Test
     public void testLocalWarmup() throws Exception {

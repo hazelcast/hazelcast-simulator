@@ -8,7 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class TestContainer_InjectHazelcastInstanceTest extends AbstractTestContainerTest {
+public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_AbstractTest {
 
     @Test
     public void testInjectHazelcastInstance() {

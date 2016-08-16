@@ -1,6 +1,7 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.utils.helper.CallerInterrupter;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -8,8 +9,11 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.TestUtils.assertEqualsStringFormat;
 import static org.junit.Assert.assertTrue;
 
@@ -19,12 +23,18 @@ public class ThreadSpawnerTest {
 
     @Before
     public void setUp() {
+        setupFakeUserDir();
         sleepInfiniteRunnable = new Runnable() {
             @Override
             public void run() {
                 sleepSeconds(Integer.MAX_VALUE);
             }
         };
+    }
+
+    @After
+    public void tearDown() {
+        teardownFakeUserDir();
     }
 
     @Test(expected = NullPointerException.class)
@@ -89,7 +99,7 @@ public class ThreadSpawnerTest {
 
     @Test
     public void testThreadSpawnerException_reportException() {
-        File exceptionFile = new File("1.exception");
+        File exceptionFile = new File(getUserDir(), "1.exception");
 
         ThreadSpawner spawner = new ThreadSpawner("AnyTestCaseId");
         spawner.spawn(new Runnable() {
@@ -101,7 +111,6 @@ public class ThreadSpawnerTest {
         spawner.awaitCompletion();
 
         assertTrue(exceptionFile.exists());
-        deleteQuiet(exceptionFile);
     }
 
     @Test(expected = RuntimeException.class)

@@ -15,7 +15,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
+import java.io.File;
+
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -25,6 +28,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
     private static final int THREAD_COUNT = 3;
     private static final int ITERATION_COUNT = 10;
     private static final int DEFAULT_TEST_TIMEOUT = 30000;
+    private File userDir;
 
     private enum Operation {
         STOP_TEST_CONTEXT,
@@ -37,6 +41,8 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
 
     @Before
     public void setUp() {
+        userDir = setupFakeUserDir();
+
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerWithProbeControlTest");
         testContainer = new TestContainer(testContext, test,
@@ -47,7 +53,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
 
     @After
     public void tearDown() {
-        deleteExceptionLogs(THREAD_COUNT);
+        teardownFakeUserDir();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
@@ -66,7 +72,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
         testContainer.invoke(TestPhase.RUN);
 
         assertTrue(test.testContext.isStopped());
-        assertEquals(THREAD_COUNT , test.workerCreated);
+        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

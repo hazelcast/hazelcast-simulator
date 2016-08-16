@@ -33,6 +33,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static java.lang.String.format;
@@ -42,13 +43,12 @@ public class Agent {
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
-    private final File pidFile = new File("agent.pid");
-
-    private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
+     private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
 
     private final int addressIndex;
     private final String publicAddress;
     private final int port;
+    private final File pidFile = new File(getUserDir(), "agent.pid");
 
     private final String cloudProvider;
     private final String cloudIdentity;
@@ -86,7 +86,7 @@ public class Agent {
     }
 
     private void createPidFile() {
-        deleteQuiet(pidFile);
+         deleteQuiet(pidFile);
         writeText("" + getPID(), pidFile);
     }
 

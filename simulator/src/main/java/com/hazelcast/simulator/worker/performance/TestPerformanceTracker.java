@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -64,7 +65,7 @@ final class TestPerformanceTracker {
         this.testId = testContainer.getTestCase().getId();
         this.testStartedTimestamp = testContainer.getTestStartedTimestamp();
         this.lastTimestamp = testStartedTimestamp;
-        this.performanceLogWriter = new PerformanceLogWriter(new File("performance-" + testId + ".csv"));
+        this.performanceLogWriter = new PerformanceLogWriter(new File(getUserDir(), "performance-" + testId + ".csv"));
 
         for (String probeName : testContainer.getProbeMap().keySet()) {
             histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
@@ -174,6 +175,6 @@ final class TestPerformanceTracker {
     }
 
     private static File getLatencyFile(String testId, String probeName) {
-        return new File(testId + '-' + probeName + ".hdr");
+        return new File(getUserDir(), testId + '-' + probeName + ".hdr");
     }
 }

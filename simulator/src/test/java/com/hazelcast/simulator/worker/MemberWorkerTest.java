@@ -9,12 +9,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
+import java.io.File;
+
+import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.worker.WorkerType.CLIENT;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
@@ -23,8 +27,8 @@ import static org.mockito.Mockito.when;
 
 public class MemberWorkerTest {
 
-    private static final String MEMBER_CONFIG_FILE = "memberWorkerTest-hazelcast.xml";
-    private static final String CLIENT_CONFIG_FILE = "memberWorkerTest-client-hazelcast.xml";
+    private File memberConfigFile;
+    private File clientConfigFile;
 
     private static final String PUBLIC_ADDRESS = "127.0.0.1";
     private static final int AGENT_INDEX = 1;
@@ -35,44 +39,40 @@ public class MemberWorkerTest {
 
     @Before
     public void setUp() {
+        setupFakeUserDir();
+
         ComponentRegistry componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = mock(SimulatorProperties.class);
         when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
 
-        String memberHzConfig = fileAsText("simulator/src/test/resources/hazelcast.xml");
+        String memberHzConfig = fileAsText(localResourceDirectory() + "/hazelcast.xml");
         memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, 5701, null, properties);
-        appendText(memberHzConfig, MEMBER_CONFIG_FILE);
+        memberConfigFile = new File(getUserDir(), "hazelcast.xml");
+        appendText(memberHzConfig, memberConfigFile);
 
-        String clientHzConfig = fileAsText("simulator/src/test/resources/client-hazelcast.xml");
+        String clientHzConfig = fileAsText(localResourceDirectory() + "/client-hazelcast.xml");
         clientHzConfig = initClientHzConfig(clientHzConfig, componentRegistry, 5701, null);
-        appendText(clientHzConfig, CLIENT_CONFIG_FILE);
+        clientConfigFile = new File(getUserDir(), "client-hazelcast.xml");
+        appendText(clientHzConfig, clientConfigFile);
     }
 
     @After
     public void tearDown() throws Exception {
-        try {
-            if (worker != null) {
-                worker.shutdown(false);
-                worker.awaitShutdown();
-            }
-
-            Hazelcast.shutdownAll();
-        } finally {
-            deleteLogs();
-
-            deleteQuiet("performance.csv");
-            deleteQuiet("worker.address");
-
-            deleteQuiet(MEMBER_CONFIG_FILE);
-            deleteQuiet(CLIENT_CONFIG_FILE);
+        if (worker != null) {
+            worker.shutdown(false);
+            worker.awaitShutdown();
         }
+
+        Hazelcast.shutdownAll();
+        teardownFakeUserDir();
     }
 
     @Test
     public void testConstructor_MemberWorker() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, MEMBER_CONFIG_FILE, true, 10);
+        worker = new MemberWorker(
+                MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, memberConfigFile.getAbsolutePath(), true, 10);
         worker.start();
         assertMemberWorker();
     }
@@ -81,7 +81,8 @@ public class MemberWorkerTest {
     public void testConstructor_ClientWorker() throws Exception {
         Hazelcast.newHazelcastInstance();
 
-        worker = new MemberWorker(CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, CLIENT_CONFIG_FILE, true, 10);
+        worker = new MemberWorker(
+                CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, clientConfigFile.getAbsolutePath(), true, 10);
         worker.start();
         assertMemberWorker();
     }
@@ -116,7 +117,7 @@ public class MemberWorkerTest {
         System.setProperty("agentIndex", String.valueOf(AGENT_INDEX));
         System.setProperty("workerIndex", String.valueOf(WORKER_INDEX));
         System.setProperty("workerPort", String.valueOf(WORKER_PORT));
-        System.setProperty("hzConfigFile", MEMBER_CONFIG_FILE);
+        System.setProperty("hzConfigFile", memberConfigFile.getAbsolutePath());
         System.setProperty("autoCreateHzInstance", "true");
         System.setProperty("workerPerformanceMonitorIntervalSeconds", "10");
 

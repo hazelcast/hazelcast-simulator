@@ -6,29 +6,28 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.ExceptionReporter.report;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class ExceptionReporterTest {
 
-    private static final File EXCEPTION_FILE = new File("1.exception");
-    private static final File TMP_EXCEPTION_FILE = new File("1.exception.tmp");
-
     @Before
     public void setUp() {
-        deleteQuiet(EXCEPTION_FILE);
+        setupFakeUserDir();
         ExceptionReporter.reset();
     }
 
     @After
     public void tearDown() {
-        deleteQuiet(EXCEPTION_FILE);
+        teardownFakeUserDir();
         ExceptionReporter.reset();
     }
 
@@ -38,36 +37,30 @@ public class ExceptionReporterTest {
     }
 
     @Test
-    public void testReportNullCause() {
+    public void testReportNullCause_thenIgnored() {
         report("testID", null);
 
-        assertFalse(EXCEPTION_FILE.exists());
+        File exceptionFile = new File(getUserDir(), "1.exception");
+        assertFalse(exceptionFile.exists());
     }
 
     @Test
     public void testReport() {
         report("testID", new RuntimeException("Expected exception"));
 
-        assertTrue(EXCEPTION_FILE.exists());
-        assertNotNull(fileAsText(EXCEPTION_FILE));
+        File exceptionFile = new File(getUserDir(), "1.exception");
+        assertTrue(exceptionFile.exists());
+        assertFalse(new File(getUserDir(), "1.exception.tmp").exists());
+        assertNotNull(fileAsText(exceptionFile));
     }
 
     @Test
     public void testReportTooManyExceptions() {
-        ExceptionReporter.FAILURE_ID.set(ExceptionReporter.MAX_EXCEPTION_COUNT + 1);
+        int currentExceptions = ExceptionReporter.MAX_EXCEPTION_COUNT + 1;
+        ExceptionReporter.FAILURE_ID.set(currentExceptions);
         report("testID", new RuntimeException("Expected exception"));
 
-        assertFalse(EXCEPTION_FILE.exists());
-    }
-
-    @Test
-    public void testReportTmpFileExists() {
-        ensureExistingFile(TMP_EXCEPTION_FILE);
-        report("testID", new RuntimeException("Expected exception"));
-
-        assertTrue(TMP_EXCEPTION_FILE.exists());
-        assertFalse(EXCEPTION_FILE.exists());
-
-        deleteQuiet(TMP_EXCEPTION_FILE);
+        // make sure no new files have been made
+        assertEquals(0, getUserDir().listFiles().length);
     }
 }

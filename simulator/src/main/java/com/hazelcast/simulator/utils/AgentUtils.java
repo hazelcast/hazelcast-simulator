@@ -20,8 +20,6 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
@@ -32,7 +30,6 @@ import static java.lang.String.format;
 
 public final class AgentUtils {
 
-    private static final File SIMULATOR_HOME = getSimulatorHome();
     private static final String SIMULATOR_VERSION = getSimulatorVersion();
 
     private AgentUtils() {
@@ -145,9 +142,9 @@ public final class AgentUtils {
         private void runLocal() {
             logger.info(format("Starting Agent on %s", ip));
             execute(format("nohup %s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
-                    SIMULATOR_HOME, mandatoryParameters, optionalParameters));
+                    getSimulatorHome(), mandatoryParameters, optionalParameters));
 
-            execute(format("%s/bin/.await-file-exists agent.pid", SIMULATOR_HOME));
+            execute(format("%s/bin/.await-file-exists agent.pid", getSimulatorHome()));
         }
 
         private void runRemote() {
@@ -192,7 +189,7 @@ public final class AgentUtils {
 
         private void runLocal() {
             logger.info(format("Stopping Agent %s", ip));
-            execute(format("%s/bin/.kill-from-pid-file agent.pid", SIMULATOR_HOME));
+            execute(format("%s/bin/.kill-from-pid-file agent.pid", getSimulatorHome()));
         }
 
         private void runRemote() {

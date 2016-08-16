@@ -26,8 +26,8 @@ import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -51,7 +51,7 @@ public class AwsProvisionerTest {
 
     @Before
     public void setUp() {
-        setDistributionUserDir();
+        setupFakeEnvironment();
         createAgentsFileWithLocalhost();
 
         ec2 = mock(AmazonEC2.class);
@@ -70,7 +70,7 @@ public class AwsProvisionerTest {
     public void tearDown() {
         provisioner.shutdown();
 
-        resetUserDir();
+        tearDownFakeEnvironment();
         deleteAgentsFile();
 
         deleteQuiet(AwsProvisioner.AWS_ELB_FILE_NAME);

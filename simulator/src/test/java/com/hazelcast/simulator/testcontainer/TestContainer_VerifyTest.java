@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_VerifyTest extends AbstractTestContainerTest {
+public class TestContainer_VerifyTest extends TestContainer_AbstractTest {
 
     @Test
     public void testLocalVerify() throws Exception {

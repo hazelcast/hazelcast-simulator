@@ -33,6 +33,7 @@ import java.io.File;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
@@ -70,7 +71,7 @@ final class AwsProvisionerCli {
         OptionSet options = initOptionsWithHelp(cli.parser, args);
 
         SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
-        ComponentRegistry componentRegistry = loadComponentRegister(new File(AgentsFile.NAME), false);
+        ComponentRegistry componentRegistry = loadComponentRegister(new File(getUserDir(), AgentsFile.NAME), false);
 
         try {
             String awsCredentialsPath = properties.get("AWS_CREDENTIALS", "awscredentials.properties");

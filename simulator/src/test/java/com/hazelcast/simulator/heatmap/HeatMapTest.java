@@ -2,7 +2,7 @@ package com.hazelcast.simulator.heatmap;
 
 import com.hazelcast.simulator.provisioner.AbstractComputeServiceTest;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.junit.After;
+import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,16 +20,18 @@ import static org.junit.Assert.assertNotNull;
 
 public class HeatMapTest extends AbstractComputeServiceTest {
 
-    private File directory;
+    private File workersDirectory;
 
     private HeatMap heatMap;
+    private File tmpDir;
 
     @Before
     public void setUp() {
-        directory = ensureExistingDirectory("workers");
+        tmpDir = TestUtils.createTmpDirectory();
+        workersDirectory = ensureExistingDirectory(tmpDir, "workers");
 
-        File directory1 = ensureExistingDirectory(directory, "workers1");
-        File directory2 = ensureExistingDirectory(directory, "workers2");
+        File directory1 = ensureExistingDirectory(workersDirectory, "workers1");
+        File directory2 = ensureExistingDirectory(workersDirectory, "workers2");
 
         ensureExistingFile(directory1, "latency-HeatMapTest-aggregated.txt");
         ensureExistingFile(directory2, "latency-HeatMapTest-aggregated.txt");
@@ -41,12 +43,7 @@ public class HeatMapTest extends AbstractComputeServiceTest {
         createLatencyFile(classLoader, "heatmap-test-sample-1.txt", directory1);
         createLatencyFile(classLoader, "heatmap-test-sample-2.txt", directory2);
 
-        heatMap = new HeatMap(directory.getAbsolutePath(), "HeatMapTest", "");
-    }
-
-    @After
-    public void tearDown() {
-        deleteQuiet(directory);
+        heatMap = new HeatMap(workersDirectory.getAbsolutePath(), "HeatMapTest", "");
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -17,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteGeneratedRunners;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
 import static com.hazelcast.simulator.testcontainer.TestPhase.SETUP;
@@ -30,9 +32,14 @@ public class TimeStepRunStrategyIntegrationTest {
 
     private static final String TEST_ID = "SomeId";
 
+    @Before
+    public void setup() {
+        setupFakeUserDir();
+    }
+
     @After
-    public void after() {
-        deleteGeneratedRunners();
+    public void tearDown() {
+        teardownFakeUserDir();
     }
 
     @Test
@@ -133,7 +140,7 @@ public class TimeStepRunStrategyIntegrationTest {
         for (TestWithAllRunPhasesAndWarmup.ThreadState state : testInstance.states.values()) {
             assertEquals(1, state.beforeRunCount);
             assertEquals(1, state.afterRunCount);
-            assertTrue(state.timeStepCount>1);
+            assertTrue(state.timeStepCount > 1);
         }
 
         System.out.println("done");

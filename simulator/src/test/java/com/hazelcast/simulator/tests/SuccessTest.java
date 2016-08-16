@@ -63,6 +63,8 @@ public class SuccessTest {
     public void run() {
         while (!context.isStopped()) {
             sleepSeconds(1);
+            System.out.println("testSuccess running");
         }
+        System.out.println("testSuccess completed");
     }
 }

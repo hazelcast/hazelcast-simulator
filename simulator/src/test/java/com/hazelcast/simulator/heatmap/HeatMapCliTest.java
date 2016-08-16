@@ -8,11 +8,10 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteLogs;
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
-import static com.hazelcast.simulator.TestEnvironmentUtils.resetUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setDistributionUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.heatmap.HeatMapCli.init;
 import static com.hazelcast.simulator.heatmap.HeatMapCli.run;
 import static org.mockito.Mockito.mock;
@@ -28,14 +27,13 @@ public class HeatMapCliTest {
     @BeforeClass
     public static void setUp() {
         setExitExceptionSecurityManagerWithStatusZero();
-        setDistributionUserDir();
+        setupFakeEnvironment();
     }
 
     @AfterClass
     public static void tearDown() {
         resetSecurityManager();
-        resetUserDir();
-        deleteLogs();
+        tearDownFakeEnvironment();
     }
 
     @Test

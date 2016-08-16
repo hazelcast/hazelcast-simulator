@@ -12,7 +12,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.deleteExceptionLogs;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -31,6 +32,7 @@ public class AbstractMonotonicWorkerTest {
 
     @Before
     public void setUp() {
+        setupFakeUserDir();
         test = new WorkerTest();
         testContext = new TestContextImpl("AbstractMonotonicWorkerTest");
         TestCase testCase = new TestCase("id").setProperty("threadCount", THREAD_COUNT);
@@ -41,7 +43,7 @@ public class AbstractMonotonicWorkerTest {
 
     @After
     public void tearDown() {
-        deleteExceptionLogs(THREAD_COUNT);
+        teardownFakeUserDir();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
