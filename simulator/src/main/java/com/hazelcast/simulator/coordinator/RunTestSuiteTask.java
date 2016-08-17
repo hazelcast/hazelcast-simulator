@@ -80,7 +80,7 @@ public class RunTestSuiteTask {
 
         componentRegistry.addTests(testSuite);
         int testCount = testSuite.size();
-        boolean parallel = coordinatorParameters.isParallel() && testCount > 1;
+        boolean parallel = testSuite.isParallel() && testCount > 1;
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
                 coordinatorParameters.getLastTestPhaseToSync());
 
@@ -100,7 +100,6 @@ public class RunTestSuiteTask {
                     testPhaseSyncMap,
                     failureCollector,
                     componentRegistry,
-                    coordinatorParameters,
                     workerParameters,
                     performanceStatsCollector);
             testPhaseListeners.addListener(testIndex, runner);
@@ -169,9 +168,9 @@ public class RunTestSuiteTask {
         }
         echoer.echo(HORIZONTAL_RULER);
 
-        int targetCount = coordinatorParameters.getTargetCount();
+        int targetCount = testSuite.getTargetCount();
         if (targetCount > 0) {
-            TargetType targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
+            TargetType targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
             List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
             echoer.echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
         }

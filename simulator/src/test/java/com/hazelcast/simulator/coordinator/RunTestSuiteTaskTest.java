@@ -320,10 +320,11 @@ public class RunTestSuiteTaskTest {
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
-        when(coordinatorParameters.isVerifyEnabled()).thenReturn(verifyEnabled);
-        when(coordinatorParameters.isParallel()).thenReturn(parallel);
-        when(coordinatorParameters.getTargetType(anyBoolean())).thenReturn(TargetType.ALL);
-        when(coordinatorParameters.getTargetCount()).thenReturn(targetCount);
+
+        testSuite.setVerifyEnabled(verifyEnabled)
+                .setParallel(parallel)
+                .setTargetType(TargetType.ALL)
+                .setTargetCount(targetCount);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
