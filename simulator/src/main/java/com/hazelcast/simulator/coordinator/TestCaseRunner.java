@@ -139,32 +139,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     void run() {
         try {
-            createTest();
-            executePhase(SETUP);
-
-            executePhase(LOCAL_PREPARE);
-            executePhase(GLOBAL_PREPARE);
-
-            if (testSuite.getWarmupDurationSeconds() > 0) {
-                executeWarmup();
-
-                executePhase(LOCAL_AFTER_WARMUP);
-                executePhase(GLOBAL_AFTER_WARMUP);
-            } else {
-                echo("Skipping Test warmup");
-            }
-
-            executeRun();
-
-            if (isVerifyEnabled) {
-                executePhase(GLOBAL_VERIFY);
-                executePhase(LOCAL_VERIFY);
-            } else {
-                echo("Skipping Test verification");
-            }
-
-            executePhase(GLOBAL_TEARDOWN);
-            executePhase(LOCAL_TEARDOWN);
+            run0();
         } catch (TestCaseAbortedException e) {
             echo(e.getMessage());
             // unblock other TestCaseRunner threads, if fail fast is not set and they have no failures on their own
@@ -176,6 +151,35 @@ final class TestCaseRunner implements TestPhaseListener {
         } catch (Exception e) {
             throw rethrow(e);
         }
+    }
+
+    private void run0() {
+        createTest();
+        executePhase(SETUP);
+
+        executePhase(LOCAL_PREPARE);
+        executePhase(GLOBAL_PREPARE);
+
+        if (testSuite.getWarmupDurationSeconds() > 0) {
+            executeWarmup();
+
+            executePhase(LOCAL_AFTER_WARMUP);
+            executePhase(GLOBAL_AFTER_WARMUP);
+        } else {
+            echo("Skipping Test warmup");
+        }
+
+        executeRun();
+
+        if (isVerifyEnabled) {
+            executePhase(GLOBAL_VERIFY);
+            executePhase(LOCAL_VERIFY);
+        } else {
+            echo("Skipping Test verification");
+        }
+
+        executePhase(GLOBAL_TEARDOWN);
+        executePhase(LOCAL_TEARDOWN);
     }
 
     private void createTest() {
