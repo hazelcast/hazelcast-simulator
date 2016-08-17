@@ -13,16 +13,23 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.testcontainer.TestContainer;
 import com.hazelcast.simulator.testcontainer.TestContextImpl;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.worker.Worker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.matchers.ThrowableCauseMatcher;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,8 +42,11 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.test.TestContext.LOCALHOST;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static java.util.Collections.singletonList;
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -52,6 +62,7 @@ public class TestOperationProcessorTest {
     @Before
     public void setup(){
         setupFakeUserDir();
+        ExceptionReporter.reset();
     }
 
     @After
@@ -98,7 +109,7 @@ public class TestOperationProcessorTest {
         runPhase(TestPhase.SETUP);
         runTest();
 
-        //exceptionLogger.assertException(TestException.class);
+        assertExceptionEventually(TestException.class);
     }
 
     @Test
@@ -107,8 +118,20 @@ public class TestOperationProcessorTest {
 
         runTest();
 
-        // no setup was executed, so TestContext is null
-        //exceptionLogger.assertException(NullPointerException.class);
+        assertExceptionEventually(NullPointerException.class);
+    }
+
+    private void assertExceptionEventually(final Class<? extends Throwable> exceptionClass) {
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                File exceptionFile = new File(getUserDir(), "1.exception");
+                assertTrue(exceptionFile.exists());
+
+                String text = FileUtils.fileAsText(exceptionFile);
+                assertTrue(text.contains(exceptionClass.getName()));
+            }
+        });
     }
 
     @Test
@@ -144,7 +167,7 @@ public class TestOperationProcessorTest {
 
         runPhase(TestPhase.GLOBAL_VERIFY);
 
-        //exceptionLogger.assertException(AssertionError.class);
+        assertExceptionEventually(AssertionError.class);
     }
 
     @Test
@@ -156,9 +179,9 @@ public class TestOperationProcessorTest {
         StartTestPhaseOperation operation = new StartTestPhaseOperation(TestPhase.RUN);
         processor.process(operation, COORDINATOR);
 
-        runPhase(TestPhase.LOCAL_VERIFY, EXCEPTION_DURING_OPERATION_EXECUTION);
+        runPhase(TestPhase.LOCAL_VERIFY, SUCCESS);
 
-        //exceptionLogger.assertException(IllegalStateException.class);
+        assertExceptionEventually(IllegalStateException.class);
     }
 
     @Test
@@ -167,8 +190,12 @@ public class TestOperationProcessorTest {
 
         runPhase(TestPhase.LOCAL_TEARDOWN);
 
-        //exceptionLogger.assertNoException();
-        verify(workerConnector).removeTest(1);
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                verify(workerConnector).removeTest(1);
+            }
+        });
     }
 
     private void runPhase(TestPhase testPhase) {
