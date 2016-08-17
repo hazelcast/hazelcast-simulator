@@ -160,7 +160,9 @@ abstract class AbstractServerConnector implements ServerConnector {
 
         if (port > 0) {
             messageQueueThread.shutdown();
-            channel.close().syncUninterruptibly();
+            if (channel != null) {
+                channel.close().syncUninterruptibly();
+            }
         }
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, SECONDS).syncUninterruptibly();
 

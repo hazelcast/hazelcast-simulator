@@ -146,14 +146,14 @@ public class AgentSmokeTest implements FailureListener {
         failureOperations.add(failure);
     }
 
-    @Test
+    @Test(timeout = 300000)
     public void testSuccess() throws Exception {
         TestCase testCase = new TestCase("testSuccess");
         testCase.setProperty("class", SuccessTest.class.getName());
         executeTestCase(testCase);
     }
 
-    @Test
+    @Test(timeout = 300000)
     public void testThrowingFailures() throws Exception {
         failureCollector.addListener(this);
 
