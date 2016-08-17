@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.common;
 
+import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -35,27 +36,69 @@ import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
 
+@SuppressWarnings(value = "checkstyle:methodcount")
 public class TestSuite {
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
-
     private int durationSeconds;
     private int warmupDurationSeconds;
     private boolean waitForTestCase;
     private boolean failFast;
-
+    private boolean parallel;
+    private TargetType targetType;
+    private int targetCount;
+    private boolean verifyEnabled;
     private Set<FailureType> tolerableFailures = Collections.emptySet();
+
+    public TestSuite setVerifyEnabled(boolean verifyEnabled) {
+        this.verifyEnabled = verifyEnabled;
+        return this;
+    }
+
+    public boolean isVerifyEnabled() {
+        return verifyEnabled;
+    }
+
+
+    public TestSuite setParallel(boolean parallel) {
+        this.parallel = parallel;
+        return this;
+    }
+
+    public boolean isParallel() {
+        return parallel;
+    }
+
+    public TestSuite setTargetType(TargetType targetType) {
+        this.targetType = targetType;
+        return this;
+    }
+
+    public TargetType getTargetType(boolean hasClientWorkers) {
+        return targetType.resolvePreferClient(hasClientWorkers);
+    }
+
+    public TestSuite setTargetCount(int targetCount) {
+        this.targetCount = targetCount;
+        return this;
+    }
+
+    public int getTargetCount() {
+        return targetCount;
+    }
 
     public List<TestCase> getTestCaseList() {
         return testCaseList;
     }
 
-    public void setDurationSeconds(int durationSeconds) {
+    public TestSuite setDurationSeconds(int durationSeconds) {
         this.durationSeconds = durationSeconds;
+        return this;
     }
 
-    public void setWarmupDurationSeconds(int warmupDurationSeconds) {
+    public TestSuite setWarmupDurationSeconds(int warmupDurationSeconds) {
         this.warmupDurationSeconds = warmupDurationSeconds;
+        return this;
     }
 
     public int getWarmupDurationSeconds() {
@@ -66,32 +109,36 @@ public class TestSuite {
         return durationSeconds;
     }
 
-    public void setWaitForTestCase(boolean waitForTestCase) {
+    public TestSuite setWaitForTestCase(boolean waitForTestCase) {
         this.waitForTestCase = waitForTestCase;
+        return this;
     }
 
     public boolean isWaitForTestCase() {
         return waitForTestCase;
     }
 
-    public void setFailFast(boolean failFast) {
+    public TestSuite setFailFast(boolean failFast) {
         this.failFast = failFast;
+        return this;
     }
 
     public boolean isFailFast() {
         return failFast;
     }
 
-    public void setTolerableFailures(Set<FailureType> tolerableFailures) {
+    public TestSuite setTolerableFailures(Set<FailureType> tolerableFailures) {
         this.tolerableFailures = tolerableFailures;
+        return this;
     }
 
     public Set<FailureType> getTolerableFailures() {
         return tolerableFailures;
     }
 
-    public void addTest(TestCase testCase) {
+    public TestSuite addTest(TestCase testCase) {
         testCaseList.add(testCase);
+        return this;
     }
 
     public TestCase getTestCase(String testCaseId) {
@@ -126,9 +173,15 @@ public class TestSuite {
     public String toString() {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
+                + ", warmupDurationSeconds=" + warmupDurationSeconds
                 + ", waitForTestCase=" + waitForTestCase
-                + ", testCaseList=" + testCaseList
                 + ", failFast=" + failFast
+                + ", parallel=" + parallel
+                + ", targetType=" + targetType
+                + ", targetCount=" + targetCount
+                + ", verifyEnabled=" + verifyEnabled
+                + ", tolerableFailures=" + tolerableFailures
+                + ", testCaseList=" + testCaseList
                 + '}';
     }
 

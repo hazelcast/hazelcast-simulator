@@ -103,7 +103,6 @@ final class TestCaseRunner implements TestPhaseListener {
                    Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                    FailureCollector failureCollector,
                    ComponentRegistry componentRegistry,
-                   CoordinatorParameters coordinatorParameters,
                    WorkerParameters workerParameters,
                    PerformanceStatsCollector performanceStatsCollector) {
         this.testIndex = testIndex;
@@ -119,9 +118,9 @@ final class TestCaseRunner implements TestPhaseListener {
         this.prefix = padRight(testCaseId, testSuite.getMaxTestCaseIdLength() + 1);
         this.testPhaseSyncMap = testPhaseSyncMap;
 
-        this.isVerifyEnabled = coordinatorParameters.isVerifyEnabled();
-        this.targetType = coordinatorParameters.getTargetType(componentRegistry.hasClientWorkers());
-        this.targetCount = coordinatorParameters.getTargetCount();
+        this.isVerifyEnabled = testSuite.isVerifyEnabled();
+        this.targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
+        this.targetCount = testSuite.getTargetCount();
 
         this.monitorPerformance = workerParameters.isMonitorPerformance();
         this.logPerformanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();

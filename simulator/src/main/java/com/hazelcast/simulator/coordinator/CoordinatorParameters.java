@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 
 import java.text.SimpleDateFormat;
@@ -31,11 +30,6 @@ class CoordinatorParameters {
     private final String workerClassPath;
 
     private final boolean skipDownload;
-    private final boolean verifyEnabled;
-    private final boolean parallel;
-
-    private final TargetType targetType;
-    private final int targetCount;
 
     private final TestPhase lastTestPhaseToSync;
     private final int workerVmStartupDelayMs;
@@ -47,10 +41,6 @@ class CoordinatorParameters {
     CoordinatorParameters(String sessionId,
                           SimulatorProperties properties,
                           String workerClassPath,
-                          boolean verifyEnabled,
-                          boolean parallel,
-                          TargetType targetType,
-                          int targetCount,
                           TestPhase lastTestPhaseToSync,
                           int workerVmStartupDelayMs,
                           boolean skipDownload,
@@ -58,10 +48,6 @@ class CoordinatorParameters {
         this.sessionId = sessionId == null ? createSessionId() : sessionId;
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
-        this.verifyEnabled = verifyEnabled;
-        this.parallel = parallel;
-        this.targetType = targetType;
-        this.targetCount = targetCount;
         this.lastTestPhaseToSync = lastTestPhaseToSync;
         this.workerVmStartupDelayMs = workerVmStartupDelayMs;
         this.skipDownload = skipDownload;
@@ -82,22 +68,6 @@ class CoordinatorParameters {
 
     String getWorkerClassPath() {
         return workerClassPath;
-    }
-
-    boolean isVerifyEnabled() {
-        return verifyEnabled;
-    }
-
-    boolean isParallel() {
-        return parallel;
-    }
-
-    TargetType getTargetType(boolean hasClientWorkers) {
-        return targetType.resolvePreferClient(hasClientWorkers);
-    }
-
-    int getTargetCount() {
-        return targetCount;
     }
 
     TestPhase getLastTestPhaseToSync() {

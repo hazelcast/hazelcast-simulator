@@ -198,10 +198,6 @@ final class CoordinatorCli {
                 options.valueOf(sessionIdSpec),
                 simulatorProperties,
                 options.valueOf(workerClassPathSpec),
-                options.valueOf(verifyEnabledSpec),
-                options.has(parallelSpec),
-                options.valueOf(targetTypeSpec),
-                options.valueOf(targetCountSpec),
                 options.valueOf(syncToTestPhaseSpec),
                 options.valueOf(workerVmStartupDelayMsSpec),
                 options.has(skipDownloadSpec),
@@ -241,14 +237,18 @@ final class CoordinatorCli {
             durationSeconds = 0;
         }
 
-        TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec));
-        testSuite.setDurationSeconds(durationSeconds);
-        testSuite.setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec));
-        testSuite.setWaitForTestCase(hasWaitForTestCase);
-        testSuite.setFailFast(options.valueOf(failFastSpec));
-        testSuite.setTolerableFailures(fromPropertyValue(options.valueOf(tolerableFailureSpec)));
+        TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec))
+                .setDurationSeconds(durationSeconds)
+                .setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec))
+                .setWaitForTestCase(hasWaitForTestCase)
+                .setFailFast(options.valueOf(failFastSpec))
+                .setTolerableFailures(fromPropertyValue(options.valueOf(tolerableFailureSpec)))
+                .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
+                .setParallel(options.has(parallelSpec))
+                .setTargetType(options.valueOf(targetTypeSpec))
+                .setTargetCount(options.valueOf(targetCountSpec));
 
-        // if the coordinator is not monitoring performance, we don't care for measuring latencies
+         // if the coordinator is not monitoring performance, we don't care for measuring latencies
         if (!options.has(monitorPerformanceSpec)) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
