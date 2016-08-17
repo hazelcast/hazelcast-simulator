@@ -22,11 +22,34 @@ public interface TestContext {
      */
     String LOCALHOST = "127.0.0.1";
 
+    /**
+     * Returns the id of the current test.
+     *
+     * @return the id of the current test.
+     */
     String getTestId();
 
+    /**
+     * Returns the public ip address of the machine the test runs on. In some environments like ec2, there are public and private
+     * ip addresses.
+     *
+     * @return the public ip address.
+     */
     String getPublicIpAddress();
 
+    /**
+     * Checks if the run phase or warmup phase has stopped. In most cases this method doesn't need to be called since the
+     * {@link com.hazelcast.simulator.test.annotations.TimeStep} approach will take care of stopping. But in certain cases
+     * like using the {@link com.hazelcast.simulator.test.annotations.Run}; one needs to check explicitly.
+     *
+     * @return true if stopped, false otherwise.
+     */
     boolean isStopped();
 
+    /**
+     * Stops the run/warmup phase. In most cases an outside duration is passed and the test will run as long as needed or
+     * until an exception is thrown. But in certain condition the implementer of a test wants to stop the run/warmup phase
+     * directly.
+     */
     void stop();
 }
