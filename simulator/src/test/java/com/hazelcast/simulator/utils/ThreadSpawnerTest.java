@@ -19,17 +19,17 @@ import static org.junit.Assert.assertTrue;
 
 public class ThreadSpawnerTest {
 
-    private Runnable sleepInfiniteRunnable;
+    private Runnable sleepInfiniteRunnable  = new Runnable() {
+        @Override
+        public void run() {
+            sleepSeconds(Integer.MAX_VALUE);
+        }
+    };
 
     @Before
     public void setUp() {
         setupFakeUserDir();
-        sleepInfiniteRunnable = new Runnable() {
-            @Override
-            public void run() {
-                sleepSeconds(Integer.MAX_VALUE);
-            }
-        };
+        ExceptionReporter.reset();
     }
 
     @After
