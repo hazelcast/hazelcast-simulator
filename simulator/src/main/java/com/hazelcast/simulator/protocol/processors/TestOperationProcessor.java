@@ -35,7 +35,6 @@ import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -52,8 +51,6 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(TestOperationProcessor.class);
 
     private static final AtomicInteger TESTS_PENDING = new AtomicInteger(0);
-
-    private final AtomicReference<TestPhase> testPhaseReference = new AtomicReference<TestPhase>(null);
 
     private final Worker worker;
     private final WorkerType type;
@@ -80,7 +77,7 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
     // just for testing
     TestPhase getTestPhase() {
-        return testPhaseReference.get();
+        return testContainer.currentTestPhase();
     }
 
     public SimulatorAddress getTestAddress() {
@@ -139,9 +136,9 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
         LOGGER.info(format("%s Starting %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
         try {
-            OperationThread operationThread = new OperationThread(testPhase) {
+            OperationThread operationThread = new OperationThread() {
                 @Override
-                public void doRun() throws Exception {
+                public void run0() throws Exception {
                     try {
                         testContainer.invoke(testPhase);
                     } finally {
@@ -166,9 +163,9 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
         }
 
         LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
-        OperationThread operationThread = new OperationThread(TestPhase.RUN) {
+        OperationThread operationThread = new OperationThread() {
             @Override
-            public void doRun() throws Exception {
+            public void run0() throws Exception {
                 try {
                     testContainer.invoke(TestPhase.RUN);
                 } finally {
@@ -205,26 +202,17 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
     private abstract class OperationThread extends Thread {
 
-        OperationThread(TestPhase testPhase) {
-            if (!testPhaseReference.compareAndSet(null, testPhase)) {
-                throw new IllegalStateException(format("Tried to start %s for test %s, but %s is still running!", testPhase,
-                        testId, testPhaseReference.get()));
-            }
-        }
-
         @Override
         @SuppressWarnings("PMD.AvoidCatchingThrowable")
         public final void run() {
             try {
-                doRun();
+                run0();
             } catch (Throwable t) {
                 LOGGER.error("Error while executing test phase", t);
                 ExceptionReporter.report(testId, t);
-            } finally {
-                sendPhaseCompletedOperation(testPhaseReference.getAndSet(null));
             }
         }
 
-        abstract void doRun() throws Exception;
+        abstract void run0() throws Exception;
     }
 }

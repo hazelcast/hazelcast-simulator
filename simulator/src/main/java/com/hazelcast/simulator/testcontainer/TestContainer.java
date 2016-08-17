@@ -44,6 +44,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.testcontainer.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.testcontainer.TestPhase.GLOBAL_PREPARE;
@@ -63,7 +64,7 @@ import static java.util.Arrays.asList;
 
 /**
  * Container for test instances.
- *
+ * <p>
  * It is responsible for:
  * <ul>
  * <li>Creates the test class instance by its fully qualified class name.</li>
@@ -82,11 +83,13 @@ public class TestContainer {
     private final PropertyBinding propertyBinding;
     private final Class testClass;
     private final RunStrategy runStrategy;
+    private final AtomicReference<TestPhase> testPhaseReference = new AtomicReference<TestPhase>(null);
 
     public TestContainer(TestContextImpl targetInstance, TestCase testCase) {
         this(targetInstance, null, testCase);
     }
 
+    // this method exists for testing purposes.
     public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase) {
         this.testContext = checkNotNull(testContext, "testContext can't null!");
         this.testCase = checkNotNull(testCase, "testCase can't be null!");
@@ -158,7 +161,31 @@ public class TestContainer {
         return propertyBinding.getProbeMap();
     }
 
+    public TestPhase currentTestPhase() {
+        return testPhaseReference.get();
+    }
+
     public void invoke(TestPhase testPhase) throws Exception {
+        for (; ; ) {
+            TestPhase current = testPhaseReference.get();
+            if (current != null) {
+                throw new IllegalStateException(format("Tried to start %s for test %s, but %s is still running!", testPhase,
+                        testCase.getId(), testPhaseReference.get()));
+            }
+
+            if (testPhaseReference.compareAndSet(null, testPhase)) {
+                break;
+            }
+        }
+
+        try {
+            invoke0(testPhase);
+        } finally {
+            testPhaseReference.set(null);
+        }
+    }
+
+    private void invoke0(TestPhase testPhase) throws Exception {
         if (testPhase == LOCAL_AFTER_WARMUP) {
             testContext.afterLocalWarmup();
         }
