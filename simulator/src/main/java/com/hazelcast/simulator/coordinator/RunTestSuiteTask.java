@@ -25,6 +25,7 @@ import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -46,6 +47,7 @@ public class RunTestSuiteTask {
     private final RemoteClient remoteClient;
     private final PerformanceStatsCollector performanceStatsCollector;
     private final WorkerParameters workerParameters;
+    private final List<TestCaseRunner> runners = new ArrayList<TestCaseRunner>();
 
     public RunTestSuiteTask(TestSuite testSuite,
                             CoordinatorParameters coordinatorParameters,
@@ -102,6 +104,7 @@ public class RunTestSuiteTask {
                     componentRegistry,
                     workerParameters,
                     performanceStatsCollector);
+            runners.add(runner);
             testPhaseListeners.addListener(testIndex, runner);
         }
 
@@ -133,12 +136,12 @@ public class RunTestSuiteTask {
 
     private void runParallel() {
         ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
-        for (final TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
+        for (final TestCaseRunner runner : runners) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        ((TestCaseRunner) testCaseRunner).run();
+                        runner.run();
                     } catch (Exception e) {
                         throw rethrow(e);
                     }
@@ -149,8 +152,8 @@ public class RunTestSuiteTask {
     }
 
     private void runSequential() {
-        for (TestPhaseListener testCaseRunner : testPhaseListeners.getListeners()) {
-            ((TestCaseRunner) testCaseRunner).run();
+        for (TestCaseRunner runner : runners) {
+            runner.run();
             boolean hasCriticalFailure = failureCollector.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
                 echoer.echo("Aborting TestSuite due to critical failure");
