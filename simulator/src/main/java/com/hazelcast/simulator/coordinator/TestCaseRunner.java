@@ -54,12 +54,13 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
 import static com.hazelcast.simulator.utils.FormatUtils.padRight;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Collections.synchronizedList;
 
 /**
  * Responsible for running a single {@link TestCase}.
- *
+ * <p>
  * Multiple TestCases can be run in parallel, by having multiple TestCaseRunners in parallel.
  */
 final class TestCaseRunner implements TestPhaseListener {
@@ -91,8 +92,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private final TargetType targetType;
     private final int targetCount;
 
-    private final boolean monitorPerformance;
-    private final int logPerformanceIntervalSeconds;
+    private final int performanceMonitorIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
 
     @SuppressWarnings("checkstyle:parameternumber")
@@ -122,9 +122,12 @@ final class TestCaseRunner implements TestPhaseListener {
         this.targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
         this.targetCount = testSuite.getTargetCount();
 
-        this.monitorPerformance = workerParameters.isMonitorPerformance();
-        this.logPerformanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
-        this.logRunPhaseIntervalSeconds = workerParameters.getRunPhaseLogIntervalSeconds(RUN_PHASE_LOG_INTERVAL_SECONDS);
+        this.performanceMonitorIntervalSeconds = workerParameters.getPerformanceMonitorIntervalSeconds();
+        if (performanceMonitorIntervalSeconds > 0) {
+            this.logRunPhaseIntervalSeconds = min(performanceMonitorIntervalSeconds, RUN_PHASE_LOG_INTERVAL_SECONDS);
+        } else {
+            this.logRunPhaseIntervalSeconds = RUN_PHASE_LOG_INTERVAL_SECONDS;
+        }
 
         for (TestPhase testPhase : TestPhase.values()) {
             phaseCompletedMap.put(testPhase, synchronizedList(new ArrayList<SimulatorAddress>()));
@@ -392,7 +395,7 @@ final class TestCaseRunner implements TestPhaseListener {
                     warmup ? "Warming up " : "Running",
                     secondsToHuman(elapsed),
                     formatPercentage(elapsed, sleepSeconds));
-            if (monitorPerformance && elapsed % logPerformanceIntervalSeconds == 0) {
+            if (performanceMonitorIntervalSeconds > 0 && elapsed % performanceMonitorIntervalSeconds == 0) {
                 msg += performanceStatsCollector.formatPerformanceNumbers(testCaseId);
             }
 

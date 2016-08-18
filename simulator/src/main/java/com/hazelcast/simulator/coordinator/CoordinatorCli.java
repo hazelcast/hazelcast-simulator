@@ -61,6 +61,8 @@ final class CoordinatorCli {
 
     static final int DEFAULT_DURATION_SECONDS = 60;
     static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
+    private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
+
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
@@ -184,13 +186,14 @@ final class CoordinatorCli {
             "Prevents downloading of the created worker artifacts.");
 
     private final OptionSet options;
+    private final SimulatorProperties simulatorProperties;
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
 
         this.testSuite = loadTestSuite();
 
-        SimulatorProperties simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
+        this.simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
 
         this.componentRegistry = newComponentRegistry(simulatorProperties);
 
@@ -206,8 +209,9 @@ final class CoordinatorCli {
         int defaultHzPort = simulatorProperties.getHazelcastPort();
         String licenseKey = options.valueOf(licenseKeySpec);
 
+
         this.workerParameters = new WorkerParameters(
-                simulatorProperties,
+                simulatorProperties.getVersionSpec(),
                 options.valueOf(autoCreateHzInstanceSpec),
                 options.valueOf(workerStartupTimeoutSpec),
                 options.valueOf(workerVmOptionsSpec),
@@ -216,7 +220,7 @@ final class CoordinatorCli {
                 initClientHzConfig(loadClientHzConfig(), componentRegistry, defaultHzPort, licenseKey),
                 loadLog4jConfig(),
                 loadWorkerScript(simulatorProperties.get("VENDOR")),
-                options.has(monitorPerformanceSpec));
+                initWorkerPerformanceMonitorIntervalSeconds());
 
         DeploymentPlan deploymentPlan = newDeploymentPlan(simulatorProperties, componentRegistry,
                 workerParameters, defaultHzPort, licenseKey);
@@ -224,6 +228,19 @@ final class CoordinatorCli {
         this.coordinator = new Coordinator(
                 componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
 
+    }
+
+    private int initWorkerPerformanceMonitorIntervalSeconds() {
+        if (!options.has(monitorPerformanceSpec)) {
+            return 0;
+        }
+
+        String intervalSeconds = simulatorProperties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
+        if (intervalSeconds == null || intervalSeconds.isEmpty()) {
+            return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
+        }
+
+        return Integer.parseInt(intervalSeconds);
     }
 
     void run() {

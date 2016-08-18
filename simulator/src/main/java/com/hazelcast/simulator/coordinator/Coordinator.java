@@ -108,9 +108,12 @@ final class Coordinator {
         echoLocal("Last TestPhase to sync: %s", lastTestPhaseToSync);
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
-        boolean performanceEnabled = workerParameters.isMonitorPerformance();
-        int performanceIntervalSeconds = workerParameters.getWorkerPerformanceMonitorIntervalSeconds();
-        echoLocal("Performance monitor enabled: %s (%d seconds)", performanceEnabled, performanceIntervalSeconds);
+        int performanceIntervalSeconds = workerParameters.getPerformanceMonitorIntervalSeconds();
+        if (performanceIntervalSeconds > 0) {
+            echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
+        } else {
+            echoLocal("Performance monitor disabled");
+        }
     }
 
     void run(TestSuite testSuite) {
