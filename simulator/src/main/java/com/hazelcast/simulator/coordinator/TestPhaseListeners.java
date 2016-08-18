@@ -20,6 +20,7 @@ import com.hazelcast.simulator.testcontainer.TestPhase;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -40,6 +41,14 @@ public class TestPhaseListeners {
 
     public void addListener(int testIndex, TestPhaseListener listener) {
         listenerMap.put(testIndex, listener);
+    }
+
+    public void removeAllListeners(Collection<? extends TestPhaseListener> listeners) {
+        for (Map.Entry<Integer, TestPhaseListener> entry : listenerMap.entrySet()) {
+            if (listeners.contains(entry.getValue())) {
+                listenerMap.remove(entry.getKey());
+            }
+        }
     }
 
     public void updatePhaseCompletion(int testIndex, TestPhase testPhase, SimulatorAddress workerAddress) {
