@@ -72,6 +72,7 @@ public class RunTestSuiteTask {
         try {
             run0();
         } finally {
+            testPhaseListeners.removeAllListeners(runners);
             componentRegistry.removeTests();
             performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
@@ -87,7 +88,7 @@ public class RunTestSuiteTask {
                 coordinatorParameters.getLastTestPhaseToSync());
 
         echoer.echo("Starting TestSuite");
-        logTestSuiteDuration(parallel);
+        echoTestSuiteDuration(parallel);
 
         for (TestData testData : componentRegistry.getTests()) {
             int testIndex = testData.getTestIndex();
@@ -118,7 +119,7 @@ public class RunTestSuiteTask {
         echoTestSuiteEnd(testCount, started);
     }
 
-    private void logTestSuiteDuration(boolean isParallel) {
+    private void echoTestSuiteDuration(boolean isParallel) {
         int testDuration = testSuite.getDurationSeconds();
         if (testDuration > 0) {
             echoer.echo("Running time per test: %s", secondsToHuman(testDuration));

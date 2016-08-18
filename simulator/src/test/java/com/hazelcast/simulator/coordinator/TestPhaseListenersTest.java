@@ -5,8 +5,13 @@ import com.hazelcast.simulator.testcontainer.TestPhase;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashSet;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class TestPhaseListenersTest {
 
@@ -20,6 +25,20 @@ public class TestPhaseListenersTest {
     @Test
     public void testGetListeners() {
         assertTrue(testPhaseListeners.getListeners().isEmpty());
+    }
+
+    @Test
+    public void removeAllListeners() {
+        TestPhaseListener listener1 = mock(TestPhaseListener.class);
+        TestPhaseListener listener2 = mock(TestPhaseListener.class);
+        TestPhaseListener listener3 = mock(TestPhaseListener.class);
+        testPhaseListeners.addListener(1, listener1);
+        testPhaseListeners.addListener(1, listener2);
+        testPhaseListeners.addListener(1, listener3);
+
+        testPhaseListeners.removeAllListeners(asList(listener1, listener2));
+
+        assertEquals(singleton(listener3), new HashSet<TestPhaseListener>(testPhaseListeners.getListeners()));
     }
 
     @Test
