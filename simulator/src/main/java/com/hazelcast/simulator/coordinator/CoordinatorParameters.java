@@ -28,13 +28,10 @@ class CoordinatorParameters {
 
     private final SimulatorProperties simulatorProperties;
     private final String workerClassPath;
-
     private final boolean skipDownload;
-
     private final TestPhase lastTestPhaseToSync;
     private final int workerVmStartupDelayMs;
     private final String afterCompletionFile;
-
     private final String sessionId;
 
     @SuppressWarnings("checkstyle:parameternumber")
