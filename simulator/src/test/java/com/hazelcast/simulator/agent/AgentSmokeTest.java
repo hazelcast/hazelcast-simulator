@@ -233,7 +233,7 @@ public class AgentSmokeTest implements FailureListener {
 
     private void createWorkers() {
         WorkerParameters workerParameters = new WorkerParameters(
-                new SimulatorProperties(),
+                "outofthebox",
                 true,
                 60000,
                 "",
@@ -242,8 +242,7 @@ public class AgentSmokeTest implements FailureListener {
                 "",
                 fileAsText(internalDistPath() + "/conf/worker-log4j.xml"),
                 fileAsText(internalDistPath() + "/conf/worker-hazelcast.sh"),
-                false
-        );
+                0);
         DeploymentPlan deploymentPlan = createSingleInstanceDeploymentPlan(AGENT_IP_ADDRESS, workerParameters);
         new StartWorkersTask(deploymentPlan.getWorkerDeployment(), remoteClient, componentRegistry, 0).run();
     }

@@ -19,7 +19,6 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 /**
@@ -27,26 +26,19 @@ import static java.lang.String.format;
  */
 public class WorkerParameters {
 
-    private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
-
     private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
-
     private final String versionSpec;
-
     private final String memberJvmOptions;
     private final String clientJvmOptions;
-
     private final String memberHzConfig;
     private final String clientHzConfig;
     private final String log4jConfig;
-
-    private final boolean monitorPerformance;
-    private final int workerPerformanceMonitorIntervalSeconds;
-
+    // value of 1 or higher means enabled.
+    private final int performanceMonitorIntervalSeconds;
     private final String workerScript;
 
-    public WorkerParameters(SimulatorProperties properties,
+    public WorkerParameters(String versionSpec,
                             boolean autoCreateHzInstance,
                             int workerStartupTimeout,
                             String memberJvmOptions,
@@ -55,30 +47,17 @@ public class WorkerParameters {
                             String clientHzConfig,
                             String log4jConfig,
                             String workerScript,
-                            boolean monitorPerformance) {
+                            int performanceMonitorIntervalSeconds) {
         this.autoCreateHzInstance = autoCreateHzInstance;
         this.workerStartupTimeout = workerStartupTimeout;
-
-        this.versionSpec = properties.getVersionSpec();
-
+        this.versionSpec = versionSpec;
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
-
         this.memberHzConfig = memberHzConfig;
         this.clientHzConfig = clientHzConfig;
         this.log4jConfig = log4jConfig;
-
-        this.monitorPerformance = monitorPerformance;
-        this.workerPerformanceMonitorIntervalSeconds = initWorkerPerformanceMonitorIntervalSeconds(properties);
+        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         this.workerScript = workerScript;
-    }
-
-    private int initWorkerPerformanceMonitorIntervalSeconds(SimulatorProperties properties) {
-        String intervalSeconds = properties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
-        if (intervalSeconds == null || intervalSeconds.isEmpty()) {
-            return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
-        }
-        return Integer.parseInt(intervalSeconds);
     }
 
     public boolean isAutoCreateHzInstance() {
@@ -113,23 +92,8 @@ public class WorkerParameters {
         return log4jConfig;
     }
 
-    public boolean isMonitorPerformance() {
-        return monitorPerformance;
-    }
-
-    public int getWorkerPerformanceMonitorIntervalSeconds() {
-        if (monitorPerformance) {
-            return workerPerformanceMonitorIntervalSeconds;
-        } else {
-            return -1;
-        }
-    }
-
-    public int getRunPhaseLogIntervalSeconds(int runPhaseLogIntervalSeconds) {
-        if (!monitorPerformance) {
-            return runPhaseLogIntervalSeconds;
-        }
-        return min(workerPerformanceMonitorIntervalSeconds, runPhaseLogIntervalSeconds);
+    public int getPerformanceMonitorIntervalSeconds() {
+        return performanceMonitorIntervalSeconds;
     }
 
     public String getWorkerScript() {

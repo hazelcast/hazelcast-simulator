@@ -83,7 +83,7 @@ final class AgentWorkerLayout {
         environment.put("LOG4j_CONFIG", parameters.getLog4jConfig());
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", Boolean.toString(parameters.isAutoCreateHzInstance()));
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(parameters.getWorkerPerformanceMonitorIntervalSeconds()));
+                Integer.toString(parameters.getPerformanceMonitorIntervalSeconds()));
 
         WorkerProcessSettings settings = new WorkerProcessSettings(
                 agentData.getNextWorkerIndex(),

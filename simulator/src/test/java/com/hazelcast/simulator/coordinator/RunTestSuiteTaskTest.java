@@ -19,7 +19,6 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
-import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -51,7 +50,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
@@ -76,7 +74,7 @@ public class RunTestSuiteTaskTest {
 
     private boolean parallel = false;
     private boolean verifyEnabled = true;
-    private boolean monitorPerformance = false;
+    private int monitorPerformanceMonitorIntervalSeconds = 0;
 
     @BeforeClass
     public static void prepareEnvironment() {
@@ -145,7 +143,7 @@ public class RunTestSuiteTaskTest {
     public void runParallel_performanceMonitorEnabled() {
         testSuite.setDurationSeconds(4);
         parallel = true;
-        monitorPerformance = true;
+        monitorPerformanceMonitorIntervalSeconds = 10;
 
         RunTestSuiteTask task = createRunTestSuiteTask();
         task.run();
@@ -323,9 +321,7 @@ public class RunTestSuiteTaskTest {
                 .setTargetCount(targetCount);
 
         WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.isMonitorPerformance()).thenReturn(monitorPerformance);
-        when(workerParameters.getWorkerPerformanceMonitorIntervalSeconds()).thenReturn(3);
-        when(workerParameters.getRunPhaseLogIntervalSeconds(anyInt())).thenReturn(3);
+        when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(monitorPerformanceMonitorIntervalSeconds);
 
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureCollector,
                 testPhaseListeners, remoteClient, performanceStatsCollector,

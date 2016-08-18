@@ -170,7 +170,7 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_singleMemberWorker() {
-        when(workerParameters.isMonitorPerformance()).thenReturn(true);
+        when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(10);
 
         workerDeployment = generateFromArguments(componentRegistry, workerParameters, 1, 0, 0);
 
