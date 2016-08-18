@@ -63,7 +63,6 @@ import static org.mockito.Mockito.when;
 
 public class RunTestSuiteTaskTest {
 
-    private static File userDir;
     private CountDownLatch finishWorkerLatch = new CountDownLatch(1);
 
     private File outputDirectory;
@@ -81,7 +80,7 @@ public class RunTestSuiteTaskTest {
 
     @BeforeClass
     public static void prepareEnvironment() {
-        userDir = setupFakeEnvironment();
+        setupFakeEnvironment();
     }
 
     @AfterClass
@@ -91,12 +90,9 @@ public class RunTestSuiteTaskTest {
 
     @Before
     public void setUp() {
-        TestCase testCase1 = new TestCase("CoordinatorTest1");
-        TestCase testCase2 = new TestCase("CoordinatorTest2");
-
         testSuite = new TestSuite();
-        testSuite.addTest(testCase1);
-        testSuite.addTest(testCase2);
+        testSuite.addTest(new TestCase("CoordinatorTest1"));
+        testSuite.addTest(new TestCase("CoordinatorTest2"));
 
         outputDirectory = createTmpDirectory();
 
