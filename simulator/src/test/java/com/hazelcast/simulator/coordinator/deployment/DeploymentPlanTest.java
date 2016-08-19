@@ -16,11 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.coordinator.deployment.AgentWorkerMode.MIXED;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.AgentWorkerMode.MIXED;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.generateFromArguments;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.generateFromXml;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertNotNull;
@@ -59,7 +58,7 @@ public class DeploymentPlanTest {
     @Test
     public void testFormatIpAddresses_sameAddresses() {
         AgentData agentData = new AgentData(1, "192.168.0.1", "192.168.0.1");
-        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, MIXED);
+        DeploymentPlan.AgentWorkerLayout agentWorkerLayout = new DeploymentPlan.AgentWorkerLayout(agentData, MIXED);
         String ipAddresses = DeploymentPlan.formatIpAddresses(agentWorkerLayout);
         assertTrue(ipAddresses.contains("192.168.0.1"));
     }
@@ -67,7 +66,7 @@ public class DeploymentPlanTest {
     @Test
     public void testFormatIpAddresses_differentAddresses() {
         AgentData agentData = new AgentData(1, "192.168.0.1", "172.16.16.1");
-        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData, MIXED);
+        DeploymentPlan.AgentWorkerLayout agentWorkerLayout = new DeploymentPlan.AgentWorkerLayout(agentData, MIXED);
         String ipAddresses = DeploymentPlan.formatIpAddresses(agentWorkerLayout);
         assertTrue(ipAddresses.contains("192.168.0.1"));
         assertTrue(ipAddresses.contains("172.16.16.1"));

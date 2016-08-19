@@ -335,4 +335,65 @@ public final class DeploymentPlan {
     public int getClientWorkerCount() {
         return clientWorkerCount;
     }
+
+    enum AgentWorkerMode {
+
+        MEMBER,
+        CLIENT,
+        MIXED,
+        CUSTOM
+    }
+
+    /**
+     * The layout of Simulator Workers for a given Simulator Agent.
+     */
+    static final class AgentWorkerLayout {
+
+        final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
+
+        final AgentData agentData;
+
+        AgentWorkerMode agentWorkerMode;
+
+        AgentWorkerLayout(AgentData agentData, AgentWorkerMode agentWorkerMode) {
+            this.agentData = agentData;
+            this.agentWorkerMode = agentWorkerMode;
+        }
+
+        Set<String> getVersionSpecs() {
+            Set<String> result = new HashSet<String>();
+            for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
+                result.add(workerProcessSettings.getVersionSpec());
+            }
+            return result;
+        }
+
+        WorkerProcessSettings addWorker(WorkerType type, WorkerParameters parameters) {
+            WorkerProcessSettings settings = new WorkerProcessSettings(
+                    agentData.getNextWorkerIndex(),
+                    type,
+                    parameters.getVersionSpec(),
+                    parameters.getWorkerScript(),
+                    parameters.getWorkerStartupTimeout(),
+                    parameters.getEnvironment());
+            workerProcessSettingsList.add(settings);
+
+            return settings;
+        }
+
+        void addWorker(WorkerProcessSettings settings) {
+            agentData.getNextWorkerIndex();
+            workerProcessSettingsList.add(settings);
+        }
+
+        int getCount(WorkerType type) {
+            int count = 0;
+            for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
+                if (workerProcessSettings.getWorkerType() == type) {
+                    count++;
+                }
+            }
+            return count;
+        }
+    }
 }
