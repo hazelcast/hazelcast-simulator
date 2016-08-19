@@ -18,14 +18,14 @@ package com.hazelcast.simulator.tests.synthetic;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
-import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.BackupOperation;
+import com.hazelcast.spi.Operation;
 import com.hazelcast.spi.PartitionAwareOperation;
 
 import java.io.IOException;
 import java.util.concurrent.locks.LockSupport;
 
-public class SyntheticBackupOperation extends AbstractOperation
+public class SyntheticBackupOperation extends Operation
         implements BackupOperation, PartitionAwareOperation, IdentifiedDataSerializable {
 
     private long delayNs;
