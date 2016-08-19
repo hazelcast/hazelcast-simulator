@@ -21,10 +21,10 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.InternalCompletableFuture;
 import com.hazelcast.spi.OperationService;
@@ -52,8 +52,8 @@ public class GenericOperationTest extends AbstractTest {
         operationService = getOperationService(targetInstance);
     }
 
-    @Prepare
-    public void prepare() {
+    @Warmup
+    public void warmup() {
         Set<Member> memberSet = targetInstance.getCluster().getMembers();
         memberAddresses = new Address[memberSet.size()];
 

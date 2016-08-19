@@ -17,10 +17,10 @@ package com.hazelcast.simulator.tests.syntheticmap;
 
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
-import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 
 import java.util.Random;
@@ -50,8 +50,8 @@ public class StringStringSyntheticMapTest extends AbstractTest {
         map = targetInstance.getDistributedObject(SyntheticMapService.SERVICE_NAME, "map-" + name);
     }
 
-    @Prepare
-    public void prepare() {
+    @Warmup
+    public void warmup() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
         values = generateStrings(valueCount, valueLength);
