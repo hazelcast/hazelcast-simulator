@@ -26,6 +26,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 import java.io.File;
+import java.util.Map;
 
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
@@ -39,16 +40,16 @@ class WorkerConfigurationConverter implements Converter {
     private final int defaultHzPort;
     private final String licenseKey;
 
-    private final WorkerParameters workerParameters;
+    private final Map<WorkerType, WorkerParameters> workerParametersMap;
 
     private final SimulatorProperties simulatorProperties;
     private final ComponentRegistry componentRegistry;
 
-    WorkerConfigurationConverter(int defaultHzPort, String licenseKey, WorkerParameters workerParameters,
+    WorkerConfigurationConverter(int defaultHzPort, String licenseKey, Map<WorkerType, WorkerParameters> workerParametersMap,
                                  SimulatorProperties simulatorProperties, ComponentRegistry componentRegistry) {
         this.defaultHzPort = defaultHzPort;
         this.licenseKey = licenseKey;
-        this.workerParameters = workerParameters;
+        this.workerParametersMap = workerParametersMap;
 
         this.simulatorProperties = simulatorProperties;
         this.componentRegistry = componentRegistry;
@@ -81,7 +82,7 @@ class WorkerConfigurationConverter implements Converter {
 
         WorkerType workerType = WorkerType.valueOf(type);
         if (hzVersion == null) {
-            hzVersion = workerParameters.getVersionSpec();
+            hzVersion = workerParametersMap.get(workerType).getVersionSpec();
         }
         hzConfig = getHzConfig(hzConfig, hzConfigFile, workerType);
         if (jvmOptions == null) {
@@ -117,10 +118,10 @@ class WorkerConfigurationConverter implements Converter {
     }
 
     private String getDefaultHzConfig(WorkerType workerType) {
-        return (workerType == MEMBER) ? workerParameters.getMemberHzConfig() : workerParameters.getClientHzConfig();
+        return workerParametersMap.get(workerType).getEnvironment().get("HAZELCAST_CONFIG");
     }
 
     private String getDefaultJvmOptions(WorkerType workerType) {
-        return (workerType == MEMBER) ? workerParameters.getMemberJvmOptions() : workerParameters.getClientJvmOptions();
+        return workerParametersMap.get(workerType).getEnvironment().get("JVM_OPTIONS");
     }
 }

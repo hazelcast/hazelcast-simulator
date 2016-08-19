@@ -313,6 +313,7 @@ public class RunTestSuiteTaskTest {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 
         CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
+        when(coordinatorParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(monitorPerformanceMonitorIntervalSeconds);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
 
         testSuite.setVerifyEnabled(verifyEnabled)
@@ -320,12 +321,8 @@ public class RunTestSuiteTaskTest {
                 .setTargetType(TargetType.ALL)
                 .setTargetCount(targetCount);
 
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(monitorPerformanceMonitorIntervalSeconds);
-
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureCollector,
-                testPhaseListeners, remoteClient, performanceStatsCollector,
-                workerParameters);
+                testPhaseListeners, remoteClient, performanceStatsCollector);
 
         new TestPhaseCompleter(componentRegistry, testPhaseListeners, failureCollector).start();
 

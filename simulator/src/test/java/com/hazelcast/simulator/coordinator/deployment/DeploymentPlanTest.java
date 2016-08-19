@@ -3,10 +3,13 @@ package com.hazelcast.simulator.coordinator.deployment;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -44,7 +47,10 @@ public class DeploymentPlanTest {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.getVersionSpec()).thenReturn("outofthebox");
 
-        DeploymentPlan deploymentPlan = DeploymentPlan.createDeploymentPlan(componentRegistry, workerParameters,
+        Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType,WorkerParameters>();
+        workerParametersMap.put(WorkerType.MEMBER, workerParameters);
+
+        DeploymentPlan deploymentPlan = DeploymentPlan.createDeploymentPlan(componentRegistry, workerParametersMap,
                 memberCount, clientCount, 0);
 
         assertEquals(singleton("outofthebox"), deploymentPlan.getVersionSpecs());

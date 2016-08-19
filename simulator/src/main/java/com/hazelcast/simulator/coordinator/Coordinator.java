@@ -57,7 +57,6 @@ final class Coordinator {
 
     private final ComponentRegistry componentRegistry;
     private final CoordinatorParameters coordinatorParameters;
-    private final WorkerParameters workerParameters;
 
     private final FailureCollector failureCollector;
 
@@ -72,24 +71,17 @@ final class Coordinator {
 
     Coordinator(ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
-                WorkerParameters workerParameters,
                 DeploymentPlan deploymentPlan) {
 
         this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
-
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
-        this.workerParameters = workerParameters;
-
         this.failureCollector = new FailureCollector(outputDirectory);
         this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
-
         this.deploymentPlan = deploymentPlan;
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
-
-        logConfiguration();
     }
 
     private void logConfiguration() {
@@ -99,7 +91,7 @@ final class Coordinator {
         echoLocal("Last TestPhase to sync: %s", lastTestPhaseToSync);
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
-        int performanceIntervalSeconds = workerParameters.getPerformanceMonitorIntervalSeconds();
+        int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
         if (performanceIntervalSeconds > 0) {
             echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
         } else {
@@ -108,6 +100,8 @@ final class Coordinator {
     }
 
     void run(TestSuite testSuite) {
+        logConfiguration();
+
         checkInstallation(bash, simulatorProperties, componentRegistry);
         new InstallVendorTask(
                 simulatorProperties,
@@ -132,8 +126,7 @@ final class Coordinator {
                         failureCollector,
                         testPhaseListeners,
                         remoteClient,
-                        performanceStatsCollector,
-                        workerParameters).run();
+                        performanceStatsCollector).run();
             } catch (CommandLineExitException e) {
                 for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureCollector.getFailureCount() == 0; i++) {
                     sleepSeconds(1);

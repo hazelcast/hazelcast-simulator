@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 public class DeploymentUtilsTest {
 
-    private final WorkerParameters workerParameters = mock(WorkerParameters.class);
+    private final Map<WorkerType,WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private SimulatorAddress firstAgent;
@@ -41,6 +41,9 @@ public class DeploymentUtilsTest {
 
     @Before
     public void setUp() {
+        workerParametersMap.put(WorkerType.MEMBER,  mock(WorkerParameters.class));
+        workerParametersMap.put(WorkerType.CLIENT,  mock(WorkerParameters.class));
+
         firstAgent = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
         secondAgent = componentRegistry.addAgent("192.168.0.2", "192.168.0.2").getAddress();
         thirdAgent = componentRegistry.addAgent("192.168.0.3", "192.168.0.3").getAddress();
@@ -48,7 +51,7 @@ public class DeploymentUtilsTest {
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
 
-        converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParameters, simulatorProperties,
+        converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParametersMap, simulatorProperties,
                 componentRegistry);
     }
 
@@ -91,7 +94,7 @@ public class DeploymentUtilsTest {
                 + NEW_LINE + "  </nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        workerDeployment = generateFromXml(componentRegistry, workerParameters, converter, xml);
+        workerDeployment = generateFromXml(componentRegistry, workerParametersMap, converter, xml);
         assertWorkerDeployment(firstAgent, 1, 0);
         assertWorkerDeployment(secondAgent, 0, 2);
         assertWorkerDeployment(thirdAgent, 3, 4);
@@ -110,7 +113,7 @@ public class DeploymentUtilsTest {
                 + NEW_LINE + "  </nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        generateFromXml(componentRegistry, workerParameters, converter, xml);
+        generateFromXml(componentRegistry, workerParametersMap, converter, xml);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -122,12 +125,12 @@ public class DeploymentUtilsTest {
                 + NEW_LINE + "\t</nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        generateFromXml(componentRegistry, workerParameters, converter, xml);
+        generateFromXml(componentRegistry, workerParametersMap, converter, xml);
     }
 
     @Test
     public void testGenerateFromArguments_dedicatedMemberCountEqualsAgentCount() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 1, 0, 3);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 1, 0, 3);
 
         assertWorkerDeployment(firstAgent, 1, 0);
         assertWorkerDeployment(secondAgent, 0, 0);
@@ -136,22 +139,22 @@ public class DeploymentUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_noAgents() {
-        generateFromArguments(new ComponentRegistry(), workerParameters, 0, 0, 0);
+        generateFromArguments(new ComponentRegistry(), workerParametersMap, 0, 0, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_dedicatedMemberCountNegative() {
-        generateFromArguments(componentRegistry, workerParameters, 0, 0, -1);
+        generateFromArguments(componentRegistry, workerParametersMap, 0, 0, -1);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_dedicatedMemberCountHigherThanAgentCount() {
-        generateFromArguments(componentRegistry, workerParameters, 1, 0, 5);
+        generateFromArguments(componentRegistry, workerParametersMap, 1, 0, 5);
     }
 
     @Test
     public void testGenerateFromArguments_agentCountSufficientForDedicatedMembersAndClientWorkers() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 1, 2);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 1, 2);
 
         assertWorkerDeployment(firstAgent, 0, 0);
         assertWorkerDeployment(secondAgent, 0, 0);
@@ -160,19 +163,19 @@ public class DeploymentUtilsTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
-        generateFromArguments(componentRegistry, workerParameters, 0, 1, 3);
+        generateFromArguments(componentRegistry, workerParametersMap, 0, 1, 3);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_noWorkersDefined() {
-        generateFromArguments(componentRegistry, workerParameters, 0, 0, 0);
+        generateFromArguments(componentRegistry, workerParametersMap, 0, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_singleMemberWorker() {
-        when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(10);
+      //  when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(10);
 
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 1, 0, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 1, 0, 0);
 
         assertWorkerDeployment(firstAgent, 1, 0);
         assertWorkerDeployment(secondAgent, 0, 0);
@@ -181,7 +184,7 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_memberWorkerOverflow() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 4, 0, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 4, 0, 0);
 
         assertWorkerDeployment(firstAgent, 2, 0);
         assertWorkerDeployment(secondAgent, 1, 0);
@@ -190,7 +193,7 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_singleClientWorker() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 1, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 1, 0);
 
         assertWorkerDeployment(firstAgent, 0, 1);
         assertWorkerDeployment(secondAgent, 0, 0);
@@ -199,7 +202,7 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_clientWorkerOverflow() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 5, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 5, 0);
 
         assertWorkerDeployment(firstAgent, 0, 2);
         assertWorkerDeployment(secondAgent, 0, 2);
@@ -208,7 +211,7 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_dedicatedAndMixedWorkers1() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 2, 3, 1);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 2, 3, 1);
 
         assertWorkerDeployment(firstAgent, 2, 0);
         assertWorkerDeployment(secondAgent, 0, 2);
@@ -217,7 +220,7 @@ public class DeploymentUtilsTest {
 
     @Test
     public void testGenerateFromArguments_dedicatedAndMixedWorkers2() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 2, 3, 2);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 2, 3, 2);
 
         assertWorkerDeployment(firstAgent, 1, 0);
         assertWorkerDeployment(secondAgent, 1, 0);
@@ -246,7 +249,7 @@ public class DeploymentUtilsTest {
         componentRegistry.addWorkers(firstAgent, singletonList(firstWorker));
         componentRegistry.addWorkers(secondAgent, singletonList(secondWorker));
 
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 4, 0);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 4, 0);
 
         assertWorkerDeployment(firstAgent, 0, 1);
         assertWorkerDeployment(secondAgent, 0, 1);
@@ -286,7 +289,7 @@ public class DeploymentUtilsTest {
         componentRegistry.addWorkers(thirdAgent, singletonList(secondWorker));
         componentRegistry.addWorkers(thirdAgent, singletonList(thirdWorker));
 
-        workerDeployment = generateFromArguments(componentRegistry, workerParameters, 0, 3, 1);
+        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 3, 1);
 
         assertWorkerDeployment(firstAgent, 0, 0);
         assertWorkerDeployment(secondAgent, 0, 2);

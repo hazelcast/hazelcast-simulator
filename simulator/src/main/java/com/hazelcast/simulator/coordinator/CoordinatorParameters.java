@@ -33,6 +33,7 @@ class CoordinatorParameters {
     private final int workerVmStartupDelayMs;
     private final String afterCompletionFile;
     private final String sessionId;
+    private final int performanceMonitorIntervalSeconds;
 
     @SuppressWarnings("checkstyle:parameternumber")
     CoordinatorParameters(String sessionId,
@@ -41,7 +42,8 @@ class CoordinatorParameters {
                           TestPhase lastTestPhaseToSync,
                           int workerVmStartupDelayMs,
                           boolean skipDownload,
-                          String afterCompletionFile) {
+                          String afterCompletionFile,
+                          int performanceMonitorIntervalSeconds) {
         this.sessionId = sessionId == null ? createSessionId() : sessionId;
         this.simulatorProperties = properties;
         this.workerClassPath = workerClassPath;
@@ -49,6 +51,11 @@ class CoordinatorParameters {
         this.workerVmStartupDelayMs = workerVmStartupDelayMs;
         this.skipDownload = skipDownload;
         this.afterCompletionFile = afterCompletionFile;
+        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
+    }
+
+    public int getPerformanceMonitorIntervalSeconds() {
+        return performanceMonitorIntervalSeconds;
     }
 
     String getSessionId() {

@@ -38,11 +38,9 @@ public class CoordinatorTest {
         when(coordinatorParameters.getSessionId()).thenReturn(sessionId);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(properties);
 
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-
         DeploymentPlan deploymentPlan = createEmptyDeploymentPlan();
 
-        coordinator = new Coordinator(componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
+        coordinator = new Coordinator(componentRegistry, coordinatorParameters, deploymentPlan);
     }
 
     @After

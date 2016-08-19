@@ -23,6 +23,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.worker.WorkerType;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -70,8 +71,8 @@ final class CoordinatorCli {
     final Coordinator coordinator;
     final TestSuite testSuite;
     final CoordinatorParameters coordinatorParameters;
-    final WorkerParameters workerParameters;
     final ComponentRegistry componentRegistry;
+    final Map<WorkerType, WorkerParameters> workerParametersMap;
 
     private final OptionParser parser = new OptionParser();
 
@@ -200,32 +201,57 @@ final class CoordinatorCli {
                 options.valueOf(syncToTestPhaseSpec),
                 options.valueOf(workerVmStartupDelayMsSpec),
                 options.has(skipDownloadSpec),
-                getConfigurationFile("after-completion.sh").getAbsolutePath());
+                getConfigurationFile("after-completion.sh").getAbsolutePath(),
+                initWorkerPerformanceMonitorIntervalSeconds());
 
         int defaultHzPort = simulatorProperties.getHazelcastPort();
         String licenseKey = options.valueOf(licenseKeySpec);
 
-
-        Map<String, String> workerEnvironment = new HashMap<String, String>();
-        workerEnvironment.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
-        workerEnvironment.put("LOG4j_CONFIG", loadLog4jConfig());
-
-        this.workerParameters = new WorkerParameters(
-                simulatorProperties.getVersionSpec(),
-                options.valueOf(workerStartupTimeoutSpec),
-                options.valueOf(workerVmOptionsSpec),
-                options.valueOf(clientWorkerVmOptionsSpec),
-                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
-                initClientHzConfig(loadClientHzConfig(), componentRegistry, defaultHzPort, licenseKey),
-                loadWorkerScript(simulatorProperties.get("VENDOR")),
-                initWorkerPerformanceMonitorIntervalSeconds(),
-                workerEnvironment);
+        this.workerParametersMap = loadWorkerParameters();
 
         DeploymentPlan deploymentPlan = newDeploymentPlan(simulatorProperties, componentRegistry,
-                workerParameters, defaultHzPort, licenseKey);
+                workerParametersMap, defaultHzPort, licenseKey);
 
         this.coordinator = new Coordinator(
-                componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
+                componentRegistry, coordinatorParameters, deploymentPlan);
+    }
+
+    private Map<WorkerType, WorkerParameters> loadWorkerParameters() {
+        Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
+        String licenseKey = options.valueOf(licenseKeySpec);
+
+        Map<String, String> memberEnv = new HashMap<String, String>();
+        memberEnv.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
+        memberEnv.put("LOG4j_CONFIG", loadLog4jConfig());
+        memberEnv.put("JVM_OPTIONS", options.valueOf(workerVmOptionsSpec));
+        memberEnv.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
+        memberEnv.put("HAZELCAST_CONFIG",
+                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(),
+                        licenseKey, simulatorProperties));
+
+        result.put(WorkerType.MEMBER, new WorkerParameters(
+                simulatorProperties.getVersionSpec(),
+                options.valueOf(workerStartupTimeoutSpec),
+                loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")),
+                memberEnv));
+
+        Map<String, String> clientEnv = new HashMap<String, String>();
+        clientEnv.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
+        clientEnv.put("LOG4j_CONFIG", loadLog4jConfig());
+        clientEnv.put("JVM_OPTIONS", options.valueOf(clientWorkerVmOptionsSpec));
+        clientEnv.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
+        clientEnv.put("HAZELCAST_CONFIG",
+                initClientHzConfig(loadClientHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(), licenseKey));
+
+        result.put(WorkerType.CLIENT, new WorkerParameters(
+                simulatorProperties.getVersionSpec(),
+                options.valueOf(workerStartupTimeoutSpec),
+                loadWorkerScript(WorkerType.CLIENT, simulatorProperties.get("VENDOR")),
+                clientEnv));
+
+        return result;
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds() {
@@ -310,14 +336,14 @@ final class CoordinatorCli {
 
     private DeploymentPlan newDeploymentPlan(SimulatorProperties simulatorProperties,
                                              ComponentRegistry componentRegistry,
-                                             WorkerParameters workerParameters,
+                                             Map<WorkerType, WorkerParameters> workerParametersMap,
                                              int defaultHzPort,
                                              String licenseKey) {
         String clusterXml = loadClusterXml();
         if (clusterXml == null) {
             return createDeploymentPlan(
                     componentRegistry,
-                    workerParameters,
+                    workerParametersMap,
                     options.valueOf(memberWorkerCountSpec),
                     options.valueOf(clientWorkerCountSpec),
                     options.valueOf(dedicatedMemberMachinesSpec));
@@ -325,7 +351,7 @@ final class CoordinatorCli {
 
         return createDeploymentPlanFromClusterXml(
                 componentRegistry,
-                workerParameters,
+                workerParametersMap,
                 simulatorProperties,
                 defaultHzPort,
                 licenseKey,
@@ -367,8 +393,8 @@ final class CoordinatorCli {
         return fileAsText(file);
     }
 
-    private static String loadWorkerScript(String vendor) {
-        File file = getConfigurationFile("worker-" + vendor + ".sh");
+    private static String loadWorkerScript(WorkerType workerType, String vendor) {
+        File file = getConfigurationFile("worker-" + vendor + "-" + workerType.id() + ".sh");
         LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
         return fileAsText(file);
     }

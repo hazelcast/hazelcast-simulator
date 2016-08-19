@@ -20,13 +20,19 @@ package com.hazelcast.simulator.worker;
  */
 public enum WorkerType {
 
-    MEMBER(true),
-    CLIENT(false);
+    MEMBER(true, "member"),
+    CLIENT(false, "client");
 
     private final boolean isMember;
+    private final String id;
 
-    WorkerType(boolean isMember) {
+    WorkerType(boolean isMember, String id) {
         this.isMember = isMember;
+        this.id = id;
+    }
+
+    public String id() {
+        return id;
     }
 
     public boolean isMember() {

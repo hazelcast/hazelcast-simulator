@@ -11,10 +11,12 @@ import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,11 +34,15 @@ public class StartWorkersTaskTest {
 
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
-    private final WorkerParameters workerParameters = mock(WorkerParameters.class);
+    private final Map<WorkerType,WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
     private RemoteClient remoteClient;
 
     @Before
     public void setup() {
+        WorkerParameters workerParameters = mock(WorkerParameters.class);
+        workerParametersMap.put(WorkerType.MEMBER, workerParameters);
+        workerParametersMap.put(WorkerType.CLIENT, workerParameters);
+
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
@@ -101,7 +107,7 @@ public class StartWorkersTaskTest {
     private Map<SimulatorAddress, List<WorkerProcessSettings>> getClusterLayout(int dedicatedMemberMachineCount,
                                                                                 int memberWorkerCount,
                                                                                 int clientWorkerCount) {
-        DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParameters,
+        DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParametersMap,
                 memberWorkerCount, clientWorkerCount, dedicatedMemberMachineCount);
 
         return deploymentPlan.getWorkerDeployment();
