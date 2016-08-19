@@ -23,7 +23,6 @@ import java.util.StringTokenizer;
 public enum FailureType {
 
     NETTY_EXCEPTION("nettyException", "Netty exception", false),
-
     WORKER_EXCEPTION("workerException", "Worker exception", false),
     WORKER_TIMEOUT("workerTimeout", "Worker timeout", false),
     WORKER_OOM("workerOOM", "Worker OOME", true),
