@@ -43,9 +43,9 @@ public class TestPhaseListeners {
         listenerMap.put(testIndex, listener);
     }
 
-    public void removeAllListeners(Collection<? extends TestPhaseListener> listeners) {
+    public void removeListener(TestPhaseListener listener) {
         for (Map.Entry<Integer, TestPhaseListener> entry : listenerMap.entrySet()) {
-            if (listeners.contains(entry.getValue())) {
+            if (entry.getValue() == listener) {
                 listenerMap.remove(entry.getKey());
             }
         }

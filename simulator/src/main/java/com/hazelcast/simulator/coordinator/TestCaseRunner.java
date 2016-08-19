@@ -94,6 +94,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private final int performanceMonitorIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
+    private final TestPhaseListeners testPhaseListeners;
 
     @SuppressWarnings("checkstyle:parameternumber")
     TestCaseRunner(int testIndex,
@@ -104,7 +105,8 @@ final class TestCaseRunner implements TestPhaseListener {
                    FailureCollector failureCollector,
                    ComponentRegistry componentRegistry,
                    WorkerParameters workerParameters,
-                   PerformanceStatsCollector performanceStatsCollector) {
+                   PerformanceStatsCollector performanceStatsCollector,
+                   TestPhaseListeners testPhaseListeners) {
         this.testIndex = testIndex;
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
@@ -121,7 +123,7 @@ final class TestCaseRunner implements TestPhaseListener {
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
         this.targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
         this.targetCount = testSuite.getTargetCount();
-
+        this.testPhaseListeners = testPhaseListeners;
         this.performanceMonitorIntervalSeconds = workerParameters.getPerformanceMonitorIntervalSeconds();
         if (performanceMonitorIntervalSeconds > 0) {
             this.logRunPhaseIntervalSeconds = min(performanceMonitorIntervalSeconds, RUN_PHASE_LOG_INTERVAL_SECONDS);
@@ -140,6 +142,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     void run() {
+        testPhaseListeners.addListener(testIndex, this);
         try {
             run0();
         } catch (TestCaseAbortedException e) {
@@ -152,6 +155,8 @@ final class TestCaseRunner implements TestPhaseListener {
             }
         } catch (Exception e) {
             throw rethrow(e);
+        } finally {
+            testPhaseListeners.removeListener(this);
         }
     }
 
