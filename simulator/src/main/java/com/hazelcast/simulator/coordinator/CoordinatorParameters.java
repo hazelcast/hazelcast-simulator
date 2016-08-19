@@ -51,11 +51,11 @@ class CoordinatorParameters {
         this.afterCompletionFile = afterCompletionFile;
     }
 
-    public String getSessionId() {
+    String getSessionId() {
         return sessionId;
     }
 
-    public int getWorkerVmStartupDelayMs() {
+    int getWorkerVmStartupDelayMs() {
         return workerVmStartupDelayMs;
     }
 
@@ -71,11 +71,11 @@ class CoordinatorParameters {
         return lastTestPhaseToSync;
     }
 
-    public boolean skipDownload() {
+    boolean skipDownload() {
         return skipDownload;
     }
 
-    public String getAfterCompletionFile() {
+    String getAfterCompletionFile() {
         return afterCompletionFile;
     }
 
