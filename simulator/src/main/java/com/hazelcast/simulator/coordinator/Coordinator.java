@@ -92,14 +92,6 @@ final class Coordinator {
         logConfiguration();
     }
 
-    WorkerParameters getWorkerParameters() {
-        return workerParameters;
-    }
-
-    ComponentRegistry getComponentRegistry() {
-        return componentRegistry;
-    }
-
     private void logConfiguration() {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Total number of Hazelcast member workers: %s", deploymentPlan.getMemberWorkerCount());
