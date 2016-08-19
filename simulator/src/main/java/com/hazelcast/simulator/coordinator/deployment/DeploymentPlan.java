@@ -103,7 +103,7 @@ public final class DeploymentPlan {
 
         Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
                 = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
-        workerDeployment.put(agentData.getAddress(), agentWorkerLayout.getWorkerProcessSettings());
+        workerDeployment.put(agentData.getAddress(), agentWorkerLayout.workerProcessSettingsList);
 
         return new DeploymentPlan(workerDeployment);
     }
@@ -114,8 +114,8 @@ public final class DeploymentPlan {
     }
 
     static String formatIpAddresses(AgentWorkerLayout agentWorkerLayout) {
-        String publicIp = formatIpAddress(agentWorkerLayout.getPublicAddress());
-        String privateIp = formatIpAddress(agentWorkerLayout.getPrivateAddress());
+        String publicIp = formatIpAddress(agentWorkerLayout.agentData.getPublicAddress());
+        String privateIp = formatIpAddress(agentWorkerLayout.agentData.getPrivateAddress());
         if (publicIp.equals(privateIp)) {
             return publicIp;
         }
@@ -140,7 +140,7 @@ public final class DeploymentPlan {
         Iterator<AgentWorkerLayout> iterator = agentWorkerLayouts.iterator();
         for (NodeConfiguration nodeConfiguration : clusterConfiguration.getNodeConfigurations()) {
             AgentWorkerLayout agentWorkerLayout = iterator.next();
-            SimulatorAddress agentAddress = agentWorkerLayout.getSimulatorAddress();
+            SimulatorAddress agentAddress = agentWorkerLayout.agentData.getAddress();
             for (WorkerGroup workerGroup : nodeConfiguration.getWorkerGroups()) {
                 WorkerConfiguration workerConfig = clusterConfiguration.getWorkerConfiguration(workerGroup.getConfiguration());
                 for (int i = 0; i < workerGroup.getCount(); i++) {
@@ -149,7 +149,7 @@ public final class DeploymentPlan {
                     workerDeployment.get(agentAddress).add(settings);
                 }
             }
-            agentWorkerLayout.setAgentWorkerMode(AgentWorkerMode.CUSTOM);
+            agentWorkerLayout.agentWorkerMode = AgentWorkerMode.CUSTOM;
         }
 
         printLayout(agentWorkerLayouts, "cluster.xml");
@@ -196,7 +196,7 @@ public final class DeploymentPlan {
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, agentWorkerLayouts, AgentWorkerMode.CLIENT);
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
                     WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
-            workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
+            workerDeployment.get(agentWorkerLayout.agentData.getAddress()).add(workerProcessSettings);
         }
 
         // assign clients
@@ -204,7 +204,7 @@ public final class DeploymentPlan {
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
                     WorkerType.CLIENT, workerParametersMap.get(WorkerType.CLIENT));
-            workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
+            workerDeployment.get(agentWorkerLayout.agentData.getAddress()).add(workerProcessSettings);
         }
 
         printLayout(agentWorkerLayouts, "arguments");
@@ -255,7 +255,7 @@ public final class DeploymentPlan {
         int lastIndex = 0;
         int lastSize = Integer.MAX_VALUE;
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            int workerCount = agentWorkerLayout.getWorkerProcessSettings().size();
+            int workerCount = agentWorkerLayout.workerProcessSettingsList.size();
             if (workerCount < lastSize) {
                 lastSize = workerCount;
                 lastIndex = currentIndex;
@@ -276,7 +276,7 @@ public final class DeploymentPlan {
     private static void assignAgentWorkerMode(List<AgentWorkerLayout> agentWorkerLayouts, int startIndex, int endIndex,
                                               AgentWorkerMode agentWorkerMode) {
         for (int i = startIndex; i < endIndex; i++) {
-            agentWorkerLayouts.get(i).setAgentWorkerMode(agentWorkerMode);
+            agentWorkerLayouts.get(i).agentWorkerMode = agentWorkerMode;
         }
     }
 
@@ -285,7 +285,7 @@ public final class DeploymentPlan {
         int size = agentWorkerLayouts.size();
         while (true) {
             AgentWorkerLayout agentLayout = agentWorkerLayouts.get(currentIndex.getAndIncrement() % size);
-            if (agentLayout.getAgentWorkerMode() != excludedAgentWorkerMode) {
+            if (agentLayout.agentWorkerMode != excludedAgentWorkerMode) {
                 return agentLayout;
             }
         }
@@ -311,10 +311,10 @@ public final class DeploymentPlan {
             }
             LOGGER.info(format(message,
                     formatIpAddresses(agentWorkerLayout),
-                    agentWorkerLayout.getSimulatorAddress(),
+                    agentWorkerLayout.agentData.getAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
-                    padLeft(agentWorkerLayout.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
+                    padLeft(agentWorkerLayout.agentWorkerMode.toString(), WORKER_MODE_LENGTH),
                     agentVersionSpecs
             ));
         }

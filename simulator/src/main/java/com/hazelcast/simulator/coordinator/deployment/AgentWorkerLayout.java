@@ -17,7 +17,6 @@ package com.hazelcast.simulator.coordinator.deployment;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
 
@@ -31,31 +30,15 @@ import java.util.Set;
  */
 final class AgentWorkerLayout {
 
-    private final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
+    final List<WorkerProcessSettings> workerProcessSettingsList = new ArrayList<WorkerProcessSettings>();
 
-    private final AgentData agentData;
+    final AgentData agentData;
 
-    private AgentWorkerMode agentWorkerMode;
+    AgentWorkerMode agentWorkerMode;
 
     AgentWorkerLayout(AgentData agentData, AgentWorkerMode agentWorkerMode) {
         this.agentData = agentData;
         this.agentWorkerMode = agentWorkerMode;
-    }
-
-    List<WorkerProcessSettings> getWorkerProcessSettings() {
-        return workerProcessSettingsList;
-    }
-
-    SimulatorAddress getSimulatorAddress() {
-        return agentData.getAddress();
-    }
-
-    String getPublicAddress() {
-        return agentData.getPublicAddress();
-    }
-
-    String getPrivateAddress() {
-        return agentData.getPrivateAddress();
     }
 
     Set<String> getVersionSpecs() {
@@ -64,14 +47,6 @@ final class AgentWorkerLayout {
             result.add(workerProcessSettings.getVersionSpec());
         }
         return result;
-    }
-
-    void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {
-        this.agentWorkerMode = agentWorkerMode;
-    }
-
-    AgentWorkerMode getAgentWorkerMode() {
-        return agentWorkerMode;
     }
 
     WorkerProcessSettings addWorker(WorkerType type, WorkerParameters parameters) {
