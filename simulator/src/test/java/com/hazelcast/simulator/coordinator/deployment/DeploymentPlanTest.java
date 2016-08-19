@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.AgentWorkerMode.MIXED;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.generateFromArguments;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.generateFromXml;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.Collections.singleton;
@@ -29,20 +29,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DeploymentPlanTest {
-    private final Map<WorkerType,WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
+    private final Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private SimulatorAddress firstAgent;
     private SimulatorAddress secondAgent;
     private SimulatorAddress thirdAgent;
 
-    private Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment;
     private WorkerConfigurationConverter converter;
 
     @Before
     public void setUp() {
-        workerParametersMap.put(WorkerType.MEMBER,  mock(WorkerParameters.class));
-        workerParametersMap.put(WorkerType.CLIENT,  mock(WorkerParameters.class));
+        workerParametersMap.put(WorkerType.MEMBER, mock(WorkerParameters.class));
+        workerParametersMap.put(WorkerType.CLIENT, mock(WorkerParameters.class));
 
         firstAgent = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
         secondAgent = componentRegistry.addAgent("192.168.0.2", "192.168.0.2").getAddress();
@@ -59,7 +58,7 @@ public class DeploymentPlanTest {
     public void testFormatIpAddresses_sameAddresses() {
         AgentData agentData = new AgentData(1, "192.168.0.1", "192.168.0.1");
         DeploymentPlan.AgentWorkerLayout agentWorkerLayout = new DeploymentPlan.AgentWorkerLayout(agentData, MIXED);
-        String ipAddresses = DeploymentPlan.formatIpAddresses(agentWorkerLayout);
+        String ipAddresses = agentWorkerLayout.formatIpAddresses();
         assertTrue(ipAddresses.contains("192.168.0.1"));
     }
 
@@ -67,7 +66,7 @@ public class DeploymentPlanTest {
     public void testFormatIpAddresses_differentAddresses() {
         AgentData agentData = new AgentData(1, "192.168.0.1", "172.16.16.1");
         DeploymentPlan.AgentWorkerLayout agentWorkerLayout = new DeploymentPlan.AgentWorkerLayout(agentData, MIXED);
-        String ipAddresses = DeploymentPlan.formatIpAddresses(agentWorkerLayout);
+        String ipAddresses = agentWorkerLayout.formatIpAddresses();
         assertTrue(ipAddresses.contains("192.168.0.1"));
         assertTrue(ipAddresses.contains("172.16.16.1"));
     }
@@ -89,10 +88,10 @@ public class DeploymentPlanTest {
                 + NEW_LINE + "  </nodeConfiguration>"
                 + NEW_LINE + "</clusterConfiguration>";
 
-        workerDeployment = generateFromXml(componentRegistry, workerParametersMap, converter, xml);
-        assertWorkerDeployment(firstAgent, 1, 0);
-        assertWorkerDeployment(secondAgent, 0, 2);
-        assertWorkerDeployment(thirdAgent, 3, 4);
+        DeploymentPlan deploymentPlan = generateFromXml(componentRegistry, workerParametersMap, converter, xml);
+        assertWorkerDeployment(deploymentPlan, firstAgent, 1, 0);
+        assertWorkerDeployment(deploymentPlan, secondAgent, 0, 2);
+        assertWorkerDeployment(deploymentPlan, thirdAgent, 3, 4);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -125,101 +124,101 @@ public class DeploymentPlanTest {
 
     @Test
     public void testGenerateFromArguments_dedicatedMemberCountEqualsAgentCount() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 1, 0, 3);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 1, 0, 3);
 
-        assertWorkerDeployment(firstAgent, 1, 0);
-        assertWorkerDeployment(secondAgent, 0, 0);
-        assertWorkerDeployment(thirdAgent, 0, 0);
+        assertWorkerDeployment(plan, firstAgent, 1, 0);
+        assertWorkerDeployment(plan, secondAgent, 0, 0);
+        assertWorkerDeployment(plan, thirdAgent, 0, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_noAgents() {
-        generateFromArguments(new ComponentRegistry(), workerParametersMap, 0, 0, 0);
+        createDeploymentPlan(new ComponentRegistry(), workerParametersMap, 0, 0, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_dedicatedMemberCountNegative() {
-        generateFromArguments(componentRegistry, workerParametersMap, 0, 0, -1);
+        createDeploymentPlan(componentRegistry, workerParametersMap, 0, 0, -1);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_dedicatedMemberCountHigherThanAgentCount() {
-        generateFromArguments(componentRegistry, workerParametersMap, 1, 0, 5);
+        createDeploymentPlan(componentRegistry, workerParametersMap, 1, 0, 5);
     }
 
     @Test
     public void testGenerateFromArguments_agentCountSufficientForDedicatedMembersAndClientWorkers() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 1, 2);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 1, 2);
 
-        assertWorkerDeployment(firstAgent, 0, 0);
-        assertWorkerDeployment(secondAgent, 0, 0);
-        assertWorkerDeployment(thirdAgent, 0, 1);
+        assertWorkerDeployment(plan, firstAgent, 0, 0);
+        assertWorkerDeployment(plan, secondAgent, 0, 0);
+        assertWorkerDeployment(plan, thirdAgent, 0, 1);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_agentCountNotSufficientForDedicatedMembersAndClientWorkers() {
-        generateFromArguments(componentRegistry, workerParametersMap, 0, 1, 3);
+        createDeploymentPlan(componentRegistry, workerParametersMap, 0, 1, 3);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testGenerateFromArguments_noWorkersDefined() {
-        generateFromArguments(componentRegistry, workerParametersMap, 0, 0, 0);
+        createDeploymentPlan(componentRegistry, workerParametersMap, 0, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_singleMemberWorker() {
         //  when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(10);
 
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 1, 0, 0);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 1, 0, 0);
 
-        assertWorkerDeployment(firstAgent, 1, 0);
-        assertWorkerDeployment(secondAgent, 0, 0);
-        assertWorkerDeployment(thirdAgent, 0, 0);
+        assertWorkerDeployment(plan, firstAgent, 1, 0);
+        assertWorkerDeployment(plan, secondAgent, 0, 0);
+        assertWorkerDeployment(plan, thirdAgent, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_memberWorkerOverflow() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 4, 0, 0);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 4, 0, 0);
 
-        assertWorkerDeployment(firstAgent, 2, 0);
-        assertWorkerDeployment(secondAgent, 1, 0);
-        assertWorkerDeployment(thirdAgent, 1, 0);
+        assertWorkerDeployment(plan, firstAgent, 2, 0);
+        assertWorkerDeployment(plan, secondAgent, 1, 0);
+        assertWorkerDeployment(plan, thirdAgent, 1, 0);
     }
 
     @Test
     public void testGenerateFromArguments_singleClientWorker() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 1, 0);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 1, 0);
 
-        assertWorkerDeployment(firstAgent, 0, 1);
-        assertWorkerDeployment(secondAgent, 0, 0);
-        assertWorkerDeployment(thirdAgent, 0, 0);
+        assertWorkerDeployment(plan, firstAgent, 0, 1);
+        assertWorkerDeployment(plan, secondAgent, 0, 0);
+        assertWorkerDeployment(plan, thirdAgent, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_clientWorkerOverflow() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 5, 0);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 5, 0);
 
-        assertWorkerDeployment(firstAgent, 0, 2);
-        assertWorkerDeployment(secondAgent, 0, 2);
-        assertWorkerDeployment(thirdAgent, 0, 1);
+        assertWorkerDeployment(plan, firstAgent, 0, 2);
+        assertWorkerDeployment(plan, secondAgent, 0, 2);
+        assertWorkerDeployment(plan, thirdAgent, 0, 1);
     }
 
     @Test
     public void testGenerateFromArguments_dedicatedAndMixedWorkers1() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 2, 3, 1);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 2, 3, 1);
 
-        assertWorkerDeployment(firstAgent, 2, 0);
-        assertWorkerDeployment(secondAgent, 0, 2);
-        assertWorkerDeployment(thirdAgent, 0, 1);
+        assertWorkerDeployment(plan, firstAgent, 2, 0);
+        assertWorkerDeployment(plan, secondAgent, 0, 2);
+        assertWorkerDeployment(plan, thirdAgent, 0, 1);
     }
 
     @Test
     public void testGenerateFromArguments_dedicatedAndMixedWorkers2() {
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 2, 3, 2);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 2, 3, 2);
 
-        assertWorkerDeployment(firstAgent, 1, 0);
-        assertWorkerDeployment(secondAgent, 1, 0);
-        assertWorkerDeployment(thirdAgent, 0, 3);
+        assertWorkerDeployment(plan, firstAgent, 1, 0);
+        assertWorkerDeployment(plan, secondAgent, 1, 0);
+        assertWorkerDeployment(plan, thirdAgent, 0, 3);
     }
 
     @Test
@@ -244,11 +243,11 @@ public class DeploymentPlanTest {
         componentRegistry.addWorkers(firstAgent, singletonList(firstWorker));
         componentRegistry.addWorkers(secondAgent, singletonList(secondWorker));
 
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 4, 0);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 4, 0);
 
-        assertWorkerDeployment(firstAgent, 0, 1);
-        assertWorkerDeployment(secondAgent, 0, 1);
-        assertWorkerDeployment(thirdAgent, 0, 2);
+        assertWorkerDeployment(plan,firstAgent, 0, 1);
+        assertWorkerDeployment(plan,secondAgent, 0, 1);
+        assertWorkerDeployment(plan,thirdAgent, 0, 2);
     }
 
     @Test
@@ -259,24 +258,21 @@ public class DeploymentPlanTest {
                 "any version",
                 "any script",
                 0,
-                new HashMap<String, String>()
-        );
+                new HashMap<String, String>());
         WorkerProcessSettings secondWorker = new WorkerProcessSettings(
                 1,
                 WorkerType.CLIENT,
                 "any version",
                 "any script",
                 0,
-                new HashMap<String, String>()
-        );
+                new HashMap<String, String>());
         WorkerProcessSettings thirdWorker = new WorkerProcessSettings(
                 2,
                 WorkerType.CLIENT,
                 "any version",
                 "any script",
                 0,
-                new HashMap<String, String>()
-        );
+                new HashMap<String, String>());
 
         componentRegistry.addWorkers(firstAgent, singletonList(firstWorker));
         componentRegistry.addWorkers(secondAgent, singletonList(secondWorker));
@@ -284,17 +280,17 @@ public class DeploymentPlanTest {
         componentRegistry.addWorkers(thirdAgent, singletonList(secondWorker));
         componentRegistry.addWorkers(thirdAgent, singletonList(thirdWorker));
 
-        workerDeployment = generateFromArguments(componentRegistry, workerParametersMap, 0, 3, 1);
+        DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 3, 1);
 
-        assertWorkerDeployment(firstAgent, 0, 0);
-        assertWorkerDeployment(secondAgent, 0, 2);
-        assertWorkerDeployment(thirdAgent, 0, 1);
+        assertWorkerDeployment(plan,firstAgent, 0, 0);
+        assertWorkerDeployment(plan,secondAgent, 0, 2);
+        assertWorkerDeployment(plan,thirdAgent, 0, 1);
     }
 
-    private void assertWorkerDeployment(SimulatorAddress agentAddress, int memberCount, int clientCount) {
-        List<WorkerProcessSettings> settingsList = workerDeployment.get(agentAddress);
+    private void assertWorkerDeployment(DeploymentPlan plan, SimulatorAddress agentAddress, int memberCount, int clientCount) {
+        List<WorkerProcessSettings> settingsList = plan.getWorkerDeployment().get(agentAddress);
         assertNotNull("Could not find WorkerProcessSettings at index " + agentAddress
-                + ", workerDeployment: " + workerDeployment, settingsList);
+                + ", workerDeployment: " + plan.getWorkerDeployment(), settingsList);
 
         int actualMemberWorkerCount = 0;
         int actualClientWorkerCount = 0;
@@ -313,6 +309,7 @@ public class DeploymentPlanTest {
         assertEquals(prefix + " (memberWorkerCount)", memberCount, actualMemberWorkerCount);
         assertEquals(prefix + " (clientWorkerCount)", clientCount, actualClientWorkerCount);
     }
+
     @Test
     public void testGetVersionSpecs() {
         AgentData agentData = new AgentData(1, "127.0.0.1", "127.0.0.1");
@@ -341,10 +338,10 @@ public class DeploymentPlanTest {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         when(workerParameters.getVersionSpec()).thenReturn("outofthebox");
 
-        Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType,WorkerParameters>();
+        Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
         workerParametersMap.put(WorkerType.MEMBER, workerParameters);
 
-        DeploymentPlan deploymentPlan = DeploymentPlan.createDeploymentPlan(componentRegistry, workerParametersMap,
+        DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParametersMap,
                 memberCount, clientCount, 0);
 
         assertEquals(singleton("outofthebox"), deploymentPlan.getVersionSpecs());
