@@ -44,26 +44,6 @@ public class WorkerParametersTest {
     }
 
     @Test
-    public void testConstructor() {
-        WorkerParameters workerParameters = new WorkerParameters("outofthebox", true, 2342, "memberJvmOptions", "clientJvmOptions",
-                memberConfig, clientConfig, "log4jConfig", "worker.sh", 1234);
-
-        assertTrue(workerParameters.isAutoCreateHzInstance());
-        assertEquals(2342, workerParameters.getWorkerStartupTimeout());
-        assertEquals(1234, workerParameters.getPerformanceMonitorIntervalSeconds());
-        assertEquals("outofthebox", workerParameters.getVersionSpec());
-
-        assertEquals("memberJvmOptions", workerParameters.getMemberJvmOptions());
-        assertEquals("clientJvmOptions", workerParameters.getClientJvmOptions());
-
-        assertEquals(memberConfig, workerParameters.getMemberHzConfig());
-        assertEquals(clientConfig, workerParameters.getClientHzConfig());
-        assertEquals("log4jConfig", workerParameters.getLog4jConfig());
-
-        assertEquals("worker.sh", workerParameters.getWorkerScript());
-    }
-
-    @Test
     public void testCreateAddressConfig() {
         String addressConfig = createAddressConfig("members", componentRegistry, 6666);
         for (int i = 1; i <= 5; i++) {

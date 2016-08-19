@@ -29,7 +29,9 @@ import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
@@ -204,24 +206,26 @@ final class CoordinatorCli {
         String licenseKey = options.valueOf(licenseKeySpec);
 
 
+        Map<String, String> workerEnvironment = new HashMap<String, String>();
+        workerEnvironment.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
+        workerEnvironment.put("LOG4j_CONFIG", loadLog4jConfig());
+
         this.workerParameters = new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
-                options.valueOf(autoCreateHzInstanceSpec),
                 options.valueOf(workerStartupTimeoutSpec),
                 options.valueOf(workerVmOptionsSpec),
                 options.valueOf(clientWorkerVmOptionsSpec),
                 initMemberHzConfig(loadMemberHzConfig(), componentRegistry, defaultHzPort, licenseKey, simulatorProperties),
                 initClientHzConfig(loadClientHzConfig(), componentRegistry, defaultHzPort, licenseKey),
-                loadLog4jConfig(),
                 loadWorkerScript(simulatorProperties.get("VENDOR")),
-                initWorkerPerformanceMonitorIntervalSeconds());
+                initWorkerPerformanceMonitorIntervalSeconds(),
+                workerEnvironment);
 
         DeploymentPlan deploymentPlan = newDeploymentPlan(simulatorProperties, componentRegistry,
                 workerParameters, defaultHzPort, licenseKey);
 
         this.coordinator = new Coordinator(
                 componentRegistry, coordinatorParameters, workerParameters, deploymentPlan);
-
     }
 
     private int initWorkerPerformanceMonitorIntervalSeconds() {
