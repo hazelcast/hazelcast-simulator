@@ -40,6 +40,7 @@ import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
+import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlanFromClusterXml;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -326,7 +327,7 @@ final class CoordinatorCli {
                     options.valueOf(dedicatedMemberMachinesSpec));
         }
 
-        return createDeploymentPlan(
+        return createDeploymentPlanFromClusterXml(
                 componentRegistry,
                 workerParameters,
                 simulatorProperties,

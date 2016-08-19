@@ -59,17 +59,23 @@ public final class DeploymentPlan {
         this.clientWorkerCount = tmpClientWorkerCount;
     }
 
-    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
-                                                      SimulatorProperties properties, int defaultHzPort, String licenseKey,
-                                                      String clusterXml) {
+    public static DeploymentPlan createDeploymentPlanFromClusterXml(ComponentRegistry componentRegistry,
+                                                                    WorkerParameters workerParameters,
+                                                                    SimulatorProperties properties,
+                                                                    int defaultHzPort,
+                                                                    String licenseKey,
+                                                                    String clusterXml) {
         WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(
                 defaultHzPort, licenseKey, workerParameters, properties, componentRegistry);
         return new DeploymentPlan(
                 generateFromXml(componentRegistry, workerParameters, workerConfigurationConverter, clusterXml));
     }
 
-    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry, WorkerParameters workerParameters,
-                                                      int memberWorker, int clientWorker, int dedicatedMemberWorker) {
+    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry,
+                                                      WorkerParameters workerParameters,
+                                                      int memberWorker,
+                                                      int clientWorker,
+                                                      int dedicatedMemberWorker) {
         Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment = generateFromArguments(
                 componentRegistry, workerParameters, memberWorker, clientWorker, dedicatedMemberWorker);
         return new DeploymentPlan(workerDeployment);
