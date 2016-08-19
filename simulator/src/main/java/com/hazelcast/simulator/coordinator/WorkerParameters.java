@@ -19,6 +19,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 
+import java.util.Map;
+
 import static java.lang.String.format;
 
 /**
@@ -26,42 +28,39 @@ import static java.lang.String.format;
  */
 public class WorkerParameters {
 
-    private final boolean autoCreateHzInstance;
     private final int workerStartupTimeout;
     private final String versionSpec;
     private final String memberJvmOptions;
     private final String clientJvmOptions;
     private final String memberHzConfig;
     private final String clientHzConfig;
-    private final String log4jConfig;
     // value of 1 or higher means enabled.
     private final int performanceMonitorIntervalSeconds;
     private final String workerScript;
+    private final Map<String, String> environment;
 
     public WorkerParameters(String versionSpec,
-                            boolean autoCreateHzInstance,
                             int workerStartupTimeout,
                             String memberJvmOptions,
                             String clientJvmOptions,
                             String memberHzConfig,
                             String clientHzConfig,
-                            String log4jConfig,
                             String workerScript,
-                            int performanceMonitorIntervalSeconds) {
-        this.autoCreateHzInstance = autoCreateHzInstance;
+                            int performanceMonitorIntervalSeconds,
+                            Map<String, String> environment) {
         this.workerStartupTimeout = workerStartupTimeout;
         this.versionSpec = versionSpec;
         this.memberJvmOptions = memberJvmOptions;
         this.clientJvmOptions = clientJvmOptions;
         this.memberHzConfig = memberHzConfig;
         this.clientHzConfig = clientHzConfig;
-        this.log4jConfig = log4jConfig;
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         this.workerScript = workerScript;
+        this.environment = environment;
     }
 
-    public boolean isAutoCreateHzInstance() {
-        return autoCreateHzInstance;
+    public Map<String, String> getEnvironment() {
+        return environment;
     }
 
     public int getWorkerStartupTimeout() {
@@ -86,10 +85,6 @@ public class WorkerParameters {
 
     public String getClientHzConfig() {
         return clientHzConfig;
-    }
-
-    public String getLog4jConfig() {
-        return log4jConfig;
     }
 
     public int getPerformanceMonitorIntervalSeconds() {

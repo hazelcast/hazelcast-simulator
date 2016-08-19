@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -232,17 +233,20 @@ public class AgentSmokeTest implements FailureListener {
     }
 
     private void createWorkers() {
+        Map<String,String> environment = new ConcurrentHashMap<String,String>();
+        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
+        environment.put("LOG4j_CONFIG", fileAsText(internalDistPath() + "/conf/worker-log4j.xml"));
+
         WorkerParameters workerParameters = new WorkerParameters(
                 "outofthebox",
-                true,
                 60000,
                 "",
                 "",
                 fileAsText(localResourceDirectory() + "/hazelcast.xml"),
                 "",
-                fileAsText(internalDistPath() + "/conf/worker-log4j.xml"),
                 fileAsText(internalDistPath() + "/conf/worker-hazelcast.sh"),
-                0);
+                0,
+                environment);
         DeploymentPlan deploymentPlan = createSingleInstanceDeploymentPlan(AGENT_IP_ADDRESS, workerParameters);
         new StartWorkersTask(deploymentPlan.getWorkerDeployment(), remoteClient, componentRegistry, 0).run();
     }
