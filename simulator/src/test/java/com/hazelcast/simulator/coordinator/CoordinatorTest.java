@@ -12,7 +12,6 @@ import org.junit.Test;
 import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createEmptyDeploymentPlan;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.mockito.Mockito.mock;
@@ -38,7 +37,7 @@ public class CoordinatorTest {
         when(coordinatorParameters.getSessionId()).thenReturn(sessionId);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(properties);
 
-        DeploymentPlan deploymentPlan = createEmptyDeploymentPlan();
+        DeploymentPlan deploymentPlan = new DeploymentPlan();
 
         coordinator = new Coordinator(componentRegistry, coordinatorParameters, deploymentPlan);
     }

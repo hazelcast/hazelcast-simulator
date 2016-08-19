@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator.deployment;
 
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
@@ -22,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.hazelcast.simulator.coordinator.deployment.ClusterConfigurationUtils.fromXml;
 
 @XStreamAlias("clusterConfiguration")
 class ClusterConfiguration {
@@ -52,5 +55,14 @@ class ClusterConfiguration {
     // just for testing
     void addWorkerConfiguration(WorkerConfiguration workerConfiguration) {
         workerConfigurations.put(workerConfiguration.getName(), workerConfiguration);
+    }
+
+    static ClusterConfiguration getClusterConfiguration(WorkerConfigurationConverter converter,
+                                                                String clusterConfiguration) {
+        try {
+            return fromXml(converter, clusterConfiguration);
+        } catch (Exception e) {
+            throw new CommandLineExitException("Could not parse cluster configuration", e);
+        }
     }
 }
