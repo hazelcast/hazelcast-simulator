@@ -13,59 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.synthetic;
+package com.hazelcast.simulator.tests.syntheticmap;
 
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
-import com.hazelcast.spi.BackupOperation;
-import com.hazelcast.spi.Operation;
+import com.hazelcast.spi.AbstractOperation;
 import com.hazelcast.spi.PartitionAwareOperation;
 
 import java.io.IOException;
-import java.util.concurrent.locks.LockSupport;
 
-public class SyntheticBackupOperation extends Operation
-        implements BackupOperation, PartitionAwareOperation, IdentifiedDataSerializable {
+public class PutOperation extends AbstractOperation implements PartitionAwareOperation, IdentifiedDataSerializable {
 
-    private long delayNs;
+    private String mapName;
+    private Data key;
+    private Data value;
 
-    public SyntheticBackupOperation() {
+    public PutOperation() {
     }
 
-    public SyntheticBackupOperation(long delayNs) {
-        this.delayNs = delayNs;
-    }
-
-    @Override
-    public String getServiceName() {
-        return null;
+    public PutOperation(String mapName, Data key, Data value) {
+        this.mapName = mapName;
+        this.key = key;
+        this.value = value;
     }
 
     @Override
     public void run() throws Exception {
-        LockSupport.parkNanos(delayNs);
+        SyntheticMapService service = getService();
+        service.put(getPartitionId(), mapName, key, value);
+    }
+
+    @Override
+    public String getServiceName() {
+        return SyntheticMapService.SERVICE_NAME;
     }
 
     @Override
     public int getFactoryId() {
-        return SyntheticSerializableFactory.ID;
+        return SyntheticMapSerializableFactory.ID;
     }
 
     @Override
     public int getId() {
-        return SyntheticSerializableFactory.BACKUP_OPERATION;
+        return SyntheticMapSerializableFactory.PUT_OPERATION;
     }
 
     @Override
     protected void writeInternal(ObjectDataOutput out) throws IOException {
         super.writeInternal(out);
-        out.writeLong(delayNs);
+        out.writeUTF(mapName);
+        out.writeData(key);
+        out.writeData(value);
     }
 
     @Override
     protected void readInternal(ObjectDataInput in) throws IOException {
         super.readInternal(in);
-        delayNs = in.readLong();
+        mapName = in.readUTF();
+        key = in.readData();
+        value = in.readData();
     }
 }
