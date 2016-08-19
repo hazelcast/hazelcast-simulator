@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,11 +47,9 @@ public class FailureCollector {
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
-    private final Set<FailureType> nonCriticalFailures;
 
-    public FailureCollector(File outputDirectory, Set<FailureType> nonCriticalFailures) {
+    public FailureCollector(File outputDirectory) {
         this.file = new File(outputDirectory, "failures.txt");
-        this.nonCriticalFailures = nonCriticalFailures;
     }
 
     public void addListener(FailureListener listener) {
@@ -65,7 +62,6 @@ public class FailureCollector {
 
     public void notify(FailureOperation failure) {
         boolean isFinishedFailure = false;
-        boolean isCriticalFailure;
 
         FailureType failureType = failure.getType();
         if (failureType.isWorkerFinishedFailure()) {
@@ -81,25 +77,18 @@ public class FailureCollector {
             return;
         }
 
-        int failureCount;
-        if (nonCriticalFailures.contains(failureType)) {
-            isCriticalFailure = false;
-            failureCount = nonCriticalFailureCounter.incrementAndGet();
-        } else {
-            failureCount = criticalFailureCounter.incrementAndGet();
-            String testId = failure.getTestId();
-            if (testId != null) {
-                hasCriticalFailuresMap.put(testId, true);
-            }
-            isCriticalFailure = true;
+        int failureCount = criticalFailureCounter.incrementAndGet();
+        String testId = failure.getTestId();
+        if (testId != null) {
+            hasCriticalFailuresMap.put(testId, true);
         }
 
-        logFailure(failure, failureCount, isCriticalFailure);
+        logFailure(failure, failureCount, true);
 
         appendText(failure.getFileMessage(), file);
 
         for (FailureListener failureListener : listenerMap.keySet()) {
-            failureListener.onFailure(failure, isFinishedFailure, isCriticalFailure);
+            failureListener.onFailure(failure, isFinishedFailure, true);
         }
     }
 

@@ -29,7 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
@@ -48,7 +47,6 @@ public class TestSuite {
     private TargetType targetType;
     private int targetCount;
     private boolean verifyEnabled;
-    private Set<FailureType> tolerableFailures = Collections.emptySet();
 
     public TestSuite setVerifyEnabled(boolean verifyEnabled) {
         this.verifyEnabled = verifyEnabled;
@@ -58,7 +56,6 @@ public class TestSuite {
     public boolean isVerifyEnabled() {
         return verifyEnabled;
     }
-
 
     public TestSuite setParallel(boolean parallel) {
         this.parallel = parallel;
@@ -127,15 +124,6 @@ public class TestSuite {
         return failFast;
     }
 
-    public TestSuite setTolerableFailures(Set<FailureType> tolerableFailures) {
-        this.tolerableFailures = tolerableFailures;
-        return this;
-    }
-
-    public Set<FailureType> getTolerableFailures() {
-        return tolerableFailures;
-    }
-
     public TestSuite addTest(TestCase testCase) {
         testCaseList.add(testCase);
         return this;
@@ -180,7 +168,6 @@ public class TestSuite {
                 + ", targetType=" + targetType
                 + ", targetCount=" + targetCount
                 + ", verifyEnabled=" + verifyEnabled
-                + ", tolerableFailures=" + tolerableFailures
                 + ", testCaseList=" + testCaseList
                 + '}';
     }

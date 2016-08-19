@@ -308,7 +308,7 @@ public class RunTestSuiteTaskTest {
         componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerProcessSettings));
         componentRegistry.addTests(testSuite);
 
-        failureCollector = new FailureCollector(outputDirectory, Collections.<FailureType>emptySet());
+        failureCollector = new FailureCollector(outputDirectory);
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 

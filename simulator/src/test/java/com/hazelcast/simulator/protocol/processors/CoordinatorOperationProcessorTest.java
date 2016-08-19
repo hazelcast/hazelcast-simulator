@@ -74,7 +74,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         performanceStatsCollector = new PerformanceStatsCollector();
 
         outputDirectory = TestUtils.createTmpDirectory();
-        failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
+        failureCollector = new FailureCollector(outputDirectory);
 
         processor = new CoordinatorOperationProcessor(failureCollector, testPhaseListeners,
                 performanceStatsCollector, remoteControllerProcessor);

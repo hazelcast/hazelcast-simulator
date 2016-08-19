@@ -45,27 +45,6 @@ public class TestSuiteTest {
     }
 
     @Test
-    public void testSetter() {
-        TestSuite testSuite = new TestSuite();
-
-        assertEquals(0, testSuite.getDurationSeconds());
-        assertFalse(testSuite.isWaitForTestCase());
-        assertFalse(testSuite.isFailFast());
-        assertTrue(testSuite.getTolerableFailures().isEmpty());
-
-        Set<FailureType> tolerableFailures = Collections.singleton(FailureType.NETTY_EXCEPTION);
-        testSuite.setDurationSeconds(23);
-        testSuite.setWaitForTestCase(true);
-        testSuite.setFailFast(true);
-        testSuite.setTolerableFailures(tolerableFailures);
-
-        assertEquals(23, testSuite.getDurationSeconds());
-        assertTrue(testSuite.isWaitForTestCase());
-        assertTrue(testSuite.isFailFast());
-        assertEquals(tolerableFailures, testSuite.getTolerableFailures());
-    }
-
-    @Test
     public void loadTestSuite_singleTestWithTestName() throws Exception {
         String txt = "atomicLongTest@class=AtomicLong" + NEW_LINE
                 + "atomicLongTest@threadCount=10";

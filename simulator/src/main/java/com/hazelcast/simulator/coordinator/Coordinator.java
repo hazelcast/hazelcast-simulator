@@ -32,7 +32,6 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.HashSet;
 
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
@@ -82,7 +81,7 @@ final class Coordinator {
         this.coordinatorParameters = coordinatorParameters;
         this.workerParameters = workerParameters;
 
-        this.failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
+        this.failureCollector = new FailureCollector(outputDirectory);
         this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
