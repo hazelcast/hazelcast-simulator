@@ -100,7 +100,7 @@ public class AgentSmokeTest implements FailureListener {
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         outputDirectory = createTmpDirectory();
-        failureCollector = new FailureCollector(outputDirectory, new HashSet<FailureType>());
+        failureCollector = new FailureCollector(outputDirectory);
 
         coordinatorConnector = new CoordinatorConnector(componentRegistry, failureCollector, testPhaseListeners,
                 performanceStatsCollector, COORDINATOR_PORT);

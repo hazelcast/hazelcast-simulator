@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
@@ -33,7 +32,6 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.common.FailureType.fromPropertyValue;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
@@ -146,11 +144,6 @@ final class CoordinatorCli {
             "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-    private final OptionSpec<String> tolerableFailureSpec = parser.accepts("tolerableFailure",
-            format("Defines if tests should not fail when given failure is detected. List of known failures: %s",
-                    FailureType.getIdsAsString()))
-            .withRequiredArg().ofType(String.class).defaultsTo("workerTimeout");
-
     private final OptionSpec parallelSpec = parser.accepts("parallel",
             "If defined tests are run in parallel.");
 
@@ -248,7 +241,7 @@ final class CoordinatorCli {
         coordinator.run(testSuite);
     }
 
-     private TestSuite loadTestSuite() {
+    private TestSuite loadTestSuite() {
         int durationSeconds = getDurationSeconds(durationSpec);
         boolean hasWaitForTestCase = options.has(waitForTestCaseSpec);
         if (!options.has(durationSpec) && hasWaitForTestCase) {
@@ -260,13 +253,12 @@ final class CoordinatorCli {
                 .setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec))
                 .setWaitForTestCase(hasWaitForTestCase)
                 .setFailFast(options.valueOf(failFastSpec))
-                .setTolerableFailures(fromPropertyValue(options.valueOf(tolerableFailureSpec)))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                 .setParallel(options.has(parallelSpec))
                 .setTargetType(options.valueOf(targetTypeSpec))
                 .setTargetCount(options.valueOf(targetCountSpec));
 
-         // if the coordinator is not monitoring performance, we don't care for measuring latencies
+        // if the coordinator is not monitoring performance, we don't care for measuring latencies
         if (!options.has(monitorPerformanceSpec)) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
