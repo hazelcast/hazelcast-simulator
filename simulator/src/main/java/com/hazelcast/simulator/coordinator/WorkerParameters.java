@@ -30,31 +30,16 @@ public class WorkerParameters {
 
     private final int workerStartupTimeout;
     private final String versionSpec;
-    private final String memberJvmOptions;
-    private final String clientJvmOptions;
-    private final String memberHzConfig;
-    private final String clientHzConfig;
-    // value of 1 or higher means enabled.
-    private final int performanceMonitorIntervalSeconds;
+      // value of 1 or higher means enabled.
     private final String workerScript;
     private final Map<String, String> environment;
 
     public WorkerParameters(String versionSpec,
                             int workerStartupTimeout,
-                            String memberJvmOptions,
-                            String clientJvmOptions,
-                            String memberHzConfig,
-                            String clientHzConfig,
                             String workerScript,
-                            int performanceMonitorIntervalSeconds,
                             Map<String, String> environment) {
         this.workerStartupTimeout = workerStartupTimeout;
         this.versionSpec = versionSpec;
-        this.memberJvmOptions = memberJvmOptions;
-        this.clientJvmOptions = clientJvmOptions;
-        this.memberHzConfig = memberHzConfig;
-        this.clientHzConfig = clientHzConfig;
-        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         this.workerScript = workerScript;
         this.environment = environment;
     }
@@ -69,26 +54,6 @@ public class WorkerParameters {
 
     public String getVersionSpec() {
         return versionSpec;
-    }
-
-    public String getMemberJvmOptions() {
-        return memberJvmOptions;
-    }
-
-    public String getClientJvmOptions() {
-        return clientJvmOptions;
-    }
-
-    public String getMemberHzConfig() {
-        return memberHzConfig;
-    }
-
-    public String getClientHzConfig() {
-        return clientHzConfig;
-    }
-
-    public int getPerformanceMonitorIntervalSeconds() {
-        return performanceMonitorIntervalSeconds;
     }
 
     public String getWorkerScript() {

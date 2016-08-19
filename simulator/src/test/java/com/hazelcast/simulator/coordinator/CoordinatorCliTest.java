@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.testcontainer.TestPhase;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -333,13 +334,13 @@ public class CoordinatorCliTest {
     }
 
     @Test
-    public void testInit_memberConfigFileInWorkDir() {
+        public void testInit_memberConfigFileInWorkDir() {
         File memberConfigFile = new File("hazelcast.xml").getAbsoluteFile();
         writeText(HAZELCAST_XML, memberConfigFile);
 
         try {
             CoordinatorCli cli = createCoordinatorCli();
-            assertEquals(HAZELCAST_XML, cli.workerParameters.getMemberHzConfig());
+            assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.MEMBER).getEnvironment().get("HAZELCAST_CONFIG"));
         } finally {
             deleteQuiet(memberConfigFile);
         }
@@ -352,7 +353,7 @@ public class CoordinatorCliTest {
 
         try {
             CoordinatorCli cli = createCoordinatorCli();
-            assertEquals(HAZELCAST_XML, cli.workerParameters.getClientHzConfig());
+            assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.CLIENT).getEnvironment().get("HAZELCAST_CONFIG"));
         } finally {
             deleteQuiet(clientConfigFile);
         }

@@ -60,24 +60,24 @@ public final class DeploymentPlan {
     }
 
     public static DeploymentPlan createDeploymentPlanFromClusterXml(ComponentRegistry componentRegistry,
-                                                                    WorkerParameters workerParameters,
+                                                                    Map<WorkerType, WorkerParameters> workerParametersMap,
                                                                     SimulatorProperties properties,
                                                                     int defaultHzPort,
                                                                     String licenseKey,
                                                                     String clusterXml) {
         WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(
-                defaultHzPort, licenseKey, workerParameters, properties, componentRegistry);
+                defaultHzPort, licenseKey, workerParametersMap, properties, componentRegistry);
         return new DeploymentPlan(
-                generateFromXml(componentRegistry, workerParameters, workerConfigurationConverter, clusterXml));
+                generateFromXml(componentRegistry, workerParametersMap, workerConfigurationConverter, clusterXml));
     }
 
     public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry,
-                                                      WorkerParameters workerParameters,
+                                                      Map<WorkerType, WorkerParameters> workerParametersMap,
                                                       int memberWorker,
                                                       int clientWorker,
                                                       int dedicatedMemberWorker) {
         Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment = generateFromArguments(
-                componentRegistry, workerParameters, memberWorker, clientWorker, dedicatedMemberWorker);
+                componentRegistry, workerParametersMap, memberWorker, clientWorker, dedicatedMemberWorker);
         return new DeploymentPlan(workerDeployment);
     }
 

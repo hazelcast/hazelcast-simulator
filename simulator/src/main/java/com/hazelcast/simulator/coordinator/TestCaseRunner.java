@@ -103,8 +103,8 @@ final class TestCaseRunner implements TestPhaseListener {
                    Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                    FailureCollector failureCollector,
                    ComponentRegistry componentRegistry,
-                   WorkerParameters workerParameters,
-                   PerformanceStatsCollector performanceStatsCollector) {
+                   PerformanceStatsCollector performanceStatsCollector,
+                   int performanceMonitorIntervalSeconds) {
         this.testIndex = testIndex;
         this.testCase = testCase;
         this.testCaseId = testCase.getId();
@@ -122,7 +122,7 @@ final class TestCaseRunner implements TestPhaseListener {
         this.targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
         this.targetCount = testSuite.getTargetCount();
 
-        this.performanceMonitorIntervalSeconds = workerParameters.getPerformanceMonitorIntervalSeconds();
+        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         if (performanceMonitorIntervalSeconds > 0) {
             this.logRunPhaseIntervalSeconds = min(performanceMonitorIntervalSeconds, RUN_PHASE_LOG_INTERVAL_SECONDS);
         } else {

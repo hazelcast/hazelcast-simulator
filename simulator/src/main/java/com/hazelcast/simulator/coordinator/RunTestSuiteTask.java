@@ -46,7 +46,7 @@ public class RunTestSuiteTask {
     private final TestPhaseListeners testPhaseListeners;
     private final RemoteClient remoteClient;
     private final PerformanceStatsCollector performanceStatsCollector;
-    private final WorkerParameters workerParameters;
+    //private final WorkerParameters workerParameters;
     private final List<TestCaseRunner> runners = new ArrayList<TestCaseRunner>();
 
     public RunTestSuiteTask(TestSuite testSuite,
@@ -55,8 +55,7 @@ public class RunTestSuiteTask {
                             FailureCollector failureCollector,
                             TestPhaseListeners testPhaseListeners,
                             RemoteClient remoteClient,
-                            PerformanceStatsCollector performanceStatsCollector,
-                            WorkerParameters workerParameters) {
+                            PerformanceStatsCollector performanceStatsCollector) {
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinatorParameters;
         this.componentRegistry = componentRegistry;
@@ -65,7 +64,6 @@ public class RunTestSuiteTask {
         this.testPhaseListeners = testPhaseListeners;
         this.remoteClient = remoteClient;
         this.performanceStatsCollector = performanceStatsCollector;
-        this.workerParameters = workerParameters;
     }
 
     public void run() {
@@ -103,8 +101,8 @@ public class RunTestSuiteTask {
                     testPhaseSyncMap,
                     failureCollector,
                     componentRegistry,
-                    workerParameters,
-                    performanceStatsCollector);
+                    performanceStatsCollector,
+                    coordinatorParameters.getPerformanceMonitorIntervalSeconds());
             runners.add(runner);
             testPhaseListeners.addListener(testIndex, runner);
         }

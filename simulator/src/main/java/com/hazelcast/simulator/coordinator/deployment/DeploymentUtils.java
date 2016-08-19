@@ -60,7 +60,7 @@ final class DeploymentUtils {
     }
 
     static Map<SimulatorAddress, List<WorkerProcessSettings>> generateFromXml(ComponentRegistry componentRegistry,
-                                                                              WorkerParameters parameters,
+                                                                              Map<WorkerType, WorkerParameters> parametersMap,
                                                                               WorkerConfigurationConverter converter,
                                                                               String clusterXml) {
         Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
@@ -81,7 +81,8 @@ final class DeploymentUtils {
             for (WorkerGroup workerGroup : nodeConfiguration.getWorkerGroups()) {
                 WorkerConfiguration workerConfig = clusterConfiguration.getWorkerConfiguration(workerGroup.getConfiguration());
                 for (int i = 0; i < workerGroup.getCount(); i++) {
-                    WorkerProcessSettings settings = agentWorkerLayout.addWorker(workerConfig.getType(), parameters);
+                    WorkerType workerType = workerConfig.getType();
+                    WorkerProcessSettings settings = agentWorkerLayout.addWorker(workerType, parametersMap.get(workerType));
                     workerDeployment.get(agentAddress).add(settings);
                 }
             }
@@ -102,11 +103,12 @@ final class DeploymentUtils {
         }
     }
 
-    static Map<SimulatorAddress, List<WorkerProcessSettings>> generateFromArguments(ComponentRegistry componentRegistry,
-                                                                                    WorkerParameters parameters,
-                                                                                    int memberWorkerCount,
-                                                                                    int clientWorkerCount,
-                                                                                    int dedicatedMemberMachineCount) {
+    static Map<SimulatorAddress, List<WorkerProcessSettings>> generateFromArguments(
+            ComponentRegistry componentRegistry,
+            Map<WorkerType, WorkerParameters> workerParametersMap,
+            int memberWorkerCount,
+            int clientWorkerCount,
+            int dedicatedMemberMachineCount) {
         checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberWorkerCount, clientWorkerCount);
 
         // if the memberCount has not been specified; we need to calculate it on the fly.
@@ -129,14 +131,16 @@ final class DeploymentUtils {
         // assign members
         for (int i = 0; i < memberWorkerCount; i++) {
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, agentWorkerLayouts, AgentWorkerMode.CLIENT);
-            WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(WorkerType.MEMBER, parameters);
+            WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
+                    WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
             workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
         }
 
         // assign clients
         for (int i = 0; i < clientWorkerCount; i++) {
             AgentWorkerLayout agentWorkerLayout = findNextAgentLayout(agentIndex, agentWorkerLayouts, AgentWorkerMode.MEMBER);
-            WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(WorkerType.CLIENT, parameters);
+            WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
+                    WorkerType.CLIENT, workerParametersMap.get(WorkerType.CLIENT));
             workerDeployment.get(agentWorkerLayout.getSimulatorAddress()).add(workerProcessSettings);
         }
 

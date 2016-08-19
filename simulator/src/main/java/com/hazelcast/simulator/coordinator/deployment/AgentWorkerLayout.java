@@ -22,10 +22,8 @@ import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.worker.WorkerType;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -77,20 +75,13 @@ final class AgentWorkerLayout {
     }
 
     WorkerProcessSettings addWorker(WorkerType type, WorkerParameters parameters) {
-        Map<String, String> environment = new HashMap<String, String>();
-        environment.putAll(parameters.getEnvironment());
-        environment.put("JVM_OPTIONS", type.isMember() ? parameters.getMemberJvmOptions() : parameters.getClientJvmOptions());
-        environment.put("HAZELCAST_CONFIG", type.isMember() ? parameters.getMemberHzConfig() : parameters.getClientHzConfig());
-         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(parameters.getPerformanceMonitorIntervalSeconds()));
-
         WorkerProcessSettings settings = new WorkerProcessSettings(
                 agentData.getNextWorkerIndex(),
                 type,
                 parameters.getVersionSpec(),
                 parameters.getWorkerScript(),
                 parameters.getWorkerStartupTimeout(),
-                environment);
+                parameters.getEnvironment());
         workerProcessSettingsList.add(settings);
 
         return settings;

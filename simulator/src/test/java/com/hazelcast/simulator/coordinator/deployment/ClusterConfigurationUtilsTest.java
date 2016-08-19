@@ -3,11 +3,14 @@ package com.hazelcast.simulator.coordinator.deployment;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import static com.hazelcast.simulator.coordinator.deployment.ClusterConfigurationUtils.fromXml;
 import static com.hazelcast.simulator.coordinator.deployment.ClusterConfigurationUtils.toXml;
@@ -33,18 +36,30 @@ public class ClusterConfigurationUtilsTest {
 
     @Before
     public void setUp() {
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getVersionSpec()).thenReturn("defaultHzVersion");
-        when(workerParameters.getMemberHzConfig()).thenReturn("defaultMemberHzConfig");
-        when(workerParameters.getMemberJvmOptions()).thenReturn("defaultMemberJvmOptions");
-
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
 
         ComponentRegistry componentRegistry = new ComponentRegistry();
 
-        converter = new WorkerConfigurationConverter(DEFAULT_HZ_PORT, "defaultLicenseKey", workerParameters, simulatorProperties,
+        Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
+        workerParametersMap.put(WorkerType.CLIENT, createWorkerParams(WorkerType.CLIENT));
+        workerParametersMap.put(WorkerType.MEMBER, createWorkerParams(WorkerType.MEMBER));
+
+        converter = new WorkerConfigurationConverter(DEFAULT_HZ_PORT, "defaultLicenseKey", workerParametersMap, simulatorProperties,
                 componentRegistry);
+    }
+
+    private WorkerParameters createWorkerParams(WorkerType workerType) {
+        Map<String, String> environment = new HashMap<String, String>();
+        if (workerType == WorkerType.MEMBER) {
+            environment.put("HAZELCAST_CONFIG", "defaultMemberHzConfig");
+            environment.put("JVM_OPTIONS", "defaultMemberJvmOptions");
+        } else {
+            environment.put("HAZELCAST_CONFIG", "defaultClientConfig");
+            environment.put("JVM_OPTIONS", "defaultClientJvmOptions");
+        }
+
+        return new WorkerParameters("defaultHzVersion", 0, "", environment);
     }
 
     @Test
