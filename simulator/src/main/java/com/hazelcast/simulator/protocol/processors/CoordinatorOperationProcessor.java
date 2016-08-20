@@ -29,6 +29,7 @@ import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -75,6 +76,9 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 break;
             case START_WORKERS:
                 coordinator.startWorkers((StartWorkersOperation) operation);
+                break;
+            case STOP_WORKERS:
+                coordinator.stopWorkers((StopWorkersOperation) operation);
                 break;
             case RUN_SUITE:
                 coordinator.runSuite(((RunSuiteOperation) operation).getTestSuite());

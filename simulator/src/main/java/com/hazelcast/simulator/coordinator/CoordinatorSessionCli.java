@@ -23,7 +23,9 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.InstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.ShutdownCoordinatorOperation;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
@@ -52,7 +54,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * todo:
  * - if the connector has not yet started on the coordinator; then session will quickly timeout.
  * - if no worker count is given with start worker, assume 1
- * - good solution to stop the coordinator and get all artifacts downloaded and post processing done
  * - Option to kill members
  * - stopping session improvements
  * - starting light members
@@ -79,6 +80,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - chaos monkeys
  * <p>
  * done
+ * - option to kill all workers.
+ * - good solution to stop the coordinator and get all artifacts downloaded and post processing done
  * - the worker version spec should default to what is in the simulator.properties
  * - when coordinator not yet initialized; any command should be blocked
  * - logging noise ----> ClientConnector R -> C sends to localhost/127.0.0.1:4014
@@ -128,6 +131,8 @@ public class CoordinatorSessionCli implements Closeable {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
             response = connector.write(new RunTestCli().newOperation(subArgs));
+        } else if ("stop-workers".equals(cmd)) {
+            response = connector.write(new StopWorkersCli().newOperation(subArgs));
         } else {
             throw new CommandLineExitException("Unrecognized cmd '" + cmd + "'");
         }
@@ -170,6 +175,18 @@ public class CoordinatorSessionCli implements Closeable {
         }
     }
 
+    private static class StopWorkersCli {
+        private final OptionParser parser = new OptionParser();
+
+        private OptionSet options;
+
+        SimulatorOperation newOperation(String[] args) {
+            this.options = initOptionsWithHelp(parser, args);
+
+            return new StopWorkersOperation();
+        }
+    }
+
     private class StartWorkersCli {
         private final OptionParser parser = new OptionParser();
 
@@ -188,7 +205,7 @@ public class CoordinatorSessionCli implements Closeable {
 
         private OptionSet options;
 
-        StartWorkersOperation newOperation(String[] args) {
+        SimulatorOperation newOperation(String[] args) {
             this.options = initOptionsWithHelp(parser, args);
 
             if (options.nonOptionArguments().size() != 1) {
@@ -243,7 +260,7 @@ public class CoordinatorSessionCli implements Closeable {
 
         private OptionSet options;
 
-        RunSuiteOperation newOperation(String[] args) {
+        SimulatorOperation newOperation(String[] args) {
             this.options = initOptionsWithHelp(parser, args);
 
             List testsuiteFiles = options.nonOptionArguments();

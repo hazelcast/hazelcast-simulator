@@ -37,7 +37,8 @@ public enum OperationType {
     INSTALL_VENDOR(InstallVendorOperation.class, 103),
     SHUTDOWN(ShutdownCoordinatorOperation.class, 104),
     START_WORKERS(StartWorkersOperation.class, 105),
-    RUN_SUITE(RunSuiteOperation.class, 106),
+    STOP_WORKERS(StopWorkersOperation.class, 106),
+    RUN_SUITE(RunSuiteOperation.class, 107),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 200),

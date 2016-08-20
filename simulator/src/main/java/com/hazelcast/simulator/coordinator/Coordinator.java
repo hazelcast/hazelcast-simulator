@@ -24,6 +24,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -86,7 +87,7 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    private CountDownLatch interaciveModeInitialized = new CountDownLatch(1);
+    private CountDownLatch interactiveModeInitialized = new CountDownLatch(1);
 
     Coordinator(ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
@@ -191,7 +192,7 @@ public final class Coordinator {
         }
     }
 
-    void startCoordinatorConnector() {
+    private void startCoordinatorConnector() {
         try {
             CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
                     this, failureCollector, testPhaseListeners, performanceStatsCollector);
@@ -219,11 +220,13 @@ public final class Coordinator {
     }
 
     void startInteractive() {
-        LOGGER.info("Coordinator interactive mode starting...");
-
-        startCoordinatorConnector();
+        echoLocal("Coordinator interactive mode starting...");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
+
+        startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+        startCoordinatorConnector();
+        startRemoteClient();
 
         new InstallVendorTask(
                 simulatorProperties,
@@ -231,25 +234,33 @@ public final class Coordinator {
                 deploymentPlan.getVersionSpecs(),
                 coordinatorParameters.getSessionId()).run();
 
-        startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-        startRemoteClient();
 
-        LOGGER.info("Coordinator interactive mode started...");
+        echoLocal("Coordinator interactive mode started...");
+        echoLocal("Total number of agents: %s", componentRegistry.agentCount());
+        echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
+        int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
+        if (performanceIntervalSeconds > 0) {
+            echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
+        } else {
+            echoLocal("Performance monitor disabled");
+        }
 
-        interaciveModeInitialized.countDown();
+        interactiveModeInitialized.countDown();
     }
 
     private void awaitInteractiveModeInitialized() throws Exception {
-        if (!interaciveModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
+        if (!interactiveModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
             throw new TimeoutException("Coordinator interactive mode failed to complete");
         }
     }
 
     private void startRemoteClient() {
+        LOGGER.info("Remote client starting....");
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
         remoteClient.sendToAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
+        LOGGER.info("Remote client started successfully!");
     }
 
     private void echo(String message, Object... args) {
@@ -266,33 +277,63 @@ public final class Coordinator {
     public void installVendor(String versionSpec) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Installing versionSpec:" + versionSpec);
+        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents ....");
         new InstallVendorTask(
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
                 Collections.singleton(versionSpec),
                 coordinatorParameters.getSessionId()).run();
-        LOGGER.info("Install successful");
-
+        LOGGER.info("Install successful!");
     }
 
     public void shutdown() {
-        LOGGER.info("Shutting down");
+        LOGGER.info("Shutting down....");
+
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
+
         close();
-        System.exit(0);
+
+        new Thread(new Runnable() {
+            private static final int DELAY = 5000;
+
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(DELAY);
+
+                    if (coordinatorConnector != null) {
+                        echo("Shutdown of ClientConnector...");
+                        coordinatorConnector.shutdown();
+                    }
+                    System.exit(0);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to shutdown", e);
+                }
+            }
+        }).start();
     }
 
-    public void startWorkers(StartWorkersOperation startWorkersOperation) throws Exception {
+    public void stopWorkers(StopWorkersOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Starting workers: " + startWorkersOperation.getCount());
+        LOGGER.info("Stopping workers...");
 
-        WorkerType workerType = WorkerType.getById(startWorkersOperation.getWorkerType());
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
+
+        LOGGER.info("Stopping workers complete!");
+    }
+
+    public void startWorkers(StartWorkersOperation op) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        LOGGER.info("Starting workers: " + op.getCount());
+
+        WorkerType workerType = WorkerType.getById(op.getWorkerType());
 
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
         environment.put("LOG4j_CONFIG", loadLog4jConfig());
-        environment.put("JVM_OPTIONS", startWorkersOperation.getVmOptions());
+        environment.put("JVM_OPTIONS", op.getVmOptions());
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
 
@@ -300,9 +341,9 @@ public final class Coordinator {
         switch (workerType) {
             case MEMBER:
                 config = initMemberHzConfig(
-                        startWorkersOperation.getHzConfig() == null
+                        op.getHzConfig() == null
                                 ? loadMemberHzConfig()
-                                : startWorkersOperation.getHzConfig(),
+                                : op.getHzConfig(),
                         componentRegistry,
                         simulatorProperties.getHazelcastPort(),
                         "",
@@ -310,9 +351,9 @@ public final class Coordinator {
                 break;
             case CLIENT:
                 config = initClientHzConfig(
-                        startWorkersOperation.getHzConfig() == null
+                        op.getHzConfig() == null
                                 ? loadClientHzConfig()
-                                : startWorkersOperation.getHzConfig(),
+                                : op.getHzConfig(),
                         componentRegistry,
                         simulatorProperties.getHazelcastPort(),
                         "");
@@ -323,9 +364,9 @@ public final class Coordinator {
         }
         environment.put("HAZELCAST_CONFIG", config);
 
-        String versionSpec = startWorkersOperation.getVersionSpec() == null
+        String versionSpec = op.getVersionSpec() == null
                 ? simulatorProperties.getVersionSpec()
-                : startWorkersOperation.getVersionSpec();
+                : op.getVersionSpec();
 
         WorkerParameters workerParameters = new WorkerParameters(
                 versionSpec,
@@ -337,7 +378,7 @@ public final class Coordinator {
                 componentRegistry,
                 workerParameters,
                 workerType,
-                startWorkersOperation.getCount(),
+                op.getCount(),
                 0); //todo:dedicated machines.. we don't know here.
 
         new StartWorkersTask(
@@ -346,11 +387,13 @@ public final class Coordinator {
                 componentRegistry,
                 coordinatorParameters.getWorkerVmStartupDelayMs()).run();
 
-        LOGGER.info("Workers started");
+        LOGGER.info("Workers started!");
     }
 
     public void runSuite(TestSuite testSuite) throws Exception {
         awaitInteractiveModeInitialized();
+
+        LOGGER.info("Run starting!");
 
         new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
@@ -359,6 +402,8 @@ public final class Coordinator {
                 testPhaseListeners,
                 remoteClient,
                 performanceStatsCollector).run();
+
+        LOGGER.info("Run complete!");
     }
 
     private static class ComponentRegistryFailureListener implements FailureListener {
