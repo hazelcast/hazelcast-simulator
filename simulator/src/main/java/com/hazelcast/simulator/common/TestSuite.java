@@ -71,8 +71,8 @@ public class TestSuite {
         return this;
     }
 
-    public TargetType getTargetType(boolean hasClientWorkers) {
-        return targetType.resolvePreferClient(hasClientWorkers);
+    public TargetType getTargetType() {
+        return targetType;
     }
 
     public TestSuite setTargetCount(int targetCount) {

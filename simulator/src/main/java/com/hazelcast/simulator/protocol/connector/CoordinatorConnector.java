@@ -15,10 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
-import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
-import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -37,8 +34,6 @@ import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
-import com.hazelcast.simulator.protocol.processors.CoordinatorRemoteControllerProcessor;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -61,18 +56,9 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     private final CoordinatorOperationProcessor processor;
     private final ConnectionManager connectionManager = new ConnectionManager();
 
-    public CoordinatorConnector(ComponentRegistry componentRegistry,
-                         FailureCollector failureCollector,
-                         TestPhaseListeners testPhaseListeners,
-                         PerformanceStatsCollector performanceStatsCollector,
-                         int port) {
+    public CoordinatorConnector(CoordinatorOperationProcessor processor, int port) {
         super(COORDINATOR, port, getDefaultThreadPoolSize());
-
-        CoordinatorRemoteControllerProcessor remoteControllerProcessor = new CoordinatorRemoteControllerProcessor(this,
-                componentRegistry);
-
-        this.processor = new CoordinatorOperationProcessor(failureCollector, testPhaseListeners,
-                performanceStatsCollector, remoteControllerProcessor);
+        this.processor = processor;
     }
 
     @Override

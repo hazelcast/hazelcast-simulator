@@ -60,7 +60,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
-
     static final int DEFAULT_DURATION_SECONDS = 60;
     static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
     private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
@@ -182,6 +181,9 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
+    private final OptionSpec interactiveSpecSpec = parser.accepts("interactive",
+            "....");
+
     private final OptionSet options;
     private final SimulatorProperties simulatorProperties;
 
@@ -202,7 +204,7 @@ final class CoordinatorCli {
                 options.valueOf(workerVmStartupDelayMsSpec),
                 options.has(skipDownloadSpec),
                 getConfigurationFile("after-completion.sh").getAbsolutePath(),
-                initWorkerPerformanceMonitorIntervalSeconds());
+                getPerformanceMonitorInterval());
 
         int defaultHzPort = simulatorProperties.getHazelcastPort();
         String licenseKey = options.valueOf(licenseKeySpec);
@@ -254,7 +256,7 @@ final class CoordinatorCli {
         return result;
     }
 
-    private int initWorkerPerformanceMonitorIntervalSeconds() {
+    private int getPerformanceMonitorInterval() {
         if (!options.has(monitorPerformanceSpec)) {
             return 0;
         }
@@ -263,12 +265,22 @@ final class CoordinatorCli {
         if (intervalSeconds == null || intervalSeconds.isEmpty()) {
             return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
         }
-
         return Integer.parseInt(intervalSeconds);
     }
 
     void run() {
-        coordinator.run(testSuite);
+        if (!options.has(interactiveSpecSpec)) {
+            coordinator.run(testSuite);
+        } else {
+            LOGGER.info("Coordinator interactive mode enabled");
+            coordinator.start();
+//            //hack
+//            try {
+//                Thread.sleep(10000000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+        }
     }
 
     private TestSuite loadTestSuite() {
@@ -387,25 +399,25 @@ final class CoordinatorCli {
         return file;
     }
 
-    private static String loadMemberHzConfig() {
-        File file = getConfigurationFile("hazelcast.xml");
-        LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
-        return fileAsText(file);
-    }
-
-    private static String loadWorkerScript(WorkerType workerType, String vendor) {
+    public static String loadWorkerScript(WorkerType workerType, String vendor) {
         File file = getConfigurationFile("worker-" + vendor + "-" + workerType.id() + ".sh");
         LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
-    private static String loadClientHzConfig() {
+    public static String loadMemberHzConfig() {
+        File file = getConfigurationFile("hazelcast.xml");
+        LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
+        return fileAsText(file);
+    }
+
+    public static String loadClientHzConfig() {
         File file = getConfigurationFile("client-hazelcast.xml");
         LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
         return fileAsText(file);
     }
 
-    private static String loadLog4jConfig() {
+    public static String loadLog4jConfig() {
         return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
     }
 
@@ -433,6 +445,7 @@ final class CoordinatorCli {
         try {
             CoordinatorCli cli = new CoordinatorCli(args);
             cli.run();
+            LOGGER.info("Complete");
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run Coordinator", e);
         }

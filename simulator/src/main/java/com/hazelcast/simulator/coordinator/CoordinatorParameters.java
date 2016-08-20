@@ -54,7 +54,7 @@ class CoordinatorParameters {
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
     }
 
-    public int getPerformanceMonitorIntervalSeconds() {
+    int getPerformanceMonitorIntervalSeconds() {
         return performanceMonitorIntervalSeconds;
     }
 

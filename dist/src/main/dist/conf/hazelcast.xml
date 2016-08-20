@@ -7,6 +7,8 @@
         <name>workers</name>
     </group>
 
+    <!--LITE_MEMBER_CONFIG-->
+
     <network>
         <port port-count="200" auto-increment="true">5701</port>
         <join>

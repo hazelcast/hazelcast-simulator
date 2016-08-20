@@ -15,17 +15,20 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.protocol.operation.InstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.RemoteControllerOperation;
+import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartMembersOperation;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -44,16 +47,15 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     private final FailureCollector failureCollector;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsCollector performanceStatsCollector;
-    private final CoordinatorRemoteControllerProcessor remoteControllerProcessor;
+    private final Coordinator coordinator;
 
-    public CoordinatorOperationProcessor(FailureCollector failureCollector,
+    public CoordinatorOperationProcessor(Coordinator coordinator, FailureCollector failureCollector,
                                          TestPhaseListeners testPhaseListeners,
-                                         PerformanceStatsCollector performanceStatsCollector,
-                                         CoordinatorRemoteControllerProcessor remoteControllerProcessor) {
+                                         PerformanceStatsCollector performanceStatsCollector) {
+        this.coordinator = coordinator;
         this.failureCollector = failureCollector;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStatsCollector = performanceStatsCollector;
-        this.remoteControllerProcessor = remoteControllerProcessor;
     }
 
     @Override
@@ -61,24 +63,29 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                                             SimulatorAddress sourceAddress) throws Exception {
         switch (operationType) {
             case FAILURE:
-                processFailure((FailureOperation) operation);
+                failureCollector.notify((FailureOperation) operation);
                 break;
             case PHASE_COMPLETED:
                 return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
             case PERFORMANCE_STATE:
-                processPerformanceStats((PerformanceStatsOperation) operation, sourceAddress);
+                performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) operation).getPerformanceStats());
                 break;
-            case REMOTE_CONTROLLER:
-                processRemoteController((RemoteControllerOperation) operation);
+            case INSTALL_VENDOR:
+                coordinator.installVendor(((InstallVendorOperation) operation).getVersionSpec());
+                break;
+            case START_WORKERS:
+                coordinator.startWorkers((StartMembersOperation) operation);
+                break;
+            case RUN_SUITE:
+                coordinator.runSuite(((RunSuiteOperation) operation).getTestSuite());
+                break;
+            case SHUTDOWN:
+                coordinator.shutdown();
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
         return SUCCESS;
-    }
-
-    private void processFailure(FailureOperation operation) {
-        failureCollector.notify(operation);
     }
 
     private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
@@ -90,13 +97,5 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         SimulatorAddress workerAddress = sourceAddress.getParent();
         testPhaseListeners.updatePhaseCompletion(testIndex, operation.getTestPhase(), workerAddress);
         return SUCCESS;
-    }
-
-    private void processPerformanceStats(PerformanceStatsOperation operation, SimulatorAddress sourceAddress) {
-        performanceStatsCollector.update(sourceAddress, operation.getPerformanceStats());
-    }
-
-    private void processRemoteController(RemoteControllerOperation operation) {
-        remoteControllerProcessor.process(operation.getType());
     }
 }

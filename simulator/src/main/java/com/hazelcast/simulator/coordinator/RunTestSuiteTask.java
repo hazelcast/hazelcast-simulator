@@ -37,6 +37,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 
 public class RunTestSuiteTask {
+
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;
     private final ComponentRegistry componentRegistry;
@@ -67,6 +68,7 @@ public class RunTestSuiteTask {
     }
 
     public void run() {
+        componentRegistry.addTests(testSuite);
         try {
             run0();
         } finally {
@@ -79,7 +81,6 @@ public class RunTestSuiteTask {
     private void run0() {
         remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
 
-        componentRegistry.addTests(testSuite);
         int testCount = testSuite.size();
         boolean parallel = testSuite.isParallel() && testCount > 1;
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
@@ -172,7 +173,7 @@ public class RunTestSuiteTask {
 
         int targetCount = testSuite.getTargetCount();
         if (targetCount > 0) {
-            TargetType targetType = testSuite.getTargetType(componentRegistry.hasClientWorkers());
+            TargetType targetType = testSuite.getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
             List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
             echoer.echo("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers);
         }
