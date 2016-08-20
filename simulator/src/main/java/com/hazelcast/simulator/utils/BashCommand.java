@@ -121,7 +121,6 @@ public class BashCommand {
     }
 
     private static class BashStreamGobbler extends Thread {
-
         private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
         private final StringBuilder stringBuilder;
@@ -138,6 +137,7 @@ public class BashCommand {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    LOGGER.trace(line);
                     stringBuilder.append(line).append(NEW_LINE);
                 }
             } catch (IOException ignored) {

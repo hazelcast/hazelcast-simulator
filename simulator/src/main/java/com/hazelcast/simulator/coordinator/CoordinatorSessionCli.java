@@ -29,6 +29,7 @@ import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
+import joptsimple.NonOptionArgumentSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -53,16 +54,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * todo:
  * - if the connector has not yet started on the coordinator; then session will quickly timeout.
- * - if no worker count is given with start worker, assume 1
  * - Option to kill members
- * - stopping session improvements
  * - starting light members
- * - help in case there is a problem with parsing the main command
- * - start member; controlling configuration
- * - start client; controlling configuration
- * - cancel running test
- * - cancel all running tests
- * - scaling up down workers
+ * - start worker; controlling configuration
  * - killing random member
  * - Coordinator Session install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
@@ -75,11 +69,15 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
  * at com.hazelcast.simulator.coordinator.RemoteClient.sendToTestOnFirstWorker(RemoteClient.java:93)
  * at com.hazelcast.simulator.coordinator.TestCaseRunner.executePhase(TestCaseRunner.java:198)
- * <p>
+ *
  * nice to have
  * - chaos monkeys
- * <p>
+ * - cancel running test
+ * - cancel all running tests
+ * - scaling up down workers
+ *
  * done
+ * - if no worker count is given with start worker, assume 1
  * - option to kill all workers.
  * - good solution to stop the coordinator and get all artifacts downloaded and post processing done
  * - the worker version spec should default to what is in the simulator.properties
@@ -91,34 +89,40 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - when version spec not provided on start workers command, use the one in simulator.properties (which is already installed)
  * - problem starting members
  * - Option to start clients
+ * - help in case there is a problem with parsing the main command
+ * - stopping session improvements
  */
 public class CoordinatorSessionCli implements Closeable {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorSessionCli.class);
 
     private final SimulatorProperties simulatorProperties;
-    private final String cmd;
-    private final String[] subArgs;
     private final int coordinatorPort;
-
+    private final String[] args;
     private RemoteControllerConnector connector;
 
     public CoordinatorSessionCli(String[] args) {
-        cmd = args[0];
-        subArgs = removeFirst(args);
-        simulatorProperties = new SimulatorProperties();
+        this.args = args;
+        this.simulatorProperties = new SimulatorProperties();
         File file = new File(FileUtils.getUserDir(), "simulator.properties");
         if (file.exists()) {
             simulatorProperties.init(file);
         }
 
-        coordinatorPort = simulatorProperties.getCoordinatorPort();
+        this.coordinatorPort = simulatorProperties.getCoordinatorPort();
         if (coordinatorPort == 0) {
             throw new CommandLineExitException("Coordinator port is disabled!");
         }
     }
 
     public void run() {
+        if (args.length == 0) {
+            printHelpAndExit();
+        }
+
+        String cmd = args[0];
+        String[] subArgs = removeFirst(args);
+
         connector = new RemoteControllerConnector("localhost", coordinatorPort);
         connector.start();
         Response response;
@@ -126,7 +130,7 @@ public class CoordinatorSessionCli implements Closeable {
             LOGGER.info("Shutting down Coordinator Session");
             response = connector.write(new ShutdownCoordinatorOperation());
         } else if ("install".equals(cmd)) {
-            response = connector.write(InstallVendorCli.newOperation(subArgs));
+            response = connector.write(new InstallVendorCli().newOperation(subArgs));
         } else if ("start-workers".equals(cmd)) {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
@@ -134,13 +138,26 @@ public class CoordinatorSessionCli implements Closeable {
         } else if ("stop-workers".equals(cmd)) {
             response = connector.write(new StopWorkersCli().newOperation(subArgs));
         } else {
-            throw new CommandLineExitException("Unrecognized cmd '" + cmd + "'");
+            printHelpAndExit();
+            return;
         }
 
         ResponseType responseType = response.getFirstErrorResponseType();
         if (responseType != ResponseType.SUCCESS) {
             throw new CommandLineExitException("Could not process command: " + responseType);
         }
+    }
+
+    private static void printHelpAndExit() {
+        System.out.println(
+                "Command         Description                                                                 \n"
+                        + "------         -----------                                                                  \n"
+                        + "install         Installs vendor software on the remote machines                             \n"
+                        + "start-workers   Starts workers                                                              \n"
+                        + "stop-workers    Stops workers                                                               \n"
+                        + "run             Runs a test                                                                 \n"
+                        + "stop            Stops the Coordinator interactive session                                   ");
+        System.exit(1);
     }
 
     @Override
@@ -169,7 +186,19 @@ public class CoordinatorSessionCli implements Closeable {
     private static class InstallVendorCli {
         private final OptionParser parser = new OptionParser();
 
-        static InstallVendorOperation newOperation(String[] args) {
+        private final NonOptionArgumentSpec argumentSpec = parser
+                .nonOptions("version specification");
+
+        private OptionSet options;
+
+        InstallVendorOperation newOperation(String[] args) {
+
+            this.options = initOptionsWithHelp(parser, args);
+
+            if (options.nonOptionArguments().size() != 1) {
+                throw new CommandLineExitException(format("Too many arguments"));
+            }
+
             LOGGER.info("Installing " + args[0]);
             return new InstallVendorOperation(args[0]);
         }
@@ -192,7 +221,7 @@ public class CoordinatorSessionCli implements Closeable {
 
         private final OptionSpec<String> vmOptionsSpec = parser.accepts("vmOptions",
                 "Worker JVM options (quotes can be used).")
-                .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
+                .withRequiredArg().ofType(String.class).defaultsTo("");
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
                 "The versionSpec of the member, e.g. maven=3.7. It will default to what is configured in the"
@@ -203,26 +232,32 @@ public class CoordinatorSessionCli implements Closeable {
                 "The type of machine to start. member, litemember, client:java (native clients will be added soon) etc")
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
+        private final OptionSpec<Integer> countSpec = parser.accepts("count",
+                "The number of workers to start")
+                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
+        private final OptionSpec<String> configSpec = parser.accepts("config",
+                "The file containing the configuration to use to start up the worker. E.g. Hazelcast configuration")
+                .withRequiredArg().ofType(String.class);
+
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
             this.options = initOptionsWithHelp(parser, args);
 
-            if (options.nonOptionArguments().size() != 1) {
-                throw new CommandLineExitException(format("Too many arguments"));
+            int count = options.valueOf(countSpec);
+            if (count <= 0) {
+                throw new CommandLineExitException("member count can't be smaller than 1");
             }
 
-            int memberCount = Integer.parseInt((String) options.nonOptionArguments().get(0));
-            if (memberCount < 0) {
-                throw new CommandLineExitException("member count can't be smaller than 0");
-            }
+            LOGGER.info(format("Starting %s workers", count));
 
             return new StartWorkersOperation(
-                    memberCount,
+                    count,
                     options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
                     options.valueOf(workerTypeSpec),
-                    null);
+                    options.valueOf(configSpec));
         }
     }
 
