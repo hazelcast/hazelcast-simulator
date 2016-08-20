@@ -38,6 +38,8 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadClientHzConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig;
@@ -51,9 +53,10 @@ import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("checkstyle:classdataabstractioncoupling")
@@ -62,6 +65,7 @@ public final class Coordinator {
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+    private static final int INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES = 5;
 
     private final File outputDirectory;
 
@@ -82,11 +86,13 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
+    private CountDownLatch interaciveModeInitialized = new CountDownLatch(1);
+
     Coordinator(ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
                 DeploymentPlan deploymentPlan) {
 
-        this.outputDirectory = ensureExistingDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
+        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
         this.failureCollector = new FailureCollector(outputDirectory);
@@ -212,10 +218,13 @@ public final class Coordinator {
         }
     }
 
-    void start() {
-        LOGGER.info("Starting...");
+    void startInteractive() {
+        LOGGER.info("Coordinator interactive mode starting...");
+
+        startCoordinatorConnector();
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
+
         new InstallVendorTask(
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
@@ -223,10 +232,17 @@ public final class Coordinator {
                 coordinatorParameters.getSessionId()).run();
 
         startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-        startCoordinatorConnector();
         startRemoteClient();
 
-        LOGGER.info("Start completed...");
+        LOGGER.info("Coordinator interactive mode started...");
+
+        interaciveModeInitialized.countDown();
+    }
+
+    private void awaitInteractiveModeInitialized() throws Exception {
+        if (!interaciveModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
+            throw new TimeoutException("Coordinator interactive mode failed to complete");
+        }
     }
 
     private void startRemoteClient() {
@@ -247,14 +263,16 @@ public final class Coordinator {
         return log;
     }
 
-    public void installVendor(String versionSpec) {
+    public void installVendor(String versionSpec) throws Exception {
+        awaitInteractiveModeInitialized();
+
         LOGGER.info("Installing versionSpec:" + versionSpec);
         new InstallVendorTask(
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
                 Collections.singleton(versionSpec),
                 coordinatorParameters.getSessionId()).run();
-        LOGGER.info("Install successfull");
+        LOGGER.info("Install successful");
 
     }
 
@@ -264,7 +282,9 @@ public final class Coordinator {
         System.exit(0);
     }
 
-    public void startWorkers(StartWorkersOperation startWorkersOperation) {
+    public void startWorkers(StartWorkersOperation startWorkersOperation) throws Exception {
+        awaitInteractiveModeInitialized();
+
         LOGGER.info("Starting workers: " + startWorkersOperation.getCount());
 
         WorkerType workerType = WorkerType.getById(startWorkersOperation.getWorkerType());
@@ -303,8 +323,12 @@ public final class Coordinator {
         }
         environment.put("HAZELCAST_CONFIG", config);
 
+        String versionSpec = startWorkersOperation.getVersionSpec() == null
+                ? simulatorProperties.getVersionSpec()
+                : startWorkersOperation.getVersionSpec();
+
         WorkerParameters workerParameters = new WorkerParameters(
-                startWorkersOperation.getVersionSpec(),
+                versionSpec,
                 simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(workerType, simulatorProperties.get("VENDOR")),
                 environment);
@@ -325,7 +349,9 @@ public final class Coordinator {
         LOGGER.info("Workers started");
     }
 
-    public void runSuite(TestSuite testSuite) {
+    public void runSuite(TestSuite testSuite) throws Exception {
+        awaitInteractiveModeInitialized();
+
         new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
                 componentRegistry,

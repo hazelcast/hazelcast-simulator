@@ -116,8 +116,10 @@ public class ClientConnector {
                 ChannelFuture future = bootstrap.connect().syncUninterruptibly();
                 if (future.isSuccess()) {
                     channel = future.channel();
-                    LOGGER.info(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress,
-                            channel.remoteAddress()));
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress,
+                                channel.remoteAddress()));
+                    }
                     return;
                 }
                 future.channel().close();

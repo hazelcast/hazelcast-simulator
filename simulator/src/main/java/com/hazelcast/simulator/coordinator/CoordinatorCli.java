@@ -192,15 +192,7 @@ final class CoordinatorCli {
 
         this.componentRegistry = newComponentRegistry(simulatorProperties);
 
-        this.coordinatorParameters = new CoordinatorParameters(
-                options.valueOf(sessionIdSpec),
-                simulatorProperties,
-                options.valueOf(workerClassPathSpec),
-                options.valueOf(syncToTestPhaseSpec),
-                options.valueOf(workerVmStartupDelayMsSpec),
-                options.has(skipDownloadSpec),
-                getConfigurationFile("after-completion.sh").getAbsolutePath(),
-                getPerformanceMonitorInterval());
+        this.coordinatorParameters = loadCoordinatorParameters();
 
         int defaultHzPort = simulatorProperties.getHazelcastPort();
         String licenseKey = options.valueOf(licenseKeySpec);
@@ -212,6 +204,18 @@ final class CoordinatorCli {
 
         this.coordinator = new Coordinator(
                 componentRegistry, coordinatorParameters, deploymentPlan);
+    }
+
+    private CoordinatorParameters loadCoordinatorParameters() {
+        return new CoordinatorParameters(
+                options.valueOf(sessionIdSpec),
+                simulatorProperties,
+                options.valueOf(workerClassPathSpec),
+                options.valueOf(syncToTestPhaseSpec),
+                options.valueOf(workerVmStartupDelayMsSpec),
+                options.has(skipDownloadSpec),
+                getConfigurationFile("after-completion.sh").getAbsolutePath(),
+                getPerformanceMonitorInterval());
     }
 
     private Map<WorkerType, WorkerParameters> loadWorkerParameters() {
@@ -265,17 +269,10 @@ final class CoordinatorCli {
     }
 
     void run() {
-        if (!options.has(interactiveSpecSpec)) {
-            coordinator.run(testSuite);
+        if (options.has(interactiveSpecSpec)) {
+            coordinator.startInteractive();
         } else {
-            LOGGER.info("Coordinator interactive mode enabled");
-            coordinator.start();
-//            //hack
-//            try {
-//                Thread.sleep(10000000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            coordinator.run(testSuite);
         }
     }
 

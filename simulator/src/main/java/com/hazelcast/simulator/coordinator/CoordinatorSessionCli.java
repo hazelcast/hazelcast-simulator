@@ -25,7 +25,6 @@ import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.ShutdownCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
 import joptsimple.OptionParser;
@@ -43,7 +42,6 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_WARMUP_
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -52,13 +50,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * todo:
- * - Start should not be done async. The call should wait till the starting has actually completed.
- * - Stopping doesn't complete
+ * - if the connector has not yet started on the coordinator; then session will quickly timeout.
+ * - if no worker count is given with start worker, assume 1
+ * - good solution to stop the coordinator and get all artifacts downloaded and post processing done
  * - Option to kill members
- * - Option to start clients
- * - starting session improvements
  * - stopping session improvements
- * - the worker jvm version spec should default to what is in the simulator.properties
  * - starting light members
  * - help in case there is a problem with parsing the main command
  * - start member; controlling configuration
@@ -68,15 +64,30 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - scaling up down workers
  * - killing random member
  * - Coordinator Session install vendor : parsing + help
- * - when invalid version is used in install; no propper feedback
- * - appearently hazelcast 3.6 is automatically installed on interactive startup
- * - monitor performance
- *
+ * - when invalid version is used in install; no proper feedback
+ * - on startup of cluster interactive I see: INFO  10:41:46 Created via arguments:
+ * INFO  10:41:46     Agent  54.211.251.117  10.142.170.116 (C_A1) members:  1, clients:  0, mode:  MIXED,
+ * version specs: [outofthebox]
+ * this doesn't make a lot of sense since we don't have any members
+ * - if there are no workers, don't show a stacktrace.
+ * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
+ * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
+ * at com.hazelcast.simulator.coordinator.RemoteClient.sendToTestOnFirstWorker(RemoteClient.java:93)
+ * at com.hazelcast.simulator.coordinator.TestCaseRunner.executePhase(TestCaseRunner.java:198)
+ * <p>
  * nice to have
  * - chaos monkeys
- *
+ * <p>
  * done
+ * - the worker version spec should default to what is in the simulator.properties
+ * - when coordinator not yet initialized; any command should be blocked
+ * - logging noise ----> ClientConnector R -> C sends to localhost/127.0.0.1:4014
+ * - when install command executed successfully, don't log it
+ * - monitor performance
+ * - coordinator start command should be removed
+ * - when version spec not provided on start workers command, use the one in simulator.properties (which is already installed)
  * - problem starting members
+ * - Option to start clients
  */
 public class CoordinatorSessionCli implements Closeable {
 
@@ -105,12 +116,6 @@ public class CoordinatorSessionCli implements Closeable {
     }
 
     public void run() {
-        if ("start".equals(cmd)) {
-            LOGGER.info("Starting Coordinator Session on port:" + coordinatorPort);
-            new BashCommand(getSimulatorHome() + "/bin/" + "coordinator --interactive &").execute();
-            return;
-        }
-
         connector = new RemoteControllerConnector("localhost", coordinatorPort);
         connector.start();
         Response response;
@@ -119,7 +124,6 @@ public class CoordinatorSessionCli implements Closeable {
             response = connector.write(new ShutdownCoordinatorOperation());
         } else if ("install".equals(cmd)) {
             response = connector.write(InstallVendorCli.newOperation(subArgs));
-            System.out.println(response);
         } else if ("start-workers".equals(cmd)) {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
@@ -174,8 +178,9 @@ public class CoordinatorSessionCli implements Closeable {
                 .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
-                "The versionSpec of the member, e.g. maven=3.7")
-                .withRequiredArg().ofType(String.class).defaultsTo("outofthebox");
+                "The versionSpec of the member, e.g. maven=3.7. It will default to what is configured in the"
+                        + " simulator.properties")
+                .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
                 "The type of machine to start. member, litemember, client:java (native clients will be added soon) etc")

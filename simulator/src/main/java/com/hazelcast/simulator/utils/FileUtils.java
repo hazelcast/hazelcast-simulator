@@ -46,6 +46,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 @SuppressFBWarnings("DM_DEFAULT_ENCODING")
+@SuppressWarnings("checkstyle:methodcount")
 public final class FileUtils {
 
     public static final String USER_HOME = System.getProperty("user.home");
@@ -273,6 +274,18 @@ public final class FileUtils {
         return dir;
     }
 
+    public static File ensureNewDirectory(File dir) {
+        if (dir.exists()) {
+            throw new UncheckedIOException("Directory [%s] already exists");
+        }
+
+        if (!dir.mkdirs()) {
+            throw new UncheckedIOException("Could not create directory: " + dir.getAbsolutePath());
+        }
+
+        return dir;
+    }
+
     public static void rename(File source, File target) {
         if (!source.exists()) {
             return;
@@ -414,7 +427,7 @@ public final class FileUtils {
         try {
             Files.copy(sourceFile, targetFile);
             if (sourceFile.canExecute()) {
-                 targetFile.setExecutable(true);
+                targetFile.setExecutable(true);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),

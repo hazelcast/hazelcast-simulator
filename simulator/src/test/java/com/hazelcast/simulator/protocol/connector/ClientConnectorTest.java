@@ -64,7 +64,6 @@ public class ClientConnectorTest {
         verify(future, times(1)).channel();
         verifyNoMoreInteractions(future);
 
-        verify(channel, times(1)).remoteAddress();
         verifyNoMoreInteractions(channel);
     }
 
@@ -84,7 +83,6 @@ public class ClientConnectorTest {
         verifyNoMoreInteractions(future);
 
         verify(channel, times(1)).close();
-        verify(channel, times(1)).remoteAddress();
         verifyNoMoreInteractions(channel);
     }
 
@@ -103,7 +101,6 @@ public class ClientConnectorTest {
         verify(future, times(1)).channel();
         verifyNoMoreInteractions(future);
 
-        verify(channel, times(1)).remoteAddress();
         verifyNoMoreInteractions(channel);
     }
 
