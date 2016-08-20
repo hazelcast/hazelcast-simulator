@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -20,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;

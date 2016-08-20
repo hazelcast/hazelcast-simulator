@@ -61,7 +61,6 @@
         <hdr-histogram.version>2.1.9</hdr-histogram.version>
         <!-- cannot update to 5.x, since they dropped Java 6 support -->
         <jopt.version>4.9</jopt.version>
-        <xstream.version>1.4.9</xstream.version>
 
         <jclouds.version>1.9.2</jclouds.version>
         <amazonaws.version>1.11.20</amazonaws.version>

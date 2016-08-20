@@ -18,7 +18,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
@@ -48,7 +47,7 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzCon
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;

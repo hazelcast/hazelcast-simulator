@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.coordinator.deployment;
+package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -29,13 +27,11 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.simulator.coordinator.deployment.ClusterConfiguration.getClusterConfiguration;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
@@ -53,52 +49,6 @@ public final class DeploymentPlan {
     private final AtomicInteger agentIndex = new AtomicInteger();
 
     public DeploymentPlan() {
-    }
-
-    public static DeploymentPlan createDeploymentPlanFromClusterXml(ComponentRegistry componentRegistry,
-                                                                    Map<WorkerType, WorkerParameters> workerParametersMap,
-                                                                    SimulatorProperties properties,
-                                                                    int defaultHzPort,
-                                                                    String licenseKey,
-                                                                    String clusterXml) {
-        WorkerConfigurationConverter workerConfigurationConverter = new WorkerConfigurationConverter(
-                defaultHzPort, licenseKey, workerParametersMap, properties, componentRegistry);
-
-        return generateFromXml(componentRegistry, workerParametersMap, workerConfigurationConverter, clusterXml);
-    }
-
-    static DeploymentPlan generateFromXml(ComponentRegistry componentRegistry,
-                                          Map<WorkerType, WorkerParameters> parametersMap,
-                                          WorkerConfigurationConverter converter,
-                                          String clusterXml) {
-        DeploymentPlan deploymentPlan = new DeploymentPlan();
-
-        deploymentPlan.initAgentWorkerLayouts(componentRegistry);
-        int agentCount = componentRegistry.agentCount();
-        ClusterConfiguration clusterConfiguration = getClusterConfiguration(converter, clusterXml);
-        if (clusterConfiguration.size() != agentCount) {
-            throw new CommandLineExitException(format("Found %d node configurations for %d agents (number must be equal)",
-                    clusterConfiguration.size(), agentCount));
-        }
-
-        Iterator<AgentWorkerLayout> iterator = deploymentPlan.agentWorkerLayouts.iterator();
-        for (NodeConfiguration nodeConfiguration : clusterConfiguration.getNodeConfigurations()) {
-            AgentWorkerLayout agentWorkerLayout = iterator.next();
-            SimulatorAddress agentAddress = agentWorkerLayout.agentData.getAddress();
-            for (WorkerGroup workerGroup : nodeConfiguration.getWorkerGroups()) {
-                WorkerConfiguration workerConfig = clusterConfiguration.getWorkerConfiguration(workerGroup.getConfiguration());
-                for (int i = 0; i < workerGroup.getCount(); i++) {
-                    WorkerType workerType = workerConfig.getType();
-                    WorkerProcessSettings settings = agentWorkerLayout.addWorker(workerType, parametersMap.get(workerType));
-                    deploymentPlan.workerDeployment.get(agentAddress).add(settings);
-                }
-            }
-            agentWorkerLayout.agentWorkerMode = AgentWorkerMode.CUSTOM;
-        }
-
-        deploymentPlan.printLayout("cluster.xml");
-
-        return deploymentPlan;
     }
 
     public static DeploymentPlan createDeploymentPlan(

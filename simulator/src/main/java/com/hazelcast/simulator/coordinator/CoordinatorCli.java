@@ -18,7 +18,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.testcontainer.TestPhase;
@@ -40,8 +39,7 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlanFromClusterXml;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -194,16 +192,11 @@ final class CoordinatorCli {
 
         this.coordinatorParameters = loadCoordinatorParameters();
 
-        int defaultHzPort = simulatorProperties.getHazelcastPort();
-        String licenseKey = options.valueOf(licenseKeySpec);
-
         this.workerParametersMap = loadWorkerParameters();
 
-        DeploymentPlan deploymentPlan = newDeploymentPlan(simulatorProperties, componentRegistry,
-                workerParametersMap, defaultHzPort, licenseKey);
+        DeploymentPlan deploymentPlan = newDeploymentPlan(componentRegistry, workerParametersMap);
 
-        this.coordinator = new Coordinator(
-                componentRegistry, coordinatorParameters, deploymentPlan);
+        this.coordinator = new Coordinator(componentRegistry, coordinatorParameters, deploymentPlan);
     }
 
     private CoordinatorParameters loadCoordinatorParameters() {
@@ -339,28 +332,15 @@ final class CoordinatorCli {
         return componentRegistry;
     }
 
-    private DeploymentPlan newDeploymentPlan(SimulatorProperties simulatorProperties,
-                                             ComponentRegistry componentRegistry,
-                                             Map<WorkerType, WorkerParameters> workerParametersMap,
-                                             int defaultHzPort,
-                                             String licenseKey) {
-        String clusterXml = loadClusterXml();
-        if (clusterXml == null) {
-            return createDeploymentPlan(
-                    componentRegistry,
-                    workerParametersMap,
-                    options.valueOf(memberWorkerCountSpec),
-                    options.valueOf(clientWorkerCountSpec),
-                    options.valueOf(dedicatedMemberMachinesSpec));
-        }
-
-        return createDeploymentPlanFromClusterXml(
+    private DeploymentPlan newDeploymentPlan(ComponentRegistry componentRegistry,
+                                             Map<WorkerType, WorkerParameters> workerParametersMap) {
+        return createDeploymentPlan(
                 componentRegistry,
                 workerParametersMap,
-                simulatorProperties,
-                defaultHzPort,
-                licenseKey,
-                clusterXml);
+                options.valueOf(memberWorkerCountSpec),
+                options.valueOf(clientWorkerCountSpec),
+                options.valueOf(dedicatedMemberMachinesSpec));
+
     }
 
     private File getTestSuiteFile() {
@@ -412,16 +392,6 @@ final class CoordinatorCli {
 
     public static String loadLog4jConfig() {
         return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
-    }
-
-    private static String loadClusterXml() {
-        File file = new File("cluster.xml").getAbsoluteFile();
-        if (file.exists()) {
-            LOGGER.info("Loading cluster configuration: " + file.getAbsolutePath());
-            return fileAsText(file.getAbsolutePath());
-        } else {
-            return null;
-        }
     }
 
     private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {

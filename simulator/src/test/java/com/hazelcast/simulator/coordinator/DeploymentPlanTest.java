@@ -1,8 +1,7 @@
-package com.hazelcast.simulator.coordinator.deployment;
+package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -16,10 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.AgentWorkerMode.MIXED;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createDeploymentPlan;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.generateFromXml;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.AgentWorkerMode.MIXED;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertNotNull;
@@ -36,8 +33,6 @@ public class DeploymentPlanTest {
     private SimulatorAddress secondAgent;
     private SimulatorAddress thirdAgent;
 
-    private WorkerConfigurationConverter converter;
-
     @Before
     public void setUp() {
         workerParametersMap.put(WorkerType.MEMBER, mock(WorkerParameters.class));
@@ -49,9 +44,6 @@ public class DeploymentPlanTest {
 
         SimulatorProperties simulatorProperties = mock(SimulatorProperties.class);
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
-
-        converter = new WorkerConfigurationConverter(5701, "defaultLicenseKey", workerParametersMap, simulatorProperties,
-                componentRegistry);
     }
 
     @Test
@@ -69,57 +61,6 @@ public class DeploymentPlanTest {
         String ipAddresses = agentWorkerLayout.formatIpAddresses();
         assertTrue(ipAddresses.contains("192.168.0.1"));
         assertTrue(ipAddresses.contains("172.16.16.1"));
-    }
-
-    @Test
-    public void testGenerateFromXml() {
-        String xml = "<clusterConfiguration>"
-                + NEW_LINE + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>"
-                + NEW_LINE + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>"
-                + NEW_LINE + "  <nodeConfiguration>"
-                + NEW_LINE + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>"
-                + NEW_LINE + "  </nodeConfiguration>"
-                + NEW_LINE + "  <nodeConfiguration>"
-                + NEW_LINE + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>"
-                + NEW_LINE + "  </nodeConfiguration>"
-                + NEW_LINE + "  <nodeConfiguration>"
-                + NEW_LINE + "    <workerGroup configuration=\"memberWorker\" count=\"3\"/>"
-                + NEW_LINE + "    <workerGroup configuration=\"clientWorker\" count=\"4\"/>"
-                + NEW_LINE + "  </nodeConfiguration>"
-                + NEW_LINE + "</clusterConfiguration>";
-
-        DeploymentPlan deploymentPlan = generateFromXml(componentRegistry, workerParametersMap, converter, xml);
-        assertWorkerDeployment(deploymentPlan, firstAgent, 1, 0);
-        assertWorkerDeployment(deploymentPlan, secondAgent, 0, 2);
-        assertWorkerDeployment(deploymentPlan, thirdAgent, 3, 4);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testGenerateFromXml_countMismatch() {
-        String xml = "<clusterConfiguration>"
-                + NEW_LINE + "  <workerConfiguration name=\"memberWorker\" type=\"MEMBER\"/>"
-                + NEW_LINE + "  <workerConfiguration name=\"clientWorker\" type=\"CLIENT\"/>"
-                + NEW_LINE + "  <nodeConfiguration>"
-                + NEW_LINE + "    <workerGroup configuration=\"memberWorker\" count=\"1\"/>"
-                + NEW_LINE + "  </nodeConfiguration>"
-                + NEW_LINE + "  <nodeConfiguration>"
-                + NEW_LINE + "    <workerGroup configuration=\"clientWorker\" count=\"2\"/>"
-                + NEW_LINE + "  </nodeConfiguration>"
-                + NEW_LINE + "</clusterConfiguration>";
-
-        generateFromXml(componentRegistry, workerParametersMap, converter, xml);
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testGenerateFromXml_hzConfigFileNotExists() {
-        String xml = "<clusterConfiguration>"
-                + NEW_LINE + "\t<workerConfiguration name=\"memberWorker\" type=\"MEMBER\" hzConfigFile=\"notExists\"/>"
-                + NEW_LINE + "\t<nodeConfiguration>"
-                + NEW_LINE + "\t<workerGroup configuration=\"memberWorker\" count=\"1\"/>"
-                + NEW_LINE + "\t</nodeConfiguration>"
-                + NEW_LINE + "</clusterConfiguration>";
-
-        generateFromXml(componentRegistry, workerParametersMap, converter, xml);
     }
 
     @Test
@@ -245,9 +186,9 @@ public class DeploymentPlanTest {
 
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 4, 0);
 
-        assertWorkerDeployment(plan,firstAgent, 0, 1);
-        assertWorkerDeployment(plan,secondAgent, 0, 1);
-        assertWorkerDeployment(plan,thirdAgent, 0, 2);
+        assertWorkerDeployment(plan, firstAgent, 0, 1);
+        assertWorkerDeployment(plan, secondAgent, 0, 1);
+        assertWorkerDeployment(plan, thirdAgent, 0, 2);
     }
 
     @Test
@@ -282,9 +223,9 @@ public class DeploymentPlanTest {
 
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, 0, 3, 1);
 
-        assertWorkerDeployment(plan,firstAgent, 0, 0);
-        assertWorkerDeployment(plan,secondAgent, 0, 2);
-        assertWorkerDeployment(plan,thirdAgent, 0, 1);
+        assertWorkerDeployment(plan, firstAgent, 0, 0);
+        assertWorkerDeployment(plan, secondAgent, 0, 2);
+        assertWorkerDeployment(plan, thirdAgent, 0, 1);
     }
 
     private void assertWorkerDeployment(DeploymentPlan plan, SimulatorAddress agentAddress, int memberCount, int clientCount) {

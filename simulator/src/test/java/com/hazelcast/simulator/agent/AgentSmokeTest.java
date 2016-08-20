@@ -14,7 +14,7 @@ import com.hazelcast.simulator.coordinator.TerminateWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
-import com.hazelcast.simulator.coordinator.deployment.DeploymentPlan;
+import com.hazelcast.simulator.coordinator.DeploymentPlan;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -51,7 +51,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirector
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.coordinator.deployment.DeploymentPlan.createSingleInstanceDeploymentPlan;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createSingleInstanceDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
