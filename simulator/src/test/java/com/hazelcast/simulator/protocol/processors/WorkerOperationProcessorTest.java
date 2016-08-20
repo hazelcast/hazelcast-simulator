@@ -123,7 +123,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_TerminateWorkers_onClientWorker() {
-        processor = new WorkerOperationProcessor(WorkerType.CLIENT, hazelcastInstance, worker, workerAddress);
+        processor = new WorkerOperationProcessor(WorkerType.JAVA_CLIENT, hazelcastInstance, worker, workerAddress);
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
 
         processor.process(operation, COORDINATOR);

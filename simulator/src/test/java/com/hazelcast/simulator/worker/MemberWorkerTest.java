@@ -19,7 +19,6 @@ import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzC
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.worker.WorkerType.CLIENT;
 import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -48,7 +47,7 @@ public class MemberWorkerTest {
         when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
 
         String memberHzConfig = fileAsText(localResourceDirectory() + "/hazelcast.xml");
-        memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, 5701, null, properties);
+        memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, 5701, null, properties, false);
         memberConfigFile = new File(getUserDir(), "hazelcast.xml");
         appendText(memberHzConfig, memberConfigFile);
 
@@ -82,7 +81,7 @@ public class MemberWorkerTest {
         Hazelcast.newHazelcastInstance();
 
         worker = new MemberWorker(
-                CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, clientConfigFile.getAbsolutePath(), true, 10);
+                WorkerType.JAVA_CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, clientConfigFile.getAbsolutePath(), true, 10);
         worker.start();
         assertMemberWorker();
     }

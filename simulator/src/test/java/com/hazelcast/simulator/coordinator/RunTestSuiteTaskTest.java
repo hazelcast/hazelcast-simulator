@@ -19,6 +19,7 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -302,6 +303,7 @@ public class RunTestSuiteTaskTest {
     private RunTestSuiteTask createRunTestSuiteTask(int targetCount) {
         WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
         when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
+        when(workerProcessSettings.getWorkerType()).thenReturn(WorkerType.MEMBER);
 
         componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent("127.0.0.1", "127.0.0.1");

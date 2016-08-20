@@ -130,7 +130,7 @@ public class StartWorkersTask {
     }
 
     private static Map<SimulatorAddress, List<WorkerProcessSettings>> filterByWorkerType(
-            boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
+            boolean isFullMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {
 
         Map<SimulatorAddress, List<WorkerProcessSettings>> result = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
 
@@ -138,7 +138,7 @@ public class StartWorkersTask {
             List<WorkerProcessSettings> filtered = new LinkedList<WorkerProcessSettings>();
 
             for (WorkerProcessSettings settings : entry.getValue()) {
-                if (settings.getWorkerType().isMember() == isMember) {
+                if (settings.getWorkerType().isMember() == isFullMember) {
                     filtered.add(settings);
                 }
             }

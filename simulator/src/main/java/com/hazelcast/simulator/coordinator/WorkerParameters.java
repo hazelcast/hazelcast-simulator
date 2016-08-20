@@ -30,7 +30,7 @@ public class WorkerParameters {
 
     private final int workerStartupTimeout;
     private final String versionSpec;
-      // value of 1 or higher means enabled.
+    // value of 1 or higher means enabled.
     private final String workerScript;
     private final Map<String, String> environment;
 
@@ -61,9 +61,9 @@ public class WorkerParameters {
     }
 
     public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,
-                                            String licenseKey, SimulatorProperties properties) {
+                                            String licenseKey, SimulatorProperties properties, boolean liteMember) {
         String addressConfig = createAddressConfig("member", componentRegistry, port);
-        memberHzConfig = updateHzConfig(memberHzConfig, addressConfig, licenseKey);
+        memberHzConfig = updateAddressAndLicenseKey(memberHzConfig, addressConfig, licenseKey);
 
         String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
         if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
@@ -74,13 +74,17 @@ public class WorkerParameters {
                             updateIntervalAttr, manCenterURL));
         }
 
+        if (liteMember) {
+            memberHzConfig = memberHzConfig.replace("<!--LITE_MEMBER_CONFIG-->", "<lite-member enabled=\"true\"/>");
+        }
+
         return memberHzConfig;
     }
 
     public static String initClientHzConfig(String clientHzConfig, ComponentRegistry componentRegistry, int port,
                                             String licenseKey) {
         String addressConfig = createAddressConfig("address", componentRegistry, port);
-        return updateHzConfig(clientHzConfig, addressConfig, licenseKey);
+        return updateAddressAndLicenseKey(clientHzConfig, addressConfig, licenseKey);
     }
 
     static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
@@ -92,7 +96,7 @@ public class WorkerParameters {
         return members.toString();
     }
 
-    private static String updateHzConfig(String hzConfig, String addressConfig, String licenseKey) {
+    private static String updateAddressAndLicenseKey(String hzConfig, String addressConfig, String licenseKey) {
         hzConfig = hzConfig.replace("<!--MEMBERS-->", addressConfig);
         if (licenseKey != null) {
             String licenseConfig = format("<license-key>%s</license-key>", licenseKey);

@@ -40,7 +40,7 @@ public class StartWorkersTaskTest {
     public void setup() {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         workerParametersMap.put(WorkerType.MEMBER, workerParameters);
-        workerParametersMap.put(WorkerType.CLIENT, workerParameters);
+        workerParametersMap.put(WorkerType.JAVA_CLIENT, workerParameters);
 
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
@@ -55,7 +55,7 @@ public class StartWorkersTaskTest {
     @Test
     public void testCreateWorkers_withClients() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 3);
+        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 6, 3);
 
         remoteClient = new RemoteClient(
                 coordinatorConnector, componentRegistry,
@@ -69,7 +69,7 @@ public class StartWorkersTaskTest {
     @Test
     public void testCreateWorkers_noClients() {
         initMockForCreateWorkerOperation(ResponseType.SUCCESS);
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
+        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 6, 0);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
@@ -81,7 +81,7 @@ public class StartWorkersTaskTest {
     @Test(expected = CommandLineExitException.class)
     public void testCreateWorkers_withErrorResponse() {
         initMockForCreateWorkerOperation(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
+        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 6, 0);
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
@@ -92,7 +92,7 @@ public class StartWorkersTaskTest {
     public void testCreateWorkers_withExceptionOnWrite() {
         try {
             initMockForCreateWorkerOperation(null);
-            Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getClusterLayout(0, 6, 0);
+            Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 6, 0);
 
             remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
@@ -103,11 +103,11 @@ public class StartWorkersTaskTest {
         }
     }
 
-    private Map<SimulatorAddress, List<WorkerProcessSettings>> getClusterLayout(int dedicatedMemberMachineCount,
-                                                                                int memberWorkerCount,
-                                                                                int clientWorkerCount) {
+    private Map<SimulatorAddress, List<WorkerProcessSettings>> getDeployment(int dedicatedMemberMachineCount,
+                                                                             int memberWorkerCount,
+                                                                             int clientWorkerCount) {
         DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParametersMap,
-                memberWorkerCount, clientWorkerCount, dedicatedMemberMachineCount);
+                WorkerType.JAVA_CLIENT,  memberWorkerCount, clientWorkerCount,dedicatedMemberMachineCount);
 
         return deploymentPlan.getWorkerDeployment();
     }

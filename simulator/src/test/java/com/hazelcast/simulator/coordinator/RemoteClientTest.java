@@ -15,6 +15,7 @@ import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,8 +54,8 @@ public class RemoteClientTest {
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
 
-        WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
-        when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
+        WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(
+                1, WorkerType.MEMBER, "", "", 0, new HashMap<String, String>());
 
         SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();
         componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerProcessSettings));

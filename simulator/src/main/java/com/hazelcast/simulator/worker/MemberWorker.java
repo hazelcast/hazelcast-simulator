@@ -123,12 +123,10 @@ public final class MemberWorker implements Worker {
         HazelcastInstance instance = null;
         if (autoCreateHzInstance) {
             logHeader("Creating " + type + " HazelcastInstance");
-            switch (type) {
-                case CLIENT:
-                    instance = createClientHazelcastInstance(hzConfigFile);
-                    break;
-                default:
-                    instance = createServerHazelcastInstance(hzConfigFile);
+            if (type.equals(WorkerType.JAVA_CLIENT)) {
+                instance = createClientHazelcastInstance(hzConfigFile);
+            } else {
+                instance = createServerHazelcastInstance(hzConfigFile);
             }
             logHeader("Successfully created " + type + " HazelcastInstance");
 
@@ -170,7 +168,7 @@ public final class MemberWorker implements Worker {
         echo("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
 
         String workerId = System.getProperty("workerId");
-        WorkerType type = WorkerType.valueOf(System.getProperty("workerType"));
+        WorkerType type = new WorkerType(System.getProperty("workerType"));
 
         String publicAddress = System.getProperty("publicAddress");
         int agentIndex = parseInt(System.getProperty("agentIndex"));

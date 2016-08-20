@@ -13,7 +13,6 @@ import static com.hazelcast.simulator.coordinator.WorkerParameters.createAddress
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -60,7 +59,7 @@ public class WorkerParametersTest {
         assertTrue(memberConfig.contains("<!--LICENSE-KEY-->"));
         assertTrue(memberConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
 
-        String memberHzConfig = initMemberHzConfig(memberConfig, componentRegistry, 5701, "licenseKey2342", properties);
+        String memberHzConfig = initMemberHzConfig(memberConfig, componentRegistry, 5701, "licenseKey2342", properties, false);
 
         assertNotNull(memberHzConfig);
         assertTrue(memberHzConfig.contains("licenseKey2342"));

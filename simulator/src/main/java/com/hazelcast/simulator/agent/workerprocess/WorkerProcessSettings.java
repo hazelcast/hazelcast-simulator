@@ -54,7 +54,7 @@ public class WorkerProcessSettings {
     }
 
     public WorkerType getWorkerType() {
-        return WorkerType.valueOf(workerType);
+        return new WorkerType(workerType);
     }
 
     public String getVersionSpec() {

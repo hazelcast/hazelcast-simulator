@@ -352,21 +352,9 @@ public class CoordinatorCliTest {
 
         try {
             CoordinatorCli cli = createCoordinatorCli();
-            assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.CLIENT).getEnvironment().get("HAZELCAST_CONFIG"));
+            assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.JAVA_CLIENT).getEnvironment().get("HAZELCAST_CONFIG"));
         } finally {
             deleteQuiet(clientConfigFile);
-        }
-    }
-
-    @Test
-    public void testInit_clusterConfigFileInWorkDir() {
-        File clusterConfigFile = new File("cluster.xml").getAbsoluteFile();
-        writeText(CLUSTER_XML, clusterConfigFile);
-
-        try {
-            createCoordinatorCli();
-        } finally {
-            deleteQuiet(clusterConfigFile);
         }
     }
 

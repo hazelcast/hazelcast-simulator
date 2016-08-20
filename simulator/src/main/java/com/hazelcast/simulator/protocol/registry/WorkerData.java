@@ -21,7 +21,7 @@ import com.hazelcast.simulator.worker.WorkerType;
 
 /**
  * Contains the metadata of a Simulator Worker.
- *
+ * <p>
  * Part of the metadata is the {@link SimulatorAddress} which is used by the Simulator Communication Protocol.
  */
 public class WorkerData {
@@ -43,6 +43,6 @@ public class WorkerData {
     }
 
     public boolean isMemberWorker() {
-        return (settings.getWorkerType() == WorkerType.MEMBER);
+        return settings.getWorkerType().equals(WorkerType.MEMBER);
     }
 }

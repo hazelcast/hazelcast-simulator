@@ -53,6 +53,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * todo:
+ * INFO  19:04:22 Valid connection from /127.0.0.1:49778 (magic bytes found)
  * - if the connector has not yet started on the coordinator; then session will quickly timeout.
  * - Option to kill members
  * - starting light members

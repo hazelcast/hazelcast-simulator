@@ -137,14 +137,14 @@ public class HazelcastUtilsTest {
         when(member.getSocketAddress()).thenReturn(SOCKET_ADDRESS);
         hazelcastInstance = createMockHazelcastInstance(member);
 
-        String address = getHazelcastAddress(WorkerType.CLIENT, "172.16.16.1", hazelcastInstance);
+        String address = getHazelcastAddress(WorkerType.JAVA_CLIENT, "172.16.16.1", hazelcastInstance);
 
         assertEquals("127.0.0.1:5701", address);
     }
 
     @Test
     public void testGetHazelcastAddress_withClientWorker_hazelcastInstanceIsNull() {
-        String address = getHazelcastAddress(WorkerType.CLIENT, "172.16.16.1", null);
+        String address = getHazelcastAddress(WorkerType.JAVA_CLIENT, "172.16.16.1", null);
 
         assertEquals("client:172.16.16.1", address);
     }
@@ -158,7 +158,7 @@ public class HazelcastUtilsTest {
         when(hazelcastInstance.getLocalEndpoint()).thenThrow(new NoSuchMethodError("expected exception"));
         when(hazelcastInstance.getCluster()).thenReturn(cluster);
 
-        String address = getHazelcastAddress(WorkerType.CLIENT, "172.16.16.1", hazelcastInstance);
+        String address = getHazelcastAddress(WorkerType.JAVA_CLIENT, "172.16.16.1", hazelcastInstance);
 
         assertEquals("client:172.16.16.1", address);
     }

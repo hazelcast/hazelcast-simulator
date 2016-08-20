@@ -54,6 +54,7 @@ public final class DeploymentPlan {
     public static DeploymentPlan createDeploymentPlan(
             ComponentRegistry componentRegistry,
             Map<WorkerType, WorkerParameters> workerParametersMap,
+            WorkerType clientType,
             int memberCount,
             int clientCount,
             int dedicatedMemberMachineCount) {
@@ -76,7 +77,7 @@ public final class DeploymentPlan {
 
         plan.assign(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
 
-        plan.assign(clientCount, WorkerType.CLIENT, workerParametersMap.get(WorkerType.CLIENT));
+        plan.assign(clientCount, clientType, workerParametersMap.get(clientType));
 
         plan.printLayout("arguments");
 
@@ -209,7 +210,7 @@ public final class DeploymentPlan {
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
-            int agentClientWorkerCount = agentWorkerLayout.getCount(WorkerType.CLIENT);
+            int agentClientWorkerCount = agentWorkerLayout.workerProcessSettingsList.size() - agentMemberWorkerCount;
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
 
             String message = "    Agent %s (%s) members: %s, clients: %s";

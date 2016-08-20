@@ -15,40 +15,52 @@
  */
 package com.hazelcast.simulator.worker;
 
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
+
 /**
  * Defines the different types for Simulator Worker components.
  */
-public enum WorkerType {
+public final class WorkerType {
 
-    MEMBER(true, "member"),
-    CLIENT(false, "client");
+    public static final WorkerType MEMBER = new WorkerType("member");
+    public static final WorkerType JAVA_CLIENT = new WorkerType("javaclient");
+    public static final WorkerType LITE_MEMBER = new WorkerType("litemember");
 
-    private final boolean isMember;
-    private final String id;
+    private final String name;
 
-    WorkerType(boolean isMember, String id) {
-        this.isMember = isMember;
-        this.id = id;
+    public WorkerType(String name) {
+        this.name = checkNotNull(name, "name can't be null");
     }
 
-    public String id() {
-        return id;
-    }
-
-    public static WorkerType getById(String id) {
-        for (WorkerType workerType : values()) {
-            if (workerType.id.equals(id)) {
-                return workerType;
-            }
-        }
-        return null;
+    public String name() {
+        return name;
     }
 
     public boolean isMember() {
-        return isMember;
+        return MEMBER.name.equals(name);
     }
 
-    public String toLowerCase() {
-        return name().toLowerCase();
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+
+        if (o.getClass() != WorkerType.class) {
+            return false;
+        }
+
+        WorkerType that = (WorkerType) o;
+        return that.name.equals(this.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 }

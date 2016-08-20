@@ -45,9 +45,9 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadClientHzCon
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
-import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
@@ -325,42 +325,45 @@ public final class Coordinator {
     public void startWorkers(StartWorkersOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Starting workers: " + op.getCount());
+        WorkerType workerType = new WorkerType(op.getWorkerType());
 
-        WorkerType workerType = WorkerType.getById(op.getWorkerType());
+        LOGGER.info("Starting [" + workerType + "] workers: " + op.getCount());
 
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
         environment.put("LOG4j_CONFIG", loadLog4jConfig());
         environment.put("JVM_OPTIONS", op.getVmOptions());
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
+                "" + coordinatorParameters.getPerformanceMonitorIntervalSeconds());
 
         String config;
-        switch (workerType) {
-            case MEMBER:
-                config = initMemberHzConfig(
-                        op.getHzConfig() == null
-                                ? loadMemberHzConfig()
-                                : op.getHzConfig(),
-                        componentRegistry,
-                        simulatorProperties.getHazelcastPort(),
-                        "",
-                        simulatorProperties);
-                break;
-            case CLIENT:
-                config = initClientHzConfig(
-                        op.getHzConfig() == null
-                                ? loadClientHzConfig()
-                                : op.getHzConfig(),
-                        componentRegistry,
-                        simulatorProperties.getHazelcastPort(),
-                        "");
-                break;
-            default:
-                throw new IllegalStateException("Unrecognized workerType:" + workerType);
+        if (WorkerType.MEMBER.equals(workerType)) {
+            config = initMemberHzConfig(
+                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
+                    componentRegistry,
+                    simulatorProperties.getHazelcastPort(),
+                    "",
+                    simulatorProperties, false);
+        } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
+            config = initMemberHzConfig(
+                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
+                    componentRegistry,
+                    simulatorProperties.getHazelcastPort(),
+                    "",
+                    simulatorProperties, true);
 
+            LOGGER.info(config);
+        } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
+            config = initClientHzConfig(
+                    op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
+                    componentRegistry,
+                    simulatorProperties.getHazelcastPort(),
+                    "");
+
+        } else {
+            throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
         }
+
         environment.put("HAZELCAST_CONFIG", config);
 
         String versionSpec = op.getVersionSpec() == null

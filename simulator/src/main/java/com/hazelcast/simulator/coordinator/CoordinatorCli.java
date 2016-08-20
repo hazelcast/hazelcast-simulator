@@ -37,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
 import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
-import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -115,6 +115,10 @@ final class CoordinatorCli {
                     + " List of allowed types: %s", TargetType.getIdsAsString()))
             .withRequiredArg().ofType(TargetType.class).defaultsTo(TargetType.PREFER_CLIENT);
 
+    private final OptionSpec<String> clientTypeSpec = parser.accepts("clientType",
+            "Defines the type of client e.g javaclient, litemember, etc.")
+            .withRequiredArg().ofType(String.class).defaultsTo(WorkerType.JAVA_CLIENT.name());
+
     private final OptionSpec<Integer> targetCountSpec = parser.accepts("targetCount",
             "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
@@ -175,8 +179,8 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
-    private final OptionSpec interactiveSpecSpec = parser.accepts("interactive",
-            "....");
+    private final OptionSpec interactiveSpec = parser.accepts("interactive",
+            "Puts Coordinator into interactive mode for coordinator-session");
 
     private final OptionSet options;
     private final SimulatorProperties simulatorProperties;
@@ -212,9 +216,50 @@ final class CoordinatorCli {
     }
 
     private Map<WorkerType, WorkerParameters> loadWorkerParameters() {
-        Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
         String licenseKey = options.valueOf(licenseKeySpec);
+        Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
+        result.put(WorkerType.MEMBER, loadMemberWorkerParameters(licenseKey));
+        result.put(WorkerType.LITE_MEMBER, loadLiteMemberWorkerParameters(licenseKey));
+        result.put(WorkerType.JAVA_CLIENT, loadJavaClientWorkerParameters(licenseKey));
+        return result;
+    }
 
+    private WorkerParameters loadJavaClientWorkerParameters(String licenseKey) {
+        Map<String, String> javaClientEnv = new HashMap<String, String>();
+        javaClientEnv.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
+        javaClientEnv.put("LOG4j_CONFIG", loadLog4jConfig());
+        javaClientEnv.put("JVM_OPTIONS", options.valueOf(clientWorkerVmOptionsSpec));
+        javaClientEnv.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
+        javaClientEnv.put("HAZELCAST_CONFIG",
+                initClientHzConfig(loadClientHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(), licenseKey));
+
+        return new WorkerParameters(
+                simulatorProperties.getVersionSpec(),
+                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
+                loadWorkerScript(WorkerType.JAVA_CLIENT, simulatorProperties.get("VENDOR")),
+                javaClientEnv);
+    }
+
+    private WorkerParameters loadLiteMemberWorkerParameters(String licenseKey) {
+        Map<String, String> liteMemberEnv = new HashMap<String, String>();
+        liteMemberEnv.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
+        liteMemberEnv.put("LOG4j_CONFIG", loadLog4jConfig());
+        liteMemberEnv.put("JVM_OPTIONS", options.valueOf(clientWorkerVmOptionsSpec));
+        liteMemberEnv.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
+        liteMemberEnv.put("HAZELCAST_CONFIG",
+                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(),
+                        licenseKey, simulatorProperties, true));
+
+        return new WorkerParameters(
+                simulatorProperties.getVersionSpec(),
+                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
+                loadWorkerScript(WorkerType.LITE_MEMBER, simulatorProperties.get("VENDOR")),
+                liteMemberEnv);
+    }
+
+    private WorkerParameters loadMemberWorkerParameters(String licenseKey) {
         Map<String, String> memberEnv = new HashMap<String, String>();
         memberEnv.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         memberEnv.put("LOG4j_CONFIG", loadLog4jConfig());
@@ -223,30 +268,13 @@ final class CoordinatorCli {
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         memberEnv.put("HAZELCAST_CONFIG",
                 initMemberHzConfig(loadMemberHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(),
-                        licenseKey, simulatorProperties));
+                        licenseKey, simulatorProperties, false));
 
-        result.put(WorkerType.MEMBER, new WorkerParameters(
+        return new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
                 simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")),
-                memberEnv));
-
-        Map<String, String> clientEnv = new HashMap<String, String>();
-        clientEnv.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
-        clientEnv.put("LOG4j_CONFIG", loadLog4jConfig());
-        clientEnv.put("JVM_OPTIONS", options.valueOf(clientWorkerVmOptionsSpec));
-        clientEnv.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
-        clientEnv.put("HAZELCAST_CONFIG",
-                initClientHzConfig(loadClientHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(), licenseKey));
-
-        result.put(WorkerType.CLIENT, new WorkerParameters(
-                simulatorProperties.getVersionSpec(),
-                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
-                loadWorkerScript(WorkerType.CLIENT, simulatorProperties.get("VENDOR")),
-                clientEnv));
-
-        return result;
+                memberEnv);
     }
 
     private int getPerformanceMonitorInterval() {
@@ -262,7 +290,7 @@ final class CoordinatorCli {
     }
 
     void run() {
-        if (options.has(interactiveSpecSpec)) {
+        if (options.has(interactiveSpec)) {
             coordinator.startInteractive();
         } else {
             coordinator.run(testSuite);
@@ -270,6 +298,10 @@ final class CoordinatorCli {
     }
 
     private TestSuite loadTestSuite() {
+        if (options.hasArgument(interactiveSpec)) {
+            return null;
+        }
+
         int durationSeconds = getDurationSeconds(durationSpec);
         boolean hasWaitForTestCase = options.has(waitForTestCaseSpec);
         if (!options.has(durationSpec) && hasWaitForTestCase) {
@@ -334,9 +366,15 @@ final class CoordinatorCli {
 
     private DeploymentPlan newDeploymentPlan(ComponentRegistry componentRegistry,
                                              Map<WorkerType, WorkerParameters> workerParametersMap) {
+        WorkerType workerType = new WorkerType(options.valueOf(clientTypeSpec));
+        if (workerType.isMember()) {
+            throw new CommandLineExitException("client workerType can't be [member]");
+        }
+
         return createDeploymentPlan(
                 componentRegistry,
                 workerParametersMap,
+                workerType,
                 options.valueOf(memberWorkerCountSpec),
                 options.valueOf(clientWorkerCountSpec),
                 options.valueOf(dedicatedMemberMachinesSpec));
@@ -373,7 +411,7 @@ final class CoordinatorCli {
     }
 
     public static String loadWorkerScript(WorkerType workerType, String vendor) {
-        File file = getConfigurationFile("worker-" + vendor + "-" + workerType.id() + ".sh");
+        File file = getConfigurationFile("worker-" + vendor + "-" + workerType.name() + ".sh");
         LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
         return fileAsText(file);
     }
