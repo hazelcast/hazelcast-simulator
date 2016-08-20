@@ -170,10 +170,6 @@ final class CoordinatorCli {
                     PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec<Integer> workerStartupTimeoutSpec = parser.accepts("workerStartupTimeout",
-            "The startup timeout in seconds for a Worker.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(60);
-
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
             "Sets the license key for Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(String.class);
@@ -234,7 +230,7 @@ final class CoordinatorCli {
 
         result.put(WorkerType.MEMBER, new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
-                options.valueOf(workerStartupTimeoutSpec),
+                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")),
                 memberEnv));
 
@@ -249,7 +245,7 @@ final class CoordinatorCli {
 
         result.put(WorkerType.CLIENT, new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
-                options.valueOf(workerStartupTimeoutSpec),
+                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(WorkerType.CLIENT, simulatorProperties.get("VENDOR")),
                 clientEnv));
 

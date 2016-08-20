@@ -193,9 +193,6 @@ final class TestCaseRunner implements TestPhaseListener {
             throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
         }
 
-        LOGGER.info(System.identityHashCode(this) + " executePhase:" + testCase.getId());
-
-
         echo("Starting Test " + testPhase.desc());
         if (testPhase.isGlobal()) {
             remoteClient.sendToTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));

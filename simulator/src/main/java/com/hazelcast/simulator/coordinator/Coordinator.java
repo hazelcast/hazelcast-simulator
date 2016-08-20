@@ -23,7 +23,7 @@ import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.protocol.operation.StartMembersOperation;
+import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -264,15 +264,15 @@ public final class Coordinator {
         System.exit(0);
     }
 
-    public void startWorkers(StartMembersOperation startMembersOperation) {
-        LOGGER.info("Starting workers: " + startMembersOperation.getCount());
+    public void startWorkers(StartWorkersOperation startWorkersOperation) {
+        LOGGER.info("Starting workers: " + startWorkersOperation.getCount());
 
-        WorkerType workerType = WorkerType.valueOf(startMembersOperation.getWorkerType());
+        WorkerType workerType = WorkerType.getById(startWorkersOperation.getWorkerType());
 
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
         environment.put("LOG4j_CONFIG", loadLog4jConfig());
-        environment.put("JVM_OPTIONS", startMembersOperation.getVmOptions());
+        environment.put("JVM_OPTIONS", startWorkersOperation.getVmOptions());
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
 
@@ -280,9 +280,9 @@ public final class Coordinator {
         switch (workerType) {
             case MEMBER:
                 config = initMemberHzConfig(
-                        startMembersOperation.getHzConfig() == null
+                        startWorkersOperation.getHzConfig() == null
                                 ? loadMemberHzConfig()
-                                : startMembersOperation.getHzConfig(),
+                                : startWorkersOperation.getHzConfig(),
                         componentRegistry,
                         simulatorProperties.getHazelcastPort(),
                         "",
@@ -290,9 +290,9 @@ public final class Coordinator {
                 break;
             case CLIENT:
                 config = initClientHzConfig(
-                        startMembersOperation.getHzConfig() == null
+                        startWorkersOperation.getHzConfig() == null
                                 ? loadClientHzConfig()
-                                : startMembersOperation.getHzConfig(),
+                                : startWorkersOperation.getHzConfig(),
                         componentRegistry,
                         simulatorProperties.getHazelcastPort(),
                         "");
@@ -304,8 +304,8 @@ public final class Coordinator {
         environment.put("HAZELCAST_CONFIG", config);
 
         WorkerParameters workerParameters = new WorkerParameters(
-                startMembersOperation.getVersionSpec(),
-                0,
+                startWorkersOperation.getVersionSpec(),
+                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(workerType, simulatorProperties.get("VENDOR")),
                 environment);
 
@@ -313,7 +313,7 @@ public final class Coordinator {
                 componentRegistry,
                 workerParameters,
                 workerType,
-                startMembersOperation.getCount(),
+                startWorkersOperation.getCount(),
                 0); //todo:dedicated machines.. we don't know here.
 
         new StartWorkersTask(

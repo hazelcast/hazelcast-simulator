@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -334,7 +333,7 @@ public class CoordinatorCliTest {
     }
 
     @Test
-        public void testInit_memberConfigFileInWorkDir() {
+    public void testInit_memberConfigFileInWorkDir() {
         File memberConfigFile = new File("hazelcast.xml").getAbsoluteFile();
         writeText(HAZELCAST_XML, memberConfigFile);
 

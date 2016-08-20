@@ -212,6 +212,11 @@ public class SimulatorProperties {
         properties.setProperty(name, value);
     }
 
+    public int getAsInt(String property) {
+        String value = get(property);
+        return Integer.parseInt(value);
+    }
+
     public String getAsString() {
         return fileAsText(propertiesFile);
     }

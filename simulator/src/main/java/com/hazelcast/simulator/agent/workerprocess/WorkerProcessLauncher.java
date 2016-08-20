@@ -24,7 +24,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.BuildInfoUtils.getHazelcastVersionFromJAR;
@@ -36,6 +35,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Responsible for launching {@link WorkerProcess} instances.
@@ -127,7 +127,7 @@ public class WorkerProcessLauncher {
     }
 
     private void waitForWorkersStartup(WorkerProcess worker, int workerTimeoutSec) {
-        int loopCount = (int) TimeUnit.SECONDS.toMillis(workerTimeoutSec) / WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS;
+        int loopCount = (int) SECONDS.toMillis(workerTimeoutSec) / WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS;
         for (int i = 0; i < loopCount; i++) {
             if (hasExited(worker)) {
                 throw new SpawnWorkerFailedException(format(

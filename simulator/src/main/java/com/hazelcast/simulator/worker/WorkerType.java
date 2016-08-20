@@ -35,6 +35,15 @@ public enum WorkerType {
         return id;
     }
 
+    public static WorkerType getById(String id) {
+        for (WorkerType workerType : values()) {
+            if (workerType.id.equals(id)) {
+                return workerType;
+            }
+        }
+        return null;
+    }
+
     public boolean isMember() {
         return isMember;
     }

@@ -15,14 +15,14 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class StartMembersOperation implements SimulatorOperation {
+public class StartWorkersOperation implements SimulatorOperation {
     private int count;
     private String versionSpec;
     private String vmOptions;
     private String workerType;
     private String hzConfig;
 
-    public StartMembersOperation(int count, String versionSpec, String vmOptions, String workerType, String hzConfig) {
+    public StartWorkersOperation(int count, String versionSpec, String vmOptions, String workerType, String hzConfig) {
         this.count = count;
         this.versionSpec = versionSpec;
         this.vmOptions = vmOptions;

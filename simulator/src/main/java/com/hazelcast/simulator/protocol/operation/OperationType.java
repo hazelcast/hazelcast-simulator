@@ -36,7 +36,7 @@ public enum OperationType {
     PERFORMANCE_STATE(PerformanceStatsOperation.class, 102),
     INSTALL_VENDOR(InstallVendorOperation.class, 103),
     SHUTDOWN(ShutdownCoordinatorOperation.class, 104),
-    START_WORKERS(StartMembersOperation.class, 105),
+    START_WORKERS(StartWorkersOperation.class, 105),
     RUN_SUITE(RunSuiteOperation.class, 106),
 
     // AgentOperationProcessor

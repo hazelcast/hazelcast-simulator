@@ -23,7 +23,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.InstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.ShutdownCoordinatorOperation;
-import com.hazelcast.simulator.protocol.operation.StartMembersOperation;
+import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -67,27 +67,16 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - cancel all running tests
  * - scaling up down workers
  * - killing random member
+ * - Coordinator Session install vendor : parsing + help
+ * - when invalid version is used in install; no propper feedback
+ * - appearently hazelcast 3.6 is automatically installed on interactive startup
+ * - monitor performance
  *
  * nice to have
  * - chaos monkeys
  *
  * done
- * - the workers are currently started with arbitrary version spec
- * - control the hz config of the worker
- * - worker jvm settings
- * - when the same testsuite is re-run then:
- * java.lang.IllegalStateException: Can't init TestCase: CreateTestOperation{testIndex='1', testId='AtomicLongTest'}, another
- * test with testId [AtomicLongTest] already exists]
- * - test
- * - test target count
- * - test verify
- * - test parallel
- * - test duration
- * - test warmup
- * - test run
- * - start worker
- * - install software
- * - remove remote controller
+ * - problem starting members
  */
 public class CoordinatorSessionCli implements Closeable {
 
@@ -96,6 +85,7 @@ public class CoordinatorSessionCli implements Closeable {
     private final SimulatorProperties simulatorProperties;
     private final String cmd;
     private final String[] subArgs;
+    private final int coordinatorPort;
 
     private RemoteControllerConnector connector;
 
@@ -108,11 +98,13 @@ public class CoordinatorSessionCli implements Closeable {
             simulatorProperties.init(file);
         }
 
-        int coordinatorPort = simulatorProperties.getCoordinatorPort();
+        coordinatorPort = simulatorProperties.getCoordinatorPort();
         if (coordinatorPort == 0) {
             throw new CommandLineExitException("Coordinator port is disabled!");
         }
+    }
 
+    public void run() {
         if ("start".equals(cmd)) {
             LOGGER.info("Starting Coordinator Session on port:" + coordinatorPort);
             new BashCommand(getSimulatorHome() + "/bin/" + "coordinator --interactive &").execute();
@@ -121,9 +113,6 @@ public class CoordinatorSessionCli implements Closeable {
 
         connector = new RemoteControllerConnector("localhost", coordinatorPort);
         connector.start();
-    }
-
-    public void run() {
         Response response;
         if ("stop".equals(cmd)) {
             LOGGER.info("Shutting down Coordinator Session");
@@ -132,7 +121,7 @@ public class CoordinatorSessionCli implements Closeable {
             response = connector.write(InstallVendorCli.newOperation(subArgs));
             System.out.println(response);
         } else if ("start-workers".equals(cmd)) {
-            response = connector.write(new StartMembersCli().newOperation(subArgs));
+            response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
             response = connector.write(new RunTestCli().newOperation(subArgs));
         } else {
@@ -145,6 +134,7 @@ public class CoordinatorSessionCli implements Closeable {
         }
     }
 
+    @Override
     public void close() {
         closeQuietly(connector);
     }
@@ -176,19 +166,15 @@ public class CoordinatorSessionCli implements Closeable {
         }
     }
 
-    private class SessionCli {
-        private final OptionParser parser = new OptionParser();
-    }
-
-    private class StartMembersCli {
+    private class StartWorkersCli {
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> vmOptionsSpec = parser.accepts("vmOptions",
                 "Worker JVM options (quotes can be used).")
                 .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
-        private final OptionSpec<String> versionSpec = parser.accepts("version",
-                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
+        private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
+                "The versionSpec of the member, e.g. maven=3.7")
                 .withRequiredArg().ofType(String.class).defaultsTo("outofthebox");
 
         private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
@@ -197,7 +183,7 @@ public class CoordinatorSessionCli implements Closeable {
 
         private OptionSet options;
 
-        StartMembersOperation newOperation(String[] args) {
+        StartWorkersOperation newOperation(String[] args) {
             this.options = initOptionsWithHelp(parser, args);
 
             if (options.nonOptionArguments().size() != 1) {
@@ -209,9 +195,9 @@ public class CoordinatorSessionCli implements Closeable {
                 throw new CommandLineExitException("member count can't be smaller than 0");
             }
 
-            return new StartMembersOperation(
+            return new StartWorkersOperation(
                     memberCount,
-                    options.valueOf(versionSpec),
+                    options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
                     options.valueOf(workerTypeSpec),
                     null);
