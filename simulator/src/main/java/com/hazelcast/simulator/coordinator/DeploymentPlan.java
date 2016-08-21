@@ -329,7 +329,7 @@ public final class DeploymentPlan {
         int getCount(WorkerType type) {
             int count = 0;
             for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
-                if (workerProcessSettings.getWorkerType() == type) {
+                if (workerProcessSettings.getWorkerType().equals(type)) {
                     count++;
                 }
             }
