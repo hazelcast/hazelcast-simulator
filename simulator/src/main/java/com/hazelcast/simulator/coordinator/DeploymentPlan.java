@@ -48,9 +48,6 @@ public final class DeploymentPlan {
     private final List<AgentWorkerLayout> agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
     private final AtomicInteger agentIndex = new AtomicInteger();
 
-    public DeploymentPlan() {
-    }
-
     public static DeploymentPlan createDeploymentPlan(
             ComponentRegistry componentRegistry,
             Map<WorkerType, WorkerParameters> workerParametersMap,
@@ -308,7 +305,7 @@ public final class DeploymentPlan {
                 case MIXED:
                     return true;
                 default:
-                    throw new RuntimeException("Unhandled agentWorkerMode:"+agentWorkerMode);
+                    throw new RuntimeException("Unhandled agentWorkerMode:" + agentWorkerMode);
             }
         }
 
