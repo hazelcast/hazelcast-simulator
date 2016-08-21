@@ -21,15 +21,6 @@ image_height=1024
 # - statistics overview doesn't mention the name of the benchmark
 #
 # DONE
-# - latency didn't have grid
-# - latency statistics has 'stuff' inside title
-# - cli:w hat if no directories are passed
-# - problem with dstat not found and reporting
-# - html title
-# - if dstats files not present, give hint.
-# - aggregated throughput funky underscore problem
-# - latency line labels too long; contains full file path
-# - aggregated dstats underscore issue
 #
 # Nice to have
 # - attractive plots
@@ -233,12 +224,12 @@ report_throughput(){
     html_img "throughput_per_worker"
 
     html "<table border=\"2\">"
-    html "<tr><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
+    html "<tr><th>Benchmark</th><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
         benchmark_name=$(basename $benchmark_dir)
         aggregated_file="${benchmark_name}_throughput_aggregated.tmp"
-        html_stats "${aggregated_file}" 2
+        html_stats "${aggregated_file}" 2 $benchmark_name
     done
     html "</table>"
 
@@ -249,6 +240,7 @@ html_stats()
 {
     csv_file=$1
     column=$2
+    benchmark_name=$3
 
     # first we write the column into a file.
     awk -v column=$column  '{print $column}' ${csv_file} > tmp
@@ -278,7 +270,7 @@ html_stats()
 
     stats=($result)
 
-    html "<tr><td>${stats[1]}</td><td>${stats[2]}</td><td>${stats[3]}</td><td>${stats[4]}</td></tr>"
+    html "<tr><th>$benchmark_name</th><td>${stats[1]}</td><td>${stats[2]}</td><td>${stats[3]}</td><td>${stats[4]}</td></tr>"
 }
 
 plot_latency_stat(){
@@ -497,12 +489,12 @@ plot_dstat_probe(){
     plot_complete
 
     html "<table border=\"2\">"
-    html "<tr><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
+    html "<tr><th>Benchmark</th><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
         benchmark_name=$(basename $benchmark_dir)
         aggregated_file="${benchmark_name}_aggregated.tmp"
-        html_stats "${aggregated_file}" 2
+        html_stats "${aggregated_file}" 2 $benchmark_name
     done
     html "</table>"
 
