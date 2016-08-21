@@ -104,12 +104,15 @@ html_h2(){
     html "<h2>$title</h2>"
 }
 
+html_h3(){
+    title=$1
+    html "<h3>$title</h3>"
+}
+
 html_img(){
      img=$1
      image_file="$output_dir/images/${img}.png"
-     if [ -f "$image_file" ] ; then
-        html "<img src=\"images/${img}.png\" style=\"width:640px;height:512px;\" onclick=\"window.open(this.src)\">"
-     fi
+     html "<img src=\"images/${img}.png\" style=\"width:640px;height:512px;\" onclick=\"window.open(this.src)\">"
 }
 
 html(){
@@ -350,39 +353,52 @@ report_latency(){
     html_h2 "Latency"
     html_img "latency"
 
+
+    html_h3 "Latency interval 25%"
     plot_latency_stat "Interval 25%" "Latency (μs)" "interval_25" 3
     html_img "interval_25"
 
+    html_h3 "Latency interval 50%"
     plot_latency_stat "Interval 50%" "Latency (μs)" "interval_50" 4
     html_img "interval_50"
 
+    html_h3 "Latency interval 75%"
     plot_latency_stat "Interval 75%" "Latency (μs)" "interval_75" 5
     html_img "interval_75"
 
+    html_h3 "Latency interval 90%"
     plot_latency_stat "Interval 90%" "Latency (μs)" "interval_90" 6
     html_img "interval_90"
 
+    html_h3 "Latency interval 99%"
     plot_latency_stat "Interval 99%" "Latency (μs)" "interval_99" 7
     html_img "interval_99"
 
+    html_h3 "Latency interval 99.9%"
     plot_latency_stat "Interval 99.9%" "Latency (μs)" "interval_999" 8
     html_img "interval_999"
 
+    html_h3 "Latency interval 99.99%"
     plot_latency_stat "Interval 99.99%" "Latency (μs)" "interval_9999" 9
     html_img "interval_9999"
 
+    html_h3 "Latency interval 99.999%"
     plot_latency_stat "Interval 99.999%" "Latency (μs)" "interval_99999" 10
     html_img "interval_99999"
 
+    html_h3 "Latency interval Min"
     plot_latency_stat "Interval Min" "Latency (μs)" "interval_min" 11
     html_img "interval_min"
 
+    html_h3 "Latency interval Max"
     plot_latency_stat "Interval Max" "Latency (μs)" "interval_max" 12
     html_img "interval_max"
 
+    html_h3 "Latency interval Mean"
     plot_latency_stat "Interval Mean" "Latency (μs)" "interval_mean" 13
     html_img "interval_mean"
 
+    html_h3 "Latency interval Std Deviation"
     plot_latency_stat "Interval Std Deviation" "Latency (μs)" "interval_std_deviation" 14
     html_img "interval_std_deviation"
 }
@@ -526,42 +542,50 @@ report_dstat()
 
     html_h2 "Total Cpu Usage"
 
-    plot_dstat_probe "CPU User %" "CPU User %" "cpu_user" "" "1" 6
+    html_h3 "CPU User"
     html_img "cpu_user_aggregated"
     html_img "cpu_user"
+    plot_dstat_probe "CPU User %" "CPU User %" "cpu_user" "" "1" 6
 
-    plot_dstat_probe "CPU System %" "CPU System %" "cpu_system" "" "1" 7
+    html_h3 "CPU System"
     html_img "cpu_system_aggregated"
     html_img "cpu_system"
+    plot_dstat_probe "CPU System %" "CPU System %" "cpu_system" "" "1" 7
 
-    plot_dstat_probe "CPU Idle %" "CPU Idle %" "cpu_idle" "" "1" 8
+    html_h3 "CPU Idle"
     html_img "cpu_idle_aggregated"
     html_img "cpu_idle"
+    plot_dstat_probe "CPU Idle %" "CPU Idle %" "cpu_idle" "" "1" 8
 
-    plot_dstat_probe "CPU Wait %" "CPU Wait %" "cpu_wait" "" "1" 9
+    html_h3 "CPU Wait"
     html_img "cpu_wait_aggregated"
     html_img "cpu_wait"
+    plot_dstat_probe "CPU Wait %" "CPU Wait %" "cpu_wait" "" "1" 9
 
     ###################################################
     #               memory
     ###################################################
     html_h2 "Memory Usage"
 
-    plot_dstat_probe "Memory Used" "Memory Used" "memory_used" "%.0s%cByte" "1" 2
+    html_h3 "memory Used"
     html_img "memory_used_aggregated"
     html_img "memory_used"
+    plot_dstat_probe "Memory Used" "Memory Used" "memory_used" "%.0s%cByte" "1" 2
 
-    plot_dstat_probe "Memory Buffered" "Memory Buffered" "memory_buffered" "%.0s%cByte" "1" 3
+    html_h3 "Memory Cached"
     html_img "memory_cached_aggregated"
     html_img "memory_cached"
+    plot_dstat_probe "Memory Buffered" "Memory Buffered" "memory_buffered" "%.0s%cByte" "1" 3
 
-    plot_dstat_probe "Memory Cached" "Memory Cached" "memory_cached" "%.0s%cByte" "1" 4
+    html_h3 "Memory Buffered"
     html_img "memory_buffered_aggregated"
     html_img "memory_buffered"
+    plot_dstat_probe "Memory Cached" "Memory Cached" "memory_cached" "%.0s%cByte" "1" 4
 
-    plot_dstat_probe "Memory Free" "Memory Free" "memory_free" "%.0s%cByte" "1" 5
+    html_h3 "Memory Free"
     html_img "memory_free_aggregated"
     html_img "memory_free"
+    plot_dstat_probe "Memory Free" "Memory Free" "memory_free" "%.0s%cByte" "1" 5
 
     ###################################################
     #               Interrupts
@@ -569,13 +593,15 @@ report_dstat()
 
     html_h2 "Interrupts"
 
-    plot_dstat_probe "CPU Hardware Interrupts" "CPU Hardware Interrupts/sec" "cpu_hardware_interrupts" "" "1" 10
+    html_h3 "CPU Hardware Interrupts"
     html_img "cpu_hardware_interrupts_aggregated"
     html_img "cpu_hardware_interrupts"
+    plot_dstat_probe "CPU Hardware Interrupts" "CPU Hardware Interrupts/sec" "cpu_hardware_interrupts" "" "1" 10
 
+    html_h3 "CPU Software Interrupts"
+    html_img "cpu_software_interrupts_aggregated"
+    html_img "cpu_software_interrupts"
     plot_dstat_probe "CPU Software Interrupts" "CPU Software Interrupts/sec" "cpu_software_interrupts" "" "1" 11
-    html_img "images/cpu_software_interrupts_aggregated.png"
-    html_img "images/cpu_software_interrupts.png"
 
     ###################################################
     #               Network
@@ -583,13 +609,15 @@ report_dstat()
 
     html_h2 "Network"
 
-    plot_dstat_probe "Net Receive" "Receiving/second" "net_receive" "%.0s%cbit" "8" 14
-    html_img "net_send_aggregated"
-    html_img "net_send"
-
-    plot_dstat_probe "Net Send" "Sending/second" "net_send" "%.0s%cbit" "8" 15
+    html_h3 "Net Receive"
     html_img "net_receive_aggregated"
     html_img "net_receive"
+    plot_dstat_probe "Net Receive" "Receiving/second" "net_receive" "%.0s%cbit" "8" 14
+
+    html_h3 "Net send"
+    html_img "net_send_aggregated"
+    html_img "net_send"
+    plot_dstat_probe "Net Send" "Sending/second" "net_send" "%.0s%cbit" "8" 15
 
     ###################################################
     #               System
@@ -597,13 +625,15 @@ report_dstat()
 
     html_h2 "System"
 
-    plot_dstat_probe "System Interrupts" "System Interrupts/second" "system_interrupts" "" "1" 17
+    html_h3 "System Interrupts"
     html_img "system_interrupts_aggregated"
     html_img "system_interrupts"
+    plot_dstat_probe "System Interrupts" "System Interrupts/second" "system_interrupts" "" "1" 17
 
-    plot_dstat_probe "System Context Switches" "System Context Switches/sec" "system_context_switches" "" "1" 18
+    html_h3 "System Context Switches"
     html_img "system_context_switches_aggregated"
     html_img "system_context_switches"
+    plot_dstat_probe "System Context Switches" "System Context Switches/sec" "system_context_switches" "" "1" 18
 
     ###################################################
     #               Disk
@@ -611,13 +641,15 @@ report_dstat()
 
     html_h2 "Disk"
 
-    plot_dstat_probe "Disk Read" "" "disk_read" "%.0s%cByte" "1" 17
+    html_h3 "Disk Read"
     html_img "disk_read_aggregated"
     html_img "disk_read"
+    plot_dstat_probe "Disk Read" "" "disk_read" "%.0s%cByte" "1" 17
 
-    plot_dstat_probe "Disk Write" "" "disk_write" "%.0s%cByte" "1" 18
+    html_h3 "Disk Write"
     html_img "disk_write_aggregated"
     html_img "disk_write"
+    plot_dstat_probe "Disk Write" "" "disk_write" "%.0s%cByte" "1" 18
 
     ###################################################
     #               Paging
@@ -625,13 +657,15 @@ report_dstat()
 
     html_h2 "Paging"
 
-    plot_dstat_probe "Page In" "Pages in" "page_in" "" "1" 12
+    html_h3 "Page In"
     html_img "page_in_aggregated"
     html_img "page_in"
+    plot_dstat_probe "Page In" "Pages in" "page_in" "" "1" 12
 
-    plot_dstat_probe "Page Out" "Pages out" "page_out" "" "1" 13
+    html_h3 "Page Out"
     html_img "page_out_aggregated"
     html_img "page_out"
+    plot_dstat_probe "Page Out" "Pages out" "page_out" "" "1" 13
 }
 
 report_end(){
