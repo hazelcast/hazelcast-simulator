@@ -272,8 +272,7 @@ public final class DeploymentPlan {
     enum AgentWorkerMode {
         MEMBER,
         CLIENT,
-        MIXED,
-        CUSTOM
+        MIXED
     }
 
     /**
@@ -309,7 +308,7 @@ public final class DeploymentPlan {
                 case MIXED:
                     return true;
                 default:
-                    throw new RuntimeException();
+                    throw new RuntimeException("Unhandled agentWorkerMode:"+agentWorkerMode);
             }
         }
 
