@@ -21,18 +21,18 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.common.TestPhase;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.testcontainer.TestPhase.GLOBAL_PREPARE;
-import static com.hazelcast.simulator.testcontainer.TestPhase.GLOBAL_TEARDOWN;
-import static com.hazelcast.simulator.testcontainer.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.testcontainer.TestPhase.LOCAL_PREPARE;
-import static com.hazelcast.simulator.testcontainer.TestPhase.LOCAL_TEARDOWN;
-import static com.hazelcast.simulator.testcontainer.TestPhase.LOCAL_VERIFY;
-import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
-import static com.hazelcast.simulator.testcontainer.TestPhase.SETUP;
+import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
+import static com.hazelcast.simulator.common.TestPhase.GLOBAL_TEARDOWN;
+import static com.hazelcast.simulator.common.TestPhase.GLOBAL_VERIFY;
+import static com.hazelcast.simulator.common.TestPhase.LOCAL_PREPARE;
+import static com.hazelcast.simulator.common.TestPhase.LOCAL_TEARDOWN;
+import static com.hazelcast.simulator.common.TestPhase.LOCAL_VERIFY;
+import static com.hazelcast.simulator.common.TestPhase.RUN;
+import static com.hazelcast.simulator.common.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
 /**

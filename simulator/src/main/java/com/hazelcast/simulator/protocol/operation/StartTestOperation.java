@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -23,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Starts the {@link com.hazelcast.simulator.testcontainer.TestPhase#RUN} phase of a Simulator Test.
+ * Starts the {@link TestPhase#RUN} phase of a Simulator Test.
  */
 public class StartTestOperation implements SimulatorOperation {
 

@@ -27,8 +27,8 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
-import com.hazelcast.simulator.testcontainer.TestContainer;
-import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.worker.testcontainer.TestContainer;
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.testcontainer.TestPhase.getLastTestPhase;
+import static com.hazelcast.simulator.common.TestPhase.getLastTestPhase;
 import static java.lang.String.format;
 
 /**

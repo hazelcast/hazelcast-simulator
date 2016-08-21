@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.worker.performance;
 
+import com.hazelcast.simulator.common.TestPhase;
+
 import static java.lang.Math.max;
 
 /**
@@ -83,7 +85,7 @@ public class PerformanceStats {
     /**
      * Combines {@link PerformanceStats} instances, e.g. from different Simulator Workers.
      *
-     * For the real-time performance monitor during the {@link com.hazelcast.simulator.testcontainer.TestPhase#RUN} the
+     * For the real-time performance monitor during the {@link TestPhase#RUN} the
      * maximum value should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats}
      * instances of the last interval.
      *

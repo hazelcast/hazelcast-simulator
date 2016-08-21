@@ -53,7 +53,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * todo:
- * INFO  19:04:22 Valid connection from /127.0.0.1:49778 (magic bytes found)
  * - if the connector has not yet started on the coordinator; then session will quickly timeout.
  * - Option to kill members
  * - starting light members
@@ -78,20 +77,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - scaling up down workers
  *
  * done
- * - if no worker count is given with start worker, assume 1
- * - option to kill all workers.
- * - good solution to stop the coordinator and get all artifacts downloaded and post processing done
- * - the worker version spec should default to what is in the simulator.properties
- * - when coordinator not yet initialized; any command should be blocked
- * - logging noise ----> ClientConnector R -> C sends to localhost/127.0.0.1:4014
- * - when install command executed successfully, don't log it
- * - monitor performance
- * - coordinator start command should be removed
- * - when version spec not provided on start workers command, use the one in simulator.properties (which is already installed)
- * - problem starting members
- * - Option to start clients
- * - help in case there is a problem with parsing the main command
- * - stopping session improvements
+ * INFO  19:04:22 Valid connection from /127.0.0.1:49778 (magic bytes found)
  */
 public class CoordinatorSessionCli implements Closeable {
 
