@@ -53,12 +53,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * todo:
- * - if the connector has not yet started on the coordinator; then session will quickly timeout.
+ * - if the connector has not yet started on the coordinator; then remote will quickly timeout.
  * - Option to kill members
  * - starting light members
  * - start worker; controlling configuration
  * - killing random member
- * - Coordinator Session install vendor : parsing + help
+ * - Coordinator Remote install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
  * - on startup of cluster interactive I see: INFO  10:41:46 Created via arguments:
  * INFO  10:41:46     Agent  54.211.251.117  10.142.170.116 (C_A1) members:  1, clients:  0, mode:  MIXED,
@@ -79,16 +79,16 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * done
  * INFO  19:04:22 Valid connection from /127.0.0.1:49778 (magic bytes found)
  */
-public class CoordinatorSessionCli implements Closeable {
+public class CoordinatorRemoteCli implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorSessionCli.class);
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorRemoteCli.class);
 
     private final SimulatorProperties simulatorProperties;
     private final int coordinatorPort;
     private final String[] args;
     private RemoteControllerConnector connector;
 
-    public CoordinatorSessionCli(String[] args) {
+    public CoordinatorRemoteCli(String[] args) {
         this.args = args;
         this.simulatorProperties = new SimulatorProperties();
         File file = new File(FileUtils.getUserDir(), "simulator.properties");
@@ -114,7 +114,7 @@ public class CoordinatorSessionCli implements Closeable {
         connector.start();
         Response response;
         if ("stop".equals(cmd)) {
-            LOGGER.info("Shutting down Coordinator Session");
+            LOGGER.info("Shutting down Coordinator Remote");
             response = connector.write(new ShutdownCoordinatorOperation());
         } else if ("install".equals(cmd)) {
             response = connector.write(new InstallVendorCli().newOperation(subArgs));
@@ -143,7 +143,7 @@ public class CoordinatorSessionCli implements Closeable {
                         + "start-workers   Starts workers                                                              \n"
                         + "stop-workers    Stops workers                                                               \n"
                         + "run             Runs a test                                                                 \n"
-                        + "stop            Stops the Coordinator interactive session                                   ");
+                        + "stop            Stops the Coordinator remote session                                        ");
         System.exit(1);
     }
 
@@ -153,9 +153,9 @@ public class CoordinatorSessionCli implements Closeable {
     }
 
     public static void main(String[] args) {
-        CoordinatorSessionCli cli = null;
+        CoordinatorRemoteCli cli = null;
         try {
-            cli = new CoordinatorSessionCli(args);
+            cli = new CoordinatorRemoteCli(args);
             cli.run();
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run Coordinator", e);

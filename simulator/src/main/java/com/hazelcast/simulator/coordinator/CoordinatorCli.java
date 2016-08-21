@@ -179,8 +179,8 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
-    private final OptionSpec interactiveSpec = parser.accepts("interactive",
-            "Puts Coordinator into interactive mode for coordinator-session");
+    private final OptionSpec interactiveSpec = parser.accepts("remote",
+            "Puts Coordinator into remote control mode for coordinator-remote");
 
     private final OptionSet options;
     private final SimulatorProperties simulatorProperties;

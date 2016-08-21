@@ -9,5 +9,5 @@ export JAVA_OPTS="-server -Xmx1g -Xms256m ${JAVA_EXTRA_OPTS}"
 java -cp "${SIMULATOR_HOME}/lib/*" ${JAVA_OPTS} \
     -DSIMULATOR_HOME=${SIMULATOR_HOME} \
     -Dhazelcast.logging.type=log4j \
-    -Dlog4j.configuration=file:${SIMULATOR_HOME}/conf/coordinator-session-log4j.xml \
-    com.hazelcast.simulator.coordinator.CoordinatorSessionCli "$@"
+    -Dlog4j.configuration=file:${SIMULATOR_HOME}/conf/coordinator-remote-log4j.xml \
+    com.hazelcast.simulator.coordinator.CoordinatorRemoteCli "$@"
