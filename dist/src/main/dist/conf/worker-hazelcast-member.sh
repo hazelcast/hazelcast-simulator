@@ -34,8 +34,9 @@ JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
 
-java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
+MAIN=com.hazelcast.simulator.worker.MemberWorker
 
+java -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 #########################################################################
 # Yourkit
@@ -51,7 +52,7 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 #   http://www.yourkit.com/docs/java/help/agent.jsp
 #   http://www.yourkit.com/docs/java/help/startup_options.jsp
 #
-# java -agentpath:$(pwd)/libyjpagent.so=dir=$(pwd),sampling -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# java -agentpath:$(pwd)/libyjpagent.so=dir=$(pwd),sampling -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 
 
@@ -65,7 +66,7 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 # For configuration options see:
 #   http://docs.oracle.com/javase/7/docs/technotes/samples/hprof.html
 #
-# java -agentlib:hprof=cpu=samples,depth=10 -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# java -agentlib:hprof=cpu=samples,depth=10 -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 
 
@@ -97,7 +98,7 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 #           echo -1 > /proc/sys/kernel/perf_event_paranoid
 # To make it permanent, add it to /etc/rc.local
 #
-# perf record -o perf.data --quiet java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# perf record -o perf.data --quiet java -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 
 
@@ -117,7 +118,7 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 # Reference to amplxe-cl commandline options:
 # https://software.intel.com/sites/products/documentation/doclib/iss/2013/amplifier/lin/ug_docs/GUID-09766DB6-3FA8-445B-8E70-5BC9A1BE7C55.htm#GUID-09766DB6-3FA8-445B-8E70-5BC9A1BE7C55
 #
-# /opt/intel/vtune_amplifier_xe/bin64/amplxe-cl -collect hotspots java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# /opt/intel/vtune_amplifier_xe/bin64/amplxe-cl -collect hotspots java -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 
 
@@ -130,7 +131,7 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 #
 # Example: NUMA_CONTROL=numactl -m 0 -N 0
 # It will bind members to node 0.
-# numactl -m 0 -N 0 java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# numactl -m 0 -N 0 java -classpath $CLASSPATH $JVM_ARGS $MAIN
 
 
 
@@ -139,7 +140,7 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 #########################################################################
 #
 # dstat --epoch -m --all --noheaders --nocolor --output dstat.csv 5 > /dev/null &
-# java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# java -classpath $CLASSPATH $JVM_ARGS $MAIN
 # kill $(jobs -p)
 
 
@@ -150,4 +151,4 @@ java -classpath $CLASSPATH $JVM_ARGS com.hazelcast.simulator.worker.MemberWorker
 #
 # The network stack for Solarflare network adapters (new lab).
 #
-# onload --profile=latency java -classpath ${CLASSPATH} ${JVM_ARGS} ${MAIN}
+# onload --profile=latency java -classpath $CLASSPATH $JVM_ARGS $MAIN
