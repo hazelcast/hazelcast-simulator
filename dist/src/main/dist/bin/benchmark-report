@@ -11,14 +11,12 @@ image_height=1024
 # TODO:
 # - clients and members (we don't want to see members in the throughput in case of client test)
 # - cut of parts off the plot which are after completion or before start.
-# - graphs from same benchmark, same color.
+# - graphs from same benchmark, same color: in case of multiple benchmarks
 # - time in the hdr file; should be expressed in micro's instead of milli's with a comma?
 # - from one of the latency:  [3.19078e+06:3.19078e+06], adjusting to [3.15888e+06:3.22269e+06]
 # - test suite / jvm parameters etc should all be copied into the output directory so the whole bundle is self explaining.
 # - regular latency histogram contains all hgrm files from each benchmark for each commulative probe; but no info which probe
-# - image link should only be printed of image exist
 # - summary of the benchmark
-# - statistics overview doesn't mention the name of the benchmark
 #
 # DONE
 #
