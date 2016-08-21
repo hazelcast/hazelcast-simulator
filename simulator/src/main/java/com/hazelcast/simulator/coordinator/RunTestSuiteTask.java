@@ -22,7 +22,7 @@ import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.testcontainer.TestPhase.getTestPhaseSyncMap;
+import static com.hazelcast.simulator.common.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;

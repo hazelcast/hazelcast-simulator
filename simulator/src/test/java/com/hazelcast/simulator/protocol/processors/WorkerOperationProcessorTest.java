@@ -13,7 +13,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import com.hazelcast.simulator.testcontainer.TestContainer;
+import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.Worker;

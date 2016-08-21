@@ -20,7 +20,7 @@ import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
-import com.hazelcast.simulator.testcontainer.TestContainer;
+import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import org.HdrHistogram.Histogram;
 import org.apache.log4j.Logger;
 

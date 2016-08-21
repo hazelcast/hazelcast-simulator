@@ -2,7 +2,6 @@ package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -20,8 +19,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.testcontainer.TestContainer;
+import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
@@ -30,7 +28,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;

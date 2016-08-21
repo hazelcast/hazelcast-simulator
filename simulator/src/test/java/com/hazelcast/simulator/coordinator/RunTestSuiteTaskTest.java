@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
@@ -18,7 +17,7 @@ import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -29,7 +28,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -38,8 +36,8 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironme
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
-import static com.hazelcast.simulator.testcontainer.TestPhase.RUN;
-import static com.hazelcast.simulator.testcontainer.TestPhase.WARMUP;
+import static com.hazelcast.simulator.common.TestPhase.RUN;
+import static com.hazelcast.simulator.common.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -51,7 +49,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;

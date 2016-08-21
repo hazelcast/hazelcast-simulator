@@ -5,7 +5,7 @@
 # All properties from the 'simulator.properties' are passed as environment variables.
 #
 # todo:
-# - git multiple repo's
+# -
 # - selecting the right os jars
 # - selecting the right enterprise jars
 # - use rsync instead of scp for upload
@@ -16,16 +16,6 @@
 # - hz-lib git: enterprise
 #
 # done
-# - uploading in parallel
-# - added multi version spec support in the coordinator
-# - multi release spec support: no explicit support is needed in the install script; just call it multiple times with different
-#   versions
-# - split enterprise worker start from regular worker start.
-# - split enterprise from os install
-# - non conflicting hz-lib directories are not removed when uploading
-# - introduced worker selection mechanism
-# - introduce hazelcast-enterprise vendor
-# - remove enable enterprise in coordinator cli
 #
 # ideas
 # - instead of download artifacts to local machine and then uploading; download them on the target machine

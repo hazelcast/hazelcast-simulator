@@ -14,7 +14,7 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.test.TestException;
-import com.hazelcast.simulator.testcontainer.TestPhase;
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
 import org.junit.Before;

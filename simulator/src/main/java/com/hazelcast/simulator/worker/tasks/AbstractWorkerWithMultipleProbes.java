@@ -17,8 +17,8 @@ package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.testcontainer.PropertyBinding;
-import com.hazelcast.simulator.testcontainer.PropertyBindingAware;
+import com.hazelcast.simulator.worker.testcontainer.PropertyBinding;
+import com.hazelcast.simulator.worker.testcontainer.PropertyBindingAware;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.selector.OperationSelector;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
