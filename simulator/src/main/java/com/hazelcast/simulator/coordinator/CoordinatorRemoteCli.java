@@ -186,7 +186,7 @@ public class CoordinatorRemoteCli implements Closeable {
             this.options = initOptionsWithHelp(parser, args);
 
             if (options.nonOptionArguments().size() != 1) {
-                throw new CommandLineExitException(format("Too many arguments"));
+                throw new CommandLineExitException("Too many arguments");
             }
 
             LOGGER.info("Installing " + args[0]);

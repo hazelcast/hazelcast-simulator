@@ -47,6 +47,7 @@ public enum OperationType {
     CREATE_WORKER(CreateWorkerOperation.class, 202),
     START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 203),
     STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 204),
+    IGNORE_WORKER_FAILURE(IgnoreWorkerFailureOperation.class, 205),
 
     // WorkerOperationProcessor
     PING(PingOperation.class, 300),

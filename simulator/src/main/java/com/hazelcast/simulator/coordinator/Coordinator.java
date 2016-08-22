@@ -20,7 +20,9 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.KillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
@@ -411,10 +413,10 @@ public final class Coordinator {
     }
 
     public void killWorker(RcKillWorkersOperation operation) throws InterruptedException {
+        LOGGER.info("Killing working....");
+
         List<WorkerData> workers = componentRegistry.getWorkers();
         Collections.shuffle(workers);
-
-        LOGGER.info("Killing working....");
 
         WorkerData randomMember = null;
         for (WorkerData workerData : workers) {
@@ -428,8 +430,11 @@ public final class Coordinator {
             throw new IllegalStateException("No members found!");
         }
 
-        coordinatorConnector.write(randomMember.getAddress(), new KillWorkerOperation());
-        LOGGER.info("Kill send to worker [" + randomMember.getAddress() + "]");
+        SimulatorAddress memberAddress = randomMember.getAddress();
+        componentRegistry.removeWorker(memberAddress);
+        coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
+        coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
+        LOGGER.info("Kill send to worker [" + memberAddress + "]");
     }
 
     private static class ComponentRegistryFailureListener implements FailureListener {

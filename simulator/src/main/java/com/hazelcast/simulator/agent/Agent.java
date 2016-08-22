@@ -110,6 +110,10 @@ public class Agent {
         return workerProcessFailureMonitor;
     }
 
+    public WorkerProcessManager getWorkerProcessManager() {
+        return workerProcessManager;
+    }
+
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }

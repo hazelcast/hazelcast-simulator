@@ -43,6 +43,11 @@ public class WorkerProcessManager {
         workerProcesses.remove(process.getAddress());
     }
 
+    public void ignore(SimulatorAddress workerAddress) {
+        LOGGER.info("Dropping worker [" + workerAddress + "]");
+        workerProcesses.remove(workerAddress);
+    }
+
     public Collection<WorkerProcess> getWorkerProcesses() {
         return workerProcesses.values();
     }

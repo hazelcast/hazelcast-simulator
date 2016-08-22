@@ -109,6 +109,7 @@ public class WorkerProcessFailureMonitor {
             while (running) {
                 try {
                     for (WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+
                         detectFailures(workerProcess);
 
                         if (workerProcess.isFinished()) {
