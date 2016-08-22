@@ -22,14 +22,15 @@ import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.InstallVendorOperation;
+import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
+import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -71,19 +72,22 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
             case PERFORMANCE_STATE:
                 performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) operation).getPerformanceStats());
                 break;
-            case INSTALL_VENDOR:
-                coordinator.installVendor(((InstallVendorOperation) operation).getVersionSpec());
+            case RC_INSTALL_VENDOR:
+                coordinator.installVendor(((RcInstallVendorOperation) operation).getVersionSpec());
                 break;
-            case START_WORKERS:
-                coordinator.startWorkers((StartWorkersOperation) operation);
+            case RC_START_WORKERS:
+                coordinator.startWorkers((RcStartWorkersOperation) operation);
                 break;
-            case STOP_WORKERS:
-                coordinator.stopWorkers((StopWorkersOperation) operation);
+            case RC_STOP_WORKERS:
+                coordinator.stopWorkers((RcStopWorkersOperation) operation);
                 break;
-            case RUN_SUITE:
-                coordinator.runSuite(((RunSuiteOperation) operation).getTestSuite());
+            case RC_RUN_SUITE:
+                coordinator.runSuite(((RcRunSuiteOperation) operation).getTestSuite());
                 break;
-            case SHUTDOWN:
+            case RC_KILL_WORKERS:
+                coordinator.killWorker(((RcKillWorkersOperation) operation));
+                break;
+            case RC_SHUTDOWN:
                 coordinator.shutdown();
                 break;
             default:

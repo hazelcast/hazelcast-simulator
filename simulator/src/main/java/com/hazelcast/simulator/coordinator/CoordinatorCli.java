@@ -291,7 +291,7 @@ final class CoordinatorCli {
 
     void run() {
         if (options.has(interactiveSpec)) {
-            coordinator.startInteractive();
+            coordinator.startRemoteMode();
         } else {
             coordinator.run(testSuite);
         }

@@ -28,6 +28,7 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
+import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
@@ -56,6 +57,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     private static final String DASHES = "---------------------------";
 
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
+    private static final int DELAY_MS = 5000;
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
@@ -90,6 +92,20 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
+                break;
+            case KILL_WORKER:
+
+                new Thread() {
+                    public void run() {
+                        try {
+                            Thread.sleep(DELAY_MS);
+                        } catch (InterruptedException e) {
+                            EmptyStatement.ignore(e);
+                        }
+                        LOGGER.fatal("Killing worker");
+                        System.exit(1);
+                    }
+                }.run();
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;

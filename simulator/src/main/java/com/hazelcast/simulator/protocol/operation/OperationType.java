@@ -34,11 +34,12 @@ public enum OperationType {
     FAILURE(FailureOperation.class, 100),
     PHASE_COMPLETED(PhaseCompletedOperation.class, 101),
     PERFORMANCE_STATE(PerformanceStatsOperation.class, 102),
-    INSTALL_VENDOR(InstallVendorOperation.class, 103),
-    SHUTDOWN(ShutdownCoordinatorOperation.class, 104),
-    START_WORKERS(StartWorkersOperation.class, 105),
-    STOP_WORKERS(StopWorkersOperation.class, 106),
-    RUN_SUITE(RunSuiteOperation.class, 107),
+    RC_INSTALL_VENDOR(RcInstallVendorOperation.class, 103),
+    RC_SHUTDOWN(RcShutdownCoordinatorOperation.class, 104),
+    RC_START_WORKERS(RcStartWorkersOperation.class, 105),
+    RC_STOP_WORKERS(RcStopWorkersOperation.class, 106),
+    RC_RUN_SUITE(RcRunSuiteOperation.class, 107),
+    RC_KILL_WORKERS(RcKillWorkersOperation.class, 108),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 200),
@@ -51,6 +52,7 @@ public enum OperationType {
     PING(PingOperation.class, 300),
     TERMINATE_WORKER(TerminateWorkerOperation.class, 301),
     CREATE_TEST(CreateTestOperation.class, 302),
+    KILL_WORKER(KillWorkerOperation.class, 303),
 
     // TestOperationProcessor
     START_TEST_PHASE(StartTestPhaseOperation.class, 400),
@@ -115,7 +117,7 @@ public enum OperationType {
 
     /**
      * Stores and validates the registered {@link OperationType} entries.
-     *
+     * <p>
      * This class prevents double registration of class types or classIds, which would produce late failures during runtime.
      */
     @SuppressWarnings("PMD.UnusedModifier")

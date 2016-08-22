@@ -15,6 +15,6 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class StopWorkersOperation implements SimulatorOperation {
+public class RcStopWorkersOperation implements SimulatorOperation {
 
 }

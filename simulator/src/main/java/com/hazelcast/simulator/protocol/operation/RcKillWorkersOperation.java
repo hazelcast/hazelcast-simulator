@@ -15,5 +15,14 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class ShutdownCoordinatorOperation implements SimulatorOperation {
+public class RcKillWorkersOperation implements SimulatorOperation {
+    private final int count;
+
+    public RcKillWorkersOperation(int count) {
+        this.count = count;
+    }
+
+    public int getCount() {
+        return count;
+    }
 }
