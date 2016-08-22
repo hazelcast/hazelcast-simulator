@@ -55,7 +55,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * Connector which connects to remote Simulator Coordinator instances.
  */
-@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class RemoteControllerConnector implements ClientPipelineConfigurator, Closeable {
 
     private static final int COORDINATOR_INDEX = 1;
