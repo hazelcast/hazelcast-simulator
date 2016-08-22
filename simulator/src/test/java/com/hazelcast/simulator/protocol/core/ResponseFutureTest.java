@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.getMessageIdFromFutureKey;
+import static com.hazelcast.simulator.protocol.core.ResponseFuture.getRemoteAddressIndexFromFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.getSourceFromFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseType.INTERRUPTED;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -40,6 +41,14 @@ public class ResponseFutureTest {
     }
 
     @Test
+    public void testGetMessageIdFromFutureKey() {
+        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 4, 8, 23);
+        String futureKey = createFutureKey(expectedAddress, 42, 23);
+        long messageId = getMessageIdFromFutureKey(futureKey);
+        assertEquals(42, messageId);
+    }
+
+    @Test
     public void testGetSourceFromFutureKey() {
         SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.WORKER, 4, 8, 0);
         String futureKey = createFutureKey(expectedAddress, 42, 23);
@@ -48,11 +57,12 @@ public class ResponseFutureTest {
     }
 
     @Test
-    public void testGetMessageIdFromFutureKey() {
-        SimulatorAddress expectedAddress = new SimulatorAddress(AddressLevel.TEST, 4, 8, 23);
-        String futureKey = createFutureKey(expectedAddress, 42, 23);
-        long messageId = getMessageIdFromFutureKey(futureKey);
-        assertEquals(42, messageId);
+    public void testGetRemoteAddressIndexFromFutureKey() {
+        int expectedRemoteIndex = 23;
+        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 4, 8, 0);
+        String futureKey = createFutureKey(workerAddress, 42, expectedRemoteIndex);
+        int actualRemoteIndex = getRemoteAddressIndexFromFutureKey(futureKey);
+        assertEquals(expectedRemoteIndex, actualRemoteIndex);
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -116,11 +126,6 @@ public class ResponseFutureTest {
     @Test(timeout = 10000, expected = IllegalArgumentException.class)
     public void testGet_withTimeout_illegalTimeout() throws Exception {
         future.get(-1, TimeUnit.SECONDS);
-    }
-
-    @Test(timeout = 10000, expected = IllegalArgumentException.class)
-    public void testGet_withTimeout_illegalTimeUnit() throws Exception {
-        future.get(0, null);
     }
 
     @Test

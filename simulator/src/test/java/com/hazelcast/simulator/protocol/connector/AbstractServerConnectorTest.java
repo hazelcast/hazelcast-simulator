@@ -16,14 +16,12 @@ import org.junit.Test;
 
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
-import static com.hazelcast.simulator.protocol.core.ResponseFuture.getMessageIdFromFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
@@ -199,9 +197,9 @@ public class AbstractServerConnectorTest {
         int tries = 0;
         do {
             for (Map.Entry<String, ResponseFuture> entry : futureMap.entrySet()) {
-                long messageId = getMessageIdFromFutureKey(entry.getKey());
-                Response response = new Response(messageId, connectorAddress, COORDINATOR, responseType);
-                entry.getValue().set(response);
+                ResponseFuture responseFuture = entry.getValue();
+                Response response = new Response(responseFuture.getMessageId(), connectorAddress, COORDINATOR, responseType);
+                responseFuture.set(response);
                 responseSetCounter++;
             }
             sleepMillis(50);

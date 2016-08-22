@@ -69,26 +69,19 @@ public final class ResponseFuture implements Future<Response> {
         return source.toString() + '-' + messageId + '-' + remoteAddressIndex;
     }
 
-    public static SimulatorAddress getSourceFromFutureKey(String futureKey) {
-        String sourceString = futureKey.substring(0, futureKey.indexOf('-'));
-        return SimulatorAddress.fromString(sourceString);
-    }
-
-    public static long getMessageIdFromFutureKey(String futureKey) {
+    static long getMessageIdFromFutureKey(String futureKey) {
         String messageIdString = futureKey.substring(futureKey.indexOf('-') + 1, futureKey.lastIndexOf('-'));
         return parseLong(messageIdString);
     }
 
-    public static int getRemoteAddressIndexFromFutureKey(String futureKey) {
-        String remoteAddressIndexString = futureKey.substring(futureKey.lastIndexOf('-') + 1, futureKey.length());
-        return parseInt(remoteAddressIndexString);
+    static SimulatorAddress getSourceFromFutureKey(String futureKey) {
+        String sourceString = futureKey.substring(0, futureKey.indexOf('-'));
+        return SimulatorAddress.fromString(sourceString);
     }
 
-    public void unblockOnFailure(SimulatorAddress source, SimulatorAddress destination, int remoteAddressIndex) {
-        if (getSourceFromFutureKey(key).equals(destination) && getRemoteAddressIndexFromFutureKey(key) == remoteAddressIndex) {
-            long messageId = getMessageIdFromFutureKey(key);
-            set(new Response(messageId, destination, source, UNBLOCKED_BY_FAILURE));
-        }
+    static int getRemoteAddressIndexFromFutureKey(String futureKey) {
+        String remoteAddressIndexString = futureKey.substring(futureKey.lastIndexOf('-') + 1, futureKey.length());
+        return parseInt(remoteAddressIndexString);
     }
 
     @Override
@@ -104,6 +97,17 @@ public final class ResponseFuture implements Future<Response> {
     @Override
     public boolean isDone() {
         return (response != null);
+    }
+
+    public void unblockOnFailure(SimulatorAddress source, SimulatorAddress destination, int remoteAddressIndex) {
+        if (getSourceFromFutureKey(key).equals(destination) && getRemoteAddressIndexFromFutureKey(key) == remoteAddressIndex) {
+            long messageId = getMessageIdFromFutureKey(key);
+            set(new Response(messageId, destination, source, UNBLOCKED_BY_FAILURE));
+        }
+    }
+
+    public long getMessageId() {
+        return getMessageIdFromFutureKey(key);
     }
 
     public void set(Response response) {
@@ -141,7 +145,7 @@ public final class ResponseFuture implements Future<Response> {
 
     @Override
     public Response get(long timeout, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
-        if (timeout < 0 || timeUnit == null) {
+        if (timeout < 0) {
             throw new IllegalArgumentException("Invalid timeout or timeUnit for ResponseFuture.get()");
         }
 
