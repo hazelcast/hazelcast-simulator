@@ -22,12 +22,15 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
+import com.hazelcast.simulator.protocol.operation.KillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -37,6 +40,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
@@ -87,7 +91,7 @@ public final class Coordinator {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    private CountDownLatch interactiveModeInitialized = new CountDownLatch(1);
+    private CountDownLatch remoteModeInitialized = new CountDownLatch(1);
 
     Coordinator(ComponentRegistry componentRegistry,
                 CoordinatorParameters coordinatorParameters,
@@ -216,8 +220,8 @@ public final class Coordinator {
         }
     }
 
-    void startInteractive() {
-        echoLocal("Coordinator interactive mode starting...");
+    void startRemoteMode() {
+        echoLocal("Coordinator remote mode starting...");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
@@ -232,7 +236,7 @@ public final class Coordinator {
                 coordinatorParameters.getSessionId()).run();
 
 
-        echoLocal("Coordinator interactive mode started...");
+        echoLocal("Coordinator remote mode started...");
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
         int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
@@ -242,11 +246,11 @@ public final class Coordinator {
             echoLocal("Performance monitor disabled");
         }
 
-        interactiveModeInitialized.countDown();
+        remoteModeInitialized.countDown();
     }
 
     private void awaitInteractiveModeInitialized() throws Exception {
-        if (!interactiveModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
+        if (!remoteModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
             throw new TimeoutException("Coordinator interactive mode failed to complete");
         }
     }
@@ -310,7 +314,7 @@ public final class Coordinator {
         }).start();
     }
 
-    public void stopWorkers(StopWorkersOperation op) throws Exception {
+    public void stopWorkers(RcStopWorkersOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         LOGGER.info("Stopping workers...");
@@ -320,7 +324,7 @@ public final class Coordinator {
         LOGGER.info("Stopping workers complete!");
     }
 
-    public void startWorkers(StartWorkersOperation op) throws Exception {
+    public void startWorkers(RcStartWorkersOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
@@ -404,6 +408,28 @@ public final class Coordinator {
                 performanceStatsCollector).run();
 
         LOGGER.info("Run complete!");
+    }
+
+    public void killWorker(RcKillWorkersOperation operation) throws InterruptedException {
+        List<WorkerData> workers = componentRegistry.getWorkers();
+        Collections.shuffle(workers);
+
+        LOGGER.info("Killing working....");
+
+        WorkerData randomMember = null;
+        for (WorkerData workerData : workers) {
+            if (workerData.isMemberWorker()) {
+                randomMember = workerData;
+                break;
+            }
+        }
+
+        if (randomMember == null) {
+            throw new IllegalStateException("No members found!");
+        }
+
+        coordinatorConnector.write(randomMember.getAddress(), new KillWorkerOperation());
+        LOGGER.info("Kill send to worker [" + randomMember.getAddress() + "]");
     }
 
     private static class ComponentRegistryFailureListener implements FailureListener {

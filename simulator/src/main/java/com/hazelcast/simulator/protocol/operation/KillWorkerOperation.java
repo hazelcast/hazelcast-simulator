@@ -15,17 +15,5 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.common.TestSuite;
-
-public class RunSuiteOperation implements SimulatorOperation {
-
-    private TestSuite testSuite;
-
-    public RunSuiteOperation(TestSuite testSuite) {
-        this.testSuite = testSuite;
-    }
-
-    public TestSuite getTestSuite() {
-        return testSuite;
-    }
+public class KillWorkerOperation implements SimulatorOperation {
 }

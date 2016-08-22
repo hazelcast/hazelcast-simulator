@@ -20,12 +20,13 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.RemoteControllerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
-import com.hazelcast.simulator.protocol.operation.InstallVendorOperation;
-import com.hazelcast.simulator.protocol.operation.RunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.ShutdownCoordinatorOperation;
+import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
+import com.hazelcast.simulator.protocol.operation.RcShutdownCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.operation.StartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.StopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
@@ -55,8 +56,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * todo:
  * - if the connector has not yet started on the coordinator; then remote will quickly timeout.
  * - Option to kill members
- * - starting light members
- * - start worker; controlling configuration
  * - killing random member
  * - Coordinator Remote install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
@@ -77,7 +76,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - scaling up down workers
  *
  * done
- * INFO  19:04:22 Valid connection from /127.0.0.1:49778 (magic bytes found)
+ * - starting light members
+ * - start worker; controlling configuration
  */
 public class CoordinatorRemoteCli implements Closeable {
 
@@ -115,7 +115,7 @@ public class CoordinatorRemoteCli implements Closeable {
         Response response;
         if ("stop".equals(cmd)) {
             LOGGER.info("Shutting down Coordinator Remote");
-            response = connector.write(new ShutdownCoordinatorOperation());
+            response = connector.write(new RcShutdownCoordinatorOperation());
         } else if ("install".equals(cmd)) {
             response = connector.write(new InstallVendorCli().newOperation(subArgs));
         } else if ("start-workers".equals(cmd)) {
@@ -124,6 +124,8 @@ public class CoordinatorRemoteCli implements Closeable {
             response = connector.write(new RunTestCli().newOperation(subArgs));
         } else if ("stop-workers".equals(cmd)) {
             response = connector.write(new StopWorkersCli().newOperation(subArgs));
+        } else if ("kill-workers".equals(cmd)) {
+            response = connector.write(new KillWorkersCli().newOperation(subArgs));
         } else {
             printHelpAndExit();
             return;
@@ -140,8 +142,9 @@ public class CoordinatorRemoteCli implements Closeable {
                 "Command         Description                                                                 \n"
                         + "------         -----------                                                                  \n"
                         + "install         Installs vendor software on the remote machines                             \n"
-                        + "start-workers   Starts workers                                                              \n"
+                        + "kill-workers    Kills one or more workers (for high availability testing)                   \n"
                         + "run             Runs a test                                                                 \n"
+                        + "start-workers   Starts workers                                                              \n"
                         + "stop-workers    Stops workers                                                               \n"
                         + "stop            Stops the Coordinator remote session                                        ");
         System.exit(1);
@@ -178,7 +181,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
         private OptionSet options;
 
-        InstallVendorOperation newOperation(String[] args) {
+        RcInstallVendorOperation newOperation(String[] args) {
 
             this.options = initOptionsWithHelp(parser, args);
 
@@ -187,7 +190,7 @@ public class CoordinatorRemoteCli implements Closeable {
             }
 
             LOGGER.info("Installing " + args[0]);
-            return new InstallVendorOperation(args[0]);
+            return new RcInstallVendorOperation(args[0]);
         }
     }
 
@@ -199,7 +202,28 @@ public class CoordinatorRemoteCli implements Closeable {
         SimulatorOperation newOperation(String[] args) {
             this.options = initOptionsWithHelp(parser, args);
 
-            return new StopWorkersOperation();
+            return new RcStopWorkersOperation();
+        }
+    }
+
+    private static class KillWorkersCli {
+        private final OptionParser parser = new OptionParser();
+
+        private final OptionSpec<Integer> countSpec = parser.accepts("count",
+                "The number of workers to kill")
+                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
+        private OptionSet options;
+
+        SimulatorOperation newOperation(String[] args) {
+            this.options = initOptionsWithHelp(parser, args);
+
+            int count = options.valueOf(countSpec);
+            if (count <= 0) {
+                throw new CommandLineExitException("worker count can't be smaller than 1");
+            }
+
+            return new RcKillWorkersOperation(count);
         }
     }
 
@@ -234,12 +258,12 @@ public class CoordinatorRemoteCli implements Closeable {
 
             int count = options.valueOf(countSpec);
             if (count <= 0) {
-                throw new CommandLineExitException("member count can't be smaller than 1");
+                throw new CommandLineExitException("worker count can't be smaller than 1");
             }
 
             LOGGER.info(format("Starting %s workers", count));
 
-            return new StartWorkersOperation(
+            return new RcStartWorkersOperation(
                     count,
                     options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
@@ -307,7 +331,7 @@ public class CoordinatorRemoteCli implements Closeable {
                     .setFailFast(options.has(failFastSpec));
 
             LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
-            return new RunSuiteOperation(suite);
+            return new RcRunSuiteOperation(suite);
         }
 
         private int getDurationSeconds(OptionSpec<String> optionSpec) {

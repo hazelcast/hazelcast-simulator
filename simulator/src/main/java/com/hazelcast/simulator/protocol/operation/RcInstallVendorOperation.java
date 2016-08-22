@@ -15,38 +15,14 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class StartWorkersOperation implements SimulatorOperation {
-    private int count;
-    private String versionSpec;
-    private String vmOptions;
-    private String workerType;
-    private String hzConfig;
+public class RcInstallVendorOperation implements SimulatorOperation {
+    private final String versionSpec;
 
-    public StartWorkersOperation(int count, String versionSpec, String vmOptions, String workerType, String hzConfig) {
-        this.count = count;
+    public RcInstallVendorOperation(String versionSpec) {
         this.versionSpec = versionSpec;
-        this.vmOptions = vmOptions;
-        this.workerType = workerType;
-        this.hzConfig = hzConfig;
-    }
-
-    public int getCount() {
-        return count;
     }
 
     public String getVersionSpec() {
         return versionSpec;
-    }
-
-    public String getVmOptions() {
-        return vmOptions;
-    }
-
-    public String getWorkerType() {
-        return workerType;
-    }
-
-    public String getHzConfig() {
-        return hzConfig;
     }
 }
