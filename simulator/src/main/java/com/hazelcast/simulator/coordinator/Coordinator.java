@@ -50,6 +50,7 @@ import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.exit;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -301,7 +302,7 @@ public final class Coordinator {
                         echo("Shutdown of ClientConnector...");
                         coordinatorConnector.shutdown();
                     }
-                    System.exit(0);
+                    exit(0);
                 } catch (Exception e) {
                     LOGGER.warn("Failed to shutdown", e);
                 }
