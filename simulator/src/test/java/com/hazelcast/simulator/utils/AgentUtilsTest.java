@@ -4,7 +4,6 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import org.apache.log4j.Logger;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 

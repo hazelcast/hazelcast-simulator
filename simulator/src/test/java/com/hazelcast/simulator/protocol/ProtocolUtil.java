@@ -19,10 +19,10 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
-import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
+import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.util.ExceptionUtil;
 import org.apache.log4j.Logger;
 

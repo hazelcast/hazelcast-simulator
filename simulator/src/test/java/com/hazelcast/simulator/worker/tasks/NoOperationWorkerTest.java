@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.worker.tasks;
 
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
-import com.hazelcast.simulator.common.TestPhase;
 import org.junit.Before;
 import org.junit.Test;
 

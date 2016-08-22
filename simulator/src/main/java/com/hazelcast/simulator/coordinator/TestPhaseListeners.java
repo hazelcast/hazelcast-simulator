@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;

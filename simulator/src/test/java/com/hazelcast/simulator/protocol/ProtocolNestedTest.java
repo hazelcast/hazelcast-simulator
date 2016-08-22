@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.protocol;
 
-import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;

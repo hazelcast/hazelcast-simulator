@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.hazelcast.simulator.worker.testcontainer.Probability.loadTimeStepProbabilityArray;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
+import static com.hazelcast.simulator.worker.testcontainer.Probability.loadTimeStepProbabilityArray;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isPublic;

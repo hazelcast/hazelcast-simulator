@@ -18,9 +18,9 @@ import org.junit.Test;
 
 import java.util.Map;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.worker.testcontainer.TestContainer_RunTest.MultiProbeWorkerTest.Operation.FIRST_OPERATION;
 import static com.hazelcast.simulator.worker.testcontainer.TestContainer_RunTest.MultiProbeWorkerTest.Operation.SECOND_OPERATION;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

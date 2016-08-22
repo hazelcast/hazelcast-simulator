@@ -28,11 +28,11 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import com.hazelcast.simulator.worker.testcontainer.TestContainer;
-import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.worker.testcontainer.TestContainer;
+import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
