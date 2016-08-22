@@ -177,10 +177,16 @@ public class SimulatorAddress {
      * @return {@code true} if the {@link SimulatorAddress} contains a wildcard, {@code false} otherwise.
      */
     public boolean containsWildcard() {
-        if (addressLevel == AddressLevel.COORDINATOR) {
-            return false;
+        switch (addressLevel) {
+            case AGENT:
+                return agentIndex == 0;
+            case WORKER:
+                return agentIndex == 0 || workerIndex == 0;
+            case TEST:
+                return agentIndex == 0 || workerIndex == 0 || testIndex == 0;
+            default:
+                return false;
         }
-        return getAddressIndex() == 0;
     }
 
     @Override

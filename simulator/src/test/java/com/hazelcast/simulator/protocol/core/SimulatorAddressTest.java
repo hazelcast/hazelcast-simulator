@@ -3,8 +3,10 @@ package com.hazelcast.simulator.protocol.core;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class SimulatorAddressTest {
 
@@ -96,6 +98,80 @@ public class SimulatorAddressTest {
     @Test(expected = IllegalArgumentException.class)
     public void getChild_fromTest() {
         address.getChild(1);
+    }
+
+    @Test
+    public void containsWildcard_withRemote() {
+        assertFalse(SimulatorAddress.REMOTE.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withCoordinator() {
+        assertFalse(SimulatorAddress.COORDINATOR.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withAgent() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
+        assertFalse(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withAgent_withWildcard() {
+        assertTrue(SimulatorAddress.ALL_AGENTS.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withWorker() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
+        assertFalse(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withWorker_withAgentWildcard() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.WORKER, 0, 1, 0);
+        assertTrue(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withWorker_withWorkerWildcard() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.WORKER, 1, 0, 0);
+        assertTrue(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withWorker_withAllWildcards() {
+        assertTrue(SimulatorAddress.ALL_WORKERS.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withTest() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
+        assertFalse(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withTest_withAgentWildcard() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 0, 1, 1);
+        assertTrue(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withTest_withWorkerWildcard() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 1, 0, 1);
+        assertTrue(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withTest_withTestWildcard() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 1, 1, 0);
+        assertTrue(address.containsWildcard());
+    }
+
+    @Test
+    public void containsWildcard_withTest_withAllWildcards() {
+        SimulatorAddress address = new SimulatorAddress(AddressLevel.TEST, 0, 0, 0);
+        assertTrue(address.containsWildcard());
     }
 
     @Test
