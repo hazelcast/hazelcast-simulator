@@ -19,8 +19,6 @@ import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
@@ -35,12 +33,9 @@ import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static java.util.Collections.unmodifiableCollection;
@@ -88,6 +83,11 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         return connectionManager.getChannels();
     }
 
+    @Override
+    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
+        return super.write(destination, operation);
+    }
+
     /**
      * Adds a Simulator Agent and connects to it.
      *
@@ -112,42 +112,6 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         getClientConnectorManager().removeClient(agentIndex);
     }
 
-    /**
-     * Sends a {@link SimulatorMessage} to the addressed Simulator component.
-     *
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
-     * @return a {@link Response} with the response of all addressed Simulator components.
-     */
-    @Override
-    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(COORDINATOR, destination, operation);
-
-        int agentAddressIndex = destination.getAgentIndex();
-        Response response = new Response(message);
-        List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
-        if (agentAddressIndex == 0) {
-            for (ClientConnector agent : getClientConnectorManager().getClientConnectors()) {
-                futureList.add(agent.writeAsync(message));
-            }
-        } else {
-            ClientConnector agent = getClientConnectorManager().get(agentAddressIndex);
-            if (agent == null) {
-                response.addResponse(COORDINATOR, FAILURE_AGENT_NOT_FOUND);
-            } else {
-                futureList.add(agent.writeAsync(message));
-            }
-        }
-        try {
-            for (ResponseFuture future : futureList) {
-                response.addResponse(future.get());
-            }
-        } catch (InterruptedException e) {
-            throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
-        }
-        return response;
-    }
-
     public Response writeToRemoteController(SimulatorOperation operation) {
         return super.write(REMOTE, operation);
     }
@@ -155,10 +119,5 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     // just for testing
     public Collection<ClientConnector> getClientConnectors() {
         return unmodifiableCollection(getClientConnectorManager().getClientConnectors());
-    }
-
-    // just for testing
-    void addAgent(int agentIndex, ClientConnector agent) {
-        getClientConnectorManager().addClient(agentIndex, agent);
     }
 }

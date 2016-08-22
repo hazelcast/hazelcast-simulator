@@ -64,7 +64,7 @@ public interface ServerConnector {
     /**
      * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
-     * The {@link SimulatorOperation} is put on a queue. The {@link Response} is not returned.
+     * The {@link SimulatorOperation} is put on a queue and a {@link ResponseFuture} is returned to wait for the result.
      *
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
@@ -73,7 +73,7 @@ public interface ServerConnector {
     ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
+     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
      * Blocks until the {@link Response} is received.
      *
@@ -84,7 +84,7 @@ public interface ServerConnector {
     Response write(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
+     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
      * Blocks until the {@link Response} is received.
      *
@@ -96,7 +96,7 @@ public interface ServerConnector {
     Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
 
     /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
+     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
@@ -105,7 +105,7 @@ public interface ServerConnector {
     ResponseFuture writeAsync(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress} via the connected {@link ClientConnector}.
+     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
      * @param source      the {@link SimulatorAddress} of the source
      * @param destination the {@link SimulatorAddress} of the destination

@@ -38,6 +38,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -50,6 +52,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
+import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_AGENT_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
@@ -61,6 +64,7 @@ import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThrea
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -197,11 +201,18 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+        Response response = new Response(message);
+
+        List<ResponseFuture> futureList = writeAsync(message);
         try {
-            return writeAsync(source, destination, operation).get();
+            for (ResponseFuture future : futureList) {
+                response.addResponse(future.get());
+            }
         } catch (InterruptedException e) {
             throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);
         }
+        return response;
     }
 
     @Override
@@ -212,7 +223,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     @Override
     public ResponseFuture writeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
-        return writeAsync(message);
+        return writeAsync(message).get(0);
     }
 
     static int getDefaultThreadPoolSize() {
@@ -243,11 +254,38 @@ abstract class AbstractServerConnector implements ServerConnector {
         return responseFuture;
     }
 
-    SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
+    private SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
         return new SimulatorMessage(dst, src, messageIds.incrementAndGet(), getOperationType(op), toJson(op));
     }
 
-    private ResponseFuture writeAsync(SimulatorMessage message) {
+    private List<ResponseFuture> writeAsync(SimulatorMessage message) {
+        if (localAddress.getAddressLevel().isParentAddressLevel(message.getDestination().getAddressLevel())) {
+            // we have to send the message to the connected children
+            return writeAsyncToChildren(message, message.getDestination().getAgentIndex());
+        } else {
+            // we have to send the message to the connected parents
+            return singletonList(writeAsyncToParents(message));
+        }
+    }
+
+    private List<ResponseFuture> writeAsyncToChildren(SimulatorMessage message, int agentAddressIndex) {
+        List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
+        if (agentAddressIndex == 0) {
+            for (ClientConnector agent : getClientConnectorManager().getClientConnectors()) {
+                futureList.add(agent.writeAsync(message));
+            }
+        } else {
+            ClientConnector agent = getClientConnectorManager().get(agentAddressIndex);
+            if (agent == null) {
+                futureList.add(createResponseFuture(message, FAILURE_AGENT_NOT_FOUND));
+            } else {
+                futureList.add(agent.writeAsync(message));
+            }
+        }
+        return futureList;
+    }
+
+    private ResponseFuture writeAsyncToParents(SimulatorMessage message) {
         long messageId = message.getMessageId();
         String futureKey = createFutureKey(message.getSource(), messageId, addressIndex);
         ResponseFuture future = createInstance(futureMap, futureKey);
@@ -257,6 +295,16 @@ abstract class AbstractServerConnector implements ServerConnector {
         OperationTypeCounter.sent(message.getOperationType());
         getChannelGroup().writeAndFlush(message);
 
+        return future;
+    }
+
+    private ResponseFuture createResponseFuture(SimulatorMessage message, ResponseType responseType) {
+        long messageId = message.getMessageId();
+        SimulatorAddress destination = message.getDestination();
+        String futureKey = createFutureKey(message.getSource(), messageId, destination.getAddressIndex());
+
+        ResponseFuture future = createInstance(futureMap, futureKey);
+        future.set(new Response(messageId, destination, message.getSource(), responseType));
         return future;
     }
 
@@ -284,7 +332,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                     String futureKey = createFutureKey(message.getSource(), message.getMessageId(), 0);
                     responseFuture = messageQueueFutures.get(futureKey);
 
-                    response = writeAsync(message).get();
+                    response = writeAsync(message).get(0).get();
                 } catch (Exception e) {
                     LOGGER.error("Error while sending message from messageQueue", e);
 
