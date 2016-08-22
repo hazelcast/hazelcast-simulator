@@ -141,8 +141,8 @@ public class CoordinatorRemoteCli implements Closeable {
                         + "------         -----------                                                                  \n"
                         + "install         Installs vendor software on the remote machines                             \n"
                         + "start-workers   Starts workers                                                              \n"
-                        + "stop-workers    Stops workers                                                               \n"
                         + "run             Runs a test                                                                 \n"
+                        + "stop-workers    Stops workers                                                               \n"
                         + "stop            Stops the Coordinator remote session                                        ");
         System.exit(1);
     }
