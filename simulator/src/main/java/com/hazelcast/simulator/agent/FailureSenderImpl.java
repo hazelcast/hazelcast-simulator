@@ -20,13 +20,14 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorProtocolException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import org.apache.log4j.Logger;
 
-import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
 
 class FailureSenderImpl implements FailureSender {
@@ -56,25 +57,25 @@ class FailureSenderImpl implements FailureSender {
                                         String testId,
                                         String cause) {
         boolean sentSuccessfully = true;
-        boolean isFailure = type != WORKER_FINISHED;
         SimulatorAddress workerAddress = workerProcess.getAddress();
+        String workerId = workerProcess.getId();
         FailureOperation operation = new FailureOperation(message, type, workerAddress, agentAddress,
-                workerProcess.getHazelcastAddress(), workerProcess.getId(), testId, testSuite, cause);
+                workerProcess.getHazelcastAddress(), workerId, testId, testSuite, cause);
 
-        if (isFailure) {
-            LOGGER.error(format("Detected failure on Worker %s (%s): %s", workerProcess.getId(), workerProcess.getAddress(),
-                    operation.getLogMessage(++failureCount)));
+        if (type.isPoisonPill()) {
+            LOGGER.info(format("Worker %s (%s) finished.", workerId, workerAddress));
         } else {
-            LOGGER.info(format("Worker %s (%s) finished.", workerProcess.getId(), workerProcess.getAddress()));
+            LOGGER.error(format("Detected failure on Worker %s (%s): %s", workerId, workerAddress,
+                    operation.getLogMessage(++failureCount)));
         }
 
         try {
-            Response response = agentConnector.write(SimulatorAddress.COORDINATOR, operation);
+            Response response = agentConnector.write(COORDINATOR, operation);
             ResponseType firstErrorResponseType = response.getFirstErrorResponseType();
             if (firstErrorResponseType != ResponseType.SUCCESS) {
                 LOGGER.error(format("Could not send failure to coordinator: %s", firstErrorResponseType));
                 sentSuccessfully = false;
-            } else if (isFailure) {
+            } else if (!type.isPoisonPill()) {
                 LOGGER.info("Failure successfully sent to Coordinator!");
             }
         } catch (SimulatorProtocolException e) {
@@ -85,11 +86,22 @@ class FailureSenderImpl implements FailureSender {
         }
 
         if (type.isWorkerFinishedFailure()) {
-            String finishedType = (isFailure) ? "failed" : "finished";
-            LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
-            agentConnector.removeWorker(workerAddress.getWorkerIndex());
+            unblockPendingFutures(workerAddress);
+            removeFinishedWorker(workerAddress, type);
         }
 
         return sentSuccessfully;
+    }
+
+    private void unblockPendingFutures(SimulatorAddress workerAddress) {
+        for (ResponseFuture future : agentConnector.getFutureMap().values()) {
+            future.unblockOnFailure(workerAddress, COORDINATOR, workerAddress.getAddressIndex());
+        }
+    }
+
+    private void removeFinishedWorker(SimulatorAddress workerAddress, FailureType type) {
+        String finishedType = (type.isPoisonPill()) ? "finished" : "failed";
+        LOGGER.info(format("Removing %s Worker %s from configuration...", finishedType, workerAddress));
+        agentConnector.removeWorker(workerAddress.getWorkerIndex());
     }
 }

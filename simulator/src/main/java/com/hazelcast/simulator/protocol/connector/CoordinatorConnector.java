@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -31,7 +30,6 @@ import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import io.netty.channel.ChannelPipeline;
@@ -50,8 +48,7 @@ import static java.util.Collections.unmodifiableCollection;
 /**
  * Connector which connects to remote Simulator Agent instances.
  */
-@SuppressWarnings("checkstyle:classdataabstractioncoupling")
-public class CoordinatorConnector extends AbstractServerConnector implements ClientPipelineConfigurator, FailureListener {
+public class CoordinatorConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
     private final CoordinatorOperationProcessor processor;
     private final ConnectionManager connectionManager = new ConnectionManager();
@@ -59,20 +56,6 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     public CoordinatorConnector(CoordinatorOperationProcessor processor, int port) {
         super(COORDINATOR, port, getDefaultThreadPoolSize());
         this.processor = processor;
-    }
-
-    @Override
-    public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
-        if (!isFinishedFailure) {
-            return;
-        }
-        SimulatorAddress workerAddress = failure.getWorkerAddress();
-        if (workerAddress == null) {
-            return;
-        }
-        for (ResponseFuture future : getFutureMap().values()) {
-            future.unblockOnFailure(workerAddress, COORDINATOR, workerAddress.getAgentIndex());
-        }
     }
 
     @Override
@@ -95,8 +78,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
         pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(COORDINATOR));
-        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor,
-                getScheduledExecutor()));
+        pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(COORDINATOR, processor, getScheduledExecutor()));
         pipeline.addLast("responseHandler", new ResponseHandler(COORDINATOR, REMOTE, getFutureMap(), 0));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));
     }

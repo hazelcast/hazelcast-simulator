@@ -121,6 +121,11 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     }
 
     @Override
+    public ConcurrentMap<String, ResponseFuture> getFutureMap() {
+        return super.getFutureMap();
+    }
+
+    @Override
     public Response write(SimulatorAddress destination, SimulatorOperation operation) {
         return super.write(destination, operation);
     }
