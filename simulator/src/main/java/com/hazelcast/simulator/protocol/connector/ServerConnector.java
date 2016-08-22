@@ -65,6 +65,7 @@ public interface ServerConnector {
      * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
      * The {@link SimulatorOperation} is put on a queue and a {@link ResponseFuture} is returned to wait for the result.
+     * Does not support a destination {@link SimulatorAddress} with a wildcard.
      *
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
@@ -98,6 +99,8 @@ public interface ServerConnector {
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
      *
+     * Does not support a destination {@link SimulatorAddress} with a wildcard.
+     *
      * @param destination the {@link SimulatorAddress} of the destination
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link ResponseFuture} with returns the result of the call
@@ -106,6 +109,8 @@ public interface ServerConnector {
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
+     *
+     * Does not support a destination {@link SimulatorAddress} with a wildcard.
      *
      * @param source      the {@link SimulatorAddress} of the source
      * @param destination the {@link SimulatorAddress} of the destination
