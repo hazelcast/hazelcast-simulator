@@ -54,7 +54,8 @@ public final class MemberWorker implements Worker {
     private static final String DASHES = "---------------------------";
 
     private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
-    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
+
+    private final AtomicBoolean shutdown = new AtomicBoolean();
 
     private final WorkerType type;
     private final String publicAddress;
@@ -71,7 +72,6 @@ public final class MemberWorker implements Worker {
 
     MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort, String hzConfigFile,
                  boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds) throws Exception {
-        SHUTDOWN_STARTED.set(false);
         this.type = type;
         this.publicAddress = publicAddress;
 
@@ -247,7 +247,7 @@ public final class MemberWorker implements Worker {
     private final class WorkerShutdownThread extends ShutdownThread {
 
         private WorkerShutdownThread(boolean ensureProcessShutdown) {
-            super("WorkerShutdownThread", SHUTDOWN_STARTED, ensureProcessShutdown);
+            super("WorkerShutdownThread", shutdown, ensureProcessShutdown);
         }
 
         @Override
