@@ -18,7 +18,9 @@ package com.hazelcast.simulator.coordinator;
 import java.util.Map;
 
 /**
- * Parameters for Simulator Worker.
+ * Parameters for Simulator Worker. The class itself should remain implementation independent; maybe it is a Java worker,
+ * maybe it is a c++ Hazelcast client worker. The implementation specific variables, can be passed using the the environment,
+ * see {@link #getEnvironment()}.
  */
 public class WorkerParameters {
 
