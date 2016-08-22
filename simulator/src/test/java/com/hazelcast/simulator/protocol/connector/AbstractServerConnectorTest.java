@@ -24,6 +24,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setLogLevel;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.ALL_AGENTS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
@@ -190,6 +191,20 @@ public class AbstractServerConnectorTest {
         Response response = future.get();
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, response.getFirstErrorResponseType());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSubmit_whenDestinationContainsWildcard_thenThrowException() {
+        testServerConnector.start();
+
+        testServerConnector.submit(ALL_AGENTS, DEFAULT_OPERATION);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWriteAsync_withSource_whenDestinationContainsWildcard_thenThrowException() {
+        testServerConnector.start();
+
+        testServerConnector.writeAsync(COORDINATOR, ALL_AGENTS, DEFAULT_OPERATION);
     }
 
     private void setResponse(ResponseType responseType, int expectedMessageCount) {

@@ -171,6 +171,18 @@ public class SimulatorAddress {
         }
     }
 
+    /**
+     * Checks if the {@link SimulatorAddress} contains a wildcard.
+     *
+     * @return {@code true} if the {@link SimulatorAddress} contains a wildcard, {@code false} otherwise.
+     */
+    public boolean containsWildcard() {
+        if (addressLevel == AddressLevel.COORDINATOR) {
+            return false;
+        }
+        return getAddressIndex() == 0;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

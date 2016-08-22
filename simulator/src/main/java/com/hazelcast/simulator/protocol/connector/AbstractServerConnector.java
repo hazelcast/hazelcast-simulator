@@ -191,6 +191,8 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation) {
+        checkNoWildcardAllowed(destination);
+
         return submit(localAddress, destination, operation);
     }
 
@@ -222,6 +224,8 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public ResponseFuture writeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+        checkNoWildcardAllowed(destination);
+
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
         return writeAsync(message).get(0);
     }
@@ -306,6 +310,12 @@ abstract class AbstractServerConnector implements ServerConnector {
         ResponseFuture future = createInstance(futureMap, futureKey);
         future.set(new Response(messageId, destination, message.getSource(), responseType));
         return future;
+    }
+
+    private void checkNoWildcardAllowed(SimulatorAddress destination) {
+        if (destination.containsWildcard()) {
+            throw new IllegalArgumentException("This method is not allowed for a wildcard destination!");
+        }
     }
 
     private final class MessageQueueThread extends Thread {
