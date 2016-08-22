@@ -46,8 +46,8 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
-import static com.hazelcast.simulator.coordinator.WorkerParameters.initClientHzConfig;
-import static com.hazelcast.simulator.coordinator.WorkerParameters.initMemberHzConfig;
+import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
+import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;

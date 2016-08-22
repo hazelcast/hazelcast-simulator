@@ -25,6 +25,9 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.worker.MemberWorker;
 import com.hazelcast.simulator.worker.WorkerType;
 import org.apache.log4j.Logger;
@@ -39,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+import static java.lang.String.format;
 
 public final class HazelcastUtils {
 
@@ -132,5 +136,50 @@ public final class HazelcastUtils {
                 return null;
             }
         }
+    }
+
+    public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,
+                                            String licenseKey, SimulatorProperties properties, boolean liteMember) {
+        String addressConfig = createAddressConfig("member", componentRegistry, port);
+        memberHzConfig = updateAddressAndLicenseKey(memberHzConfig, addressConfig, licenseKey);
+
+        String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
+        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
+            String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
+            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
+            memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
+                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
+                            updateIntervalAttr, manCenterURL));
+        }
+
+        if (liteMember) {
+            memberHzConfig = memberHzConfig.replace("<!--LITE_MEMBER_CONFIG-->", "<lite-member enabled=\"true\"/>");
+        }
+
+        return memberHzConfig;
+    }
+
+    public static String initClientHzConfig(String clientHzConfig, ComponentRegistry componentRegistry, int port,
+                                            String licenseKey) {
+        String addressConfig = createAddressConfig("address", componentRegistry, port);
+        return updateAddressAndLicenseKey(clientHzConfig, addressConfig, licenseKey);
+    }
+
+    public static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
+        StringBuilder members = new StringBuilder();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            String hostAddress = agentData.getPrivateAddress();
+            members.append(format("<%s>%s:%d</%s>%n", tagName, hostAddress, port, tagName));
+        }
+        return members.toString();
+    }
+
+    private static String updateAddressAndLicenseKey(String hzConfig, String addressConfig, String licenseKey) {
+        hzConfig = hzConfig.replace("<!--MEMBERS-->", addressConfig);
+        if (licenseKey != null) {
+            String licenseConfig = format("<license-key>%s</license-key>", licenseKey);
+            hzConfig = hzConfig.replace("<!--LICENSE-KEY-->", licenseConfig);
+        }
+        return hzConfig;
     }
 }
