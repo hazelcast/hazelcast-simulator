@@ -41,6 +41,14 @@ public class CoordinatorCliTest {
             + NEW_LINE + "  xmlns=\"http://www.hazelcast.com/schema/config\""
             + NEW_LINE + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />";
 
+    private static final String CLUSTER_XML
+            = "<clusterConfiguration>"
+            + NEW_LINE + "\t<workerConfiguration name=\"test\" type=\"MEMBER\"/>"
+            + NEW_LINE + "\t<nodeConfiguration>"
+            + NEW_LINE + "\t\t<workerGroup configuration=\"test\" count=\"1\"/>"
+            + NEW_LINE + "\t</nodeConfiguration>"
+            + NEW_LINE + "</clusterConfiguration>";
+
     private static File testSuiteFile;
     private static File propertiesFile;
 

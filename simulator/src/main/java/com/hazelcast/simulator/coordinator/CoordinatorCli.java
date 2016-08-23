@@ -19,10 +19,10 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.common.WorkerType;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -179,7 +179,7 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
-    private final OptionSpec remoteSpec = parser.accepts("remote",
+    private final OptionSpec interactiveSpec = parser.accepts("remote",
             "Puts Coordinator into remote control mode for coordinator-remote");
 
     private final OptionSet options;
@@ -290,7 +290,7 @@ final class CoordinatorCli {
     }
 
     void run() {
-        if (options.has(remoteSpec)) {
+        if (options.has(interactiveSpec)) {
             coordinator.startRemoteMode();
         } else {
             coordinator.run(testSuite);
@@ -298,7 +298,7 @@ final class CoordinatorCli {
     }
 
     private TestSuite loadTestSuite() {
-        if (options.hasArgument(remoteSpec)) {
+        if (options.hasArgument(interactiveSpec)) {
             return null;
         }
 
@@ -371,33 +371,13 @@ final class CoordinatorCli {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
-        int dedicatedMemberMachines = options.valueOf(dedicatedMemberMachinesSpec);
-
-        int clientCount = options.valueOf(clientWorkerCountSpec);
-        int memberCount;
-        if (options.has(remoteSpec)) {
-            memberCount = 0;
-        } else {
-            int configuredMembers = options.valueOf(memberWorkerCountSpec);
-
-            if (configuredMembers == -1) {
-                memberCount = dedicatedMemberMachines == 0 ? componentRegistry.agentCount() : dedicatedMemberMachines;
-            } else {
-                memberCount = configuredMembers;
-            }
-
-            if (memberCount == 0 && clientCount == 0) {
-                throw new CommandLineExitException("No workers have been defined!");
-            }
-        }
-
         return createDeploymentPlan(
                 componentRegistry,
                 workerParametersMap,
                 workerType,
-                memberCount,
-                clientCount,
-                dedicatedMemberMachines);
+                options.valueOf(memberWorkerCountSpec),
+                options.valueOf(clientWorkerCountSpec),
+                options.valueOf(dedicatedMemberMachinesSpec));
 
     }
 
