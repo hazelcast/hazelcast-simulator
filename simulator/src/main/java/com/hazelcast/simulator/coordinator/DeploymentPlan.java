@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
@@ -46,7 +45,6 @@ public final class DeploymentPlan {
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
             = new HashMap<SimulatorAddress, List<WorkerProcessSettings>>();
     private final List<AgentWorkerLayout> agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
-    private final AtomicInteger agentIndex = new AtomicInteger();
 
     public static DeploymentPlan createDeploymentPlan(
             ComponentRegistry componentRegistry,
@@ -70,8 +68,6 @@ public final class DeploymentPlan {
 
         plan.assignDedicatedMemberMachines(componentRegistry.agentCount(), dedicatedMemberMachineCount);
 
-        plan.initAgentIndex();
-
         plan.assign(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
 
         plan.assign(clientCount, clientType, workerParametersMap.get(clientType));
@@ -91,8 +87,6 @@ public final class DeploymentPlan {
         plan.initAgentWorkerLayouts(componentRegistry);
 
         plan.assignDedicatedMemberMachines(componentRegistry.agentCount(), dedicatedMemberWorker);
-
-        plan.initAgentIndex();
 
         plan.assign(workerCount, workerType, workerParameters);
 
@@ -159,22 +153,6 @@ public final class DeploymentPlan {
         }
     }
 
-    private void initAgentIndex() {
-        int currentIndex = 0;
-        int lastIndex = 0;
-        int lastSize = Integer.MAX_VALUE;
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            int workerCount = agentWorkerLayout.workerProcessSettingsList.size();
-            if (workerCount < lastSize) {
-                lastSize = workerCount;
-                lastIndex = currentIndex;
-            }
-            currentIndex++;
-        }
-
-        agentIndex.set(lastIndex);
-    }
-
     private void assignDedicatedMemberMachines(int agentCount, int dedicatedMemberMachineCount) {
         if (dedicatedMemberMachineCount > 0) {
             assignAgentWorkerMode(0, dedicatedMemberMachineCount, AgentWorkerMode.MEMBER);
@@ -189,13 +167,27 @@ public final class DeploymentPlan {
     }
 
     private AgentWorkerLayout nextAgent(WorkerType workerType) {
-        int size = agentWorkerLayouts.size();
-        while (true) {
-            AgentWorkerLayout agentLayout = agentWorkerLayouts.get(agentIndex.getAndIncrement() % size);
-            if (agentLayout.allowed(workerType)) {
-                return agentLayout;
+        AgentWorkerLayout smallest = null;
+        for (AgentWorkerLayout agent : agentWorkerLayouts) {
+            if (!agent.allowed(workerType)) {
+                continue;
+            }
+
+            if (smallest == null) {
+                smallest = agent;
+                continue;
+            }
+
+            if (agent.workerProcessSettingsList.size() < smallest.workerProcessSettingsList.size()) {
+                smallest = agent;
             }
         }
+
+        if (smallest == null) {
+            throw new IllegalStateException(format("No agent found for workerType [%s]", workerType));
+        }
+
+        return smallest;
     }
 
     private void printLayout(String layoutType) {
