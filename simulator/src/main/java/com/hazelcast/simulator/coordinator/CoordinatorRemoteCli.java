@@ -200,7 +200,7 @@ public class CoordinatorRemoteCli implements Closeable {
             this.options = initOptionsWithHelp(parser, args);
 
             if (options.nonOptionArguments().size() != 1) {
-                throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'jstack $(<worker.pid)'");
+                throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'jstack $PID'");
             }
 
             String cmd = args[0];
