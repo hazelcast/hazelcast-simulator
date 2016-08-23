@@ -112,7 +112,7 @@ public class CoordinatorRemoteCli implements Closeable {
         } else if ("install".equals(cmd)) {
             response = connector.write(new InstallVendorCli().newOperation(subArgs));
         } else if ("bash".equals(cmd)) {
-            response = connector.write(new BashCommandCli().newOperation(subArgs));
+            response = connector.write(new BashWorkersCommandCli().newOperation(subArgs));
         } else if ("start-workers".equals(cmd)) {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
@@ -136,7 +136,7 @@ public class CoordinatorRemoteCli implements Closeable {
         System.out.println(
                 "Command         Description                                                                 \n"
                         + "------         -----------                                                                  \n"
-                        + "bash            Executes a bash command on every worker                                     \n"
+                        + "bash-workers    Executes a bash command on every worker                                     \n"
                         + "install         Installs vendor software on the remote machines                             \n"
                         + "kill-workers    Kills one or more workers (for high availability testing)                   \n"
                         + "run             Runs a test                                                                 \n"
@@ -190,7 +190,7 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private static class BashCommandCli {
+    private static class BashWorkersCommandCli {
         private final OptionParser parser = new OptionParser();
 
         private OptionSet options;
