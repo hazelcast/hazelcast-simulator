@@ -20,13 +20,14 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.RemoteControllerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcShutdownCoordinatorOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
@@ -57,6 +58,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - Coordinator Remote install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
  * - if there are no workers, don't show a stacktrace.
+ * - commands should be tchecked for non option args
  * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
  * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
  * at com.hazelcast.simulator.coordinator.RemoteClient.sendToTestOnFirstWorker(RemoteClient.java:93)
@@ -109,6 +111,8 @@ public class CoordinatorRemoteCli implements Closeable {
             response = connector.write(new RcShutdownCoordinatorOperation());
         } else if ("install".equals(cmd)) {
             response = connector.write(new InstallVendorCli().newOperation(subArgs));
+        } else if ("bash".equals(cmd)) {
+            response = connector.write(new BashCommandCli().newOperation(subArgs));
         } else if ("start-workers".equals(cmd)) {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
@@ -132,6 +136,7 @@ public class CoordinatorRemoteCli implements Closeable {
         System.out.println(
                 "Command         Description                                                                 \n"
                         + "------         -----------                                                                  \n"
+                        + "bash            Executes a bash command on every worker                                     \n"
                         + "install         Installs vendor software on the remote machines                             \n"
                         + "kill-workers    Kills one or more workers (for high availability testing)                   \n"
                         + "run             Runs a test                                                                 \n"
@@ -182,6 +187,25 @@ public class CoordinatorRemoteCli implements Closeable {
 
             LOGGER.info("Installing " + args[0]);
             return new RcInstallVendorOperation(args[0]);
+        }
+    }
+
+    private static class BashCommandCli {
+        private final OptionParser parser = new OptionParser();
+
+        private OptionSet options;
+
+        SimulatorOperation newOperation(String[] args) {
+
+            this.options = initOptionsWithHelp(parser, args);
+
+            if (options.nonOptionArguments().size() != 1) {
+                throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'jstack $(<worker.pid)'");
+            }
+
+            String cmd = args[0];
+            LOGGER.info("Executing [" + cmd + "]");
+            return new RcBashOperation(cmd);
         }
     }
 

@@ -16,13 +16,16 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessLauncher;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
@@ -31,7 +34,8 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.utils.BashCommand;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -90,10 +94,27 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 WorkerProcessManager workerProcessManager = agent.getWorkerProcessManager();
                 workerProcessManager.ignore(((IgnoreWorkerFailureOperation) operation).getSimulatorAddress());
                 break;
+            case BASH:
+                processBashOperation((BashOperation) operation);
+                break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
         return SUCCESS;
+    }
+
+    private void processBashOperation(final BashOperation operation) {
+        ThreadSpawner spawner = new ThreadSpawner("bash[" + operation.getCommand() + "]");
+        for (final WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    new BashCommand(operation.getCommand())
+                            .setDirectory(workerProcess.getWorkerHome())
+                            .execute();
+                }
+            });
+        }
     }
 
     private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)

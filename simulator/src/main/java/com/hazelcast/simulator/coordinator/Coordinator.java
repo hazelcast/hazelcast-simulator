@@ -19,13 +19,16 @@ import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.KillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
+import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
@@ -36,7 +39,6 @@ import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -409,7 +411,9 @@ public final class Coordinator {
         LOGGER.info("Run complete!");
     }
 
-    public void killWorker(RcKillWorkersOperation operation) throws InterruptedException {
+    public void killWorker(RcKillWorkersOperation operation) throws Exception {
+        awaitInteractiveModeInitialized();
+
         LOGGER.info("Killing working....");
 
         List<WorkerData> workers = componentRegistry.getWorkers();
@@ -432,6 +436,17 @@ public final class Coordinator {
         coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
         coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
         LOGGER.info("Kill send to worker [" + memberAddress + "]");
+    }
+
+    public void bash(RcBashOperation operation) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        LOGGER.info("Bash [" + operation.getCommand() + "] on all workers");
+
+        remoteClient.sendToAllAgents(new BashOperation(operation.getCommand()));
+
+        LOGGER.info("Bash [" + operation.getCommand() + "] completed");
+
     }
 
     private static class ComponentRegistryFailureListener implements FailureListener {

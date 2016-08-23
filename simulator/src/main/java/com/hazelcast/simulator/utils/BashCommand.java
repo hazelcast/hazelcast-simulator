@@ -19,6 +19,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -39,6 +41,7 @@ public class BashCommand {
     private final List<String> params = new ArrayList<String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
     private boolean throwException;
+    private File directory;
 
     public BashCommand(String command) {
         params.add(command);
@@ -67,6 +70,11 @@ public class BashCommand {
         return this;
     }
 
+    public BashCommand setDirectory(File directory) {
+        this.directory = checkNotNull(directory, "directory can't be null");
+        return this;
+    }
+
     private String command() {
         StringBuilder sb = new StringBuilder();
         for (String param : params) {
@@ -87,6 +95,9 @@ public class BashCommand {
         try {
             // create a process for the shell
             ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
+            if (directory != null) {
+                pb.directory(directory);
+            }
 
             // fix the environment
             for (Map.Entry<String, Object> entry : environment.entrySet()) {

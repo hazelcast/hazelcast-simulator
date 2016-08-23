@@ -40,6 +40,7 @@ public enum OperationType {
     RC_STOP_WORKERS(RcStopWorkersOperation.class, 106),
     RC_RUN_SUITE(RcRunSuiteOperation.class, 107),
     RC_KILL_WORKERS(RcKillWorkersOperation.class, 108),
+    RC_BASH(RcBashOperation.class, 109),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 200),
@@ -48,6 +49,7 @@ public enum OperationType {
     START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 203),
     STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 204),
     IGNORE_WORKER_FAILURE(IgnoreWorkerFailureOperation.class, 205),
+    BASH(BashOperation.class, 206),
 
     // WorkerOperationProcessor
     PING(PingOperation.class, 300),

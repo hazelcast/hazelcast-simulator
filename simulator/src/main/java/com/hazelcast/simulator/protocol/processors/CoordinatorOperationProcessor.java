@@ -22,15 +22,16 @@ import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
+import com.hazelcast.simulator.protocol.operation.RcBashOperation;
+import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -89,6 +90,9 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 break;
             case RC_SHUTDOWN:
                 coordinator.shutdown();
+                break;
+            case RC_BASH:
+                coordinator.bash((RcBashOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
