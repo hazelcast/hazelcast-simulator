@@ -19,10 +19,10 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.common.WorkerType;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -61,7 +61,6 @@ final class CoordinatorCli {
     static final int DEFAULT_DURATION_SECONDS = 60;
     static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
     private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
-
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
@@ -179,11 +178,12 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
-    private final OptionSpec interactiveSpec = parser.accepts("remote",
+    private final OptionSpec remoteSpec = parser.accepts("remote",
             "Puts Coordinator into remote control mode for coordinator-remote");
 
     private final OptionSet options;
     private final SimulatorProperties simulatorProperties;
+    private final DeploymentPlan deploymentPlan;
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
@@ -198,9 +198,9 @@ final class CoordinatorCli {
 
         this.workerParametersMap = loadWorkerParameters();
 
-        DeploymentPlan deploymentPlan = newDeploymentPlan(componentRegistry, workerParametersMap);
+        this.deploymentPlan = newDeploymentPlan();
 
-        this.coordinator = new Coordinator(componentRegistry, coordinatorParameters, deploymentPlan);
+        this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
     }
 
     private CoordinatorParameters loadCoordinatorParameters() {
@@ -290,15 +290,15 @@ final class CoordinatorCli {
     }
 
     void run() {
-        if (options.has(interactiveSpec)) {
+        if (options.has(remoteSpec)) {
             coordinator.startRemoteMode();
         } else {
-            coordinator.run(testSuite);
+            coordinator.run(deploymentPlan, testSuite);
         }
     }
 
     private TestSuite loadTestSuite() {
-        if (options.hasArgument(interactiveSpec)) {
+        if (options.hasArgument(remoteSpec)) {
             return null;
         }
 
@@ -364,8 +364,11 @@ final class CoordinatorCli {
         return componentRegistry;
     }
 
-    private DeploymentPlan newDeploymentPlan(ComponentRegistry componentRegistry,
-                                             Map<WorkerType, WorkerParameters> workerParametersMap) {
+    private DeploymentPlan newDeploymentPlan() {
+        if (options.has(remoteSpec)) {
+            return null;
+        }
+
         WorkerType workerType = new WorkerType(options.valueOf(clientTypeSpec));
         if (workerType.isMember()) {
             throw new CommandLineExitException("client workerType can't be [member]");

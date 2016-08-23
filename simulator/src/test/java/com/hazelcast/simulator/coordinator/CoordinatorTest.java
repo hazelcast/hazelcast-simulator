@@ -22,6 +22,7 @@ public class CoordinatorTest {
     private SimulatorProperties properties;
     private Coordinator coordinator;
     private TestSuite testSuite;
+    private DeploymentPlan deploymentPlan;
 
     @Before
     public void setUp() {
@@ -36,9 +37,9 @@ public class CoordinatorTest {
         when(coordinatorParameters.getSessionId()).thenReturn(sessionId);
         when(coordinatorParameters.getSimulatorProperties()).thenReturn(properties);
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan();
+        deploymentPlan = new DeploymentPlan();
 
-        coordinator = new Coordinator(componentRegistry, coordinatorParameters, deploymentPlan);
+        coordinator = new Coordinator(componentRegistry, coordinatorParameters);
     }
 
     @After
@@ -54,6 +55,6 @@ public class CoordinatorTest {
         when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
         when(properties.getVersionSpec()).thenReturn("outofthebox");
 
-        coordinator.run(testSuite);
+        coordinator.run(deploymentPlan, testSuite);
     }
 }

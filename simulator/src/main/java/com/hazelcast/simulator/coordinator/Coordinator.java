@@ -63,6 +63,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static java.lang.String.format;
+import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -87,7 +88,6 @@ public final class Coordinator {
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
 
-    private final DeploymentPlan deploymentPlan;
     private final TestPhase lastTestPhaseToSync;
 
     private RemoteClient remoteClient;
@@ -95,9 +95,7 @@ public final class Coordinator {
 
     private CountDownLatch remoteModeInitialized = new CountDownLatch(1);
 
-    Coordinator(ComponentRegistry componentRegistry,
-                CoordinatorParameters coordinatorParameters,
-                DeploymentPlan deploymentPlan) {
+    Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters) {
 
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
         this.componentRegistry = componentRegistry;
@@ -106,11 +104,10 @@ public final class Coordinator {
         this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
-        this.deploymentPlan = deploymentPlan;
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
     }
 
-    private void logConfiguration() {
+    private void logConfiguration(DeploymentPlan deploymentPlan) {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Total number of Hazelcast member workers: %s", deploymentPlan.getMemberWorkerCount());
         echoLocal("Total number of Hazelcast client workers: %s", deploymentPlan.getClientWorkerCount());
@@ -125,8 +122,8 @@ public final class Coordinator {
         }
     }
 
-    void run(TestSuite testSuite) {
-        logConfiguration();
+    void run(DeploymentPlan deploymentPlan, TestSuite testSuite) {
+        logConfiguration(deploymentPlan);
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
         new InstallVendorTask(
@@ -234,7 +231,7 @@ public final class Coordinator {
         new InstallVendorTask(
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
-                deploymentPlan.getVersionSpecs(),
+                singleton(simulatorProperties.getVersionSpec()),
                 coordinatorParameters.getSessionId()).run();
 
 
@@ -284,7 +281,7 @@ public final class Coordinator {
         new InstallVendorTask(
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
-                Collections.singleton(versionSpec),
+                singleton(versionSpec),
                 coordinatorParameters.getSessionId()).run();
         LOGGER.info("Install successful!");
     }
