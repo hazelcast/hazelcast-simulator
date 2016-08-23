@@ -363,7 +363,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
             echo(warmup ? "Executing Test warmup stop" : "Executing Test stop");
             remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StopTestOperation());
-            waitForPhaseCompletion(RUN);
+            waitForPhaseCompletion(warmup ? WARMUP : RUN);
             echo(warmup ? "Completed Test warmup stop" : "Completed Test stop");
         }
 
