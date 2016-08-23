@@ -18,7 +18,7 @@ package com.hazelcast.simulator.agent.workerprocess;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;

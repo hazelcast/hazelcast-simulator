@@ -2,7 +2,7 @@ package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 

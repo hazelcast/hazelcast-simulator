@@ -35,7 +35,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.test.TestContext.LOCALHOST;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
+import static com.hazelcast.simulator.common.WorkerType.MEMBER;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

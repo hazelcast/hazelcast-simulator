@@ -31,7 +31,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

@@ -16,7 +16,7 @@ import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;

@@ -18,7 +18,7 @@ package com.hazelcast.simulator.protocol.operation;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.TargetType;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 
 import java.util.Collections;
 import java.util.List;

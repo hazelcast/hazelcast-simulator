@@ -17,6 +17,7 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.ShutdownThread;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;

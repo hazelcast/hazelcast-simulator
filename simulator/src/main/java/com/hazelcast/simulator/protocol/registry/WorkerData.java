@@ -17,7 +17,7 @@ package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 
 /**
  * Contains the metadata of a Simulator Worker.

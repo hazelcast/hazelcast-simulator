@@ -3,7 +3,7 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.connector.WorkerConnector.createInstance;

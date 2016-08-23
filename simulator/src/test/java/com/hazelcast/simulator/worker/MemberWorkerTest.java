@@ -2,6 +2,7 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -19,7 +20,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
-import static com.hazelcast.simulator.worker.WorkerType.MEMBER;
+import static com.hazelcast.simulator.common.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

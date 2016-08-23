@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.common;
 
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 

@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 
 import java.util.Map;
 

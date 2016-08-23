@@ -16,7 +16,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
 import org.junit.Before;

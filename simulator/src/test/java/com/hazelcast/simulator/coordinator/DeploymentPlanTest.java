@@ -6,7 +6,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.worker.WorkerType;
+import com.hazelcast.simulator.common.WorkerType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.AgentWorkerMode.MIXED;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
-import static com.hazelcast.simulator.worker.WorkerType.JAVA_CLIENT;
+import static com.hazelcast.simulator.common.WorkerType.JAVA_CLIENT;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertNotNull;
