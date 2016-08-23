@@ -55,14 +55,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * todo:
  * - if the connector has not yet started on the coordinator; then remote will quickly timeout.
- * - Option to kill members
- * - killing random member
  * - Coordinator Remote install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
- * - on startup of cluster interactive I see: INFO  10:41:46 Created via arguments:
- * INFO  10:41:46     Agent  54.211.251.117  10.142.170.116 (C_A1) members:  1, clients:  0, mode:  MIXED,
- * version specs: [outofthebox]
- * this doesn't make a lot of sense since we don't have any members
  * - if there are no workers, don't show a stacktrace.
  * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
  * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
@@ -76,8 +70,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - scaling up down workers
  *
  * done
- * - starting light members
- * - start worker; controlling configuration
  */
 public class CoordinatorRemoteCli implements Closeable {
 

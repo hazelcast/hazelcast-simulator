@@ -16,12 +16,12 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -55,13 +55,6 @@ public final class DeploymentPlan {
             int dedicatedMemberMachineCount) {
         checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberCount, clientCount);
 
-        // if the memberCount has not been specified; we need to calculate it on the fly.
-        if (memberCount == -1) {
-            memberCount = dedicatedMemberMachineCount == 0
-                    ? componentRegistry.agentCount()
-                    : dedicatedMemberMachineCount;
-        }
-
         DeploymentPlan plan = new DeploymentPlan();
 
         plan.initAgentWorkerLayouts(componentRegistry);
@@ -72,7 +65,7 @@ public final class DeploymentPlan {
 
         plan.assign(clientCount, clientType, workerParametersMap.get(clientType));
 
-        plan.printLayout("arguments");
+        plan.printLayout();
 
         return plan;
     }
@@ -90,7 +83,7 @@ public final class DeploymentPlan {
 
         plan.assign(workerCount, workerType, workerParameters);
 
-        plan.printLayout("arguments");
+        plan.printLayout();
 
         return plan;
     }
@@ -119,25 +112,34 @@ public final class DeploymentPlan {
         }
     }
 
+    @SuppressWarnings("checkstyle:npathcomplexity")
     private static void checkParameters(int agentCount, int dedicatedMemberMachineCount,
                                         int memberWorkerCount, int clientWorkerCount) {
         if (agentCount == 0) {
             throw new CommandLineExitException("You need at least one agent in your cluster!"
                     + " Please configure your agents.txt or run Provisioner.");
         }
+
+        if (memberWorkerCount < 0) {
+            throw new CommandLineExitException("memberWorkerCount can't be smaller than 0");
+        }
+
+        if (clientWorkerCount < 0) {
+            throw new CommandLineExitException("clientWorkerCount can't be smaller than 0");
+        }
+
         if (dedicatedMemberMachineCount < 0) {
             throw new CommandLineExitException("dedicatedMemberMachineCount can't be smaller than 0");
         }
+
         if (dedicatedMemberMachineCount > agentCount) {
             throw new CommandLineExitException(format("dedicatedMemberMachineCount %d can't be larger than number of agents %d",
                     dedicatedMemberMachineCount, agentCount));
         }
+
         if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
             throw new CommandLineExitException(
                     "dedicatedMemberMachineCount is too big, there are no machines left for clients!");
-        }
-        if (memberWorkerCount == 0 && clientWorkerCount == 0) {
-            throw new CommandLineExitException("No workers have been defined!");
         }
     }
 
@@ -190,12 +192,11 @@ public final class DeploymentPlan {
         return smallest;
     }
 
-    private void printLayout(String layoutType) {
+    private void printLayout() {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("Cluster layout");
         LOGGER.info(HORIZONTAL_RULER);
 
-        LOGGER.info(format("Created via %s: ", layoutType));
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);

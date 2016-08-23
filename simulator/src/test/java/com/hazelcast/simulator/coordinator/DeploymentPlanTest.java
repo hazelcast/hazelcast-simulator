@@ -102,11 +102,6 @@ public class DeploymentPlanTest {
         createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 1, 3);
     }
 
-    @Test(expected = CommandLineExitException.class)
-    public void testGenerateFromArguments_noWorkersDefined() {
-        createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 0, 0);
-    }
-
     @Test
     public void testGenerateFromArguments_singleMemberWorker() {
         //  when(workerParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(10);
