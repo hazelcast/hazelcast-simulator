@@ -38,7 +38,10 @@ import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,6 +50,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 import static org.apache.log4j.Level.DEBUG;
 import static org.apache.log4j.Level.FATAL;
@@ -109,8 +113,14 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
+                    Map<String, Object> environment = new HashMap<String, Object>();
+                    File pidFile = new File(workerProcess.getWorkerHome(), "worker.pid");
+                    if (pidFile.exists()) {
+                        environment.put("PID", fileAsText(pidFile));
+                    }
                     new BashCommand(operation.getCommand())
                             .setDirectory(workerProcess.getWorkerHome())
+                            .addEnvironment(environment)
                             .execute();
                 }
             });
