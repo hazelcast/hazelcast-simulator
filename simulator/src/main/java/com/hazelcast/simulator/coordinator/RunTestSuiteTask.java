@@ -47,7 +47,6 @@ public class RunTestSuiteTask {
     private final TestPhaseListeners testPhaseListeners;
     private final RemoteClient remoteClient;
     private final PerformanceStatsCollector performanceStatsCollector;
-    //private final WorkerParameters workerParameters;
     private final List<TestCaseRunner> runners = new ArrayList<TestCaseRunner>();
 
     public RunTestSuiteTask(TestSuite testSuite,
