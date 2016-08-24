@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.agent;
+package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.common.FailureType;
 
-public interface FailureSender {
+public interface FailureHandler {
 
-    boolean sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause);
+    boolean handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause);
 }

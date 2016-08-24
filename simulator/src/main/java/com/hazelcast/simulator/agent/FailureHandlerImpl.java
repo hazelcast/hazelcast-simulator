@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.agent;
 
+import com.hazelcast.simulator.agent.workerprocess.FailureHandler;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestSuite;
@@ -30,9 +31,9 @@ import org.apache.log4j.Logger;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
 
-class FailureSenderImpl implements FailureSender {
+class FailureHandlerImpl implements FailureHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(FailureSenderImpl.class);
+    private static final Logger LOGGER = Logger.getLogger(FailureHandlerImpl.class);
 
     private final String agentAddress;
     private final AgentConnector agentConnector;
@@ -41,7 +42,7 @@ class FailureSenderImpl implements FailureSender {
 
     private int failureCount;
 
-    FailureSenderImpl(String agentAddress, AgentConnector agentConnector) {
+    FailureHandlerImpl(String agentAddress, AgentConnector agentConnector) {
         this.agentAddress = agentAddress;
         this.agentConnector = agentConnector;
     }
@@ -51,14 +52,26 @@ class FailureSenderImpl implements FailureSender {
     }
 
     @Override
-    public boolean sendFailureOperation(String message,
-                                        FailureType type,
-                                        WorkerProcess workerProcess,
-                                        String testId,
-                                        String cause) {
-        boolean sentSuccessfully = true;
+    public boolean handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause) {
+        boolean send = true;
+
+        if (!workerProcess.isFailureIgnored()) {
+            send = send(message, type, workerProcess, testId, cause);
+        }
+
+        if (type.isWorkerFinishedFailure()) {
+            SimulatorAddress workerAddress = workerProcess.getAddress();
+            unblockPendingFutures(workerAddress);
+            removeFinishedWorker(workerAddress, type);
+        }
+
+        return send;
+    }
+
+    private boolean send(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause) {
         SimulatorAddress workerAddress = workerProcess.getAddress();
         String workerId = workerProcess.getId();
+
         FailureOperation operation = new FailureOperation(message, type, workerAddress, agentAddress,
                 workerProcess.getHazelcastAddress(), workerId, testId, testSuite, cause);
 
@@ -69,28 +82,23 @@ class FailureSenderImpl implements FailureSender {
                     operation.getLogMessage(++failureCount)));
         }
 
+        boolean send = true;
         try {
             Response response = agentConnector.write(COORDINATOR, operation);
             ResponseType firstErrorResponseType = response.getFirstErrorResponseType();
             if (firstErrorResponseType != ResponseType.SUCCESS) {
                 LOGGER.error(format("Could not send failure to coordinator: %s", firstErrorResponseType));
-                sentSuccessfully = false;
+                send = false;
             } else if (!type.isPoisonPill()) {
                 LOGGER.info("Failure successfully sent to Coordinator!");
             }
         } catch (SimulatorProtocolException e) {
             if (!(e.getCause() instanceof InterruptedException)) {
                 LOGGER.error(format("Could not send failure to coordinator! %s", operation.getFileMessage()), e);
-                sentSuccessfully = false;
+                send = false;
             }
         }
-
-        if (type.isWorkerFinishedFailure()) {
-            unblockPendingFutures(workerAddress);
-            removeFinishedWorker(workerAddress, type);
-        }
-
-        return sentSuccessfully;
+        return send;
     }
 
     private void unblockPendingFutures(SimulatorAddress workerAddress) {

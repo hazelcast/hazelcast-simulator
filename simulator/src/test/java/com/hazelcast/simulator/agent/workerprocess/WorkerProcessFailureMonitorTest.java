@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.FailureSender;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -57,7 +56,7 @@ public class WorkerProcessFailureMonitorTest {
 
     private static int addressIndex;
 
-    private FailureSender failureSender;
+    private FailureHandler failureHandler;
     private WorkerProcessManager workerProcessManager;
 
 
@@ -70,15 +69,15 @@ public class WorkerProcessFailureMonitorTest {
         simulatorHome = setupFakeEnvironment();
         workersHome = new File(simulatorHome, "workers");
 
-        failureSender = mock(FailureSender.class);
-        when(failureSender.sendFailureOperation(
+        failureHandler = mock(FailureHandler.class);
+        when(failureHandler.handle(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(true);
 
         workerProcessManager = new WorkerProcessManager();
 
         workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
-                failureSender,
+                failureHandler,
                 workerProcessManager,
                 DEFAULT_LAST_SEEN_TIMEOUT_SECONDS,
                 DEFAULT_CHECK_INTERVAL);
@@ -94,18 +93,18 @@ public class WorkerProcessFailureMonitorTest {
 
     @Test
     public void testConstructor() {
-        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureHandler, workerProcessManager,
                 DEFAULT_LAST_SEEN_TIMEOUT_SECONDS);
         workerProcessFailureMonitor.start();
 
-        verifyZeroInteractions(failureSender);
+        verifyZeroInteractions(failureHandler);
     }
 
     @Test
     public void testRun_shouldSendNoFailures() {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyZeroInteractions(failureSender);
+        verifyZeroInteractions(failureHandler);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
@@ -123,7 +122,7 @@ public class WorkerProcessFailureMonitorTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                assertFailureType(failureSender, WORKER_OOM);
+                assertFailureType(failureHandler, WORKER_OOM);
             }
         });
     }
@@ -132,7 +131,7 @@ public class WorkerProcessFailureMonitorTest {
     public void testRun_shouldContinueAfterErrorResponse() {
         Response failOnceResponse = mock(Response.class);
         when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
-        when(failureSender.sendFailureOperation(
+        when(failureHandler.handle(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false);
 
@@ -140,12 +139,12 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXIT);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXIT);
     }
 
     @Test
     public void testRun_shouldContinueAfterSendFailure() {
-        when(failureSender.sendFailureOperation(
+        when(failureHandler.handle(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false)
                 .thenReturn(true);
@@ -154,7 +153,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXIT);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXIT);
     }
 
     @Test
@@ -168,7 +167,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
@@ -181,7 +180,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
@@ -194,13 +193,13 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
     }
 
     @Test
     public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withSingleErrorResponse() {
-        when(failureSender.sendFailureOperation(
+        when(failureHandler.handle(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false)
                 .thenReturn(true);
@@ -212,14 +211,14 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
         assertThatRenamedExceptionFileExists(exceptionFile);
     }
 
     @Test
     public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withContinuousErrorResponse() {
-        when(failureSender.sendFailureOperation(
+        when(failureHandler.handle(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false);
 
@@ -229,7 +228,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_EXCEPTION);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
         assertThatExceptionFileDoesNotExist(exceptionFile);
         assertThatRenamedExceptionFileExists(exceptionFile);
     }
@@ -242,7 +241,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureType(failureSender, WORKER_OOM);
+        assertFailureType(failureHandler, WORKER_OOM);
     }
 
     @Test
@@ -253,7 +252,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureType(failureSender, WORKER_OOM);
+        assertFailureType(failureHandler, WORKER_OOM);
     }
 
     @Test
@@ -265,14 +264,14 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureSender, WORKER_TIMEOUT);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_TIMEOUT);
     }
 
     @Test
     public void testRun_shouldNotDetectInactivity_ifDetectionDisabled() {
         WorkerProcess workerProcess = addRunningWorkerProcess();
 
-        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager, -1,
+        workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureHandler, workerProcessManager, -1,
                 DEFAULT_CHECK_INTERVAL);
         workerProcessFailureMonitor.start();
 
@@ -286,7 +285,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyZeroInteractions(failureSender);
+        verifyZeroInteractions(failureHandler);
     }
 
     @Test
@@ -297,7 +296,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyZeroInteractions(failureSender);
+        verifyZeroInteractions(failureHandler);
     }
 
     @Test
@@ -313,7 +312,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        verifyZeroInteractions(failureSender);
+        verifyZeroInteractions(failureHandler);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
@@ -325,7 +324,7 @@ public class WorkerProcessFailureMonitorTest {
         } while (!workerProcess.isFinished());
 
         assertTrue(workerProcess.isFinished());
-        assertFailureType(failureSender, WORKER_FINISHED);
+        assertFailureType(failureHandler, WORKER_FINISHED);
     }
 
     @Test
@@ -335,7 +334,7 @@ public class WorkerProcessFailureMonitorTest {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         assertFalse(workerProcess.isFinished());
-        assertFailureType(failureSender, WORKER_EXIT);
+        assertFailureType(failureHandler, WORKER_EXIT);
     }
 
     @Test
@@ -395,21 +394,21 @@ public class WorkerProcessFailureMonitorTest {
         return exceptionFile;
     }
 
-    private void assertFailureType(FailureSender failureSender, FailureType failureType) {
-        assertFailureTypeAtLeastOnce(failureSender, failureType, times(1));
+    private void assertFailureType(FailureHandler failureHandler, FailureType failureType) {
+        assertFailureTypeAtLeastOnce(failureHandler, failureType, times(1));
     }
 
-    private void assertFailureTypeAtLeastOnce(FailureSender failureSender, FailureType failureType) {
-        assertFailureTypeAtLeastOnce(failureSender, failureType, atLeastOnce());
+    private void assertFailureTypeAtLeastOnce(FailureHandler failureHandler, FailureType failureType) {
+        assertFailureTypeAtLeastOnce(failureHandler, failureType, atLeastOnce());
     }
 
-    private void assertFailureTypeAtLeastOnce(FailureSender failureSender, FailureType failureType, VerificationMode mode) {
-        verify(failureSender, mode).sendFailureOperation(anyString(),
+    private void assertFailureTypeAtLeastOnce(FailureHandler failureHandler, FailureType failureType, VerificationMode mode) {
+        verify(failureHandler, mode).handle(anyString(),
                 eq(failureType),
                 any(WorkerProcess.class),
                 any(String.class),
                 any(String.class));
-        verifyNoMoreInteractions(failureSender);
+        verifyNoMoreInteractions(failureHandler);
     }
 
     private static void assertThatExceptionFileDoesNotExist(final File firstExceptionFile) {
