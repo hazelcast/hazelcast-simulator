@@ -20,5 +20,5 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 public interface TestPhaseListener {
 
-    void completed(TestPhase testPhase, SimulatorAddress workerAddress);
+    void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress);
 }

@@ -276,7 +276,7 @@ public class AgentSmokeTest implements FailureListener {
         }
 
         @Override
-        public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
+        public void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress) {
             latches.get(testPhase).countDown();
         }
 

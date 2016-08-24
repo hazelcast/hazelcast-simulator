@@ -431,7 +431,7 @@ public class RunTestSuiteTaskTest {
             for (TestPhase testPhase : TestPhase.values()) {
                 sleepMillis(100);
                 for (TestData testData : componentRegistry.getTests()) {
-                    testPhaseListeners.updatePhaseCompletion(testData.getTestIndex(), testPhase, workerAddress);
+                    testPhaseListeners.onCompletion(testData.getTestIndex(), testPhase, workerAddress);
                 }
             }
 

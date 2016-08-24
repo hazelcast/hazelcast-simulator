@@ -55,7 +55,7 @@ public class TestPhaseListenersTest {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
         testPhaseListeners.addListener(1, listener);
 
-        testPhaseListeners.updatePhaseCompletion(1, TestPhase.GLOBAL_PREPARE, null);
+        testPhaseListeners.onCompletion(1, TestPhase.GLOBAL_PREPARE, null);
 
         assertEquals(TestPhase.GLOBAL_PREPARE, listener.lastTestPhase);
     }
@@ -65,7 +65,7 @@ public class TestPhaseListenersTest {
         UnitTestPhaseListener listener = new UnitTestPhaseListener();
         testPhaseListeners.addListener(1, listener);
 
-        testPhaseListeners.updatePhaseCompletion(2, TestPhase.GLOBAL_PREPARE, null);
+        testPhaseListeners.onCompletion(2, TestPhase.GLOBAL_PREPARE, null);
 
         assertEquals(null, listener.lastTestPhase);
     }
@@ -75,7 +75,7 @@ public class TestPhaseListenersTest {
         private TestPhase lastTestPhase;
 
         @Override
-        public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
+        public void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress) {
             lastTestPhase = testPhase;
         }
     }

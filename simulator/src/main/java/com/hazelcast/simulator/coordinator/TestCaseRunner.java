@@ -133,7 +133,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     @Override
-    public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
+    public void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress) {
         phaseCompletedMap.get(testPhase).add(workerAddress);
     }
 

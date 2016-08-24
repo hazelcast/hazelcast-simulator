@@ -118,7 +118,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         testPhaseListeners.addListener(1, new TestPhaseListener() {
             @Override
-            public void completed(TestPhase testPhase, SimulatorAddress workerAddress) {
+            public void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress) {
                 if (testPhase.equals(TestPhase.LOCAL_TEARDOWN)) {
                     phaseCompleted.incrementAndGet();
                 }

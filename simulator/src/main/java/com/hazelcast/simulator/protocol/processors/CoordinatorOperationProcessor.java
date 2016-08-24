@@ -107,7 +107,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         }
         int testIndex = sourceAddress.getTestIndex();
         SimulatorAddress workerAddress = sourceAddress.getParent();
-        testPhaseListeners.updatePhaseCompletion(testIndex, operation.getTestPhase(), workerAddress);
+        testPhaseListeners.onCompletion(testIndex, operation.getTestPhase(), workerAddress);
         return SUCCESS;
     }
 }

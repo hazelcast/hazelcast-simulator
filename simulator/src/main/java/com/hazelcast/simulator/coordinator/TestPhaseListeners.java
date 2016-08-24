@@ -51,13 +51,13 @@ public class TestPhaseListeners {
         }
     }
 
-    public void updatePhaseCompletion(int testIndex, TestPhase testPhase, SimulatorAddress workerAddress) {
+    public void onCompletion(int testIndex, TestPhase testPhase, SimulatorAddress workerAddress) {
         TestPhaseListener listener = listenerMap.get(testIndex);
         if (listener == null) {
             LOGGER.error(format("Could not find listener for testIndex %d (%d listeners in total)", testIndex,
                     listenerMap.size()));
             return;
         }
-        listener.completed(testPhase, workerAddress);
+        listener.onCompletion(testPhase, workerAddress);
     }
 }
