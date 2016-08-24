@@ -267,7 +267,12 @@ public final class FileUtils {
             throw new IllegalArgumentException(format("File [%s] is not a directory", dir.getAbsolutePath()));
         }
 
-        if (!dir.mkdirs()) {
+        // we don't care about the result because multiple threads are allowed to call this method concurrently
+        // and therfore mkdir can return false if the directory has been created by another thread.
+        dir.mkdirs();
+
+        // we just need to make sure the directory is created.
+        if (!dir.exists()) {
             throw new UncheckedIOException("Could not create directory: " + dir.getAbsolutePath());
         }
 
