@@ -15,10 +15,6 @@
  */
 package com.hazelcast.simulator.common;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-
 public enum TestPhase {
 
     SETUP("setup", false),
@@ -72,19 +68,4 @@ public enum TestPhase {
         return builder.toString();
     }
 
-    public static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean parallel,
-                                                                     TestPhase latestTestPhaseToSync) {
-        if (!parallel) {
-            return null;
-        }
-        Map<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
-        boolean setTestCount = true;
-        for (TestPhase testPhase : TestPhase.values()) {
-            testPhaseSyncMap.put(testPhase, new CountDownLatch(setTestCount ? testCount : 0));
-            if (testPhase.equals(latestTestPhaseToSync)) {
-                setTestCount = false;
-            }
-        }
-        return testPhaseSyncMap;
-    }
 }

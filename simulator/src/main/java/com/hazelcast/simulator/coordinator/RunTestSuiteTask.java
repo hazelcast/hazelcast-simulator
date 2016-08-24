@@ -28,9 +28,9 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.common.TestPhase.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
@@ -187,5 +187,21 @@ public class RunTestSuiteTask {
             echoer.echo("Finished running of %d tests (%s)", testCount, secondsToHuman(getElapsedSeconds(started)));
         }
         echoer.echo(HORIZONTAL_RULER);
+    }
+
+    static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean parallel,
+                                                                     TestPhase latestTestPhaseToSync) {
+        if (!parallel) {
+            return null;
+        }
+        Map<TestPhase, CountDownLatch> testPhaseSyncMap = new ConcurrentHashMap<TestPhase, CountDownLatch>();
+        boolean setTestCount = true;
+        for (TestPhase testPhase : TestPhase.values()) {
+            testPhaseSyncMap.put(testPhase, new CountDownLatch(setTestCount ? testCount : 0));
+            if (testPhase.equals(latestTestPhaseToSync)) {
+                setTestCount = false;
+            }
+        }
+        return testPhaseSyncMap;
     }
 }
