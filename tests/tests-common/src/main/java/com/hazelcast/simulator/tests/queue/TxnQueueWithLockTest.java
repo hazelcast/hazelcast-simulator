@@ -20,10 +20,11 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.transaction.TransactionContext;
 
 import static org.junit.Assert.assertFalse;
@@ -33,63 +34,54 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest extends AbstractTest {
 
-    public int threadCount = 5;
+    @TimeStep
+    public void timeStep(ThreadState state) {
+        try {
+            ILock firstLock = targetInstance.getLock(name + "l1");
+            firstLock.lock();
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        for (int i = 0; i < threadCount; i++) {
-            spawner.spawn(new Worker());
+            TransactionContext ctx = targetInstance.newTransactionContext();
+            try {
+                ctx.beginTransaction();
+
+                TransactionalQueue<Integer> queue = ctx.getQueue(name + 'q');
+                queue.offer(1);
+
+                ILock secondLock = targetInstance.getLock(name + "l2");
+                secondLock.lock();
+                secondLock.unlock();
+
+                queue.take();
+
+                ctx.commitTransaction();
+                state.counter.committed++;
+
+            } catch (Exception txnException) {
+                try {
+                    ctx.rollbackTransaction();
+                    state.counter.rolled++;
+
+                    logger.severe(name + ": Exception in txn " + state.counter, txnException);
+                } catch (Exception rollException) {
+                    state.counter.failedRollbacks++;
+                    logger.severe(name + ": Exception in roll " + state.counter, rollException);
+                }
+            } finally {
+                firstLock.unlock();
+            }
+        } catch (Exception e) {
+            logger.severe(name + ": outer Exception" + state.counter, e);
         }
-        spawner.awaitCompletion();
     }
 
-    private class Worker implements Runnable {
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        IList<TxnCounter> results = targetInstance.getList(name + "results");
+        results.add(state.counter);
+    }
+
+    public class ThreadState extends BaseThreadState {
         private TxnCounter counter = new TxnCounter();
-
-        @Override
-        public void run() {
-            while (!testContext.isStopped()) {
-                try {
-                    ILock firstLock = targetInstance.getLock(name + "l1");
-                    firstLock.lock();
-
-                    TransactionContext ctx = targetInstance.newTransactionContext();
-                    try {
-                        ctx.beginTransaction();
-
-                        TransactionalQueue<Integer> queue = ctx.getQueue(name + 'q');
-                        queue.offer(1);
-
-                        ILock secondLock = targetInstance.getLock(name + "l2");
-                        secondLock.lock();
-                        secondLock.unlock();
-
-                        queue.take();
-
-                        ctx.commitTransaction();
-                        counter.committed++;
-
-                    } catch (Exception txnException) {
-                        try {
-                            ctx.rollbackTransaction();
-                            counter.rolled++;
-
-                            logger.severe(name + ": Exception in txn " + counter, txnException);
-                        } catch (Exception rollException) {
-                            counter.failedRollbacks++;
-                            logger.severe(name + ": Exception in roll " + counter, rollException);
-                        }
-                    } finally {
-                        firstLock.unlock();
-                    }
-                } catch (Exception e) {
-                    logger.severe(name + ": outer Exception" + counter, e);
-                }
-            }
-            IList<TxnCounter> results = targetInstance.getList(name + "results");
-            results.add(counter);
-        }
     }
 
     @Verify
