@@ -51,4 +51,20 @@ public @interface TimeStep {
      * @return the probability.
      */
     double prob() default 1;
+
+    /**
+     * Normally all timeStep methods will be executed by a single executionGroup of threads. But in some case you need to have
+     * some methods executed by one executionGroup of threads, and other methods by other groups threads. A good example would
+     * be a produce/consume example where the produce timeStep methods are called by different methods than consume timestep
+     * methods.
+     *
+     * Normally threadCount is configured using 'threadCount=5'. In case of 'foobar' executionGroup, the threadCount is
+     * configured using 'foobarThreadCount=5'.
+     *
+     * This setting is copied from JMH, see:
+     * http://javadox.com/org.openjdk.jmh/jmh-core/0.9/org/openjdk/jmh/annotations/Group.html
+     *
+     * @return the executionGroup.
+     */
+    String executionGroup() default "";
 }

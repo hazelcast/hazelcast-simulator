@@ -22,11 +22,15 @@ public class TimeStepModel_probabilityTest {
                 + "}\n", probs);
 
         assertProbability(model, "timeStep1", 1.0);
-        assertNull(model.getTimeStepProbabilityArray());
+        assertNull(model.getTimeStepProbabilityArray(""));
     }
 
     private void assertProbability(TimeStepModel model, String method, double value) {
-        assertEquals(value, model.getProbability(method).getValue(), 0.001);
+        assertEquals(value, model.getProbability("", method).getValue(), 0.001);
+    }
+
+    private void assertProbability(TimeStepModel model, String group, String method, double value) {
+        assertEquals(value, model.getProbability(group, method).getValue(), 0.001);
     }
 
     @Test(expected = IllegalTestException.class)
@@ -86,7 +90,52 @@ public class TimeStepModel_probabilityTest {
 
         assertProbability(model, "timeStep1", 1.0);
         assertProbability(model, "timeStep2", 0.0);
-        assertNull(model.getTimeStepProbabilityArray());
+        assertNull(model.getTimeStepProbabilityArray(""));
+    }
+
+    @Test
+    public void test_singleActiveMethodProperties_multipleProbabilities() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+
+        TimeStepModel model = loadModel("public class CLAZZ{\n"
+                + "@TimeStep(prob=0.10, executionGroup=\"a\") public void a1(){}\n"
+                + "@TimeStep(prob=0.90, executionGroup=\"a\") public void a2(){}\n"
+                + "@TimeStep(prob=0.20, executionGroup=\"b\") public void b1(){}\n"
+                + "@TimeStep(prob=0.80, executionGroup=\"b\") public void b2(){}\n"
+
+                + "}\n", probs);
+
+        assertProbability(model, "a", "a1", 0.10);
+        assertProbability(model, "a", "a2", 0.90);
+        assertProbability(model, "b", "b1", 0.20);
+        assertProbability(model, "b", "b2", 0.80);
+
+        assertNotNull(model.getTimeStepProbabilityArray("a"));
+        assertNotNull(model.getTimeStepProbabilityArray("b"));
+    }
+
+    @Test
+    public void test_singleActiveMethodExternalProperties_multipleProbabilities() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+        probs.put("a1Prob", 0.05);
+        probs.put("a2Prob", 0.95);
+        probs.put("b1Prob", 0.03);
+        probs.put("b2Prob", 0.97);
+
+        TimeStepModel model = loadModel("public class CLAZZ{\n"
+                + "@TimeStep(prob=0.10, executionGroup=\"a\") public void a1(){}\n"
+                + "@TimeStep(prob=0.90, executionGroup=\"a\") public void a2(){}\n"
+                + "@TimeStep(prob=0.20, executionGroup=\"b\") public void b1(){}\n"
+                + "@TimeStep(prob=0.80, executionGroup=\"b\") public void b2(){}\n"
+                + "}\n", probs);
+
+        assertProbability(model, "a", "a1", 0.05);
+        assertProbability(model, "a", "a2", 0.95);
+        assertProbability(model, "b", "b1", 0.03);
+        assertProbability(model, "b", "b2", 0.97);
+
+        assertNotNull(model.getTimeStepProbabilityArray("a"));
+        assertNotNull(model.getTimeStepProbabilityArray("b"));
     }
 
     @Test
@@ -100,7 +149,7 @@ public class TimeStepModel_probabilityTest {
 
         assertProbability(model, "timeStep1", 1.0);
         assertProbability(model, "timeStep2", 0.0);
-        assertNull(model.getTimeStepProbabilityArray());
+        assertNull(model.getTimeStepProbabilityArray(""));
     }
 
     @Test
@@ -114,7 +163,7 @@ public class TimeStepModel_probabilityTest {
 
         assertProbability(model, "timeStep1", 0.5);
         assertProbability(model, "timeStep2", 0.5);
-        assertNotNull(model.getTimeStepProbabilityArray());
+        assertNotNull(model.getTimeStepProbabilityArray(""));
     }
 
     @Test
@@ -128,7 +177,7 @@ public class TimeStepModel_probabilityTest {
 
         assertProbability(model, "timeStep1", 0.2);
         assertProbability(model, "timeStep2", 0.8);
-        assertNotNull(model.getTimeStepProbabilityArray());
+        assertNotNull(model.getTimeStepProbabilityArray(""));
     }
 
     @Test
@@ -144,7 +193,7 @@ public class TimeStepModel_probabilityTest {
 
         assertProbability(model, "timeStep1", 0.3);
         assertProbability(model, "timeStep2", 0.7);
-        assertNotNull(model.getTimeStepProbabilityArray());
+        assertNotNull(model.getTimeStepProbabilityArray(""));
     }
 
     private TimeStepModel loadModel(String code, Map<String, Double> probs) {

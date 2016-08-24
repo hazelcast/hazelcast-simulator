@@ -12,8 +12,8 @@ public class ${className} extends TimeStepRunner {
 
 <#if metronomeClass??>
 </#if>
-    public ${className}(${testInstanceClass} testInstance, TimeStepModel model) {
-        super(testInstance, model);
+    public ${className}(${testInstanceClass} testInstance, TimeStepModel model, String executionGroup) {
+        super(testInstance, model, executionGroup);
     }
 
     @Override

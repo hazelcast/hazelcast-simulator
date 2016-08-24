@@ -31,4 +31,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface BeforeRun {
+    /**
+     * The execution executionGroup. For more information see {@link TimeStep}.
+     *
+     * @return the execution executionGroup.
+     */
+    String executionGroup() default "";
 }
