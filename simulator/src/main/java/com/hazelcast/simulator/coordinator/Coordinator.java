@@ -432,9 +432,13 @@ public final class Coordinator {
         }
 
         SimulatorAddress memberAddress = randomMember.getAddress();
+
         componentRegistry.removeWorker(memberAddress);
+
         coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
+
         coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
+
         LOGGER.info("Kill send to worker [" + memberAddress + "]");
     }
 

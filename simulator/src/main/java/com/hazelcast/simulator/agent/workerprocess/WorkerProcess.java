@@ -33,6 +33,7 @@ public class WorkerProcess {
     private volatile boolean isFinished;
     private volatile Process process;
     private volatile String hzAddress;
+    private volatile boolean failureIgnored;
 
     public WorkerProcess(SimulatorAddress address, String id, File workerHome) {
         this.address = address;
@@ -94,5 +95,13 @@ public class WorkerProcess {
 
     public void setHzAddress(String memberAddress) {
         this.hzAddress = memberAddress;
+    }
+
+    public boolean isFailureIgnored() {
+        return failureIgnored;
+    }
+
+    public void setFailureIgnored(boolean failureIgnored) {
+        this.failureIgnored = failureIgnored;
     }
 }

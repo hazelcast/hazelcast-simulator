@@ -31,10 +31,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class FailureSenderImplTest {
+public class FailureHandlerImplTest {
 
     private static final String FAILURE_MESSAGE = "failure message";
-    private static final String SESSION_ID = "FailureSenderImplTest";
+    private static final String SESSION_ID = "FailureHandlerImplTest";
     private static final String CAUSE = "any stacktrace";
 
     private SimulatorAddress workerAddress;
@@ -42,7 +42,7 @@ public class FailureSenderImplTest {
 
     private AgentConnector agentConnector;
 
-    private FailureSenderImpl failureSender;
+    private FailureHandlerImpl failureSender;
 
     private ResponseFuture responseFuture;
 
@@ -64,13 +64,13 @@ public class FailureSenderImplTest {
 
         TestSuite testSuite = new TestSuite();
 
-        failureSender = new FailureSenderImpl("127.0.0.1", agentConnector);
+        failureSender = new FailureHandlerImpl("127.0.0.1", agentConnector);
         failureSender.setTestSuite(testSuite);
     }
 
     @Test
     public void testSendFailureOperation() {
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
+        boolean success = failureSender.handle(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
 
         assertTrue(success);
         assertFalse(responseFuture.isDone());
@@ -78,7 +78,7 @@ public class FailureSenderImplTest {
 
     @Test(timeout = 10000)
     public void testSendFailureOperation_whenWorkerIsFinished_thenUnblockResponseFutureByFailure() throws Exception {
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, SESSION_ID, CAUSE);
+        boolean success = failureSender.handle(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, SESSION_ID, CAUSE);
 
         assertTrue(success);
         assertTrue(responseFuture.isDone());
@@ -90,7 +90,7 @@ public class FailureSenderImplTest {
         Response failureResponse = new Response(1, COORDINATOR, workerAddress, FAILURE_COORDINATOR_NOT_FOUND);
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(failureResponse);
 
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
+        boolean success = failureSender.handle(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
 
         assertFalse(success);
         assertFalse(responseFuture.isDone());
@@ -101,7 +101,7 @@ public class FailureSenderImplTest {
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception"));
 
-        boolean success = failureSender.sendFailureOperation(FAILURE_MESSAGE, NETTY_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
+        boolean success = failureSender.handle(FAILURE_MESSAGE, NETTY_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
 
         assertFalse(success);
         assertFalse(responseFuture.isDone());

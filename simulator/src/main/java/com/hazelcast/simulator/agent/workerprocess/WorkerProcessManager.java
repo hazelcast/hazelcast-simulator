@@ -44,8 +44,10 @@ public class WorkerProcessManager {
     }
 
     public void ignore(SimulatorAddress workerAddress) {
-        LOGGER.info("Dropping worker [" + workerAddress + "]");
-        workerProcesses.remove(workerAddress);
+        WorkerProcess workerProcess = workerProcesses.get(workerAddress);
+        if (workerProcess != null) {
+            workerProcess.setFailureIgnored(true);
+        }
     }
 
     public Collection<WorkerProcess> getWorkerProcesses() {

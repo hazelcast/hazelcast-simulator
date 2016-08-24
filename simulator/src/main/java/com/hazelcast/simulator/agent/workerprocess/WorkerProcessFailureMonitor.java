@@ -15,13 +15,11 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.FailureSender;
 import com.hazelcast.simulator.common.FailureType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
@@ -34,6 +32,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class WorkerProcessFailureMonitor {
@@ -44,17 +43,17 @@ public class WorkerProcessFailureMonitor {
 
     private final MonitorThread monitorThread;
 
-    public WorkerProcessFailureMonitor(FailureSender failureSender,
+    public WorkerProcessFailureMonitor(FailureHandler failureHandler,
                                        WorkerProcessManager workerProcessManager,
                                        int lastSeenTimeoutSeconds) {
-        this(failureSender, workerProcessManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
+        this(failureHandler, workerProcessManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
     }
 
-    WorkerProcessFailureMonitor(FailureSender failureSender,
+    WorkerProcessFailureMonitor(FailureHandler failureHandler,
                                 WorkerProcessManager workerProcessManager,
                                 int lastSeenTimeoutSeconds,
                                 int checkIntervalMillis) {
-        monitorThread = new MonitorThread(failureSender, workerProcessManager, lastSeenTimeoutSeconds, checkIntervalMillis);
+        monitorThread = new MonitorThread(failureHandler, workerProcessManager, lastSeenTimeoutSeconds, checkIntervalMillis);
     }
 
     public void start() {
@@ -83,7 +82,7 @@ public class WorkerProcessFailureMonitor {
 
     private final class MonitorThread extends Thread {
 
-        private final FailureSender failureSender;
+        private final FailureHandler failureHandler;
         private final WorkerProcessManager workerProcessManager;
         private final int lastSeenTimeoutSeconds;
         private final int checkIntervalMillis;
@@ -91,14 +90,14 @@ public class WorkerProcessFailureMonitor {
         private volatile boolean running = true;
         private volatile boolean detectTimeouts;
 
-        private MonitorThread(FailureSender failureSender,
+        private MonitorThread(FailureHandler failureHandler,
                               WorkerProcessManager workerProcessManager,
                               int lastSeenTimeoutSeconds,
                               int checkIntervalMillis) {
             super("WorkerJvmFailureMonitorThread");
             setDaemon(true);
 
-            this.failureSender = failureSender;
+            this.failureHandler = failureHandler;
             this.workerProcessManager = workerProcessManager;
             this.lastSeenTimeoutSeconds = lastSeenTimeoutSeconds;
             this.checkIntervalMillis = checkIntervalMillis;
@@ -161,7 +160,7 @@ public class WorkerProcessFailureMonitor {
                 }
 
                 // we delete or rename the exception file so that we don't detect the same exception again
-                boolean send = failureSender.sendFailureOperation(
+                boolean send = failureHandler.handle(
                         "Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess, testId, cause);
 
                 if (send) {
@@ -199,7 +198,7 @@ public class WorkerProcessFailureMonitor {
                 return;
             }
 
-            long elapsed = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - workerProcess.getLastSeen());
+            long elapsed = MILLISECONDS.toSeconds(System.currentTimeMillis() - workerProcess.getLastSeen());
             if (elapsed > 0 && elapsed % lastSeenTimeoutSeconds == 0) {
                 sendFailureOperation(
                         format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerProcess);
@@ -229,7 +228,7 @@ public class WorkerProcessFailureMonitor {
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess) {
-            failureSender.sendFailureOperation(message, type, workerProcess, null, null);
+            failureHandler.handle(message, type, workerProcess, null, null);
         }
     }
 
