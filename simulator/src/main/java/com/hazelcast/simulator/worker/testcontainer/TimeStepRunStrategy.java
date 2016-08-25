@@ -21,6 +21,8 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
@@ -36,15 +38,14 @@ public class TimeStepRunStrategy extends RunStrategy {
 
     private static final Logger LOGGER = Logger.getLogger(TimeStepRunStrategy.class);
 
-    // properties
-    public int threadCount = DEFAULT_THREAD_COUNT;
-
     private final TestContext testContext;
     private final Object testInstance;
-    private final Class runnerClass;
     private final TimeStepModel timeStepModel;
     private final PropertyBinding propertyBinding;
     private volatile TimeStepRunner[] runners;
+    private final Map<String, Class> runnerClassMap = new HashMap<String, Class>();
+    private final Map<String, Integer> threadCountMap = new HashMap<String, Integer>();
+    private int totalThreadCount;
 
     public TimeStepRunStrategy(TestContainer testContainer) {
         this.propertyBinding = testContainer.getPropertyBinding();
@@ -53,11 +54,34 @@ public class TimeStepRunStrategy extends RunStrategy {
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
         this.timeStepModel = new TimeStepModel(testInstance.getClass(), propertyBinding);
-        this.runnerClass = new TimeStepRunnerCodeGenerator().compile(
-                testContainer.getTestCase().getId(),
-                timeStepModel,
-                propertyBinding.getMetronomeClass(),
-                propertyBinding.getProbeClass());
+
+        for (String executionGroup : timeStepModel.getExecutionGroups()) {
+            Class runnerClass = new TimeStepRunnerCodeGenerator().compile(
+                    testContainer.getTestCase().getId(),
+                    executionGroup,
+                    timeStepModel,
+                    propertyBinding.getMetronomeClass(),
+                    propertyBinding.getProbeClass());
+            runnerClassMap.put(executionGroup, runnerClass);
+
+            int threadCount = loadThreadCount(executionGroup);
+            totalThreadCount += threadCount;
+            threadCountMap.put(executionGroup, threadCount);
+        }
+    }
+
+    private int loadThreadCount(String group) {
+        String threadCountName = group.equals("") ? "threadCount" : group + "ThreadCount";
+        String value = propertyBinding.loadProperty(threadCountName);
+        if (value == null) {
+            return DEFAULT_THREAD_COUNT;
+        } else {
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new IllegalTestException("property " + threadCountName + " with value '" + value + "' is not an Integer");
+            }
+        }
     }
 
     @Override
@@ -78,9 +102,9 @@ public class TimeStepRunStrategy extends RunStrategy {
             @Override
             public Object call() throws Exception {
                 try {
-                    LOGGER.info(format("Spawning %d worker threads for running %s", threadCount, testContext.getTestId()));
+                    LOGGER.info(format("Spawning %d worker threads for running %s", totalThreadCount, testContext.getTestId()));
 
-                    if (threadCount <= 0) {
+                    if (totalThreadCount <= 0) {
                         return null;
                     }
                     runners = createRunners();
@@ -102,9 +126,9 @@ public class TimeStepRunStrategy extends RunStrategy {
             @Override
             public Object call() throws Exception {
                 try {
-                    LOGGER.info(format("Spawning %d worker threads for warmup %s", threadCount, testContext.getTestId()));
+                    LOGGER.info(format("Spawning %d worker threads for warmup %s", totalThreadCount, testContext.getTestId()));
 
-                    if (threadCount <= 0) {
+                    if (totalThreadCount <= 0) {
                         return null;
                     }
                     runners = createRunners();
@@ -132,13 +156,22 @@ public class TimeStepRunStrategy extends RunStrategy {
 
     @SuppressWarnings("unchecked")
     private TimeStepRunner[] createRunners() throws Exception {
-        TimeStepRunner[] tmpRunners = new TimeStepRunner[threadCount];
-        Constructor<TimeStepRunner> constructor = runnerClass.getConstructor(testInstance.getClass(), TimeStepModel.class);
-        for (int i = 0; i < threadCount; i++) {
-            TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel);
-            propertyBinding.bind(runner);
-            tmpRunners[i] = runner;
+        TimeStepRunner[] returnRunners = new TimeStepRunner[totalThreadCount];
+
+        int k = 0;
+        for (String executionGroup : timeStepModel.getExecutionGroups()) {
+            Class runnerClass = runnerClassMap.get(executionGroup);
+            Constructor<TimeStepRunner> constructor = runnerClass
+                    .getConstructor(testInstance.getClass(), TimeStepModel.class, String.class);
+
+            for (int thread = 0; thread < threadCountMap.get(executionGroup); thread++) {
+                TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel, executionGroup);
+                propertyBinding.bind(runner);
+                returnRunners[k] = runner;
+                k++;
+            }
         }
-        return tmpRunners;
+
+        return returnRunners;
     }
 }

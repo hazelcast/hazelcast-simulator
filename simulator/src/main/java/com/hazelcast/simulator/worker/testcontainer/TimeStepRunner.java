@@ -38,6 +38,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     @InjectMetronome
     protected Metronome metronome;
 
+    protected final String executionGroup;
     protected final Object threadState;
     protected final Object testInstance;
     protected final AtomicLong iterations = new AtomicLong();
@@ -45,16 +46,21 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     protected final byte[] timeStepProbabilities;
     protected final Map<String, Probe> probeMap = new HashMap<String, Probe>();
 
-    public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel) {
+    public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel, String executionGroup) {
         this.testInstance = testInstance;
         this.timeStepModel = timeStepModel;
+        this.executionGroup = executionGroup;
         this.threadState = initThreadState();
-        this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray();
+        this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray(executionGroup);
+    }
+
+    public String getExecutionGroup() {
+        return executionGroup;
     }
 
     @Override
     public void bind(PropertyBinding binding) {
-        for (Method method : timeStepModel.getActiveTimeStepMethods()) {
+        for (Method method : timeStepModel.getActiveTimeStepMethods(executionGroup)) {
             Probe probe = binding.getOrCreateProbe(method.getName(), false);
             if (probe != null) {
                 probeMap.put(method.getName(), probe);
@@ -78,7 +84,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     }
 
     private Object initThreadState() {
-        Constructor constructor = timeStepModel.getThreadStateConstructor();
+        Constructor constructor = timeStepModel.getThreadStateConstructor(executionGroup);
         if (constructor == null) {
             return null;
         }
@@ -92,12 +98,12 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
         } catch (Exception e) {
             throw new IllegalTestException(
                     format("Failed to create an instance of thread state class '%s'",
-                            timeStepModel.getThreadStateClass().getName()), e);
+                            timeStepModel.getThreadStateClass(executionGroup).getName()), e);
         }
     }
 
     private void beforeRun() throws Exception {
-        for (Method beforeRunMethod : timeStepModel.getBeforeRunMethods()) {
+        for (Method beforeRunMethod : timeStepModel.getBeforeRunMethods(executionGroup)) {
             run(beforeRunMethod);
         }
     }
@@ -105,7 +111,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     protected abstract void timeStepLoop() throws Exception;
 
     private void afterRun() throws Exception {
-        for (Method afterRunMethod : timeStepModel.getAfterRunMethods()) {
+        for (Method afterRunMethod : timeStepModel.getAfterRunMethods(executionGroup)) {
             run(afterRunMethod);
         }
     }

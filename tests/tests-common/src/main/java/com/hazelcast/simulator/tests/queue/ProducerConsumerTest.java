@@ -18,27 +18,21 @@ package com.hazelcast.simulator.tests.queue;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 
-import java.io.Serializable;
-import java.util.Random;
-
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static org.junit.Assert.assertEquals;
 
 public class ProducerConsumerTest extends AbstractTest {
 
     // properties
-    public int producerCount = 4;
-    public int consumerCount = 4;
     public int maxIntervalMillis = 1000;
 
     private IAtomicLong produced;
-    private IQueue<Work> workQueue;
+    private IQueue<Long> workQueue;
     private IAtomicLong consumed;
 
     @Setup
@@ -48,16 +42,41 @@ public class ProducerConsumerTest extends AbstractTest {
         workQueue = targetInstance.getQueue(name + ":WorkQueue");
     }
 
-    @Run
-    public void run() {
-        ThreadSpawner spawner = new ThreadSpawner(name);
-        for (int i = 0; i < producerCount; i++) {
-            spawner.spawn("ProducerThread", new Producer(i));
+    @TimeStep(executionGroup = "producer")
+    public void produce(ProducerState state) throws Exception {
+        Thread.sleep(state.randomInt(maxIntervalMillis));
+        workQueue.offer(new Long(0));
+        state.produced++;
+    }
+
+    @TimeStep(executionGroup = "producer")
+    public void afterRun(ProducerState state) {
+        produced.addAndGet(state.produced);
+        workQueue.add(-1L);
+    }
+
+    public class ProducerState extends BaseThreadState {
+        long produced;
+    }
+
+    @TimeStep(executionGroup = "consumer")
+    public void consume(ConsumerState state) throws Exception {
+        Long item = workQueue.take();
+        if (item.equals(-1L)) {
+            return;
         }
-        for (int i = 0; i < consumerCount; i++) {
-            spawner.spawn("ConsumerThread", new Consumer(i));
-        }
-        spawner.awaitCompletion();
+
+        state.consumed++;
+        Thread.sleep(state.randomInt(maxIntervalMillis));
+    }
+
+    @TimeStep(executionGroup = "consumer")
+    public void afterRun(ConsumerState state) {
+        consumed.addAndGet(state.consumed);
+    }
+
+    public class ConsumerState extends BaseThreadState {
+        long consumed;
     }
 
     @Verify
@@ -72,72 +91,5 @@ public class ProducerConsumerTest extends AbstractTest {
         produced.destroy();
         workQueue.destroy();
         consumed.destroy();
-    }
-
-    private class Producer implements Runnable {
-        final Random rand = new Random(System.currentTimeMillis());
-        final int id;
-
-        public Producer(int id) {
-            this.id = id;
-        }
-
-        @Override
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                try {
-                    Thread.sleep(rand.nextInt(maxIntervalMillis) * consumerCount);
-                    produced.incrementAndGet();
-                    workQueue.offer(new Work());
-
-                    iteration++;
-                    if (iteration % 10 == 0) {
-                        logger.info(String.format(
-                                "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
-                                Thread.currentThread().getName(), id, iteration,
-                                produced.get(), workQueue.size(), consumed.get()
-                        ));
-                    }
-                } catch (Exception e) {
-                    throw rethrow(e);
-                }
-            }
-        }
-    }
-
-    private class Consumer implements Runnable {
-        Random rand = new Random(System.currentTimeMillis());
-        int id;
-
-        public Consumer(int id) {
-            this.id = id;
-        }
-
-        @Override
-        public void run() {
-            long iteration = 0;
-            while (!testContext.isStopped()) {
-                try {
-                    workQueue.take();
-                    consumed.incrementAndGet();
-                    Thread.sleep(rand.nextInt(maxIntervalMillis) * producerCount);
-
-                    iteration++;
-                    if (iteration % 20 == 0) {
-                        logger.info(String.format(
-                                "%s prod-id: %d, iteration: %d, produced: %d, workQueue: %d, consumed: %d",
-                                Thread.currentThread().getName(), id, iteration,
-                                produced.get(), workQueue.size(), consumed.get()
-                        ));
-                    }
-                } catch (Exception e) {
-                    throw rethrow(e);
-                }
-            }
-        }
-    }
-
-    static class Work implements Serializable {
     }
 }

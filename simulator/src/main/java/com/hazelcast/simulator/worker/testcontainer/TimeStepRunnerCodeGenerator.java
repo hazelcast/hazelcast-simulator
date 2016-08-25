@@ -57,14 +57,21 @@ class TimeStepRunnerCodeGenerator {
 
     Class compile(
             String testCaseId,
+            String executionGroup,
             TimeStepModel timeStepModel,
             Class<? extends Metronome> metronomeClass,
             Class<? extends Probe> probeClass) {
-        String className = timeStepModel.getTestClass().getSimpleName() + "Runner";
+        String className = timeStepModel.getTestClass().getSimpleName();
+        if (!"".equals(executionGroup)) {
+            className += "_" + executionGroup + "_";
+
+        }
+        className += "Runner";
+
         if (!"".equals(testCaseId)) {
             className += testCaseId;
         }
-        JavaFileObject file = createJavaFileObject(className, metronomeClass, timeStepModel, probeClass);
+        JavaFileObject file = createJavaFileObject(className, executionGroup, metronomeClass, timeStepModel, probeClass);
         return compile(javaCompiler, file, className);
     }
 
@@ -113,6 +120,7 @@ class TimeStepRunnerCodeGenerator {
 
     private JavaFileObject createJavaFileObject(
             String className,
+            String executionGroup,
             Class<? extends Metronome> metronomeClass,
             TimeStepModel timeStepModel,
             Class<? extends Probe> probeClass) {
@@ -126,11 +134,11 @@ class TimeStepRunnerCodeGenerator {
             Map<String, Object> root = new HashMap<String, Object>();
             root.put("testInstanceClass", getClassName(timeStepModel.getTestClass()));
             root.put("metronomeClass", getMetronomeClass(metronomeClass));
-            root.put("timeStepMethods", timeStepModel.getActiveTimeStepMethods());
+            root.put("timeStepMethods", timeStepModel.getActiveTimeStepMethods(executionGroup));
             root.put("probeClass", getClassName(probeClass));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
             root.put("Probe", Probe.class);
-            root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass()));
+            root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass(executionGroup)));
             root.put("hasProbe", new HasProbeMethod());
             root.put("className", className);
 

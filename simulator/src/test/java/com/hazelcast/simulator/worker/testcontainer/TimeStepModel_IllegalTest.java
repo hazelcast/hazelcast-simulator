@@ -214,6 +214,29 @@ public class TimeStepModel_IllegalTest {
                 + "}\n");
     }
 
+    // ===========================================
+
+    @Test
+    public void test_singleAfterRun() {
+        assertBroken("class CLAZZ{\n"
+                + "@AfterRun public void afterRun(){}\n"
+                + "}\n");
+    }
+
+    @Test
+    public void test_singleBeforeRun() {
+        assertBroken("class CLAZZ{\n"
+                + "@BeforeRun public void beforeRun(){}\n"
+                + "}\n");
+    }
+
+    @Test
+    public void test_invalidGroupName() {
+        assertBroken("class CLAZZ{\n"
+                + "@TimeStep(executionGroup=\".\") public void timeStep(){}\n"
+                + "}\n");
+    }
+
     private static void assertBroken(String source) {
         String header = "import java.util.*;\n"
                 + " import com.hazelcast.simulator.test.*;\n"
