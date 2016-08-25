@@ -24,16 +24,16 @@ import com.hazelcast.query.PredicateBuilder;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.tests.map.helpers.PredicateOperationCounter;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -48,31 +48,15 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * In this test we are using different predicate methods to execute a query on a map of {@link Employee} objects.
- *
+ * <p>
  * This test also concurrently updates and modifies the employee objects in the map while the predicate queries are executing. The
  * test may also destroy the map while while predicate are executing. We verify the result of every query to ensure that the
  * objects returned fit the requirements of the query.
  */
 public class MapPredicateTest extends AbstractTest {
 
-    private enum Operation {
-        PREDICATE_BUILDER,
-        SQL_STRING,
-        PAGING_PREDICATE,
-        UPDATE_EMPLOYEE,
-        DESTROY_MAP
-    }
-
     public int keyCount = 100;
     public int pageSize = 5;
-
-    public double predicateBuilderProb = 0.2;
-    public double sqlStringProb = 0.2;
-    public double pagePredicateProb = 0.2;
-    public double updateEmployeeProb = 0.3;
-    public double destroyProb = 0.1;
-
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
 
     private IMap<Integer, Employee> map;
     private IList<PredicateOperationCounter> operationCounterList;
@@ -85,12 +69,6 @@ public class MapPredicateTest extends AbstractTest {
         operationCounterList = targetInstance.getList(name + "OperationCounter");
 
         baseAssertMessage = format("%s: %%s not matching %%s", name);
-
-        operationSelectorBuilder.addOperation(Operation.PREDICATE_BUILDER, predicateBuilderProb)
-                .addOperation(Operation.SQL_STRING, sqlStringProb)
-                .addOperation(Operation.PAGING_PREDICATE, pagePredicateProb)
-                .addOperation(Operation.UPDATE_EMPLOYEE, updateEmployeeProb)
-                .addOperation(Operation.DESTROY_MAP, destroyProb);
     }
 
     @Prepare(global = true)
@@ -107,12 +85,129 @@ public class MapPredicateTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.2)
+    public void predicateBuilder(ThreadState state) {
+        long startMs = System.currentTimeMillis();
+
+        int age = state.randomInt(Employee.MAX_AGE);
+        String name = Employee.getRandomName();
+
+        // TODO: Still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
+        EntryObject entryObject = new PredicateBuilder().getEntryObject();
+        Predicate agePredicate = entryObject.get("age").lessThan(age);
+        Predicate ageNamePredicate = entryObject.get("name").equal(name).and(agePredicate);
+
+        Collection<Employee> employees = map.values(ageNamePredicate);
+        for (Employee emp : employees) {
+            String assertMessage = format(baseAssertMessage, emp, ageNamePredicate);
+            assertTrue(assertMessage, emp.getAge() < age);
+            assertTrue(assertMessage, emp.getName().equals(name));
+        }
+        state.operationCounter.predicateBuilderCount++;
+
+        updateStats(state, startMs);
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0.2)
+    public void sqlString(ThreadState state) {
+        long startMs = System.currentTimeMillis();
+        boolean active = state.randomBoolean();
+        int age = state.randomInt(Employee.MAX_AGE);
+
+        SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age >" + age);
+        Collection<Employee> employees = map.values(predicate);
+
+        for (Employee emp : employees) {
+            String assertMessage = format(baseAssertMessage, emp, predicate);
+            assertTrue(assertMessage, emp.isActive() == active);
+            assertTrue(assertMessage, emp.getAge() > age);
+        }
+        state.operationCounter.sqlStringCount++;
+        updateStats(state, startMs);
+    }
+
+    @TimeStep(prob = 0.2)
+    public void pagingPredicate(ThreadState state) {
+        double maxSalary = state.randomDouble() * Employee.MAX_SALARY;
+        Predicate predicate = Predicates.lessThan("salary", maxSalary);
+        SalaryComparator salaryComparator = new SalaryComparator();
+        PagingPredicate pagingPredicate = new PagingPredicate(predicate, salaryComparator, pageSize);
+
+        Collection<Employee> employees;
+        List<Employee> employeeList;
+        do {
+            employees = map.values(pagingPredicate);
+            employeeList = fillListWithQueryResultSet(employees);
+            Employee nextEmployee;
+            Employee currentEmployee;
+            for (int i = 0; i < employeeList.size() - 1; i++) {
+                currentEmployee = employeeList.get(i);
+                nextEmployee = employeeList.get(i + 1);
+                // check the order & max salary
+                assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),
+                        currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSalary);
+            }
+            pagingPredicate.nextPage();
+        } while (!employees.isEmpty());
+
+        state.operationCounter.pagePredicateCount++;
+    }
+
+    private List<Employee> fillListWithQueryResultSet(Iterable<Employee> iterable) {
+        List<Employee> list = new ArrayList<Employee>();
+        for (Employee employee : iterable) {
+            list.add(employee);
+        }
+        return list;
+    }
+
+    @TimeStep(prob = 0.3)
+    public void updateEmployee(ThreadState state) {
+        Integer key = state.randomInt(keyCount);
+        Employee employee = map.get(key);
+        if (employee != null) {
+            employee.randomizeProperties();
+            map.put(key, employee);
+            state.operationCounter.updateEmployeeCount++;
+        }
+    }
+
+    @TimeStep(prob = 0.1)
+    public void destroyMap(ThreadState state) {
+        map.destroy();
+        initMap();
+        state.operationCounter.destroyCount++;
+    }
+
+    private void updateStats(ThreadState state, long startMs) {
+        long nowMs = System.currentTimeMillis();
+        long durationMs = nowMs - startMs;
+        state.maxLastMinute = Math.max(durationMs, state.maxLastMinute);
+        state.minLastMinute = Math.min(durationMs, state.minLastMinute);
+        state.iterationsLastMinute++;
+        state.spendTimeMs += durationMs;
+
+        if (state.lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
+            double avg = state.spendTimeMs / (double) state.iterationsLastMinute;
+            double perf = (state.iterationsLastMinute * 1000d) / (double) state.spendTimeMs;
+
+            logger.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
+                    state.iterationsLastMinute, state.minLastMinute, state.maxLastMinute, avg, perf));
+
+            state.maxLastMinute = Long.MIN_VALUE;
+            state.minLastMinute = Long.MAX_VALUE;
+            state.iterationsLastMinute = 0;
+            state.lastUpdateMs = nowMs;
+        }
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounterList.add(state.operationCounter);
+    }
+
+
+    public class ThreadState extends BaseThreadState {
 
         private final PredicateOperationCounter operationCounter = new PredicateOperationCounter();
 
@@ -121,143 +216,6 @@ public class MapPredicateTest extends AbstractTest {
         private long maxLastMinute = Long.MIN_VALUE;
         private long minLastMinute = Long.MAX_VALUE;
         private long spendTimeMs = 0;
-
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
-
-        @Override
-        public void timeStep(Operation operation) {
-            long startMs = System.currentTimeMillis();
-
-            switch (operation) {
-                case PREDICATE_BUILDER:
-                    predicateBuilder();
-                    break;
-                case SQL_STRING:
-                    sqlString();
-                    break;
-                case PAGING_PREDICATE:
-                    pagingPredicate();
-                    break;
-                case UPDATE_EMPLOYEE:
-                    updateEmployee();
-                    break;
-                case DESTROY_MAP:
-                    destroyMap();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-
-            long nowMs = System.currentTimeMillis();
-            long durationMs = nowMs - startMs;
-            maxLastMinute = Math.max(durationMs, maxLastMinute);
-            minLastMinute = Math.min(durationMs, minLastMinute);
-            iterationsLastMinute++;
-            spendTimeMs += durationMs;
-
-            if (lastUpdateMs + SECONDS.toMillis(60) < nowMs) {
-                double avg = spendTimeMs / (double) iterationsLastMinute;
-                double perf = (iterationsLastMinute * 1000d) / (double) spendTimeMs;
-
-                logger.info(format("last minute: iterations=%d, min=%d ms, max=%d ms, avg=%.2f ms, perf=%.2f predicates/second",
-                        iterationsLastMinute, minLastMinute, maxLastMinute, avg, perf));
-
-                maxLastMinute = Long.MIN_VALUE;
-                minLastMinute = Long.MAX_VALUE;
-                iterationsLastMinute = 0;
-                lastUpdateMs = nowMs;
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            operationCounterList.add(operationCounter);
-        }
-
-        private void predicateBuilder() {
-            int age = randomInt(Employee.MAX_AGE);
-            String name = Employee.getRandomName();
-
-            // TODO: Still broken because it relies on reflection which is dog slow, so we need an explicit AgeNamePredicate
-            EntryObject entryObject = new PredicateBuilder().getEntryObject();
-            Predicate agePredicate = entryObject.get("age").lessThan(age);
-            Predicate ageNamePredicate = entryObject.get("name").equal(name).and(agePredicate);
-
-            Collection<Employee> employees = map.values(ageNamePredicate);
-            for (Employee emp : employees) {
-                String assertMessage = format(baseAssertMessage, emp, ageNamePredicate);
-                assertTrue(assertMessage, emp.getAge() < age);
-                assertTrue(assertMessage, emp.getName().equals(name));
-            }
-            operationCounter.predicateBuilderCount++;
-        }
-
-        private void sqlString() {
-            boolean active = getRandom().nextBoolean();
-            int age = randomInt(Employee.MAX_AGE);
-
-            SqlPredicate predicate = new SqlPredicate("active=" + active + " AND age >" + age);
-            Collection<Employee> employees = map.values(predicate);
-
-            for (Employee emp : employees) {
-                String assertMessage = format(baseAssertMessage, emp, predicate);
-                assertTrue(assertMessage, emp.isActive() == active);
-                assertTrue(assertMessage, emp.getAge() > age);
-            }
-            operationCounter.sqlStringCount++;
-        }
-
-        private void pagingPredicate() {
-            double maxSalary = getRandom().nextDouble() * Employee.MAX_SALARY;
-            Predicate predicate = Predicates.lessThan("salary", maxSalary);
-            SalaryComparator salaryComparator = new SalaryComparator();
-            PagingPredicate pagingPredicate = new PagingPredicate(predicate, salaryComparator, pageSize);
-
-            Collection<Employee> employees;
-            List<Employee> employeeList;
-            do {
-                employees = map.values(pagingPredicate);
-                employeeList = fillListWithQueryResultSet(employees);
-                Employee nextEmployee;
-                Employee currentEmployee;
-                for (int i = 0; i < employeeList.size() - 1; i++) {
-                    currentEmployee = employeeList.get(i);
-                    nextEmployee = employeeList.get(i + 1);
-                    // check the order & max salary
-                    assertTrue(format(baseAssertMessage, currentEmployee.getSalary(), predicate),
-                            currentEmployee.getSalary() <= nextEmployee.getSalary() && nextEmployee.getSalary() < maxSalary);
-                }
-                pagingPredicate.nextPage();
-            } while (!employees.isEmpty());
-
-            operationCounter.pagePredicateCount++;
-        }
-
-        private List<Employee> fillListWithQueryResultSet(Iterable<Employee> iterable) {
-            List<Employee> list = new ArrayList<Employee>();
-            for (Employee employee : iterable) {
-                list.add(employee);
-            }
-            return list;
-        }
-
-        private void updateEmployee() {
-            Integer key = randomInt(keyCount);
-            Employee employee = map.get(key);
-            if (employee != null) {
-                employee.randomizeProperties();
-                map.put(key, employee);
-                operationCounter.updateEmployeeCount++;
-            }
-        }
-
-        private void destroyMap() {
-            map.destroy();
-            initMap();
-            operationCounter.destroyCount++;
-        }
     }
 
     private static class SalaryComparator implements Comparator<Map.Entry>, Serializable {
