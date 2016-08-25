@@ -144,11 +144,17 @@ public class TimeStepRunStrategy extends RunStrategy {
     }
 
     private ThreadSpawner spawnThreads(TimeStepRunner[] runners, boolean warmup) {
-        String identifier = (warmup ? "warmup-" : "run-") + testContext.getTestId();
-        ThreadSpawner spawner = new ThreadSpawner(identifier);
+        ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
 
         for (TimeStepRunner runner : runners) {
-            spawner.spawn(runner);
+            String executionGroup = runner.executionGroup;
+            String name = testContext.getTestId();
+            if (!executionGroup.equals("")) {
+                name += "-" + executionGroup;
+            }
+            name += warmup ? "-warmup" : "-run";
+            name += "Thread";
+            spawner.spawn(name, runner);
         }
 
         return spawner;

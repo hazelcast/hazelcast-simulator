@@ -139,7 +139,7 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
         LOGGER.info(format("%s Starting %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
         try {
-            OperationThread operationThread = new OperationThread(testPhase) {
+            new OperationThread(testPhase) {
                 @Override
                 public void doRun() throws Exception {
                     try {
@@ -154,8 +154,7 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
                         }
                     }
                 }
-            };
-            operationThread.start();
+            }.start();
         } catch (Exception e) {
             LOGGER.fatal(format("Failed to execute %s of %s", testPhase.desc(), testId), e);
             throw e;
@@ -163,23 +162,24 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processStartTest(StartTestOperation operation) {
+        final TestPhase testPhase = operation.isWarmup() ? TestPhase.WARMUP : TestPhase.RUN;
+
         if (skipRunPhase(operation)) {
-            sendPhaseCompletedOperation(TestPhase.RUN);
+            sendPhaseCompletedOperation(testPhase);
             return;
         }
 
         LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
-        OperationThread operationThread = new OperationThread(TestPhase.RUN) {
+        new OperationThread(testPhase) {
             @Override
             public void doRun() throws Exception {
                 try {
-                    testContainer.invoke(TestPhase.RUN);
+                    testContainer.invoke(testPhase);
                 } finally {
                     LOGGER.info(format("%s Completed run of %s %s", DASHES, testId, DASHES));
                 }
             }
-        };
-        operationThread.start();
+        }.start();
     }
 
     private void processStopTest() {

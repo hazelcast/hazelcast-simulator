@@ -19,6 +19,9 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.StopException;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -29,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 public class ProducerConsumerTest extends AbstractTest {
 
     // properties
-    public int maxIntervalMillis = 1000;
+    public int maxIntervalMillis = 2;
 
     private IAtomicLong produced;
     private IQueue<Long> workQueue;
@@ -49,8 +52,9 @@ public class ProducerConsumerTest extends AbstractTest {
         state.produced++;
     }
 
-    @TimeStep(executionGroup = "producer")
+    @AfterRun(executionGroup = "producer")
     public void afterRun(ProducerState state) {
+        logger.severe("AfterRun(ProducerState) caller with state: " + state.produced);
         produced.addAndGet(state.produced);
         workQueue.add(-1L);
     }
@@ -63,15 +67,17 @@ public class ProducerConsumerTest extends AbstractTest {
     public void consume(ConsumerState state) throws Exception {
         Long item = workQueue.take();
         if (item.equals(-1L)) {
-            return;
+            workQueue.add(item);
+            throw new StopException();
         }
 
         state.consumed++;
         Thread.sleep(state.randomInt(maxIntervalMillis));
     }
 
-    @TimeStep(executionGroup = "consumer")
+    @AfterRun(executionGroup = "consumer")
     public void afterRun(ConsumerState state) {
+        logger.severe("AfterRun(ConsumerState) caller with state: " + state.consumed);
         consumed.addAndGet(state.consumed);
     }
 
@@ -79,10 +85,15 @@ public class ProducerConsumerTest extends AbstractTest {
         long consumed;
     }
 
+    @AfterWarmup
+    public void afterWarmup() {
+        workQueue.clear();
+    }
+
     @Verify
     public void verify() {
-        long expected = workQueue.size() + consumed.get();
-        long actual = produced.get();
+        long expected = produced.get();
+        long actual = consumed.get();
         assertEquals(expected, actual);
     }
 

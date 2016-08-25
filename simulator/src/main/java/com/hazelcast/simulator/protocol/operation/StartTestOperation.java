@@ -38,17 +38,23 @@ public class StartTestOperation implements SimulatorOperation {
      */
     private final List<String> targetWorkers;
 
+    /**
+     * If this is a warmup or the actual run.
+     */
+    private final boolean warmup;
+
     public StartTestOperation() {
         this(TargetType.ALL);
     }
 
     public StartTestOperation(TargetType targetType) {
-        this(targetType, Collections.<String>emptyList());
+        this(targetType, Collections.<String>emptyList(), false);
     }
 
-    public StartTestOperation(TargetType targetType, List<String> targetWorkers) {
+    public StartTestOperation(TargetType targetType, List<String> targetWorkers, boolean warmup) {
         this.targetType = targetType;
         this.targetWorkers = targetWorkers;
+        this.warmup = warmup;
     }
 
     public boolean matchesTargetType(WorkerType workerType) {
@@ -61,5 +67,9 @@ public class StartTestOperation implements SimulatorOperation {
 
     public TargetType getTargetType() {
         return targetType;
+    }
+
+    public boolean isWarmup() {
+        return warmup;
     }
 }

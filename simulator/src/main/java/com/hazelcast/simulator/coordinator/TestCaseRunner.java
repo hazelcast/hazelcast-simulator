@@ -207,7 +207,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void executeWarmup() {
         echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers));
+        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, true));
         echo("Completed Test warmup start");
 
         StopThread stopThread = null;
@@ -234,7 +234,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void executeRun() {
         echo(format("Starting Test start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers));
+        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, false));
         echo("Completed Test start");
 
         StopThread stopThread = null;

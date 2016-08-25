@@ -23,10 +23,14 @@ import java.util.Map;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public final class TestUtils {
 
@@ -94,7 +98,7 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     *
+     * <p>
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
      *
@@ -138,10 +142,10 @@ public final class TestUtils {
 
     /**
      * Assert that a certain task is going to assert to true eventually.
-     *
+     * <p>
      * This method makes use of an exponential back-off mechanism. So initially it will ask frequently, but the
      * more times it fails the less frequent the task is going to be retried.
-     *
+     * <p>
      * Uses the default timeout of {@link #ASSERT_TRUE_EVENTUALLY_TIMEOUT} milliseconds.
      *
      * @param task AssertTask to execute
@@ -160,5 +164,28 @@ public final class TestUtils {
             }
         }
         LOGGER.error(sb.toString());
+    }
+
+    public static void assertNoExceptions() {
+        File userDir = getUserDir();
+        if (userDir.exists()) {
+            for (File file : userDir.listFiles()) {
+                assertFalse("exception found:" + file + " content:"
+                        + FileUtils.fileAsText(file), file.getName().endsWith(".exception"));
+            }
+        }
+    }
+
+    public static void assertException(String content, int id) {
+        File userDir = getUserDir();
+        if (!userDir.exists()) {
+            fail("userDir " + userDir.getAbsolutePath() + " does not exist");
+        }
+
+        File exceptionFile = new File(userDir, id + ".exception");
+        assertTrue(exceptionFile.getAbsolutePath() + " does note exist", exceptionFile.exists());
+
+        String text = FileUtils.fileAsText(exceptionFile);
+        assertTrue(format("'%s' does not contains '%s'", text, content), text.contains(content));
     }
 }

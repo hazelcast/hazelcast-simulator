@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 /**
  * Responsible for spawning and waiting for threads.
  *
- * If used in a test context {@link #identifier} should be set to the testId of that test. This is needed to correlate an
+ * If used in a test context {@link #testId} should be set to the testId of that test. This is needed to correlate an
  * exception to a specific test case. In a test context you should not set {@link #throwException} to <code>true</code>,
  * so the {@link ExceptionReporter} will be used.
  *
@@ -41,7 +41,7 @@ public class ThreadSpawner {
     private final List<Thread> threads = Collections.synchronizedList(new LinkedList<Thread>());
     private final ConcurrentMap<String, AtomicInteger> idMap = new ConcurrentHashMap<String, AtomicInteger>();
 
-    private final String identifier;
+    private final String testId;
     private final boolean throwException;
     private final UncaughtExceptionHandler exceptionHandler;
 
@@ -52,21 +52,21 @@ public class ThreadSpawner {
      *
      * All occurring exceptions will be reported to the {@link ExceptionReporter}.
      *
-     * @param identifier identifier to give reported exceptions a context
+     * @param testId testId to give reported exceptions a context
      */
-    public ThreadSpawner(String identifier) {
-        this(identifier, false);
+    public ThreadSpawner(String testId) {
+        this(testId, false);
     }
 
     /**
      * Creates a {@link ThreadSpawner} which can report exceptions to the {@link ExceptionReporter} or throw them directly.
      *
-     * @param identifier     identifier to give reported exceptions a context
+     * @param testId     testId to give reported exceptions a context
      * @param throwException <code>true</code> if exceptions should be directly thrown,
      *                       <code>false</code> if {@link ExceptionReporter} should be used
      */
-    public ThreadSpawner(String identifier, boolean throwException) {
-        this.identifier = identifier;
+    public ThreadSpawner(String testId, boolean throwException) {
+        this.testId = testId;
         this.throwException = throwException;
         this.exceptionHandler = initExceptionHandler(throwException);
     }
@@ -91,7 +91,7 @@ public class ThreadSpawner {
      * @return the created thread
      */
     public Thread spawn(Runnable runnable) {
-        return spawn(identifier + "-Thread", runnable);
+        return spawn(testId + "-Thread", runnable);
     }
 
     /**
@@ -105,13 +105,13 @@ public class ThreadSpawner {
         checkNotNull(namePrefix, "namePrefix can't be null");
         checkNotNull(runnable, "runnable can't be null");
 
-        String name = getName(namePrefix);
+        String name = newName(namePrefix);
         Thread thread;
         if (throwException) {
             thread = new ThrowExceptionThread(name, runnable);
             thread.setUncaughtExceptionHandler(exceptionHandler);
         } else {
-            thread = new ReportExceptionThread(identifier, name, runnable);
+            thread = new ReportExceptionThread(testId, name, runnable);
         }
         threads.add(thread);
         thread.start();
@@ -145,7 +145,7 @@ public class ThreadSpawner {
         }
     }
 
-    private String getName(String prefix) {
+    private String newName(String prefix) {
         AtomicInteger idGenerator = idMap.get(prefix);
         if (idGenerator == null) {
             idGenerator = new AtomicInteger();
