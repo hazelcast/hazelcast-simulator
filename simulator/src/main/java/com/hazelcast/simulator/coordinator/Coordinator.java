@@ -375,7 +375,7 @@ public final class Coordinator {
 
         WorkerParameters workerParameters = new WorkerParameters(
                 versionSpec,
-                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
+                simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(workerType, simulatorProperties.get("VENDOR")),
                 environment);
 

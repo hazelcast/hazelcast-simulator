@@ -236,7 +236,7 @@ final class CoordinatorCli {
 
         return new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
-                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
+                simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(WorkerType.JAVA_CLIENT, simulatorProperties.get("VENDOR")),
                 javaClientEnv);
     }
@@ -254,7 +254,7 @@ final class CoordinatorCli {
 
         return new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
-                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
+                simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(WorkerType.LITE_MEMBER, simulatorProperties.get("VENDOR")),
                 liteMemberEnv);
     }
@@ -272,7 +272,7 @@ final class CoordinatorCli {
 
         return new WorkerParameters(
                 simulatorProperties.getVersionSpec(),
-                simulatorProperties.getAsInt("WORKER_STARTUP_TIMEOUT_SECONDS"),
+                simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"),
                 loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")),
                 memberEnv);
     }

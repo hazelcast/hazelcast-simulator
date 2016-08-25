@@ -96,6 +96,12 @@ final class TemplateBuilder {
         Template template = compute.templateBuilder().from(spec).build();
         TemplateOptions templateOptions = template.getOptions();
 
+        Float spotPrice = simulatorProperties.getAsFloat("EC2_SPOT_PRICE");
+        if (spotPrice != null) {
+            LOGGER.info("EC2_SPOT_PRICE: " + spotPrice);
+            templateOptions.as(AWSEC2TemplateOptions.class).spotPrice(spotPrice);
+        }
+
         addAdminAccess(user);
 
         templateOptions.inboundPorts(inboundPorts());

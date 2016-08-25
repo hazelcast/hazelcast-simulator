@@ -36,11 +36,12 @@ import static java.lang.String.format;
 
 /**
  * Loads the Hazelcast Simulator properties file.
- *
+ * <p>
  * This class will always load the properties in the <tt>${SIMULATOR_HOME}/conf/simulator.properties</tt> as defaults. If an
  * explicit {$value #PROPERTIES_FILE_NAME} file is configured or {$value #PROPERTIES_FILE_NAME} is available in the working dir,
  * it will override the properties from the default.
  */
+@SuppressWarnings("checkstyle:methodcount")
 public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
@@ -212,9 +213,20 @@ public class SimulatorProperties {
         properties.setProperty(name, value);
     }
 
-    public int getAsInt(String property) {
+    public Integer getAsInteger(String property) {
         String value = get(property);
+        if (value == null) {
+            return null;
+        }
         return Integer.parseInt(value);
+    }
+
+    public Float getAsFloat(String property) {
+        String value = get(property);
+        if (value == null) {
+            return null;
+        }
+        return Float.parseFloat(value);
     }
 
     public String getAsString() {
