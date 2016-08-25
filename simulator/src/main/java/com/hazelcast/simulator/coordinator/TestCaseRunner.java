@@ -160,7 +160,7 @@ final class TestCaseRunner implements TestPhaseListener {
         executePhase(LOCAL_PREPARE);
         executePhase(GLOBAL_PREPARE);
 
-        if (testSuite.getWarmupDurationSeconds() > 0) {
+        if (testSuite.getWarmupSeconds() > 0) {
             executeWarmup();
 
             executePhase(LOCAL_AFTER_WARMUP);
@@ -347,7 +347,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
         StopThread(boolean warmup) {
             this.warmup = warmup;
-            this.durationSeconds = warmup ? testSuite.getWarmupDurationSeconds() : testSuite.getDurationSeconds();
+            this.durationSeconds = warmup ? testSuite.getWarmupSeconds() : testSuite.getDurationSeconds();
         }
 
         public void shutdown() {

@@ -189,18 +189,18 @@ public class CoordinatorCliTest {
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testInit_warmupDuration_withNumberFormatException() {
-        args.add("--warmupDuration");
+    public void testInit_warmup_withNumberFormatException() {
+        args.add("--warmup");
         args.add("numberFormatException");
 
         createCoordinatorCli();
     }
 
     @Test
-    public void testInit_warmupDuration() {
+    public void testInit_warmup() {
         args.add("--duration");
         args.add("10s");
-        args.add("--warmupDuration");
+        args.add("--warmup");
         args.add("5s");
 
         CoordinatorCli cli = createCoordinatorCli();
@@ -208,18 +208,18 @@ public class CoordinatorCliTest {
         TestSuite testSuite = cli.testSuite;
         assertFalse(testSuite.isWaitForTestCase());
         assertEquals(10, testSuite.getDurationSeconds());
-        assertEquals(5, testSuite.getWarmupDurationSeconds());
+        assertEquals(5, testSuite.getWarmupSeconds());
     }
 
     @Test
-    public void testInit_warmupDuration_withZero() {
-        args.add("--warmupDuration");
+    public void testInit_warmup_withZero() {
+        args.add("--warmup");
         args.add("0s");
 
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertEquals(0, testSuite.getWarmupDurationSeconds());
+        assertEquals(0, testSuite.getWarmupSeconds());
     }
 
     @Test

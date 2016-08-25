@@ -168,7 +168,7 @@ public class RunTestSuiteTaskTest {
     @Test
     public void runParallel_withWarmup() {
         testSuite.setDurationSeconds(1);
-        testSuite.setWarmupDurationSeconds(1);
+        testSuite.setWarmupSeconds(1);
         parallel = true;
         verifyEnabled = false;
 
@@ -182,7 +182,7 @@ public class RunTestSuiteTaskTest {
     public void runParallel_withWarmup_waitForTestCase() {
         testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
-        testSuite.setWarmupDurationSeconds(1);
+        testSuite.setWarmupSeconds(1);
         parallel = true;
         verifyEnabled = false;
 
@@ -398,7 +398,7 @@ public class RunTestSuiteTaskTest {
             expectedTestPhases.remove(TestPhase.GLOBAL_VERIFY);
             expectedTestPhases.remove(TestPhase.LOCAL_VERIFY);
         }
-        if (testSuite.getWarmupDurationSeconds() == 0) {
+        if (testSuite.getWarmupSeconds() == 0) {
             // exclude warmup test phases
             expectedTestPhases.remove(WARMUP);
             expectedTestPhases.remove(TestPhase.LOCAL_AFTER_WARMUP);

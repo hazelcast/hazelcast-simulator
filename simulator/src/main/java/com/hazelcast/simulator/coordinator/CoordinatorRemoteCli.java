@@ -294,7 +294,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-        private final OptionSpec<String> warmupDurationSpec = parser.accepts("warmupDuration",
+        private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
                 "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_WARMUP_DURATION_SECONDS));
 
@@ -338,7 +338,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
             TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
                     .setDurationSeconds(getDurationSeconds(durationSpec))
-                    .setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec))
+                    .setWarmupSeconds(getDurationSeconds(warmupSpec))
                     .setTargetType(options.valueOf(targetTypeSpec))
                     .setTargetCount(options.valueOf(targetCountSpec))
                     .setParallel(options.has(parallelSpec))
