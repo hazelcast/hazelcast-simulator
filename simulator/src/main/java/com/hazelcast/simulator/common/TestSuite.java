@@ -40,7 +40,7 @@ public class TestSuite {
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
     private int durationSeconds;
-    private int warmupDurationSeconds;
+    private int warmupSeconds;
     private boolean waitForTestCase;
     private boolean failFast;
     private boolean parallel;
@@ -93,13 +93,13 @@ public class TestSuite {
         return this;
     }
 
-    public TestSuite setWarmupDurationSeconds(int warmupDurationSeconds) {
-        this.warmupDurationSeconds = warmupDurationSeconds;
+    public TestSuite setWarmupSeconds(int warmupSeconds) {
+        this.warmupSeconds = warmupSeconds;
         return this;
     }
 
-    public int getWarmupDurationSeconds() {
-        return warmupDurationSeconds;
+    public int getWarmupSeconds() {
+        return warmupSeconds;
     }
 
     public int getDurationSeconds() {
@@ -161,7 +161,7 @@ public class TestSuite {
     public String toString() {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
-                + ", warmupDurationSeconds=" + warmupDurationSeconds
+                + ", warmupSeconds=" + warmupSeconds
                 + ", waitForTestCase=" + waitForTestCase
                 + ", failFast=" + failFast
                 + ", parallel=" + parallel

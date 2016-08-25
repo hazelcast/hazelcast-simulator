@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
@@ -155,6 +156,15 @@ public final class TestUtils {
         assertTrueEventually(task, ASSERT_TRUE_EVENTUALLY_TIMEOUT);
     }
 
+    public static void assertCompletesEventually(final Future f) {
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertTrue("future has not completed", f.isDone());
+            }
+        });
+    }
+
     public static void printAllStackTraces() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
@@ -183,7 +193,7 @@ public final class TestUtils {
         }
 
         File exceptionFile = new File(userDir, id + ".exception");
-        assertTrue(exceptionFile.getAbsolutePath() + " does note exist", exceptionFile.exists());
+        assertTrue(exceptionFile.getAbsolutePath() + " does not exist", exceptionFile.exists());
 
         String text = FileUtils.fileAsText(exceptionFile);
         assertTrue(format("'%s' does not contains '%s'", text, content), text.contains(content));

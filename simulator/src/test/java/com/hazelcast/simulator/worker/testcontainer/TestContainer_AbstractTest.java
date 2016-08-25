@@ -5,6 +5,7 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 import org.junit.After;
 import org.junit.Before;
 
@@ -24,6 +25,7 @@ public abstract class TestContainer_AbstractTest {
 
     @Before
     public void setup() {
+        ExceptionReporter.reset();
         userDir = setupFakeUserDir();
     }
 

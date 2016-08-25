@@ -12,7 +12,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
+import static com.hazelcast.simulator.utils.TestUtils.assertCompletesEventually;
 import static com.hazelcast.simulator.utils.TestUtils.assertException;
+import static org.junit.Assert.assertEquals;
 
 public class TestContainer_TimeStep_ExceptionTest extends TestContainer_AbstractTest {
 
@@ -27,27 +29,25 @@ public class TestContainer_TimeStep_ExceptionTest extends TestContainer_Abstract
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
-        Future runFuture = spawn(new Callable() {
+        Future f = spawn(new Callable() {
             @Override
             public Object call() throws Exception {
                 container.invoke(RUN);
                 return null;
             }
         });
-        Thread.sleep(5000);
-        testContext.stop();
-        runFuture.get();
 
-        container.invoke(TestPhase.LOCAL_TEARDOWN);
-
+        assertCompletesEventually(f);
+        assertEquals(1L, testInstance.counter.get());
         assertException("IllegalStateException", 1);
     }
 
     public static class ExceptionTest {
-        private final AtomicLong counter = new AtomicLong(1000);
+        final AtomicLong counter = new AtomicLong(0);
 
         @TimeStep
         public void timeStep() {
+            counter.incrementAndGet();
             throw new IllegalStateException();
         }
     }

@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
@@ -15,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
+import static com.hazelcast.simulator.utils.TestUtils.assertCompletesEventually;
 import static com.hazelcast.simulator.utils.TestUtils.assertNoExceptions;
 import static java.util.Collections.disjoint;
 import static java.util.Collections.synchronizedSet;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 public class TestContainer_TimeStep_MultipleExecutionGroupsTest extends TestContainer_AbstractTest {
 
     @Test
-    public void testWithAllPhases() throws Exception {
+    public void test() throws Exception {
         MultipleExecutionGroupsTest testInstance = new MultipleExecutionGroupsTest();
         TestCase testCase = new TestCase("multipleExecutionGroupsTest")
                 .setProperty("group1ThreadCount", 2)
@@ -35,19 +35,15 @@ public class TestContainer_TimeStep_MultipleExecutionGroupsTest extends TestCont
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
-        Future runFuture = spawn(new Callable() {
+        Future f = spawn(new Callable() {
             @Override
             public Object call() throws Exception {
                 container.invoke(RUN);
                 return null;
             }
         });
-        Thread.sleep(5000);
-        testContext.stop();
-        runFuture.get();
 
-        container.invoke(TestPhase.LOCAL_TEARDOWN);
-
+        assertCompletesEventually(f);
         assertNoExceptions();
         assertEquals(2, testInstance.group1Threads.size());
         assertEquals(3, testInstance.group2Threads.size());
@@ -62,22 +58,34 @@ public class TestContainer_TimeStep_MultipleExecutionGroupsTest extends TestCont
 
         @TimeStep(executionGroup = "group1")
         public void group1TimeStep() {
-            if (group1Counter.get() == 0) {
-                throw new StopException();
-            }
-
-            group1Counter.decrementAndGet();
             group1Threads.add(Thread.currentThread());
+
+            for (; ; ) {
+                long current = group1Counter.get();
+                if (current == 0) {
+                    throw new StopException();
+                }
+
+                if (group1Counter.compareAndSet(current, current - 1)) {
+                    break;
+                }
+            }
         }
 
         @TimeStep(executionGroup = "group2")
         public void group2TimeStep() {
-            if (group2Counter.get() == 0) {
-                throw new StopException();
-            }
-
-            group2Counter.decrementAndGet();
             group2Threads.add(Thread.currentThread());
+
+            for (; ; ) {
+                long current = group2Counter.get();
+                if (current == 0) {
+                    throw new StopException();
+                }
+
+                if (group2Counter.compareAndSet(current, current - 1)) {
+                    break;
+                }
+            }
         }
     }
 }

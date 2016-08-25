@@ -4,6 +4,7 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.utils.AssertTask;
 import org.junit.Test;
 
 import java.util.concurrent.Callable;
@@ -13,7 +14,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
+import static com.hazelcast.simulator.utils.TestUtils.assertCompletesEventually;
 import static com.hazelcast.simulator.utils.TestUtils.assertNoExceptions;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * Tests of the {@link StopException} works correctly.
@@ -21,7 +25,7 @@ import static com.hazelcast.simulator.utils.TestUtils.assertNoExceptions;
 public class TestContainer_TimeStep_StopTest extends TestContainer_AbstractTest {
 
     @Test
-    public void testWithAllPhases() throws Exception {
+    public void test() throws Exception {
         TimeStepStopTest testInstance = new TimeStepStopTest();
         TestCase testCase = new TestCase("stopTest")
                 .setProperty("threadCount", 1)
@@ -31,19 +35,15 @@ public class TestContainer_TimeStep_StopTest extends TestContainer_AbstractTest 
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
-        Future runFuture = spawn(new Callable() {
+        Future f = spawn(new Callable() {
             @Override
             public Object call() throws Exception {
                 container.invoke(RUN);
                 return null;
             }
         });
-        Thread.sleep(5000);
-        testContext.stop();
-        runFuture.get();
 
-        container.invoke(TestPhase.LOCAL_TEARDOWN);
-
+        assertCompletesEventually(f);
         assertNoExceptions();
     }
 

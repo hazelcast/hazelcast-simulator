@@ -81,7 +81,7 @@ final class CoordinatorCli {
             "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-    private final OptionSpec<String> warmupDurationSpec = parser.accepts("warmupDuration",
+    private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
             "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_WARMUP_DURATION_SECONDS));
 
@@ -310,7 +310,7 @@ final class CoordinatorCli {
 
         TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec))
                 .setDurationSeconds(durationSeconds)
-                .setWarmupDurationSeconds(getDurationSeconds(warmupDurationSpec))
+                .setWarmupSeconds(getDurationSeconds(warmupSpec))
                 .setWaitForTestCase(hasWaitForTestCase)
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
