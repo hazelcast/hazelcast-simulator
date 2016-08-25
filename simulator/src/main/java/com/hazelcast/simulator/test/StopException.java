@@ -17,7 +17,8 @@ package com.hazelcast.simulator.test;
 
 /**
  * The {@link StopException} can be thrown in an {@link com.hazelcast.simulator.test.annotations.TimeStep} based test
- * to signal that the worker doesn't want to run any longer, but doesn't want to cause any failures.
+ * to signal that the timestep thread doesn't want to run any longer, but doesn't want to cause any failures. Also it doesn't
+ * impact any other timestep-thread.
  *
  * e.g.
  *

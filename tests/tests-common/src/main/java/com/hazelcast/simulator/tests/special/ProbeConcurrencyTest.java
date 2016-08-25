@@ -16,14 +16,15 @@
 package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.IWorker;
+import com.hazelcast.simulator.test.annotations.TimeStep;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This test is to debug and check probe results from a very controlled test case.
- *
+ * <p>
  * By adjusting the threadCount and maxOperations the invocation count of probes are absolutely predictable.
  */
 public class ProbeConcurrencyTest extends AbstractTest {
@@ -37,20 +38,12 @@ public class ProbeConcurrencyTest extends AbstractTest {
         logger.info("ThreadCount: " + threadCount + " max operations: " + maxOperations);
     }
 
-    @RunWithWorker
-    public IWorker createWorker() {
-        return new Worker();
-    }
+    @TimeStep
+    public void timeStep(AtomicLong counter) {
+        long count = counter.incrementAndGet();
 
-    private class Worker extends AbstractMonotonicWorker {
-
-        private int operationCount;
-
-        @Override
-        protected void timeStep() throws Exception {
-            if (++operationCount >= maxOperations) {
-                stopWorker();
-            }
+        if (count >= maxOperations) {
+            throw new StopException();
         }
     }
 }
