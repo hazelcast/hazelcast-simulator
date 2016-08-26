@@ -129,7 +129,11 @@ public class ComponentRegistry {
     public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
         for (WorkerProcessSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
-            agents.get(workerData.getAddress().getAgentIndex() - 1).addWorker(workerData);
+
+            AgentData agentData = agents.get(workerData.getAddress().getAgentIndex() - 1);
+            agentData.addWorker(workerData);
+            agentData.updateWorkerIndex(workerData.getAddress().getAddressIndex());
+
             workers.add(workerData);
         }
     }

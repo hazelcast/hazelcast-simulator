@@ -17,6 +17,7 @@ import java.util.Map;
 
 import static com.hazelcast.simulator.common.WorkerType.JAVA_CLIENT;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
+import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertNotNull;
@@ -50,9 +51,9 @@ public class DeploymentPlanTest {
         componentRegistry.assignDedicatedMemberMachines(3);
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 1, 0);
 
-        assertWorkerDeployment(plan, firstAgent, 1, 0);
-        assertWorkerDeployment(plan, secondAgent, 0, 0);
-        assertWorkerDeployment(plan, thirdAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 1, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -66,9 +67,9 @@ public class DeploymentPlanTest {
         componentRegistry.assignDedicatedMemberMachines(2);
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 1);
 
-        assertWorkerDeployment(plan, firstAgent, 0, 0);
-        assertWorkerDeployment(plan, secondAgent, 0, 0);
-        assertWorkerDeployment(plan, thirdAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 1);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -88,36 +89,36 @@ public class DeploymentPlanTest {
 
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 1, 0);
 
-        assertWorkerDeployment(plan, firstAgent, 1, 0);
-        assertWorkerDeployment(plan, secondAgent, 0, 0);
-        assertWorkerDeployment(plan, thirdAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 1, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_memberWorkerOverflow() {
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 4, 0);
 
-        assertWorkerDeployment(plan, firstAgent, 2, 0);
-        assertWorkerDeployment(plan, secondAgent, 1, 0);
-        assertWorkerDeployment(plan, thirdAgent, 1, 0);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 2, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 1, 0);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 1, 0);
     }
 
     @Test
     public void testGenerateFromArguments_singleClientWorker() {
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 1);
 
-        assertWorkerDeployment(plan, firstAgent, 0, 1);
-        assertWorkerDeployment(plan, secondAgent, 0, 0);
-        assertWorkerDeployment(plan, thirdAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 0);
     }
 
     @Test
     public void testGenerateFromArguments_clientWorkerOverflow() {
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 5);
 
-        assertWorkerDeployment(plan, firstAgent, 0, 2);
-        assertWorkerDeployment(plan, secondAgent, 0, 2);
-        assertWorkerDeployment(plan, thirdAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 0, 2);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 2);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 1);
     }
 
     @Test
@@ -125,9 +126,9 @@ public class DeploymentPlanTest {
         componentRegistry.assignDedicatedMemberMachines(1);
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 2, 3);
 
-        assertWorkerDeployment(plan, firstAgent, 2, 0);
-        assertWorkerDeployment(plan, secondAgent, 0, 2);
-        assertWorkerDeployment(plan, thirdAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 2, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 2);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 1);
     }
 
     @Test
@@ -135,9 +136,9 @@ public class DeploymentPlanTest {
         componentRegistry.assignDedicatedMemberMachines(2);
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 2, 3);
 
-        assertWorkerDeployment(plan, firstAgent, 1, 0);
-        assertWorkerDeployment(plan, secondAgent, 1, 0);
-        assertWorkerDeployment(plan, thirdAgent, 0, 3);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 1, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 1, 0);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 3);
     }
 
     @Test
@@ -151,7 +152,7 @@ public class DeploymentPlanTest {
                 new HashMap<String, String>()
         );
         WorkerProcessSettings secondWorker = new WorkerProcessSettings(
-                1,
+                5,
                 WorkerType.MEMBER,
                 "any version",
                 "any script",
@@ -164,9 +165,18 @@ public class DeploymentPlanTest {
 
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 4);
 
-        assertWorkerDeployment(plan, firstAgent, 0, 1);
-        assertWorkerDeployment(plan, secondAgent, 0, 1);
-        assertWorkerDeployment(plan, thirdAgent, 0, 2);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 2);
+
+        assertDeploymentPlanSizePerAgent(plan, firstAgent, 1);
+        assertDeploymentPlanSizePerAgent(plan, secondAgent, 1);
+        assertDeploymentPlanSizePerAgent(plan, thirdAgent, 2);
+
+        assertDeploymentPlanWorkerSettings(plan, firstAgent, 0, 2, JAVA_CLIENT);
+        assertDeploymentPlanWorkerSettings(plan, secondAgent, 0, 6, JAVA_CLIENT);
+        assertDeploymentPlanWorkerSettings(plan, thirdAgent, 0, 1, JAVA_CLIENT);
+        assertDeploymentPlanWorkerSettings(plan, thirdAgent, 1, 2, JAVA_CLIENT);
     }
 
     @Test
@@ -203,15 +213,16 @@ public class DeploymentPlanTest {
 
         DeploymentPlan plan = createDeploymentPlan(componentRegistry, workerParametersMap, JAVA_CLIENT, 0, 3);
 
-        assertWorkerDeployment(plan, firstAgent, 0, 0);
-        assertWorkerDeployment(plan, secondAgent, 0, 2);
-        assertWorkerDeployment(plan, thirdAgent, 0, 1);
+        assertDeploymentPlanWorkerCount(plan, firstAgent, 0, 0);
+        assertDeploymentPlanWorkerCount(plan, secondAgent, 0, 2);
+        assertDeploymentPlanWorkerCount(plan, thirdAgent, 0, 1);
     }
 
-    private void assertWorkerDeployment(DeploymentPlan plan, SimulatorAddress agentAddress, int memberCount, int clientCount) {
+    private void assertDeploymentPlanWorkerCount(DeploymentPlan plan, SimulatorAddress agentAddress,
+                                                 int memberCount, int clientCount) {
         List<WorkerProcessSettings> settingsList = plan.getWorkerDeployment().get(agentAddress);
-        assertNotNull("Could not find WorkerProcessSettings at index " + agentAddress
-                + ", workerDeployment: " + plan.getWorkerDeployment(), settingsList);
+        assertNotNull(format("Could not find WorkerProcessSettings for Agent %s , workerDeployment: %s",
+                agentAddress, plan.getWorkerDeployment()), settingsList);
 
         int actualMemberWorkerCount = 0;
         int actualClientWorkerCount = 0;
@@ -222,13 +233,30 @@ public class DeploymentPlanTest {
                 actualClientWorkerCount++;
             }
         }
-        String prefix = String.format("Agent %s members: %d clients: %d",
+        String prefix = format("Agent %s members: %d clients: %d",
                 agentAddress,
                 actualMemberWorkerCount,
                 actualClientWorkerCount);
 
         assertEquals(prefix + " (memberWorkerCount)", memberCount, actualMemberWorkerCount);
         assertEquals(prefix + " (clientWorkerCount)", clientCount, actualClientWorkerCount);
+    }
+
+    private static void assertDeploymentPlanSizePerAgent(DeploymentPlan plan, SimulatorAddress agentAddress, int expectedSize) {
+        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment = plan.getWorkerDeployment();
+        List<WorkerProcessSettings> settingsList = workerDeployment.get(agentAddress);
+        assertEquals(expectedSize, settingsList.size());
+    }
+
+    private static void assertDeploymentPlanWorkerSettings(DeploymentPlan plan, SimulatorAddress agentAddress, int index,
+                                                           int expectedWorkerIndex, WorkerType expectedWorkerType) {
+        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment = plan.getWorkerDeployment();
+        List<WorkerProcessSettings> settingsList = workerDeployment.get(agentAddress);
+        WorkerProcessSettings settings = settingsList.get(index);
+        assertEquals(format("Agent: %s, Index: %d, expectedWorkerIndex: %d", agentAddress, index, expectedWorkerIndex),
+                expectedWorkerIndex, settings.getWorkerIndex());
+        assertEquals(format("Agent: %s, Index: %d, expectedWorkerType: %s", agentAddress, index, expectedWorkerType),
+                expectedWorkerType, settings.getWorkerType());
     }
 
     @Test

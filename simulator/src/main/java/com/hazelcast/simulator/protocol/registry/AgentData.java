@@ -94,6 +94,17 @@ public class AgentData {
         return currentWorkerIndex.incrementAndGet();
     }
 
+    /**
+     * Used for tests to set a correct value for the next Worker index.
+     *
+     * @param workerIndex the index of an added Worker
+     */
+    void updateWorkerIndex(int workerIndex) {
+        if (workerIndex > currentWorkerIndex.get()) {
+            currentWorkerIndex.set(workerIndex);
+        }
+    }
+
     public Collection<WorkerData> getWorkers() {
         return workers;
     }
