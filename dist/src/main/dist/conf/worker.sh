@@ -30,7 +30,7 @@ JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
 # Include the member/client-worker jvm options
 JVM_ARGS="@JVM_OPTIONS ${JVM_ARGS}"
 
-CLASSPATH=@CLASSPATH
+CLASSPATH="@CLASSPATH"
 
 MAIN=
 case "@WORKER_TYPE" in
