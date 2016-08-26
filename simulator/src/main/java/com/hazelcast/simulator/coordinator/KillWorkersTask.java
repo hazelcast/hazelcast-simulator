@@ -42,18 +42,24 @@ public class KillWorkersTask {
     private final int count;
     private final String versionSpec;
     private final WorkerType workerType;
+    private final String agentAddress;
+    private final String workerAddress;
 
     public KillWorkersTask(
             ComponentRegistry componentRegistry,
             CoordinatorConnector coordinatorConnector,
             int count,
             String versionSpec,
-            WorkerType workerType) {
+            WorkerType workerType,
+            String agentAddress,
+            String workerAddress) {
         this.componentRegistry = componentRegistry;
         this.coordinatorConnector = coordinatorConnector;
         this.count = count;
         this.versionSpec = versionSpec;
         this.workerType = workerType;
+        this.agentAddress = agentAddress;
+        this.workerAddress = workerAddress;
     }
 
     public void run() throws Exception {
@@ -91,24 +97,37 @@ public class KillWorkersTask {
         Collections.shuffle(workers);
 
         List<WorkerData> victims = new ArrayList<WorkerData>();
-        for (WorkerData workerData : workers) {
+        for (WorkerData worker : workers) {
             if (victims.size() == count) {
                 break;
             }
 
-            if (isVictim(workerData)) {
-                victims.add(workerData);
+            if (isVictim(worker)) {
+                victims.add(worker);
             }
         }
 
         return victims;
     }
 
+    @SuppressWarnings("checkstyle:npathcomplexity")
     private boolean isVictim(WorkerData workerData) {
         WorkerProcessSettings workerProcessSettings = workerData.getSettings();
 
         if (versionSpec != null) {
             if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
+                return false;
+            }
+        }
+
+        if (workerAddress != null) {
+            if (!workerData.getAddress().equals(SimulatorAddress.fromString(workerAddress))) {
+                return false;
+            }
+        }
+
+        if (agentAddress != null) {
+            if (!workerData.getAddress().getParent().equals(SimulatorAddress.fromString(agentAddress))) {
                 return false;
             }
         }

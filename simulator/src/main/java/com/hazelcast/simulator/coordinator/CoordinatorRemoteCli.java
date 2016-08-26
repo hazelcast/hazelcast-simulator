@@ -18,8 +18,10 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.RemoteControllerConnector;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
@@ -45,8 +47,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_DURATION_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_WARMUP_DURATION_SECONDS;
-import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsOnlyWithHelp;
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static java.lang.String.format;
@@ -64,13 +66,13 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
  * at com.hazelcast.simulator.coordinator.RemoteClient.sendToTestOnFirstWorker(RemoteClient.java:93)
  * at com.hazelcast.simulator.coordinator.TestCaseRunner.executePhase(TestCaseRunner.java:198)
- *
+ * <p>
  * nice to have
  * - chaos monkeys
  * - cancel running test
  * - cancel all running tests
  * - scaling up down workers
- *
+ * <p>
  * done
  */
 public class CoordinatorRemoteCli implements Closeable {
@@ -248,10 +250,17 @@ public class CoordinatorRemoteCli implements Closeable {
                 "The type of machine to kill. member, litemember, client:java (native clients will be added soon) etc")
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
-
         private final OptionSpec<Integer> countSpec = parser.accepts("count",
                 "The number of workers to kill")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
+        private final OptionSpec<String> agentAddressSpec = parser.accepts("agentAddress",
+                "The simulator address of the agent owning the worker to kill")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<String> workerAddressSpec = parser.accepts("workerAddress",
+                "The simulator address of the worker to kill")
+                .withRequiredArg().ofType(String.class);
 
         private OptionSet options;
 
@@ -263,7 +272,58 @@ public class CoordinatorRemoteCli implements Closeable {
                 throw new CommandLineExitException("worker count can't be smaller than 1");
             }
 
-            return new RcKillWorkersOperation(count, options.valueOf(versionSpecSpec), options.valueOf(workerTypeSpec));
+            String agentAddress = loadAgentAddress();
+
+            String workerAddress = loadWorkerAddress(agentAddress);
+
+            if (agentAddress != null && workerAddress != null) {
+                throw new CommandLineExitException("agentAddress and workerAddress can't both be set");
+            }
+
+            return new RcKillWorkersOperation(
+                    count,
+                    options.valueOf(versionSpecSpec),
+                    options.valueOf(workerTypeSpec),
+                    agentAddress,
+                    workerAddress);
+        }
+
+        private String loadWorkerAddress(String agentAddress) {
+            String workerAddress = options.valueOf(workerAddressSpec);
+            if (workerAddress != null) {
+                SimulatorAddress address;
+                try {
+                    address = SimulatorAddress.fromString(workerAddress);
+                } catch (Exception e) {
+                    throw new CommandLineExitException("Worker address [" + workerAddress
+                            + "] is not a valid simulator address", e);
+                }
+
+                if (!address.getAddressLevel().equals(AddressLevel.WORKER)) {
+                    throw new CommandLineExitException("Worker address [" + agentAddress
+                            + "] is not a valid worker address, it's a " + address.getAddressLevel() + " address");
+                }
+            }
+            return workerAddress;
+        }
+
+        private String loadAgentAddress() {
+            String agentAddress = options.valueOf(agentAddressSpec);
+            if (agentAddress != null) {
+                SimulatorAddress address;
+                try {
+                    address = SimulatorAddress.fromString(agentAddress);
+                } catch (Exception e) {
+                    throw new CommandLineExitException("Agent address [" + agentAddress
+                            + "] is not a valid simulator address", e);
+                }
+
+                if (!address.getAddressLevel().equals(AddressLevel.AGENT)) {
+                    throw new CommandLineExitException("Agent address [" + agentAddress
+                            + "] is not a valid agent address, it's a " + address.getAddressLevel() + " address");
+                }
+            }
+            return agentAddress;
         }
     }
 

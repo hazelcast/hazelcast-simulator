@@ -19,11 +19,15 @@ public class RcKillWorkersOperation implements SimulatorOperation {
     private final int count;
     private final String versionSpec;
     private final String workerType;
+    private final String agentAddress;
+    private final String workerAddress;
 
-    public RcKillWorkersOperation(int count, String versionSpec, String workerType) {
+    public RcKillWorkersOperation(int count, String versionSpec, String workerType, String agentAddress, String workerAddress) {
         this.count = count;
         this.versionSpec = versionSpec;
         this.workerType = workerType;
+        this.agentAddress = agentAddress;
+        this.workerAddress = workerAddress;
     }
 
     public int getCount() {
@@ -36,5 +40,13 @@ public class RcKillWorkersOperation implements SimulatorOperation {
 
     public String getWorkerType() {
         return workerType;
+    }
+
+    public String getAgentAddress() {
+        return agentAddress;
+    }
+
+    public String getWorkerAddress() {
+        return workerAddress;
     }
 }

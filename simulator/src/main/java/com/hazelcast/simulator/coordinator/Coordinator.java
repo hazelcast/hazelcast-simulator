@@ -232,7 +232,6 @@ public final class Coordinator {
                 coordinatorParameters.getSessionId()).run();
 
 
-        echoLocal("Coordinator remote mode started...");
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
         int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
@@ -243,6 +242,8 @@ public final class Coordinator {
         }
 
         remoteModeInitialized.countDown();
+
+        echoLocal("Coordinator remote mode started...");
     }
 
     private void awaitInteractiveModeInitialized() throws Exception {
@@ -333,7 +334,7 @@ public final class Coordinator {
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
 
-        LOGGER.info("Starting [" + workerType + "] workers: " + op.getCount() + "...");
+        LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers....");
 
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
@@ -424,7 +425,9 @@ public final class Coordinator {
                 coordinatorConnector,
                 op.getCount(),
                 op.getVersionSpec(),
-                new WorkerType(op.getWorkerType())).run();
+                new WorkerType(op.getWorkerType()),
+                op.getAgentAddress(),
+                op.getWorkerAddress()).run();
 
         componentRegistry.printLayout();
 
