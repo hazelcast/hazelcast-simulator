@@ -30,7 +30,7 @@ import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.utils.FileUtils.getUserHomePath;
 import static com.hazelcast.simulator.wizard.WizardUtils.getProfileFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getSimulatorPath;
 import static java.lang.String.format;
@@ -80,7 +80,7 @@ final class WizardCli {
 
     public void run() {
         if (options.has(installSpec)) {
-            String homeDir = getUserDir().getAbsolutePath();
+            String homeDir = getUserHomePath();
             wizard.install(getSimulatorPath(), getProfileFile(homeDir));
         } else if (options.has(createWorkDirSpec)) {
             SimulatorProperties simulatorProperties = getSimulatorProperties(false);

@@ -49,16 +49,24 @@ final class WizardUtils {
         execute(format("chmod u+x %s", runScript.getAbsolutePath()));
     }
 
-    static File getProfileFile(String homeDir) {
-        File bashrcFile = new File(homeDir, ".bashrc");
+    static File getProfileFile(String directory) {
+        File zshrcFile = new File(directory, ".zshrc");
+        if (zshrcFile.isFile()) {
+            return zshrcFile;
+        }
+
+        File bashrcFile = new File(directory, ".bashrc");
         if (bashrcFile.isFile()) {
             return bashrcFile;
         }
-        File profileFile = new File(homeDir, ".profile");
+
+        File profileFile = new File(directory, ".profile");
         if (profileFile.isFile()) {
             return profileFile;
         }
-        throw new CommandLineExitException("Could not find .bashrc or .profile file!"
+
+        throw new CommandLineExitException("Could not find one of .zshrc, .bashrc or .profile files"
+                + " under directory '" + directory + "`"
                 + " Installation not supported on this system!");
     }
 
@@ -103,7 +111,7 @@ final class WizardUtils {
 
     /**
      * Compute the absolute file path to the JAR file.
-     *
+     * <p>
      * Found in http://stackoverflow.com/a/20953376
      * The framework is based on http://stackoverflow.com/a/12733172/1614775
      * But that gets it right for only one of the four cases.

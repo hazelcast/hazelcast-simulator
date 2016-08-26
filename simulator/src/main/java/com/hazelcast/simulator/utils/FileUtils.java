@@ -329,6 +329,10 @@ public final class FileUtils {
         return new File(System.getProperty("user.dir"));
     }
 
+    public static String getUserHomePath() {
+        return System.getProperty("user.home");
+    }
+
     public static File getSimulatorHome() {
         String home = System.getProperty("SIMULATOR_HOME");
         if (home != null) {
