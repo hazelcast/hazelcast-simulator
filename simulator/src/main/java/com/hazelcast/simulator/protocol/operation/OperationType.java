@@ -41,6 +41,7 @@ public enum OperationType {
     RC_RUN_SUITE(RcRunSuiteOperation.class, 107),
     RC_KILL_WORKERS(RcKillWorkersOperation.class, 108),
     RC_BASH(RcBashOperation.class, 109),
+    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 110),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 200),

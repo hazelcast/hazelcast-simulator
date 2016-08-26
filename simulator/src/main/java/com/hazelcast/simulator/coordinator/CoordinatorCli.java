@@ -294,6 +294,7 @@ final class CoordinatorCli {
             coordinator.startRemoteMode();
         } else {
             coordinator.run(deploymentPlan, testSuite);
+            LOGGER.info("completed");
         }
     }
 
@@ -449,7 +450,6 @@ final class CoordinatorCli {
         try {
             CoordinatorCli cli = new CoordinatorCli(args);
             cli.run();
-            LOGGER.info("Complete");
         } catch (Exception e) {
             exitWithError(LOGGER, "Failed to run Coordinator", e);
         }

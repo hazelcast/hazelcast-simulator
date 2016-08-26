@@ -47,22 +47,6 @@ public class DeploymentPlanTest {
         when(simulatorProperties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
     }
 
-    @Test
-    public void testFormatIpAddresses_sameAddresses() {
-        AgentData agentData = new AgentData(1, "192.168.0.1", "192.168.0.1");
-        DeploymentPlan.AgentWorkerLayout agentWorkerLayout = new DeploymentPlan.AgentWorkerLayout(agentData, MIXED);
-        String ipAddresses = agentWorkerLayout.formatIpAddresses();
-        assertTrue(ipAddresses.contains("192.168.0.1"));
-    }
-
-    @Test
-    public void testFormatIpAddresses_differentAddresses() {
-        AgentData agentData = new AgentData(1, "192.168.0.1", "172.16.16.1");
-        DeploymentPlan.AgentWorkerLayout agentWorkerLayout = new DeploymentPlan.AgentWorkerLayout(agentData, MIXED);
-        String ipAddresses = agentWorkerLayout.formatIpAddresses();
-        assertTrue(ipAddresses.contains("192.168.0.1"));
-        assertTrue(ipAddresses.contains("172.16.16.1"));
-    }
 
     @Test
     public void testGenerateFromArguments_dedicatedMemberCountEqualsAgentCount() {

@@ -21,30 +21,23 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
-import com.hazelcast.simulator.protocol.operation.KillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcBashOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
@@ -76,6 +69,7 @@ public final class Coordinator {
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
     private static final int INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES = 5;
+
 
     private final File outputDirectory;
 
@@ -322,7 +316,15 @@ public final class Coordinator {
 
         new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
 
+        componentRegistry.printLayout();
+
         LOGGER.info("Stopping workers complete!");
+    }
+
+    public void printLayout() throws Exception {
+        awaitInteractiveModeInitialized();
+
+        componentRegistry.printLayout();
     }
 
     public void startWorkers(RcStartWorkersOperation op) throws Exception {
@@ -411,46 +413,26 @@ public final class Coordinator {
         LOGGER.info("Run complete!");
     }
 
-    public void killWorker(RcKillWorkersOperation operation) throws Exception {
+    public void killWorker() throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Killing working....");
+        LOGGER.info("Killing worker....");
 
-        List<WorkerData> workers = componentRegistry.getWorkers();
-        Collections.shuffle(workers);
+        new KillWorkersTask(componentRegistry, coordinatorConnector).run();
 
-        WorkerData randomMember = null;
-        for (WorkerData workerData : workers) {
-            if (workerData.isMemberWorker()) {
-                randomMember = workerData;
-                break;
-            }
-        }
+        componentRegistry.printLayout();
 
-        if (randomMember == null) {
-            throw new IllegalStateException("No members found!");
-        }
-
-        SimulatorAddress memberAddress = randomMember.getAddress();
-
-        componentRegistry.removeWorker(memberAddress);
-
-        coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
-
-        coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
-
-        LOGGER.info("Kill send to worker [" + memberAddress + "]");
+        LOGGER.info("Killing worker completed!");
     }
 
     public void bash(RcBashOperation operation) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Bash [" + operation.getCommand() + "] on all workers");
+        LOGGER.info("Bash [" + operation.getCommand() + "] on all workers...");
 
         remoteClient.sendToAllAgents(new BashOperation(operation.getCommand()));
 
-        LOGGER.info("Bash [" + operation.getCommand() + "] completed");
-
+        LOGGER.info("Bash [" + operation.getCommand() + "] on all workers completed!");
     }
 
     private static class ComponentRegistryFailureListener implements FailureListener {

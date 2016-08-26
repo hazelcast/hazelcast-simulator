@@ -23,6 +23,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcShutdownCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_DURATION_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_WARMUP_DURATION_SECONDS;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
+import static com.hazelcast.simulator.utils.CliUtils.initOptionsOnlyWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static java.lang.String.format;
@@ -58,7 +60,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - Coordinator Remote install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
  * - if there are no workers, don't show a stacktrace.
- * - commands should be tchecked for non option args
  * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
  * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
  * at com.hazelcast.simulator.coordinator.RemoteClient.sendToTestOnFirstWorker(RemoteClient.java:93)
@@ -115,6 +116,8 @@ public class CoordinatorRemoteCli implements Closeable {
             response = connector.write(new BashWorkersCommandCli().newOperation(subArgs));
         } else if ("start-workers".equals(cmd)) {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
+        } else if ("print-layout".equals(cmd)) {
+            response = connector.write(new PrintClusterLayoutCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
             response = connector.write(new RunTestCli().newOperation(subArgs));
         } else if ("stop-workers".equals(cmd)) {
@@ -139,6 +142,7 @@ public class CoordinatorRemoteCli implements Closeable {
                         + "bash-workers    Executes a bash command on every worker                                     \n"
                         + "install         Installs vendor software on the remote machines                             \n"
                         + "kill-workers    Kills one or more workers (for high availability testing)                   \n"
+                        + "print-layout    Prints the cluster-layout                                                   \n"
                         + "run             Runs a test                                                                 \n"
                         + "start-workers   Starts workers                                                              \n"
                         + "stop-workers    Stops workers                                                               \n"
@@ -178,7 +182,6 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         RcInstallVendorOperation newOperation(String[] args) {
-
             this.options = initOptionsWithHelp(parser, args);
 
             if (options.nonOptionArguments().size() != 1) {
@@ -215,9 +218,21 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, args);
+            this.options = initOptionsOnlyWithHelp(parser, args);
 
             return new RcStopWorkersOperation();
+        }
+    }
+
+    private static class PrintClusterLayoutCli {
+        private final OptionParser parser = new OptionParser();
+
+        private OptionSet options;
+
+        SimulatorOperation newOperation(String[] args) {
+            this.options = initOptionsOnlyWithHelp(parser, args);
+
+            return new RcPrintLayoutOperation();
         }
     }
 
@@ -231,7 +246,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, args);
+            this.options = initOptionsOnlyWithHelp(parser, args);
 
             int count = options.valueOf(countSpec);
             if (count <= 0) {
@@ -269,7 +284,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, args);
+            this.options = initOptionsOnlyWithHelp(parser, args);
 
             int count = options.valueOf(countSpec);
             if (count <= 0) {

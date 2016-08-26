@@ -4,6 +4,7 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 public class AgentDataTest {
@@ -41,4 +42,20 @@ public class AgentDataTest {
     public void testConstructor_privateAddressNull() {
         new AgentData(DEFAULT_ADDRESS_INDEX, DEFAULT_PUBLIC_ADDRESS, null);
     }
+
+    @Test
+    public void testFormatIpAddresses_sameAddresses() {
+        AgentData agentData = new AgentData(1, "192.168.0.1", "192.168.0.1");
+        String ipAddresses = agentData.formatIpAddresses();
+        assertTrue(ipAddresses.contains("192.168.0.1"));
+    }
+
+    @Test
+    public void testFormatIpAddresses_differentAddresses() {
+        AgentData agentData = new AgentData(1, "192.168.0.1", "172.16.16.1");
+        String ipAddresses = agentData.formatIpAddresses();
+        assertTrue(ipAddresses.contains("192.168.0.1"));
+        assertTrue(ipAddresses.contains("172.16.16.1"));
+    }
+
 }

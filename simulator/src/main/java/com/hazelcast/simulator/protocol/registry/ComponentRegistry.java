@@ -18,9 +18,11 @@ package com.hazelcast.simulator.protocol.registry;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
+import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.Math.ceil;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -41,6 +45,7 @@ import static java.util.Collections.unmodifiableList;
  * Keeps track of all Simulator components which are running.
  */
 public class ComponentRegistry {
+    private static final Logger LOGGER = Logger.getLogger(ComponentRegistry.class);
 
     private final AtomicInteger agentIndex = new AtomicInteger();
     private final AtomicInteger testIndex = new AtomicInteger();
@@ -123,6 +128,15 @@ public class ComponentRegistry {
         return false;
     }
 
+    public WorkerData getWorker(SimulatorAddress workerAddress) {
+        for (WorkerData workerData : workers) {
+            if (workerData.getAddress().equals(workerAddress)) {
+                return workerData;
+            }
+        }
+        return null;
+    }
+
     public List<WorkerData> getWorkers() {
         return new ArrayList<WorkerData>(workers);
     }
@@ -174,6 +188,40 @@ public class ComponentRegistry {
         if (workerList.size() < targetCount) {
             throw new IllegalStateException(format("Could not find enough Workers of type %s (wanted: %d, found: %d)",
                     targetType, targetCount, workerList.size()));
+        }
+    }
+
+    public void printLayout() {
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("Cluster layout");
+        LOGGER.info(HORIZONTAL_RULER);
+
+        for (AgentData agent : agents) {
+
+            Set<String> agentVersionSpecs = agent.getVersionSpecs();
+            int agentMemberWorkerCount = agent.getCount(WorkerType.MEMBER);
+            int agentClientWorkerCount = agent.getWorkers().size() - agentMemberWorkerCount;
+            int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
+
+            String message = "    Agent %s (%s) members: %s, clients: %s";
+            if (totalWorkerCount > 0) {
+                message += ", version specs: %s";
+            } else {
+                message += " (no workers)";
+            }
+
+            LOGGER.info(format(message,
+                    agent.formatIpAddresses(),
+                    agent.getAddress(),
+                    formatLong(agentMemberWorkerCount, 2),
+                    formatLong(agentClientWorkerCount, 2),
+                    agentVersionSpecs
+            ));
+
+            for (WorkerData worker : agent.getWorkers()) {
+                LOGGER.info("        Worker " + worker.getAddress() + " " + worker.getSettings().getWorkerType()
+                        + " [" + worker.getSettings().getVersionSpec() + "]");
+            }
         }
     }
 

@@ -49,6 +49,25 @@ public final class CliUtils {
         }
     }
 
+    public static OptionSet initOptionsOnlyWithHelp(OptionParser parser, String[] args) {
+        try {
+            OptionSpec helpSpec = parser.accepts("help", "Shows the help.").forHelp();
+            OptionSet options = parser.parse(args);
+
+            if (options.has(helpSpec)) {
+                printHelpAndExit(parser, System.out);
+            }
+
+            if (options.nonOptionArguments().size() > 0) {
+                printHelpAndExit(parser, System.out);
+            }
+
+            return options;
+        } catch (OptionException e) {
+            throw new CommandLineExitException(e.getMessage() + ". Use --help to get overview of the help options.");
+        }
+    }
+
     public static void printHelpAndExit(OptionParser parser) {
         printHelpAndExit(parser, System.out);
     }

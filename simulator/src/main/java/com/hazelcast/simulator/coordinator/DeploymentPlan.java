@@ -16,12 +16,12 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
-import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
 import static java.lang.String.format;
@@ -72,7 +71,7 @@ public final class DeploymentPlan {
 
         plan.assign(clientCount, clientType, workerParametersMap.get(clientType));
 
-        plan.printLayout("arguments");
+        plan.printLayout();
 
         return plan;
     }
@@ -90,11 +89,10 @@ public final class DeploymentPlan {
 
         plan.assign(workerCount, workerType, workerParameters);
 
-        plan.printLayout("arguments");
+        plan.printLayout();
 
         return plan;
     }
-
 
     // just for testing
     public static DeploymentPlan createSingleInstanceDeploymentPlan(String agentIpAddress, WorkerParameters workerParameters) {
@@ -190,12 +188,11 @@ public final class DeploymentPlan {
         return smallest;
     }
 
-    private void printLayout(String layoutType) {
+    private void printLayout() {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("Cluster layout");
         LOGGER.info(HORIZONTAL_RULER);
 
-        LOGGER.info(format("Created via %s: ", layoutType));
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
             int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
@@ -209,7 +206,7 @@ public final class DeploymentPlan {
                 message += " (no workers)";
             }
             LOGGER.info(format(message,
-                    agentWorkerLayout.formatIpAddresses(),
+                    agentWorkerLayout.agentData.formatIpAddresses(),
                     agentWorkerLayout.agentData.getAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
@@ -326,15 +323,6 @@ public final class DeploymentPlan {
                 }
             }
             return count;
-        }
-
-        String formatIpAddresses() {
-            String publicIp = formatIpAddress(agentData.getPublicAddress());
-            String privateIp = formatIpAddress(agentData.getPrivateAddress());
-            if (publicIp.equals(privateIp)) {
-                return publicIp;
-            }
-            return publicIp + " " + privateIp;
         }
     }
 }

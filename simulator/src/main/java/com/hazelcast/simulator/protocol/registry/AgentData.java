@@ -15,23 +15,27 @@
  */
 package com.hazelcast.simulator.protocol.registry;
 
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 /**
  * Contains the metadata of a Simulator Agent.
- *
+ * <p>
  * Part of the metadata is the {@link SimulatorAddress} which is used by the Simulator Communication Protocol.
- *
+ * <p>
  * The metadata also contains the IP addresses to connect to the Agent via network. We have a public and private address to deal
  * with cloud environments.
- *
+ * <p>
  * The public address is used by the 'outside' systems like Coordinator to talk to the agents. The private address is used for
  * Hazelcast instances to communicate with each other. They are the same if there is no need for an address separation, e.g. in
  * a static setup.
@@ -87,5 +91,32 @@ public class AgentData {
 
     void removeWorker(WorkerData workerData) {
         workers.remove(workerData);
+    }
+
+    public int getCount(WorkerType workerType) {
+        int result = 0;
+        for (WorkerData workerData : workers) {
+            if (workerData.getSettings().getWorkerType().equals(workerType)) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    public Set<String> getVersionSpecs() {
+        Set<String> result = new HashSet<String>();
+        for (WorkerData workerData : workers) {
+            result.add(workerData.getSettings().getVersionSpec());
+        }
+        return result;
+    }
+
+    public String formatIpAddresses() {
+        String publicIp = formatIpAddress(getPublicAddress());
+        String privateIp = formatIpAddress(getPrivateAddress());
+        if (publicIp.equals(privateIp)) {
+            return publicIp;
+        }
+        return publicIp + " " + privateIp;
     }
 }
