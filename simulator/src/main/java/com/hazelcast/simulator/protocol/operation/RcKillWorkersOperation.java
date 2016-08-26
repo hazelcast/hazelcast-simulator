@@ -17,12 +17,24 @@ package com.hazelcast.simulator.protocol.operation;
 
 public class RcKillWorkersOperation implements SimulatorOperation {
     private final int count;
+    private final String versionSpec;
+    private final String workerType;
 
-    public RcKillWorkersOperation(int count) {
+    public RcKillWorkersOperation(int count, String versionSpec, String workerType) {
         this.count = count;
+        this.versionSpec = versionSpec;
+        this.workerType = workerType;
     }
 
     public int getCount() {
         return count;
+    }
+
+    public String getVersionSpec() {
+        return versionSpec;
+    }
+
+    public String getWorkerType() {
+        return workerType;
     }
 }

@@ -239,6 +239,16 @@ public class CoordinatorRemoteCli implements Closeable {
     private static class KillWorkersCli {
         private final OptionParser parser = new OptionParser();
 
+        private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
+                "The versionSpec of the member to kill, e.g. maven=3.7. The default value is null, meaning that the versionSpec"
+                        + "is not part of the selection criteria ")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
+                "The type of machine to kill. member, litemember, client:java (native clients will be added soon) etc")
+                .withRequiredArg().ofType(String.class).defaultsTo("member");
+
+
         private final OptionSpec<Integer> countSpec = parser.accepts("count",
                 "The number of workers to kill")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
@@ -253,7 +263,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 throw new CommandLineExitException("worker count can't be smaller than 1");
             }
 
-            return new RcKillWorkersOperation(count);
+            return new RcKillWorkersOperation(count, options.valueOf(versionSpecSpec), options.valueOf(workerTypeSpec));
         }
     }
 
