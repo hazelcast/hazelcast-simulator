@@ -15,7 +15,7 @@ exec > worker.out
 exec 2>worker.err
 
 echo $LOG4j_CONFIG>log4j.xml
-echo $HAZELCAST_CONFIG>hazelcast.xml
+echo $HAZELCAST_CONFIG>hazelcast-client.xml
 
 JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
           -Dhazelcast.logging.type=log4j \
@@ -29,7 +29,7 @@ JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
           -DworkerPort=$WORKER_PORT \
           -DworkerPerformanceMonitorIntervalSeconds=$WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS \
           -DautoCreateHzInstance=$AUTOCREATE_HAZELCAST_INSTANCE \
-          -DhzConfigFile=hazelcast.xml"
+          -DhzConfigFile=hazelcast-client.xml"
 
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
