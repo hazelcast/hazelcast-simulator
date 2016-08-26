@@ -362,6 +362,11 @@ final class CoordinatorCli {
         } else {
             componentRegistry = loadComponentRegister(getAgentsFile());
         }
+
+        if (options.has(dedicatedMemberMachinesSpec)) {
+            componentRegistry.assignDedicatedMemberMachines(options.valueOf(dedicatedMemberMachinesSpec));
+        }
+
         return componentRegistry;
     }
 
@@ -380,9 +385,7 @@ final class CoordinatorCli {
                 workerParametersMap,
                 workerType,
                 options.valueOf(memberWorkerCountSpec),
-                options.valueOf(clientWorkerCountSpec),
-                options.valueOf(dedicatedMemberMachinesSpec));
-
+                options.valueOf(clientWorkerCountSpec));
     }
 
     private File getTestSuiteFile() {

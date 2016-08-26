@@ -385,8 +385,7 @@ public final class Coordinator {
                 componentRegistry,
                 workerParameters,
                 workerType,
-                op.getCount(),
-                0); //todo:dedicated machines.. we don't know here.
+                op.getCount());
 
         new StartWorkersTask(
                 deploymentPlan.getWorkerDeployment(),

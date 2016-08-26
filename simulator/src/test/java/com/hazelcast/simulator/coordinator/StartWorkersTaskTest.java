@@ -106,8 +106,9 @@ public class StartWorkersTaskTest {
     private Map<SimulatorAddress, List<WorkerProcessSettings>> getDeployment(int dedicatedMemberMachineCount,
                                                                              int memberWorkerCount,
                                                                              int clientWorkerCount) {
+        componentRegistry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
         DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParametersMap,
-                WorkerType.JAVA_CLIENT,  memberWorkerCount, clientWorkerCount,dedicatedMemberMachineCount);
+                WorkerType.JAVA_CLIENT,  memberWorkerCount, clientWorkerCount);
 
         return deploymentPlan.getWorkerDeployment();
     }

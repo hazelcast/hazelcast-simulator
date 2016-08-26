@@ -42,12 +42,17 @@ import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
  */
 public class AgentData {
 
+    public enum AgentWorkerMode {
+        MEMBERS_ONLY,
+        CLIENTS_ONLY,
+        MIXED
+    }
+
+    private AgentWorkerMode agentWorkerMode = AgentWorkerMode.MIXED;
     private final Collection<WorkerData> workers = new ArrayList<WorkerData>();
     private final AtomicInteger currentWorkerIndex = new AtomicInteger();
-
     private final int addressIndex;
     private final SimulatorAddress address;
-
     private final String publicAddress;
     private final String privateAddress;
 
@@ -59,6 +64,14 @@ public class AgentData {
         this.address = new SimulatorAddress(AddressLevel.AGENT, addressIndex, 0, 0);
         this.publicAddress = checkNotNull(publicAddress, "publicAddress can't be null");
         this.privateAddress = checkNotNull(privateAddress, "privateAddress can't be null");
+    }
+
+    public void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {
+        this.agentWorkerMode = checkNotNull(agentWorkerMode, "agentWorkerMode can't be null");
+    }
+
+    public AgentWorkerMode getAgentWorkerMode() {
+        return agentWorkerMode;
     }
 
     public int getAddressIndex() {

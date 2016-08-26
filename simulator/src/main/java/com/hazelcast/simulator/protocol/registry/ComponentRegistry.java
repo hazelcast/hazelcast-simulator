@@ -21,6 +21,7 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -59,6 +60,38 @@ public class ComponentRegistry {
         agents.add(agentData);
 
         return agentData;
+    }
+
+    public int getDedicatedMemberMachines() {
+        int result = 0;
+        for (AgentData agentData : agents) {
+            if (agentData.getAgentWorkerMode().equals(AgentWorkerMode.MEMBERS_ONLY)) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    public void assignDedicatedMemberMachines(int dedicatedMemberMachineCount) {
+        if (dedicatedMemberMachineCount < 0) {
+            throw new CommandLineExitException("dedicatedMemberMachines can't be smaller than 0");
+        }
+
+        if (dedicatedMemberMachineCount > agents.size()) {
+            throw new CommandLineExitException("dedicatedMemberMachines can't be larger than the number of agents.");
+        }
+
+        if (dedicatedMemberMachineCount > 0) {
+            assignAgentWorkerMode(0, dedicatedMemberMachineCount, AgentWorkerMode.MEMBERS_ONLY);
+            assignAgentWorkerMode(dedicatedMemberMachineCount, agentCount(), AgentWorkerMode.CLIENTS_ONLY);
+        }
+    }
+
+    private void assignAgentWorkerMode(int startIndex, int endIndex, AgentWorkerMode agentWorkerMode) {
+        for (int i = startIndex; i < endIndex; i++) {
+            AgentData agent = agents.get(i);
+            agent.setAgentWorkerMode(agentWorkerMode);
+        }
     }
 
     public void removeAgent(AgentData agentData) {

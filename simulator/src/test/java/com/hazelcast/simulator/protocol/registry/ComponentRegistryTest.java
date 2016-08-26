@@ -5,6 +5,7 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.common.WorkerType;
 import org.junit.Test;
@@ -23,10 +24,34 @@ public class ComponentRegistryTest {
 
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
 
+
+    @Test(expected = CommandLineExitException.class)
+    public void test_assignDedicatedMemberMachines_whenDedicatedMemberCountNegative() {
+        componentRegistry.assignDedicatedMemberMachines(-1);
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void test_assignDedicatedMemberMachines_whenDedicatedMemberCountHigherThanAgentCount() {
+        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+
+        componentRegistry.assignDedicatedMemberMachines(2);
+    }
+
+    @Test
+    public void test_assignDedicatedMemberMachines() {
+        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
+        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+
+        componentRegistry.assignDedicatedMemberMachines(2);
+
+        assertEquals(AgentWorkerMode.MEMBERS_ONLY, componentRegistry.getAgents().get(0).getAgentWorkerMode());
+        assertEquals(AgentWorkerMode.MEMBERS_ONLY, componentRegistry.getAgents().get(1).getAgentWorkerMode());
+        assertEquals(AgentWorkerMode.CLIENTS_ONLY, componentRegistry.getAgents().get(2).getAgentWorkerMode());
+    }
+
     @Test
     public void testAddAgent() {
-        assertEquals(0, componentRegistry.agentCount());
-
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         assertEquals(1, componentRegistry.agentCount());
     }
@@ -155,7 +180,6 @@ public class ComponentRegistryTest {
         componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
         componentRegistry.addAgent("172.16.16.2", "127.0.0.1");
         componentRegistry.addAgent("172.16.16.3", "127.0.0.1");
-        assertEquals(3, componentRegistry.agentCount());
 
         for (AgentData agentData : componentRegistry.getAgents()) {
             List<WorkerProcessSettings> memberSettings = getWorkerProcessSettingsList(1, WorkerType.MEMBER);
