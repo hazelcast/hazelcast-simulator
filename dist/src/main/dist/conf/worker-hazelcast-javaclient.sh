@@ -36,5 +36,5 @@ JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
 
 MAIN=com.hazelcast.simulator.worker.ClientWorker
 
-java -classpath $CLASSPATH $JVM_ARGS $MAIN
+java -classpath "$CLASSPATH" $JVM_ARGS $MAIN
 
