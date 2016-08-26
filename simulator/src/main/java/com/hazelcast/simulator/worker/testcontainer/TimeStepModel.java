@@ -137,7 +137,6 @@ public class TimeStepModel {
         }
     }
 
-
     private void loadAfterRunMethods() {
         List<Method> methods = new AnnotatedMethodRetriever(testClass, AfterRun.class)
                 .findAll();
@@ -160,7 +159,7 @@ public class TimeStepModel {
                                     + "], but no timeStep methods for that executionGroup exist ");
                 }
             }
-            executionGroup.beforeRunMethods.add(method);
+            executionGroup.afterRunMethods.add(method);
         }
     }
 

@@ -6,6 +6,7 @@ import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -78,6 +79,7 @@ public class WizardCliTest {
         cli.run();
     }
 
+    @Ignore
     @Test
     public void testRun_install() {
         args.add("--install");
