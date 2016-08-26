@@ -70,6 +70,8 @@ public final class GitInfo {
         try {
             properties.load(inputStream);
             return properties;
+        } catch (NullPointerException e) {
+            LOGGER.trace("Error while loading Git properties from " + fileName, e);
         } catch (Exception e) {
             LOGGER.warn("Error while loading Git properties from " + fileName, e);
         } finally {
