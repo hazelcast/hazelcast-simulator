@@ -27,6 +27,7 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
@@ -85,7 +86,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 coordinator.runSuite(((RcRunSuiteOperation) operation).getTestSuite());
                 break;
             case RC_KILL_WORKERS:
-                coordinator.killWorker();
+                coordinator.killWorker((RcKillWorkersOperation) operation);
                 break;
             case RC_SHUTDOWN:
                 coordinator.shutdown();

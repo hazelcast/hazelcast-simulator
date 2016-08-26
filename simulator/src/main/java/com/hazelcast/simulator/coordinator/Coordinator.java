@@ -26,6 +26,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcBashOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
@@ -332,7 +333,7 @@ public final class Coordinator {
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
 
-        LOGGER.info("Starting [" + workerType + "] workers: " + op.getCount());
+        LOGGER.info("Starting [" + workerType + "] workers: " + op.getCount() + "...");
 
         Map<String, String> environment = new HashMap<String, String>();
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
@@ -399,7 +400,7 @@ public final class Coordinator {
     public void runSuite(TestSuite testSuite) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Run starting!");
+        LOGGER.info("Run starting...");
 
         new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
@@ -412,16 +413,23 @@ public final class Coordinator {
         LOGGER.info("Run complete!");
     }
 
-    public void killWorker() throws Exception {
+    public void killWorker(RcKillWorkersOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Killing worker....");
+        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s]...",
+                op.getCount(), op.getVersionSpec(), op.getWorkerType()));
 
-        new KillWorkersTask(componentRegistry, coordinatorConnector).run();
+        new KillWorkersTask(
+                componentRegistry,
+                coordinatorConnector,
+                op.getCount(),
+                op.getVersionSpec(),
+                new WorkerType(op.getWorkerType())).run();
 
         componentRegistry.printLayout();
 
-        LOGGER.info("Killing worker completed!");
+        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completed!",
+                op.getCount(), op.getVersionSpec(), op.getWorkerType()));
     }
 
     public void bash(RcBashOperation operation) throws Exception {

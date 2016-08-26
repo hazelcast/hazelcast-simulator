@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
@@ -23,68 +25,98 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static java.lang.String.format;
 
 public class KillWorkersTask {
-    private static final int MAX_KILL_TIMEOUT_SECONDS = 60;
 
     private static final Logger LOGGER = Logger.getLogger(KillWorkersTask.class);
+    private static final int WORKERS_DIED_TIMEOUT = 10;
 
     private final ComponentRegistry componentRegistry;
     private final CoordinatorConnector coordinatorConnector;
+    private final int count;
+    private final String versionSpec;
+    private final WorkerType workerType;
 
-    public KillWorkersTask(ComponentRegistry componentRegistry, CoordinatorConnector coordinatorConnector) {
+    public KillWorkersTask(
+            ComponentRegistry componentRegistry,
+            CoordinatorConnector coordinatorConnector,
+            int count,
+            String versionSpec,
+            WorkerType workerType) {
         this.componentRegistry = componentRegistry;
         this.coordinatorConnector = coordinatorConnector;
+        this.count = count;
+        this.versionSpec = versionSpec;
+        this.workerType = workerType;
     }
 
     public void run() throws Exception {
-        WorkerData randomMember = getRandomWorker();
-        if (randomMember == null) {
-            LOGGER.info("Kill worker ignored; no members found");
+        LOGGER.info("Killing " + count + " workers starting");
+
+        List<WorkerData> victims = getVictims();
+        if (victims.isEmpty()) {
+            LOGGER.info("No victims found");
             return;
         }
 
-        SimulatorAddress memberAddress = randomMember.getAddress();
-
-        componentRegistry.removeWorker(memberAddress);
-
-        coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
-
-        coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
-
-        LOGGER.info("Kill send to worker [" + memberAddress + "]");
-
-        awaitTermination(memberAddress);
-
-        LOGGER.info("Kill worker [" + memberAddress + "] completed");
-    }
-
-    private void awaitTermination(SimulatorAddress memberAddress) {
-        for (int k = 0; k < MAX_KILL_TIMEOUT_SECONDS; k++) {
-            if (componentRegistry.getWorker(memberAddress) == null) {
-                break;
-            }
-            LOGGER.info("Waiting for worker to terminate " + k + " seconds");
-            sleepSeconds(1);
+        if (victims.size() < count) {
+            LOGGER.info(format("Killing %s of the requested %s workers", victims.size(), count));
         }
+
+        for (WorkerData victim : victims) {
+            SimulatorAddress memberAddress = victim.getAddress();
+
+            componentRegistry.removeWorker(memberAddress);
+
+            coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
+
+            coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
+
+            LOGGER.info("Kill send to worker [" + memberAddress + "]");
+        }
+
+        LOGGER.info("Giving workers time to die...");
+        sleepSeconds(WORKERS_DIED_TIMEOUT);
+        LOGGER.info("Killing " + count + " workers complete");
     }
 
-    private WorkerData getRandomWorker() {
+    private List<WorkerData> getVictims() {
         List<WorkerData> workers = componentRegistry.getWorkers();
         Collections.shuffle(workers);
 
-        WorkerData randomMember = null;
+        List<WorkerData> victims = new ArrayList<WorkerData>();
         for (WorkerData workerData : workers) {
-            if (workerData.isMemberWorker()) {
-                randomMember = workerData;
+            if (victims.size() == count) {
                 break;
+            }
+
+            if (isVictim(workerData)) {
+                victims.add(workerData);
             }
         }
 
-        return randomMember;
+        return victims;
+    }
+
+    private boolean isVictim(WorkerData workerData) {
+        WorkerProcessSettings workerProcessSettings = workerData.getSettings();
+
+        if (versionSpec != null) {
+            if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
+                return false;
+            }
+        }
+
+        if (!workerProcessSettings.getWorkerType().equals(workerType)) {
+            return false;
+        }
+
+        return true;
     }
 }
