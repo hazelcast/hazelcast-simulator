@@ -135,7 +135,7 @@ public final class DeploymentPlan {
         for (AgentData agentData : componentRegistry.getAgents()) {
             AgentWorkerLayout layout = new AgentWorkerLayout(agentData);
             for (WorkerData workerData : agentData.getWorkers()) {
-                layout.addWorker(workerData.getSettings());
+                layout.workerProcessSettingsList.add(workerData.getSettings());
             }
             agentWorkerLayouts.add(layout);
 
@@ -174,7 +174,7 @@ public final class DeploymentPlan {
 
         for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
             Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
-            int agentMemberWorkerCount = agentWorkerLayout.getCount(WorkerType.MEMBER);
+            int agentMemberWorkerCount = agentWorkerLayout.count(WorkerType.MEMBER);
             int agentClientWorkerCount = agentWorkerLayout.workerProcessSettingsList.size() - agentMemberWorkerCount;
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
 
@@ -280,12 +280,7 @@ public final class DeploymentPlan {
             return settings;
         }
 
-        void addWorker(WorkerProcessSettings settings) {
-            agentData.getNextWorkerIndex();
-            workerProcessSettingsList.add(settings);
-        }
-
-        int getCount(WorkerType type) {
+        int count(WorkerType type) {
             int count = 0;
             for (WorkerProcessSettings workerProcessSettings : workerProcessSettingsList) {
                 if (workerProcessSettings.getWorkerType().equals(type)) {
