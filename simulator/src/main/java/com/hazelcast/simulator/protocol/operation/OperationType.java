@@ -31,37 +31,39 @@ public enum OperationType {
     CHAOS_MONKEY(ChaosMonkeyOperation.class, 2),
 
     // CoordinatorOperationProcessor
-    FAILURE(FailureOperation.class, 100),
-    PHASE_COMPLETED(PhaseCompletedOperation.class, 101),
-    PERFORMANCE_STATE(PerformanceStatsOperation.class, 102),
-    RC_INSTALL_VENDOR(RcInstallVendorOperation.class, 103),
-    RC_SHUTDOWN(RcShutdownCoordinatorOperation.class, 104),
-    RC_START_WORKERS(RcStartWorkersOperation.class, 105),
-    RC_STOP_WORKERS(RcStopWorkersOperation.class, 106),
-    RC_RUN_SUITE(RcRunSuiteOperation.class, 107),
-    RC_KILL_WORKERS(RcKillWorkersOperation.class, 108),
-    RC_BASH(RcBashOperation.class, 109),
-    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 110),
+    FAILURE(FailureOperation.class, 1000),
+    PHASE_COMPLETED(PhaseCompletedOperation.class, 1001),
+    PERFORMANCE_STATE(PerformanceStatsOperation.class, 1002),
+
+    // Coordinator Remote operations
+    RC_INSTALL_VENDOR(RcInstallVendorOperation.class, 2003),
+    RC_SHUTDOWN(RcShutdownCoordinatorOperation.class, 2004),
+    RC_START_WORKERS(RcStartWorkersOperation.class, 2005),
+    RC_STOP_WORKERS(RcStopWorkersOperation.class, 2006),
+    RC_RUN_SUITE(RcRunSuiteOperation.class, 2007),
+    RC_KILL_WORKERS(RcKillWorkersOperation.class, 2008),
+    RC_BASH(RcBashOperation.class, 2009),
+    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2010),
 
     // AgentOperationProcessor
-    INIT_SESSION(InitSessionOperation.class, 200),
-    INIT_TEST_SUITE(InitTestSuiteOperation.class, 201),
-    CREATE_WORKER(CreateWorkerOperation.class, 202),
-    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 203),
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 204),
-    IGNORE_WORKER_FAILURE(IgnoreWorkerFailureOperation.class, 205),
-    BASH(BashOperation.class, 206),
+    INIT_SESSION(InitSessionOperation.class, 3000),
+    INIT_TEST_SUITE(InitTestSuiteOperation.class, 3001),
+    CREATE_WORKER(CreateWorkerOperation.class, 3002),
+    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3003),
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3004),
+    IGNORE_WORKER_FAILURE(IgnoreWorkerFailureOperation.class, 3005),
+    BASH(BashOperation.class, 3006),
 
     // WorkerOperationProcessor
-    PING(PingOperation.class, 300),
-    TERMINATE_WORKER(TerminateWorkerOperation.class, 301),
-    CREATE_TEST(CreateTestOperation.class, 302),
-    KILL_WORKER(KillWorkerOperation.class, 303),
+    PING(PingOperation.class, 4000),
+    TERMINATE_WORKER(TerminateWorkerOperation.class, 4001),
+    CREATE_TEST(CreateTestOperation.class, 4002),
+    KILL_WORKER(KillWorkerOperation.class, 4003),
 
     // TestOperationProcessor
-    START_TEST_PHASE(StartTestPhaseOperation.class, 400),
-    START_TEST(StartTestOperation.class, 401),
-    STOP_TEST(StopTestOperation.class, 402);
+    START_TEST_PHASE(StartTestPhaseOperation.class, 5000),
+    START_TEST(StartTestOperation.class, 5001),
+    STOP_TEST(StopTestOperation.class, 5002);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;
