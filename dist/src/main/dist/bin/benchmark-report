@@ -31,19 +31,47 @@ image_height=1024
 
 # ================================== reading commandline =============================
 
-help="Usage: benchmark-report output_directory benchmark_directory ..."
 
-if [ "$#" -le 1 ]; then
-    echo $help
-    exit 1
-fi
+svg=false
+aggregation_only=false
+raw_time=false
 
-if [ $1 = "-h" ] ; then
-    echo $help
-    exit 0
+while getopts ":shar" opt; do
+  case $opt in
+    a)
+       aggregation_only=true
+       ;;
+    s)
+      svg=true
+      ;;
+    r)
+      raw_time=true
+      ;;
+    h)
+      echo "Benchmark report usage"
+      echo "SYNOPSIS"
+      echo "    benchmark-report [-r] [-a] [-f] output_directory benchmark_directory ..."
+      echo "Description"
+      echo "    -r   Use the actual time in the plots. This is useful for debugging"
+      echo "    -a   Only show aggregated information and skip per worker detail"
+      echo "    -s   Use SVG Graphics instead of PNG"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [ "$svg" = true ] ; then
+   img_extension=svg
+else
+   img_extension=png
 fi
 
 output_dir="$1"
+echo output_dir = $output_dir
+
 report_file="${output_dir}/report.html"
 shift
 benchmark_dirs=("$@")
@@ -111,8 +139,8 @@ html_h3(){
 
 html_img(){
      img=$1
-     image_file="$output_dir/images/${img}.png"
-     html "<img src=\"images/${img}.png\" style=\"width:640px;height:512px;\" onclick=\"window.open(this.src)\">"
+     image_file="$output_dir/images/${img}.${img_extension}"
+     html "<img src=\"images/${img}.${img_extension}\" style=\"width:640px;height:512px;\" onclick=\"window.open(this.src)\">"
 }
 
 html(){
@@ -143,23 +171,32 @@ report_start(){
 report_throughput(){
     echo "Reporting throughput"
 
-    html_h1 "Throughput"
-
+    # Throughput per member
     plot_start
     plot "set title 'Throughput Per Machine'"
     plot "set style data lines"
     plot 'set datafile separator ","'
-    plot "set terminal png size $image_width,$image_height"
+    if [ "$svg" = true ] ; then
+        plot "set term svg enhanced mouse size $image_width,$image_height"
+    else
+        plot "set terminal png size $image_width,$image_height"
+    fi
     plot "set grid"
     plot "set key below"
-    plot "set xlabel 'Time seconds'"
     plot "set xdata time"
     plot "set timefmt \"%s\""
-    plot "offset = 0"
-    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    if [ "$raw_time" = true ] ; then
+        plot "set format x \"%m-%d\n%H:%M\""
+        plot "t0(x)=(x)"
+        plot "set xlabel 'Time'"
+    else
+        plot "offset = 0"
+        plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+        plot "set xlabel 'Time seconds'"
+    fi
     plot "set ylabel 'operations/second'"
     plot "set format y '%.0f'"
-    plot "set output '$output_dir/images/throughput_per_worker.png'"
+    plot "set output '$output_dir/images/throughput_per_worker.${img_extension}'"
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
@@ -179,21 +216,34 @@ report_throughput(){
     done
     plot_complete
 
+
+    # Aggregated throughput
     plot_start
     plot "set style data lines"
     plot 'set datafile separator ","'
-    plot "set terminal png size $image_width,$image_height"
+    if [ "$svg" = true ] ; then
+        plot "set term svg enhanced mouse size $image_width,$image_height"
+    else
+        plot "set terminal png size $image_width,$image_height"
+    fi
     plot "set grid"
     plot "set key below"
     plot "set xlabel 'Time seconds'"
     plot "set xdata time"
     plot "set timefmt \"%s\""
-    plot "offset = 0"
-    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    if [ "$raw_time" = true ] ; then
+        plot "set format x \"%m-%d\n%H:%M\""
+        plot "t0(x)=(x)"
+        plot "set xlabel 'Time'"
+    else
+        plot "offset = 0"
+        plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+        plot "set xlabel 'Time seconds'"
+    fi
     plot "set title 'Throughput Aggregated'"
     plot "set ylabel 'operations/second'"
     plot "set format y '%.0f'"
-    plot "set output '$output_dir/images/throughput_aggregated.png'"
+    plot "set output '$output_dir/images/throughput_aggregated.${img_extension}'"
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
@@ -220,9 +270,12 @@ report_throughput(){
     done
     plot_complete
 
+    html_h1 "Throughput"
     html_h2 "Throughput"
     html_img "throughput_aggregated"
-    html_img "throughput_per_worker"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "throughput_per_worker"
+    fi
 
     html "<table border=\"2\">"
     html "<tr><th>Benchmark</th><th>Average</th><th>Median</th><th>Min</th><th>Max</th></tr>"
@@ -235,6 +288,7 @@ report_throughput(){
     html "</table>"
 
     rm -fr *.tmp
+    rm -fr *.tmp-e
 }
 
 html_stats()
@@ -283,13 +337,27 @@ plot_latency_stat(){
     plot_start
     plot "set style data lines"
     plot "set datafile separator \",\""
-    plot "set terminal png size $image_width,$image_height"
+    if [ "$svg" = true ] ; then
+        plot "set term svg enhanced mouse size $image_width,$image_height"
+    else
+        plot "set terminal png size $image_width,$image_height"
+    fi
     plot "set grid"
     plot "set key below"
-    plot "set xlabel 'Time seconds'"
     plot "set title '$title'"
+    if [ "$raw_time" = true ] ; then
+        plot "set format x \"%m-%d\n%H:%M\""
+        plot "t0(x)=(x)"
+        plot "set xlabel 'Time'"
+    else
+        plot "offset = 0"
+        plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+        plot "set xlabel 'Time seconds'"
+    fi
     plot "set ylabel '${ylabel}'"
-    plot "set output '$output_dir/images/${image}.png'"
+    plot "set xdata time"
+    plot "set timefmt \"%s\""
+    plot "set output '$output_dir/images/${image}.${img_extension}'"
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
@@ -308,8 +376,12 @@ plot_latency_stat(){
                 line_title="${benchmark_name}_${worker_name}"
             fi
 
+
+            # the first column starts from 0, the second column starts from 'epoch time'.
+            if [ "$raw_time" = true ] ; then xcolumn=2; else xcolumn=1;  fi
+
             # first 4 lines contain header info.
-            plot "  \"$name\" every ::2  using 1:$column title '${line_title}' noenhanced with lines, \\"
+            plot "  \"$name\" every ::2  using $xcolumn:$column title '${line_title}' noenhanced with lines, \\"
          done
     done
     plot_complete
@@ -321,14 +393,18 @@ report_latency(){
     html_h1 "Latency"
 
     plot_start
-    plot "set terminal png size $image_width,$image_height"
+    if [ "$svg" = true ] ; then
+        plot "set term svg enhanced mouse size $image_width,$image_height"
+    else
+        plot "set terminal png size $image_width,$image_height"
+    fi
     plot "set grid"
     plot "unset xtics"
     plot "set ylabel 'Latency (μs)'"
     plot "set logscale x"
     plot "set key top left"
     plot "set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\""
-    plot "set output '$output_dir/images/latency.png'"
+    plot "set output '$output_dir/images/latency.${img_extension}'"
     plot "plot '${SIMULATOR_HOME}/bin/xlabels.dat' with labels center offset 0, 1.5 point,\\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
@@ -353,53 +429,52 @@ report_latency(){
     html_h2 "Latency"
     html_img "latency"
 
-
     html_h3 "Latency interval 25%"
-    plot_latency_stat "Interval 25%" "Latency (μs)" "interval_25" 3
+    plot_latency_stat "Interval 25%" "Latency (μs)" "interval_25" 4
     html_img "interval_25"
 
     html_h3 "Latency interval 50%"
-    plot_latency_stat "Interval 50%" "Latency (μs)" "interval_50" 4
+    plot_latency_stat "Interval 50%" "Latency (μs)" "interval_50" 5
     html_img "interval_50"
 
     html_h3 "Latency interval 75%"
-    plot_latency_stat "Interval 75%" "Latency (μs)" "interval_75" 5
+    plot_latency_stat "Interval 75%" "Latency (μs)" "interval_75" 6
     html_img "interval_75"
 
     html_h3 "Latency interval 90%"
-    plot_latency_stat "Interval 90%" "Latency (μs)" "interval_90" 6
+    plot_latency_stat "Interval 90%" "Latency (μs)" "interval_90" 7
     html_img "interval_90"
 
     html_h3 "Latency interval 99%"
-    plot_latency_stat "Interval 99%" "Latency (μs)" "interval_99" 7
+    plot_latency_stat "Interval 99%" "Latency (μs)" "interval_99" 8
     html_img "interval_99"
 
     html_h3 "Latency interval 99.9%"
-    plot_latency_stat "Interval 99.9%" "Latency (μs)" "interval_999" 8
+    plot_latency_stat "Interval 99.9%" "Latency (μs)" "interval_999" 9
     html_img "interval_999"
 
     html_h3 "Latency interval 99.99%"
-    plot_latency_stat "Interval 99.99%" "Latency (μs)" "interval_9999" 9
+    plot_latency_stat "Interval 99.99%" "Latency (μs)" "interval_9999" 10
     html_img "interval_9999"
 
     html_h3 "Latency interval 99.999%"
-    plot_latency_stat "Interval 99.999%" "Latency (μs)" "interval_99999" 10
+    plot_latency_stat "Interval 99.999%" "Latency (μs)" "interval_99999" 11
     html_img "interval_99999"
 
     html_h3 "Latency interval Min"
-    plot_latency_stat "Interval Min" "Latency (μs)" "interval_min" 11
+    plot_latency_stat "Interval Min" "Latency (μs)" "interval_min" 12
     html_img "interval_min"
 
     html_h3 "Latency interval Max"
-    plot_latency_stat "Interval Max" "Latency (μs)" "interval_max" 12
+    plot_latency_stat "Interval Max" "Latency (μs)" "interval_max" 13
     html_img "interval_max"
 
     html_h3 "Latency interval Mean"
-    plot_latency_stat "Interval Mean" "Latency (μs)" "interval_mean" 13
+    plot_latency_stat "Interval Mean" "Latency (μs)" "interval_mean" 14
     html_img "interval_mean"
 
     html_h3 "Latency interval Std Deviation"
-    plot_latency_stat "Interval Std Deviation" "Latency (μs)" "interval_std_deviation" 14
+    plot_latency_stat "Interval Std Deviation" "Latency (μs)" "interval_std_deviation" 15
     html_img "interval_std_deviation"
 }
 
@@ -415,20 +490,30 @@ plot_dstat_probe(){
     plot_start
     plot "set style data lines"
     plot "set datafile separator \",\""
-    plot "set terminal png size $image_width,$image_height"
+    if [ "$svg" = true ] ; then
+        plot "set term svg enhanced mouse size $image_width,$image_height"
+    else
+        plot "set terminal png size $image_width,$image_height"
+    fi
     plot "set grid"
     plot "set key below"
-    plot "set xlabel 'time seconds'"
     plot "set xdata time"
     plot "set timefmt \"%s\""
-    plot "offset = 0"
-    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    if [ "$raw_time" = true ] ; then
+        plot "set format x \"%m-%d\n%H:%M\""
+        plot "t0(x)=(x)"
+        plot "set xlabel 'Time'"
+    else
+        plot "offset = 0"
+        plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+        plot "set xlabel 'Time seconds'"
+    fi
     plot "set title '$title'"
     plot "set ylabel '$ylabel'"
     if [ -n "$format_y" ]; then
         plot "set format y '$format_y'"
     fi
-    plot "set output '$output_dir/images/${image}.png'"
+    plot "set output '$output_dir/images/${image}.${img_extension}'"
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
@@ -464,20 +549,30 @@ plot_dstat_probe(){
     plot_start
     plot "set style data lines"
     plot "set datafile separator \",\""
-    plot "set terminal png size $image_width,$image_height"
+    if [ "$svg" = true ] ; then
+        plot "set term svg enhanced mouse size $image_width,$image_height"
+    else
+        plot "set terminal png size $image_width,$image_height"
+    fi
     plot "set grid"
     plot "set key below"
-    plot "set xlabel 'time seconds'"
     plot "set xdata time"
     plot "set timefmt \"%s\""
-    plot "offset = 0"
-    plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+    if [ "$raw_time" = true ] ; then
+        plot "set format x \"%m-%d\n%H:%M\""
+        plot "t0(x)=(x)"
+        plot "set xlabel 'Time'"
+    else
+        plot "offset = 0"
+        plot "t0(x)=(offset=(\$0==0) ? x : offset, x - offset)"
+        plot "set xlabel 'Time seconds'"
+    fi
     plot "set title '$title Aggregated'"
     plot "set ylabel '$ylabel'"
     if [ -n "$format_y" ]; then
         plot "set format y '$format_y'"
     fi
-    plot "set output '$output_dir/images/${image}_aggregated.png'"
+    plot "set output '$output_dir/images/${image}_aggregated.${img_extension}'"
     plot "plot \\"
     for benchmark_dir in "${benchmark_dirs[@]}"
     do
@@ -513,6 +608,7 @@ plot_dstat_probe(){
     html "</table>"
 
     rm -fr *.tmp
+    rm -fr *.tmp-e
 }
 
 report_dstat()
@@ -544,22 +640,31 @@ report_dstat()
 
     html_h3 "CPU User"
     html_img "cpu_user_aggregated"
-    html_img "cpu_user"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "cpu_user"
+    fi
+
     plot_dstat_probe "CPU User %" "CPU User %" "cpu_user" "" "1" 6
 
     html_h3 "CPU System"
     html_img "cpu_system_aggregated"
-    html_img "cpu_system"
+    if [ "$aggregation_only" = false ] ; then
+      html_img "cpu_system"
+    fi
     plot_dstat_probe "CPU System %" "CPU System %" "cpu_system" "" "1" 7
 
     html_h3 "CPU Idle"
     html_img "cpu_idle_aggregated"
-    html_img "cpu_idle"
+    if [ "$aggregation_only" = false ] ; then
+      html_img "cpu_idle"
+    fi
     plot_dstat_probe "CPU Idle %" "CPU Idle %" "cpu_idle" "" "1" 8
 
     html_h3 "CPU Wait"
     html_img "cpu_wait_aggregated"
-    html_img "cpu_wait"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "cpu_wait"
+    fi
     plot_dstat_probe "CPU Wait %" "CPU Wait %" "cpu_wait" "" "1" 9
 
     ###################################################
@@ -569,22 +674,31 @@ report_dstat()
 
     html_h3 "memory Used"
     html_img "memory_used_aggregated"
-    html_img "memory_used"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "memory_used"
+    fi
     plot_dstat_probe "Memory Used" "Memory Used" "memory_used" "%.0s%cByte" "1" 2
 
     html_h3 "Memory Cached"
     html_img "memory_cached_aggregated"
-    html_img "memory_cached"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "memory_cached"
+    fi
     plot_dstat_probe "Memory Buffered" "Memory Buffered" "memory_buffered" "%.0s%cByte" "1" 3
 
     html_h3 "Memory Buffered"
     html_img "memory_buffered_aggregated"
-    html_img "memory_buffered"
+
+    if [ "$aggregation_only" = false ] ; then
+        html_img "memory_buffered"
+    fi
     plot_dstat_probe "Memory Cached" "Memory Cached" "memory_cached" "%.0s%cByte" "1" 4
 
     html_h3 "Memory Free"
     html_img "memory_free_aggregated"
-    html_img "memory_free"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "memory_free"
+    fi
     plot_dstat_probe "Memory Free" "Memory Free" "memory_free" "%.0s%cByte" "1" 5
 
     ###################################################
@@ -595,12 +709,16 @@ report_dstat()
 
     html_h3 "CPU Hardware Interrupts"
     html_img "cpu_hardware_interrupts_aggregated"
-    html_img "cpu_hardware_interrupts"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "cpu_hardware_interrupts"
+    fi
     plot_dstat_probe "CPU Hardware Interrupts" "CPU Hardware Interrupts/sec" "cpu_hardware_interrupts" "" "1" 10
 
     html_h3 "CPU Software Interrupts"
     html_img "cpu_software_interrupts_aggregated"
-    html_img "cpu_software_interrupts"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "cpu_software_interrupts"
+    fi
     plot_dstat_probe "CPU Software Interrupts" "CPU Software Interrupts/sec" "cpu_software_interrupts" "" "1" 11
 
     ###################################################
@@ -611,12 +729,16 @@ report_dstat()
 
     html_h3 "Net Receive"
     html_img "net_receive_aggregated"
-    html_img "net_receive"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "net_receive"
+    fi
     plot_dstat_probe "Net Receive" "Receiving/second" "net_receive" "%.0s%cbit" "8" 14
 
     html_h3 "Net send"
     html_img "net_send_aggregated"
-    html_img "net_send"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "net_send"
+    fi
     plot_dstat_probe "Net Send" "Sending/second" "net_send" "%.0s%cbit" "8" 15
 
     ###################################################
@@ -627,12 +749,16 @@ report_dstat()
 
     html_h3 "System Interrupts"
     html_img "system_interrupts_aggregated"
-    html_img "system_interrupts"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "system_interrupts"
+    fi
     plot_dstat_probe "System Interrupts" "System Interrupts/second" "system_interrupts" "" "1" 17
 
     html_h3 "System Context Switches"
     html_img "system_context_switches_aggregated"
-    html_img "system_context_switches"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "system_context_switches"
+    fi
     plot_dstat_probe "System Context Switches" "System Context Switches/sec" "system_context_switches" "" "1" 18
 
     ###################################################
@@ -643,12 +769,16 @@ report_dstat()
 
     html_h3 "Disk Read"
     html_img "disk_read_aggregated"
-    html_img "disk_read"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "disk_read"
+    fi
     plot_dstat_probe "Disk Read" "" "disk_read" "%.0s%cByte" "1" 17
 
     html_h3 "Disk Write"
     html_img "disk_write_aggregated"
-    html_img "disk_write"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "disk_write"
+    fi
     plot_dstat_probe "Disk Write" "" "disk_write" "%.0s%cByte" "1" 18
 
     ###################################################
@@ -659,12 +789,16 @@ report_dstat()
 
     html_h3 "Page In"
     html_img "page_in_aggregated"
-    html_img "page_in"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "page_in"
+    fi
     plot_dstat_probe "Page In" "Pages in" "page_in" "" "1" 12
 
     html_h3 "Page Out"
     html_img "page_out_aggregated"
-    html_img "page_out"
+    if [ "$aggregation_only" = false ] ; then
+        html_img "page_out"
+    fi
     plot_dstat_probe "Page Out" "Pages out" "page_out" "" "1" 13
 }
 

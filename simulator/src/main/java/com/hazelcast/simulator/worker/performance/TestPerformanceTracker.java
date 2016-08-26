@@ -59,6 +59,7 @@ final class TestPerformanceTracker {
     private double intervalThroughput;
     private double totalThroughput;
     private boolean isUpdated;
+    private long previousWriteToFile = System.currentTimeMillis();
 
     TestPerformanceTracker(TestContainer testContainer) {
         this.testContainer = testContainer;
@@ -136,6 +137,7 @@ final class TestPerformanceTracker {
         this.isUpdated = true;
     }
 
+
     void writeStatsToFile(long epochTime, String timestamp) {
         performanceLogWriter.write(
                 epochTime,
@@ -151,8 +153,12 @@ final class TestPerformanceTracker {
             HistogramLogWriter histogramLogWriter = histogramLogWriterMap.get(probeName);
 
             Histogram intervalHistogram = histogramEntry.getValue();
+            intervalHistogram.setStartTimeStamp(previousWriteToFile);
+            intervalHistogram.setEndTimeStamp(epochTime);
             histogramLogWriter.outputIntervalHistogram(intervalHistogram);
         }
+
+        previousWriteToFile = epochTime;
     }
 
     PerformanceStats createPerformanceStats() {
@@ -165,6 +171,7 @@ final class TestPerformanceTracker {
             File latencyFile = getLatencyFile(testId, probeName);
             HistogramLogWriter histogramLogWriter = new HistogramLogWriter(latencyFile);
             histogramLogWriter.setBaseTime(baseTime);
+            histogramLogWriter.outputStartTime(System.currentTimeMillis());
             histogramLogWriter.outputComment("[Latency histograms for " + testId + '.' + probeName + ']');
             histogramLogWriter.outputLogFormatVersion();
             histogramLogWriter.outputLegend();
