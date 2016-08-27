@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static org.junit.Assert.assertEquals;
 
@@ -61,7 +60,7 @@ public class ExecutorTest extends AbstractTest {
     }
 
     @TimeStep
-    public void timeStep(ThreadState state) {
+    public void timeStep(ThreadState state) throws Exception {
         int index = state.randomInt(executors.length);
         IExecutorService executorService = executors[index];
         state.futureList.clear();
@@ -73,11 +72,7 @@ public class ExecutorTest extends AbstractTest {
         }
 
         for (Future future : state.futureList) {
-            try {
-                future.get();
-            } catch (Exception e) {
-                throw rethrow(e);
-            }
+            future.get();
         }
 
         if (state.iteration % 10000 == 0) {
