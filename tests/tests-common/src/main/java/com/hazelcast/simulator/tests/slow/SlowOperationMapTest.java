@@ -18,16 +18,14 @@ package com.hazelcast.simulator.tests.slow;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.MapInterceptor;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
-import com.hazelcast.simulator.worker.tasks.IWorker;
-import com.hazelcast.simulator.worker.tasks.NoOperationWorker;
 
 import java.util.Map;
 import java.util.Random;
@@ -54,17 +52,10 @@ import static org.junit.Assert.fail;
  */
 public class SlowOperationMapTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public int keyCount = 100;
-    public double putProb = 0.5;
     public int recursionDepth = 10;
 
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private final AtomicLong putCounter = new AtomicLong(0);
     private final AtomicLong getCounter = new AtomicLong(0);
 
@@ -78,10 +69,6 @@ public class SlowOperationMapTest extends AbstractTest {
         isClient = isClient(targetInstance);
         keys = generateIntKeys(keyCount, KeyLocality.LOCAL, targetInstance);
         map = targetInstance.getMap(name);
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProb)
-                .addDefaultOperation(Operation.GET);
 
         // try to find the slowOperationDetector instance (since Hazelcast 3.5)
         if (isMemberNode(targetInstance)) {
@@ -131,39 +118,30 @@ public class SlowOperationMapTest extends AbstractTest {
                 + ". Please run the test for a longer time!", operationCount > 0);
     }
 
-    @RunWithWorker
-    public IWorker createWorker() {
+    @BeforeRun
+    public void beforeRun() {
         if (isClient) {
             // if clients execute put or get operations we may produce slow operation logs on a member with put/getCounter == 0
             // in that case the verification will fail without reason, so we create a noop worker for clients
-            return new NoOperationWorker();
+            testContext.stop();
         }
-        return new Worker();
     }
 
-    private class Worker extends AbstractWorker<Operation> {
+    @TimeStep(prob = 0.5)
+    public void put(ThreadState state) {
+        int key = state.randomKey();
+        map.put(key, state.randomValue());
+        putCounter.incrementAndGet();
+    }
 
-        public Worker() {
-            super(operationSelectorBuilder);
-        }
+    @TimeStep(prob = -1)
+    public void get(ThreadState state) {
+        int key = state.randomKey();
+        map.get(key);
+        getCounter.incrementAndGet();
+    }
 
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            int key = randomKey();
-
-            switch (operation) {
-                case PUT:
-                    map.put(key, randomValue());
-                    putCounter.incrementAndGet();
-                    break;
-                case GET:
-                    map.get(key);
-                    getCounter.incrementAndGet();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
+    public class ThreadState extends BaseThreadState {
 
         private int randomKey() {
             return keys[randomInt(keys.length)];
@@ -223,5 +201,4 @@ public class SlowOperationMapTest extends AbstractTest {
     public void tearDown() {
         map.destroy();
     }
-
 }
