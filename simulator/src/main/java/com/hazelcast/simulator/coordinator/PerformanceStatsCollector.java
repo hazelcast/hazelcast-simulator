@@ -154,8 +154,7 @@ public class PerformanceStatsCollector {
             LOGGER.info("Performance information is not available!");
             return;
         }
-
-        LOGGER.info(format("Total performance       %s%% %s ops %s ops/s",
+        LOGGER.info(format("Total throughput        %s%% %s ops %s ops/s",
                 formatPercentage(1, 1),
                 formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
                 formatDouble(totalOperationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));

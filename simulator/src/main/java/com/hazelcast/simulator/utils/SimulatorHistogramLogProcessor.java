@@ -36,6 +36,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
 
         return new Object[]{
                 ((intervalHistogram.getEndTimeStamp() / 1000.0) - logReader.getStartTimeSec()),
+                (intervalHistogram.getEndTimeStamp() / 1000.0),
                 // values recorded during the last reporting interval
                 intervalHistogram.getTotalCount(),
                 intervalHistogram.getValueAtPercentile(25.0) / config.outputValueUnitRatio,
@@ -79,6 +80,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
 
         return new Object[]{
                 ((intervalHistogram.getEndTimeStamp() / 1000.0) - logReader.getStartTimeSec()),
+                (intervalHistogram.getEndTimeStamp() / 1000.0),
                 // values recorded during the last reporting interval
                 intervalHistogram.getTotalCount(),
                 intervalHistogram.getValueAtPercentile(25.0) / config.outputValueUnitRatio,
@@ -116,6 +118,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
     protected String buildLegend(boolean cvs) {
         if (cvs) {
             return "\"Timestamp\","
+                    + "\"StartTime\""
                     + "\"Int_Count\","
                     + "\"Int_25%\","
                     + "\"Int_50%\","
@@ -146,7 +149,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
                     + "\"Total_Throughput\""
                     ;
         } else {
-            return "Time: IntervalPercentiles:count "
+            return "Time: StartTime: IntervalPercentiles:count "
                     + "( 25% 50% 75% 90% 99.9% 99.99% 99.999% Min Max Mean Std-Deviation Throughput) "
                     + "TotalPercentiles:count "
                     + "( 25% 50% 75% 90% 99% 99.9% 99.99% 99.9% Min Max Mean Std-Deviation Throughput)";
@@ -156,6 +159,7 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
     protected String buildLogFormat(boolean cvs) {
         if (cvs) {
             return "%.3f," //timestamp
+                    + "%.3f," //timestamp
                     + "%d," //int count
                     + "%.3f," //int 25%
                     + "%.3f," //int 50%
@@ -186,9 +190,9 @@ public class SimulatorHistogramLogProcessor extends HistogramLogProcessor {
                     + "%.3f" //total std deviation
                     + "%.3f" //total throughput
                     + "\n"
-                    ;
+            ;
         } else {
-            return "%4.3f: I"
+            return "%4.3f: %4.3f: I"
                     + ":%d " //int count
                     + "( "
                     + "%7.3f " //int 25%
