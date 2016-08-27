@@ -254,11 +254,12 @@ public class ComponentRegistry {
     }
 
     public WorkerData getFirstWorker() {
-        if (workers.size() == 0) {
-            throw new CommandLineExitException("No workers running!");
+        synchronized (workers) {
+            if (workers.size() == 0) {
+                throw new CommandLineExitException("No workers running!");
+            }
+            return workers.get(0);
         }
-        //todo: this is racy because the worker could have died.
-        return workers.get(0);
     }
 
     public synchronized void addTests(TestSuite testSuite) {
