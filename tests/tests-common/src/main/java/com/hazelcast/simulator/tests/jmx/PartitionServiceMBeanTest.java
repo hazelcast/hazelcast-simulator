@@ -48,11 +48,9 @@ public class PartitionServiceMBeanTest extends AbstractTest {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
     }
 
-
     @TimeStep(prob = -1)
     public void isClusterSafe() throws Exception {
         mBeanServer.getAttribute(objectName, "isClusterSafe");
-
     }
 
     @TimeStep(prob = 0)
