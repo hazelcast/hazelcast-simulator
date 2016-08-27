@@ -1,12 +1,14 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.common.WorkerType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -16,6 +18,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
@@ -258,12 +261,49 @@ public class CoordinatorCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_noWorkersDefined() {
-        args.add("--memberWorkerCount");
+        args.add("--members");
         args.add("0");
-        args.add("--clientWorkerCount");
+        args.add("--clients");
         args.add("0");
 
         createCoordinatorCli();
+    }
+
+    @Test
+    public void testInit_workersAndClients() {
+        args.add("--members");
+        args.add("2");
+        args.add("--clients");
+        args.add("1");
+
+        CoordinatorCli cli = createCoordinatorCli();
+        assertEquals(2, count(cli.deploymentPlan, WorkerType.MEMBER));
+        assertEquals(1, count(cli.deploymentPlan, WorkerType.JAVA_CLIENT));
+    }
+
+    @Test
+    public void testInit_workersAndClients_oldProperties() {
+        args.add("--memberWorkerCount");
+        args.add("2");
+        args.add("--clientWorkerCount");
+        args.add("1");
+
+        CoordinatorCli cli = createCoordinatorCli();
+        assertEquals(2, count(cli.deploymentPlan, WorkerType.MEMBER));
+        assertEquals(1, count(cli.deploymentPlan, WorkerType.JAVA_CLIENT));
+    }
+
+    int count(DeploymentPlan deploymentPlan, WorkerType type) {
+        Map<SimulatorAddress, List<WorkerProcessSettings>> deployment = deploymentPlan.getWorkerDeployment();
+        int result = 0;
+        for (List<WorkerProcessSettings> list : deployment.values()) {
+            for(WorkerProcessSettings settings: list) {
+                if (settings.getWorkerType().equals(type)) {
+                    result++;
+                }
+            }
+        }
+        return result;
     }
 
     @Test(expected = CommandLineExitException.class)

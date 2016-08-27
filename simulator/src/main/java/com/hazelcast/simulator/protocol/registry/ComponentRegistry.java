@@ -165,15 +165,6 @@ public class ComponentRegistry {
         return false;
     }
 
-    public WorkerData getWorker(SimulatorAddress workerAddress) {
-        for (WorkerData workerData : workers) {
-            if (workerData.getAddress().equals(workerAddress)) {
-                return workerData;
-            }
-        }
-        return null;
-    }
-
     public List<WorkerData> getWorkers() {
         return new ArrayList<WorkerData>(workers);
     }

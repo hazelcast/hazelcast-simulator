@@ -69,6 +69,8 @@ final class CoordinatorCli {
     final CoordinatorParameters coordinatorParameters;
     final ComponentRegistry componentRegistry;
     final Map<WorkerType, WorkerParameters> workerParametersMap;
+    final SimulatorProperties simulatorProperties;
+    final DeploymentPlan deploymentPlan;
 
     private final OptionParser parser = new OptionParser();
 
@@ -93,14 +95,28 @@ final class CoordinatorCli {
                     + " \"threadcount=20,writeProb=0.2\". This makes it easy to parametrize a test.")
             .withRequiredArg().ofType(String.class).defaultsTo("");
 
+    @Deprecated
     private final OptionSpec<Integer> memberWorkerCountSpec = parser.accepts("memberWorkerCount",
+            "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
+                    + " then the number of cluster members will be equal to the number of machines in the agents file. "
+                    + " This option is deprecated, use --members instead.")
+            .withRequiredArg().ofType(Integer.class);
+
+    private final OptionSpec<Integer> membersSpec = parser.accepts("members",
             "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
                     + " then the number of cluster members will be equal to the number of machines in the agents file.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(-1);
 
+    @Deprecated
     private final OptionSpec<Integer> clientWorkerCountSpec = parser.accepts("clientWorkerCount",
+            "Number of cluster client Worker JVMs. This option is deprecated, use --clients instead. It will be removed "
+                    + "in Simulator 0.10")
+            .withRequiredArg().ofType(Integer.class);
+
+    private final OptionSpec<Integer> clientsSpec = parser.accepts("clients",
             "Number of cluster client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
 
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
             "Controls the number of dedicated member machines. For example when there are 4 machines,"
@@ -182,8 +198,6 @@ final class CoordinatorCli {
             "Puts Coordinator into remote control mode for coordinator-remote");
 
     private final OptionSet options;
-    private final SimulatorProperties simulatorProperties;
-    private final DeploymentPlan deploymentPlan;
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
@@ -380,12 +394,23 @@ final class CoordinatorCli {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
-        return createDeploymentPlan(
-                componentRegistry,
-                workerParametersMap,
-                workerType,
-                options.valueOf(memberWorkerCountSpec),
-                options.valueOf(clientWorkerCountSpec));
+        int members;
+        if (options.has(memberWorkerCountSpec)) {
+            LOGGER.warn("--memberWorkerCount option is deprecated, use --members instead");
+            members = options.valueOf(memberWorkerCountSpec);
+        } else {
+            members = options.valueOf(membersSpec);
+        }
+
+        int clients;
+        if (options.has(clientWorkerCountSpec)) {
+            LOGGER.warn("--clientWorkerCount option is deprecated, use --clients instead");
+            clients = options.valueOf(clientWorkerCountSpec);
+        } else {
+            clients = options.valueOf(clientsSpec);
+        }
+
+        return createDeploymentPlan(componentRegistry, workerParametersMap, workerType, members, clients);
     }
 
     private File getTestSuiteFile() {
