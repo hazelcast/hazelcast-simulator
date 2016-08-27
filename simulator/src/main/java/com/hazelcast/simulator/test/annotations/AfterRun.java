@@ -25,6 +25,9 @@ import java.lang.annotation.Target;
  *
  * For every load generating thread, there will be one call to the {@link AfterRun} method.
  * If the test has no {@link TimeStep} methods, methods with {@link AfterRun} are ignored.
+ *
+ * @see TimeStep
+ * @see BeforeRun
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

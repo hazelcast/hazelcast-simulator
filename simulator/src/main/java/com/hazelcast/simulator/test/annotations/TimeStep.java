@@ -31,6 +31,9 @@ import java.lang.annotation.Target;
  * </ol>
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation
  * to create a runner with the least amount of overhead.  The {@link TimeStep} looks a lot like the  @Benchmark from JMH.
+ *
+ * @see BeforeRun
+ * @see AfterRun
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

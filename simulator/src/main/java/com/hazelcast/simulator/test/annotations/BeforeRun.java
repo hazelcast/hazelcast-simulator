@@ -27,10 +27,14 @@ import java.lang.annotation.Target;
  * If the test has no {@link TimeStep} methods, methods with {@link BeforeRun} are ignored.
  *
  * {@link BeforeRun} can be useful for some initialization actions on the {@link com.hazelcast.simulator.test.BaseThreadState}.
+ *
+ * @see AfterRun
+ * @see TimeStep
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface BeforeRun {
+
     /**
      * The execution executionGroup. For more information see {@link TimeStep}.
      *
