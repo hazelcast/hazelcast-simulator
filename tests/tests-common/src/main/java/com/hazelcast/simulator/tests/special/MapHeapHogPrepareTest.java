@@ -88,7 +88,6 @@ public class MapHeapHogPrepareTest extends AbstractTest {
         logger.info(sb.toString());
     }
 
-
     @TimeStep
     public void timeStep() {
         testContext.stop();

@@ -80,7 +80,6 @@ public class FailingTest extends AbstractTest {
         createFailure(TestPhase.SETUP);
     }
 
-
     @Prepare
     public void localPrepare() throws Exception {
         createFailure(TestPhase.LOCAL_PREPARE);
@@ -115,7 +114,6 @@ public class FailingTest extends AbstractTest {
     public void globalTearDown() throws Exception {
         createFailure(TestPhase.GLOBAL_TEARDOWN);
     }
-
 
     private void createFailure(TestPhase currentTestPhase) throws Exception {
         if (!isSelected || testPhase != currentTestPhase) {
