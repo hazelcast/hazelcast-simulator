@@ -96,13 +96,13 @@ public class FailureCollector {
         int failureNumber = failureNumberGenerator.incrementAndGet();
         if (failureCount < MAX_CONSOLE_FAILURE_COUNT) {
             if (isCriticalFailure) {
-                LOGGER.error(failure.getLogMessage(failureNumber));
+                LOGGER.warn(failure.getLogMessage(failureNumber));
             } else {
                 LOGGER.info(failure.getLogMessage(failureNumber));
             }
         } else if (failureNumber == MAX_CONSOLE_FAILURE_COUNT) {
             if (isCriticalFailure) {
-                LOGGER.error(format("Maximum number of critical failures has been reached. "
+                LOGGER.warn(format("Maximum number of critical failures has been reached. "
                         + "Additional failures can be found in '%s'", file.getAbsolutePath()));
             } else {
                 LOGGER.info(format("Maximum number of non critical failures has been reached. "
@@ -128,14 +128,14 @@ public class FailureCollector {
         int nonCriticalFailureCount = nonCriticalFailureCounter.get();
         if (criticalFailureCount > 0 || nonCriticalFailureCount > 0) {
             if (criticalFailureCount > 0) {
-                LOGGER.fatal(HORIZONTAL_RULER);
-                LOGGER.fatal(criticalFailureCount + " critical failures have been detected!!!");
-                LOGGER.fatal(HORIZONTAL_RULER);
+                LOGGER.warn(HORIZONTAL_RULER);
+                LOGGER.warn(criticalFailureCount + " critical failures have been detected!!!");
+                LOGGER.warn(HORIZONTAL_RULER);
                 throw new CommandLineExitException(criticalFailureCount + " critical failures have been detected");
             } else {
-                LOGGER.fatal(HORIZONTAL_RULER);
-                LOGGER.fatal(nonCriticalFailureCount + " non-critical failures have been detected!");
-                LOGGER.fatal(HORIZONTAL_RULER);
+                LOGGER.warn(HORIZONTAL_RULER);
+                LOGGER.warn(nonCriticalFailureCount + " non-critical failures have been detected!");
+                LOGGER.warn(HORIZONTAL_RULER);
             }
             return;
         }
