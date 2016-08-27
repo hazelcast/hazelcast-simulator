@@ -1,9 +1,11 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -25,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class AbstractWorkerWithProbeControlTest {
 
@@ -50,7 +53,7 @@ public class AbstractWorkerWithProbeControlTest {
         userDir = setupFakeUserDir();
 
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractWorkerWithProbeControl");
+        testContext = new TestContextImpl(mock(HazelcastInstance.class), "Test", "localhost", mock(WorkerConnector.class));
         testContainer = new TestContainer(testContext, test,
                 new TestCase("id").setProperty("threadCount", THREAD_COUNT));
 

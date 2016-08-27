@@ -52,4 +52,16 @@ public interface TestContext {
      * directly.
      */
     void stop();
+
+    /**
+     * Echoes a message to coordinator.
+     *
+     * Be very careful sending huge quantities of messages to the coordinator because it cause stability issues. Messages are
+     * written async, so you could easily kill the by flooding it or causing other problems. So don't use this as a debug logging
+     * alternative.
+     *
+     * @param msg
+     * @param args
+     */
+    void echoCoordinator(String msg, Object... args);
 }

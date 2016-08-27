@@ -1,8 +1,10 @@
 package com.hazelcast.simulator.worker.tasks;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
@@ -26,6 +28,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class AbstractAsyncWorkerTest {
 
@@ -47,7 +50,7 @@ public class AbstractAsyncWorkerTest {
     public void setUp() {
         userDir = setupFakeUserDir();
         test = new WorkerTest();
-        testContext = new TestContextImpl("AbstractAsyncWorkerTest");
+        testContext = new TestContextImpl(mock(HazelcastInstance.class), "Test", "localhost", mock(WorkerConnector.class));
         TestCase testCase = new TestCase(testContext.getTestId()).setProperty("threadCount", THREAD_COUNT);
         testContainer = new TestContainer(testContext, test, testCase);
         ExceptionReporter.reset();

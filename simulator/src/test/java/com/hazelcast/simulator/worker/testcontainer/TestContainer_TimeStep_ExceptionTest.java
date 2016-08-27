@@ -1,7 +1,8 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
 
@@ -15,6 +16,7 @@ import static com.hazelcast.simulator.common.TestPhase.SETUP;
 import static com.hazelcast.simulator.utils.TestUtils.assertCompletesEventually;
 import static com.hazelcast.simulator.utils.TestUtils.assertException;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class TestContainer_TimeStep_ExceptionTest extends TestContainer_AbstractTest {
 
@@ -25,7 +27,8 @@ public class TestContainer_TimeStep_ExceptionTest extends TestContainer_Abstract
                 .setProperty("threadCount", 1)
                 .setProperty("class", testInstance.getClass().getName());
 
-        TestContextImpl testContext = new TestContextImpl(testCase.getId());
+        TestContextImpl testContext = new TestContextImpl(
+                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 

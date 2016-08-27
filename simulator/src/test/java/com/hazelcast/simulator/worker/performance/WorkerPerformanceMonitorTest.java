@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
@@ -170,7 +171,7 @@ public class WorkerPerformanceMonitorTest {
         private final int delayMillis;
 
         DelayTestContext(int delayMillis) {
-            super(TEST_NAME);
+            super(null, TEST_NAME, "localhost", mock(WorkerConnector.class));
             this.delayMillis = delayMillis;
         }
 

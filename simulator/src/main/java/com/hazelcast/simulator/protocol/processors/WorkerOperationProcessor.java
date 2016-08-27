@@ -184,7 +184,9 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
 
         LOGGER.info(format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
 
-        TestContextImpl testContext = new TestContextImpl(hazelcastInstance, testId, worker.getPublicIpAddress());
+        TestContextImpl testContext = new TestContextImpl(
+                hazelcastInstance, testId, worker.getPublicIpAddress(), workerConnector);
+
         TestContainer testContainer = new TestContainer(testContext, testCase);
         SimulatorAddress testAddress = workerAddress.getChild(testIndex);
         TestOperationProcessor processor = new TestOperationProcessor(worker, type, testContainer, testAddress);

@@ -1,6 +1,8 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
@@ -20,6 +22,7 @@ import static java.util.Collections.disjoint;
 import static java.util.Collections.synchronizedSet;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class TestContainer_TimeStep_MultipleExecutionGroupsTest extends TestContainer_AbstractTest {
 
@@ -31,7 +34,8 @@ public class TestContainer_TimeStep_MultipleExecutionGroupsTest extends TestCont
                 .setProperty("group2ThreadCount", 3)
                 .setProperty("class", testInstance.getClass().getName());
 
-        TestContextImpl testContext = new TestContextImpl(testCase.getId());
+        TestContextImpl testContext = new TestContextImpl(
+                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 

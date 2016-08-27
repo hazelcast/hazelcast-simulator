@@ -16,28 +16,27 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestContext;
+
+import static java.lang.String.format;
 
 public class TestContextImpl implements TestContext {
 
     private final HazelcastInstance hazelcastInstance;
     private final String testId;
     private final String publicIpAddress;
-
+    private final WorkerConnector workerConnector;
     private volatile boolean stopped;
 
-    public TestContextImpl(String testId) {
-        this(null, testId, LOCALHOST);
-    }
-
-    public TestContextImpl(HazelcastInstance hazelcastInstance, String testId) {
-        this(hazelcastInstance, testId, LOCALHOST);
-    }
-
-    public TestContextImpl(HazelcastInstance hazelcastInstance, String testId, String publicIpAddress) {
+    public TestContextImpl(HazelcastInstance hazelcastInstance, String testId, String publicIpAddress,
+                           WorkerConnector workerConnector) {
         this.hazelcastInstance = hazelcastInstance;
         this.testId = testId;
         this.publicIpAddress = publicIpAddress;
+        this.workerConnector = workerConnector;
     }
 
     public HazelcastInstance getTargetInstance() {
@@ -66,5 +65,11 @@ public class TestContextImpl implements TestContext {
 
     public void afterLocalWarmup() {
         stopped = false;
+    }
+
+    @Override
+    public void echoCoordinator(String msg, Object... args) {
+        String message = format(msg, args);
+        workerConnector.writeAsync(SimulatorAddress.COORDINATOR, new LogOperation(message));
     }
 }

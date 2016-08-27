@@ -1,7 +1,9 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
@@ -16,6 +18,7 @@ import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
 import static junit.framework.TestCase.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class PrimordialRunStrategyIntegrationTest {
 
@@ -27,7 +30,8 @@ public class PrimordialRunStrategyIntegrationTest {
                 .setProperty("threadCount", threadCount)
                 .setProperty("class", testInstance.getClass().getName());
 
-        TestContextImpl testContext = new TestContextImpl(testCase.getId());
+        TestContextImpl testContext = new TestContextImpl(
+                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
@@ -51,13 +55,13 @@ public class PrimordialRunStrategyIntegrationTest {
     public static class DummyTest {
         @InjectTestContext
         public TestContext testContext;
-        public  int threadCount;
+        public int threadCount;
         private final AtomicLong count = new AtomicLong();
 
         @Run
         public void run() {
             ThreadSpawner spawner = new ThreadSpawner("id");
-            for(int k=0;k<threadCount;k++){
+            for (int k = 0; k < threadCount; k++) {
                 spawner.spawn(new Runnable() {
                     @Override
                     public void run() {

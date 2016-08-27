@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
@@ -28,14 +29,13 @@ import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
+import static com.hazelcast.simulator.common.WorkerType.MEMBER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
-import static com.hazelcast.simulator.test.TestContext.LOCALHOST;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.common.WorkerType.MEMBER;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -222,7 +222,8 @@ public class TestOperationProcessorTest {
             TestCase testCase = new TestCase(testId);
             testCase.setProperty("class", testClass.getName());
 
-            TestContextImpl testContext = new TestContextImpl(null, testId, LOCALHOST);
+            TestContextImpl testContext = new TestContextImpl(
+                    mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
             TestContainer testContainer = new TestContainer(testContext, testCase);
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 1, 1, 1);
 
