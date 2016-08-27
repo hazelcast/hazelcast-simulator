@@ -9,7 +9,6 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
-import com.hazelcast.simulator.tests.PerformanceMonitorTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
@@ -36,14 +35,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class WorkerPerformanceMonitorTest {
+public class PerformanceMonitorTest {
 
     private static final String TEST_NAME = "WorkerPerformanceMonitorTest";
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
     private ServerConnector serverConnector;
-    private WorkerPerformanceMonitor performanceMonitor;
+    private PerformanceMonitor performanceMonitor;
 
     @Before
     public void setUp() {
@@ -54,7 +53,7 @@ public class WorkerPerformanceMonitorTest {
         serverConnector = mock(ServerConnector.class);
         when(serverConnector.getAddress()).thenReturn(workerAddress);
 
-        performanceMonitor = new WorkerPerformanceMonitor(serverConnector, tests.values(), 100, TimeUnit.MILLISECONDS);
+        performanceMonitor = new PerformanceMonitor(serverConnector, tests.values(), 100, TimeUnit.MILLISECONDS);
     }
 
     @After
@@ -92,7 +91,7 @@ public class WorkerPerformanceMonitorTest {
 
     @Test
     public void test_whenTestWithProbeWhichIsNotRunning_thenDoNothing() {
-        addTest(new PerformanceMonitorTest());
+        addTest(new com.hazelcast.simulator.tests.PerformanceMonitorTest());
 
         performanceMonitor.start();
 
@@ -143,7 +142,7 @@ public class WorkerPerformanceMonitorTest {
 
     @Test
     public void test_whenTestWithProbeWhichIsNotRunningAnymore_thenDoNothing() throws Exception {
-        addTest(new PerformanceMonitorTest());
+        addTest(new com.hazelcast.simulator.tests.PerformanceMonitorTest());
         tests.get(TEST_NAME).invoke(TestPhase.RUN);
 
         performanceMonitor.start();

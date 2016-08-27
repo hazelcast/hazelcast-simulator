@@ -23,7 +23,7 @@ import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.NativeUtils;
-import com.hazelcast.simulator.worker.performance.WorkerPerformanceMonitor;
+import com.hazelcast.simulator.worker.performance.PerformanceMonitor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -67,7 +67,7 @@ public final class MemberWorker implements Worker {
     private final HazelcastInstance hazelcastInstance;
     private final WorkerConnector workerConnector;
 
-    private final WorkerPerformanceMonitor workerPerformanceMonitor;
+    private final PerformanceMonitor performanceMonitor;
 
     private ShutdownThread shutdownThread;
 
@@ -82,7 +82,7 @@ public final class MemberWorker implements Worker {
         this.hazelcastInstance = getHazelcastInstance();
         this.workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
 
-        this.workerPerformanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
+        this.performanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
@@ -92,8 +92,8 @@ public final class MemberWorker implements Worker {
     void start() {
         workerConnector.start();
 
-        if (workerPerformanceMonitor != null) {
-            workerPerformanceMonitor.start();
+        if (performanceMonitor != null) {
+            performanceMonitor.start();
         }
     }
 
@@ -136,12 +136,12 @@ public final class MemberWorker implements Worker {
         return instance;
     }
 
-    private WorkerPerformanceMonitor initWorkerPerformanceMonitor(int intervalSeconds) {
+    private PerformanceMonitor initWorkerPerformanceMonitor(int intervalSeconds) {
         if (intervalSeconds < 1) {
             return null;
         }
         WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
-        return new WorkerPerformanceMonitor(workerConnector, processor.getTests(), intervalSeconds, TimeUnit.SECONDS);
+        return new PerformanceMonitor(workerConnector, processor.getTests(), intervalSeconds, TimeUnit.SECONDS);
     }
 
     private void signalStartToAgent() {
@@ -258,9 +258,9 @@ public final class MemberWorker implements Worker {
                 hazelcastInstance.shutdown();
             }
 
-            if (workerPerformanceMonitor != null) {
+            if (performanceMonitor != null) {
                 echo("Shutting down WorkerPerformanceMonitor");
-                workerPerformanceMonitor.shutdown();
+                performanceMonitor.shutdown();
             }
 
             if (workerConnector != null) {

@@ -46,17 +46,17 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * Monitors the performance of all running Simulator Tests on {@link com.hazelcast.simulator.worker.MemberWorker}
  * and {@link com.hazelcast.simulator.worker.ClientWorker} instances.
  */
-public class WorkerPerformanceMonitor {
+public class PerformanceMonitor {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
     private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = MILLISECONDS.toNanos(100);
-    private static final Logger LOGGER = Logger.getLogger(WorkerPerformanceMonitor.class);
+    private static final Logger LOGGER = Logger.getLogger(PerformanceMonitor.class);
 
     private final WorkerPerformanceMonitorThread thread;
     private final AtomicBoolean shutdown = new AtomicBoolean();
 
-    public WorkerPerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers,
-                                    int workerPerformanceMonitorInterval, TimeUnit workerPerformanceIntervalTimeUnit) {
+    public PerformanceMonitor(ServerConnector serverConnector, Collection<TestContainer> testContainers,
+                              int workerPerformanceMonitorInterval, TimeUnit workerPerformanceIntervalTimeUnit) {
         long intervalNanos = workerPerformanceIntervalTimeUnit.toNanos(workerPerformanceMonitorInterval);
         this.thread = new WorkerPerformanceMonitorThread(serverConnector, testContainers, intervalNanos);
         thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
