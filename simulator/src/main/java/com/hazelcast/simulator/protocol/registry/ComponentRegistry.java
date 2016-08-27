@@ -251,6 +251,12 @@ public class ComponentRegistry {
                         + " [" + worker.getSettings().getVersionSpec() + "]");
             }
         }
+
+        List<TestData> tests = new ArrayList<TestData>(this.tests.values());
+        LOGGER.info(format("    Tests %s", tests.size()));
+        for (TestData testData : tests) {
+            LOGGER.info("        " + testData.getAddress() + " " + testData.getTestCase().getId());
+        }
     }
 
     public WorkerData getFirstWorker() {
