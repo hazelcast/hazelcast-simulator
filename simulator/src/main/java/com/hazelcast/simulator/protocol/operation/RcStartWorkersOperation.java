@@ -21,13 +21,16 @@ public class RcStartWorkersOperation implements SimulatorOperation {
     private String vmOptions;
     private String workerType;
     private String hzConfig;
+    private String agentAddress;
 
-    public RcStartWorkersOperation(int count, String versionSpec, String vmOptions, String workerType, String hzConfig) {
+    public RcStartWorkersOperation(int count, String versionSpec, String vmOptions,
+                                   String workerType, String hzConfig, String agentAddress) {
         this.count = count;
         this.versionSpec = versionSpec;
         this.vmOptions = vmOptions;
         this.workerType = workerType;
         this.hzConfig = hzConfig;
+        this.agentAddress = agentAddress;
     }
 
     public int getCount() {
@@ -48,5 +51,9 @@ public class RcStartWorkersOperation implements SimulatorOperation {
 
     public String getHzConfig() {
         return hzConfig;
+    }
+
+    public String getAgentAddress() {
+        return agentAddress;
     }
 }

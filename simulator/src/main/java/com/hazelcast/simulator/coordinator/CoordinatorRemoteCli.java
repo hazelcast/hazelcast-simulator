@@ -272,7 +272,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 throw new CommandLineExitException("worker count can't be smaller than 1");
             }
 
-            String agentAddress = loadAgentAddress();
+            String agentAddress = loadAgentAddress(options, agentAddressSpec);
 
             String workerAddress = loadWorkerAddress(agentAddress);
 
@@ -306,25 +306,6 @@ public class CoordinatorRemoteCli implements Closeable {
             }
             return workerAddress;
         }
-
-        private String loadAgentAddress() {
-            String agentAddress = options.valueOf(agentAddressSpec);
-            if (agentAddress != null) {
-                SimulatorAddress address;
-                try {
-                    address = SimulatorAddress.fromString(agentAddress);
-                } catch (Exception e) {
-                    throw new CommandLineExitException("Agent address [" + agentAddress
-                            + "] is not a valid simulator address", e);
-                }
-
-                if (!address.getAddressLevel().equals(AddressLevel.AGENT)) {
-                    throw new CommandLineExitException("Agent address [" + agentAddress
-                            + "] is not a valid agent address, it's a " + address.getAddressLevel() + " address");
-                }
-            }
-            return agentAddress;
-        }
     }
 
     private class StartWorkersCli {
@@ -351,6 +332,11 @@ public class CoordinatorRemoteCli implements Closeable {
                 "The file containing the configuration to use to start up the worker. E.g. Hazelcast configuration")
                 .withRequiredArg().ofType(String.class);
 
+        private final OptionSpec<String> agentAddressSpec = parser.accepts("agentAddress",
+                "The simulator address of the agent to start the worker on")
+                .withRequiredArg().ofType(String.class);
+
+
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
@@ -368,7 +354,8 @@ public class CoordinatorRemoteCli implements Closeable {
                     options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
                     options.valueOf(workerTypeSpec),
-                    options.valueOf(configSpec));
+                    options.valueOf(configSpec),
+                    loadAgentAddress(options, agentAddressSpec));
         }
     }
 
@@ -463,5 +450,25 @@ public class CoordinatorRemoteCli implements Closeable {
             String sub = value.substring(0, value.length() - 1);
             return (int) timeUnit.toSeconds(Integer.parseInt(sub));
         }
+    }
+
+
+    private static String loadAgentAddress(OptionSet options, OptionSpec<String> spec) {
+        String agentAddress = options.valueOf(spec);
+        if (agentAddress != null) {
+            SimulatorAddress address;
+            try {
+                address = SimulatorAddress.fromString(agentAddress);
+            } catch (Exception e) {
+                throw new CommandLineExitException("Agent address [" + agentAddress
+                        + "] is not a valid simulator address", e);
+            }
+
+            if (!address.getAddressLevel().equals(AddressLevel.AGENT)) {
+                throw new CommandLineExitException("Agent address [" + agentAddress
+                        + "] is not a valid agent address, it's a " + address.getAddressLevel() + " address");
+            }
+        }
+        return agentAddress;
     }
 }

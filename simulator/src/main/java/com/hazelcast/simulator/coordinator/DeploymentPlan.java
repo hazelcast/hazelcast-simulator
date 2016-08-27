@@ -67,28 +67,67 @@ public final class DeploymentPlan {
 
         plan.initAgentWorkerLayouts(componentRegistry);
 
-        plan.assign(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
+        plan.assignToMultipleAgents(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
 
-        plan.assign(clientCount, clientType, workerParametersMap.get(clientType));
+        plan.assignToMultipleAgents(clientCount, clientType, workerParametersMap.get(clientType));
 
         plan.printLayout();
 
         return plan;
     }
 
-    public static DeploymentPlan createDeploymentPlan(ComponentRegistry componentRegistry,
-                                                      WorkerParameters workerParameters,
-                                                      WorkerType workerType,
-                                                      int workerCount) {
+    public static DeploymentPlan createDeploymentPlan(
+            ComponentRegistry componentRegistry,
+            WorkerParameters workerParameters,
+            WorkerType workerType,
+            int workerCount,
+            SimulatorAddress agentAddress) {
+
+        if (workerCount < 0) {
+            throw new IllegalArgumentException("workerCount can't be smaller than 0");
+        }
+
         DeploymentPlan plan = new DeploymentPlan();
 
         plan.initAgentWorkerLayouts(componentRegistry);
 
-        plan.assign(workerCount, workerType, workerParameters);
+        if (agentAddress == null) {
+            plan.assignToMultipleAgents(workerCount, workerType, workerParameters);
+        } else {
+            plan.assignToSingleAgent(workerCount, workerType, workerParameters, agentAddress);
+        }
 
         plan.printLayout();
 
         return plan;
+    }
+
+    private void assignToSingleAgent(int workerCount, WorkerType workerType, WorkerParameters workerParameters,
+                                     SimulatorAddress agentAddress) {
+        AgentWorkerLayout agent = null;
+        for (AgentWorkerLayout agentLayout : agentWorkerLayouts) {
+            if (agentLayout.agentData.getAddress().equals(agentAddress)) {
+                agent = agentLayout;
+                break;
+            }
+        }
+
+        if (agent == null) {
+            throw new IllegalArgumentException(format("Agent [%s] does not exist", agentAddress));
+        }
+
+        if (!agent.allowed(workerType)) {
+            throw new IllegalArgumentException(format("Agent [%s] does not accept workers of type [%s]",
+                    agentAddress, workerType));
+        }
+
+        for (int k = 0; k < workerCount; k++) {
+            WorkerProcessSettings workerProcessSettings = agent.addWorker(
+                    workerType, workerParameters);
+
+            List<WorkerProcessSettings> processSettingsList = workerDeployment.get(agent.agentData.getAddress());
+            processSettingsList.add(workerProcessSettings);
+        }
     }
 
     // just for testing
@@ -101,7 +140,7 @@ public final class DeploymentPlan {
         return deploymentPlan;
     }
 
-    private void assign(int workerCount, WorkerType workerType, WorkerParameters parameters) {
+    private void assignToMultipleAgents(int workerCount, WorkerType workerType, WorkerParameters parameters) {
 
         for (int i = 0; i < workerCount; i++) {
             AgentWorkerLayout agentWorkerLayout = nextAgent(workerType);

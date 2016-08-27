@@ -21,6 +21,7 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
@@ -383,17 +384,16 @@ public final class Coordinator {
                 loadWorkerScript(workerType, simulatorProperties.get("VENDOR")),
                 environment);
 
+        SimulatorAddress agent = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
         DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry,
-                workerParameters,
-                workerType,
-                op.getCount());
+                componentRegistry, workerParameters, workerType, op.getCount(), agent);
 
         new StartWorkersTask(
                 deploymentPlan.getWorkerDeployment(),
                 remoteClient,
                 componentRegistry,
-                coordinatorParameters.getWorkerVmStartupDelayMs()).run();
+                coordinatorParameters.getWorkerVmStartupDelayMs()
+        ).run();
 
         LOGGER.info("Workers started!");
     }
@@ -409,7 +409,8 @@ public final class Coordinator {
                 failureCollector,
                 testPhaseListeners,
                 remoteClient,
-                performanceStatsCollector).run();
+                performanceStatsCollector
+        ).run();
 
         LOGGER.info("Run complete!");
     }
