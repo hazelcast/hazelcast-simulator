@@ -37,16 +37,16 @@ public class FailureOperation implements SimulatorOperation {
     private final String hzAddress;
     private final String workerId;
     private final String testId;
-    private final TestSuite testSuite;
+    private TestSuite testSuite;
     private final String cause;
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             Throwable cause) {
-        this(message, type, workerAddress, agentAddress, null, null, null, null, throwableToString(cause));
+        this(message, type, workerAddress, agentAddress, null, null, null, throwableToString(cause));
     }
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
-                            String hzAddress, String workerId, String testId, TestSuite testSuite, String cause) {
+                            String hzAddress, String workerId, String testId, String cause) {
         this.message = message;
         this.type = type.name();
         this.workerAddress = (workerAddress == null) ? null : workerAddress.toString();
@@ -54,8 +54,12 @@ public class FailureOperation implements SimulatorOperation {
         this.hzAddress = hzAddress;
         this.workerId = workerId;
         this.testId = testId;
-        this.testSuite = testSuite;
         this.cause = cause;
+    }
+
+    public FailureOperation setTestSuite(TestSuite testSuite) {
+        this.testSuite = testSuite;
+        return this;
     }
 
     public FailureType getType() {

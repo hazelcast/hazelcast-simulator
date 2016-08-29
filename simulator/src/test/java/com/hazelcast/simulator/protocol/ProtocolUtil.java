@@ -19,6 +19,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
@@ -163,7 +164,8 @@ class ProtocolUtil {
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         File outputDirectory = TestUtils.createTmpDirectory();
-        FailureCollector failureCollector = new FailureCollector(outputDirectory);
+        ComponentRegistry componentRegistry = new ComponentRegistry();
+        FailureCollector failureCollector = new FailureCollector(outputDirectory, componentRegistry);
         CoordinatorOperationProcessor operationProcessor = new CoordinatorOperationProcessor(
                 null, failureCollector,testPhaseListeners,performanceStatsCollector);
         CoordinatorConnector coordinatorConnector = new CoordinatorConnector(operationProcessor, coordinatorPort);

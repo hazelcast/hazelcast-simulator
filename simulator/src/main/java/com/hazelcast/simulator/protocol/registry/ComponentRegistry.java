@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -243,8 +244,7 @@ public class ComponentRegistry {
                     agent.getAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
-                    agentVersionSpecs
-            ));
+                    agentVersionSpecs));
 
             for (WorkerData worker : agent.getWorkers()) {
                 LOGGER.info("        Worker " + worker.getAddress() + " " + worker.getSettings().getWorkerType()
@@ -268,17 +268,32 @@ public class ComponentRegistry {
         }
     }
 
-    public synchronized void addTests(TestSuite testSuite) {
+    public synchronized List<TestData> addTests(TestSuite testSuite) {
         for (TestCase testCase : testSuite.getTestCaseList()) {
-            int addressIndex = testIndex.incrementAndGet();
-            SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, addressIndex);
-            TestData testData = new TestData(addressIndex, testAddress, testCase);
+            if (tests.containsKey(testCase.getId())) {
+                throw new IllegalArgumentException(format("Already a test running with id '%s'", testCase.getId()));
+            }
+        }
+
+        List<TestData> result = new ArrayList<TestData>(testSuite.size());
+        for (TestCase testCase : testSuite.getTestCaseList()) {
+            int testIndex = this.testIndex.incrementAndGet();
+            SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, testIndex);
+            TestData testData = new TestData(testIndex, testAddress, testCase, testSuite);
+            result.add(testData);
             tests.put(testCase.getId(), testData);
         }
+        return result;
     }
 
-    public void removeTests() {
-        tests.clear();
+    public synchronized void removeTests(TestSuite testSuite) {
+        for (Map.Entry<String, TestData> entry : tests.entrySet()) {
+            TestData testData = entry.getValue();
+            if (testData.getTestSuite().equals(testSuite)) {
+                String testId = entry.getKey();
+                tests.remove(testId);
+            }
+        }
     }
 
     public int testCount() {

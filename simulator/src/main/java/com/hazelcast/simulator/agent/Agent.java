@@ -18,7 +18,6 @@ package com.hazelcast.simulator.agent;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.common.ShutdownThread;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import org.apache.log4j.Logger;
@@ -43,7 +42,7 @@ public class Agent {
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
-     private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
+    private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
 
     private final int addressIndex;
     private final String publicAddress;
@@ -58,7 +57,6 @@ public class Agent {
     private final FailureHandlerImpl failureSender;
     private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
 
-    private volatile TestSuite testSuite;
     private volatile String sessionId;
 
     public Agent(int addressIndex, String publicAddress, int port, String cloudProvider, String cloudIdentity,
@@ -86,7 +84,7 @@ public class Agent {
     }
 
     private void createPidFile() {
-         deleteQuiet(pidFile);
+        deleteQuiet(pidFile);
         writeText("" + getPID(), pidFile);
     }
 
@@ -116,15 +114,6 @@ public class Agent {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
-    }
-
-    public void setTestSuite(TestSuite testSuite) {
-        this.testSuite = testSuite;
-        failureSender.setTestSuite(testSuite);
-    }
-
-    public TestSuite getTestSuite() {
-        return testSuite;
     }
 
     public File getSessionDirectory() {

@@ -19,7 +19,6 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
@@ -67,19 +66,17 @@ public class RunTestSuiteTask {
     }
 
     public void run() {
-        componentRegistry.addTests(testSuite);
+        List<TestData> tests = componentRegistry.addTests(testSuite);
         try {
-            run0();
+            run0(tests);
         } finally {
             testPhaseListeners.removeAllListeners(runners);
-            componentRegistry.removeTests();
+            componentRegistry.removeTests(testSuite);
             performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
     }
 
-    private void run0() {
-        remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
-
+    private void run0(List<TestData> tests) {
         int testCount = testSuite.size();
         boolean parallel = testSuite.isParallel() && testCount > 1;
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
@@ -88,7 +85,7 @@ public class RunTestSuiteTask {
         echoer.echo("Starting TestSuite");
         echoTestSuiteDuration(parallel);
 
-        for (TestData testData : componentRegistry.getTests()) {
+        for (TestData testData: tests) {
             int testIndex = testData.getTestIndex();
             TestCase testCase = testData.getTestCase();
             echoer.echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);

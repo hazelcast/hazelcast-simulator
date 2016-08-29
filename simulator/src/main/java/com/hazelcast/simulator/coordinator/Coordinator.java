@@ -98,7 +98,7 @@ public final class Coordinator {
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
-        this.failureCollector = new FailureCollector(outputDirectory);
+        this.failureCollector = new FailureCollector(outputDirectory, componentRegistry);
         this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);

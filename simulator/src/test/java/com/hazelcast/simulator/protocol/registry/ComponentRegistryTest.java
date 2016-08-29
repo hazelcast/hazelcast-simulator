@@ -8,6 +8,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.common.WorkerType;
+import junit.framework.TestResult;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static junit.framework.TestCase.assertSame;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -280,20 +282,30 @@ public class ComponentRegistryTest {
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));
 
-        componentRegistry.addTests(testSuite);
+        List<TestData> tests = componentRegistry.addTests(testSuite);
 
+        assertEquals(3, tests.size());
         assertEquals(3, componentRegistry.testCount());
     }
 
     @Test
     public void testRemoveTests() {
-        TestSuite testSuite = new TestSuite();
-        testSuite.addTest(new TestCase("Test1"));
-        componentRegistry.addTests(testSuite);
+        TestSuite testSuite1 = new TestSuite()
+                .addTest(new TestCase("Test1a"))
+                .addTest(new TestCase("Test1b"));
+        componentRegistry.addTests(testSuite1);
 
-        componentRegistry.removeTests();
+        TestSuite testSuite2 = new TestSuite()
+                .addTest(new TestCase("Test2a"))
+                .addTest(new TestCase("Test2b"));
+        componentRegistry.addTests(testSuite2);
 
-        assertEquals(0, componentRegistry.testCount());
+        componentRegistry.removeTests(testSuite1);
+
+        assertEquals(2, componentRegistry.testCount());
+        for(TestData testData: componentRegistry.getTests()){
+            assertSame(testSuite2, testData.getTestSuite());
+        }
     }
 
     @Test

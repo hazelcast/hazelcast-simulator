@@ -47,12 +47,11 @@ public enum OperationType {
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 3000),
-    INIT_TEST_SUITE(InitTestSuiteOperation.class, 3001),
-    CREATE_WORKER(CreateWorkerOperation.class, 3002),
-    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3003),
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3004),
-    IGNORE_WORKER_FAILURE(IgnoreWorkerFailureOperation.class, 3005),
-    BASH(BashOperation.class, 3006),
+    CREATE_WORKER(CreateWorkerOperation.class, 3001),
+    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3002),
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3003),
+    IGNORE_WORKER_FAILURE(IgnoreWorkerFailureOperation.class, 3004),
+    BASH(BashOperation.class, 3005),
 
     // WorkerOperationProcessor
     PING(PingOperation.class, 4000),

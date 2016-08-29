@@ -17,6 +17,8 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -47,9 +49,11 @@ public class FailureCollector {
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
+    private final ComponentRegistry componentRegistry;
 
-    public FailureCollector(File outputDirectory) {
+    public FailureCollector(File outputDirectory, ComponentRegistry componentRegistry) {
         this.file = new File(outputDirectory, "failures.txt");
+        this.componentRegistry = componentRegistry;
     }
 
     public void addListener(FailureListener listener) {
@@ -61,6 +65,8 @@ public class FailureCollector {
     }
 
     public void notify(FailureOperation failure) {
+        failure = enrichWithTestSuite(failure);
+
         boolean isFinishedFailure = false;
 
         FailureType failureType = failure.getType();
@@ -90,6 +96,21 @@ public class FailureCollector {
         for (FailureListener failureListener : listenerMap.keySet()) {
             failureListener.onFailure(failure, isFinishedFailure, true);
         }
+    }
+
+    private FailureOperation enrichWithTestSuite(FailureOperation failure) {
+        String testId = failure.getTestId();
+        if (testId == null) {
+            return failure;
+        }
+
+        TestData testData = componentRegistry.getTest(testId);
+        if (testData == null) {
+            return failure;
+        }
+
+        failure.setTestSuite(testData.getTestSuite());
+        return failure;
     }
 
     private void logFailure(FailureOperation failure, long failureCount, boolean isCriticalFailure) {

@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 public class TestData {
@@ -23,11 +24,13 @@ public class TestData {
     private final int testIndex;
     private final SimulatorAddress address;
     private final TestCase testCase;
+    private final TestSuite testSuite;
 
-    TestData(int testIndex, SimulatorAddress address, TestCase testCase) {
+    TestData(int testIndex, SimulatorAddress address, TestCase testCase, TestSuite testSuite) {
         this.testIndex = testIndex;
         this.address = address;
         this.testCase = testCase;
+        this.testSuite = testSuite;
     }
 
     public int getTestIndex() {
@@ -40,5 +43,9 @@ public class TestData {
 
     public TestCase getTestCase() {
         return testCase;
+    }
+
+    public TestSuite getTestSuite() {
+        return testSuite;
     }
 }
