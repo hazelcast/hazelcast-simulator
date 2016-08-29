@@ -66,11 +66,6 @@ public final class TestPerformanceTracker {
         this.lastTimestamp = testStartedTimestamp;
         this.performanceLogWriter = new PerformanceLogWriter(
                 new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
-
-        for (String probeName : container.getProbeMap().keySet()) {
-            histogramLogWriterMap.put(probeName,
-                    createHistogramLogWriter(container.getTestCase().getId(), probeName, testStartedTimestamp));
-        }
     }
 
     public void update(long currentTimestamp) {
@@ -170,7 +165,11 @@ public final class TestPerformanceTracker {
         for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {
             String probeName = histogramEntry.getKey();
             HistogramLogWriter histogramLogWriter = histogramLogWriterMap.get(probeName);
-
+            if (histogramLogWriter == null) {
+                histogramLogWriter = createHistogramLogWriter(
+                        testContainer.getTestCase().getId(), probeName, testStartedTimestamp);
+                histogramLogWriterMap.put(probeName, histogramLogWriter);
+            }
             Histogram intervalHistogram = histogramEntry.getValue();
             intervalHistogram.setStartTimeStamp(previousWriteToFile);
             intervalHistogram.setEndTimeStamp(epochTime);
