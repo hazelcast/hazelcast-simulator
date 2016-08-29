@@ -20,13 +20,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * In the Prepare expensive things like filling a Map can be done.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Prepare {
 
     /**
      * Global indicates that a single member in the cluster is responsible for the warmup. If not global, then
-     * all members in the cluster will do the warmup.
+     * all members in the cluster will do the warmup. Be careful that not every worker is going to do the exact
+     * same warmup.
      *
      * If you have a lot of data you want to put in the system, then probably you don't want to use global = true
      * because all loads will be generated through a single member in the cluster.
