@@ -26,6 +26,8 @@ import static com.hazelcast.simulator.worker.metronome.MetronomeType.NOP;
 
 /**
  * Annotates {@link com.hazelcast.simulator.worker.metronome.Metronome} fields.
+ *
+ * @deprecated will be removed in 0.10.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
