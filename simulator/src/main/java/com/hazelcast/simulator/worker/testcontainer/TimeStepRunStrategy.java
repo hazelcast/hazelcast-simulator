@@ -32,7 +32,7 @@ import static java.lang.String.format;
  * annotation.
  */
 @SuppressWarnings("checkstyle:visibilitymodifier")
-public class TimeStepRunStrategy extends RunStrategy {
+class TimeStepRunStrategy extends RunStrategy {
 
     private static final int DEFAULT_THREAD_COUNT = 10;
 
@@ -47,7 +47,7 @@ public class TimeStepRunStrategy extends RunStrategy {
     private final Map<String, Integer> threadCountMap = new HashMap<String, Integer>();
     private int totalThreadCount;
 
-    public TimeStepRunStrategy(TestContainer testContainer) {
+    TimeStepRunStrategy(TestContainer testContainer) {
         this.propertyBinding = testContainer.getPropertyBinding();
         this.propertyBinding.bind(this);
 

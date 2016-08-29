@@ -34,7 +34,6 @@ public class PerformanceStats {
     private long operationCount;
     private double intervalThroughput;
     private double totalThroughput;
-
     private double intervalLatencyAvgNanos;
     private long intervalLatencyMaxNanos;
     private long intervalLatency999PercentileNanos;
@@ -67,7 +66,6 @@ public class PerformanceStats {
         this.operationCount = operationCount;
         this.intervalThroughput = intervalThroughput;
         this.totalThroughput = totalThroughput;
-
         this.intervalLatencyAvgNanos = intervalLatencyAvgNanos;
         this.intervalLatency999PercentileNanos = intervalLatency999PercentileNanos;
         this.intervalLatencyMaxNanos = intervalLatencyMaxNanos;

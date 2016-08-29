@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.worker.performance;
 
+import com.hazelcast.simulator.probes.Probe;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import org.HdrHistogram.Histogram;
@@ -26,31 +28,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Tracks performance related values for a single Simulator Test.
- *
+ * <p>
  * Has methods to update the performance values and write them to files.
- *
+ * <p>
  * Holds a map of {@link Histogram} for each {@link com.hazelcast.simulator.probes.Probe} of a Simulator Test.
  */
-final class TestPerformanceTracker {
+public final class TestPerformanceTracker {
 
     private static final long ONE_SECOND_IN_MILLIS = SECONDS.toMillis(1);
 
     private final TestContainer testContainer;
-    private final String testId;
-
-    // used to determine if the TestPerformanceTracker can be deleted
-    private long lastSeen;
-
     private final Map<String, HistogramLogWriter> histogramLogWriterMap = new HashMap<String, HistogramLogWriter>();
     private final long testStartedTimestamp;
-    private long lastIterations;
     private final PerformanceLogWriter performanceLogWriter;
     private long lastTimestamp;
     private Map<String, Histogram> intervalHistogramMap;
+    private boolean isUpdated;
+    private long previousWriteToFile = System.currentTimeMillis();
+
+    private long lastIterations;
     private double intervalLatencyAvgNanos;
     private long intervalLatency999PercentileNanos;
     private long intervalLatencyMaxNanos;
@@ -58,39 +59,80 @@ final class TestPerformanceTracker {
     private long totalOperationCount;
     private double intervalThroughput;
     private double totalThroughput;
-    private boolean isUpdated;
-    private long previousWriteToFile = System.currentTimeMillis();
 
-    TestPerformanceTracker(TestContainer testContainer) {
-        this.testContainer = testContainer;
-        this.testId = testContainer.getTestCase().getId();
-        this.testStartedTimestamp = testContainer.getTestStartedTimestamp();
+    public TestPerformanceTracker(TestContainer container) {
+        this.testContainer = container;
+        this.testStartedTimestamp = container.getTestStartedTimestamp();
         this.lastTimestamp = testStartedTimestamp;
-        this.performanceLogWriter = new PerformanceLogWriter(new File(getUserDir(), "performance-" + testId + ".csv"));
+        this.performanceLogWriter = new PerformanceLogWriter(
+                new File(getUserDir(), "performance-" + container.getTestCase().getId() + ".csv"));
 
-        for (String probeName : testContainer.getProbeMap().keySet()) {
-            histogramLogWriterMap.put(probeName, createHistogramLogWriter(testId, probeName, testStartedTimestamp));
+        for (String probeName : container.getProbeMap().keySet()) {
+            histogramLogWriterMap.put(probeName,
+                    createHistogramLogWriter(container.getTestCase().getId(), probeName, testStartedTimestamp));
         }
     }
 
-    public TestContainer getTestContainer() {
-        return testContainer;
-    }
+    public void update(long currentTimestamp) {
+        Map<String, Probe> probeMap = testContainer.getProbeMap();
+        Map<String, Histogram> intervalHistograms = new HashMap<String, Histogram>(probeMap.size());
 
-    String getTestId() {
-        return testId;
-    }
+        long intervalPercentileLatency = -1;
+        double intervalMean = -1;
+        long intervalMaxLatency = -1;
 
-    long getLastSeen() {
-        return lastSeen;
-    }
+        long iterations = testContainer.iteration();
+        long intervalOperationCount = iterations - lastIterations;
 
-    void setLastSeen(long lastSeen) {
-        this.lastSeen = lastSeen;
-    }
+        for (Map.Entry<String, Probe> entry : probeMap.entrySet()) {
+            String probeName = entry.getKey();
+            Probe probe = entry.getValue();
+            if (!(probe instanceof HdrProbe)) {
+                continue;
+            }
 
-    long getLastIterations() {
-        return lastIterations;
+            HdrProbe hdrProbe = (HdrProbe) probe;
+            Histogram intervalHistogram = hdrProbe.getIntervalHistogram();
+            intervalHistograms.put(probeName, intervalHistogram);
+
+            long percentileValue = intervalHistogram.getValueAtPercentile(INTERVAL_LATENCY_PERCENTILE);
+            if (percentileValue > intervalPercentileLatency) {
+                intervalPercentileLatency = percentileValue;
+            }
+
+            double meanLatency = intervalHistogram.getMean();
+            if (meanLatency > intervalMean) {
+                intervalMean = meanLatency;
+            }
+
+            long maxValue = intervalHistogram.getMaxValue();
+            if (maxValue > intervalMaxLatency) {
+                intervalMaxLatency = maxValue;
+            }
+
+            if (probe.isPartOfTotalThroughput()) {
+                intervalOperationCount += intervalHistogram.getTotalCount();
+            }
+        }
+
+        this.intervalHistogramMap = intervalHistograms;
+
+        this.intervalLatency999PercentileNanos = intervalPercentileLatency;
+        this.intervalLatencyAvgNanos = intervalMean;
+        this.intervalLatencyMaxNanos = intervalMaxLatency;
+
+        this.intervalOperationCount = intervalOperationCount;
+        this.totalOperationCount += intervalOperationCount;
+
+        long intervalTimeDelta = currentTimestamp - lastTimestamp;
+        long totalTimeDelta = currentTimestamp - testStartedTimestamp;
+
+        this.intervalThroughput = (intervalOperationCount * ONE_SECOND_IN_MILLIS) / (double) intervalTimeDelta;
+        this.totalThroughput = (totalOperationCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
+
+        this.lastIterations = iterations;
+        this.lastTimestamp = currentTimestamp;
+        this.isUpdated = true;
     }
 
     long getIntervalOperationCount() {
@@ -114,29 +156,6 @@ final class TestPerformanceTracker {
         isUpdated = false;
         return oldIsUpdated;
     }
-
-    void update(Map<String, Histogram> intervalHistograms, long intervalPercentileLatency, double intervalAvgLatency,
-                long intervalMaxLatency, long intervalOperationCount, long iterations, long currentTimestamp) {
-        this.intervalHistogramMap = intervalHistograms;
-
-        this.intervalLatency999PercentileNanos = intervalPercentileLatency;
-        this.intervalLatencyAvgNanos = intervalAvgLatency;
-        this.intervalLatencyMaxNanos = intervalMaxLatency;
-
-        this.intervalOperationCount = intervalOperationCount;
-        this.totalOperationCount += intervalOperationCount;
-
-        long intervalTimeDelta = currentTimestamp - lastTimestamp;
-        long totalTimeDelta = currentTimestamp - testStartedTimestamp;
-
-        this.intervalThroughput = (intervalOperationCount * ONE_SECOND_IN_MILLIS) / (double) intervalTimeDelta;
-        this.totalThroughput = (totalOperationCount * ONE_SECOND_IN_MILLIS / (double) totalTimeDelta);
-
-        this.lastIterations = iterations;
-        this.lastTimestamp = currentTimestamp;
-        this.isUpdated = true;
-    }
-
 
     void writeStatsToFile(long epochTime, String timestamp) {
         performanceLogWriter.write(
@@ -162,8 +181,13 @@ final class TestPerformanceTracker {
     }
 
     PerformanceStats createPerformanceStats() {
-        return new PerformanceStats(totalOperationCount, intervalThroughput, totalThroughput,
-                intervalLatencyAvgNanos, intervalLatency999PercentileNanos, intervalLatencyMaxNanos);
+        return new PerformanceStats(
+                totalOperationCount,
+                intervalThroughput,
+                totalThroughput,
+                intervalLatencyAvgNanos,
+                intervalLatency999PercentileNanos,
+                intervalLatencyMaxNanos);
     }
 
     static HistogramLogWriter createHistogramLogWriter(String testId, String probeName, long baseTime) {

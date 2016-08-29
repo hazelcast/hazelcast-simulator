@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
  * <li>{@link com.hazelcast.simulator.test.annotations.TimeStep}</li>
  * </ol>
  */
-public abstract class RunStrategy {
+abstract class RunStrategy {
 
     private volatile boolean running;
     private volatile long startedTimeStamp;
@@ -52,7 +52,7 @@ public abstract class RunStrategy {
     }
 
     /**
-     * Checks if the run strategy is running.
+     * Checks if the run strategy is running. This is true in case of warmup and actual running.
      *
      * This method is thread-safe.
      *
@@ -65,7 +65,7 @@ public abstract class RunStrategy {
     /**
      * Notifies the RunStrategy it has started running.
      */
-    protected final void onRunStarted() {
+    final void onRunStarted() {
         running = true;
         startedTimeStamp = System.currentTimeMillis();
     }
@@ -73,7 +73,7 @@ public abstract class RunStrategy {
     /**
      * Notifies the RunStrategy that it has completed running.
      */
-    protected final void onRunCompleted() {
+    final void onRunCompleted() {
         running = false;
     }
 
@@ -84,7 +84,7 @@ public abstract class RunStrategy {
      *
      * @return the started timestamp.
      */
-    public final long getStartedTimestamp() {
+    final long getStartedTimestamp() {
         return startedTimeStamp;
     }
 }

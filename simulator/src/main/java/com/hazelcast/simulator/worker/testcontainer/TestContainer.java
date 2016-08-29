@@ -33,6 +33,7 @@ import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.AfterWarmupFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
+import com.hazelcast.simulator.worker.performance.TestPerformanceTracker;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import java.lang.annotation.Annotation;
@@ -83,6 +84,7 @@ public class TestContainer {
     private final PropertyBinding propertyBinding;
     private final Class testClass;
     private final RunStrategy runStrategy;
+    private final TestPerformanceTracker testPerformanceTracker;
 
     public TestContainer(TestContextImpl targetInstance, TestCase testCase) {
         this(targetInstance, null, testCase);
@@ -109,6 +111,12 @@ public class TestContainer {
         registerTestPhaseTasks();
 
         propertyBinding.ensureNoUnusedProperties();
+
+        this.testPerformanceTracker = new TestPerformanceTracker(this);
+    }
+
+    public TestPerformanceTracker getTestPerformanceTracker() {
+        return testPerformanceTracker;
     }
 
     @SuppressWarnings({"unchecked", "PMD.PreserveStackTrace"})
