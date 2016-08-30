@@ -18,7 +18,6 @@ package com.hazelcast.simulator.agent;
 import com.hazelcast.simulator.agent.workerprocess.FailureHandler;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -38,17 +37,11 @@ class FailureHandlerImpl implements FailureHandler {
     private final String agentAddress;
     private final AgentConnector agentConnector;
 
-    private volatile TestSuite testSuite;
-
     private int failureCount;
 
     FailureHandlerImpl(String agentAddress, AgentConnector agentConnector) {
         this.agentAddress = agentAddress;
         this.agentConnector = agentConnector;
-    }
-
-    public void setTestSuite(TestSuite testSuite) {
-        this.testSuite = testSuite;
     }
 
     @Override
@@ -73,7 +66,7 @@ class FailureHandlerImpl implements FailureHandler {
         String workerId = workerProcess.getId();
 
         FailureOperation operation = new FailureOperation(message, type, workerAddress, agentAddress,
-                workerProcess.getHazelcastAddress(), workerId, testId, testSuite, cause);
+                workerProcess.getHazelcastAddress(), workerId, testId, cause);
 
         if (type.isPoisonPill()) {
             LOGGER.info(format("Worker %s (%s) finished.", workerId, workerAddress));

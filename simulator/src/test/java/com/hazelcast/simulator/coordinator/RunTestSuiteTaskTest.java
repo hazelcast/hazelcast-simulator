@@ -5,6 +5,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -18,7 +19,6 @@ import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.common.WorkerType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
@@ -62,6 +63,7 @@ import static org.mockito.Mockito.when;
 
 public class RunTestSuiteTaskTest {
 
+    private static final AtomicLong ID_GENERATOR = new AtomicLong();
     private CountDownLatch finishWorkerLatch = new CountDownLatch(1);
 
     private File outputDirectory;
@@ -90,14 +92,14 @@ public class RunTestSuiteTaskTest {
     @Before
     public void setUp() {
         testSuite = new TestSuite();
-        testSuite.addTest(new TestCase("CoordinatorTest1"));
-        testSuite.addTest(new TestCase("CoordinatorTest2"));
+        testSuite.addTest(new TestCase("CoordinatorTest" + ID_GENERATOR.incrementAndGet()));
+        testSuite.addTest(new TestCase("CoordinatorTest" + ID_GENERATOR.incrementAndGet()));
 
         outputDirectory = createTmpDirectory();
 
         SimulatorAddress address = new SimulatorAddress(WORKER, 1, 1, 0);
         criticalFailureOperation = new FailureOperation("expected critical failure", WORKER_EXCEPTION, address, "127.0.0.1",
-                "127.0.0.1:5701", "workerId", "CoordinatorTest1", testSuite, "stacktrace");
+                "127.0.0.1:5701", "workerId", "CoordinatorTest1", "stacktrace");
 
         simulatorProperties = new SimulatorProperties();
 
@@ -194,7 +196,7 @@ public class RunTestSuiteTaskTest {
 
     @Test
     public void runSequential_withSingleTest() {
-        TestCase testCase = new TestCase("CoordinatorTest");
+        TestCase testCase = new TestCase("CoordinatorTest" + ID_GENERATOR.incrementAndGet());
 
         testSuite = new TestSuite();
         testSuite.addTest(testCase);
@@ -208,7 +210,7 @@ public class RunTestSuiteTaskTest {
 
     @Test
     public void runParallel_withSingleTest() {
-        TestCase testCase = new TestCase("CoordinatorTest");
+        TestCase testCase = new TestCase("CoordinatorTest" + ID_GENERATOR.incrementAndGet());
 
         testSuite = new TestSuite();
         testSuite.addTest(testCase);
@@ -308,9 +310,8 @@ public class RunTestSuiteTaskTest {
         componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
         componentRegistry.addWorkers(componentRegistry.getFirstAgent().getAddress(), singletonList(workerProcessSettings));
-        componentRegistry.addTests(testSuite);
 
-        failureCollector = new FailureCollector(outputDirectory);
+        failureCollector = new FailureCollector(outputDirectory, componentRegistry);
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 
@@ -438,7 +439,7 @@ public class RunTestSuiteTaskTest {
             if (finishWorkerLatch != null) {
                 await(finishWorkerLatch);
                 FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
-                        "127.0.0.1:5701", "workerId", "testId", testSuite, "stacktrace");
+                        "127.0.0.1:5701", "workerId", "testId", "stacktrace");
                 failureCollector.notify(operation);
             }
         }

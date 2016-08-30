@@ -62,10 +62,7 @@ public class FailureHandlerImplTest {
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
         when(agentConnector.getFutureMap()).thenReturn(futureMap);
 
-        TestSuite testSuite = new TestSuite();
-
         failureSender = new FailureHandlerImpl("127.0.0.1", agentConnector);
-        failureSender.setTestSuite(testSuite);
     }
 
     @Test

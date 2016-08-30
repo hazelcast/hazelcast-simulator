@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
@@ -26,23 +27,25 @@ public class FailureCollectorTest {
     private FailureOperation oomOperation;
     private FailureOperation finishedOperation;
     private File outputDirectory;
+    private ComponentRegistry componentRegistry;
 
     @Before
     public void setUp() {
         outputDirectory = TestUtils.createTmpDirectory();
-        failureCollector = new FailureCollector(outputDirectory);
+        componentRegistry = new ComponentRegistry();
+        failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
         String agentAddress = workerAddress.getParent().toString();
 
         exceptionOperation = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress,
-                "127.0.0.1:5701", "workerId", "testId", null, null);
+                "127.0.0.1:5701", "workerId", "testId", null);
 
         oomOperation = new FailureOperation("oom", WORKER_OOM, workerAddress, agentAddress,
-                "127.0.0.1:5701", "workerId", "testId", null, null);
+                "127.0.0.1:5701", "workerId", "testId", null);
 
         finishedOperation = new FailureOperation("finished", WORKER_FINISHED, workerAddress, agentAddress,
-                "127.0.0.1:5701", "workerId", "testId", null, null);
+                "127.0.0.1:5701", "workerId", "testId", null);
     }
 
     @After

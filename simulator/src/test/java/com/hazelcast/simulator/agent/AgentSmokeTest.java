@@ -21,7 +21,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
-import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
@@ -101,7 +100,7 @@ public class AgentSmokeTest implements FailureListener {
         testPhaseListeners = new TestPhaseListeners();
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         outputDirectory = createTmpDirectory();
-        failureCollector = new FailureCollector(outputDirectory);
+        failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
         CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
                 null, failureCollector, testPhaseListeners, performanceStatsCollector);
@@ -186,7 +185,6 @@ public class AgentSmokeTest implements FailureListener {
         try {
             String testId = testCase.getId();
             TestSuite testSuite = new TestSuite();
-            remoteClient.sendToAllAgents(new InitTestSuiteOperation(testSuite));
             testSuite.addTest(testCase);
 
             componentRegistry.addTests(testSuite);
@@ -224,7 +222,7 @@ public class AgentSmokeTest implements FailureListener {
             runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_TEARDOWN);
             runPhase(testPhaseListener, testCase, TestPhase.LOCAL_TEARDOWN);
         } finally {
-            componentRegistry.removeTests();
+           // componentRegistry.removeTests();
 
             LOGGER.info("Terminating workers...");
             new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();

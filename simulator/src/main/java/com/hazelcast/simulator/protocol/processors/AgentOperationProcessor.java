@@ -29,7 +29,6 @@ import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
-import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -82,9 +81,6 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
             case INIT_SESSION:
                 agent.setSessionId(((InitSessionOperation) operation).getSessionId());
-                break;
-            case INIT_TEST_SUITE:
-                agent.setTestSuite(((InitTestSuiteOperation) operation).getTestSuite());
                 break;
             case CREATE_WORKER:
                 return processCreateWorker((CreateWorkerOperation) operation);

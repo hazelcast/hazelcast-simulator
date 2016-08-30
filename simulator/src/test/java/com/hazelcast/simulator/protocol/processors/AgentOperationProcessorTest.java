@@ -11,7 +11,6 @@ import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
-import com.hazelcast.simulator.protocol.operation.InitTestSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
@@ -79,7 +78,6 @@ public class AgentOperationProcessorTest {
         agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(1);
         when(agent.getPublicAddress()).thenReturn("127.0.0.1");
-        when(agent.getTestSuite()).thenReturn(testSuite);
         when(agent.getSessionId()).thenReturn("AgentOperationProcessorTest");
         when(agent.getSessionDirectory()).thenReturn(sessionDir);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
@@ -110,16 +108,6 @@ public class AgentOperationProcessorTest {
         ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
-    }
-
-    @Test
-    public void testInitTestSuiteOperation() throws Exception {
-        SimulatorOperation operation = new InitTestSuiteOperation(testSuite);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
-
-        assertEquals(SUCCESS, responseType);
-
-        verify(agent).setTestSuite(any(TestSuite.class));
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

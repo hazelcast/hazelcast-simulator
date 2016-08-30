@@ -14,6 +14,7 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
@@ -54,6 +55,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     private CoordinatorOperationProcessor processor;
     private File outputDirectory;
+    private ComponentRegistry componentRegistry;
 
     @Before
     public void setUp() {
@@ -62,8 +64,9 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         testPhaseListeners = new TestPhaseListeners();
         performanceStatsCollector = new PerformanceStatsCollector();
 
+        componentRegistry = new ComponentRegistry();
         outputDirectory = TestUtils.createTmpDirectory();
-        failureCollector = new FailureCollector(outputDirectory);
+        failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
         processor = new CoordinatorOperationProcessor(null, failureCollector, testPhaseListeners,
                 performanceStatsCollector);
@@ -81,17 +84,6 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
-
-//    @Test
-//    public void processException() {
-//        TestException exception = new TestException("expected exception");
-//        ExceptionOperation operation = new ExceptionOperation(WORKER_EXCEPTION.name(), "C_A1_W1", "FailingTest", exception);
-//
-//        ResponseType responseType = processor.process(operation, workerAddress);
-//
-//        assertEquals(SUCCESS, responseType);
-//        //assertEquals(1, exceptionLogger.getExceptionCount());
-//    }
 
     @Test
     public void processFailureOperation() {
