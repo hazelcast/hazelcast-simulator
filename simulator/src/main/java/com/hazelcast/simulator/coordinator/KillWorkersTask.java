@@ -19,15 +19,19 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.KillWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
@@ -35,7 +39,9 @@ import static java.lang.String.format;
 public class KillWorkersTask {
 
     private static final Logger LOGGER = Logger.getLogger(KillWorkersTask.class);
-    private static final int WORKERS_DIED_TIMEOUT = 10;
+
+    private static final int WORKER_TERMINATION_TIMEOUT_SECONDS = 300;
+    private static final int WORKER_TERMINATION_CHECK_DELAY = 5;
 
     private final ComponentRegistry componentRegistry;
     private final CoordinatorConnector coordinatorConnector;
@@ -71,24 +77,10 @@ public class KillWorkersTask {
             return;
         }
 
-        if (victims.size() < count) {
-            LOGGER.info(format("Killing %s of the requested %s workers", victims.size(), count));
-        }
+        killWorkers(victims);
 
-        for (WorkerData victim : victims) {
-            SimulatorAddress memberAddress = victim.getAddress();
+        awaitTermination(victims);
 
-            componentRegistry.removeWorker(memberAddress);
-
-            coordinatorConnector.write(memberAddress.getParent(), new IgnoreWorkerFailureOperation(memberAddress));
-
-            coordinatorConnector.writeAsync(memberAddress, new KillWorkerOperation());
-
-            LOGGER.info("Kill send to worker [" + memberAddress + "]");
-        }
-
-        LOGGER.info("Giving workers time to die...");
-        sleepSeconds(WORKERS_DIED_TIMEOUT);
         LOGGER.info("Killing " + count + " workers complete");
     }
 
@@ -137,5 +129,66 @@ public class KillWorkersTask {
         }
 
         return true;
+    }
+
+    private void killWorkers(List<WorkerData> victims) {
+        if (victims.size() < count) {
+            LOGGER.info(format("Killing %s of the requested %s workers", victims.size(), count));
+        }
+
+        LOGGER.info(format("Killing [%s]", toString(victims)));
+
+        for (WorkerData victim : victims) {
+            victim.setIgnoreFailures(true);
+
+            SimulatorOperation killOperation = new KillWorkerOperation(); //BashOperation("kill $PID");
+            coordinatorConnector.writeAsync(victim.getAddress(), killOperation);
+
+            LOGGER.info("Kill send to worker [" + victim.getAddress() + "]");
+        }
+    }
+
+    private void awaitTermination(List<WorkerData> victims) {
+        Set<WorkerData> aliveVictims = new HashSet<WorkerData>(victims);
+
+        for (int k = 0; k < WORKER_TERMINATION_TIMEOUT_SECONDS / WORKER_TERMINATION_CHECK_DELAY; k++) {
+            Iterator<WorkerData> it = aliveVictims.iterator();
+            while (it.hasNext()) {
+                WorkerData victim = it.next();
+                if (componentRegistry.findWorker(victim.getAddress()) == null) {
+                    it.remove();
+                }
+            }
+
+            if (aliveVictims.isEmpty()) {
+                break;
+            }
+
+            LOGGER.info(format("Waiting for [%s] to die", toString(aliveVictims)));
+            sleepSeconds(WORKER_TERMINATION_CHECK_DELAY);
+        }
+
+        if (aliveVictims.isEmpty()) {
+            LOGGER.info(format("Killing of workers [%s] success", toString(victims)));
+        } else {
+            LOGGER.info(format("Killing of workers [%s] failed, following failed to terminate [%s]",
+                    toString(victims), toString(victims)));
+        }
+    }
+
+    private static String toString(Collection<WorkerData> workers) {
+        StringBuilder sb = new StringBuilder();
+
+        boolean first = true;
+        for (WorkerData worker : workers) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(worker.getAddress());
+        }
+
+        return sb.toString();
     }
 }

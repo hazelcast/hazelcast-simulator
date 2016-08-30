@@ -1,33 +1,49 @@
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.File;
+import java.util.HashMap;
 
+import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
-import static com.hazelcast.simulator.common.FailureType.WORKER_OOM;
+import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class FailureCollectorTest {
 
     private FailureCollector failureCollector;
 
-    private FailureOperation exceptionOperation;
-    private FailureOperation oomOperation;
-    private FailureOperation finishedOperation;
+    private FailureOperation exceptionFailure;
+    private FailureOperation oomeFailure;
+    private FailureOperation normalExitFailure;
+    private FailureOperation abnormalExitFailure;
     private File outputDirectory;
     private ComponentRegistry componentRegistry;
+    private SimulatorAddress agentAddress;
+    private SimulatorAddress workerAddress;
 
     @Before
     public void setUp() {
@@ -35,16 +51,30 @@ public class FailureCollectorTest {
         componentRegistry = new ComponentRegistry();
         failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
-        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-        String agentAddress = workerAddress.getParent().toString();
+        agentAddress = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
+        WorkerProcessSettings workerSettings = new WorkerProcessSettings(
+                1,
+                WorkerType.MEMBER,
+                "any version",
+                "any script",
+                0,
+                new HashMap<String, String>());
 
-        exceptionOperation = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress,
+        workerAddress = new SimulatorAddress(
+                AddressLevel.WORKER, agentAddress.getAgentIndex(), workerSettings.getWorkerIndex(), 0);
+
+        componentRegistry.addWorkers(agentAddress, singletonList(workerSettings));
+
+        exceptionFailure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", "testId", null);
 
-        oomOperation = new FailureOperation("oom", WORKER_OOM, workerAddress, agentAddress,
+        abnormalExitFailure = new FailureOperation("exception", WORKER_ABNORMAL_EXIT, workerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", "testId", null);
 
-        finishedOperation = new FailureOperation("finished", WORKER_FINISHED, workerAddress, agentAddress,
+        oomeFailure = new FailureOperation("oom", WORKER_OOME, workerAddress, agentAddress.toString(),
+                "127.0.0.1:5701", "workerId", "testId", null);
+
+        normalExitFailure = new FailureOperation("finished", WORKER_NORMAL_EXIT, workerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", "testId", null);
     }
 
@@ -54,35 +84,91 @@ public class FailureCollectorTest {
     }
 
     @Test
-    public void testAddFailureOperation_withException() {
-        assertEquals(0, failureCollector.getFailureCount());
+    public void notify_whenNonExistingWorker_thenIgnore() {
+        SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAgentIndex(), 100, 0);
+        FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
+                "127.0.0.1:5701", "workerId", "testId", null);
 
-        failureCollector.notify(exceptionOperation);
+        failureCollector.notify(failure);
+
+        assertEquals(0, failureCollector.getFailureCount());
+    }
+
+    @Test
+    public void notify_whenWorkerIgnoresFailure_thenIgnore() {
+        notify_whenWorkerIgnoresFailure(oomeFailure, true);
+    }
+
+    @Test
+    public void notify_whenWorkerIgnoresFailure_andNormalExitFailure() {
+        notify_whenWorkerIgnoresFailure(normalExitFailure, true);
+    }
+
+    @Test
+    public void notify_whenWorkerIgnoresFailure_andAbnormalExitFailure() {
+        notify_whenWorkerIgnoresFailure(abnormalExitFailure, true);
+    }
+
+    @Test
+    public void notify_whenWorkerIgnoresFailure_andExceptionalFailure() {
+        notify_whenWorkerIgnoresFailure(exceptionFailure, false);
+    }
+
+    private void notify_whenWorkerIgnoresFailure(FailureOperation failure, boolean workerDeleted) {
+        WorkerData worker = componentRegistry.getWorker(workerAddress);
+        worker.setIgnoreFailures(true);
+
+        failureCollector.notify(failure);
+
+        assertEquals(0, failureCollector.getFailureCount());
+        assertEquals(workerDeleted ? null : worker, componentRegistry.getWorker(workerAddress));
+    }
+
+    @Test
+    public void notify_enrichWithTestSuite() {
+        TestSuite suite1 = new TestSuite().addTest(new TestCase("test1"));
+        TestSuite suite2 = new TestSuite().addTest(new TestCase("test2"));
+
+        componentRegistry.addTests(suite1);
+        componentRegistry.addTests(suite2);
+
+        FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
+                "127.0.0.1:5701", "workerId", "test1", null);
+
+        FailureListener listener = mock(FailureListener.class);
+        failureCollector.addListener(listener);
+        failureCollector.notify(failure);
+
+        ArgumentCaptor<FailureOperation> failureCaptor = ArgumentCaptor.forClass(FailureOperation.class);
+        verify(listener).onFailure(failureCaptor.capture(), eq(false), eq(true));
+
+        assertSame(suite1, failureCaptor.getValue().getTestSuite());
+    }
+
+    @Test
+    public void notify_withException() {
+        failureCollector.notify(exceptionFailure);
 
         assertEquals(1, failureCollector.getFailureCount());
     }
 
     @Test
-    public void testAddFailureOperation_withWorkerFinishedFailure() {
-        assertEquals(0, failureCollector.getFailureCount());
-
-        failureCollector.notify(oomOperation);
+    public void notify_withWorkerFinishedFailure() {
+        failureCollector.notify(oomeFailure);
 
         assertEquals(1, failureCollector.getFailureCount());
     }
 
     @Test
-    public void testAddFailureOperation_withPoisonPill() {
-        assertEquals(0, failureCollector.getFailureCount());
-
-        failureCollector.notify(finishedOperation);
+    public void notify_withPoisonPill() {
+        failureCollector.notify(normalExitFailure);
 
         assertEquals(0, failureCollector.getFailureCount());
     }
 
     @Test
     public void testHasCriticalFailure() {
-        failureCollector.notify(exceptionOperation);
+        failureCollector.notify(exceptionFailure);
         assertTrue(failureCollector.hasCriticalFailure());
     }
 
@@ -93,7 +179,7 @@ public class FailureCollectorTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testLogFailureInfo_withFailures() {
-        failureCollector.notify(exceptionOperation);
+        failureCollector.notify(exceptionFailure);
         failureCollector.logFailureInfo();
     }
 }

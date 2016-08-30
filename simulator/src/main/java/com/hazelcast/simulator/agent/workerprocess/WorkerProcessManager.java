@@ -43,13 +43,6 @@ public class WorkerProcessManager {
         workerProcesses.remove(process.getAddress());
     }
 
-    public void ignore(SimulatorAddress workerAddress) {
-        WorkerProcess workerProcess = workerProcesses.get(workerAddress);
-        if (workerProcess != null) {
-            workerProcess.setFailureIgnored(true);
-        }
-    }
-
     public Collection<WorkerProcess> getWorkerProcesses() {
         return workerProcesses.values();
     }

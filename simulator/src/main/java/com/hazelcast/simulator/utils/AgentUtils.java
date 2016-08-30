@@ -189,7 +189,8 @@ public final class AgentUtils {
 
         private void runLocal() {
             logger.info(format("Stopping Agent %s", ip));
-            execute(format("%s/bin/.kill-from-pid-file agent.pid", getSimulatorHome()));
+            System.out.println(getSimulatorHome());
+            bash.execute(format("%s/bin/.kill-from-pid-file agent.pid", getSimulatorHome()));
         }
 
         private void runRemote() {

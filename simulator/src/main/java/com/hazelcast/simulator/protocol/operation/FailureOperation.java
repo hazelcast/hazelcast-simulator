@@ -62,6 +62,10 @@ public class FailureOperation implements SimulatorOperation {
         return this;
     }
 
+    public TestSuite getTestSuite() {
+        return testSuite;
+    }
+
     public FailureType getType() {
         return FailureType.valueOf(type);
     }

@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
@@ -17,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.common.FailureType.NETTY_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_COORDINATOR_NOT_FOUND;
@@ -31,10 +30,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class FailureHandlerImplTest {
+public class WorkerProcessFailureHandlerImplTest {
 
     private static final String FAILURE_MESSAGE = "failure message";
-    private static final String SESSION_ID = "FailureHandlerImplTest";
+    private static final String SESSION_ID = "WorkerProcessFailureHandlerImplTest";
     private static final String CAUSE = "any stacktrace";
 
     private SimulatorAddress workerAddress;
@@ -42,7 +41,7 @@ public class FailureHandlerImplTest {
 
     private AgentConnector agentConnector;
 
-    private FailureHandlerImpl failureSender;
+    private WorkerProcessFailureHandlerImpl failureSender;
 
     private ResponseFuture responseFuture;
 
@@ -62,7 +61,7 @@ public class FailureHandlerImplTest {
         when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
         when(agentConnector.getFutureMap()).thenReturn(futureMap);
 
-        failureSender = new FailureHandlerImpl("127.0.0.1", agentConnector);
+        failureSender = new WorkerProcessFailureHandlerImpl("127.0.0.1", agentConnector);
     }
 
     @Test
@@ -75,7 +74,7 @@ public class FailureHandlerImplTest {
 
     @Test(timeout = 10000)
     public void testSendFailureOperation_whenWorkerIsFinished_thenUnblockResponseFutureByFailure() throws Exception {
-        boolean success = failureSender.handle(FAILURE_MESSAGE, WORKER_FINISHED, workerProcess, SESSION_ID, CAUSE);
+        boolean success = failureSender.handle(FAILURE_MESSAGE, WORKER_NORMAL_EXIT, workerProcess, SESSION_ID, CAUSE);
 
         assertTrue(success);
         assertTrue(responseFuture.isDone());

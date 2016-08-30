@@ -28,6 +28,7 @@ public class WorkerData {
 
     private final SimulatorAddress address;
     private final WorkerProcessSettings settings;
+    private volatile boolean ignoreFailures;
 
     WorkerData(SimulatorAddress parentAddress, WorkerProcessSettings settings) {
         this.address = parentAddress.getChild(settings.getWorkerIndex());
@@ -44,5 +45,13 @@ public class WorkerData {
 
     public boolean isMemberWorker() {
         return settings.getWorkerType().equals(WorkerType.MEMBER);
+    }
+
+    public boolean isIgnoreFailures() {
+        return ignoreFailures;
+    }
+
+    public void setIgnoreFailures(boolean ignoreFailures) {
+        this.ignoreFailures = ignoreFailures;
     }
 }

@@ -17,26 +17,32 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
+import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -45,6 +51,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_ASYNC;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_SYNC;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
@@ -93,6 +101,9 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
                 break;
+            case BASH:
+                processBashOperation((BashOperation) operation);
+                break;
             case KILL_WORKER:
                 new Thread() {
                     public void run() {
@@ -115,6 +126,24 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     @Override
     protected void onProcessOperationFailure(Throwable t) {
         ExceptionReporter.report(null, t);
+    }
+
+    private void processBashOperation(final BashOperation operation) {
+        ThreadSpawner spawner = new ThreadSpawner("bash[" + operation.getCommand() + "]");
+        spawner.spawn(new Runnable() {
+            @Override
+            public void run() {
+                Map<String, Object> environment = new HashMap<String, Object>();
+                File pidFile = new File(getUserDir(), "worker.pid");
+                if (pidFile.exists()) {
+                    environment.put("PID", fileAsText(pidFile));
+                }
+                new BashCommand(operation.getCommand())
+                        .setDirectory(getUserDir())
+                        .addEnvironment(environment)
+                        .execute();
+            }
+        });
     }
 
     private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)

@@ -54,7 +54,7 @@ public class Agent {
     private final String cloudCredential;
 
     private final AgentConnector agentConnector;
-    private final FailureHandlerImpl failureSender;
+    private final WorkerProcessFailureHandlerImpl failureSender;
     private final WorkerProcessFailureMonitor workerProcessFailureMonitor;
 
     private volatile String sessionId;
@@ -72,7 +72,7 @@ public class Agent {
         this.cloudCredential = cloudCredential;
 
         this.agentConnector = AgentConnector.createInstance(this, workerProcessManager, port, threadPoolSize);
-        this.failureSender = new FailureHandlerImpl(publicAddress, agentConnector);
+        this.failureSender = new WorkerProcessFailureHandlerImpl(publicAddress, agentConnector);
         this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
                 workerLastSeenTimeoutSeconds);
 

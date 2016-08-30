@@ -22,9 +22,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
-import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
-import static com.hazelcast.simulator.common.FailureType.WORKER_OOM;
+import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -43,13 +43,13 @@ public class WorkerProcessFailureMonitor {
 
     private final MonitorThread monitorThread;
 
-    public WorkerProcessFailureMonitor(FailureHandler failureHandler,
+    public WorkerProcessFailureMonitor(WorkerProcessFailureHandler failureHandler,
                                        WorkerProcessManager workerProcessManager,
                                        int lastSeenTimeoutSeconds) {
         this(failureHandler, workerProcessManager, lastSeenTimeoutSeconds, DEFAULT_CHECK_INTERVAL_MILLIS);
     }
 
-    WorkerProcessFailureMonitor(FailureHandler failureHandler,
+    WorkerProcessFailureMonitor(WorkerProcessFailureHandler failureHandler,
                                 WorkerProcessManager workerProcessManager,
                                 int lastSeenTimeoutSeconds,
                                 int checkIntervalMillis) {
@@ -82,7 +82,7 @@ public class WorkerProcessFailureMonitor {
 
     private final class MonitorThread extends Thread {
 
-        private final FailureHandler failureHandler;
+        private final WorkerProcessFailureHandler failureHandler;
         private final WorkerProcessManager workerProcessManager;
         private final int lastSeenTimeoutSeconds;
         private final int checkIntervalMillis;
@@ -90,7 +90,7 @@ public class WorkerProcessFailureMonitor {
         private volatile boolean running = true;
         private volatile boolean detectTimeouts;
 
-        private MonitorThread(FailureHandler failureHandler,
+        private MonitorThread(WorkerProcessFailureHandler failureHandler,
                               WorkerProcessManager workerProcessManager,
                               int lastSeenTimeoutSeconds,
                               int checkIntervalMillis) {
@@ -177,7 +177,7 @@ public class WorkerProcessFailureMonitor {
             }
             workerProcess.setOomeDetected();
 
-            sendFailureOperation("Worker ran into an OOME", WORKER_OOM, workerProcess);
+            sendFailureOperation("Worker ran into an OOME", WORKER_OOME, workerProcess);
         }
 
         private boolean isOomeFound(File workerHome) {
@@ -217,14 +217,14 @@ public class WorkerProcessFailureMonitor {
 
             if (exitCode == 0) {
                 workerProcess.setFinished();
-                sendFailureOperation("Worker terminated normally", WORKER_FINISHED, workerProcess);
+                sendFailureOperation("Worker terminated normally", WORKER_NORMAL_EXIT, workerProcess);
                 return;
             }
 
             workerProcessManager.shutdown(workerProcess);
 
             sendFailureOperation(
-                    format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_EXIT, workerProcess);
+                    format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_ABNORMAL_EXIT, workerProcess);
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess) {

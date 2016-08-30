@@ -15,19 +15,19 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
@@ -57,29 +57,25 @@ public class FailureCollector {
     }
 
     public void addListener(FailureListener listener) {
-        addListener(false, listener);
-    }
-
-    public void addListener(boolean includingPoisonPill, FailureListener listener) {
-        listenerMap.put(listener, includingPoisonPill);
+        listenerMap.put(listener, false);
     }
 
     public void notify(FailureOperation failure) {
         failure = enrichWithTestSuite(failure);
 
-        boolean isFinishedFailure = false;
-
-        FailureType failureType = failure.getType();
-        if (failureType.isWorkerFinishedFailure()) {
-            isFinishedFailure = true;
+        WorkerData worker = componentRegistry.findWorker(failure.getWorkerAddress());
+        if (worker == null) {
+            // we are not interested in failures of workers that aren't registered any longer.
+            return;
         }
 
-        if (failureType.isPoisonPill()) {
-            for (Map.Entry<FailureListener, Boolean> entry : listenerMap.entrySet()) {
-                if (entry.getValue()) {
-                    entry.getKey().onFailure(failure, isFinishedFailure, false);
-                }
-            }
+        // it the failure is the terminal for that workers, we need to remove it from the component registry
+        if (failure.getType().isTerminal()) {
+            componentRegistry.removeWorker(worker.getAddress());
+        }
+
+        // if we don't care for the failure, we are done; no need to log anything.
+        if (worker.isIgnoreFailures() || failure.getType() == WORKER_NORMAL_EXIT) {
             return;
         }
 
@@ -94,7 +90,7 @@ public class FailureCollector {
         appendText(failure.getFileMessage(), file);
 
         for (FailureListener failureListener : listenerMap.keySet()) {
-            failureListener.onFailure(failure, isFinishedFailure, true);
+            failureListener.onFailure(failure, failure.getType().isTerminal(), true);
         }
     }
 

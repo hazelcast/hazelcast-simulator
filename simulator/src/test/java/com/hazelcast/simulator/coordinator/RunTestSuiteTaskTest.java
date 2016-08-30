@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
+import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.WARMUP;
 import static com.hazelcast.simulator.coordinator.RunTestSuiteTask.getTestPhaseSyncMap;
@@ -438,7 +438,7 @@ public class RunTestSuiteTaskTest {
 
             if (finishWorkerLatch != null) {
                 await(finishWorkerLatch);
-                FailureOperation operation = new FailureOperation("Worker finished", WORKER_FINISHED, workerAddress, "127.0.0.1",
+                FailureOperation operation = new FailureOperation("Worker finished", WORKER_NORMAL_EXIT, workerAddress, "127.0.0.1",
                         "127.0.0.1:5701", "workerId", "testId", "stacktrace");
                 failureCollector.notify(operation);
             }

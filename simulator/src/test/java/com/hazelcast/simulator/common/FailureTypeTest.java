@@ -5,7 +5,7 @@ import org.junit.Test;
 import java.util.Set;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.fromPropertyValue;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -39,9 +39,9 @@ public class FailureTypeTest {
 
     @Test
     public void testFromPropertyValue_twoValues() throws Exception {
-        Set<FailureType> types = fromPropertyValue("workerException, workerExit");
+        Set<FailureType> types = fromPropertyValue("workerException, workerAbnormalExit");
         assertThat(types, hasSize(2));
-        assertThat(types, containsInAnyOrder(WORKER_EXCEPTION, WORKER_EXIT));
+        assertThat(types, containsInAnyOrder(WORKER_EXCEPTION, WORKER_ABNORMAL_EXIT));
     }
 
     @Test(expected = IllegalArgumentException.class)

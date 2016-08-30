@@ -1,7 +1,9 @@
 package com.hazelcast.simulator.protocol.processors;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
@@ -22,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,6 +42,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -56,15 +60,26 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private CoordinatorOperationProcessor processor;
     private File outputDirectory;
     private ComponentRegistry componentRegistry;
+    private SimulatorAddress agentAddress;
 
     @Before
     public void setUp() {
-        workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
-
         testPhaseListeners = new TestPhaseListeners();
         performanceStatsCollector = new PerformanceStatsCollector();
 
         componentRegistry = new ComponentRegistry();
+        agentAddress = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
+
+        workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
+        componentRegistry.addWorkers(agentAddress, singletonList(
+                new WorkerProcessSettings(
+                        workerAddress.getWorkerIndex(),
+                        WorkerType.MEMBER,
+                        "outofthebox",
+                        "",
+                        0,
+                        new HashMap<String, String>())));
+
         outputDirectory = TestUtils.createTmpDirectory();
         failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
@@ -90,7 +105,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
         failureCollector.addListener(this);
 
         TestException exception = new TestException("expected exception");
-        FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOM,
+        FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOME,
                 workerAddress, workerAddress.getParent().toString(), exception);
         ResponseType responseType = processor.process(operation, workerAddress);
 
