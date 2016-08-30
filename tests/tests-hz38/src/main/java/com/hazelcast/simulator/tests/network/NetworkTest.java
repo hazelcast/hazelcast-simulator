@@ -48,7 +48,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.nio.Packet.FLAG_RESPONSE;
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
-import static com.hazelcast.simulator.tests.network.PayloadUtils.*;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.makePayload;
+import static com.hazelcast.simulator.tests.network.PayloadUtils.readLong;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 @SuppressWarnings("checkstyle:npathcomplexity")
@@ -118,7 +121,7 @@ public class NetworkTest extends AbstractTest {
                 threadingModel = nonBlockingIOThreadingModel;
                 break;
             case Spinning:
-                threadingModel = new SpinningIOThreadingModel(ioService, loggingService, metricsRegistry, threadGroup);
+                threadingModel = new SpinningIOThreadingModel(loggingService, metricsRegistry, threadGroup);
                 break;
             default:
                 throw new IllegalStateException("Unrecognized threading model: " + ioThreadingModel);
