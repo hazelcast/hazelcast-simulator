@@ -94,7 +94,6 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 processCreateTest((CreateTestOperation) operation);
                 break;
             case KILL_WORKER:
-
                 new Thread() {
                     public void run() {
                         try {
@@ -105,7 +104,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                         LOGGER.fatal("Killing worker");
                         System.exit(1);
                     }
-                }.run();
+                }.start();
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
