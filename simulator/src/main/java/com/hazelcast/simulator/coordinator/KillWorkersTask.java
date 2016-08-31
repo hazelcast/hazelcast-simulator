@@ -17,7 +17,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
@@ -81,19 +80,9 @@ public class KillWorkersTask {
         for (WorkerData victim : victims) {
             victim.setIgnoreFailures(true);
 
-            coordinatorConnector.writeAsync(victim.getAddress(), newKillOperation());
+            coordinatorConnector.writeAsync(victim.getAddress(), new ExecuteScriptOperation(command));
 
             LOGGER.info("Kill send to worker [" + victim.getAddress() + "]");
-        }
-    }
-
-    private SimulatorOperation newKillOperation() {
-        if ("System.exit".equals(command)) {
-            return new ExecuteScriptOperation("js:java.lang.System.exit(0);");
-        } else if ("OOME".equals(command)) {
-            return new ExecuteScriptOperation(command);
-        } else {
-            return new ExecuteScriptOperation(command);
         }
     }
 
@@ -124,6 +113,4 @@ public class KillWorkersTask {
                     toAddressString(victims), toAddressString(victims)));
         }
     }
-
-
 }

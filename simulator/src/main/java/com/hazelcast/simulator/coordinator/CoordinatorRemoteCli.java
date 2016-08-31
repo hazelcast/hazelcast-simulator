@@ -157,7 +157,7 @@ public class CoordinatorRemoteCli implements Closeable {
         closeQuietly(connector);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         CoordinatorRemoteCli cli = null;
         try {
             cli = new CoordinatorRemoteCli(args);
@@ -382,7 +382,18 @@ public class CoordinatorRemoteCli implements Closeable {
                     .setMaxCount(maxCount)
                     .setRandom(options.valueOf(randomSpec));
 
-            return new RcKillWorkerOperation(options.valueOf(commandSpec), workerQuery);
+            String command = options.valueOf(commandSpec);
+            if ("System.exit".equals(command)) {
+                command = "js:java.lang.System.exit(0);";
+            } else if ("OOME".equals(command)) {
+                command = "var list = new java.util.ArrayList();\n"
+                        + "while(true){\n"
+                        + "    try{"
+                        + "         list.add( new Array(10000));"
+                        + "    }catch(error){}"
+                        + "}";
+            }
+            return new RcKillWorkerOperation(command, workerQuery);
         }
     }
 

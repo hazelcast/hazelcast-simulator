@@ -102,7 +102,7 @@ public class FailureCollector {
             TestData testData = componentRegistry.getTest(testId);
             if (testData != null) {
                 failure.setTestSuite(testData.getTestSuite());
-                failure.setDuration(System.currentTimeMillis()-testData.getStartTimeMillis());
+                failure.setDuration(System.currentTimeMillis() - testData.getStartTimeMillis());
             }
         }
         return failure;

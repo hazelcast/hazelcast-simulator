@@ -58,7 +58,7 @@ public class FailureOperation implements SimulatorOperation {
         this.cause = cause;
     }
 
-    public void setDuration(long durationMs){
+    public void setDuration(long durationMs) {
         this.durationMs = durationMs;
     }
 
