@@ -26,9 +26,8 @@ import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
@@ -123,8 +122,6 @@ public class CoordinatorRemoteCli implements Closeable {
             response = connector.write(new PrintClusterLayoutCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
             response = connector.write(new RunCli().newOperation(subArgs));
-        } else if ("stop-workers".equals(cmd)) {
-            response = connector.write(new StopWorkersCli().newOperation(subArgs));
         } else if ("kill-workers".equals(cmd)) {
             response = connector.write(new KillWorkersCli().newOperation(subArgs));
         } else {
@@ -143,12 +140,11 @@ public class CoordinatorRemoteCli implements Closeable {
                 "Command         Description                                                                 \n"
                         + "------         -----------                                                                  \n"
                         + "install         Installs vendor software on the remote machines                             \n"
-                        + "kill-workers    Kills one or more workers (for high availability testing)                   \n"
+                        + "kill-workers    Kills one or more workers                                                   \n"
                         + "print-layout    Prints the cluster-layout                                                   \n"
                         + "run             Runs a test                                                                 \n"
                         + "script-workers  Executes a script on workers                                                \n"
                         + "start-workers   Starts workers                                                              \n"
-                        + "stop-workers    Stops workers                                                               \n"
                         + "stop            Stops the Coordinator remote session                                        ");
         System.exit(1);
     }
@@ -258,18 +254,6 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private static class StopWorkersCli {
-        private final OptionParser parser = new OptionParser();
-
-        private OptionSet options;
-
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, args);
-
-            return new RcStopWorkersOperation();
-        }
-    }
-
     private static class PrintClusterLayoutCli {
         private final OptionParser parser = new OptionParser();
 
@@ -307,7 +291,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> commandSpec = parser.accepts("command",
-                "The way to kill the worker. E.g. 'System.exit', 'OOME', 'bash:kill -9 $PID', 'js:")
+                "The way to kill the worker. E.g. 'System.exit', 'OOME', 'bash:kill -9 $PID', 'js:somescript")
                 .withRequiredArg().ofType(String.class).defaultsTo("System.exit");
 
         private final OptionSpec<Boolean> randomSpec = parser.accepts("random",

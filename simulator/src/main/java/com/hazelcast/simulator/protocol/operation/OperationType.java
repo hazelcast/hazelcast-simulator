@@ -39,11 +39,10 @@ public enum OperationType {
     RC_INSTALL_VENDOR(RcInstallVendorOperation.class, 2003),
     RC_SHUTDOWN(RcStopCoordinatorOperation.class, 2004),
     RC_START_WORKERS(RcStartWorkersOperation.class, 2005),
-    RC_STOP_WORKERS(RcStopWorkersOperation.class, 2006),
-    RC_RUN_SUITE(RcRunSuiteOperation.class, 2007),
-    RC_KILL_WORKERS(RcKillWorkersOperation.class, 2008),
-    RC_WORKER_SCRIPT(RcWorkersScriptOperation.class, 2009),
-    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2010),
+    RC_RUN_SUITE(RcRunSuiteOperation.class, 2006),
+    RC_KILL_WORKERS(RcKillWorkersOperation.class, 2007),
+    RC_WORKER_SCRIPT(RcWorkersScriptOperation.class, 2008),
+    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2009),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 3000),

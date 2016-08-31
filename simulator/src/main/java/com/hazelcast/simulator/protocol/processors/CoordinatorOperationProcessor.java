@@ -30,7 +30,6 @@ import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Logger;
 
@@ -78,9 +77,6 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 break;
             case RC_START_WORKERS:
                 coordinator.startWorkers((RcStartWorkersOperation) operation);
-                break;
-            case RC_STOP_WORKERS:
-                coordinator.stopWorkers((RcStopWorkersOperation) operation);
                 break;
             case RC_RUN_SUITE:
                 coordinator.runSuite(((RcRunSuiteOperation) operation).getTestSuite());

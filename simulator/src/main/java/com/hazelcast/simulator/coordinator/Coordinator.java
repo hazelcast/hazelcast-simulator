@@ -26,7 +26,6 @@ import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
@@ -310,18 +309,6 @@ public final class Coordinator {
                 }
             }
         }).start();
-    }
-
-    public void stopWorkers(RcStopWorkersOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
-
-        LOGGER.info("Stopping workers...");
-
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
-
-        componentRegistry.printLayout();
-
-        LOGGER.info("Stopping workers complete!");
     }
 
     public void printLayout() throws Exception {
