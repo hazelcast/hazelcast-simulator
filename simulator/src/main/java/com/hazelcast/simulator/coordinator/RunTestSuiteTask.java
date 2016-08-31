@@ -91,9 +91,7 @@ public class RunTestSuiteTask {
             echoer.echo("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase);
 
             TestCaseRunner runner = new TestCaseRunner(
-                    testIndex,
-                    testCase,
-                    testSuite,
+                    testData,
                     remoteClient,
                     testPhaseSyncMap,
                     failureCollector,
@@ -118,7 +116,7 @@ public class RunTestSuiteTask {
         int testDuration = testSuite.getDurationSeconds();
         if (testDuration > 0) {
             echoer.echo("Running time per test: %s", secondsToHuman(testDuration));
-            int totalDuration = (isParallel ? testDuration : testDuration * testSuite.size());
+            int totalDuration = isParallel ? testDuration : testDuration * testSuite.size();
             if (testSuite.isWaitForTestCase()) {
                 echoer.echo("Testsuite will run until tests are finished for a maximum time of: %s",
                         secondsToHuman(totalDuration));

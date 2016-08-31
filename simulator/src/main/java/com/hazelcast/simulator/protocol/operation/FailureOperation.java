@@ -39,6 +39,7 @@ public class FailureOperation implements SimulatorOperation {
     private final String testId;
     private TestSuite testSuite;
     private final String cause;
+    private long durationMs;
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             Throwable cause) {
@@ -55,6 +56,10 @@ public class FailureOperation implements SimulatorOperation {
         this.workerId = workerId;
         this.testId = testId;
         this.cause = cause;
+    }
+
+    public void setDuration(long durationMs){
+        this.durationMs = durationMs;
     }
 
     public FailureOperation setTestSuite(TestSuite testSuite) {
@@ -125,6 +130,7 @@ public class FailureOperation implements SimulatorOperation {
         sb.append("   message='").append(message).append('\'').append(NEW_LINE);
         sb.append("   type=").append(type).append(NEW_LINE);
         sb.append("   timestamp=").append(timestamp).append(NEW_LINE);
+        sb.append("   duration=").append(durationMs).append(" ms").append(NEW_LINE);
         sb.append("   workerAddress=").append(workerAddress).append(NEW_LINE);
         sb.append("   agentAddress=").append(agentAddress).append(NEW_LINE);
         sb.append("   hzAddress=").append(hzAddress).append(NEW_LINE);

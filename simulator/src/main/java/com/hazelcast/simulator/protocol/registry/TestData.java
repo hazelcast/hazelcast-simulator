@@ -25,6 +25,7 @@ public class TestData {
     private final SimulatorAddress address;
     private final TestCase testCase;
     private final TestSuite testSuite;
+    private volatile long startTimeMillis;
 
     TestData(int testIndex, SimulatorAddress address, TestCase testCase, TestSuite testSuite) {
         this.testIndex = testIndex;
@@ -47,5 +48,13 @@ public class TestData {
 
     public TestSuite getTestSuite() {
         return testSuite;
+    }
+
+    public void initStartTime() {
+        this.startTimeMillis = System.currentTimeMillis();
+    }
+
+    public long getStartTimeMillis() {
+        return startTimeMillis;
     }
 }

@@ -61,7 +61,7 @@ public class FailureCollector {
     }
 
     public void notify(FailureOperation failure) {
-        failure = enrichWithTestSuite(failure);
+        failure = enrich(failure);
 
         WorkerData worker = componentRegistry.findWorker(failure.getWorkerAddress());
         if (worker == null) {
@@ -95,18 +95,16 @@ public class FailureCollector {
         }
     }
 
-    private FailureOperation enrichWithTestSuite(FailureOperation failure) {
+    private FailureOperation enrich(FailureOperation failure) {
         String testId = failure.getTestId();
-        if (testId == null) {
-            return failure;
-        }
+        if (testId != null) {
 
-        TestData testData = componentRegistry.getTest(testId);
-        if (testData == null) {
-            return failure;
+            TestData testData = componentRegistry.getTest(testId);
+            if (testData != null) {
+                failure.setTestSuite(testData.getTestSuite());
+                failure.setDuration(System.currentTimeMillis()-testData.getStartTimeMillis());
+            }
         }
-
-        failure.setTestSuite(testData.getTestSuite());
         return failure;
     }
 

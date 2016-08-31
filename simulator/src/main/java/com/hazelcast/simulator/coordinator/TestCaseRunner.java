@@ -25,6 +25,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import org.apache.log4j.Logger;
 
@@ -75,7 +76,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private final ConcurrentMap<TestPhase, List<SimulatorAddress>> phaseCompletedMap
             = new ConcurrentHashMap<TestPhase, List<SimulatorAddress>>();
 
-    private final int testIndex;
+    private final TestData testData;
     private final TestCase testCase;
     private final TestSuite testSuite;
 
@@ -95,18 +96,16 @@ final class TestCaseRunner implements TestPhaseListener {
     private final int logRunPhaseIntervalSeconds;
 
     @SuppressWarnings("checkstyle:parameternumber")
-    TestCaseRunner(int testIndex,
-                   TestCase testCase,
-                   TestSuite testSuite,
+    TestCaseRunner(TestData testData,
                    RemoteClient remoteClient,
                    Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                    FailureCollector failureCollector,
                    ComponentRegistry componentRegistry,
                    PerformanceStatsCollector performanceStatsCollector,
                    int performanceMonitorIntervalSeconds) {
-        this.testIndex = testIndex;
-        this.testCase = testCase;
-        this.testSuite = testSuite;
+        this.testData = testData;
+        this.testCase = testData.getTestCase();
+        this.testSuite = testData.getTestSuite();
 
         this.remoteClient = remoteClient;
         this.failureCollector = failureCollector;
@@ -138,6 +137,7 @@ final class TestCaseRunner implements TestPhaseListener {
     }
 
     void run() {
+        testData.initStartTime();
         try {
             run0();
         } catch (TestCaseAbortedException e) {
@@ -184,7 +184,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private void createTest() {
         echo("Starting Test initialization");
-        remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
+        remoteClient.sendToAllWorkers(new CreateTestOperation(testData.getTestIndex(), testCase));
         echo("Completed Test initialization");
     }
 
@@ -402,7 +402,6 @@ final class TestCaseRunner implements TestPhaseListener {
 
             LOGGER.info(prefix + msg);
         }
-
     }
 
     private static final class TestCaseAbortedException extends RuntimeException {
