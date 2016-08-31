@@ -22,13 +22,14 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
+import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
@@ -109,21 +110,22 @@ public class CoordinatorRemoteCli implements Closeable {
         connector = new RemoteControllerConnector("localhost", coordinatorPort);
         connector.start();
         Response response;
-        if ("stop".equals(cmd)) {
-            LOGGER.info("Shutting down Coordinator Remote");
-            response = connector.write(new RcStopCoordinatorOperation());
+        if ("download".equals(cmd)) {
+            response = connector.write(new DownloadCli().newOperation(subArgs));
         } else if ("install".equals(cmd)) {
             response = connector.write(new InstallCli().newOperation(subArgs));
-        } else if ("script-workers".equals(cmd)) {
-            response = connector.write(new ScriptWorkersCli().newOperation(subArgs));
-        } else if ("start-workers".equals(cmd)) {
-            response = connector.write(new StartWorkersCli().newOperation(subArgs));
+        } else if ("kill-worker".equals(cmd)) {
+            response = connector.write(new KillWorkerCli().newOperation(subArgs));
         } else if ("print-layout".equals(cmd)) {
             response = connector.write(new PrintClusterLayoutCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
             response = connector.write(new RunCli().newOperation(subArgs));
-        } else if ("kill-workers".equals(cmd)) {
-            response = connector.write(new KillWorkersCli().newOperation(subArgs));
+        } else if ("script-worker".equals(cmd)) {
+            response = connector.write(new ScriptWorkerCli().newOperation(subArgs));
+        } else if ("start-worker".equals(cmd)) {
+            response = connector.write(new StartWorkerCli().newOperation(subArgs));
+        } else if ("stop".equals(cmd)) {
+            response = connector.write(new ExitCli().newOperation(subArgs));
         } else {
             printHelpAndExit();
             return;
@@ -138,13 +140,14 @@ public class CoordinatorRemoteCli implements Closeable {
     private static void printHelpAndExit() {
         System.out.println(
                 "Command         Description                                                                 \n"
-                        + "------         -----------                                                                  \n"
+                        + "--------------------------                                                                  \n"
+                        + "download        Downloads all artifacts from the workers                                    \n"
                         + "install         Installs vendor software on the remote machines                             \n"
-                        + "kill-workers    Kills one or more workers                                                   \n"
+                        + "kill-worker     Kills one or more workers                                                   \n"
                         + "print-layout    Prints the cluster-layout                                                   \n"
                         + "run             Runs a test                                                                 \n"
-                        + "script-workers  Executes a script on workers                                                \n"
-                        + "start-workers   Starts workers                                                              \n"
+                        + "script-worker   Executes a script on workers                                                \n"
+                        + "start-worker    Starts workers                                                              \n"
                         + "stop            Stops the Coordinator remote session                                        ");
         System.exit(1);
     }
@@ -173,6 +176,17 @@ public class CoordinatorRemoteCli implements Closeable {
     }
 
     private static class InstallCli {
+        private final String help = ""
+                + "Install Hazelcast on the remote machines. By default the coordinator will upload to the agents\n"
+                + "what has been configured on the simulator.properties. But in case of testing multiple versions\n"
+                + "the other versions need to be installed. If a worker is started without the right software, "
+                + "the worker will fail to start\n\n"
+                + "\n"
+                + "Examples\n"
+                + "coordinator-remote install maven=3.6\n"
+                + "coordinator-remote install maven=3.8-SNAPSHOT\n"
+                + "coordinator-remote install git=<somehash>\n";
+
         private final OptionParser parser = new OptionParser();
 
         private final NonOptionArgumentSpec argumentSpec = parser
@@ -180,19 +194,41 @@ public class CoordinatorRemoteCli implements Closeable {
 
         private OptionSet options;
 
-        RcInstallVendorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, args);
+        RcInstallOperation newOperation(String[] args) {
+            this.options = initOptionsWithHelp(parser, help, args);
 
             if (options.nonOptionArguments().size() != 1) {
                 throw new CommandLineExitException("Too many arguments");
             }
 
             LOGGER.info("Installing " + args[0]);
-            return new RcInstallVendorOperation(args[0]);
+            return new RcInstallOperation(args[0]);
         }
     }
 
-    private static class ScriptWorkersCli {
+    private static class DownloadCli {
+        private final String help = ""
+                + "The download command downloads all artifacts from the workers.\n";
+
+        private final OptionParser parser = new OptionParser();
+
+        private OptionSet options;
+
+        SimulatorOperation newOperation(String[] args) {
+            this.options = initOptionsOnlyWithHelp(parser, help, args);
+            return new RcDownloadOperation();
+        }
+    }
+
+    private static class ScriptWorkerCli {
+        private final String help = ""
+                + "Executes a script on one or more workers\n"
+                + "Various filter options are available like --versionSpec, --workerType, --agentAddress\n"
+                + "and it is even possible to execute a script on a specific worker using --workerAddress\n"
+                + "\nExamples\n"
+                + "coordinator-remote script --version 3.7 --command 'bash:ls'\n"
+                + "coordinator-remote script --workerAddress C_A1_W1 --command 'javascript:java.lang.System.exit(0)'\n";
+
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
@@ -205,7 +241,8 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
         private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
-                "The maximum number of workers to execute the script on")
+                "The maximum number of workers to execute the script on. It can safely be called with a maxCount larger than "
+                        + "the actual number of workers.")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
         private final OptionSpec<String> agentAddressSpec = parser.accepts("agentAddress",
@@ -223,7 +260,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, args);
+            this.options = initOptionsWithHelp(parser, help, args);
             List<?> nonOptionArguments = options.nonOptionArguments();
             if (nonOptionArguments.size() != 1) {
                 throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'jstack $PID'");
@@ -250,23 +287,45 @@ public class CoordinatorRemoteCli implements Closeable {
 
             String cmd = (String) nonOptionArguments.get(0);
             LOGGER.info("Executing [" + cmd + "]");
-            return new RcWorkersScriptOperation(cmd, workerQuery);
+            return new RcWorkerScriptOperation(cmd, workerQuery);
         }
     }
 
     private static class PrintClusterLayoutCli {
+        private final String help = ""
+                + "Prints the cluster layout.\n";
+
         private final OptionParser parser = new OptionParser();
 
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, args);
+            this.options = initOptionsOnlyWithHelp(parser, help, args);
 
             return new RcPrintLayoutOperation();
         }
     }
 
-    private static class KillWorkersCli {
+    private static class ExitCli {
+        private final String help = ""
+                + "Terminates the the coordinator session.\n";
+
+        private final OptionParser parser = new OptionParser();
+
+        private OptionSet options;
+
+        SimulatorOperation newOperation(String[] args) {
+            this.options = initOptionsOnlyWithHelp(parser, help, args);
+            LOGGER.info("Shutting down Coordinator Remote");
+            return new RcStopCoordinatorOperation();
+        }
+    }
+
+    private static class KillWorkerCli {
+        private final String help = ""
+                + "The kill-worker command kills one or more workers. The killing can be done based using an exact \n"
+                + "worker address or using various filters like versionSpec, etc.\n";
+
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
@@ -279,7 +338,8 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
         private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
-                "The maximum number of workers to execute the script on")
+                "The maximum number of workers to kill. It can safely be called with a maxCount larger than "
+                        + "the actual number of workers.")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
         private final OptionSpec<String> agentAddressSpec = parser.accepts("agentAddress",
@@ -301,7 +361,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, args);
+            this.options = initOptionsOnlyWithHelp(parser, help, args);
 
             int maxCount = options.valueOf(maxCountSpec);
             if (maxCount <= 0) {
@@ -322,11 +382,14 @@ public class CoordinatorRemoteCli implements Closeable {
                     .setMaxCount(maxCount)
                     .setRandom(options.valueOf(randomSpec));
 
-            return new RcKillWorkersOperation(options.valueOf(commandSpec), workerQuery);
+            return new RcKillWorkerOperation(options.valueOf(commandSpec), workerQuery);
         }
     }
 
-    private class StartWorkersCli {
+    private class StartWorkerCli {
+        private final String help = ""
+                + "Starts one or more workers.\n";
+
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> vmOptionsSpec = parser.accepts("vmOptions",
@@ -358,7 +421,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, args);
+            this.options = initOptionsOnlyWithHelp(parser, help, args);
 
             int count = options.valueOf(countSpec);
             if (count <= 0) {
@@ -367,7 +430,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
             LOGGER.info(format("Starting %s workers", count));
 
-            return new RcStartWorkersOperation(
+            return new RcStartWorkerOperation(
                     count,
                     options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
@@ -378,6 +441,8 @@ public class CoordinatorRemoteCli implements Closeable {
     }
 
     private class RunCli {
+        private final String help = "Runs a test";
+
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> durationSpec = parser.accepts("duration",
@@ -412,7 +477,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, args);
+            this.options = initOptionsWithHelp(parser, help, args);
 
             List testsuiteFiles = options.nonOptionArguments();
             File testSuiteFile;

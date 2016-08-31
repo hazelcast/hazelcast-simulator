@@ -25,11 +25,12 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
-import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
+import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import org.apache.log4j.Logger;
 
@@ -72,26 +73,29 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
             case PERFORMANCE_STATE:
                 performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) operation).getPerformanceStats());
                 break;
-            case RC_INSTALL_VENDOR:
-                coordinator.installVendor(((RcInstallVendorOperation) operation).getVersionSpec());
+            case RC_INSTALL:
+                coordinator.install(((RcInstallOperation) operation).getVersionSpec());
                 break;
-            case RC_START_WORKERS:
-                coordinator.startWorkers((RcStartWorkersOperation) operation);
+            case RC_START_WORKER:
+                coordinator.startWorkers((RcStartWorkerOperation) operation);
                 break;
             case RC_RUN_SUITE:
                 coordinator.runSuite(((RcRunSuiteOperation) operation).getTestSuite());
                 break;
-            case RC_KILL_WORKERS:
-                coordinator.killWorker((RcKillWorkersOperation) operation);
+            case RC_KILL_WORKER:
+                coordinator.killWorker((RcKillWorkerOperation) operation);
                 break;
-            case RC_SHUTDOWN:
-                coordinator.shutdown();
+            case RC_EXIT:
+                coordinator.exit();
                 break;
             case RC_WORKER_SCRIPT:
-                coordinator.workerScript((RcWorkersScriptOperation) operation);
+                coordinator.workerScript((RcWorkerScriptOperation) operation);
                 break;
             case RC_PRINT_LAYOUT:
                 coordinator.printLayout();
+                break;
+            case RC_DOWNLOAD:
+                coordinator.download((RcDownloadOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;

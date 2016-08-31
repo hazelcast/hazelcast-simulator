@@ -24,9 +24,10 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
+import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
+import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -34,6 +35,7 @@ import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
@@ -53,7 +55,6 @@ import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.CommonUtils.exit;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -272,7 +273,7 @@ public final class Coordinator {
         return log;
     }
 
-    public void installVendor(String versionSpec) throws Exception {
+    public void install(String versionSpec) throws Exception {
         awaitInteractiveModeInitialized();
 
         LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents ....");
@@ -284,7 +285,7 @@ public final class Coordinator {
         LOGGER.info("Install successful!");
     }
 
-    public void shutdown() {
+    public void exit() {
         LOGGER.info("Shutting down....");
 
         new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
@@ -303,7 +304,7 @@ public final class Coordinator {
                         echo("Shutdown of ClientConnector...");
                         coordinatorConnector.shutdown();
                     }
-                    exit(0);
+                    CommonUtils.exit(0);
                 } catch (Exception e) {
                     LOGGER.warn("Failed to shutdown", e);
                 }
@@ -317,7 +318,7 @@ public final class Coordinator {
         componentRegistry.printLayout();
     }
 
-    public void startWorkers(RcStartWorkersOperation op) throws Exception {
+    public void startWorkers(RcStartWorkerOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
@@ -401,7 +402,7 @@ public final class Coordinator {
         LOGGER.info("Run complete!");
     }
 
-    public void killWorker(RcKillWorkersOperation op) throws Exception {
+    public void killWorker(RcKillWorkerOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerQuery workerQuery = op.getWorkerQuery();
@@ -413,12 +414,11 @@ public final class Coordinator {
 
         componentRegistry.printLayout();
 
-        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completes",
+        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completed!",
                 workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
-
     }
 
-    public void workerScript(RcWorkersScriptOperation operation) throws Exception {
+    public void workerScript(RcWorkerScriptOperation operation) throws Exception {
         awaitInteractiveModeInitialized();
 
         List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
@@ -430,6 +430,20 @@ public final class Coordinator {
             LOGGER.info("Script send to worker [" + worker.getAddress() + "]");
         }
 
-        LOGGER.info(format("Script [%s] on %s workers completed!!!", operation.getCommand(), workers.size()));
+        LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
+    }
+
+    public void download(RcDownloadOperation operation) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        LOGGER.info("Downloading ....");
+
+        new DownloadTask(
+                coordinatorParameters.getSessionId(),
+                simulatorProperties,
+                outputDirectory,
+                componentRegistry).run();
+
+        LOGGER.info("Downloading complete!");
     }
 }

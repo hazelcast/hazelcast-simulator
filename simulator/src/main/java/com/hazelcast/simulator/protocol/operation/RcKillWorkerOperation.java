@@ -17,12 +17,11 @@ package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 
-public class RcWorkersScriptOperation implements SimulatorOperation {
-
+public class RcKillWorkerOperation implements SimulatorOperation {
     private final String command;
     private final WorkerQuery workerQuery;
 
-    public RcWorkersScriptOperation(String command, WorkerQuery workerQuery) {
+    public RcKillWorkerOperation(String command, WorkerQuery workerQuery) {
         this.command = command;
         this.workerQuery = workerQuery;
     }

@@ -35,11 +35,18 @@ public final class CliUtils {
 
     @SuppressWarnings("PMD.PreserveStackTrace")
     public static OptionSet initOptionsWithHelp(OptionParser parser, String[] args) {
+        return initOptionsWithHelp(parser, null, args);
+    }
+
+    public static OptionSet initOptionsWithHelp(OptionParser parser, String help, String[] args) {
         try {
             OptionSpec helpSpec = parser.accepts("help", "Shows the help.").forHelp();
             OptionSet options = parser.parse(args);
 
             if (options.has(helpSpec)) {
+                if (help != null) {
+                    System.out.println(help);
+                }
                 printHelpAndExit(parser, System.out);
             }
 
@@ -49,16 +56,18 @@ public final class CliUtils {
         }
     }
 
-    public static OptionSet initOptionsOnlyWithHelp(OptionParser parser, String[] args) {
+    public static OptionSet initOptionsOnlyWithHelp(OptionParser parser, String content, String[] args) {
         try {
             OptionSpec helpSpec = parser.accepts("help", "Shows the help.").forHelp();
             OptionSet options = parser.parse(args);
 
             if (options.has(helpSpec)) {
+                System.out.println(content);
                 printHelpAndExit(parser, System.out);
             }
 
             if (options.nonOptionArguments().size() > 0) {
+                System.out.println(content);
                 printHelpAndExit(parser, System.out);
             }
 

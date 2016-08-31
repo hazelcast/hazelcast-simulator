@@ -15,14 +15,5 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class RcInstallVendorOperation implements SimulatorOperation {
-    private final String versionSpec;
-
-    public RcInstallVendorOperation(String versionSpec) {
-        this.versionSpec = versionSpec;
-    }
-
-    public String getVersionSpec() {
-        return versionSpec;
-    }
+public class RcDownloadOperation implements SimulatorOperation {
 }

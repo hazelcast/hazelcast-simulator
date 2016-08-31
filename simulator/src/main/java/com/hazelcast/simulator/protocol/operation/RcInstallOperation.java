@@ -15,22 +15,14 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.protocol.registry.WorkerQuery;
+public class RcInstallOperation implements SimulatorOperation {
+    private final String versionSpec;
 
-public class RcKillWorkersOperation implements SimulatorOperation {
-    private final String command;
-    private final WorkerQuery workerQuery;
-
-    public RcKillWorkersOperation(String command, WorkerQuery workerQuery) {
-        this.command = command;
-        this.workerQuery = workerQuery;
+    public RcInstallOperation(String versionSpec) {
+        this.versionSpec = versionSpec;
     }
 
-    public String getCommand() {
-        return command;
-    }
-
-    public WorkerQuery getWorkerQuery() {
-        return workerQuery;
+    public String getVersionSpec() {
+        return versionSpec;
     }
 }
