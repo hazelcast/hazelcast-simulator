@@ -23,16 +23,16 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
+import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.utils.BashCommand;
-import com.hazelcast.simulator.utils.EmptyStatement;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.utils.JavascriptCommand;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
@@ -101,21 +101,8 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
                 break;
-            case BASH:
-                processBashOperation((BashOperation) operation);
-                break;
-            case KILL_WORKER:
-                new Thread() {
-                    public void run() {
-                        try {
-                            Thread.sleep(DELAY_MS);
-                        } catch (InterruptedException e) {
-                            EmptyStatement.ignore(e);
-                        }
-                        LOGGER.fatal("Killing worker");
-                        System.exit(1);
-                    }
-                }.start();
+            case EXECUTE_SCRIPT:
+                processExecuteScript((ExecuteScriptOperation) operation);
                 break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -128,22 +115,45 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         ExceptionReporter.report(null, t);
     }
 
-    private void processBashOperation(final BashOperation operation) {
-        ThreadSpawner spawner = new ThreadSpawner("bash[" + operation.getCommand() + "]");
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                Map<String, Object> environment = new HashMap<String, Object>();
-                File pidFile = new File(getUserDir(), "worker.pid");
-                if (pidFile.exists()) {
-                    environment.put("PID", fileAsText(pidFile));
+    private void processExecuteScript(final ExecuteScriptOperation operation) {
+        String fullCommand = operation.getCommand();
+        int indexColon = fullCommand.indexOf(":");
+        String type = fullCommand.substring(0, indexColon);
+        final String command = fullCommand.substring(indexColon + 1);
+        ThreadSpawner spawner = new ThreadSpawner(type + "[" + operation.getCommand() + "]");
+
+        if (type.equals("js")) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Object result = new JavascriptCommand(command)
+                                .addEnvironment("hazelcastInstance", hazelcastInstance)
+                                .execute();
+                        LOGGER.info(format("Javascript [%s] with [%s]", command, result));
+                    } catch (Exception e) {
+                        LOGGER.warn(format("Failed to process javascript command '%s'", command), e);
+                    }
                 }
-                new BashCommand(operation.getCommand())
-                        .setDirectory(getUserDir())
-                        .addEnvironment(environment)
-                        .execute();
-            }
-        });
+            });
+        } else if (type.equals("bash")) {
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    Map<String, Object> environment = new HashMap<String, Object>();
+                    File pidFile = new File(getUserDir(), "worker.pid");
+                    if (pidFile.exists()) {
+                        environment.put("PID", fileAsText(pidFile));
+                    }
+                    new BashCommand(command)
+                            .setDirectory(getUserDir())
+                            .addEnvironment(environment)
+                            .execute();
+                }
+            });
+        } else {
+            throw new IllegalArgumentException("Unhandled script type: " + type);
+        }
     }
 
     private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)

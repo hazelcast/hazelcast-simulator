@@ -15,15 +15,23 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class RcBashOperation implements SimulatorOperation {
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 
-    private String command;
+public class RcWorkersScriptOperation implements SimulatorOperation {
 
-    public RcBashOperation(String command) {
+    private final String command;
+    private final WorkerQuery workerQuery;
+
+    public RcWorkersScriptOperation(String command, WorkerQuery workerQuery) {
         this.command = command;
+        this.workerQuery = workerQuery;
     }
 
     public String getCommand() {
         return command;
+    }
+
+    public WorkerQuery getWorkerQuery() {
+        return workerQuery;
     }
 }

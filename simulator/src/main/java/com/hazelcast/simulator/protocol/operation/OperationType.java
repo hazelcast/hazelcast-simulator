@@ -37,12 +37,12 @@ public enum OperationType {
 
     // Coordinator Remote operations
     RC_INSTALL_VENDOR(RcInstallVendorOperation.class, 2003),
-    RC_SHUTDOWN(RcShutdownCoordinatorOperation.class, 2004),
+    RC_SHUTDOWN(RcStopCoordinatorOperation.class, 2004),
     RC_START_WORKERS(RcStartWorkersOperation.class, 2005),
     RC_STOP_WORKERS(RcStopWorkersOperation.class, 2006),
     RC_RUN_SUITE(RcRunSuiteOperation.class, 2007),
     RC_KILL_WORKERS(RcKillWorkersOperation.class, 2008),
-    RC_BASH(RcBashOperation.class, 2009),
+    RC_WORKER_SCRIPT(RcWorkersScriptOperation.class, 2009),
     RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2010),
 
     // AgentOperationProcessor
@@ -50,13 +50,12 @@ public enum OperationType {
     CREATE_WORKER(CreateWorkerOperation.class, 3001),
     START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3002),
     STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3003),
-    BASH(BashOperation.class, 3004),
 
     // WorkerOperationProcessor
     PING(PingOperation.class, 4000),
     TERMINATE_WORKER(TerminateWorkerOperation.class, 4001),
     CREATE_TEST(CreateTestOperation.class, 4002),
-    KILL_WORKER(KillWorkerOperation.class, 4003),
+    EXECUTE_SCRIPT(ExecuteScriptOperation.class, 4003),
 
     // TestOperationProcessor
     START_TEST_PHASE(StartTestPhaseOperation.class, 5000),

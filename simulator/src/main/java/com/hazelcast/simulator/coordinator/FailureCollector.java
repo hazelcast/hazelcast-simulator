@@ -71,6 +71,7 @@ public class FailureCollector {
 
         // it the failure is the terminal for that workers, we need to remove it from the component registry
         if (failure.getType().isTerminal()) {
+            LOGGER.info("Removing worker " + worker.getAddress() + " from componentRegistry due to [" + failure.getType() + "]");
             componentRegistry.removeWorker(worker.getAddress());
         }
 

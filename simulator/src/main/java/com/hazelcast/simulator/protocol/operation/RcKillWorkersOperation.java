@@ -15,38 +15,22 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
+
 public class RcKillWorkersOperation implements SimulatorOperation {
-    private final int count;
-    private final String versionSpec;
-    private final String workerType;
-    private final String agentAddress;
-    private final String workerAddress;
+    private final String command;
+    private final WorkerQuery workerQuery;
 
-    public RcKillWorkersOperation(int count, String versionSpec, String workerType, String agentAddress, String workerAddress) {
-        this.count = count;
-        this.versionSpec = versionSpec;
-        this.workerType = workerType;
-        this.agentAddress = agentAddress;
-        this.workerAddress = workerAddress;
+    public RcKillWorkersOperation(String command, WorkerQuery workerQuery) {
+        this.command = command;
+        this.workerQuery = workerQuery;
     }
 
-    public int getCount() {
-        return count;
+    public String getCommand() {
+        return command;
     }
 
-    public String getVersionSpec() {
-        return versionSpec;
-    }
-
-    public String getWorkerType() {
-        return workerType;
-    }
-
-    public String getAgentAddress() {
-        return agentAddress;
-    }
-
-    public String getWorkerAddress() {
-        return workerAddress;
+    public WorkerQuery getWorkerQuery() {
+        return workerQuery;
     }
 }

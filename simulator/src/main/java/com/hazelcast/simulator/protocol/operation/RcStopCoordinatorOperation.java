@@ -15,14 +15,5 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class BashOperation implements SimulatorOperation {
-    private String command;
-
-    public BashOperation(String command) {
-        this.command = command;
-    }
-
-    public String getCommand() {
-        return command;
-    }
+public class RcStopCoordinatorOperation implements SimulatorOperation {
 }

@@ -22,16 +22,17 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.RcShutdownCoordinatorOperation;
+import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
 import joptsimple.NonOptionArgumentSpec;
@@ -111,17 +112,17 @@ public class CoordinatorRemoteCli implements Closeable {
         Response response;
         if ("stop".equals(cmd)) {
             LOGGER.info("Shutting down Coordinator Remote");
-            response = connector.write(new RcShutdownCoordinatorOperation());
+            response = connector.write(new RcStopCoordinatorOperation());
         } else if ("install".equals(cmd)) {
-            response = connector.write(new InstallVendorCli().newOperation(subArgs));
-        } else if ("bash".equals(cmd)) {
-            response = connector.write(new BashWorkersCommandCli().newOperation(subArgs));
+            response = connector.write(new InstallCli().newOperation(subArgs));
+        } else if ("script-workers".equals(cmd)) {
+            response = connector.write(new ScriptWorkersCli().newOperation(subArgs));
         } else if ("start-workers".equals(cmd)) {
             response = connector.write(new StartWorkersCli().newOperation(subArgs));
         } else if ("print-layout".equals(cmd)) {
             response = connector.write(new PrintClusterLayoutCli().newOperation(subArgs));
         } else if ("run".equals(cmd)) {
-            response = connector.write(new RunTestCli().newOperation(subArgs));
+            response = connector.write(new RunCli().newOperation(subArgs));
         } else if ("stop-workers".equals(cmd)) {
             response = connector.write(new StopWorkersCli().newOperation(subArgs));
         } else if ("kill-workers".equals(cmd)) {
@@ -141,11 +142,11 @@ public class CoordinatorRemoteCli implements Closeable {
         System.out.println(
                 "Command         Description                                                                 \n"
                         + "------         -----------                                                                  \n"
-                        + "bash-workers    Executes a bash command on every worker                                     \n"
                         + "install         Installs vendor software on the remote machines                             \n"
                         + "kill-workers    Kills one or more workers (for high availability testing)                   \n"
                         + "print-layout    Prints the cluster-layout                                                   \n"
                         + "run             Runs a test                                                                 \n"
+                        + "script-workers  Executes a script on workers                                                \n"
                         + "start-workers   Starts workers                                                              \n"
                         + "stop-workers    Stops workers                                                               \n"
                         + "stop            Stops the Coordinator remote session                                        ");
@@ -175,7 +176,7 @@ public class CoordinatorRemoteCli implements Closeable {
         return result;
     }
 
-    private static class InstallVendorCli {
+    private static class InstallCli {
         private final OptionParser parser = new OptionParser();
 
         private final NonOptionArgumentSpec argumentSpec = parser
@@ -195,22 +196,65 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private static class BashWorkersCommandCli {
+    private static class ScriptWorkersCli {
         private final OptionParser parser = new OptionParser();
+
+        private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
+                "The versionSpec of the member to kill, e.g. maven=3.7. The default value is null, meaning that the versionSpec"
+                        + "is not part of the selection criteria ")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
+                "The type of machine to kill. member, litemember, client:java (native clients will be added soon) etc")
+                .withRequiredArg().ofType(String.class).defaultsTo("member");
+
+        private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
+                "The maximum number of workers to execute the script on")
+                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+
+        private final OptionSpec<String> agentAddressSpec = parser.accepts("agentAddress",
+                "The simulator address of the agent owning the worker to kill")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<String> workerAddressSpec = parser.accepts("workerAddress",
+                "The simulator address of the worker to kill")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
+                "If workers should be picked randomly or predictably")
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
-
             this.options = initOptionsWithHelp(parser, args);
-
-            if (options.nonOptionArguments().size() != 1) {
+            List<?> nonOptionArguments = options.nonOptionArguments();
+            if (nonOptionArguments.size() != 1) {
                 throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'jstack $PID'");
             }
 
-            String cmd = args[0];
+            String agentAddress = loadAgentAddress(options, agentAddressSpec);
+            String workerAddress = loadWorkerAddress(options, workerAddressSpec);
+            if (agentAddress != null && workerAddress != null) {
+                throw new CommandLineExitException("---agentAddress and --workerAddress can't both be set");
+            }
+
+            int maxCount = options.valueOf(maxCountSpec);
+            if (maxCount <= 0) {
+                throw new CommandLineExitException("--maxCount can't be smaller than 1");
+            }
+
+            WorkerQuery workerQuery = new WorkerQuery()
+                    .setAgentAddress(agentAddress)
+                    .setWorkerAddress(workerAddress)
+                    .setWorkerType(options.valueOf(workerTypeSpec))
+                    .setVersionSpec(options.valueOf(versionSpecSpec))
+                    .setMaxCount(maxCount)
+                    .setRandom(options.valueOf(randomSpec));
+
+            String cmd = (String) nonOptionArguments.get(0);
             LOGGER.info("Executing [" + cmd + "]");
-            return new RcBashOperation(cmd);
+            return new RcWorkersScriptOperation(cmd, workerQuery);
         }
     }
 
@@ -250,8 +294,8 @@ public class CoordinatorRemoteCli implements Closeable {
                 "The type of machine to kill. member, litemember, client:java (native clients will be added soon) etc")
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
-        private final OptionSpec<Integer> countSpec = parser.accepts("count",
-                "The number of workers to kill")
+        private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
+                "The maximum number of workers to execute the script on")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
         private final OptionSpec<String> agentAddressSpec = parser.accepts("agentAddress",
@@ -262,49 +306,39 @@ public class CoordinatorRemoteCli implements Closeable {
                 "The simulator address of the worker to kill")
                 .withRequiredArg().ofType(String.class);
 
+        private final OptionSpec<String> commandSpec = parser.accepts("command",
+                "The way to kill the worker. E.g. 'System.exit', 'OOME', 'bash:kill -9 $PID', 'js:")
+                .withRequiredArg().ofType(String.class).defaultsTo("System.exit");
+
+        private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
+                "If workers should be picked randomly or predictably")
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
         private OptionSet options;
 
         SimulatorOperation newOperation(String[] args) {
             this.options = initOptionsOnlyWithHelp(parser, args);
 
-            int count = options.valueOf(countSpec);
-            if (count <= 0) {
-                throw new CommandLineExitException("worker count can't be smaller than 1");
+            int maxCount = options.valueOf(maxCountSpec);
+            if (maxCount <= 0) {
+                throw new CommandLineExitException("--maxCount can't be smaller than 1");
             }
 
             String agentAddress = loadAgentAddress(options, agentAddressSpec);
-
-            String workerAddress = loadWorkerAddress(agentAddress);
-
+            String workerAddress = loadWorkerAddress(options, workerAddressSpec);
             if (agentAddress != null && workerAddress != null) {
-                throw new CommandLineExitException("agentAddress and workerAddress can't both be set");
+                throw new CommandLineExitException("--agentAddress and --workerAddress can't both be set");
             }
 
-            return new RcKillWorkersOperation(
-                    count,
-                    options.valueOf(versionSpecSpec),
-                    options.valueOf(workerTypeSpec),
-                    agentAddress,
-                    workerAddress);
-        }
+            WorkerQuery workerQuery = new WorkerQuery()
+                    .setAgentAddress(agentAddress)
+                    .setWorkerAddress(workerAddress)
+                    .setWorkerType(options.valueOf(workerTypeSpec))
+                    .setVersionSpec(options.valueOf(versionSpecSpec))
+                    .setMaxCount(maxCount)
+                    .setRandom(options.valueOf(randomSpec));
 
-        private String loadWorkerAddress(String agentAddress) {
-            String workerAddress = options.valueOf(workerAddressSpec);
-            if (workerAddress != null) {
-                SimulatorAddress address;
-                try {
-                    address = SimulatorAddress.fromString(workerAddress);
-                } catch (Exception e) {
-                    throw new CommandLineExitException("Worker address [" + workerAddress
-                            + "] is not a valid simulator address", e);
-                }
-
-                if (!address.getAddressLevel().equals(AddressLevel.WORKER)) {
-                    throw new CommandLineExitException("Worker address [" + agentAddress
-                            + "] is not a valid worker address, it's a " + address.getAddressLevel() + " address");
-                }
-            }
-            return workerAddress;
+            return new RcKillWorkersOperation(options.valueOf(commandSpec), workerQuery);
         }
     }
 
@@ -344,7 +378,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
             int count = options.valueOf(countSpec);
             if (count <= 0) {
-                throw new CommandLineExitException("worker count can't be smaller than 1");
+                throw new CommandLineExitException("--count can't be smaller than 1");
             }
 
             LOGGER.info(format("Starting %s workers", count));
@@ -359,7 +393,7 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class RunTestCli {
+    private class RunCli {
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> durationSpec = parser.accepts("duration",
@@ -470,5 +504,24 @@ public class CoordinatorRemoteCli implements Closeable {
             }
         }
         return agentAddress;
+    }
+
+    private static String loadWorkerAddress(OptionSet options, OptionSpec<String> spec) {
+        String workerAddress = options.valueOf(spec);
+        if (workerAddress != null) {
+            SimulatorAddress address;
+            try {
+                address = SimulatorAddress.fromString(workerAddress);
+            } catch (Exception e) {
+                throw new CommandLineExitException("Worker address [" + workerAddress
+                        + "] is not a valid simulator address", e);
+            }
+
+            if (!address.getAddressLevel().equals(AddressLevel.WORKER)) {
+                throw new CommandLineExitException("Worker address [" + workerAddress
+                        + "] is not a valid worker address, it's a " + address.getAddressLevel() + " address");
+            }
+        }
+        return workerAddress;
     }
 }

@@ -15,24 +15,20 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.KillWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static com.hazelcast.simulator.protocol.registry.WorkerData.toAddressString;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
@@ -45,33 +41,24 @@ public class KillWorkersTask {
 
     private final ComponentRegistry componentRegistry;
     private final CoordinatorConnector coordinatorConnector;
-    private final int count;
-    private final String versionSpec;
-    private final WorkerType workerType;
-    private final String agentAddress;
-    private final String workerAddress;
+    private final String command;
+    private final WorkerQuery workerQuery;
 
     public KillWorkersTask(
             ComponentRegistry componentRegistry,
             CoordinatorConnector coordinatorConnector,
-            int count,
-            String versionSpec,
-            WorkerType workerType,
-            String agentAddress,
-            String workerAddress) {
+            String command,
+            WorkerQuery workerQuery) {
         this.componentRegistry = componentRegistry;
         this.coordinatorConnector = coordinatorConnector;
-        this.count = count;
-        this.versionSpec = versionSpec;
-        this.workerType = workerType;
-        this.agentAddress = agentAddress;
-        this.workerAddress = workerAddress;
+        this.command = command;
+        this.workerQuery = workerQuery;
     }
 
     public void run() throws Exception {
-        LOGGER.info("Killing " + count + " workers starting");
+        LOGGER.info("Killing " + workerQuery.getMaxCount() + " workers starting");
 
-        List<WorkerData> victims = getVictims();
+        List<WorkerData> victims = workerQuery.execute(componentRegistry.getWorkers());
         if (victims.isEmpty()) {
             LOGGER.info("No victims found");
             return;
@@ -81,70 +68,32 @@ public class KillWorkersTask {
 
         awaitTermination(victims);
 
-        LOGGER.info("Killing " + count + " workers complete");
-    }
-
-    private List<WorkerData> getVictims() {
-        List<WorkerData> workers = componentRegistry.getWorkers();
-        Collections.shuffle(workers);
-
-        List<WorkerData> victims = new ArrayList<WorkerData>();
-        for (WorkerData worker : workers) {
-            if (victims.size() == count) {
-                break;
-            }
-
-            if (isVictim(worker)) {
-                victims.add(worker);
-            }
-        }
-
-        return victims;
-    }
-
-    @SuppressWarnings("checkstyle:npathcomplexity")
-    private boolean isVictim(WorkerData workerData) {
-        WorkerProcessSettings workerProcessSettings = workerData.getSettings();
-
-        if (versionSpec != null) {
-            if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
-                return false;
-            }
-        }
-
-        if (workerAddress != null) {
-            if (!workerData.getAddress().equals(SimulatorAddress.fromString(workerAddress))) {
-                return false;
-            }
-        }
-
-        if (agentAddress != null) {
-            if (!workerData.getAddress().getParent().equals(SimulatorAddress.fromString(agentAddress))) {
-                return false;
-            }
-        }
-
-        if (!workerProcessSettings.getWorkerType().equals(workerType)) {
-            return false;
-        }
-
-        return true;
+        LOGGER.info("Killing " + workerQuery.getMaxCount() + " workers complete");
     }
 
     private void killWorkers(List<WorkerData> victims) {
-        if (victims.size() < count) {
-            LOGGER.info(format("Killing %s of the requested %s workers", victims.size(), count));
+        if (victims.size() < workerQuery.getMaxCount()) {
+            LOGGER.info(format("Killing %s of the requested %s workers", victims.size(), workerQuery.getMaxCount()));
         }
 
-        LOGGER.info(format("Killing [%s]", toString(victims)));
+        LOGGER.info(format("Killing [%s]", toAddressString(victims)));
 
         for (WorkerData victim : victims) {
             victim.setIgnoreFailures(true);
 
-            SimulatorOperation killOperation = new KillWorkerOperation(); //BashOperation("kill $PID");
-            coordinatorConnector.writeAsync(victim.getAddress(), killOperation);
+            coordinatorConnector.writeAsync(victim.getAddress(), newKillOperation());
 
             LOGGER.info("Kill send to worker [" + victim.getAddress() + "]");
+        }
+    }
+
+    private SimulatorOperation newKillOperation() {
+        if ("System.exit".equals(command)) {
+            return new ExecuteScriptOperation("js:java.lang.System.exit(0);");
+        } else if ("OOME".equals(command)) {
+            return new ExecuteScriptOperation(command);
+        } else {
+            return new ExecuteScriptOperation(command);
         }
     }
 
@@ -164,31 +113,17 @@ public class KillWorkersTask {
                 break;
             }
 
-            LOGGER.info(format("Waiting for [%s] to die", toString(aliveVictims)));
+            LOGGER.info(format("Waiting for [%s] to die", toAddressString(aliveVictims)));
             sleepSeconds(WORKER_TERMINATION_CHECK_DELAY);
         }
 
         if (aliveVictims.isEmpty()) {
-            LOGGER.info(format("Killing of workers [%s] success", toString(victims)));
+            LOGGER.info(format("Killing of workers [%s] success", toAddressString(victims)));
         } else {
             LOGGER.info(format("Killing of workers [%s] failed, following failed to terminate [%s]",
-                    toString(victims), toString(victims)));
+                    toAddressString(victims), toAddressString(victims)));
         }
     }
 
-    private static String toString(Collection<WorkerData> workers) {
-        StringBuilder sb = new StringBuilder();
 
-        boolean first = true;
-        for (WorkerData worker : workers) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append(",");
-            }
-            sb.append(worker.getAddress());
-        }
-
-        return sb.toString();
-    }
 }

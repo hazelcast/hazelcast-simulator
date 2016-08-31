@@ -19,6 +19,8 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.common.WorkerType;
 
+import java.util.Collection;
+
 /**
  * Contains the metadata of a Simulator Worker.
  * <p>
@@ -53,5 +55,21 @@ public class WorkerData {
 
     public void setIgnoreFailures(boolean ignoreFailures) {
         this.ignoreFailures = ignoreFailures;
+    }
+
+    public static String toAddressString(Collection<WorkerData> workers) {
+        StringBuilder sb = new StringBuilder();
+
+        boolean first = true;
+        for (WorkerData worker : workers) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(worker.getAddress());
+        }
+
+        return sb.toString();
     }
 }

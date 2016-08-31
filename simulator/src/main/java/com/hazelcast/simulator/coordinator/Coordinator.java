@@ -21,16 +21,18 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.BashOperation;
+import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.protocol.operation.RcBashOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopWorkersOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -38,6 +40,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
@@ -406,8 +409,7 @@ public final class Coordinator {
                 failureCollector,
                 testPhaseListeners,
                 remoteClient,
-                performanceStatsCollector
-        ).run();
+                performanceStatsCollector).run();
 
         LOGGER.info("Run complete!");
     }
@@ -415,31 +417,32 @@ public final class Coordinator {
     public void killWorker(RcKillWorkersOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s]...",
-                op.getCount(), op.getVersionSpec(), op.getWorkerType()));
+        WorkerQuery workerQuery = op.getWorkerQuery();
 
-        new KillWorkersTask(
-                componentRegistry,
-                coordinatorConnector,
-                op.getCount(),
-                op.getVersionSpec(),
-                new WorkerType(op.getWorkerType()),
-                op.getAgentAddress(),
-                op.getWorkerAddress()).run();
+        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s]...",
+                workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
+
+        new KillWorkersTask(componentRegistry, coordinatorConnector, op.getCommand(), workerQuery).run();
 
         componentRegistry.printLayout();
 
-        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completed!",
-                op.getCount(), op.getVersionSpec(), op.getWorkerType()));
+        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completes",
+                workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
+
     }
 
-    public void bash(RcBashOperation operation) throws Exception {
+    public void workerScript(RcWorkersScriptOperation operation) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Bash [" + operation.getCommand() + "] on all workers...");
+        List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
 
-        remoteClient.sendToAllAgents(new BashOperation(operation.getCommand()));
+        LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
 
-        LOGGER.info("Bash [" + operation.getCommand() + "] on all workers completed!");
+        for (WorkerData worker : workers) {
+            coordinatorConnector.write(worker.getAddress(), new ExecuteScriptOperation(operation.getCommand()));
+            LOGGER.info("Script send to worker [" + worker.getAddress() + "]");
+        }
+
+        LOGGER.info(format("Script [%s] on %s workers completed!!!", operation.getCommand(), workers.size()));
     }
 }

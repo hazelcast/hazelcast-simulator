@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessLauncher;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
@@ -25,21 +24,15 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.utils.BashCommand;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 import static org.apache.log4j.Level.DEBUG;
 import static org.apache.log4j.Level.FATAL;
@@ -89,33 +81,10 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
             case STOP_TIMEOUT_DETECTION:
                 processStopTimeoutDetection();
                 break;
-            case BASH:
-                processBashOperation((BashOperation) operation);
-                break;
             default:
                 return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
         }
         return SUCCESS;
-    }
-
-    private void processBashOperation(final BashOperation operation) {
-        ThreadSpawner spawner = new ThreadSpawner("bash[" + operation.getCommand() + "]");
-        for (final WorkerProcess workerProcess : workerProcessManager.getWorkerProcesses()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    Map<String, Object> environment = new HashMap<String, Object>();
-                    File pidFile = new File(workerProcess.getWorkerHome(), "worker.pid");
-                    if (pidFile.exists()) {
-                        environment.put("PID", fileAsText(pidFile));
-                    }
-                    new BashCommand(operation.getCommand())
-                            .setDirectory(workerProcess.getWorkerHome())
-                            .addEnvironment(environment)
-                            .execute();
-                }
-            });
-        }
     }
 
     private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)

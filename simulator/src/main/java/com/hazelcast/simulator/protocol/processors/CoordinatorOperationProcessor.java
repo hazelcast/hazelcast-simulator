@@ -25,7 +25,7 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.RcBashOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkersScriptOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallVendorOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkersOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
@@ -91,8 +91,8 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
             case RC_SHUTDOWN:
                 coordinator.shutdown();
                 break;
-            case RC_BASH:
-                coordinator.bash((RcBashOperation) operation);
+            case RC_WORKER_SCRIPT:
+                coordinator.workerScript((RcWorkersScriptOperation) operation);
                 break;
             case RC_PRINT_LAYOUT:
                 coordinator.printLayout();

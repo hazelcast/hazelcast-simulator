@@ -15,5 +15,15 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class KillWorkerOperation implements SimulatorOperation {
+public class ExecuteScriptOperation implements SimulatorOperation {
+
+    private String command;
+
+    public ExecuteScriptOperation(String command) {
+        this.command = command;
+    }
+
+    public String getCommand() {
+        return command;
+    }
 }
