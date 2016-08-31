@@ -14,9 +14,9 @@ import java.io.File;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXIT;
-import static com.hazelcast.simulator.common.FailureType.WORKER_FINISHED;
-import static com.hazelcast.simulator.common.FailureType.WORKER_OOM;
+import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_COORDINATOR_NOT_FOUND;
@@ -56,7 +56,7 @@ public class WorkerProcessFailureMonitorTest {
 
     private static int addressIndex;
 
-    private FailureHandler failureHandler;
+    private WorkerProcessFailureHandler failureHandler;
     private WorkerProcessManager workerProcessManager;
 
 
@@ -69,7 +69,7 @@ public class WorkerProcessFailureMonitorTest {
         simulatorHome = setupFakeEnvironment();
         workersHome = new File(simulatorHome, "workers");
 
-        failureHandler = mock(FailureHandler.class);
+        failureHandler = mock(WorkerProcessFailureHandler.class);
         when(failureHandler.handle(
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(true);
@@ -122,7 +122,7 @@ public class WorkerProcessFailureMonitorTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                assertFailureType(failureHandler, WORKER_OOM);
+                assertFailureType(failureHandler, WORKER_OOME);
             }
         });
     }
@@ -139,7 +139,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXIT);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_ABNORMAL_EXIT);
     }
 
     @Test
@@ -153,7 +153,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXIT);
+        assertFailureTypeAtLeastOnce(failureHandler, WORKER_ABNORMAL_EXIT);
     }
 
     @Test
@@ -241,7 +241,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureType(failureHandler, WORKER_OOM);
+        assertFailureType(failureHandler, WORKER_OOME);
     }
 
     @Test
@@ -252,7 +252,7 @@ public class WorkerProcessFailureMonitorTest {
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
-        assertFailureType(failureHandler, WORKER_OOM);
+        assertFailureType(failureHandler, WORKER_OOME);
     }
 
     @Test
@@ -324,7 +324,7 @@ public class WorkerProcessFailureMonitorTest {
         } while (!workerProcess.isFinished());
 
         assertTrue(workerProcess.isFinished());
-        assertFailureType(failureHandler, WORKER_FINISHED);
+        assertFailureType(failureHandler, WORKER_NORMAL_EXIT);
     }
 
     @Test
@@ -334,7 +334,7 @@ public class WorkerProcessFailureMonitorTest {
         sleepMillis(DEFAULT_SLEEP_TIME);
 
         assertFalse(workerProcess.isFinished());
-        assertFailureType(failureHandler, WORKER_EXIT);
+        assertFailureType(failureHandler, WORKER_ABNORMAL_EXIT);
     }
 
     @Test
@@ -394,15 +394,15 @@ public class WorkerProcessFailureMonitorTest {
         return exceptionFile;
     }
 
-    private void assertFailureType(FailureHandler failureHandler, FailureType failureType) {
+    private void assertFailureType(WorkerProcessFailureHandler failureHandler, FailureType failureType) {
         assertFailureTypeAtLeastOnce(failureHandler, failureType, times(1));
     }
 
-    private void assertFailureTypeAtLeastOnce(FailureHandler failureHandler, FailureType failureType) {
+    private void assertFailureTypeAtLeastOnce(WorkerProcessFailureHandler failureHandler, FailureType failureType) {
         assertFailureTypeAtLeastOnce(failureHandler, failureType, atLeastOnce());
     }
 
-    private void assertFailureTypeAtLeastOnce(FailureHandler failureHandler, FailureType failureType, VerificationMode mode) {
+    private void assertFailureTypeAtLeastOnce(WorkerProcessFailureHandler failureHandler, FailureType failureType, VerificationMode mode) {
         verify(failureHandler, mode).handle(anyString(),
                 eq(failureType),
                 any(WorkerProcess.class),

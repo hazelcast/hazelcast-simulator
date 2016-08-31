@@ -13,18 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.operation;
+package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.common.FailureType;
 
-public class IgnoreWorkerFailureOperation implements SimulatorOperation {
-    private final SimulatorAddress simulatorAddress;
+public interface WorkerProcessFailureHandler {
 
-    public IgnoreWorkerFailureOperation(SimulatorAddress simulatorAddress) {
-        this.simulatorAddress = simulatorAddress;
-    }
-
-    public SimulatorAddress getSimulatorAddress() {
-        return simulatorAddress;
-    }
+    boolean handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause);
 }

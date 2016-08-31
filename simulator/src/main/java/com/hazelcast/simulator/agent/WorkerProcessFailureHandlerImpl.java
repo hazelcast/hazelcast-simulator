@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.workerprocess.FailureHandler;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureHandler;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
@@ -30,29 +30,25 @@ import org.apache.log4j.Logger;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
 
-class FailureHandlerImpl implements FailureHandler {
+class WorkerProcessFailureHandlerImpl implements WorkerProcessFailureHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(FailureHandlerImpl.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkerProcessFailureHandlerImpl.class);
 
     private final String agentAddress;
     private final AgentConnector agentConnector;
 
     private int failureCount;
 
-    FailureHandlerImpl(String agentAddress, AgentConnector agentConnector) {
+    WorkerProcessFailureHandlerImpl(String agentAddress, AgentConnector agentConnector) {
         this.agentAddress = agentAddress;
         this.agentConnector = agentConnector;
     }
 
     @Override
     public boolean handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause) {
-        boolean send = true;
+        boolean send = send(message, type, workerProcess, testId, cause);
 
-        if (!workerProcess.isFailureIgnored()) {
-            send = send(message, type, workerProcess, testId, cause);
-        }
-
-        if (type.isWorkerFinishedFailure()) {
+        if (type.isTerminal()) {
             SimulatorAddress workerAddress = workerProcess.getAddress();
             unblockPendingFutures(workerAddress);
             removeFinishedWorker(workerAddress, type);

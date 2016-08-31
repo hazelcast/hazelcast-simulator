@@ -25,18 +25,18 @@ public enum FailureType {
     NETTY_EXCEPTION("nettyException", "Netty exception", false),
     WORKER_EXCEPTION("workerException", "Worker exception", false),
     WORKER_TIMEOUT("workerTimeout", "Worker timeout", false),
-    WORKER_OOM("workerOOM", "Worker OOME", true),
-    WORKER_EXIT("workerExit", "Worker exit failure", true),
-    WORKER_FINISHED("workerFinished", "Worker finished", true);
+    WORKER_OOME("workerOOME", "Worker OOME", true),
+    WORKER_ABNORMAL_EXIT("workerAbnormalExit", "Worker abnormal exit", true),
+    WORKER_NORMAL_EXIT("workerNormalExit", "Worker normal exit", true);
 
     private final String id;
     private final String humanReadable;
-    private final boolean isWorkerFinishedFailure;
+    private final boolean isTerminal;
 
-    FailureType(String id, String humanReadable, boolean isWorkerFinishedFailure) {
+    FailureType(String id, String humanReadable, boolean isTerminal) {
         this.id = id;
         this.humanReadable = humanReadable;
-        this.isWorkerFinishedFailure = isWorkerFinishedFailure;
+        this.isTerminal = isTerminal;
     }
 
     public String getId() {
@@ -48,12 +48,17 @@ public enum FailureType {
         return humanReadable;
     }
 
-    public boolean isWorkerFinishedFailure() {
-        return isWorkerFinishedFailure;
+    /**
+     * Checks if the failure is a terminal failure for the worker. E.g. process has exited or OOME etc.
+     *
+     * @return true if terminal.
+     */
+    public boolean isTerminal() {
+        return isTerminal;
     }
 
     public boolean isPoisonPill() {
-        return (this == WORKER_FINISHED);
+        return this == WORKER_NORMAL_EXIT;
     }
 
     public static Set<FailureType> fromPropertyValue(String propertyValue) {

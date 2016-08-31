@@ -127,6 +127,15 @@ public class ComponentRegistry {
         return agents.get(0);
     }
 
+    public WorkerData getWorker(SimulatorAddress workerAddress) {
+        for (WorkerData workerData : workers) {
+            if (workerData.getAddress().equals(workerAddress)) {
+                return workerData;
+            }
+        }
+        return null;
+    }
+
     public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
         for (WorkerProcessSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
@@ -146,6 +155,16 @@ public class ComponentRegistry {
                 break;
             }
         }
+    }
+
+    public synchronized WorkerData findWorker(SimulatorAddress workerAddress) {
+        for (WorkerData workerData : workers) {
+            if (workerData.getAddress().equals(workerAddress)) {
+                return workerData;
+            }
+        }
+
+        return null;
     }
 
     public synchronized void removeWorker(WorkerData workerData) {

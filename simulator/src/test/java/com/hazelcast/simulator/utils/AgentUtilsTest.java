@@ -137,6 +137,7 @@ public class AgentUtilsTest {
 
         stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
+        verify(bash).execute(contains("/bin/.kill-from-pid-file agent.pid"));
         verifyNoMoreInteractions(bash);
     }
 
@@ -154,7 +155,6 @@ public class AgentUtilsTest {
     public void testStopAgents_isEC2() {
         setCloudProvider(PROVIDER_EC2);
         stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/.kill-from-pid-file agent.pid"));
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/harakiri-monitor"));
         verifyNoMoreInteractions(bash);

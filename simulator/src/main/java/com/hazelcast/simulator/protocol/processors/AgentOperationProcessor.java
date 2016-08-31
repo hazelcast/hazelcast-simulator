@@ -27,7 +27,6 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.BashOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
-import com.hazelcast.simulator.protocol.operation.IgnoreWorkerFailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
@@ -89,10 +88,6 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 break;
             case STOP_TIMEOUT_DETECTION:
                 processStopTimeoutDetection();
-                break;
-            case IGNORE_WORKER_FAILURE:
-                WorkerProcessManager workerProcessManager = agent.getWorkerProcessManager();
-                workerProcessManager.ignore(((IgnoreWorkerFailureOperation) operation).getSimulatorAddress());
                 break;
             case BASH:
                 processBashOperation((BashOperation) operation);

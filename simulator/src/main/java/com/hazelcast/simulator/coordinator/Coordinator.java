@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.TestSuite;
@@ -23,7 +22,6 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.BashOperation;
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcBashOperation;
@@ -99,7 +97,6 @@ public final class Coordinator {
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
         this.failureCollector = new FailureCollector(outputDirectory, componentRegistry);
-        this.failureCollector.addListener(true, new ComponentRegistryFailureListener(componentRegistry));
         this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
@@ -444,23 +441,5 @@ public final class Coordinator {
         remoteClient.sendToAllAgents(new BashOperation(operation.getCommand()));
 
         LOGGER.info("Bash [" + operation.getCommand() + "] on all workers completed!");
-    }
-
-    private static class ComponentRegistryFailureListener implements FailureListener {
-
-        private final ComponentRegistry componentRegistry;
-
-        ComponentRegistryFailureListener(ComponentRegistry componentRegistry) {
-            this.componentRegistry = componentRegistry;
-        }
-
-        @Override
-        public void onFailure(FailureOperation failure, boolean isFinishedFailure, boolean isCritical) {
-            FailureType failureType = failure.getType();
-
-            if (failureType.isWorkerFinishedFailure()) {
-                componentRegistry.removeWorker(failure.getWorkerAddress());
-            }
-        }
     }
 }
