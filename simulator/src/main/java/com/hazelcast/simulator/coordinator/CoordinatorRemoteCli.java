@@ -176,8 +176,8 @@ public class CoordinatorRemoteCli implements Closeable {
     }
 
     private static class InstallCli {
-        private final String help = ""
-                + "Install Hazelcast on the agents. By default the coordinator will upload to the agents what has\n"
+        private final String help
+                = "Install Hazelcast on the agents. By default the coordinator will upload to the agents what has\n"
                 + "been configured on the simulator.properties. But in case of testing multiple versions the other\n"
                 + "versions need to be installed. If a worker is started without the right software, the worker will\n"
                 + "fail to start\n"
@@ -188,11 +188,11 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "SNAPSHOT.\n"
                 + "\n"
                 + "Examples\n"
-                + " # installs Hazelcast 3.6 from local or remote repo.\n"
+                + "# installs Hazelcast 3.6 from local or remote repo.\n"
                 + "coordinator-remote install maven=3.6\n\n"
-                + " # installs Hazelcast 3.8-SNAPSHOT from local or remote repo.\n"
+                + "# installs Hazelcast 3.8-SNAPSHOT from local or remote repo.\n"
                 + "coordinator-remote install maven=3.8-SNAPSHOT\n"
-                + " # installs Hazelcast using some git commit hash.\n"
+                + "# installs Hazelcast using some git commit hash.\n"
                 + "coordinator-remote install git=<somehash>\n";
 
         private final OptionParser parser = new OptionParser();
@@ -229,20 +229,21 @@ public class CoordinatorRemoteCli implements Closeable {
     }
 
     private static class ScriptWorkerCli {
-        private final String help = ""
-                + "Executes a script on one or more workers\n"
+        private final String help
+                = "Executes a script on one or more workers\n"
                 + "Various filter options are available like --versionSpec, --workerType, --agent\n"
-                + "and it is even possible to execute a script on a specific worker using --worker\n\n"
+                + "and it is even possible to execute a script on a specific worker using --worker\n"
+                + "\n"
                 + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
                 + "one can enable shuffling of members."
-                + "\nExamples\n"
+                + "\n"
+                + "Examples\n"
                 + "# executes takes a threadump on at least 100 members in the cluster one\n"
                 + "coordinator-remote script --maxCount 100 --command 'bash:jstack $PID''\n\n"
                 + "#executes a bash script on all member on agent C_A1\n"
                 + "coordinator-remote script --maxCount 100 --workerType member --agent C_A1 --command 'bash:kill -9 $PID'\n"
                 + "#executes a javascript that calls System.ext on worker C_A1_W1\n"
-                + "coordinator-remote script --worker C_A1_W1 --command 'javascript:java.lang.System.exit(0)'\n"
-                ;
+                + "coordinator-remote script --worker C_A1_W1 --command 'javascript:java.lang.System.exit(0)'\n";
 
         private final OptionParser parser = new OptionParser();
 
@@ -441,8 +442,8 @@ public class CoordinatorRemoteCli implements Closeable {
     }
 
     private class StartWorkerCli {
-        private final String help = ""
-                + "Starts one or more workers.\n\n"
+        private final String help
+                = "Starts one or more workers.\n\n"
                 + "Before a test run run, the appropriate workers need to be started.\n"
                 + "\n"
                 + "By default the workers will be spread so that the number of worker on each agent is in balance.\n"
@@ -450,6 +451,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "The start-workers command will NOT install software when a --versionSpec is used. Make sure that\n"
                 + "appropriate calls to the install command have been made easier.\n"
+                + "\n"
                 + "Examples\n"
                 + "# starts 1 members\n"
                 + "coordinator-remote start-worker\n\n"
@@ -513,7 +515,31 @@ public class CoordinatorRemoteCli implements Closeable {
     }
 
     private class RunCli {
-        private final String help = "Runs a test";
+        private final String help
+                = "Runs a test suite\n"
+                + "A testsuite can contain a single test, or multiple tests when using test4@someproperty=10\n"
+                + "By default the test are run in sequential, but can be controlled using the --parallel flag\n"
+                + "\n"
+                + "By default a test will prefer to run on client and of none available, it will try to run on\n"
+                + "The members. Also it will use either all clients or all members as drivers of the test. This\n"
+                + "behavior can be controlled using the --targetType and --targetCount options"
+                + "\n"
+                + "Examples\n"
+                + "# runs a file 'test.properties' for 1 minute\n"
+                + "coordinator-remote run\n\n"
+                + "# runs atomiclong.properties for 1 minute\n"
+                + "coordinator-remote run atomiclong.properties\n\n"
+                + "# runs a test with a warmup period of 5 minute and a duration of 1 hour\n"
+                + "coordinator-remote run --warmup 5m --duration 1h\n\n"
+                + "# runs a test by running all tests in the suite in parallel for 10m.\n"
+                + "coordinator-remote run --duration 10m --parallel suite.properties\n\n"
+                + "# run a test but disable the verification\n"
+                + "coordinator-remote run --verify false\n\n"
+                + "# run a test but disable the fail fast mechanism\n"
+                + "coordinator-remote run --failFast \n\n"
+                + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
+                + "coordinator-remote run --targetType member --targetCount 3 \n\n"
+                ;
 
         private final OptionParser parser = new OptionParser();
 
@@ -538,7 +564,7 @@ public class CoordinatorRemoteCli implements Closeable {
         private final OptionSpec parallelSpec = parser.accepts("parallel",
                 "If defined tests are run in parallel.");
 
-        private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
+        private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verify",
                 "Defines if tests are verified.")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
