@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.processors;
+package com.hazelcast.simulator.protocol.exception;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.worker.Promise;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 
-/**
- * Processes {@link SimulatorOperation} instances on a Simulator component.
- */
-public interface OperationProcessor {
+public class ProcessException extends RuntimeException {
+    private final ResponseType responseType;
 
-    void process(SimulatorOperation operation, SimulatorAddress sourceAddress, Promise promise) throws Exception;
+    public ProcessException(ResponseType responseType) {
+        this.responseType = responseType;
+    }
+
+    public ResponseType getResponseType() {
+        return responseType;
+    }
 }

@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
-import com.hazelcast.simulator.protocol.connector.RemoteControllerConnector;
+import com.hazelcast.simulator.protocol.connector.CoordinatorRemoteConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import org.apache.log4j.Level;
@@ -24,7 +24,7 @@ public class ProtocolRemoteControllerTest {
     private static final int COORDINATOR_PORT = 11111;
 
     private static CoordinatorConnector coordinatorConnector;
-    private static RemoteControllerConnector remoteControllerConnector;
+    private static CoordinatorRemoteConnector coordinatorRemoteConnector;
 
     @BeforeClass
     public static void beforeClass() {
@@ -32,13 +32,13 @@ public class ProtocolRemoteControllerTest {
 
         coordinatorConnector = startCoordinator("127.0.0.1", getAgentStartPort(), 0, COORDINATOR_PORT);
 
-        remoteControllerConnector = new RemoteControllerConnector("127.0.0.1", COORDINATOR_PORT);
-        remoteControllerConnector.start();
+        coordinatorRemoteConnector = new CoordinatorRemoteConnector("127.0.0.1", COORDINATOR_PORT);
+        coordinatorRemoteConnector.start();
     }
 
     @AfterClass
     public static void afterClass() {
-        remoteControllerConnector.close();
+        coordinatorRemoteConnector.close();
         coordinatorConnector.shutdown();
 
         resetLogLevel();
@@ -46,7 +46,7 @@ public class ProtocolRemoteControllerTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void test_sendMessageToCoordinator() {
-        Response response = remoteControllerConnector.write(new IntegrationTestOperation());
+        Response response = coordinatorRemoteConnector.write(new IntegrationTestOperation());
 
         assertSingleTarget(response, REMOTE, COORDINATOR, SUCCESS);
     }

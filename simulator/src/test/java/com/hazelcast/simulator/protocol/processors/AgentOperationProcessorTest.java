@@ -6,7 +6,7 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -15,7 +15,6 @@ import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.util.EmptyStatement;
 import org.junit.After;
 import org.junit.Before;
@@ -33,6 +32,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.processOperation;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
@@ -45,7 +45,6 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,7 +58,6 @@ public class AgentOperationProcessorTest {
     private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
     private final ScheduledExecutorService scheduler = createScheduledThreadPool(3, "AgentOperationProcessorTest");
 
-    private TestSuite testSuite;
     private File sessionDir;
 
     private AgentOperationProcessor processor;
@@ -70,7 +68,6 @@ public class AgentOperationProcessorTest {
         setupFakeEnvironment();
 
         File workersDir = new File(getSimulatorHome(), "workers");
-        testSuite = new TestSuite();
         sessionDir = new File(workersDir, "AgentOperationProcessorTest").getAbsoluteFile();
 
         AgentConnector agentConnector = mock(AgentConnector.class);
@@ -97,7 +94,7 @@ public class AgentOperationProcessorTest {
     @Test
     public void testProcessOperation_unsupportedOperation() throws Exception {
         SimulatorOperation operation = new CreateTestOperation(1, new TestCase("AgentOperationProcessorTest"));
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
@@ -105,7 +102,7 @@ public class AgentOperationProcessorTest {
     @Test
     public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
         SimulatorOperation operation = new IntegrationTestOperation();
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
@@ -144,7 +141,7 @@ public class AgentOperationProcessorTest {
     @Test
     public void testStartTimeoutDetectionOperation() throws Exception {
         SimulatorOperation operation = new StartTimeoutDetectionOperation();
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
 
@@ -154,7 +151,7 @@ public class AgentOperationProcessorTest {
     @Test
     public void testStopTimeoutDetectionOperation() throws Exception {
         SimulatorOperation operation = new StopTimeoutDetectionOperation();
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType =processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
 
@@ -171,7 +168,7 @@ public class AgentOperationProcessorTest {
                 new HashMap<String, String>());
 
         SimulatorOperation operation = new CreateWorkerOperation(singletonList(workerProcessSettings), 0);
-        return processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        return processOperation(processor, getOperationType(operation), operation, COORDINATOR);
     }
 
     private void assertWorkerLifecycle() throws InterruptedException {

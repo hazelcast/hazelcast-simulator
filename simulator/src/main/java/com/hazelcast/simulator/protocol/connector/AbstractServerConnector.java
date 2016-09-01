@@ -209,7 +209,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         List<ResponseFuture> futureList = writeAsync(message);
         try {
             for (ResponseFuture future : futureList) {
-                response.addResponse(future.get());
+                response.addAllParts(future.get());
             }
         } catch (InterruptedException e) {
             throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);

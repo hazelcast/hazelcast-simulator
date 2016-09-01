@@ -17,7 +17,6 @@ package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
@@ -48,8 +47,8 @@ public class WorkerProcessManager {
     }
 
     public void updateLastSeenTimestamp(Response response) {
-        for (Map.Entry<SimulatorAddress, ResponseType> responseTypeEntry : response.entrySet()) {
-            updateLastSeenTimestamp(responseTypeEntry.getKey());
+        for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
+            updateLastSeenTimestamp(entry.getKey());
         }
     }
 

@@ -72,9 +72,9 @@ public class ProtocolSmokeTest {
 
             // log response
             boolean responseSuccess = true;
-            for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
+            for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
                 SimulatorAddress responseSource = entry.getKey();
-                ResponseType responseType = entry.getValue();
+                ResponseType responseType = entry.getValue().getType();
                 switch (responseType) {
                     case SUCCESS:
                         LOGGER.info(format("[%d] %s %s", messageId, responseSource, responseType));
@@ -95,9 +95,9 @@ public class ProtocolSmokeTest {
             assertEquals(SimulatorAddress.COORDINATOR, response.getDestination());
             assertEquals(expectResponseSuccess(destination), responseSuccess);
             if (responseSuccess) {
-                assertEquals(getNumberOfTargets(destination), response.entrySet().size());
+                assertEquals(getNumberOfTargets(destination), response.getParts().size());
             } else {
-                assertTrue(response.entrySet().size() > 0);
+                assertTrue(response.getParts().size() > 0);
             }
         }
     }

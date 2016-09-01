@@ -18,11 +18,12 @@ package com.hazelcast.simulator.protocol.core;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Map;
+import java.util.Set;
 
-import static com.hazelcast.simulator.protocol.core.BaseCodec.ADDRESS_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.INT_SIZE;
 import static com.hazelcast.simulator.protocol.core.BaseCodec.LONG_SIZE;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddressCodec.decodeSimulatorAddress;
+import static io.netty.util.CharsetUtil.UTF_8;
 
 /**
  * Encodes and decodes a {@link Response}.
@@ -35,28 +36,42 @@ public final class ResponseCodec {
     private static final int OFFSET_MESSAGE_ID = OFFSET_MAGIC_BYTES + INT_SIZE;
     private static final int OFFSET_DST_ADDRESS = OFFSET_MESSAGE_ID + LONG_SIZE;
 
-    private static final int HEADER_SIZE = INT_SIZE + LONG_SIZE + ADDRESS_SIZE;
-    private static final int DATA_ENTRY_SIZE = ADDRESS_SIZE + INT_SIZE;
-
     private ResponseCodec() {
     }
 
     public static void encodeByteBuf(Response response, ByteBuf buffer) {
-        buffer.writeInt(HEADER_SIZE + response.size() * DATA_ENTRY_SIZE);
-        buffer.writeInt(MAGIC_BYTES);
+        Set<Map.Entry<SimulatorAddress, Response.Part>> parts = response.getParts();
 
+        // write place holder for length. Eventually we'll overwrite it with the correct length.
+        buffer.writeInt(0);
+        int start = buffer.writerIndex();
+
+        buffer.writeInt(MAGIC_BYTES);
         buffer.writeLong(response.getMessageId());
         SimulatorAddressCodec.encodeByteBuf(response.getDestination(), buffer);
 
-        for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
+        buffer.writeInt(parts.size());
+        for (Map.Entry<SimulatorAddress, Response.Part> entry : parts) {
             SimulatorAddressCodec.encodeByteBuf(entry.getKey(), buffer);
-            buffer.writeInt(entry.getValue().toInt());
+            Response.Part part = entry.getValue();
+            buffer.writeInt(part.getType().toInt());
+
+            String payload = part.getPayload();
+            if (payload == null) {
+                buffer.writeInt(-1);
+            } else {
+                byte[] data = payload.getBytes(UTF_8);
+                buffer.writeInt(data.length);
+                buffer.writeBytes(data);
+            }
         }
+
+        int length = buffer.writerIndex() - start;
+        buffer.setInt(start - INT_SIZE, length);
     }
 
     public static Response decodeResponse(ByteBuf buffer) {
         int frameLength = buffer.readInt();
-        int dataLength = (frameLength - HEADER_SIZE) / DATA_ENTRY_SIZE;
 
         if (buffer.readInt() != MAGIC_BYTES) {
             throw new IllegalArgumentException("Invalid magic bytes for Response");
@@ -66,17 +81,25 @@ public final class ResponseCodec {
         SimulatorAddress destination = decodeSimulatorAddress(buffer);
         Response response = new Response(messageId, destination);
 
-        for (int i = 0; i < dataLength; i++) {
+        int partCount = buffer.readInt();
+        for (int i = 0; i < partCount; i++) {
             SimulatorAddress source = decodeSimulatorAddress(buffer);
             ResponseType responseType = ResponseType.fromInt(buffer.readInt());
-            response.addResponse(source, responseType);
+
+            String payload = null;
+            int size = buffer.readInt();
+            if (size > -1) {
+                payload = buffer.readSlice(size).toString(UTF_8);
+            }
+
+            response.addPart(source, responseType, payload);
         }
 
         return response;
     }
 
     public static boolean isResponse(ByteBuf in) {
-        return (in.getInt(OFFSET_MAGIC_BYTES) == MAGIC_BYTES);
+        return in.getInt(OFFSET_MAGIC_BYTES) == MAGIC_BYTES;
     }
 
     public static long getMessageId(ByteBuf in) {

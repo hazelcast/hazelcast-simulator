@@ -21,6 +21,7 @@ import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
@@ -32,6 +33,7 @@ import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
@@ -62,14 +64,15 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                            SimulatorAddress sourceAddress) throws Exception {
+    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case FAILURE:
                 failureCollector.notify((FailureOperation) operation);
                 break;
             case PHASE_COMPLETED:
-                return processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress);
+                promise.answer(processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress));
+                return;
             case PERFORMANCE_STATE:
                 performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) operation).getPerformanceStats());
                 break;
@@ -98,9 +101,9 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 coordinator.download((RcDownloadOperation) operation);
                 break;
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
-        return SUCCESS;
+        promise.answer(SUCCESS);
     }
 
     private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {

@@ -7,10 +7,12 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
+import com.hazelcast.simulator.worker.Promise;
 import org.junit.Before;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.EQUALS;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -27,7 +29,7 @@ public class AbstractOperationProcessorTest {
     public void testProcessIntegrationTestOperation() throws Exception {
         IntegrationTestOperation operation = new IntegrationTestOperation();
 
-        ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
+        ResponseType responseType = process(processor,operation, SimulatorAddress.COORDINATOR);
 
         assertEquals(ResponseType.SUCCESS, responseType);
         //assertEquals(0, exceptionLogger.getExceptionCount());
@@ -37,27 +39,27 @@ public class AbstractOperationProcessorTest {
     public void testProcessIntegrationTestOperation_withInvalidData() throws Exception {
         IntegrationTestOperation operation = new IntegrationTestOperation(EQUALS, "invalid");
 
-        ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
+        ResponseType responseType = process(processor,operation, SimulatorAddress.COORDINATOR);
 
         assertEquals(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         //assertEquals(1, exceptionLogger.getExceptionCount());
     }
 
     @Test
-    public void testProcessLogOperation() {
+    public void testProcessLogOperation() throws Exception {
         LogOperation operation = new LogOperation("BasicOperationProcessorTest");
 
-        ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
+        ResponseType responseType = process(processor,operation, SimulatorAddress.COORDINATOR);
 
         assertEquals(ResponseType.SUCCESS, responseType);
         //assertEquals(0, exceptionLogger.getExceptionCount());
     }
 
     @Test
-    public void testOtherOperation() {
+    public void testOtherOperation() throws Exception {
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
 
-        ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
+        ResponseType responseType = process(processor,operation, SimulatorAddress.COORDINATOR);
 
         assertNull(responseType);
         assertEquals(processor.operationType, OperationType.TERMINATE_WORKER);
@@ -68,10 +70,9 @@ public class AbstractOperationProcessorTest {
         private OperationType operationType;
 
         @Override
-        protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                                SimulatorAddress sourceAddress) throws Exception {
+        protected void processOperation(OperationType operationType, SimulatorOperation operation,
+                                                SimulatorAddress sourceAddress, Promise promise) throws Exception {
             this.operationType = operationType;
-            return null;
         }
     }
 }

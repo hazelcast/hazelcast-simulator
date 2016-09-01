@@ -275,7 +275,7 @@ public class RemoteClientTest {
     @Test
     public void testPingWorkerThread_shouldStopAfterInterruptedException() {
         Response response = new Response(1L, ALL_WORKERS);
-        response.addResponse(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
+        response.addPart(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
 
         when(coordinatorConnector.write(eq(ALL_WORKERS), any(PingOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception", new InterruptedException()))
@@ -294,7 +294,7 @@ public class RemoteClientTest {
     @Test
     public void testPingWorkerThread_shouldContinueAfterOtherException() {
         Response response = new Response(1L, ALL_WORKERS);
-        response.addResponse(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
+        response.addPart(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
 
         when(coordinatorConnector.write(eq(ALL_WORKERS), any(PingOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception", new TimeoutException()))
@@ -322,11 +322,11 @@ public class RemoteClientTest {
     }
 
     private void initMock(ResponseType responseType) {
-        Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
-        responseTypes.put(COORDINATOR, responseType);
+        Map<SimulatorAddress, Response.Part> parts = new HashMap<SimulatorAddress, Response.Part>();
+        parts.put(COORDINATOR, new Response.Part(responseType, null));
 
         Response response = mock(Response.class);
-        when(response.entrySet()).thenReturn(responseTypes.entrySet());
+        when(response.getParts()).thenReturn(parts.entrySet());
 
         when(coordinatorConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
     }
