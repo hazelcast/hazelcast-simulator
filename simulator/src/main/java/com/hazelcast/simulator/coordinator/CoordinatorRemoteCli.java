@@ -185,7 +185,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "In case of the maven version spec, the local repository is always preferred and no update checking\n"
                 + "is done in case of SNAPSHOT version. This is very useful for testing custom SNAPSHOT branches, but\n"
                 + "can be a problem if the local SNAPSHOT is not updated and the user expects to use the latest\n"
-                + "SNAPSHOT\n"
+                + "SNAPSHOT.\n"
                 + "\n"
                 + "Examples\n"
                 + " # installs Hazelcast 3.6 from local or remote repo.\n"
