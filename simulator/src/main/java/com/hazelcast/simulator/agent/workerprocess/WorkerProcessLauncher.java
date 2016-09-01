@@ -16,9 +16,9 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.Agent;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -225,6 +225,17 @@ public class WorkerProcessLauncher {
         if ("outofthebox".equals(versionSpec)) {
             return "outofthebox";
         }
-        return versionSpec.replace('=', '-');
+        String s = versionSpec.replace('=', '-');
+
+        // we need to replace all forward slashes by double back slashes.
+        StringBuilder result = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            if (c == '/') {
+                result.append('\\').append('\\');
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 }

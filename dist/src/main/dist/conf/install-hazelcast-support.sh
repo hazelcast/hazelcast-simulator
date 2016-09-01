@@ -150,8 +150,11 @@ prepare_using_git()
 
     popd
 
+    # we need to encode the git_branch so it deals with slashes correctly
+    encoded_git_branch=${git_branch//\//\\\\}
+
     # copy from the cache into the local_install_dir
-    destination=$local_install_dir/git-${git_branch}
+    destination=$local_install_dir/git-${encoded_git_branch}
     mkdir -p $destination
     jars=($(find $local_build_cache/$hash -name *.jar))
     for jar in "${jars[@]}" ; do
@@ -159,6 +162,8 @@ prepare_using_git()
         cp $jar $destination
     done
 }
+
+
 
 # throttles the number of concurrent uploads by limiting the number of child processes
 throttle_concurrent_uploads() {

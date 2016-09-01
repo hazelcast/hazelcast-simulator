@@ -10,7 +10,6 @@
 # - selecting the right enterprise jars
 # - use rsync instead of scp for upload
 # - if downloading of maven artifacts fails, no error
-# - directory creation and git version spec: problem if branch contains /
 # - variables to be used in quotes
 # - hz-lib maven: enterprise
 # - hz-lib git: enterprise
