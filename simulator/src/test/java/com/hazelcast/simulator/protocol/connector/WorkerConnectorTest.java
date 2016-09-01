@@ -1,12 +1,11 @@
 package com.hazelcast.simulator.protocol.connector;
 
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
-import com.hazelcast.simulator.common.WorkerType;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.protocol.connector.WorkerConnector.createInstance;
 import static org.junit.Assert.assertEquals;
 
 // this test is without value. It tests the construction of the object, but not that it does anything.
@@ -18,7 +17,7 @@ public class WorkerConnectorTest {
 
     @Test
     public void testCreateInstance_withFileExceptionLogger() {
-        WorkerConnector connector = createInstance(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null);
+        WorkerConnector connector = new WorkerConnector(AGENT_INDEX, WORKER_INDEX, PORT, WorkerType.MEMBER, null, null);
         assertWorkerConnector(connector);
     }
 

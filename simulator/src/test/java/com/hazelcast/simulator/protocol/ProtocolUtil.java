@@ -121,8 +121,7 @@ class ProtocolUtil {
 
     private static WorkerConnector startWorker(int addressIndex, int parentAddressIndex, int port, int numberOfTests) {
         Worker worker = mock(Worker.class);
-        WorkerConnector workerConnector = WorkerConnector.createInstance(parentAddressIndex, addressIndex, port, MEMBER, null,
-                worker);
+        WorkerConnector workerConnector = new WorkerConnector(parentAddressIndex, addressIndex, port, MEMBER, null, worker);
         when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
         TestContainer testContainer = mock(TestContainer.class, RETURNS_DEEP_STUBS);
@@ -145,7 +144,7 @@ class ProtocolUtil {
 
         WorkerProcessManager workerProcessManager = new WorkerProcessManager();
 
-        AgentConnector agentConnector = AgentConnector.createInstance(agent, workerProcessManager, port, 0);
+        AgentConnector agentConnector = new AgentConnector(agent, workerProcessManager, port, 0);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
 
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {

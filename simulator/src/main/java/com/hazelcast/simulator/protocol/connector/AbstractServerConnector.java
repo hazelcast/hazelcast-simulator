@@ -79,6 +79,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     private static final SimulatorMessage POISON_PILL = new SimulatorMessage(null, null, 0, null, null);
 
     protected final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
+    protected final SimulatorAddress localAddress;
 
     private final AtomicBoolean isStarted = new AtomicBoolean();
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
@@ -88,7 +89,6 @@ abstract class AbstractServerConnector implements ServerConnector {
     private final BlockingQueue<SimulatorMessage> messageQueue = new LinkedBlockingQueue<SimulatorMessage>();
     private final MessageQueueThread messageQueueThread = new MessageQueueThread();
 
-    private final SimulatorAddress localAddress;
     private final int addressIndex;
     private final int port;
 

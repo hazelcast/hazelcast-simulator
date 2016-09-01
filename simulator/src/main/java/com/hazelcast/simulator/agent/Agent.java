@@ -71,7 +71,7 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.agentConnector = AgentConnector.createInstance(this, workerProcessManager, port, threadPoolSize);
+        this.agentConnector = new AgentConnector(this, workerProcessManager, port, threadPoolSize);
         this.failureSender = new WorkerProcessFailureHandlerImpl(publicAddress, agentConnector);
         this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
                 workerLastSeenTimeoutSeconds);

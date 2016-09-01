@@ -50,23 +50,9 @@ import static java.lang.Math.max;
 public class AgentConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 
     private final AgentOperationProcessor processor;
-
-    private final SimulatorAddress localAddress;
     private final int addressIndex;
-
     private final ConnectionManager connectionManager = new ConnectionManager();
     private final WorkerProcessManager workerProcessManager;
-
-    AgentConnector(SimulatorAddress localAddress, int port, Agent agent,
-                   WorkerProcessManager workerProcessManager,
-                   int threadPoolSize) {
-        super(localAddress, port, threadPoolSize);
-
-        this.processor = new AgentOperationProcessor(agent, workerProcessManager, getScheduledExecutor());
-        this.localAddress = localAddress;
-        this.addressIndex = localAddress.getAddressIndex();
-        this.workerProcessManager = workerProcessManager;
-    }
 
     /**
      * Creates an {@link AgentConnector} instance.
@@ -75,15 +61,14 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
      * @param workerProcessManager manager for WorkerJVM instances
      * @param port                 the port for incoming connections
      * @param threadPoolSize       size of the Netty thread pool to connect to Worker instances
-     * @return the {@link AgentConnector} instance
-     */
-    public static AgentConnector createInstance(Agent agent, WorkerProcessManager workerProcessManager,
-                                                int port, int threadPoolSize) {
-        SimulatorAddress localAddress = new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0);
+      */
+    public AgentConnector(Agent agent, WorkerProcessManager workerProcessManager,
+                          int port, int threadPoolSize) {
+        super(new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0), port, max(getDefaultThreadPoolSize(), threadPoolSize));
 
-        threadPoolSize = max(getDefaultThreadPoolSize(), threadPoolSize);
-
-        return new AgentConnector(localAddress, port, agent, workerProcessManager, threadPoolSize);
+        this.processor = new AgentOperationProcessor(agent, workerProcessManager, getScheduledExecutor());
+        this.addressIndex = localAddress.getAddressIndex();
+        this.workerProcessManager = workerProcessManager;
     }
 
     @Override

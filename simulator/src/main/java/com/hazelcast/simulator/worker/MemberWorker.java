@@ -80,7 +80,7 @@ public final class MemberWorker implements Worker {
         this.hzConfigFile = hzConfigFile;
 
         this.hazelcastInstance = getHazelcastInstance();
-        this.workerConnector = WorkerConnector.createInstance(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
+        this.workerConnector = new WorkerConnector(agentIndex, workerIndex, workerPort, type, hazelcastInstance, this);
 
         this.performanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
 
