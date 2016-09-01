@@ -23,6 +23,8 @@ import java.lang.annotation.Target;
 /**
  * Is placed on a method in a test so for verification. E.g. when an IAtomicLong.inc is tested, in the verify method one
  * could check if the counter of the IAtomicLong matches the actual number of increments.
+ *
+ * Multiple {@link Verify} methods are allowed.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

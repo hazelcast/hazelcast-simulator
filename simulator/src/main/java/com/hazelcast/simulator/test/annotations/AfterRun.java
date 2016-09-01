@@ -26,6 +26,11 @@ import java.lang.annotation.Target;
  * For every load generating thread, there will be one call to the {@link AfterRun} method.
  * If the test has no {@link TimeStep} methods, methods with {@link AfterRun} are ignored.
  *
+ * An AfterRun is only called if preceding methods like BeforeRun, TimeStep and other
+ * AfterRun methods have completed without exception.
+ *
+ * Multiple {@link AfterRun} methods are allowed.
+ *
  * @see TimeStep
  * @see BeforeRun
  */

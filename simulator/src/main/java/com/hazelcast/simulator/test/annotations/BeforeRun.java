@@ -28,6 +28,8 @@ import java.lang.annotation.Target;
  *
  * {@link BeforeRun} can be useful for some initialization actions on the {@link com.hazelcast.simulator.test.BaseThreadState}.
  *
+ * Multiple {@link BeforeRun} methods are allowed.
+ *
  * @see AfterRun
  * @see TimeStep
  */

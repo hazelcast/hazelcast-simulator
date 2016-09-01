@@ -32,6 +32,8 @@ import java.lang.annotation.Target;
  * is reset by methods with the {@link AfterWarmup} annotation. This is done between the warmup and the run phase.
  *
  * If no warmup duration is defined, the {@link AfterWarmup} method is not called.
+ *
+ * Multiple {@link AfterWarmup} methods are allowed.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

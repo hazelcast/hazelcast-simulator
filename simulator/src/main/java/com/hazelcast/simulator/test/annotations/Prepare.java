@@ -22,6 +22,9 @@ import java.lang.annotation.Target;
 
 /**
  * In the Prepare expensive things like filling a Map can be done.
+ *
+ *
+ * Multiple {@link Prepare} methods are allowed.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
