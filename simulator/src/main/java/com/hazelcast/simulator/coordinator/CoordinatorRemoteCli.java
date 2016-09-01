@@ -224,9 +224,13 @@ public class CoordinatorRemoteCli implements Closeable {
         private final String help = ""
                 + "Executes a script on one or more workers\n"
                 + "Various filter options are available like --versionSpec, --workerType, --agentAddress\n"
-                + "and it is even possible to execute a script on a specific worker using --workerAddress\n"
+                + "and it is even possible to execute a script on a specific worker using --workerAddress\n\n"
+                + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
+                + "one can enable shuffling of members."
                 + "\nExamples\n"
-                + "coordinator-remote script --version 3.7 --command 'bash:ls'\n"
+                + "# executes takes a threadump on at least 100 members in the cluster one\n"
+                + "coordinator-remote script --maxCount 100 --command 'bash:jstack $PID''\n\n"
+                + "#executes a javascript that calls System.ext on worker C_A1_W1\n"
                 + "coordinator-remote script --workerAddress C_A1_W1 --command 'javascript:java.lang.System.exit(0)'\n";
 
         private final OptionParser parser = new OptionParser();
@@ -263,7 +267,7 @@ public class CoordinatorRemoteCli implements Closeable {
             this.options = initOptionsWithHelp(parser, help, args);
             List<?> nonOptionArguments = options.nonOptionArguments();
             if (nonOptionArguments.size() != 1) {
-                throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'jstack $PID'");
+                throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'bash:jstack $PID'");
             }
 
             String agentAddress = loadAgentAddress(options, agentAddressSpec);
@@ -293,7 +297,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private static class PrintClusterLayoutCli {
         private final String help = ""
-                + "Prints the cluster layout.\n";
+                + "Prints the cluster layout on the coordinator.\n";
 
         private final OptionParser parser = new OptionParser();
 
@@ -399,7 +403,25 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private class StartWorkerCli {
         private final String help = ""
-                + "Starts one or more workers.\n";
+                + "Starts one or more workers.\n\n"
+                + "Before a test run run, the appropriate workers need to be started.\n"
+                + "\n"
+                + "By default the workers will be spread so that the number of worker on each agent is in balance.\n"
+                + "Using the coordinator --dedicatedMemberMachines setting dedicated member agents can be created.\n"
+                + "\n"
+                + "The start-workers command will NOT install software when a --versionSpec is used. Make sure that\n"
+                + "appropriate calls to the install command have been made easier.\n"
+                + "Examples\n"
+                + "# starts 2 members\n"
+                + "coordinator-remote start-worker --count 2\n\n"
+                + "# starts 1 java clients\n"
+                + "coordinator-remote start-worker --workerType javaclient\n\n"
+                + "# starts 3 litemembers using version spec git=master clients\n"
+                + "coordinator-remote start-worker --count --workerType litemember --versionSpec git=master\n\n"
+                + "# starts 1 member on agent C_A1\n"
+                + "coordinator-remote start-worker --agentAddress C_A1 \n\n"
+                + "# starts 1 client with a custom client-hazelcast.xml file\n"
+                + "coordinator-remote start-worker --config client-hazelcast.xml \n\n";
 
         private final OptionParser parser = new OptionParser();
 
