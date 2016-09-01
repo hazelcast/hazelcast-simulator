@@ -28,7 +28,7 @@ public class WorkerQuery {
     private String versionSpec;
     private SimulatorAddress workerAddress;
     private SimulatorAddress agentAddress;
-    private int maxCount;
+    private Integer maxCount;
     private WorkerType workerType;
     private boolean random;
 
@@ -68,11 +68,11 @@ public class WorkerQuery {
         return this;
     }
 
-    public int getMaxCount() {
+    public Integer getMaxCount() {
         return maxCount;
     }
 
-    public WorkerQuery setMaxCount(int count) {
+    public WorkerQuery setMaxCount(Integer count) {
         this.maxCount = count;
         return this;
     }
@@ -98,7 +98,7 @@ public class WorkerQuery {
                 continue;
             }
 
-            if (result.size() == maxCount) {
+            if (maxCount != null && result.size() == maxCount) {
                 break;
             }
 

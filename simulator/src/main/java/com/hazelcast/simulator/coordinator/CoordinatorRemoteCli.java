@@ -230,20 +230,35 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private static class ScriptWorkerCli {
         private final String help
-                = "Executes a script on one or more workers\n"
-                + "Various filter options are available like --versionSpec, --workerType, --agent\n"
-                + "and it is even possible to execute a script on a specific worker using --worker\n"
+                = "Executes a Bash-script or Javascript on workers\n"
                 + "\n"
-                + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
+                + "Various filter options are available like --versionSpec, --workerType, --agent, --worker\n"
+                + "\n"
+                + "By default the script is executed on all members selected, but can be controlled using the\n"
+                + "--maxCount setting.\n"
+                + "\n"
+                + "By default the selection of members is deterministic, however using the --random setting\n"
                 + "one can enable shuffling of members."
                 + "\n"
+                + "The bash and javascript commands are very useful for High Availability testing by e.g\n"
+                + "causing split brains, consuming most memory, consuming CPU cycles, and poking in Hazelcast\n"
+                + "internals\n"
+                + "\n"
                 + "Examples\n"
-                + "# executes takes a threadump on at least 100 members in the cluster one\n"
-                + "coordinator-remote script --maxCount 100 --command 'bash:jstack $PID''\n\n"
-                + "#executes a bash script on all member on agent C_A1\n"
-                + "coordinator-remote script --maxCount 100 --workerType member --agent C_A1 --command 'bash:kill -9 $PID'\n"
-                + "#executes a javascript that calls System.ext on worker C_A1_W1\n"
-                + "coordinator-remote script --worker C_A1_W1 --command 'javascript:java.lang.System.exit(0)'\n";
+                + "# takes a threadump on all workers\n"
+                + "coordinator-remote script  --command 'bash:jstack $PID''\n\n"
+                + "# takes a threadump on at most 2 workers\n"
+                + "coordinator-remote script  --maxCount 2 --command 'bash:jstack $PID''\n\n"
+                + "# takes a threadump on all member\n"
+                + "coordinator-remote script  --workerType member --command 'bash:jstack $PID''\n\n"
+                + "# takes a threadump on all workers with a specific version\n"
+                + "coordinator-remote script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
+                + "# takes a threaddump on all member on agent C_A1\n"
+                + "coordinator-remote script --workerType member --agent C_A1 --command 'bash:jstack $PID'\n"
+                + "#takes a threaddump on C_A1_W1\n"
+                + "coordinator-remote script --worker C_A1_W1 --command 'bash:jstack $PID'\n"
+                + "#takes a threaddump on C_A1_W1\n"
+                + "coordinator-remote script --worker C_A1_W1 --command 'js:java.lang.System.out.println(\"hello\")'\n";
 
         private final OptionParser parser = new OptionParser();
 
@@ -258,8 +273,8 @@ public class CoordinatorRemoteCli implements Closeable {
 
         private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
                 "The maximum number of workers to execute the script on. It can safely be called with a maxCount larger than "
-                        + "the actual number of workers.")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
+                        + "the actual number of workers. ")
+                .withRequiredArg().ofType(Integer.class);
 
         private final OptionSpec<String> agentSpec = parser.accepts("agent",
                 "The simulator address of the agent owning the worker to kill")
@@ -288,8 +303,8 @@ public class CoordinatorRemoteCli implements Closeable {
                 throw new CommandLineExitException("---agent and --worker can't both be set");
             }
 
-            int maxCount = options.valueOf(maxCountSpec);
-            if (maxCount <= 0) {
+            Integer maxCount = options.valueOf(maxCountSpec);
+            if (maxCount != null && maxCount <= 0) {
                 throw new CommandLineExitException("--maxCount can't be smaller than 1");
             }
 
@@ -538,8 +553,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# run a test but disable the fail fast mechanism\n"
                 + "coordinator-remote run --failFast \n\n"
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
-                + "coordinator-remote run --targetType member --targetCount 3 \n\n"
-                ;
+                + "coordinator-remote run --targetType member --targetCount 3 \n\n";
 
         private final OptionParser parser = new OptionParser();
 
