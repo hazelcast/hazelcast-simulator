@@ -177,14 +177,22 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private static class InstallCli {
         private final String help = ""
-                + "Install Hazelcast on the remote machines. By default the coordinator will upload to the agents\n"
-                + "what has been configured on the simulator.properties. But in case of testing multiple versions\n"
-                + "the other versions need to be installed. If a worker is started without the right software, "
-                + "the worker will fail to start\n\n"
+                + "Install Hazelcast on the agents. By default the coordinator will upload to the agents what has\n"
+                + "been configured on the simulator.properties. But in case of testing multiple versions the other\n"
+                + "versions need to be installed. If a worker is started without the right software, the worker will\n"
+                + "fail to start\n"
+                + "\n"
+                + "In case of the maven version spec, the local repository is always preferred and no update checking\n"
+                + "is done in case of SNAPSHOT version. This is very useful for testing custom SNAPSHOT branches, but\n"
+                + "can be a problem if the local SNAPSHOT is not updated and the user expects to use the latest\n"
+                + "SNAPSHOT\n"
                 + "\n"
                 + "Examples\n"
-                + "coordinator-remote install maven=3.6\n"
+                + " # installs Hazelcast 3.6 from local or remote repo.\n"
+                + "coordinator-remote install maven=3.6\n\n"
+                + " # installs Hazelcast 3.8-SNAPSHOT from local or remote repo.\n"
                 + "coordinator-remote install maven=3.8-SNAPSHOT\n"
+                + " # installs Hazelcast using some git commit hash.\n"
                 + "coordinator-remote install git=<somehash>\n";
 
         private final OptionParser parser = new OptionParser();
