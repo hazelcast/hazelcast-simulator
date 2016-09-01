@@ -17,13 +17,11 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.ChaosMonkeyOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.utils.ChaosMonkeyUtils;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,8 +32,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static java.lang.String.format;
 
 /**
- * Abstract {@link OperationProcessor} with basic implementations for {@link IntegrationTestOperation}, {@link LogOperation}
- * and {@link ChaosMonkeyOperation}.
+ * Abstract {@link OperationProcessor} with basic implementations for {@link IntegrationTestOperation}, {@link LogOperation).
  */
 abstract class AbstractOperationProcessor implements OperationProcessor {
 
@@ -57,9 +54,6 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
                     return processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress);
                 case LOG:
                     processLog((LogOperation) operation, sourceAddress);
-                    break;
-                case CHAOS_MONKEY:
-                    processChaosMonkey((ChaosMonkeyOperation) operation);
                     break;
                 default:
                     return processOperation(operationType, operation, sourceAddress);
@@ -94,10 +88,6 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
         LOGGER.log(operation.getLevel(), format("[%s] %s", sourceAddress, operation.getMessage()));
     }
 
-    private void processChaosMonkey(ChaosMonkeyOperation operation) {
-        ChaosMonkeyUtils.execute(operation.getType());
-    }
-
-    abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
+     abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
                                            SimulatorAddress sourceAddress) throws Exception;
 }

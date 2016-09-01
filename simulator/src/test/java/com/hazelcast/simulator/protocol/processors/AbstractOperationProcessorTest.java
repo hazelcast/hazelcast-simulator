@@ -2,7 +2,6 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.ChaosMonkeyOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -47,16 +46,6 @@ public class AbstractOperationProcessorTest {
     @Test
     public void testProcessLogOperation() {
         LogOperation operation = new LogOperation("BasicOperationProcessorTest");
-
-        ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
-
-        assertEquals(ResponseType.SUCCESS, responseType);
-        //assertEquals(0, exceptionLogger.getExceptionCount());
-    }
-
-    @Test
-    public void testChaosMonkey() {
-        ChaosMonkeyOperation operation = new ChaosMonkeyOperation(ChaosMonkeyOperation.Type.INTEGRATION_TEST);
 
         ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
 
