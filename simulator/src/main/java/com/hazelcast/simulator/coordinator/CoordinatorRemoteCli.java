@@ -177,10 +177,10 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private static class InstallCli {
         private final String help
-                = "Install Hazelcast on the agents. By default the coordinator will upload to the agents what has\n"
-                + "been configured on the simulator.properties. But in case of testing multiple versions the other\n"
-                + "versions need to be installed. If a worker is started without the right software, the worker will\n"
-                + "fail to start\n"
+                = "The 'install' command installs Hazelcast on the agents. By default the coordinator will upload to\n"
+                + "the agents what has been configured on the simulator.properties. But in case of testing multiple\n"
+                + "versions the other versions need to be installed. If a worker is started without the right software\n"
+                + "the worker will fail to start\n"
                 + "\n"
                 + "In case of the maven version spec, the local repository is always preferred and no update checking\n"
                 + "is done in case of SNAPSHOT version. This is very useful for testing custom SNAPSHOT branches, but\n"
@@ -191,7 +191,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# installs Hazelcast 3.6 from local or remote repo.\n"
                 + "coordinator-remote install maven=3.6\n\n"
                 + "# installs Hazelcast 3.8-SNAPSHOT from local or remote repo.\n"
-                + "coordinator-remote install maven=3.8-SNAPSHOT\n"
+                + "coordinator-remote install maven=3.8-SNAPSHOT\n\n"
                 + "# installs Hazelcast using some git commit hash.\n"
                 + "coordinator-remote install git=<somehash>\n";
 
@@ -230,7 +230,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private static class ScriptWorkerCli {
         private final String help
-                = "Executes a Bash-script or Javascript on workers\n"
+                = "The 'script-worker' commands executes a Bash-script or Javascript on workers\n"
                 + "\n"
                 + "Various filter options are available like --versionSpec, --workerType, --agent, --worker\n"
                 + "\n"
@@ -254,11 +254,11 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# takes a threadump on all workers with a specific version\n"
                 + "coordinator-remote script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
                 + "# takes a threaddump on all member on agent C_A1\n"
-                + "coordinator-remote script --workerType member --agent C_A1 --command 'bash:jstack $PID'\n"
-                + "#takes a threaddump on C_A1_W1\n"
-                + "coordinator-remote script --worker C_A1_W1 --command 'bash:jstack $PID'\n"
-                + "#takes a threaddump on C_A1_W1\n"
-                + "coordinator-remote script --worker C_A1_W1 --command 'js:java.lang.System.out.println(\"hello\")'\n";
+                + "coordinator-remote script --workerType member --agent C_A1 --command 'bash:jstack $PID'\n\n"
+                + "# takes a threaddump on C_A1_W1\n"
+                + "coordinator-remote script --worker C_A1_W1 --command 'bash:jstack $PID'\n\n"
+                + "# executes a javascript on all workers\n"
+                + "coordinator-remote script --command 'js:java.lang.System.out.println(\"hello\")'";
 
         private final OptionParser parser = new OptionParser();
 
@@ -286,7 +286,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
         private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
                 "If workers should be picked randomly or predictably")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
         private OptionSet options;
 
@@ -354,7 +354,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private static class KillWorkerCli {
         private final String help = ""
-                + "The kill-worker command kills one or more workers. The killing can be done based using an exact\n"
+                + "The 'kill-worker' command kills one or more workers. The killing can be done based using an exact\n"
                 + "worker address or using various filters like versionSpec, etc.\n"
                 + "\n"
                 + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
@@ -415,7 +415,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
         private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
                 "If workers should be picked randomly or predictably")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
         private OptionSet options;
 
@@ -458,8 +458,9 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private class StartWorkerCli {
         private final String help
-                = "Starts one or more workers.\n\n"
-                + "Before a test run run, the appropriate workers need to be started.\n"
+                = "The 'start-worker' command starts one or more workers.\n"
+                + "\n"
+                + "Before a test run run, the appropriate workers need to be started using 'start-workers'\n"
                 + "\n"
                 + "By default the workers will be spread so that the number of worker on each agent is in balance.\n"
                 + "Using the coordinator --dedicatedMemberMachines setting dedicated member agents can be created.\n"
@@ -491,7 +492,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
-                "The type of machine to start. member, litemember, client:java (native clients will be added soon) etc")
+                "The type of machine to start. member, litemember, javaclient (native clients will be added soon) etc")
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
         private final OptionSpec<Integer> countSpec = parser.accepts("count",
@@ -531,7 +532,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private class RunCli {
         private final String help
-                = "Runs a test suite\n"
+                = "The 'run' command runs a test suite\n"
                 + "A testsuite can contain a single test, or multiple tests when using test4@someproperty=10\n"
                 + "By default the test are run in sequential, but can be controlled using the --parallel flag\n"
                 + "\n"

@@ -20,8 +20,9 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.shuffle;
 
 public class WorkerQuery {
 
@@ -109,7 +110,7 @@ public class WorkerQuery {
 
     private List<WorkerData> randomize(List<WorkerData> workers) {
         List<WorkerData> result = new ArrayList<WorkerData>(workers);
-        Collections.shuffle(workers);
+        shuffle(workers);
         return result;
     }
 

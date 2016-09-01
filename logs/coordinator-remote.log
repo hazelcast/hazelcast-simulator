@@ -1,0 +1,2 @@
+INFO  2016-09-01 08:08:33,988 [main] com.hazelcast.simulator.common.SimulatorProperties: Loading default simulator.properties: /home/alarmnummer/hazelcast-simulator-0.9-SNAPSHOT/conf/simulator.properties
+FATAL 2016-09-01 08:08:33,991 [main] com.hazelcast.simulator.coordinator.CoordinatorRemoteCli: Coordinator port is disabled!

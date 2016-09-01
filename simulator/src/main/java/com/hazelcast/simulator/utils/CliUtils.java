@@ -45,7 +45,7 @@ public final class CliUtils {
 
             if (options.has(helpSpec)) {
                 if (help != null) {
-                    System.out.println(help);
+                    printHelp(help);
                 }
                 printHelpAndExit(parser, System.out);
             }
@@ -62,12 +62,12 @@ public final class CliUtils {
             OptionSet options = parser.parse(args);
 
             if (options.has(helpSpec)) {
-                System.out.println(content);
+                printHelp(content);
                 printHelpAndExit(parser, System.out);
             }
 
             if (options.nonOptionArguments().size() > 0) {
-                System.out.println(content);
+                printHelp(content);
                 printHelpAndExit(parser, System.out);
             }
 
@@ -75,6 +75,11 @@ public final class CliUtils {
         } catch (OptionException e) {
             throw new CommandLineExitException(e.getMessage() + ". Use --help to get overview of the help options.");
         }
+    }
+
+    private static void printHelp(String content) {
+        System.out.println(content);
+        System.out.println();
     }
 
     public static void printHelpAndExit(OptionParser parser) {
