@@ -36,6 +36,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -55,12 +56,14 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * Connector which connects to remote Simulator Coordinator instances.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, Closeable {
 
     private static final int COORDINATOR_INDEX = 1;
 
     private final EventLoopGroup group = new NioEventLoopGroup();
-    private final AtomicLong messageIds = new AtomicLong();
+    // we need to initialize the messageId's because multiple remote connectors could be connected at the same time.
+    private final AtomicLong messageIds = new AtomicLong(new Random().nextLong());
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
     private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
     private final ExecutorService executorService = createFixedThreadPool(1, "CoordinatorRemoteConnector");
@@ -100,15 +103,6 @@ public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, C
 
         executorService.shutdown();
         awaitTermination(executorService, 1, MINUTES);
-    }
-
-    /**
-     * Returns the last response the {@link CoordinatorRemoteOperationProcessor} received.
-     *
-     * @return last response of the {@link CoordinatorRemoteOperationProcessor}
-     */
-    public String getResponse() {
-        return processor.getResponse();
     }
 
     /**

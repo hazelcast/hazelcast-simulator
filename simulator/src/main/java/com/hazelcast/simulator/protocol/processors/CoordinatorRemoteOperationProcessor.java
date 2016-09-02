@@ -29,12 +29,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
  */
 public class CoordinatorRemoteOperationProcessor extends AbstractOperationProcessor {
 
-    private volatile String response;
-
-    public String getResponse() {
-        return response;
-    }
-
     @Override
     public final void processOperation(OperationType operationType, SimulatorOperation operation,
                                        SimulatorAddress sourceAddress, Promise promise) {
