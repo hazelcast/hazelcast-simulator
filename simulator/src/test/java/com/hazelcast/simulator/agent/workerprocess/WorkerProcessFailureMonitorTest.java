@@ -65,7 +65,7 @@ public class WorkerProcessFailureMonitorTest {
     private File workersHome;
 
     @Before
-    public void setUp() {
+    public void before() {
         simulatorHome = setupFakeEnvironment();
         workersHome = new File(simulatorHome, "workers");
 
@@ -85,7 +85,7 @@ public class WorkerProcessFailureMonitorTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         workerProcessFailureMonitor.shutdown();
 
         tearDownFakeEnvironment();

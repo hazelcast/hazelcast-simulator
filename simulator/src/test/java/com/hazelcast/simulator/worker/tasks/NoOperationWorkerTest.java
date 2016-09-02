@@ -28,7 +28,7 @@ public class NoOperationWorkerTest {
     private File userDir;
 
     @Before
-    public void setUp() {
+    public void before() {
         userDir = setupFakeUserDir();
 
         test = new WorkerTest();

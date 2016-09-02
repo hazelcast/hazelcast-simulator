@@ -20,13 +20,13 @@ import static org.junit.Assert.assertTrue;
 public class ExceptionReporterTest {
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
         ExceptionReporter.reset();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
         ExceptionReporter.reset();
     }

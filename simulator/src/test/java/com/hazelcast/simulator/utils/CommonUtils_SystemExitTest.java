@@ -16,13 +16,13 @@ public class CommonUtils_SystemExitTest {
     private final Logger logger = Logger.getLogger(CommonUtils_SystemExitTest.class.getSimpleName());
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         oldSecurityManager = System.getSecurityManager();
         System.setSecurityManager(new ExitExceptionSecurityManager());
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         System.setSecurityManager(oldSecurityManager);
     }
 

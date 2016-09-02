@@ -46,7 +46,7 @@ public class AbstractWorkerTest {
     private TestContainer testContainer;
 
     @Before
-    public void setUp() {
+    public void before() {
         userDir = setupFakeUserDir();
 
         test = new WorkerTest();
@@ -59,7 +59,7 @@ public class AbstractWorkerTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

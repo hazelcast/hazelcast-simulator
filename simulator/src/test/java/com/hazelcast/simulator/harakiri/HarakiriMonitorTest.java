@@ -25,12 +25,12 @@ public class HarakiriMonitorTest {
     private HarakiriMonitor harakiriMonitor;
 
     @BeforeClass
-    public static void setUp() {
+    public static void before() {
         setExitExceptionSecurityManager();
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
     }
 

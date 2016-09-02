@@ -54,12 +54,12 @@ public class FileUtilsTest {
     private static final File TARGET_FILE = new File("target");
 
     @Before
-    public void setUp() {
+    public void before() {
         writeText(EXAMPLE_CONTENT, EXAMPLE_FILE);
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         deleteQuiet(INVALID_FILE);
         deleteQuiet(EXAMPLE_FILE);
         deleteQuiet(TARGET_FILE);

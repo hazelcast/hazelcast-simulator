@@ -34,7 +34,7 @@ public class DeploymentPlanTest {
     private SimulatorAddress thirdAgent;
 
     @Before
-    public void setUp() {
+    public void before() {
         workerParametersMap.put(WorkerType.MEMBER, mock(WorkerParameters.class));
         workerParametersMap.put(JAVA_CLIENT, mock(WorkerParameters.class));
 

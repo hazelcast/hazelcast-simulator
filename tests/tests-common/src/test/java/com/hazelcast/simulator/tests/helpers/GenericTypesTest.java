@@ -21,7 +21,7 @@ public class GenericTypesTest {
     private Random random = new Random();
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         Config config = new Config();
         config.setProperty("hazelcast.partition.count", "" + PARTITION_COUNT);
 
@@ -29,7 +29,7 @@ public class GenericTypesTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         Hazelcast.shutdownAll();
     }
 

@@ -49,7 +49,7 @@ public class AbstractWorkerWithMultipleProbesTest {
     private TestContainer testContainer;
 
     @Before
-    public void setUp() {
+    public void before() {
         userDir = setupFakeEnvironment();
         test = new WorkerTest();
         testContext = new TestContextImpl(mock(HazelcastInstance.class), "Test", "localhost", mock(WorkerConnector.class));
@@ -61,7 +61,7 @@ public class AbstractWorkerWithMultipleProbesTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         tearDownFakeEnvironment();
     }
 

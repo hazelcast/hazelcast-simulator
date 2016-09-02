@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNull;
 public class ComputeServiceBuilderTest {
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setLogLevel(Level.DEBUG);
         setupFakeEnvironment();
         createCloudCredentialFiles();
@@ -35,7 +35,7 @@ public class ComputeServiceBuilderTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetLogLevel();
         tearDownFakeEnvironment();
         deleteCloudCredentialFiles();

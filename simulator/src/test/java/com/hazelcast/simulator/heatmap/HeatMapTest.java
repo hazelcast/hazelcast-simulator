@@ -25,7 +25,7 @@ public class HeatMapTest extends AbstractComputeServiceTest {
     private File tmpDir;
 
     @Before
-    public void setUp() {
+    public void before() {
         tmpDir = TestUtils.createTmpDirectory();
         workersDirectory = ensureExistingDirectory(tmpDir, "workers");
 

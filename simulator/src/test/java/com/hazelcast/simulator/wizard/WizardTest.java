@@ -72,7 +72,7 @@ public class WizardTest {
     }
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
 
         simulatorProperties = mock(SimulatorProperties.class);
@@ -96,7 +96,7 @@ public class WizardTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         tearDownFakeEnvironment();
 
         deleteQuiet(localSimulatorPropertiesFile);

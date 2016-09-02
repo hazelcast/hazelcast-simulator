@@ -2,8 +2,8 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import org.apache.log4j.Logger;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ public class AgentUtilsTest {
     private ComponentRegistry componentRegistry;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
         writeText(String.valueOf(Integer.MAX_VALUE), new File(getUserDir(), "agent.pid"));
 
@@ -55,7 +55,7 @@ public class AgentUtilsTest {
         componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
     }
 
-    @Teardown
+    @After
     public void after() {
         tearDownFakeEnvironment();
     }

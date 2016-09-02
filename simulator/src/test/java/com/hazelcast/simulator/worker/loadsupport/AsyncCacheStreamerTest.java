@@ -3,8 +3,8 @@ package com.hazelcast.simulator.worker.loadsupport;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -42,7 +42,7 @@ public class AsyncCacheStreamerTest {
     private Streamer<Integer, String> streamer;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
 
         when(cache.putAsync(anyInt(), anyString())).thenReturn(future);
@@ -51,8 +51,8 @@ public class AsyncCacheStreamerTest {
         streamer = StreamerFactory.getInstance(cache);
     }
 
-    @Teardown
-    public void tearDown() {
+    @After
+    public void after() {
         teardownFakeUserDir();
     }
 

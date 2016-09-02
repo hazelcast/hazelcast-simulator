@@ -23,7 +23,7 @@ public class OperationSelectorTest {
     private OperationSelector<Operation> selector;
 
     @Before
-    public void setUp() {
+    public void before() {
         builder = new OperationSelectorBuilder<Operation>();
     }
 

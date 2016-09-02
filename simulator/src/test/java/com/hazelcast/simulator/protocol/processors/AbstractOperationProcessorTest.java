@@ -19,7 +19,7 @@ public class AbstractOperationProcessorTest {
     private IntegrationTestOperationProcessor processor;
 
     @Before
-    public void setUp() {
+    public void before() {
         processor = new IntegrationTestOperationProcessor();
     }
 

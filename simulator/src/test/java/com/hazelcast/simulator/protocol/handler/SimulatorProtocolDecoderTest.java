@@ -16,12 +16,12 @@ public class SimulatorProtocolDecoderTest {
     private ByteBuf buffer;
 
     @Before
-    public void setUp() {
+    public void before() {
         simulatorProtocolDecoder = new SimulatorProtocolDecoder(SimulatorAddress.COORDINATOR);
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         if (buffer != null) {
             buffer.release();
         }

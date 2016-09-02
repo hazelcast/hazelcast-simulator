@@ -13,7 +13,7 @@ public class SimulatorMessageCodecTest {
     private ByteBuf buffer;
 
     @After
-    public void tearDown() {
+    public void after() {
         if (buffer != null) {
             buffer.release();
         }

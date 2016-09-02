@@ -32,13 +32,13 @@ public class WizardUtilsTest {
     private File parent;
 
     @Before
-    public void setUp() throws Exception {
+    public void before() throws Exception {
         parent = new File("parent").getAbsoluteFile();
         ensureExistingDirectory(parent);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void after() throws Exception {
         deleteQuiet(parent);
     }
 

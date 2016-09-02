@@ -22,12 +22,12 @@ public class AgentCliTest {
     private Agent agent;
 
     @Before
-    public void setup() {
+    public void before() {
         setupFakeEnvironment();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         if (agent != null) {
             agent.shutdown();
         }

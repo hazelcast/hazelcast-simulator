@@ -38,7 +38,7 @@ public class MemberWorkerTest {
     private MemberWorker worker;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
 
         ComponentRegistry componentRegistry = new ComponentRegistry();
@@ -59,7 +59,7 @@ public class MemberWorkerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void after() throws Exception {
         if (worker != null) {
             worker.shutdown(false);
             worker.awaitShutdown();

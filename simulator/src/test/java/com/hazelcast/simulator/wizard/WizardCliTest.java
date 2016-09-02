@@ -38,7 +38,7 @@ public class WizardCliTest {
     private Wizard wizard = mock(Wizard.class);
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setExitExceptionSecurityManagerWithStatusZero();
         setupFakeEnvironment();
 
@@ -48,7 +48,7 @@ public class WizardCliTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
         tearDownFakeEnvironment();
 

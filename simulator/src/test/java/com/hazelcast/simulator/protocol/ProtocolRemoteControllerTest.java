@@ -27,7 +27,7 @@ public class ProtocolRemoteControllerTest {
     private static RemoteControllerConnector remoteControllerConnector;
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setLogLevel(Level.TRACE);
 
         coordinatorConnector = startCoordinator("127.0.0.1", getAgentStartPort(), 0, COORDINATOR_PORT);
@@ -37,7 +37,7 @@ public class ProtocolRemoteControllerTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         remoteControllerConnector.close();
         coordinatorConnector.shutdown();
 

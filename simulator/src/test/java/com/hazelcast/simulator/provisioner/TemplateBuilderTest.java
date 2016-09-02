@@ -35,7 +35,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
     private int hazelcastEndPort;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
 
         simulatorProperties = new SimulatorProperties();
@@ -51,7 +51,7 @@ public class TemplateBuilderTest extends AbstractComputeServiceTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         tearDownFakeEnvironment();
     }
 

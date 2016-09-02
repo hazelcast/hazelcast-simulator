@@ -50,7 +50,7 @@ public class AwsProvisionerTest {
     private AwsProvisioner provisioner;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
         createAgentsFileWithLocalhost();
 
@@ -67,7 +67,7 @@ public class AwsProvisionerTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         provisioner.shutdown();
 
         tearDownFakeEnvironment();

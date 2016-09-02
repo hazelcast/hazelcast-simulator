@@ -24,12 +24,12 @@ public class TestSuiteTest {
     private File testSuiteFile;
 
     @Before
-    public void setUp() {
+    public void before() {
         testSuiteFile = ensureExistingFile("simulator.properties");
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         deleteQuiet(testSuiteFile);
     }
 

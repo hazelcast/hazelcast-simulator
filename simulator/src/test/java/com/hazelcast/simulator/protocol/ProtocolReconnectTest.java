@@ -35,14 +35,14 @@ public class ProtocolReconnectTest {
     private static final Logger LOGGER = Logger.getLogger(ProtocolReconnectTest.class);
 
     @Before
-    public void setUp() {
+    public void before() {
         setLogLevel(Level.TRACE);
 
         startSimulatorComponents(1, 1, 1);
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         stopSimulatorComponents();
 
         resetLogLevel();

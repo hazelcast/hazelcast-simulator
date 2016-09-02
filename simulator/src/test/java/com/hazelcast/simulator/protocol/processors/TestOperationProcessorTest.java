@@ -50,12 +50,12 @@ public class TestOperationProcessorTest {
     private TestOperationProcessor processor;
 
     @Before
-    public void setup(){
+    public void before(){
         setupFakeUserDir();
     }
 
     @After
-    public void tearDown(){
+    public void after(){
         teardownFakeUserDir();
     }
 

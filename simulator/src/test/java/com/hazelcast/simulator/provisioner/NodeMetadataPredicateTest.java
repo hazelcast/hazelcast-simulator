@@ -23,7 +23,7 @@ public class NodeMetadataPredicateTest {
     private NodeMetadata nodeMetadata;
 
     @Before
-    public void setUp() {
+    public void before() {
         componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
 
         nodeMetadata = mock(NodeMetadata.class);

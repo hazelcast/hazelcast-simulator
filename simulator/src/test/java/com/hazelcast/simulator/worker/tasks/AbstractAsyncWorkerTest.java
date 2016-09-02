@@ -47,7 +47,7 @@ public class AbstractAsyncWorkerTest {
     private TestContainer testContainer;
 
     @Before
-    public void setUp() {
+    public void before() {
         userDir = setupFakeUserDir();
         test = new WorkerTest();
         testContext = new TestContextImpl(mock(HazelcastInstance.class), "Test", "localhost", mock(WorkerConnector.class));
@@ -57,7 +57,7 @@ public class AbstractAsyncWorkerTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
         test.executor.shutdown();
     }

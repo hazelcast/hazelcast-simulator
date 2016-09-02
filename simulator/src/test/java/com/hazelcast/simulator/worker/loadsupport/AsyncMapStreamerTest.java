@@ -42,7 +42,7 @@ public class AsyncMapStreamerTest {
     private Streamer<Integer, String> streamer;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
 
         StreamerFactory.enforceAsync(true);
@@ -50,7 +50,7 @@ public class AsyncMapStreamerTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

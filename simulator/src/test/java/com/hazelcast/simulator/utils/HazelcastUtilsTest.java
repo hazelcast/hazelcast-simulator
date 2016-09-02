@@ -59,7 +59,7 @@ public class HazelcastUtilsTest {
     private String clientConfig;
 
     @Before
-    public void setUp() {
+    public void before() {
         properties = mock(SimulatorProperties.class);
         when(properties.getVersionSpec()).thenReturn("outofthebox");
         when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");
@@ -69,6 +69,11 @@ public class HazelcastUtilsTest {
 
         memberConfig = fileAsText("dist/src/main/dist/conf/hazelcast.xml");
         clientConfig = fileAsText("dist/src/main/dist/conf/client-hazelcast.xml");
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        executor.shutdown();
     }
 
     @Test
@@ -124,11 +129,6 @@ public class HazelcastUtilsTest {
         ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
         when(componentRegistry.getAgents()).thenReturn(agents);
         return componentRegistry;
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        executor.shutdown();
     }
 
     @Test

@@ -46,13 +46,13 @@ public class ProtocolIntegrationTest {
     private static final long ASSERT_EVENTUALLY_TIMEOUT_SECONDS = 3;
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setupFakeUserDir();
         startSimulatorComponents(2, 2, 2);
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         stopSimulatorComponents();
         teardownFakeUserDir();
     }

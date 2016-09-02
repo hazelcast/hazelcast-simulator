@@ -18,7 +18,7 @@ public class TestPhaseListenersTest {
     private TestPhaseListeners testPhaseListeners;
 
     @Before
-    public void setUp() {
+    public void before() {
         testPhaseListeners = new TestPhaseListeners();
     }
 

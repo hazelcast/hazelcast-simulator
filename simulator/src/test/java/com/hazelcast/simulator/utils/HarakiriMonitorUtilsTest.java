@@ -29,12 +29,12 @@ public class HarakiriMonitorUtilsTest {
     private final SimulatorProperties properties = new SimulatorProperties();
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setupFakeEnvironment();
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         tearDownFakeEnvironment();
     }
 

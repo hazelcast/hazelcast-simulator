@@ -11,12 +11,12 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecur
 public class AgentTest {
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setExitExceptionSecurityManager();
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
     }
 

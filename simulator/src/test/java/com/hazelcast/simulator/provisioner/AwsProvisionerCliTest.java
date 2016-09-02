@@ -36,14 +36,14 @@ public class AwsProvisionerCliTest {
     private AwsProvisioner provisioner = mock(AwsProvisioner.class);
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setExitExceptionSecurityManagerWithStatusZero();
         setupFakeEnvironment();
         createAgentsFileWithLocalhost();
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
         tearDownFakeEnvironment();
         deleteAgentsFile();

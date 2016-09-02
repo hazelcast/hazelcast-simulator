@@ -43,14 +43,14 @@ public class ProtocolSmokeTest {
     private static final Logger LOGGER = Logger.getLogger(ProtocolSmokeTest.class);
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setLogLevel(Level.INFO);
 
         startSimulatorComponents(NUMBER_OF_AGENTS, NUMBER_OF_WORKERS, NUMBER_OF_TESTS);
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         stopSimulatorComponents();
 
         resetLogLevel();

@@ -13,7 +13,7 @@ public class ResponseCodecTest {
     private ByteBuf buffer;
 
     @After
-    public void tearDown() {
+    public void after() {
         if (buffer != null) {
             buffer.release();
         }

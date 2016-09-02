@@ -20,7 +20,7 @@ public class ExceptionHandlerTest {
     private ExceptionHandler exceptionHandler;
 
     @Before
-    public void setUp() {
+    public void before() {
         serverConnector = mock(ServerConnector.class);
         when(serverConnector.getAddress()).thenReturn(SimulatorAddress.COORDINATOR);
 

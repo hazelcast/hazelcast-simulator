@@ -32,7 +32,7 @@ public class PerformanceStatsCollectorTest {
     private SimulatorAddress agentAddress2;
 
     @Before
-    public void setUp() {
+    public void before() {
         emptyPerformanceStatsCollector = new PerformanceStatsCollector();
         performanceStatsCollector = new PerformanceStatsCollector();
 

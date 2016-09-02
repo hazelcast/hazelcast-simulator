@@ -25,7 +25,7 @@ public class CoordinatorTest {
     private DeploymentPlan deploymentPlan;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
 
         testSuite = new TestSuite();
@@ -43,7 +43,7 @@ public class CoordinatorTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         deleteQuiet(new File(sessionId).getAbsoluteFile());
 
         TestEnvironmentUtils.tearDownFakeEnvironment();

@@ -24,12 +24,12 @@ public class HarakiriMonitorCliTest {
     private final List<String> args = new ArrayList<String>();
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setExitExceptionSecurityManager();
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
     }
 

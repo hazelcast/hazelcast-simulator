@@ -22,13 +22,13 @@ public class CliUtilsTest {
     private SecurityManager oldSecurityManager;
 
     @Before
-    public void setUp() {
+    public void before() {
         oldSecurityManager = System.getSecurityManager();
         System.setSecurityManager(new ExitExceptionSecurityManager(true));
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         System.setSecurityManager(oldSecurityManager);
     }
 

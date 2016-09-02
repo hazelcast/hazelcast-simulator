@@ -37,12 +37,12 @@ public class TimeStepRunStrategyIntegrationTest {
     private static final String TEST_ID = "SomeId";
 
     @Before
-    public void setup() {
+    public void before() {
         setupFakeUserDir();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

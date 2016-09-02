@@ -26,13 +26,13 @@ public abstract class TestContainer_AbstractTest {
     File userDir;
 
     @Before
-    public void setup() {
+    public void before() {
         ExceptionReporter.reset();
         userDir = setupFakeUserDir();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

@@ -25,7 +25,7 @@ public class ResponseHandlerTest {
     private ResponseHandler responseHandler;
 
     @Before
-    public void setUp() {
+    public void before() {
         futureMap = new ConcurrentHashMap<String, ResponseFuture>();
 
         responseHandler = new ResponseHandler(localAddress, remoteAddress, futureMap);

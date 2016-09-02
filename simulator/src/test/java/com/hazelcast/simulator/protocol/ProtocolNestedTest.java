@@ -42,13 +42,13 @@ public class ProtocolNestedTest {
     private static final Logger LOGGER = Logger.getLogger(ProtocolNestedTest.class);
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
         startSimulatorComponents(2, 2, 2);
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         stopSimulatorComponents();
         teardownFakeUserDir();
     }

@@ -29,7 +29,7 @@ public class WorkerProcessManagerTest {
     private WorkerProcessManager workerProcessManager;
 
     @Before
-    public void setUp() {
+    public void before() {
         firstWorkerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
         secondWorkerAddress = new SimulatorAddress(WORKER, 1, 2, 0);
 

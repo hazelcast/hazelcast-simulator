@@ -43,7 +43,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
     private TestContainer testContainer;
 
     @Before
-    public void setUp() {
+    public void before() {
         userDir = setupFakeUserDir();
 
         test = new WorkerTest();
@@ -55,7 +55,7 @@ public class AbstractMonotonicWorkerWithProbeControlTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

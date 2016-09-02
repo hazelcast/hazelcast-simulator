@@ -26,13 +26,13 @@ public class ThreadSpawnerTest {
     };
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
         ExceptionReporter.reset();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

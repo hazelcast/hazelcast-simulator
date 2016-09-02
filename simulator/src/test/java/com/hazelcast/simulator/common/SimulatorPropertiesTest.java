@@ -26,13 +26,13 @@ public class SimulatorPropertiesTest {
     private SimulatorProperties simulatorProperties;
 
     @Before
-    public void setUp() {
+    public void before() {
         this.simulatorHome = setupFakeEnvironment();
         this.simulatorProperties = new SimulatorProperties();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         tearDownFakeEnvironment();
     }
 

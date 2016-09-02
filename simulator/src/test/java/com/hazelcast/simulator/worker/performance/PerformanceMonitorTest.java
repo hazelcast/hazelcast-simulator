@@ -45,7 +45,7 @@ public class PerformanceMonitorTest {
     private PerformanceMonitor performanceMonitor;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
 
         SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
@@ -57,7 +57,7 @@ public class PerformanceMonitorTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         performanceMonitor.shutdown();
 
         teardownFakeUserDir();

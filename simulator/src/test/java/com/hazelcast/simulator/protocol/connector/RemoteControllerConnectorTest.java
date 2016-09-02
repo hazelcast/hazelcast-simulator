@@ -29,12 +29,12 @@ public class RemoteControllerConnectorTest {
     private static final int COORDINATOR_PORT = 0;
 
     @Before
-    public void setUp() {
+    public void before() {
         connector = new RemoteControllerConnector("127.0.0.1", COORDINATOR_PORT);
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         connector.close();
     }
 

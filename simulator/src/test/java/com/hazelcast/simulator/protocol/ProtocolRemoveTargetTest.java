@@ -30,14 +30,14 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 public class ProtocolRemoveTargetTest {
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setLogLevel(Level.TRACE);
 
         startSimulatorComponents(1, 1, 1);
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         stopSimulatorComponents();
 
         resetLogLevel();

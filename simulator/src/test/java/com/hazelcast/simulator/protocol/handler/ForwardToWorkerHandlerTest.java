@@ -43,7 +43,7 @@ public class ForwardToWorkerHandlerTest {
     private ByteBuf buffer;
 
     @Before
-    public void setUp() {
+    public void before() {
         when(forwardAddressIndexAttribute.get()).thenReturn(1);
 
         when(ctx.attr(forwardAddressIndex)).thenReturn(forwardAddressIndexAttribute);
@@ -55,7 +55,7 @@ public class ForwardToWorkerHandlerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void after() throws Exception {
         if (buffer != null) {
             buffer.release();
         }

@@ -63,7 +63,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     private SimulatorAddress agentAddress;
 
     @Before
-    public void setUp() {
+    public void before() {
         testPhaseListeners = new TestPhaseListeners();
         performanceStatsCollector = new PerformanceStatsCollector();
 

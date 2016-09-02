@@ -24,7 +24,7 @@ public class SyncCacheStreamerTest {
     private Streamer<Integer, String> streamer;
 
     @Before
-    public void setUp() {
+    public void before() {
         StreamerFactory.enforceAsync(false);
         streamer = StreamerFactory.getInstance(cache);
     }

@@ -10,12 +10,12 @@ import static org.junit.Assert.assertEquals;
 public class OperationTypeCounterTest {
 
     @Before
-    public void setUp() {
+    public void before() {
         OperationTypeCounter.reset();
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         OperationTypeCounter.reset();
     }
 

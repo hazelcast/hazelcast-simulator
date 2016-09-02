@@ -15,7 +15,7 @@ public class RemoteControllerOperationProcessorTest {
     private RemoteControllerOperationProcessor processor;
 
     @Before
-    public void setUp() {
+    public void before() {
         processor = new RemoteControllerOperationProcessor();
     }
 

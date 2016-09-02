@@ -34,7 +34,7 @@ public class AbstractMonotonicWorkerTest {
     private TestContainer testContainer;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeUserDir();
         test = new WorkerTest();
         testContext = new TestContextImpl(mock(HazelcastInstance.class), "Test", "localhost", mock(WorkerConnector.class));
@@ -45,7 +45,7 @@ public class AbstractMonotonicWorkerTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         teardownFakeUserDir();
     }
 

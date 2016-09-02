@@ -53,7 +53,7 @@ public class AbstractServerConnectorTest {
     private TestServerConnector testServerConnector;
 
     @Before
-    public void setUp() {
+    public void before() {
         setLogLevel(Level.TRACE);
 
         connectorAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
@@ -66,7 +66,7 @@ public class AbstractServerConnectorTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         resetLogLevel();
 
         if (shutdownAfterTest) {

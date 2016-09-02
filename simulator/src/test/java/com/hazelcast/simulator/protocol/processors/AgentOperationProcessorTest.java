@@ -66,7 +66,7 @@ public class AgentOperationProcessorTest {
     private Agent agent;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
 
         File workersDir = new File(getSimulatorHome(), "workers");
@@ -87,7 +87,7 @@ public class AgentOperationProcessorTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void after() throws Exception {
         tearDownFakeEnvironment();
 
         scheduler.shutdown();

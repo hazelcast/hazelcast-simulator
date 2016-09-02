@@ -32,7 +32,7 @@ public class ClientConnectorTest {
     private Channel channel;
 
     @Before
-    public void setUp() throws Exception {
+    public void before() throws Exception {
         EventLoopGroup eventLoopGroup = mock(EventLoopGroup.class);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);

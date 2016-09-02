@@ -59,7 +59,7 @@ public class WorkerOperationProcessorTest {
     private WorkerOperationProcessor processor;
 
     @Before
-    public void setUp() throws Exception {
+    public void before() throws Exception {
         properties = new HashMap<String, String>();
         setTestCaseClass(DEFAULT_TEST.getName());
 
@@ -80,7 +80,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @AfterClass
-    public static void after() {
+    public static void afterClass() {
         new BashCommand("rm *.exception").execute();
     }
 

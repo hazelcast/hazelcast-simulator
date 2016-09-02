@@ -90,7 +90,7 @@ public class RunTestSuiteTaskTest {
     }
 
     @Before
-    public void setUp() {
+    public void before() {
         testSuite = new TestSuite();
         testSuite.addTest(new TestCase("CoordinatorTest" + ID_GENERATOR.incrementAndGet()));
         testSuite.addTest(new TestCase("CoordinatorTest" + ID_GENERATOR.incrementAndGet()));

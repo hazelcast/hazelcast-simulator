@@ -30,7 +30,7 @@ public class ProvisionerCliTest {
     private Provisioner provisioner = mock(Provisioner.class);
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setExitExceptionSecurityManagerWithStatusZero();
         setupFakeEnvironment();
 
@@ -40,7 +40,7 @@ public class ProvisionerCliTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
         tearDownFakeEnvironment();
         deleteCloudCredentialFiles();

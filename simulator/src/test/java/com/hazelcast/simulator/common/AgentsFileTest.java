@@ -26,12 +26,12 @@ public class AgentsFileTest {
     private ComponentRegistry componentRegistry;
 
     @Before
-    public void setUp() throws IOException {
+    public void before() throws IOException {
         agentsFile = ensureExistingFile("AgentsFileTest-agents.txt");
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         deleteQuiet(agentsFile);
     }
 

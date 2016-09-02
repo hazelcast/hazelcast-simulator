@@ -49,7 +49,7 @@ public class RemoteClientTest {
     private RemoteClient remoteClient;
 
     @Before
-    public void setUp() {
+    public void before() {
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
         componentRegistry.addAgent("192.168.0.3", "192.168.0.3");

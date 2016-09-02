@@ -35,13 +35,13 @@ public class ConnectionValidationHandlerTest {
     private ByteBuf buffer;
 
     @Before
-    public void setUp() throws Exception {
+    public void before() throws Exception {
         when(context.channel()).thenReturn(channel);
         when(context.pipeline()).thenReturn(mock(ChannelPipeline.class));
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         if (buffer != null) {
             buffer.release();
         }

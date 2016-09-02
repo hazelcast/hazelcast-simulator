@@ -46,7 +46,7 @@ public class WorkerProcessFailureHandlerImplTest {
     private ResponseFuture responseFuture;
 
     @Before
-    public void setUp() {
+    public void before() {
         workerAddress = new SimulatorAddress(AddressLevel.WORKER, 2, 3, 0);
         workerProcess = new WorkerProcess(workerAddress, workerAddress.toString(), null);
 

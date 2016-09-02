@@ -52,7 +52,7 @@ public class KeyUtilsTest {
     private static HazelcastInstance client;
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         Config config = new Config();
         config.setProperty("hazelcast.partition.count", "" + PARTITION_COUNT);
 
@@ -68,7 +68,7 @@ public class KeyUtilsTest {
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         HazelcastClient.shutdownAll();
         Hazelcast.shutdownAll();
     }

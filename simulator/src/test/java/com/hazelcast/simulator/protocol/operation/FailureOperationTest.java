@@ -29,7 +29,7 @@ public class FailureOperationTest {
     private FailureOperation fullOperation;
 
     @Before
-    public void setUp() {
+    public void before() {
         testSuite = new TestSuite();
 
         cause = new TestException("expected exception");

@@ -18,7 +18,7 @@ public class ExecutorFactoryTest {
     private ExecutorService executorService;
 
     @After
-    public void tearDown() throws Exception {
+    public void after() throws Exception {
         if (executorService != null) {
             executorService.shutdown();
             executorService.awaitTermination(5, TimeUnit.SECONDS);

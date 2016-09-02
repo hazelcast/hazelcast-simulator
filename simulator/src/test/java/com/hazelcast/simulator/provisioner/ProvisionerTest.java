@@ -36,7 +36,7 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
     private Provisioner provisioner;
 
     @Before
-    public void setUp() {
+    public void before() {
         setupFakeEnvironment();
         createAgentsFileWithLocalhost();
         createCloudCredentialFiles();
@@ -50,7 +50,7 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         tearDownFakeEnvironment();
         provisioner.shutdown();
 

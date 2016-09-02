@@ -32,13 +32,13 @@ public class SimulatorUtilsTest {
     private ComponentRegistry componentRegistry;
 
     @Before
-    public void setUp() throws IOException {
+    public void before() throws IOException {
         setupFakeEnvironment();
         agentsFile = ensureExistingFile(getUserDir(), "SimulatorUtilsTest-agentsFile.txt");
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         tearDownFakeEnvironment();
     }
 

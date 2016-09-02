@@ -25,13 +25,13 @@ public class HeatMapCliTest {
     private HeatMap heatMap = mock(HeatMap.class);
 
     @BeforeClass
-    public static void setUp() {
+    public static void beforeClass() {
         setExitExceptionSecurityManagerWithStatusZero();
         setupFakeEnvironment();
     }
 
     @AfterClass
-    public static void tearDown() {
+    public static void afterClass() {
         resetSecurityManager();
         tearDownFakeEnvironment();
     }

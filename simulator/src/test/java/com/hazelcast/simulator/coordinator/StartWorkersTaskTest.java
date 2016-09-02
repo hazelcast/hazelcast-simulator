@@ -37,7 +37,7 @@ public class StartWorkersTaskTest {
     private RemoteClient remoteClient;
 
     @Before
-    public void setup() {
+    public void before() {
         WorkerParameters workerParameters = mock(WorkerParameters.class);
         workerParametersMap.put(WorkerType.MEMBER, workerParameters);
         workerParametersMap.put(WorkerType.JAVA_CLIENT, workerParameters);
@@ -48,7 +48,7 @@ public class StartWorkersTaskTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         closeQuietly(remoteClient);
     }
 

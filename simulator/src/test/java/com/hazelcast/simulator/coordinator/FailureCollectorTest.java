@@ -46,7 +46,7 @@ public class FailureCollectorTest {
     private SimulatorAddress workerAddress;
 
     @Before
-    public void setUp() {
+    public void before() {
         outputDirectory = TestUtils.createTmpDirectory();
         componentRegistry = new ComponentRegistry();
         failureCollector = new FailureCollector(outputDirectory, componentRegistry);
@@ -79,7 +79,7 @@ public class FailureCollectorTest {
     }
 
     @After
-    public void tearDown() {
+    public void after() {
         deleteQuiet(outputDirectory);
     }
 
