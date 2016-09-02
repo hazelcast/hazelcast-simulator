@@ -110,6 +110,10 @@ abstract class AbstractServerConnector implements ServerConnector {
         this.executorService = executorService;
     }
 
+    public void setInitialMessageId(long messageId){
+        messageIds.set(messageId);
+    }
+
     abstract void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector);
 
     abstract ChannelGroup getChannelGroup();
