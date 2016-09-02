@@ -37,13 +37,13 @@ import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.log4j.Level.DEBUG;
 import static org.apache.log4j.Level.FATAL;
 
@@ -135,7 +135,7 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
         for (WorkerProcessSettings workerProcessSettings : operation.getWorkerProcessSettings()) {
             WorkerProcessLauncher launcher = new WorkerProcessLauncher(agent, workerProcessManager, workerProcessSettings);
             LaunchWorkerCallable task = new LaunchWorkerCallable(launcher, workerProcessSettings);
-            Future<Boolean> future = executorService.schedule(task, operation.getDelayMs(), TimeUnit.MILLISECONDS);
+            Future<Boolean> future = executorService.schedule(task, operation.getDelayMs(), MILLISECONDS);
             futures.add(future);
         }
         for (Future<Boolean> future : futures) {

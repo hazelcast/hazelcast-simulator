@@ -25,6 +25,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNBLOCKED_BY_FA
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * A {@link Future} implementation to wait asynchronously for the {@link Response} to a {@link SimulatorMessage}.
@@ -37,11 +38,7 @@ public final class ResponseFuture implements Future<Response> {
     private final String key;
 
     private volatile Response response;
-
-    private ResponseFuture(ConcurrentMap<String, ResponseFuture> futureMap, String key) {
-        this.futureMap = futureMap;
-        this.key = key;
-    }
+    private ResponseFutureListener listener;
 
     /**
      * Creates a {@link ResponseFuture} instance.
@@ -50,10 +47,14 @@ public final class ResponseFuture implements Future<Response> {
      * @param key       the key for this {@link ResponseFuture} in the map
      * @return the {@link ResponseFuture} instance
      */
+    public ResponseFuture(ConcurrentMap<String, ResponseFuture> futureMap, String key) {
+        this.futureMap = futureMap;
+        this.key = key;
+    }
+
     public static ResponseFuture createInstance(ConcurrentMap<String, ResponseFuture> futureMap, String key) {
         ResponseFuture future = new ResponseFuture(futureMap, key);
         futureMap.put(key, future);
-
         return future;
     }
 
@@ -115,9 +116,15 @@ public final class ResponseFuture implements Future<Response> {
             throw new IllegalArgumentException("response is null");
         }
 
+        futureMap.remove(key);
+
         synchronized (this) {
             this.response = response;
             notifyAll();
+
+            if (listener != null) {
+                listener.onCompletion(response);
+            }
         }
     }
 
@@ -138,7 +145,6 @@ public final class ResponseFuture implements Future<Response> {
                 wait();
             }
 
-            futureMap.remove(key);
             return response;
         }
     }
@@ -153,7 +159,7 @@ public final class ResponseFuture implements Future<Response> {
         synchronized (this) {
             while (response == null && remainingTimeoutNanos > ONE_MILLISECOND) {
                 long started = System.nanoTime();
-                wait(TimeUnit.NANOSECONDS.toMillis(remainingTimeoutNanos));
+                wait(NANOSECONDS.toMillis(remainingTimeoutNanos));
                 remainingTimeoutNanos -= System.nanoTime() - started;
             }
 
@@ -162,8 +168,26 @@ public final class ResponseFuture implements Future<Response> {
                 throw new TimeoutException(format("Timeout while waiting for response (%d ms)", timeUnit.toMillis(timeout)));
             }
 
-            futureMap.remove(key);
             return tmpResponse;
+        }
+    }
+
+    public void addListener(ResponseFutureListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener is null");
+        }
+
+        synchronized (this) {
+            if (this.listener != null) {
+                throw new IllegalStateException("Only 1 listener allowed");
+            }
+
+            if (response != null) {
+                listener.onCompletion(response);
+                return;
+            }
+
+            this.listener = listener;
         }
     }
 }
