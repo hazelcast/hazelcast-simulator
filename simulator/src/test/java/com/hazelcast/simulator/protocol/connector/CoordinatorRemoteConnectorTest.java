@@ -20,17 +20,17 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class RemoteControllerConnectorTest {
+public class CoordinatorRemoteConnectorTest {
 
     private static final int DEFAULT_TIMEOUT = 30000;
 
-    private RemoteControllerConnector connector;
+    private CoordinatorRemoteConnector connector;
 
     private static final int COORDINATOR_PORT = 0;
 
     @Before
     public void before() {
-        connector = new RemoteControllerConnector("127.0.0.1", COORDINATOR_PORT);
+        connector = new CoordinatorRemoteConnector("127.0.0.1", COORDINATOR_PORT);
     }
 
     @After

@@ -9,8 +9,10 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
+import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
@@ -39,6 +41,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.String.format;
@@ -46,6 +49,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class CoordinatorOperationProcessorTest implements FailureListener {
 
@@ -95,19 +99,23 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     @Test
     public void testProcessOperation_unsupportedOperation() throws Exception {
         SimulatorOperation operation = new IntegrationTestOperation();
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
 
-        assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
+        try {
+            processor.processOperation(getOperationType(operation), operation, COORDINATOR, new StubPromise());
+            fail();
+        }catch (ProcessException e){
+            assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, e.getResponseType());
+        }
     }
 
     @Test
-    public void processFailureOperation() {
+    public void processFailureOperation() throws Exception {
         failureCollector.addListener(this);
 
         TestException exception = new TestException("expected exception");
         FailureOperation operation = new FailureOperation("CoordinatorOperationProcessorTest", FailureType.WORKER_OOME,
                 workerAddress, workerAddress.getParent().toString(), exception);
-        ResponseType responseType = processor.process(operation, workerAddress);
+        ResponseType responseType = process(processor, operation, workerAddress);
 
         assertEquals(SUCCESS, responseType);
         assertEquals(1, failureOperations.size());
@@ -118,7 +126,7 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
     }
 
     @Test
-    public void processPhaseCompletion() {
+    public void processPhaseCompletion() throws Exception {
         final AtomicInteger phaseCompleted = new AtomicInteger();
 
         PhaseCompletedOperation operation = new PhaseCompletedOperation(TestPhase.LOCAL_TEARDOWN);
@@ -132,29 +140,29 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
             }
         });
 
-        ResponseType responseType = processor.process(operation, new SimulatorAddress(TEST, 1, 1, 1));
+        ResponseType responseType = process(processor, operation, new SimulatorAddress(TEST, 1, 1, 1));
         assertEquals(SUCCESS, responseType);
         assertEquals(1, phaseCompleted.get());
 
-        responseType = processor.process(operation, new SimulatorAddress(TEST, 1, 2, 1));
+        responseType = process(processor, operation, new SimulatorAddress(TEST, 1, 2, 1));
         assertEquals(SUCCESS, responseType);
         assertEquals(2, phaseCompleted.get());
     }
 
     @Test
-    public void processPhaseCompletion_withOperationFromWorker() {
+    public void processPhaseCompletion_withOperationFromWorker() throws Exception {
         PhaseCompletedOperation operation = new PhaseCompletedOperation(TestPhase.LOCAL_TEARDOWN);
-        ResponseType responseType = processor.process(operation, workerAddress);
+        ResponseType responseType = process(processor, operation, workerAddress);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
     }
 
     @Test
-    public void processPerformanceStats() {
+    public void processPerformanceStats() throws Exception {
         PerformanceStatsOperation operation = new PerformanceStatsOperation();
         operation.addPerformanceStats("testId", new PerformanceStats(1000, 50.0, 1234.56, 33000.0d, 23000, 42000));
 
-        ResponseType responseType = processor.process(operation, workerAddress);
+        ResponseType responseType = process(processor, operation, workerAddress);
         assertEquals(SUCCESS, responseType);
 
         String performanceNumbers = performanceStatsCollector.formatPerformanceNumbers("testId");

@@ -15,18 +15,17 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static java.lang.String.format;
@@ -42,7 +41,7 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
 
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
-    public final ResponseType process(SimulatorOperation operation, SimulatorAddress sourceAddress) {
+    public final void process(SimulatorOperation operation, SimulatorAddress sourceAddress, Promise promise) throws Exception {
         OperationType operationType = getOperationType(operation);
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ')');
@@ -51,27 +50,29 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
         try {
             switch (operationType) {
                 case INTEGRATION_TEST:
-                    return processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress);
+                    processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress, promise);
+                    return;
                 case LOG:
                     processLog((LogOperation) operation, sourceAddress);
+                    promise.answer(SUCCESS);
                     break;
                 default:
-                    return processOperation(operationType, operation, sourceAddress);
+                    processOperation(operationType, operation, sourceAddress, promise);
+                    return;
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             processFailureCount.incrementAndGet();
             onProcessOperationFailure(e);
-            return EXCEPTION_DURING_OPERATION_EXECUTION;
+            throw e;
         }
-        return SUCCESS;
     }
 
     protected void onProcessOperationFailure(Throwable t) {
         LOGGER.fatal(t.getMessage(), t);
     }
 
-    private ResponseType processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
-                                                SimulatorAddress sourceAddress) throws Exception {
+    private void processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
+                                        SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operation.getType()) {
             case EQUALS:
                 if (!IntegrationTestOperation.TEST_DATA.equals(operation.getTestData())) {
@@ -79,15 +80,16 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
                 }
                 break;
             default:
-                return processOperation(operationType, operation, sourceAddress);
+                processOperation(operationType, operation, sourceAddress, promise);
+                return;
         }
-        return SUCCESS;
+        promise.answer(SUCCESS);
     }
 
     private void processLog(LogOperation operation, SimulatorAddress sourceAddress) {
         LOGGER.log(operation.getLevel(), format("[%s] %s", sourceAddress, operation.getMessage()));
     }
 
-     abstract ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                           SimulatorAddress sourceAddress) throws Exception;
+    abstract void processOperation(OperationType operationType, SimulatorOperation operation,
+                                   SimulatorAddress sourceAddress, Promise promise) throws Exception;
 }

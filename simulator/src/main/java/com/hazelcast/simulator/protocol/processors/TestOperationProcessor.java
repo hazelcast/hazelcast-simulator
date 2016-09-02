@@ -16,10 +16,12 @@
 package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -29,8 +31,8 @@ import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.worker.Promise;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import org.apache.log4j.Logger;
 
@@ -88,24 +90,27 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                            SimulatorAddress sourceAddress) throws Exception {
+    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case INTEGRATION_TEST:
-                return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
+                promise.answer(processIntegrationTest((IntegrationTestOperation) operation, sourceAddress));
+                return;
             case START_TEST_PHASE:
                 processStartTestPhase((StartTestPhaseOperation) operation);
+                promise.answer(SUCCESS);
                 break;
             case START_TEST:
                 processStartTest((StartTestOperation) operation);
+                promise.answer(SUCCESS);
                 break;
             case STOP_TEST:
                 processStopTest();
+                promise.answer(SUCCESS);
                 break;
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
-        return SUCCESS;
     }
 
     @Override

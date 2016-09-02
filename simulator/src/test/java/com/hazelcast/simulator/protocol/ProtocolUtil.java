@@ -238,9 +238,9 @@ class ProtocolUtil {
     static void assertAllTargets(Response response, SimulatorAddress source, SimulatorAddress destination,
                                  ResponseType responseType, int responseCount) {
         assertEquals(source, response.getDestination());
-        assertEquals(responseCount, response.entrySet().size());
-        for (Map.Entry<SimulatorAddress, ResponseType> entry : response.entrySet()) {
-            assertEquals(responseType, entry.getValue());
+        assertEquals(responseCount, response.getParts().size());
+        for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
+            assertEquals(responseType, entry.getValue().getType());
             assertEquals(destination.getAddressLevel(), entry.getKey().getAddressLevel());
         }
     }

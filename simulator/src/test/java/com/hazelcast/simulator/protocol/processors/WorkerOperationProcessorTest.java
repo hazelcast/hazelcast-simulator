@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -16,7 +17,6 @@ import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
@@ -36,6 +36,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.processOperation;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -86,8 +88,8 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_unsupportedOperation() throws Exception {
-        SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerProcessSettings>emptyList(),0);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerProcessSettings>emptyList(), 0);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
@@ -95,16 +97,16 @@ public class WorkerOperationProcessorTest {
     @Test
     public void process_IntegrationTestOperation_unsupportedOperation() throws Exception {
         SimulatorOperation operation = new IntegrationTestOperation();
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
 
     @Test
-    public void process_Ping() {
+    public void process_Ping() throws Exception {
         PingOperation operation = new PingOperation();
 
-        ResponseType responseType = processor.process(operation, COORDINATOR);
+        ResponseType responseType = process(processor, operation, COORDINATOR);
 
         assertEquals(SUCCESS, responseType);
         verify(worker).getWorkerConnector();
@@ -112,21 +114,21 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_TerminateWorkers_onMemberWorker() {
+    public void process_TerminateWorkers_onMemberWorker() throws Exception {
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
 
-        processor.process(operation, COORDINATOR);
+        process(processor, operation, COORDINATOR);
 
         verify(worker).shutdown(false);
         verifyNoMoreInteractions(worker);
     }
 
     @Test
-    public void process_TerminateWorkers_onClientWorker() {
+    public void process_TerminateWorkers_onClientWorker() throws Exception {
         processor = new WorkerOperationProcessor(WorkerType.JAVA_CLIENT, hazelcastInstance, worker, workerAddress);
         TerminateWorkerOperation operation = new TerminateWorkerOperation(0, false);
 
-        processor.process(operation, COORDINATOR);
+        process(processor, operation, COORDINATOR);
 
         verify(worker).shutdown(false);
         verifyNoMoreInteractions(worker);
@@ -163,7 +165,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_invalidTestId() {
+    public void process_CreateTest_invalidTestId() throws Exception {
         TestCase testCase = createTestCase(SuccessTest.class, "%&/?!");
 
         ResponseType responseType = runCreateTestOperation(testCase);
@@ -173,7 +175,7 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_invalidClassPath() {
+    public void process_CreateTest_invalidClassPath() throws Exception {
         setTestCaseClass("not.found.SuccessTest");
 
         ResponseType responseType = runCreateTestOperation(defaultTestCase);
@@ -195,13 +197,13 @@ public class WorkerOperationProcessorTest {
         return testCase;
     }
 
-    private ResponseType runCreateTestOperation(TestCase testCase) {
+    private ResponseType runCreateTestOperation(TestCase testCase) throws Exception {
         return runCreateTestOperation(testCase, 1);
     }
 
-    private ResponseType runCreateTestOperation(TestCase testCase, int testIndex) {
+    private ResponseType runCreateTestOperation(TestCase testCase, int testIndex) throws Exception {
         SimulatorOperation operation = new CreateTestOperation(testIndex, testCase);
         LOGGER.debug("Serialized operation: " + toJson(operation));
-        return processor.process(operation, COORDINATOR);
+        return process(processor, operation, COORDINATOR);
     }
 }

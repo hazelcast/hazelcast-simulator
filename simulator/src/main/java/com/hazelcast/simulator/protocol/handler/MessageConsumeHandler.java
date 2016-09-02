@@ -20,7 +20,9 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
+import com.hazelcast.simulator.worker.Promise;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.log4j.Logger;
@@ -63,8 +65,20 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                ResponseType responseType = processor.process(fromSimulatorMessage(msg), msg.getSource());
-                ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, responseType));
+                Promise promise = new Promise() {
+                    @Override
+                    public void answer(ResponseType result) {
+                        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, result));
+                    }
+                };
+
+                try {
+                    processor.process(fromSimulatorMessage(msg), msg.getSource(), promise);
+                } catch (ProcessException e) {
+                    promise.answer(e.getResponseType());
+                } catch (Exception e) {
+                    promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+                }
             }
         });
     }

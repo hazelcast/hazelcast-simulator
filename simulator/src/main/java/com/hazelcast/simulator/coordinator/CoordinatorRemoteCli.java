@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestSuite;
-import com.hazelcast.simulator.protocol.connector.RemoteControllerConnector;
+import com.hazelcast.simulator.protocol.connector.CoordinatorRemoteConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -83,7 +83,7 @@ public class CoordinatorRemoteCli implements Closeable {
     private final SimulatorProperties simulatorProperties;
     private final int coordinatorPort;
     private final String[] args;
-    private RemoteControllerConnector connector;
+    private CoordinatorRemoteConnector connector;
 
     public CoordinatorRemoteCli(String[] args) {
         this.args = args;
@@ -107,7 +107,7 @@ public class CoordinatorRemoteCli implements Closeable {
         String cmd = args[0];
         String[] subArgs = removeFirst(args);
 
-        connector = new RemoteControllerConnector("localhost", coordinatorPort);
+        connector = new CoordinatorRemoteConnector("localhost", coordinatorPort);
         connector.start();
         Response response;
         if ("download".equals(cmd)) {

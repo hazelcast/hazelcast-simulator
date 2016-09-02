@@ -15,18 +15,19 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.worker.Promise;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 
 /**
  * An {@link OperationProcessor} implementation to process Operations
- * from a Simulator Coordinator on a Simulator Remote Controller.
+ * from a Simulator Coordinator on a CoordinatorRemote.
  */
-public class RemoteControllerOperationProcessor extends AbstractOperationProcessor {
+public class CoordinatorRemoteOperationProcessor extends AbstractOperationProcessor {
 
     private volatile String response;
 
@@ -35,11 +36,11 @@ public class RemoteControllerOperationProcessor extends AbstractOperationProcess
     }
 
     @Override
-    public final ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                               SimulatorAddress sourceAddress) {
+    public final void processOperation(OperationType operationType, SimulatorOperation operation,
+                                       SimulatorAddress sourceAddress, Promise promise) {
         switch (operationType) {
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
     }
 }

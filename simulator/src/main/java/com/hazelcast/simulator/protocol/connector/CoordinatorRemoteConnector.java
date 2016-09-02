@@ -28,8 +28,7 @@ import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.protocol.processors.RemoteControllerOperationProcessor;
-import com.hazelcast.simulator.utils.ExecutorFactory;
+import com.hazelcast.simulator.protocol.processors.CoordinatorRemoteOperationProcessor;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -49,13 +48,14 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.toJson;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
+import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Connector which connects to remote Simulator Coordinator instances.
  */
-public class RemoteControllerConnector implements ClientPipelineConfigurator, Closeable {
+public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, Closeable {
 
     private static final int COORDINATOR_INDEX = 1;
 
@@ -63,14 +63,14 @@ public class RemoteControllerConnector implements ClientPipelineConfigurator, Cl
     private final AtomicLong messageIds = new AtomicLong();
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
     private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
-    private final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "RemoteControllerConnector");
+    private final ExecutorService executorService = createFixedThreadPool(1, "CoordinatorRemoteConnector");
 
     private final ClientConnector client;
-    private final RemoteControllerOperationProcessor processor;
+    private final CoordinatorRemoteOperationProcessor processor;
 
-    public RemoteControllerConnector(String coordinatorHost, int coordinatorPort) {
+    public CoordinatorRemoteConnector(String coordinatorHost, int coordinatorPort) {
         client = new ClientConnector(this, group, futureMap, REMOTE, COORDINATOR, 1, coordinatorHost, coordinatorPort);
-        processor = new RemoteControllerOperationProcessor();
+        processor = new CoordinatorRemoteOperationProcessor();
     }
 
     @Override
@@ -103,9 +103,9 @@ public class RemoteControllerConnector implements ClientPipelineConfigurator, Cl
     }
 
     /**
-     * Returns the last response the {@link RemoteControllerOperationProcessor} received.
+     * Returns the last response the {@link CoordinatorRemoteOperationProcessor} received.
      *
-     * @return last response of the {@link RemoteControllerOperationProcessor}
+     * @return last response of the {@link CoordinatorRemoteOperationProcessor}
      */
     public String getResponse() {
         return processor.getResponse();
@@ -128,7 +128,7 @@ public class RemoteControllerConnector implements ClientPipelineConfigurator, Cl
         }
         try {
             for (ResponseFuture future : futureList) {
-                response.addResponse(future.get());
+                response.addAllParts(future.get());
             }
         } catch (InterruptedException e) {
             throw new SimulatorProtocolException("ResponseFuture.get() got interrupted!", e);

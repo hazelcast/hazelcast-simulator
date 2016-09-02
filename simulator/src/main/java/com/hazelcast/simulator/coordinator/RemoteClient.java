@@ -97,10 +97,10 @@ public class RemoteClient implements Closeable {
     }
 
     private void validateResponse(SimulatorOperation operation, Response response) {
-        for (Map.Entry<SimulatorAddress, ResponseType> responseTypeEntry : response.entrySet()) {
-            ResponseType responseType = responseTypeEntry.getValue();
+        for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
+            ResponseType responseType = entry.getValue().getType();
             if (responseType != ResponseType.SUCCESS && responseType != ResponseType.UNBLOCKED_BY_FAILURE) {
-                SimulatorAddress source = responseTypeEntry.getKey();
+                SimulatorAddress source = entry.getKey();
                 throw new CommandLineExitException(format("Could not execute %s on %s (%s)", operation, source, responseType));
             }
         }

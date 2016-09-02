@@ -56,24 +56,24 @@ public class ResponseTest {
     public void testSize() {
         assertEquals(0, response.size());
 
-        response.addResponse(COORDINATOR, ResponseType.SUCCESS);
+        response.addPart(COORDINATOR, ResponseType.SUCCESS);
         assertEquals(1, response.size());
     }
 
     @Test
     public void testEntrySet() {
-        assertEquals(0, response.entrySet().size());
+        assertEquals(0, response.getParts().size());
 
-        response.addResponse(COORDINATOR, ResponseType.SUCCESS);
-        assertEquals(1, response.entrySet().size());
+        response.addPart(COORDINATOR, ResponseType.SUCCESS);
+        assertEquals(1, response.getParts().size());
     }
 
     @Test
     public void testGetFirstErrorResponseType() {
-        response.addResponse(COORDINATOR, ResponseType.SUCCESS);
+        response.addPart(COORDINATOR, ResponseType.SUCCESS);
         assertEquals(ResponseType.SUCCESS, response.getFirstErrorResponseType());
 
-        response.addResponse(COORDINATOR, ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+        response.addPart(COORDINATOR, ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
         assertEquals(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, response.getFirstErrorResponseType());
     }
 

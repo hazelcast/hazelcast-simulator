@@ -35,6 +35,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.processOperation;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -55,7 +57,7 @@ public class TestOperationProcessorTest {
     }
 
     @After
-    public void after(){
+    public void after() {
         teardownFakeUserDir();
     }
 
@@ -64,7 +66,7 @@ public class TestOperationProcessorTest {
         createTestOperationProcessor();
 
         SimulatorOperation operation = new CreateWorkerOperation(Collections.<WorkerProcessSettings>emptyList(), 0);
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
@@ -74,14 +76,14 @@ public class TestOperationProcessorTest {
         createTestOperationProcessor();
 
         SimulatorOperation operation = new IntegrationTestOperation();
-        ResponseType responseType = processor.processOperation(getOperationType(operation), operation, COORDINATOR);
+        ResponseType responseType = processOperation(processor, getOperationType(operation), operation, COORDINATOR);
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
         //exceptionLogger.assertNoException();
     }
 
     @Test
-    public void process_StartTest() {
+    public void process_StartTest() throws Exception {
         createTestOperationProcessor();
 
         runPhase(TestPhase.SETUP);
@@ -102,7 +104,7 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_noSetUp() {
+    public void process_StartTest_noSetUp() throws Exception {
         createTestOperationProcessor();
 
         runTest();
@@ -112,11 +114,11 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_skipRunPhase_targetTypeMismatch() {
+    public void process_StartTest_skipRunPhase_targetTypeMismatch() throws Exception {
         createTestOperationProcessor();
 
         StartTestOperation operation = new StartTestOperation(TargetType.CLIENT);
-        ResponseType responseType = processor.process(operation, COORDINATOR);
+        ResponseType responseType = process(processor, operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);
 
         waitForPhaseCompletion(TestPhase.RUN);
@@ -125,12 +127,12 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTest_skipRunPhase_notOnTargetWorkersList() {
+    public void process_StartTest_skipRunPhase_notOnTargetWorkersList() throws Exception {
         createTestOperationProcessor();
 
         List<String> targetWorkers = singletonList(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0).toString());
         StartTestOperation operation = new StartTestOperation(TargetType.ALL, targetWorkers, false);
-        ResponseType responseType = processor.process(operation, COORDINATOR);
+        ResponseType responseType = process(processor, operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);
 
         waitForPhaseCompletion(TestPhase.RUN);
@@ -148,13 +150,13 @@ public class TestOperationProcessorTest {
     }
 
     @Test
-    public void process_StartTestPhase_oldPhaseStillRunning() {
+    public void process_StartTestPhase_oldPhaseStillRunning() throws Exception {
         createTestOperationProcessor();
 
         runPhase(TestPhase.SETUP);
 
         StartTestPhaseOperation operation = new StartTestPhaseOperation(TestPhase.RUN);
-        processor.process(operation, COORDINATOR);
+        process(processor, operation, COORDINATOR);
 
         runPhase(TestPhase.LOCAL_VERIFY, EXCEPTION_DURING_OPERATION_EXECUTION);
 
@@ -171,22 +173,22 @@ public class TestOperationProcessorTest {
         verify(workerConnector).removeTest(1);
     }
 
-    private void runPhase(TestPhase testPhase) {
+    private void runPhase(TestPhase testPhase) throws Exception {
         runPhase(testPhase, SUCCESS);
     }
 
-    private void runPhase(TestPhase testPhase, ResponseType expectedResponseType) {
+    private void runPhase(TestPhase testPhase, ResponseType expectedResponseType) throws Exception {
         StartTestPhaseOperation operation = new StartTestPhaseOperation(testPhase);
-        ResponseType responseType = processor.process(operation, COORDINATOR);
+        ResponseType responseType = process(processor, operation, COORDINATOR);
 
         assertEquals(expectedResponseType, responseType);
 
         waitForPhaseCompletion(testPhase);
     }
 
-    private void runTest() {
+    private void runTest() throws Exception {
         StartTestOperation operation = new StartTestOperation();
-        processor.process(operation, COORDINATOR);
+        process(processor, operation, COORDINATOR);
 
         waitForPhaseCompletion(TestPhase.RUN);
     }
@@ -197,7 +199,11 @@ public class TestOperationProcessorTest {
             public void run() {
                 sleepMillis(delayMs);
                 StopTestOperation operation = new StopTestOperation();
-                processor.process(operation, COORDINATOR);
+                try {
+                    process(processor, operation, COORDINATOR);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
         stopThread.start();

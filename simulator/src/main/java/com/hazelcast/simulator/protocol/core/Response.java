@@ -21,13 +21,13 @@ import java.util.Set;
 
 /**
  * Response which is sent back to the sender {@link SimulatorAddress} of a {@link SimulatorMessage}.
- *
+ * <p>
  * Returns a {@link ResponseType} per destination {@link SimulatorAddress},
  * e.g. if multiple Simulator components have been addressed by a single {@link SimulatorMessage}.
  */
 public class Response {
 
-    private final Map<SimulatorAddress, ResponseType> responseTypes = new HashMap<SimulatorAddress, ResponseType>();
+    private final Map<SimulatorAddress, Part> parts = new HashMap<SimulatorAddress, Part>();
 
     private final long messageId;
     private final SimulatorAddress destination;
@@ -42,7 +42,7 @@ public class Response {
 
     public Response(long messageId, SimulatorAddress destination, SimulatorAddress source, ResponseType responseType) {
         this(messageId, destination);
-        responseTypes.put(source, responseType);
+        parts.put(source, new Part(responseType, null));
     }
 
     public Response(long messageId, SimulatorAddress destination) {
@@ -50,12 +50,18 @@ public class Response {
         this.destination = destination;
     }
 
-    public void addResponse(SimulatorAddress address, ResponseType responseType) {
-        responseTypes.put(address, responseType);
+    public Response addPart(SimulatorAddress address, ResponseType responseType, String payload) {
+        parts.put(address, new Part(responseType, payload));
+        return this;
     }
 
-    public void addResponse(Response response) {
-        responseTypes.putAll(response.responseTypes);
+    public Response addPart(SimulatorAddress address, ResponseType responseType) {
+        addPart(address, responseType, null);
+        return this;
+    }
+
+    public void addAllParts(Response response) {
+        parts.putAll(response.parts);
     }
 
     public long getMessageId() {
@@ -67,17 +73,44 @@ public class Response {
     }
 
     public int size() {
-        return responseTypes.size();
+        return parts.size();
     }
 
-    public Set<Map.Entry<SimulatorAddress, ResponseType>> entrySet() {
-        return responseTypes.entrySet();
+    public Set<Map.Entry<SimulatorAddress, Part>> getParts() {
+        return parts.entrySet();
+    }
+
+    public Part getPart(SimulatorAddress address) {
+        return parts.get(address);
+    }
+
+    public static class Part {
+        private final ResponseType type;
+        private final String payload;
+
+        public Part(ResponseType type, String payload) {
+            this.type = type;
+            this.payload = payload;
+        }
+
+        public ResponseType getType() {
+            return type;
+        }
+
+        public String getPayload() {
+            return payload;
+        }
+
+        @Override
+        public String toString() {
+            return "Part{type=" + type + ", payload='" + payload + "'}";
+        }
     }
 
     public ResponseType getFirstErrorResponseType() {
-        for (ResponseType responseType : responseTypes.values()) {
-            if (responseType != ResponseType.SUCCESS) {
-                return responseType;
+        for (Part entry : parts.values()) {
+            if (entry.getType() != ResponseType.SUCCESS) {
+                return entry.type;
             }
         }
         return ResponseType.SUCCESS;
@@ -88,7 +121,7 @@ public class Response {
         return "Response{"
                 + "messageId=" + messageId
                 + ", destination=" + destination
-                + ", responseTypes=" + responseTypes
+                + ", parts=" + parts
                 + '}';
     }
 }

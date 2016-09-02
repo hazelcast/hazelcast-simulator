@@ -5,15 +5,19 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
@@ -21,6 +25,16 @@ import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class PrimordialRunStrategyIntegrationTest {
+
+    @Before
+    public void setup() {
+        setupFakeUserDir();
+    }
+
+    @AfterRun
+    public void after() {
+        teardownFakeUserDir();
+    }
 
     @Test
     public void testWithAllPhases() throws Exception {

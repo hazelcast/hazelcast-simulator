@@ -22,14 +22,15 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
@@ -65,30 +67,34 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                            SimulatorAddress sourceAddress) throws Exception {
+    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case INTEGRATION_TEST:
-                return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
+                processIntegrationTest((IntegrationTestOperation) operation, sourceAddress, promise);
+                return;
             case INIT_SESSION:
                 agent.setSessionId(((InitSessionOperation) operation).getSessionId());
-                break;
+                promise.answer(SUCCESS);
+                return;
             case CREATE_WORKER:
-                return processCreateWorker((CreateWorkerOperation) operation);
+                processCreateWorker((CreateWorkerOperation) operation, promise);
+                return;
             case START_TIMEOUT_DETECTION:
                 processStartTimeoutDetection();
-                break;
+                promise.answer(SUCCESS);
+                return;
             case STOP_TIMEOUT_DETECTION:
                 processStopTimeoutDetection();
-                break;
+                promise.answer(SUCCESS);
+                return;
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
-        return SUCCESS;
     }
 
-    private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)
-            throws Exception {
+    private void processIntegrationTest(
+            IntegrationTestOperation operation, SimulatorAddress sourceAddress, Promise promise) throws Exception {
         SimulatorOperation nestedOperation;
         Response response;
         ResponseFuture future;
@@ -97,30 +103,34 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 nestedOperation = new LogOperation("Sync nested integration test message");
                 response = agent.getAgentConnector().write(sourceAddress, nestedOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
-                return response.getFirstErrorResponseType();
+                promise.answer(response.getFirstErrorResponseType());
+                return;
             case NESTED_ASYNC:
                 nestedOperation = new LogOperation("Async nested integration test message");
                 future = agent.getAgentConnector().submit(sourceAddress, nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async nested message: " + response);
-                return response.getFirstErrorResponseType();
+                promise.answer(response.getFirstErrorResponseType());
+                return;
             case DEEP_NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync deep nested integration test message");
                 response = agent.getAgentConnector().write(COORDINATOR, nestedOperation);
                 LOGGER.debug("Got response for sync deep nested message: " + response);
-                return response.getFirstErrorResponseType();
+                promise.answer(response.getFirstErrorResponseType());
+                return;
             case DEEP_NESTED_ASYNC:
                 nestedOperation = new LogOperation("Sync deep nested integration test message");
                 future = agent.getAgentConnector().submit(COORDINATOR, nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async deep nested message: " + response);
-                return response.getFirstErrorResponseType();
+                promise.answer(response.getFirstErrorResponseType());
+                return;
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
     }
 
-    private ResponseType processCreateWorker(CreateWorkerOperation operation) throws Exception {
+    private void processCreateWorker(CreateWorkerOperation operation, Promise promise) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
         for (WorkerProcessSettings workerProcessSettings : operation.getWorkerProcessSettings()) {
             WorkerProcessLauncher launcher = new WorkerProcessLauncher(agent, workerProcessManager, workerProcessSettings);
@@ -131,10 +141,10 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
         for (Future<Boolean> future : futures) {
             if (!future.get()) {
                 LOGGER.error("Failed to start Worker, settings response type EXCEPTION_DURING_OPERATION_EXECUTION...");
-                return ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
+                throw new ProcessException(EXCEPTION_DURING_OPERATION_EXECUTION);
             }
         }
-        return SUCCESS;
+        promise.answer(SUCCESS);
     }
 
     private void processStartTimeoutDetection() {

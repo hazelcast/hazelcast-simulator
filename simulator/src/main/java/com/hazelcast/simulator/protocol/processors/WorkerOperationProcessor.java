@@ -21,8 +21,8 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
@@ -34,6 +34,7 @@ import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.JavascriptCommand;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.Promise;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
@@ -87,27 +88,31 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected ResponseType processOperation(OperationType operationType, SimulatorOperation operation,
-                                            SimulatorAddress sourceAddress) throws Exception {
+    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case INTEGRATION_TEST:
-                return processIntegrationTest((IntegrationTestOperation) operation, sourceAddress);
+                processIntegrationTest((IntegrationTestOperation) operation, sourceAddress, promise);
+                return;
             case PING:
                 processPing(sourceAddress);
+                promise.answer(SUCCESS);
                 break;
             case TERMINATE_WORKER:
                 processTerminateWorker((TerminateWorkerOperation) operation);
+                promise.answer(SUCCESS);
                 break;
             case CREATE_TEST:
                 processCreateTest((CreateTestOperation) operation);
+                promise.answer(SUCCESS);
                 break;
             case EXECUTE_SCRIPT:
                 processExecuteScript((ExecuteScriptOperation) operation);
+                promise.answer(SUCCESS);
                 break;
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
-        return SUCCESS;
     }
 
     @Override
@@ -156,7 +161,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         }
     }
 
-    private ResponseType processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress)
+    private void processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress, Promise promise)
             throws Exception {
         SimulatorOperation nestedOperation;
         Response response;
@@ -166,27 +171,29 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 nestedOperation = new LogOperation("Sync nested integration test message");
                 response = worker.getWorkerConnector().write(sourceAddress, nestedOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
-                return response.getFirstErrorResponseType();
+                break;
             case NESTED_ASYNC:
                 nestedOperation = new LogOperation("Async nested integration test message");
                 future = worker.getWorkerConnector().submit(sourceAddress, nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async nested message: " + response);
-                return response.getFirstErrorResponseType();
+                break;
             case DEEP_NESTED_SYNC:
                 nestedOperation = new IntegrationTestOperation(DEEP_NESTED_SYNC);
                 response = worker.getWorkerConnector().write(workerAddress.getParent(), nestedOperation);
                 LOGGER.debug("Got response for sync deep nested message: " + response);
-                return response.getFirstErrorResponseType();
+                break;
             case DEEP_NESTED_ASYNC:
                 nestedOperation = new IntegrationTestOperation(DEEP_NESTED_ASYNC);
                 future = worker.getWorkerConnector().submit(workerAddress.getParent(), nestedOperation);
                 response = future.get();
                 LOGGER.debug("Got response for async deep nested message: " + response);
-                return response.getFirstErrorResponseType();
+                break;
             default:
-                return UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
+                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
+
+        promise.answer(response.getFirstErrorResponseType());
     }
 
     private void processPing(SimulatorAddress sourceAddress) {

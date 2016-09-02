@@ -8,21 +8,22 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
 import static org.junit.Assert.assertEquals;
 
-public class RemoteControllerOperationProcessorTest {
+public class CoordinatorRemoteOperationProcessorTest {
 
-    private RemoteControllerOperationProcessor processor;
+    private CoordinatorRemoteOperationProcessor processor;
 
     @Before
     public void before() {
-        processor = new RemoteControllerOperationProcessor();
+        processor = new CoordinatorRemoteOperationProcessor();
     }
 
     @Test
-    public void testProcessOperation_unsupportedOperation() {
+    public void testProcessOperation_unsupportedOperation() throws Exception {
         SimulatorOperation operation = new StopTestOperation();
-        ResponseType responseType = processor.process(operation, COORDINATOR);
+        ResponseType responseType = process(processor,operation,COORDINATOR);;
 
         assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, responseType);
     }
