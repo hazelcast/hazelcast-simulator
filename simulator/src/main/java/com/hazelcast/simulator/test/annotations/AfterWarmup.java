@@ -33,7 +33,9 @@ import java.lang.annotation.Target;
  *
  * If no warmup duration is defined, the {@link AfterWarmup} method is not called.
  *
- * Multiple {@link AfterWarmup} methods are allowed.
+ * Multiple {@link AfterWarmup} methods are allowed. The {@link AfterWarmup} methods on a subclass are executed before
+ * the {@link AfterWarmup} methods on a super class, however there is no ordering within the same class. This is the same
+ * semantics as provided by junit. Local {@link AfterWarmup} always happens before global {@link AfterWarmup}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

@@ -29,7 +29,9 @@ import java.lang.annotation.Target;
  * An AfterRun is only called if preceding methods like BeforeRun, TimeStep and other
  * AfterRun methods have completed without exception.
  *
- * Multiple {@link AfterRun} methods are allowed.
+ * Multiple {@link AfterRun} methods are allowed. The {@link AfterRun} method on a subclass is executed before
+ * the {@link AfterRun} methods on a super class, however there is no ordering within the same class. This is the same
+ * semantics as provided by junit.
  *
  * @see TimeStep
  * @see BeforeRun

@@ -23,7 +23,9 @@ import java.lang.annotation.Target;
 /**
  * Can be placed on a method in a Simulator test that takes care of tearing down the test. E.g. delete resources.
  *
- * Multiple {@link Verify} methods are allowed.
+ * Multiple {@link Teardown} methods are allowed. The {@link Teardown} methods on a subclass are executed before
+ * the {@link Teardown} methods on a super class, however there is no ordering within the same class. However global
+ * teardown will be executed before local teardown.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
