@@ -263,25 +263,24 @@ public class CoordinatorRemoteCli implements Closeable {
         private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
-                "The versionSpec of the member to kill, e.g. maven=3.7. The default value is null, meaning that the versionSpec"
-                        + "is not part of the selection criteria ")
+                "The versionSpec of the worker to select e.g  maven=3.7 or git=master")
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
-                "The type of machine to kill. member, litemember, client:java (native clients will be added soon) etc")
+                "The type of machine to select, e.g. member, litemember, javaclient (native clients will be added soon) etc")
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
         private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
-                "The maximum number of workers to execute the script on. It can safely be called with a maxCount larger than "
-                        + "the actual number of workers. ")
+                "The maximum number of workers to select. It can safely be called with a maxCount larger than "
+                        + "the actual number of workers.")
                 .withRequiredArg().ofType(Integer.class);
 
         private final OptionSpec<String> agentSpec = parser.accepts("agent",
-                "The simulator address of the agent owning the worker to kill")
+                "The simulator address of the agent owning the worker")
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> workerSpec = parser.accepts("worker",
-                "The simulator address of the worker to kill")
+                "The simulator address of the worker. This is useful if you want to execute a script on a particular worker.")
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
