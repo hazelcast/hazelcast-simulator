@@ -84,7 +84,7 @@ public class KillWorkersTask {
         for (WorkerData victim : victims) {
             victim.setIgnoreFailures(true);
 
-            coordinatorConnector.writeAsync(victim.getAddress(), new ExecuteScriptOperation(command));
+            coordinatorConnector.invokeAsync(victim.getAddress(), new ExecuteScriptOperation(command));
 
             LOGGER.info("Kill send to worker [" + victim.getAddress() + "]");
         }

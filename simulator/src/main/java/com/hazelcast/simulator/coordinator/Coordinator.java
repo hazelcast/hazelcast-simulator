@@ -258,7 +258,7 @@ public final class Coordinator {
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
-        remoteClient.sendToAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
+        remoteClient.invokeOnAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
         LOGGER.info("Remote client started successfully!");
     }
 
@@ -431,7 +431,7 @@ public final class Coordinator {
         LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
 
         for (WorkerData worker : workers) {
-            coordinatorConnector.write(worker.getAddress(), new ExecuteScriptOperation(operation.getCommand()));
+            coordinatorConnector.invoke(worker.getAddress(), new ExecuteScriptOperation(operation.getCommand()));
             LOGGER.info("Script send to worker [" + worker.getAddress() + "]");
         }
 

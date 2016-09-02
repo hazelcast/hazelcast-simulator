@@ -155,7 +155,7 @@ public class ProtocolIntegrationTest {
         AgentConnector agent = getAgentConnector(0);
         SimulatorAddress source = agent.getAddress();
         SimulatorAddress destination = COORDINATOR;
-        Response response = agent.write(destination, DEFAULT_OPERATION);
+        Response response = agent.invoke(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
     }
@@ -165,7 +165,7 @@ public class ProtocolIntegrationTest {
         AgentConnector agent = getAgentConnector(0);
         SimulatorAddress source = agent.getAddress();
         SimulatorAddress destination = COORDINATOR;
-        ResponseFuture future = agent.writeAsync(destination, DEFAULT_OPERATION);
+        ResponseFuture future = agent.invokeAsync(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
@@ -175,7 +175,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
         SimulatorAddress destination = COORDINATOR;
-        Response response = worker.write(destination, DEFAULT_OPERATION);
+        Response response = worker.invoke(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
     }
@@ -185,7 +185,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
         SimulatorAddress destination = COORDINATOR;
-        ResponseFuture future = worker.writeAsync(destination, DEFAULT_OPERATION);
+        ResponseFuture future = worker.invokeAsync(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
@@ -195,7 +195,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = COORDINATOR;
-        Response response = worker.write(source, destination, DEFAULT_OPERATION);
+        Response response = worker.invoke(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
     }
@@ -205,7 +205,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = COORDINATOR;
-        ResponseFuture future = worker.writeAsync(source, destination, DEFAULT_OPERATION);
+        ResponseFuture future = worker.invokeAsync(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
@@ -215,7 +215,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
         SimulatorAddress destination = source.getParent();
-        Response response = worker.write(destination, DEFAULT_OPERATION);
+        Response response = worker.invoke(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
     }
@@ -225,7 +225,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress();
         SimulatorAddress destination = source.getParent();
-        ResponseFuture future = worker.writeAsync(destination, DEFAULT_OPERATION);
+        ResponseFuture future = worker.invokeAsync(destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
@@ -235,7 +235,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = worker.getAddress().getParent();
-        Response response = worker.write(source, destination, DEFAULT_OPERATION);
+        Response response = worker.invoke(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(response, source, destination, SUCCESS);
     }
@@ -245,7 +245,7 @@ public class ProtocolIntegrationTest {
         WorkerConnector worker = getWorkerConnector(0);
         SimulatorAddress source = worker.getAddress().getChild(1);
         SimulatorAddress destination = worker.getAddress().getParent();
-        ResponseFuture future = worker.writeAsync(source, destination, DEFAULT_OPERATION);
+        ResponseFuture future = worker.invokeAsync(source, destination, DEFAULT_OPERATION);
 
         assertSingleTarget(future.get(), source, destination, SUCCESS);
     }
@@ -306,7 +306,7 @@ public class ProtocolIntegrationTest {
 
         SimulatorOperation operation = new LogOperation("Please log me on " + destination + '!', Level.FATAL);
 
-        Response response = worker.write(source, destination, operation);
+        Response response = worker.invoke(source, destination, operation);
 
         assertSingleTarget(response, source, destination, ResponseType.SUCCESS);
     }

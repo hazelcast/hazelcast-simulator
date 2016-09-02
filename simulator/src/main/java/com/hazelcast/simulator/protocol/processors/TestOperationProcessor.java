@@ -125,7 +125,7 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
         switch (operation.getType()) {
             case NESTED_SYNC:
                 logOperation = new LogOperation("Sync nested integration test message");
-                response = worker.getWorkerConnector().write(sourceAddress, logOperation);
+                response = worker.getWorkerConnector().invoke(sourceAddress, logOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
                 return response.getFirstErrorResponseType();
             case NESTED_ASYNC:

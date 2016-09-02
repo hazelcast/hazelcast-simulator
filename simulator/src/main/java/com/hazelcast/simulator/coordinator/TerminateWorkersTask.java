@@ -67,13 +67,13 @@ public class TerminateWorkersTask {
     }
 
     private void terminateWorkers() {
-        remoteClient.sendToAllAgents(new StopTimeoutDetectionOperation());
+        remoteClient.invokeOnAllAgents(new StopTimeoutDetectionOperation());
 
         int shutdownDelaySeconds = componentRegistry.hasClientWorkers()
                 ? simulatorProperties.getMemberWorkerShutdownDelaySeconds()
                 : 0;
 
-        remoteClient.sendToAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
+        remoteClient.invokeOnAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
     }
 
     private void waitForWorkerShutdown(int expectedWorkerCount) {

@@ -101,7 +101,7 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
         switch (operation.getType()) {
             case NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync nested integration test message");
-                response = agent.getAgentConnector().write(sourceAddress, nestedOperation);
+                response = agent.getAgentConnector().invoke(sourceAddress, nestedOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
                 promise.answer(response.getFirstErrorResponseType());
                 return;
@@ -114,7 +114,7 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
                 return;
             case DEEP_NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync deep nested integration test message");
-                response = agent.getAgentConnector().write(COORDINATOR, nestedOperation);
+                response = agent.getAgentConnector().invoke(COORDINATOR, nestedOperation);
                 LOGGER.debug("Got response for sync deep nested message: " + response);
                 promise.answer(response.getFirstErrorResponseType());
                 return;

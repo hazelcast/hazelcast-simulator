@@ -58,7 +58,7 @@ public class WorkerProcessFailureHandlerImplTest {
         Response response = new Response(messageId, COORDINATOR, workerAddress, SUCCESS);
 
         agentConnector = mock(AgentConnector.class);
-        when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
+        when(agentConnector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
         when(agentConnector.getFutureMap()).thenReturn(futureMap);
 
         failureSender = new WorkerProcessFailureHandlerImpl("127.0.0.1", agentConnector);
@@ -84,7 +84,7 @@ public class WorkerProcessFailureHandlerImplTest {
     @Test
     public void testSendFailureOperation_withFailureResponse() {
         Response failureResponse = new Response(1, COORDINATOR, workerAddress, FAILURE_COORDINATOR_NOT_FOUND);
-        when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(failureResponse);
+        when(agentConnector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(failureResponse);
 
         boolean success = failureSender.handle(FAILURE_MESSAGE, WORKER_EXCEPTION, workerProcess, SESSION_ID, CAUSE);
 
@@ -94,7 +94,7 @@ public class WorkerProcessFailureHandlerImplTest {
 
     @Test
     public void testSendFailureOperation_withProtocolException() {
-        when(agentConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class)))
+        when(agentConnector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception"));
 
         boolean success = failureSender.handle(FAILURE_MESSAGE, NETTY_EXCEPTION, workerProcess, SESSION_ID, CAUSE);

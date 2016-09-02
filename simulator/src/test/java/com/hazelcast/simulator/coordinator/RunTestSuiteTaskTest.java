@@ -106,7 +106,7 @@ public class RunTestSuiteTaskTest {
         Response response = new Response(1, SimulatorAddress.COORDINATOR, address, ResponseType.SUCCESS);
 
         CoordinatorConnector connector = mock(CoordinatorConnector.class);
-        when(connector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
+        when(connector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
 
         remoteClient = mock(RemoteClient.class);
         when(remoteClient.getCoordinatorConnector()).thenReturn(connector);
@@ -268,7 +268,7 @@ public class RunTestSuiteTaskTest {
 
     @Test(expected = IllegalStateException.class)
     public void runSequential_withException() {
-        doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
+        doThrow(new IllegalStateException("expected")).when(remoteClient).invokeOnAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
         parallel = false;
 
@@ -278,7 +278,7 @@ public class RunTestSuiteTaskTest {
 
     @Test(expected = IllegalStateException.class)
     public void runParallel_withException() {
-        doThrow(new IllegalStateException("expected")).when(remoteClient).sendToAllWorkers(any(SimulatorOperation.class));
+        doThrow(new IllegalStateException("expected")).when(remoteClient).invokeOnAllWorkers(any(SimulatorOperation.class));
         testSuite.setDurationSeconds(1);
         parallel = true;
 
@@ -359,11 +359,11 @@ public class RunTestSuiteTaskTest {
 
         // verify number of remote calls
         ArgumentCaptor<SimulatorOperation> argumentCaptor = ArgumentCaptor.forClass(SimulatorOperation.class);
-        verify(remoteClient, times(numberOfTests)).sendToAllWorkers(any(CreateTestOperation.class));
+        verify(remoteClient, times(numberOfTests)).invokeOnAllWorkers(any(CreateTestOperation.class));
         int expectedTimes = numberOfTests * expectedStartTestPhaseOnFirstWorker;
-        verify(remoteClient, times(expectedTimes)).sendToTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
+        verify(remoteClient, times(expectedTimes)).invokeOnTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
         expectedTimes = numberOfTests * (expectedStartTestPhaseOnAllWorkers + expectedStartTest + expectedStopTest);
-        verify(remoteClient, times(expectedTimes)).sendToTestOnAllWorkers(anyString(), argumentCaptor.capture());
+        verify(remoteClient, times(expectedTimes)).invokeOnTestOnAllWorkers(anyString(), argumentCaptor.capture());
         verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
 
         // assert captured arguments

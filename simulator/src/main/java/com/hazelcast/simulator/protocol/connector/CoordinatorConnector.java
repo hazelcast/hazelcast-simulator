@@ -84,8 +84,8 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     }
 
     @Override
-    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
-        return super.write(destination, operation);
+    public Response invoke(SimulatorAddress destination, SimulatorOperation operation) {
+        return super.invoke(destination, operation);
     }
 
     /**
@@ -113,7 +113,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
     }
 
     public Response writeToRemoteController(SimulatorOperation operation) {
-        return super.write(REMOTE, operation);
+        return super.invoke(REMOTE, operation);
     }
 
     // just for testing

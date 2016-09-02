@@ -199,11 +199,11 @@ class ProtocolUtil {
     }
 
     static Response sendFromCoordinator(SimulatorAddress destination) {
-        return coordinatorConnector.write(destination, DEFAULT_OPERATION);
+        return coordinatorConnector.invoke(destination, DEFAULT_OPERATION);
     }
 
     static Response sendFromCoordinator(SimulatorAddress destination, SimulatorOperation operation) {
-        return coordinatorConnector.write(destination, operation);
+        return coordinatorConnector.invoke(destination, operation);
     }
 
     static int getAgentStartPort() {

@@ -58,7 +58,7 @@ public class ProtocolReconnectTest {
         assertSingleTarget(response, testAddress, SUCCESS);
 
         // assert that the connection is working upstream
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         // shutdown connection
@@ -66,7 +66,7 @@ public class ProtocolReconnectTest {
         assertNull(getCoordinatorConnector());
 
         // assert that there are no connections found anymore
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, getAgentConnector(0).getAddress(), FAILURE_COORDINATOR_NOT_FOUND);
 
         LOGGER.info("--------------------------");
@@ -76,11 +76,11 @@ public class ProtocolReconnectTest {
         CoordinatorConnector newConnector = startCoordinator("127.0.0.1", getAgentStartPort(), 1);
 
         // assert that new connection is working downstream
-        response = newConnector.write(testAddress, DEFAULT_OPERATION);
+        response = newConnector.invoke(testAddress, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, SUCCESS);
 
         // assert that the new connection is working upstream
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         newConnector.shutdown();
@@ -96,7 +96,7 @@ public class ProtocolReconnectTest {
         assertSingleTarget(response, testAddress, SUCCESS);
 
         // assert that the connection is working upstream
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         LOGGER.info("-------------------------------");
@@ -110,25 +110,25 @@ public class ProtocolReconnectTest {
         assertSingleTarget(response, testAddress, SUCCESS);
 
         // assert that second connection is working downstream
-        response = secondConnector.write(testAddress, DEFAULT_OPERATION);
+        response = secondConnector.invoke(testAddress, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, SUCCESS);
 
         // assert that the connections are working upstream
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         // shutdown first connection
         shutdownCoordinatorConnector();
 
         // assert that the connections are working upstream
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         // shutdown second connection
         secondConnector.shutdown();
 
         // assert that there are no connections found anymore
-        response = worker.write(testAddress, COORDINATOR, DEFAULT_OPERATION);
+        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, getAgentConnector(0).getAddress(), FAILURE_COORDINATOR_NOT_FOUND);
     }
 }

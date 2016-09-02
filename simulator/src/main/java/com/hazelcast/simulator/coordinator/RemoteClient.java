@@ -62,37 +62,37 @@ public class RemoteClient implements Closeable {
     }
 
     public void logOnAllAgents(String message) {
-        coordinatorConnector.write(ALL_AGENTS, new LogOperation(message));
+        coordinatorConnector.invoke(ALL_AGENTS, new LogOperation(message));
     }
 
     public void logOnAllWorkers(String message) {
-        coordinatorConnector.write(ALL_WORKERS, new LogOperation(message));
+        coordinatorConnector.invoke(ALL_WORKERS, new LogOperation(message));
     }
 
-    public void sendToAllAgents(SimulatorOperation operation) {
-        Response response = coordinatorConnector.write(ALL_AGENTS, operation);
+    public void invokeOnAllAgents(SimulatorOperation operation) {
+        Response response = coordinatorConnector.invoke(ALL_AGENTS, operation);
         validateResponse(operation, response);
     }
 
-    public void sendToAllWorkers(SimulatorOperation operation) {
-        Response response = coordinatorConnector.write(ALL_WORKERS, operation);
+    public void invokeOnAllWorkers(SimulatorOperation operation) {
+        Response response = coordinatorConnector.invoke(ALL_WORKERS, operation);
         validateResponse(operation, response);
     }
 
-    public void sendToFirstWorker(SimulatorOperation operation) {
-        Response response = coordinatorConnector.write(componentRegistry.getFirstWorker().getAddress(), operation);
+    public void invokeOnFirstWorker(SimulatorOperation operation) {
+        Response response = coordinatorConnector.invoke(componentRegistry.getFirstWorker().getAddress(), operation);
         validateResponse(operation, response);
     }
 
-    public void sendToTestOnAllWorkers(String testId, SimulatorOperation operation) {
-        Response response = coordinatorConnector.write(componentRegistry.getTest(testId).getAddress(), operation);
+    public void invokeOnTestOnAllWorkers(String testId, SimulatorOperation operation) {
+        Response response = coordinatorConnector.invoke(componentRegistry.getTest(testId).getAddress(), operation);
         validateResponse(operation, response);
     }
 
-    public void sendToTestOnFirstWorker(String testId, SimulatorOperation operation) {
+    public void invokeOnTestOnFirstWorker(String testId, SimulatorOperation operation) {
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
         SimulatorAddress testAddress = componentRegistry.getTest(testId).getAddress();
-        Response response = coordinatorConnector.write(firstWorkerAddress.getChild(testAddress.getTestIndex()), operation);
+        Response response = coordinatorConnector.invoke(firstWorkerAddress.getChild(testAddress.getTestIndex()), operation);
         validateResponse(operation, response);
     }
 
@@ -130,7 +130,7 @@ public class RemoteClient implements Closeable {
             PingOperation operation = new PingOperation();
             while (running) {
                 try {
-                    sendToAllWorkers(operation);
+                    invokeOnAllWorkers(operation);
                     sleepMillis(pingIntervalMillis);
                 } catch (SimulatorProtocolException e) {
                     if (e.getCause() instanceof InterruptedException) {

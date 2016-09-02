@@ -78,7 +78,7 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         remoteClient.logOnAllAgents("test");
 
-        verify(coordinatorConnector).write(eq(ALL_AGENTS), any(LogOperation.class));
+        verify(coordinatorConnector).invoke(eq(ALL_AGENTS), any(LogOperation.class));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -87,7 +87,7 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         remoteClient.logOnAllWorkers("test");
 
-        verify(coordinatorConnector).write(eq(ALL_WORKERS), any(LogOperation.class));
+        verify(coordinatorConnector).invoke(eq(ALL_WORKERS), any(LogOperation.class));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -96,9 +96,9 @@ public class RemoteClientTest {
         initMock(ResponseType.SUCCESS);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.sendToAllAgents(DEFAULT_OPERATION);
+        remoteClient.invokeOnAllAgents(DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(ALL_AGENTS), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(ALL_AGENTS), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -107,9 +107,9 @@ public class RemoteClientTest {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.sendToAllAgents(DEFAULT_OPERATION);
+        remoteClient.invokeOnAllAgents(DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(ALL_AGENTS), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(ALL_AGENTS), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -119,9 +119,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
         try {
-            remoteClient.sendToAllAgents(DEFAULT_OPERATION);
+            remoteClient.invokeOnAllAgents(DEFAULT_OPERATION);
         } finally {
-            verify(coordinatorConnector).write(eq(ALL_AGENTS), eq(DEFAULT_OPERATION));
+            verify(coordinatorConnector).invoke(eq(ALL_AGENTS), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);
         }
     }
@@ -131,9 +131,9 @@ public class RemoteClientTest {
         initMock(ResponseType.SUCCESS);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.sendToAllWorkers(DEFAULT_OPERATION);
+        remoteClient.invokeOnAllWorkers(DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(ALL_WORKERS), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(ALL_WORKERS), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -142,9 +142,9 @@ public class RemoteClientTest {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.sendToAllWorkers(DEFAULT_OPERATION);
+        remoteClient.invokeOnAllWorkers(DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(ALL_WORKERS), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(ALL_WORKERS), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -154,9 +154,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
         try {
-            remoteClient.sendToAllWorkers(DEFAULT_OPERATION);
+            remoteClient.invokeOnAllWorkers(DEFAULT_OPERATION);
         } finally {
-            verify(coordinatorConnector).write(eq(ALL_WORKERS), eq(DEFAULT_OPERATION));
+            verify(coordinatorConnector).invoke(eq(ALL_WORKERS), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);
         }
     }
@@ -167,9 +167,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
-        remoteClient.sendToFirstWorker(DEFAULT_OPERATION);
+        remoteClient.invokeOnFirstWorker(DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(firstWorkerAddress), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(firstWorkerAddress), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -179,9 +179,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
-        remoteClient.sendToFirstWorker(DEFAULT_OPERATION);
+        remoteClient.invokeOnFirstWorker(DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(firstWorkerAddress), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(firstWorkerAddress), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -192,9 +192,9 @@ public class RemoteClientTest {
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
 
         try {
-            remoteClient.sendToFirstWorker(DEFAULT_OPERATION);
+            remoteClient.invokeOnFirstWorker(DEFAULT_OPERATION);
         } finally {
-            verify(coordinatorConnector).write(eq(firstWorkerAddress), eq(DEFAULT_OPERATION));
+            verify(coordinatorConnector).invoke(eq(firstWorkerAddress), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);
         }
     }
@@ -204,9 +204,9 @@ public class RemoteClientTest {
         initMock(ResponseType.SUCCESS);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.sendToTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -215,9 +215,9 @@ public class RemoteClientTest {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.sendToTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -227,9 +227,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
         try {
-            remoteClient.sendToTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+            remoteClient.invokeOnTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
         } finally {
-            verify(coordinatorConnector).write(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
+            verify(coordinatorConnector).invoke(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);
         }
     }
@@ -240,9 +240,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
-        remoteClient.sendToTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -252,9 +252,9 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
-        remoteClient.sendToTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
 
-        verify(coordinatorConnector).write(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
+        verify(coordinatorConnector).invoke(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -265,9 +265,9 @@ public class RemoteClientTest {
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
         try {
-            remoteClient.sendToTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+            remoteClient.invokeOnTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
         } finally {
-            verify(coordinatorConnector).write(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
+            verify(coordinatorConnector).invoke(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);
         }
     }
@@ -277,7 +277,7 @@ public class RemoteClientTest {
         Response response = new Response(1L, ALL_WORKERS);
         response.addPart(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
 
-        when(coordinatorConnector.write(eq(ALL_WORKERS), any(PingOperation.class)))
+        when(coordinatorConnector.invoke(eq(ALL_WORKERS), any(PingOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception", new InterruptedException()))
                 .thenReturn(response);
 
@@ -287,7 +287,7 @@ public class RemoteClientTest {
 
         remoteClient.close();
 
-        verify(coordinatorConnector).write(eq(ALL_WORKERS), any(PingOperation.class));
+        verify(coordinatorConnector).invoke(eq(ALL_WORKERS), any(PingOperation.class));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -296,7 +296,7 @@ public class RemoteClientTest {
         Response response = new Response(1L, ALL_WORKERS);
         response.addPart(new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0), ResponseType.SUCCESS);
 
-        when(coordinatorConnector.write(eq(ALL_WORKERS), any(PingOperation.class)))
+        when(coordinatorConnector.invoke(eq(ALL_WORKERS), any(PingOperation.class)))
                 .thenThrow(new SimulatorProtocolException("expected exception", new TimeoutException()))
                 .thenReturn(response);
 
@@ -306,7 +306,7 @@ public class RemoteClientTest {
 
         remoteClient.close();
 
-        verify(coordinatorConnector, atLeast(2)).write(eq(ALL_WORKERS), any(PingOperation.class));
+        verify(coordinatorConnector, atLeast(2)).invoke(eq(ALL_WORKERS), any(PingOperation.class));
         verifyNoMoreInteractions(coordinatorConnector);
     }
 
@@ -328,6 +328,6 @@ public class RemoteClientTest {
         Response response = mock(Response.class);
         when(response.getParts()).thenReturn(parts.entrySet());
 
-        when(coordinatorConnector.write(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
+        when(coordinatorConnector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
     }
 }

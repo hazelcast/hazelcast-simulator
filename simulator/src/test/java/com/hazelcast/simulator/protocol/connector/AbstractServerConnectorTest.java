@@ -138,7 +138,7 @@ public class AbstractServerConnectorTest {
             }
         }.start();
 
-        testServerConnector.write(COORDINATOR, new IntegrationTestOperation());
+        testServerConnector.invoke(COORDINATOR, new IntegrationTestOperation());
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
@@ -204,7 +204,7 @@ public class AbstractServerConnectorTest {
     public void testWriteAsync_withSource_whenDestinationContainsWildcard_thenThrowException() {
         testServerConnector.start();
 
-        testServerConnector.writeAsync(COORDINATOR, ALL_AGENTS, DEFAULT_OPERATION);
+        testServerConnector.invokeAsync(COORDINATOR, ALL_AGENTS, DEFAULT_OPERATION);
     }
 
     private void setResponse(ResponseType responseType, int expectedMessageCount) {

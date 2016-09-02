@@ -111,8 +111,8 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
     }
 
     @Override
-    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
-        return super.write(destination, operation);
+    public Response invoke(SimulatorAddress destination, SimulatorOperation operation) {
+        return super.invoke(destination, operation);
     }
 
     /**

@@ -83,7 +83,7 @@ public class StartWorkersTask {
         // then create all clients
         startWorkers(false, clientDeploymentPlan);
 
-        remoteClient.sendToAllAgents(new StartTimeoutDetectionOperation());
+        remoteClient.invokeOnAllAgents(new StartTimeoutDetectionOperation());
 
         if (componentRegistry.workerCount() > 0) {
             WorkerData firstWorker = componentRegistry.getFirstWorker();
@@ -180,7 +180,7 @@ public class StartWorkersTask {
         @Override
         public void run() {
             CreateWorkerOperation operation = new CreateWorkerOperation(workersSettings, startupDelayMs);
-            Response response = remoteClient.getCoordinatorConnector().write(agentAddress, operation);
+            Response response = remoteClient.getCoordinatorConnector().invoke(agentAddress, operation);
 
             ResponseType responseType = response.getFirstErrorResponseType();
             if (responseType != SUCCESS) {

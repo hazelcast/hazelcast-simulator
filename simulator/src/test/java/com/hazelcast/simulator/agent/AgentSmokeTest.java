@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.core.Hazelcast;
-import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
@@ -109,7 +108,7 @@ public class AgentSmokeTest implements FailureListener {
         coordinatorConnector.start();
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, (int) SECONDS.toMillis(10));
-        remoteClient.sendToAllAgents(new InitSessionOperation("AgentSmokeTest"));
+        remoteClient.invokeOnAllAgents(new InitSessionOperation("AgentSmokeTest"));
     }
 
     @After
@@ -187,7 +186,7 @@ public class AgentSmokeTest implements FailureListener {
             createWorkers();
 
             LOGGER.info("InitTest phase...");
-            remoteClient.sendToAllWorkers(new CreateTestOperation(testIndex, testCase));
+            remoteClient.invokeOnAllWorkers(new CreateTestOperation(testIndex, testCase));
 
             runPhase(testPhaseListener, testCase, TestPhase.SETUP);
 
@@ -195,14 +194,14 @@ public class AgentSmokeTest implements FailureListener {
             runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_PREPARE);
 
             LOGGER.info("Starting run phase...");
-            remoteClient.sendToTestOnAllWorkers(testId, new StartTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(testId, new StartTestOperation());
 
             LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
             sleepSeconds(TEST_RUNTIME_SECONDS);
             LOGGER.info("Finished running");
 
             LOGGER.info("Stopping test...");
-            remoteClient.sendToTestOnAllWorkers(testId, new StopTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(testId, new StopTestOperation());
             testPhaseListener.await(TestPhase.RUN);
 
             runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_VERIFY);
@@ -240,9 +239,9 @@ public class AgentSmokeTest implements FailureListener {
     private void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
         if (testPhase.isGlobal()) {
-            remoteClient.sendToTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
         } else {
-            remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
         }
         listener.await(testPhase);
     }

@@ -197,16 +197,16 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public Response write(SimulatorAddress destination, SimulatorOperation operation) {
-        return write(localAddress, destination, operation);
+    public Response invoke(SimulatorAddress destination, SimulatorOperation operation) {
+        return invoke(localAddress, destination, operation);
     }
 
     @Override
-    public Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+    public Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
         Response response = new Response(message);
 
-        List<ResponseFuture> futureList = writeAsync(message);
+        List<ResponseFuture> futureList = invokeAsync(message);
         try {
             for (ResponseFuture future : futureList) {
                 response.addAllParts(future.get());
@@ -218,16 +218,16 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public ResponseFuture writeAsync(SimulatorAddress destination, SimulatorOperation operation) {
-        return writeAsync(localAddress, destination, operation);
+    public ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation operation) {
+        return invokeAsync(localAddress, destination, operation);
     }
 
     @Override
-    public ResponseFuture writeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+    public ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
         checkNoWildcardAllowed(destination);
 
         SimulatorMessage message = createSimulatorMessage(source, destination, operation);
-        return writeAsync(message).get(0);
+        return invokeAsync(message).get(0);
     }
 
     static int getDefaultThreadPoolSize() {
@@ -262,7 +262,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         return new SimulatorMessage(dst, src, messageIds.incrementAndGet(), getOperationType(op), toJson(op));
     }
 
-    private List<ResponseFuture> writeAsync(SimulatorMessage message) {
+    private List<ResponseFuture> invokeAsync(SimulatorMessage message) {
         if (localAddress.getAddressLevel().isParentAddressLevel(message.getDestination().getAddressLevel())) {
             // we have to send the message to the connected children
             return writeAsyncToChildren(message, message.getDestination().getAgentIndex());
@@ -342,7 +342,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                     String futureKey = createFutureKey(message.getSource(), message.getMessageId(), 0);
                     responseFuture = messageQueueFutures.get(futureKey);
 
-                    response = writeAsync(message).get(0).get();
+                    response = invokeAsync(message).get(0).get();
                 } catch (Exception e) {
                     LOGGER.error("Error while sending message from messageQueue", e);
 

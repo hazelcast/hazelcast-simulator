@@ -70,6 +70,6 @@ public class TestContextImpl implements TestContext {
     @Override
     public void echoCoordinator(String msg, Object... args) {
         String message = format(msg, args);
-        workerConnector.writeAsync(SimulatorAddress.COORDINATOR, new LogOperation(message));
+        workerConnector.invokeAsync(SimulatorAddress.COORDINATOR, new LogOperation(message));
     }
 }

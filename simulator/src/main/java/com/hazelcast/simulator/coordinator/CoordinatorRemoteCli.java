@@ -64,7 +64,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - if there are no workers, don't show a stacktrace.
  * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
  * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
- * at com.hazelcast.simulator.coordinator.RemoteClient.sendToTestOnFirstWorker(RemoteClient.java:93)
+ * at com.hazelcast.simulator.coordinator.RemoteClient.invokeOnTestOnFirstWorker(RemoteClient.java:93)
  * at com.hazelcast.simulator.coordinator.TestCaseRunner.executePhase(TestCaseRunner.java:198)
  * <p>
  * nice to have

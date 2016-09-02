@@ -73,7 +73,7 @@ class WorkerProcessFailureHandlerImpl implements WorkerProcessFailureHandler {
 
         boolean send = true;
         try {
-            Response response = agentConnector.write(COORDINATOR, operation);
+            Response response = agentConnector.invoke(COORDINATOR, operation);
             ResponseType firstErrorResponseType = response.getFirstErrorResponseType();
             if (firstErrorResponseType != ResponseType.SUCCESS) {
                 LOGGER.error(format("Could not send failure to coordinator: %s", firstErrorResponseType));

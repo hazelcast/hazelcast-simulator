@@ -118,10 +118,10 @@ public class StartWorkersTaskTest {
             Response response = mock(Response.class);
             when(response.getFirstErrorResponseType()).thenReturn(responseType);
 
-            when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenReturn(response);
+            when(coordinatorConnector.invoke(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenReturn(response);
         } else {
             Exception exception = new SimulatorProtocolException("expected exception");
-            when(coordinatorConnector.write(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenThrow(exception);
+            when(coordinatorConnector.invoke(any(SimulatorAddress.class), any(CreateWorkerOperation.class))).thenThrow(exception);
         }
     }
 

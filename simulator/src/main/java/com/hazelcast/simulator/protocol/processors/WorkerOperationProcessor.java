@@ -169,7 +169,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         switch (operation.getType()) {
             case NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync nested integration test message");
-                response = worker.getWorkerConnector().write(sourceAddress, nestedOperation);
+                response = worker.getWorkerConnector().invoke(sourceAddress, nestedOperation);
                 LOGGER.debug("Got response for sync nested message: " + response);
                 break;
             case NESTED_ASYNC:
@@ -180,7 +180,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 break;
             case DEEP_NESTED_SYNC:
                 nestedOperation = new IntegrationTestOperation(DEEP_NESTED_SYNC);
-                response = worker.getWorkerConnector().write(workerAddress.getParent(), nestedOperation);
+                response = worker.getWorkerConnector().invoke(workerAddress.getParent(), nestedOperation);
                 LOGGER.debug("Got response for sync deep nested message: " + response);
                 break;
             case DEEP_NESTED_ASYNC:

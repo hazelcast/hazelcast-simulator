@@ -184,7 +184,7 @@ final class TestCaseRunner implements TestPhaseListener {
 
     private void createTest() {
         echo("Starting Test initialization");
-        remoteClient.sendToAllWorkers(new CreateTestOperation(testData.getTestIndex(), testCase));
+        remoteClient.invokeOnAllWorkers(new CreateTestOperation(testData.getTestIndex(), testCase));
         echo("Completed Test initialization");
     }
 
@@ -195,9 +195,9 @@ final class TestCaseRunner implements TestPhaseListener {
 
         echo("Starting Test " + testPhase.desc());
         if (testPhase.isGlobal()) {
-            remoteClient.sendToTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
         } else {
-            remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
         }
         waitForPhaseCompletion(testPhase);
         echo("Completed Test " + testPhase.desc());
@@ -207,7 +207,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void executeWarmup() {
         echo(format("Starting Test warmup start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, true));
+        remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, true));
         echo("Completed Test warmup start");
 
         StopThread stopThread = null;
@@ -234,7 +234,7 @@ final class TestCaseRunner implements TestPhaseListener {
     private void executeRun() {
         echo(format("Starting Test start on %s", targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, false));
+        remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, false));
         echo("Completed Test start");
 
         StopThread stopThread = null;
@@ -362,7 +362,7 @@ final class TestCaseRunner implements TestPhaseListener {
             echo(format("Test finished %s", warmup ? "warmup" : "running"));
 
             echo(warmup ? "Executing Test warmup stop" : "Executing Test stop");
-            remoteClient.sendToTestOnAllWorkers(testCase.getId(), new StopTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StopTestOperation());
             try {
                 waitForPhaseCompletion(warmup ? WARMUP : RUN);
                 echo(warmup ? "Completed Test warmup stop" : "Completed Test stop");

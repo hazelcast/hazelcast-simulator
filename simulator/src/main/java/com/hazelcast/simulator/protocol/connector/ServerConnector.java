@@ -82,7 +82,7 @@ public interface ServerConnector {
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
      */
-    Response write(SimulatorAddress destination, SimulatorOperation operation);
+    Response invoke(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -94,7 +94,7 @@ public interface ServerConnector {
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
      */
-    Response write(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
+    Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -105,7 +105,7 @@ public interface ServerConnector {
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link ResponseFuture} with returns the result of the call
      */
-    ResponseFuture writeAsync(SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation operation);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -117,5 +117,5 @@ public interface ServerConnector {
      * @param operation   the {@link SimulatorOperation} to send
      * @return a {@link ResponseFuture} with returns the result of the call
      */
-    ResponseFuture writeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
 }
