@@ -80,14 +80,14 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 coordinator.install(((RcInstallOperation) operation).getVersionSpec());
                 break;
             case RC_START_WORKER:
-                coordinator.startWorkers((RcStartWorkerOperation) operation);
-                break;
+                promise.answer(SUCCESS, coordinator.startWorkers((RcStartWorkerOperation) operation));
+                return;
             case RC_RUN_SUITE:
                 coordinator.runSuite(((RcRunSuiteOperation) operation).getTestSuite());
                 break;
             case RC_KILL_WORKER:
-                coordinator.killWorker((RcKillWorkerOperation) operation);
-                break;
+                promise.answer(SUCCESS, coordinator.killWorker((RcKillWorkerOperation) operation));
+                return;
             case RC_EXIT:
                 coordinator.exit();
                 break;
@@ -95,8 +95,8 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 coordinator.workerScript((RcWorkerScriptOperation) operation);
                 break;
             case RC_PRINT_LAYOUT:
-                coordinator.printLayout();
-                break;
+                promise.answer(ResponseType.SUCCESS, coordinator.printLayout());
+                return;
             case RC_DOWNLOAD:
                 coordinator.download((RcDownloadOperation) operation);
                 break;

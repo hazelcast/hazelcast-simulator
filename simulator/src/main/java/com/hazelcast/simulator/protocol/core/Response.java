@@ -80,6 +80,10 @@ public class Response {
         return parts.entrySet();
     }
 
+    public Part getFirstPart() {
+        return parts.values().iterator().next();
+    }
+
     public Part getPart(SimulatorAddress address) {
         return parts.get(address);
     }
@@ -114,6 +118,15 @@ public class Response {
             }
         }
         return ResponseType.SUCCESS;
+    }
+
+    public Part getFirstErrorPart() {
+        for (Part part : parts.values()) {
+            if (part.getType() != ResponseType.SUCCESS) {
+                return part;
+            }
+        }
+        return null;
     }
 
     @Override

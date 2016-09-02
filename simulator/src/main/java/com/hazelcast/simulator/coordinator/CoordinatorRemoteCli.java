@@ -20,7 +20,6 @@ import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorRemoteConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
@@ -109,31 +108,24 @@ public class CoordinatorRemoteCli implements Closeable {
 
         connector = new CoordinatorRemoteConnector("localhost", coordinatorPort);
         connector.start();
-        Response response;
         if ("download".equals(cmd)) {
-            response = connector.write(new DownloadCli().newOperation(subArgs));
+            new DownloadCli().run(subArgs);
         } else if ("install".equals(cmd)) {
-            response = connector.write(new InstallCli().newOperation(subArgs));
+            new InstallCli().run(subArgs);
         } else if ("kill-worker".equals(cmd)) {
-            response = connector.write(new KillWorkerCli().newOperation(subArgs));
+            new KillWorkerCli().run(subArgs);
         } else if ("print-layout".equals(cmd)) {
-            response = connector.write(new PrintClusterLayoutCli().newOperation(subArgs));
+            new PrintClusterLayoutCli().run(subArgs);
         } else if ("run".equals(cmd)) {
-            response = connector.write(new RunCli().newOperation(subArgs));
+            new RunCli().run(subArgs);
         } else if ("script-worker".equals(cmd)) {
-            response = connector.write(new ScriptWorkerCli().newOperation(subArgs));
+            new ScriptWorkerCli().run(subArgs);
         } else if ("start-worker".equals(cmd)) {
-            response = connector.write(new StartWorkerCli().newOperation(subArgs));
+            new StartWorkerCli().run(subArgs);
         } else if ("stop".equals(cmd)) {
-            response = connector.write(new ExitCli().newOperation(subArgs));
+            new ExitCli().run(subArgs);
         } else {
             printHelpAndExit();
-            return;
-        }
-
-        ResponseType responseType = response.getFirstErrorResponseType();
-        if (responseType != ResponseType.SUCCESS) {
-            throw new CommandLineExitException("Could not process command: " + responseType);
         }
     }
 
@@ -175,7 +167,34 @@ public class CoordinatorRemoteCli implements Closeable {
         return result;
     }
 
-    private static class InstallCli {
+    private abstract class AbstractCli {
+
+        protected final OptionParser parser = new OptionParser();
+
+        protected OptionSet options;
+
+        protected abstract SimulatorOperation newOperation();
+
+        protected abstract OptionSet newOptions(String[] args);
+
+        protected void run(String[] args) {
+            this.options = newOptions(args);
+
+            Response response = connector.write(newOperation());
+
+            Response.Part errorPart = response.getFirstErrorPart();
+
+            if (errorPart == null) {
+                Response.Part part = response.getFirstPart();
+                System.out.println(part.getPayload());
+            } else {
+                throw new CommandLineExitException(
+                        format("Could not process command: %s message [%s]", errorPart.getType(), errorPart.getPayload()));
+            }
+        }
+    }
+
+    private class InstallCli extends AbstractCli {
         private final String help
                 = "The 'install' command installs Hazelcast on the agents. By default the coordinator will upload to\n"
                 + "the agents what has been configured on the simulator.properties. But in case of testing multiple\n"
@@ -195,40 +214,43 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# installs Hazelcast using some git commit hash.\n"
                 + "coordinator-remote install git=<somehash>\n";
 
-        private final OptionParser parser = new OptionParser();
+        private final NonOptionArgumentSpec<String> argumentSpec = parser
+                .nonOptions("version specification").ofType(String.class);
 
-        private final NonOptionArgumentSpec argumentSpec = parser
-                .nonOptions("version specification");
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsWithHelp(parser, help, args);
+        }
 
-        private OptionSet options;
-
-        RcInstallOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, help, args);
-
-            if (options.nonOptionArguments().size() != 1) {
+        @Override
+        protected SimulatorOperation newOperation() {
+            List<String> nonOptionArguments = options.valuesOf(argumentSpec);
+            if (nonOptionArguments.size() != 1) {
                 throw new CommandLineExitException("Too many arguments");
             }
 
-            LOGGER.info("Installing " + args[0]);
+            String versionSpec = nonOptionArguments.get(0);
+            LOGGER.info("Installing [" + versionSpec + "]");
             return new RcInstallOperation(args[0]);
         }
     }
 
-    private static class DownloadCli {
+    private class DownloadCli extends AbstractCli {
         private final String help = ""
                 + "The download command downloads all artifacts from the workers.\n";
 
-        private final OptionParser parser = new OptionParser();
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsOnlyWithHelp(parser, help, args);
+        }
 
-        private OptionSet options;
-
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, help, args);
+        @Override
+        protected SimulatorOperation newOperation() {
             return new RcDownloadOperation();
         }
     }
 
-    private static class ScriptWorkerCli {
+    private class ScriptWorkerCli extends AbstractCli {
         private final String help
                 = "The 'script-worker' commands executes a Bash-script or Javascript on workers\n"
                 + "\n"
@@ -260,8 +282,6 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# executes a javascript on all workers\n"
                 + "coordinator-remote script --command 'js:java.lang.System.out.println(\"hello\")'";
 
-        private final OptionParser parser = new OptionParser();
-
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
                 "The versionSpec of the worker to select e.g  maven=3.7 or git=master")
                 .withRequiredArg().ofType(String.class);
@@ -287,10 +307,13 @@ public class CoordinatorRemoteCli implements Closeable {
                 "If workers should be picked randomly or predictably")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
-        private OptionSet options;
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsWithHelp(parser, help, args);
+        }
 
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, help, args);
+        @Override
+        protected SimulatorOperation newOperation() {
             List<?> nonOptionArguments = options.nonOptionArguments();
             if (nonOptionArguments.size() != 1) {
                 throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'bash:jstack $PID'");
@@ -321,39 +344,40 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private static class PrintClusterLayoutCli {
-        private final String help = ""
-                + "Prints the cluster layout on the coordinator.\n";
+    private class PrintClusterLayoutCli extends AbstractCli {
+        private final String help
+                = "Prints the cluster layout on the coordinator.\n";
 
-        private final OptionParser parser = new OptionParser();
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsOnlyWithHelp(parser, help, args);
+        }
 
-        private OptionSet options;
-
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, help, args);
-
+        @Override
+        protected SimulatorOperation newOperation() {
             return new RcPrintLayoutOperation();
         }
     }
 
-    private static class ExitCli {
-        private final String help = ""
-                + "Terminates the the coordinator session.\n";
+    private class ExitCli extends AbstractCli {
+        private final String help
+                = "Terminates the the coordinator session.\n";
 
-        private final OptionParser parser = new OptionParser();
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsOnlyWithHelp(parser, help, args);
+        }
 
-        private OptionSet options;
-
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, help, args);
+        @Override
+        protected SimulatorOperation newOperation() {
             LOGGER.info("Shutting down Coordinator Remote");
             return new RcStopCoordinatorOperation();
         }
     }
 
-    private static class KillWorkerCli {
-        private final String help = ""
-                + "The 'kill-worker' command kills one or more workers. The killing can be done based using an exact\n"
+    private class KillWorkerCli extends AbstractCli {
+        private final String help
+                = "The 'kill-worker' command kills one or more workers. The killing can be done based using an exact\n"
                 + "worker address or using various filters like versionSpec, etc.\n"
                 + "\n"
                 + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
@@ -383,8 +407,6 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote kill-worker --command 'bash:kill -9 $PID'\n\n"
                 + "# kill one member using javascript which calls System.exit\n"
                 + "coordinator-remote kill-worker --command 'js:java.lang.System.exit(0);'";
-
-        private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
                 "The versionSpec of the member to kill, e.g. maven=3.7. The default value is null, meaning that the versionSpec"
@@ -416,11 +438,13 @@ public class CoordinatorRemoteCli implements Closeable {
                 "If workers should be picked randomly or predictably")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
-        private OptionSet options;
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsOnlyWithHelp(parser, help, args);
+        }
 
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, help, args);
-
+        @Override
+        protected SimulatorOperation newOperation() {
             int maxCount = options.valueOf(maxCountSpec);
             if (maxCount <= 0) {
                 throw new CommandLineExitException("--maxCount can't be smaller than 1");
@@ -455,7 +479,7 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class StartWorkerCli {
+    private class StartWorkerCli extends AbstractCli {
         private final String help
                 = "The 'start-worker' command starts one or more workers.\n"
                 + "\n"
@@ -478,8 +502,6 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote start-worker --agent C_A1 \n\n"
                 + "# starts 1 client with a custom client-hazelcast.xml file\n"
                 + "coordinator-remote start-worker --config client-hazelcast.xml \n\n";
-
-        private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> vmOptionsSpec = parser.accepts("vmOptions",
                 "Worker JVM options (quotes can be used).")
@@ -507,11 +529,13 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
 
-        private OptionSet options;
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsOnlyWithHelp(parser, help, args);
+        }
 
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsOnlyWithHelp(parser, help, args);
-
+        @Override
+        protected SimulatorOperation newOperation() {
             int count = options.valueOf(countSpec);
             if (count <= 0) {
                 throw new CommandLineExitException("--count can't be smaller than 1");
@@ -529,7 +553,7 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class RunCli {
+    private class RunCli extends AbstractCli {
         private final String help
                 = "The 'run' command runs a test suite\n"
                 + "A testsuite can contain a single test, or multiple tests when using test4@someproperty=10\n"
@@ -554,8 +578,6 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote run --failFast \n\n"
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
                 + "coordinator-remote run --targetType member --targetCount 3 \n\n";
-
-        private final OptionParser parser = new OptionParser();
 
         private final OptionSpec<String> durationSpec = parser.accepts("duration",
                 "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
@@ -586,11 +608,13 @@ public class CoordinatorRemoteCli implements Closeable {
                 "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-        private OptionSet options;
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsWithHelp(parser, help, args);
+        }
 
-        SimulatorOperation newOperation(String[] args) {
-            this.options = initOptionsWithHelp(parser, help, args);
-
+        @Override
+        protected SimulatorOperation newOperation() {
             List testsuiteFiles = options.nonOptionArguments();
             File testSuiteFile;
             if (testsuiteFiles.size() > 1) {
@@ -646,7 +670,6 @@ public class CoordinatorRemoteCli implements Closeable {
             return (int) timeUnit.toSeconds(Integer.parseInt(sub));
         }
     }
-
 
     private static String loadAgentAddress(OptionSet options, OptionSpec<String> spec) {
         String agentAddress = options.valueOf(spec);

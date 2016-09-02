@@ -58,6 +58,7 @@ public class StartWorkersTask {
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> clientDeploymentPlan;
 
     private long started;
+    private List<WorkerData> result = new LinkedList<WorkerData>();
 
     public StartWorkersTask(
             Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
@@ -73,7 +74,7 @@ public class StartWorkersTask {
         this.clientDeploymentPlan = filterByWorkerType(false, deploymentPlan);
     }
 
-    public void run() {
+    public List<WorkerData> run() {
         echoStartWorkers();
 
         // first create all members
@@ -91,6 +92,7 @@ public class StartWorkersTask {
         }
 
         echoStartComplete();
+        return result;
     }
 
     private void echoStartWorkers() {
@@ -187,7 +189,8 @@ public class StartWorkersTask {
             }
 
             LOGGER.info(format("Created %d %s Worker on %s", workersSettings.size(), workerType, agentAddress));
-            componentRegistry.addWorkers(agentAddress, workersSettings);
+            List<WorkerData> createdWorkers = componentRegistry.addWorkers(agentAddress, workersSettings);
+            result.addAll(createdWorkers);
         }
     }
 }

@@ -136,7 +136,8 @@ public class ComponentRegistry {
         return null;
     }
 
-    public synchronized void addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
+    public synchronized List<WorkerData> addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
+        List<WorkerData> result = new ArrayList<WorkerData>(settingsList.size());
         for (WorkerProcessSettings settings : settingsList) {
             WorkerData workerData = new WorkerData(parentAddress, settings);
 
@@ -145,7 +146,9 @@ public class ComponentRegistry {
             agentData.updateWorkerIndex(workerData.getAddress().getAddressIndex());
 
             workers.add(workerData);
+            result.add(workerData);
         }
+        return result;
     }
 
     public synchronized void removeWorker(SimulatorAddress workerAddress) {
@@ -239,10 +242,12 @@ public class ComponentRegistry {
         }
     }
 
-    public void printLayout() {
-        LOGGER.info(HORIZONTAL_RULER);
-        LOGGER.info("Cluster layout");
-        LOGGER.info(HORIZONTAL_RULER);
+    public String printLayout() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(HORIZONTAL_RULER).append('\n');
+        sb.append("Cluster layout").append('\n');
+        sb.append(HORIZONTAL_RULER).append('\n');
 
         for (AgentData agent : agents) {
 
@@ -258,24 +263,33 @@ public class ComponentRegistry {
                 message += " (no workers)";
             }
 
-            LOGGER.info(format(message,
+            sb.append(format(message,
                     agent.formatIpAddresses(),
                     agent.getAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
-                    agentVersionSpecs));
+                    agentVersionSpecs)).append('\n');
 
             for (WorkerData worker : agent.getWorkers()) {
-                LOGGER.info("        Worker " + worker.getAddress() + " " + worker.getSettings().getWorkerType()
-                        + " [" + worker.getSettings().getVersionSpec() + "]");
+                sb.append("        Worker ")
+                        .append(worker.getAddress())
+                        .append(" ").append(worker.getSettings().getWorkerType())
+                        .append(" [").append(worker.getSettings().getVersionSpec()).append("]")
+                        .append('\n');
             }
         }
 
         List<TestData> tests = new ArrayList<TestData>(this.tests.values());
-        LOGGER.info(format("    Tests %s", tests.size()));
+        sb.append(format("    Tests %s", tests.size())).append('\n');
         for (TestData testData : tests) {
-            LOGGER.info("        " + testData.getAddress() + " " + testData.getTestCase().getId());
+            sb.append("        ")
+                    .append(testData.getAddress())
+                    .append(" ")
+                    .append(testData.getTestCase().getId())
+                    .append('\n');
         }
+
+        return sb.toString();
     }
 
     public WorkerData getFirstWorker() {

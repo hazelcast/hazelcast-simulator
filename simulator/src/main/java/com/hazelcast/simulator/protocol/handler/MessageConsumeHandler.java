@@ -67,17 +67,19 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
             public void run() {
                 Promise promise = new Promise() {
                     @Override
-                    public void answer(ResponseType result) {
-                        ctx.writeAndFlush(new Response(messageId, msg.getSource(), localAddress, result));
+                    public void answer(ResponseType responseType, String payload) {
+                        Response response = new Response(messageId, msg.getSource())
+                                .addPart(localAddress, responseType, payload);
+                        ctx.writeAndFlush(response);
                     }
                 };
 
                 try {
                     processor.process(fromSimulatorMessage(msg), msg.getSource(), promise);
                 } catch (ProcessException e) {
-                    promise.answer(e.getResponseType());
+                    promise.answer(e.getResponseType(), e.getMessage());
                 } catch (Exception e) {
-                    promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
+                    promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, e.getMessage());
                 }
             }
         });

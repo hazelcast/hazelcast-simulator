@@ -80,15 +80,15 @@ public class TestProcessorManager {
         } catch (Exception e) {
             promise.answer(EXCEPTION_DURING_OPERATION_EXECUTION);
         }
-        response.addPart(testAddress, promise.result);
+        response.addPart(testAddress, promise.responseType);
     }
 
-    static class DummyPromise implements Promise {
-        private ResponseType result;
+    static class DummyPromise extends Promise {
+        private ResponseType responseType;
 
         @Override
-        public void answer(ResponseType result) {
-            this.result = result;
+        public void answer(ResponseType responseType, String payload) {
+            this.responseType = responseType;
         }
     }
 }

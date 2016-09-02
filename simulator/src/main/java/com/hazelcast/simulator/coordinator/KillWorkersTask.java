@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +43,7 @@ public class KillWorkersTask {
     private final CoordinatorConnector coordinatorConnector;
     private final String command;
     private final WorkerQuery workerQuery;
+    private final List<WorkerData> result = new ArrayList<WorkerData>();
 
     public KillWorkersTask(
             ComponentRegistry componentRegistry,
@@ -54,13 +56,13 @@ public class KillWorkersTask {
         this.workerQuery = workerQuery;
     }
 
-    public void run() throws Exception {
+    public List<WorkerData> run() throws Exception {
         LOGGER.info("Killing " + workerQuery.getMaxCount() + " workers starting");
 
         List<WorkerData> victims = workerQuery.execute(componentRegistry.getWorkers());
         if (victims.isEmpty()) {
             LOGGER.info("No victims found");
-            return;
+            return victims;
         }
 
         killWorkers(victims);
@@ -68,6 +70,8 @@ public class KillWorkersTask {
         awaitTermination(victims);
 
         LOGGER.info("Killing " + workerQuery.getMaxCount() + " workers complete");
+
+        return result;
     }
 
     private void killWorkers(List<WorkerData> victims) {
@@ -94,6 +98,7 @@ public class KillWorkersTask {
             while (it.hasNext()) {
                 WorkerData victim = it.next();
                 if (componentRegistry.findWorker(victim.getAddress()) == null) {
+                    result.add(victim);
                     it.remove();
                 }
             }

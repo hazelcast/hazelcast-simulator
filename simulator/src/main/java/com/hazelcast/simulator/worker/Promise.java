@@ -17,6 +17,10 @@ package com.hazelcast.simulator.worker;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 
-public interface Promise {
-    void answer(ResponseType result);
+public abstract class Promise {
+    public final void answer(ResponseType responseType) {
+        answer(responseType, null);
+    }
+
+    public abstract void answer(ResponseType responseType, String payload);
 }

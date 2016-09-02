@@ -8,15 +8,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Created by alarmnummer on 9/1/16.
- */
-public class StubPromise implements Promise, Future<ResponseType> {
+public class StubPromise extends Promise implements Future<ResponseType> {
     private volatile ResponseType result;
 
     @Override
-    public void answer(ResponseType result) {
-        this.result = result;
+    public void answer(ResponseType responseType, String payload) {
+        this.result = responseType;
     }
 
     public ResponseType join(){

@@ -312,13 +312,13 @@ public final class Coordinator {
         }).start();
     }
 
-    public void printLayout() throws Exception {
+    public String printLayout() throws Exception {
         awaitInteractiveModeInitialized();
 
-        componentRegistry.printLayout();
+        return componentRegistry.printLayout();
     }
 
-    public void startWorkers(RcStartWorkerOperation op) throws Exception {
+    public String startWorkers(RcStartWorkerOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
@@ -376,7 +376,7 @@ public final class Coordinator {
         DeploymentPlan deploymentPlan = createDeploymentPlan(
                 componentRegistry, workerParameters, workerType, op.getCount(), agent);
 
-        new StartWorkersTask(
+        List<WorkerData> workers = new StartWorkersTask(
                 deploymentPlan.getWorkerDeployment(),
                 remoteClient,
                 componentRegistry,
@@ -384,6 +384,8 @@ public final class Coordinator {
         ).run();
 
         LOGGER.info("Workers started!");
+
+        return WorkerData.toAddressString(workers);
     }
 
     public void runSuite(TestSuite testSuite) throws Exception {
@@ -402,7 +404,7 @@ public final class Coordinator {
         LOGGER.info("Run complete!");
     }
 
-    public void killWorker(RcKillWorkerOperation op) throws Exception {
+    public String killWorker(RcKillWorkerOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerQuery workerQuery = op.getWorkerQuery();
@@ -410,12 +412,15 @@ public final class Coordinator {
         LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s]...",
                 workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
 
-        new KillWorkersTask(componentRegistry, coordinatorConnector, op.getCommand(), workerQuery).run();
+        List<WorkerData> result = new KillWorkersTask(
+                componentRegistry, coordinatorConnector, op.getCommand(), workerQuery).run();
 
-        componentRegistry.printLayout();
+        LOGGER.info("\n" + componentRegistry.printLayout());
 
         LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completed!",
                 workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
+
+        return WorkerData.toAddressString(result);
     }
 
     public void workerScript(RcWorkerScriptOperation operation) throws Exception {
