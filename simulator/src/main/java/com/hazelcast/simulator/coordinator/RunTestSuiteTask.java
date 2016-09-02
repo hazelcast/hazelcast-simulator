@@ -42,7 +42,6 @@ public class RunTestSuiteTask {
     private final ComponentRegistry componentRegistry;
     private final Echoer echoer;
     private final FailureCollector failureCollector;
-    //todo: should this argument be passed or is it part of the RunTestSuiteTask?
     private final TestPhaseListeners testPhaseListeners;
     private final RemoteClient remoteClient;
     private final PerformanceStatsCollector performanceStatsCollector;
