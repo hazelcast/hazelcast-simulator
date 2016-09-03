@@ -211,7 +211,7 @@ final class TestCaseRunner implements TestPhaseListener {
         echo("Completed Test warmup start");
 
         StopThread stopThread = null;
-        if (testSuite.getDurationSeconds() > 0) {
+        if (testSuite.getWarmupSeconds() > 0) {
             stopThread = new StopThread(true);
             stopThread.start();
         }
