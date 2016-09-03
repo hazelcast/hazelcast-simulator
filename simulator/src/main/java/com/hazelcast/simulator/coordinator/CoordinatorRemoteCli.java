@@ -188,6 +188,11 @@ public class CoordinatorRemoteCli implements Closeable {
                 Response.Part part = response.getFirstPart();
                 System.out.println(part.getPayload());
             } else {
+                if (errorPart.getPayload() != null) {
+                    System.err.println(errorPart.getPayload());
+                } else {
+                    System.err.print("errorType:" + errorPart.getType());
+                }
                 throw new CommandLineExitException(
                         format("Could not process command: %s message [%s]", errorPart.getType(), errorPart.getPayload()));
             }
