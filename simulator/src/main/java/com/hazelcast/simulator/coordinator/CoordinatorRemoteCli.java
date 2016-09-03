@@ -186,7 +186,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
             if (errorPart == null) {
                 Response.Part part = response.getFirstPart();
-                System.out.println(part.getPayload());
+                System.out.println(part.getPayload() == null ? "success" : part.getPayload());
             } else {
                 if (errorPart.getPayload() != null) {
                     System.err.println(errorPart.getPayload());
