@@ -80,7 +80,8 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
-            "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
+            "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
+                    + "the test will not stop due to timeout.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
     private final OptionSpec<String> warmupSpec = parser.accepts("warmup",

@@ -580,7 +580,9 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote run --targetType member --targetCount 3 \n\n";
 
         private final OptionSpec<String> durationSpec = parser.accepts("duration",
-                "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d.")
+                "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If the duration is 0, the "
+                        + "there is no external timeout that stops the test. But the test can stop for other reasons e.g. the "
+                        + "workers decided to stop")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
         private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
