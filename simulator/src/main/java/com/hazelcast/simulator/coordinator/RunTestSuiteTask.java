@@ -84,7 +84,7 @@ public class RunTestSuiteTask {
         LOGGER.info("Starting TestSuite");
         echoTestSuiteDuration(parallel);
 
-        for (TestData testData: tests) {
+        for (TestData testData : tests) {
             int testIndex = testData.getTestIndex();
             TestCase testCase = testData.getTestCase();
             LOGGER.info(format("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase));
@@ -116,13 +116,9 @@ public class RunTestSuiteTask {
         if (testDuration > 0) {
             LOGGER.info(format("Running time per test: %s", secondsToHuman(testDuration)));
             int totalDuration = isParallel ? testDuration : testDuration * testSuite.size();
-            if (testSuite.isWaitForTestCase()) {
-                LOGGER.info(format("Testsuite will run until tests are finished for a maximum time of: %s",
-                        secondsToHuman(totalDuration)));
-            } else {
-                LOGGER.info(format("Expected total TestSuite time: %s", secondsToHuman(totalDuration)));
-            }
-        } else if (testSuite.isWaitForTestCase()) {
+            LOGGER.info(format("Testsuite will run until tests are finished for a maximum time of: %s",
+                    secondsToHuman(totalDuration)));
+        } else {
             LOGGER.info("Testsuite will run until tests are finished");
         }
     }
@@ -183,7 +179,7 @@ public class RunTestSuiteTask {
     }
 
     static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean parallel,
-                                                                     TestPhase latestTestPhaseToSync) {
+                                                              TestPhase latestTestPhaseToSync) {
         if (!parallel) {
             return null;
         }

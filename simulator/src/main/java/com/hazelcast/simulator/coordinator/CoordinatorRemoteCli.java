@@ -42,23 +42,17 @@ import org.apache.log4j.Logger;
 import java.io.Closeable;
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_DURATION_SECONDS;
-import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_WARMUP_DURATION_SECONDS;
+import static com.hazelcast.simulator.coordinator.CoordinatorCli.getDurationSeconds;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsOnlyWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * todo:
- * - Coordinator Remote install vendor : parsing + help
  * - when invalid version is used in install; no proper feedback
  * - if there are no workers, don't show a stacktrace.
  * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
@@ -584,14 +578,14 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote run --targetType member --targetCount 3 \n\n";
 
         private final OptionSpec<String> durationSpec = parser.accepts("duration",
-                "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If the duration is 0, the "
-                        + "there is no external timeout that stops the test. But the test can stop for other reasons e.g. the "
-                        + "workers decided to stop")
+                "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
+                        + "the test will run until the test decides to stop.")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
         private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
-                .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_WARMUP_DURATION_SECONDS));
+                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
+                        + "the test will warmup until the test decides to stop.")
+                .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                 format("Defines the type of Workers which execute the RUN phase."
@@ -634,46 +628,19 @@ public class CoordinatorRemoteCli implements Closeable {
             LOGGER.info("File:" + testSuiteFile);
 
             TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
-                    .setDurationSeconds(getDurationSeconds(durationSpec))
-                    .setWarmupSeconds(getDurationSeconds(warmupSpec))
+                    .setDurationSeconds(getDurationSeconds(options, durationSpec))
                     .setTargetType(options.valueOf(targetTypeSpec))
                     .setTargetCount(options.valueOf(targetCountSpec))
                     .setParallel(options.has(parallelSpec))
                     .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                     .setFailFast(options.valueOf(failFastSpec));
 
+            if (options.has(warmupSpec)) {
+                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
+            }
+
             LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
             return new RcRunSuiteOperation(suite);
-        }
-
-        private int getDurationSeconds(OptionSpec<String> optionSpec) {
-            int duration;
-            String value = options.valueOf(optionSpec);
-            try {
-                if (value.endsWith("s")) {
-                    duration = parseDurationWithoutLastChar(SECONDS, value);
-                } else if (value.endsWith("m")) {
-                    duration = parseDurationWithoutLastChar(MINUTES, value);
-                } else if (value.endsWith("h")) {
-                    duration = parseDurationWithoutLastChar(HOURS, value);
-                } else if (value.endsWith("d")) {
-                    duration = parseDurationWithoutLastChar(DAYS, value);
-                } else {
-                    duration = Integer.parseInt(value);
-                }
-            } catch (NumberFormatException e) {
-                throw new CommandLineExitException(format("Failed to parse duration '%s'", value), e);
-            }
-
-            if (duration < 0) {
-                throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
-            }
-            return duration;
-        }
-
-        private int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
-            String sub = value.substring(0, value.length() - 1);
-            return (int) timeUnit.toSeconds(Integer.parseInt(sub));
         }
     }
 

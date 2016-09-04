@@ -41,8 +41,8 @@ public class TestSuite {
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
     private int durationSeconds;
-    private int warmupSeconds;
-    private boolean waitForTestCase;
+    // -1 means no warmup
+    private int warmupSeconds = -1;
     private boolean failFast;
     private boolean parallel;
     private TargetType targetType;
@@ -107,15 +107,6 @@ public class TestSuite {
         return durationSeconds;
     }
 
-    public TestSuite setWaitForTestCase(boolean waitForTestCase) {
-        this.waitForTestCase = waitForTestCase;
-        return this;
-    }
-
-    public boolean isWaitForTestCase() {
-        return waitForTestCase;
-    }
-
     public TestSuite setFailFast(boolean failFast) {
         this.failFast = failFast;
         return this;
@@ -163,7 +154,6 @@ public class TestSuite {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
                 + ", warmupSeconds=" + warmupSeconds
-                + ", waitForTestCase=" + waitForTestCase
                 + ", failFast=" + failFast
                 + ", parallel=" + parallel
                 + ", targetType=" + targetType

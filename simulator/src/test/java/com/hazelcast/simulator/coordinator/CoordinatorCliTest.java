@@ -86,7 +86,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(CoordinatorCli.DEFAULT_DURATION_SECONDS, testSuite.getDurationSeconds());
     }
 
@@ -97,7 +96,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(CoordinatorCli.DEFAULT_DURATION_SECONDS, testSuite.getDurationSeconds());
     }
 
@@ -109,7 +107,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(423, testSuite.getDurationSeconds());
     }
 
@@ -121,7 +118,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(TimeUnit.SECONDS.toSeconds(3), testSuite.getDurationSeconds());
     }
 
@@ -133,7 +129,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(TimeUnit.MINUTES.toSeconds(5), testSuite.getDurationSeconds());
     }
 
@@ -145,7 +140,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(TimeUnit.HOURS.toSeconds(4), testSuite.getDurationSeconds());
     }
 
@@ -157,7 +151,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(TimeUnit.DAYS.toSeconds(23), testSuite.getDurationSeconds());
     }
 
@@ -170,7 +163,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(0, testSuite.getDurationSeconds());
     }
 
@@ -208,7 +200,6 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertFalse(testSuite.isWaitForTestCase());
         assertEquals(10, testSuite.getDurationSeconds());
         assertEquals(5, testSuite.getWarmupSeconds());
     }
@@ -225,26 +216,13 @@ public class CoordinatorCliTest {
     }
 
     @Test
-    public void testInit_waitForTestCaseCompletion() {
-        args.add("--waitForTestCaseCompletion");
-
-        CoordinatorCli cli = createCoordinatorCli();
-
-        TestSuite testSuite = cli.testSuite;
-        assertTrue(testSuite.isWaitForTestCase());
-        assertEquals(0, testSuite.getDurationSeconds());
-    }
-
-    @Test
-    public void testInit_waitForTestCaseCompletion_and_duration() {
-        args.add("--waitForTestCaseCompletion");
+    public void testInit_waitForDuration() {
         args.add("--duration");
         args.add("42s");
 
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertTrue(testSuite.isWaitForTestCase());
         assertEquals(42, testSuite.getDurationSeconds());
     }
 

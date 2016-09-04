@@ -118,7 +118,6 @@ public class RunTestSuiteTaskTest {
 
     @Test
     public void runParallel_waitForTestCase_and_duration() {
-        testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(3);
         parallel = true;
 
@@ -130,7 +129,6 @@ public class RunTestSuiteTaskTest {
 
     @Test
     public void runParallel_waitForTestCase_noVerify() {
-        testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         parallel = true;
         verifyEnabled = false;
@@ -155,7 +153,6 @@ public class RunTestSuiteTaskTest {
 
     @Test
     public void runParallel_withTargetCount() {
-        testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         parallel = true;
         verifyEnabled = false;
@@ -181,7 +178,6 @@ public class RunTestSuiteTaskTest {
 
     @Test
     public void runParallel_withWarmup_waitForTestCase() {
-        testSuite.setWaitForTestCase(true);
         testSuite.setDurationSeconds(0);
         testSuite.setWarmupSeconds(1);
         parallel = true;
@@ -377,11 +373,11 @@ public class RunTestSuiteTaskTest {
             }
         }
 
-        if (testSuite.getDurationSeconds() > 0 && testSuite.getWarmupSeconds() > 0) {
-            assertEquals("actualStopTestCount incorrect", 2 * testCount, actualStopTestCount);
-        } else if (testSuite.getDurationSeconds() != 0 || testSuite.getWarmupSeconds() != 0) {
-            assertEquals("actualStopTestCount incorrect", testCount, actualStopTestCount);
+        int expectedStopCount = testCount;
+        if (testSuite.getWarmupSeconds() >= 0) {
+            expectedStopCount+=testCount;
         }
+        assertEquals("actualStopTestCount incorrect", expectedStopCount, actualStopTestCount);
 
         for (Map.Entry<TestPhase, AtomicInteger> entry : remainingPhaseCount.entrySet()) {
             TestPhase phase = entry.getKey();
@@ -399,7 +395,7 @@ public class RunTestSuiteTaskTest {
             expectedTestPhases.remove(TestPhase.LOCAL_VERIFY);
         }
 
-        if (testSuite.getWarmupSeconds() == 0) {
+        if (testSuite.getWarmupSeconds() < 0) {
             // exclude warmup test phases
             expectedTestPhases.remove(WARMUP);
             expectedTestPhases.remove(TestPhase.LOCAL_AFTER_WARMUP);
