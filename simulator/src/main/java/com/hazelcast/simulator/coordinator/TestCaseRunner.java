@@ -141,7 +141,7 @@ final class TestCaseRunner implements TestPhaseListener {
         phaseCompletedMap.get(testPhase).add(workerAddress);
     }
 
-    void run() {
+    boolean run() {
         testData.initStartTime();
         try {
             run0();
@@ -156,6 +156,8 @@ final class TestCaseRunner implements TestPhaseListener {
         } catch (Exception e) {
             throw rethrow(e);
         }
+
+        return hasFailure();
     }
 
     private void run0() {

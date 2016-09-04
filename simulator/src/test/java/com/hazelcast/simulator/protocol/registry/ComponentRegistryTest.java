@@ -2,12 +2,12 @@ package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.common.WorkerType;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -288,6 +288,21 @@ public class ComponentRegistryTest {
     }
 
     @Test
+    public void testAddTests_testIdFixing() {
+        TestCase test1 = new TestCase("foo");
+        TestCase test2 = new TestCase("foo");
+        TestCase test3 = new TestCase("foo");
+
+        componentRegistry.addTests(new TestSuite().addTest(test1));
+        componentRegistry.addTests(new TestSuite().addTest(test2));
+        componentRegistry.addTests(new TestSuite().addTest(test3));
+
+        assertEquals("foo", test1.getId());
+        assertEquals("foo__1", test2.getId());
+        assertEquals("foo__2", test3.getId());
+    }
+
+    @Test
     public void testRemoveTests() {
         TestSuite testSuite1 = new TestSuite()
                 .addTest(new TestCase("Test1a"))
@@ -302,7 +317,7 @@ public class ComponentRegistryTest {
         componentRegistry.removeTests(testSuite1);
 
         assertEquals(2, componentRegistry.testCount());
-        for(TestData testData: componentRegistry.getTests()){
+        for (TestData testData : componentRegistry.getTests()) {
             assertSame(testSuite2, testData.getTestSuite());
         }
     }

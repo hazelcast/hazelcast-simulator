@@ -7,6 +7,7 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TestUtils;
@@ -17,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
@@ -124,15 +126,16 @@ public class FailureCollectorTest {
     }
 
     @Test
-    public void notify_enrichWithTestSuite() {
-        TestSuite suite1 = new TestSuite().addTest(new TestCase("test1"));
+    public void notify_enrich() {
+        TestCase testCase = new TestCase("test1");
+        TestSuite suite1 = new TestSuite().addTest(testCase);
         TestSuite suite2 = new TestSuite().addTest(new TestCase("test2"));
 
         componentRegistry.addTests(suite1);
         componentRegistry.addTests(suite2);
 
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", "test1", null);
+                "127.0.0.1:5701", "workerId", testCase.getId(), null);
 
         FailureListener listener = mock(FailureListener.class);
         failureCollector.addListener(listener);
@@ -141,7 +144,7 @@ public class FailureCollectorTest {
         ArgumentCaptor<FailureOperation> failureCaptor = ArgumentCaptor.forClass(FailureOperation.class);
         verify(listener).onFailure(failureCaptor.capture(), eq(false), eq(true));
 
-        assertSame(suite1, failureCaptor.getValue().getTestSuite());
+        assertSame(suite1.getTestCaseList().get(0), failureCaptor.getValue().getTestCase());
     }
 
     @Test

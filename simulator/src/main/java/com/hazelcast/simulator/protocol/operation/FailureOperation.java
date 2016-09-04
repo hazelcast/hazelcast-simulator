@@ -17,7 +17,6 @@ package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
@@ -37,7 +36,7 @@ public class FailureOperation implements SimulatorOperation {
     private final String hzAddress;
     private final String workerId;
     private final String testId;
-    private TestSuite testSuite;
+    private TestCase testCase;
     private final String cause;
     private long durationMs;
 
@@ -62,13 +61,13 @@ public class FailureOperation implements SimulatorOperation {
         this.durationMs = durationMs;
     }
 
-    public FailureOperation setTestSuite(TestSuite testSuite) {
-        this.testSuite = testSuite;
+    public FailureOperation setTestCase(TestCase testCase) {
+        this.testCase = testCase;
         return this;
     }
 
-    public TestSuite getTestSuite() {
-        return testSuite;
+    public TestCase getTestCase() {
+        return testCase;
     }
 
     public FailureType getType() {
@@ -136,7 +135,6 @@ public class FailureOperation implements SimulatorOperation {
         sb.append("   hzAddress=").append(hzAddress).append(NEW_LINE);
         sb.append("   workerId=").append(workerId).append(NEW_LINE);
 
-        TestCase testCase = (testSuite != null) ? testSuite.getTestCase(testId) : null;
         if (testCase != null) {
             String prefix = "   test=";
             for (String testString : testCase.toString().split(NEW_LINE)) {

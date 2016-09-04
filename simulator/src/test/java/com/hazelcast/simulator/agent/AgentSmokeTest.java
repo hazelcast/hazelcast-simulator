@@ -25,6 +25,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -36,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -49,6 +51,13 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirector
 import static com.hazelcast.simulator.TestEnvironmentUtils.resetLogLevel;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
+import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
+import static com.hazelcast.simulator.common.TestPhase.GLOBAL_TEARDOWN;
+import static com.hazelcast.simulator.common.TestPhase.GLOBAL_VERIFY;
+import static com.hazelcast.simulator.common.TestPhase.LOCAL_PREPARE;
+import static com.hazelcast.simulator.common.TestPhase.LOCAL_TEARDOWN;
+import static com.hazelcast.simulator.common.TestPhase.LOCAL_VERIFY;
+import static com.hazelcast.simulator.common.TestPhase.SETUP;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createSingleInstanceDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -171,13 +180,12 @@ public class AgentSmokeTest implements FailureListener {
     // todo: we don't we use the testsuite runner for this? This is just fragile and duplication
     private void executeTestCase(TestCase testCase) throws Exception {
         try {
-            String testId = testCase.getId();
             TestSuite testSuite = new TestSuite();
             testSuite.addTest(testCase);
 
             componentRegistry.addTests(testSuite);
-            int testIndex = componentRegistry.getTest(testId).getTestIndex();
-            LOGGER.info(format("Created TestSuite for %s with index %d", testId, testIndex));
+            int testIndex = componentRegistry.getTest(testCase.getId()).getTestIndex();
+            LOGGER.info(format("Created TestSuite for %s with index %d", testCase.getId(), testIndex));
 
             TestPhaseListenerImpl testPhaseListener = new TestPhaseListenerImpl();
             testPhaseListeners.addListener(testIndex, testPhaseListener);
@@ -188,27 +196,27 @@ public class AgentSmokeTest implements FailureListener {
             LOGGER.info("InitTest phase...");
             remoteClient.invokeOnAllWorkers(new CreateTestOperation(testIndex, testCase));
 
-            runPhase(testPhaseListener, testCase, TestPhase.SETUP);
+            runPhase(testPhaseListener, testCase, SETUP);
 
-            runPhase(testPhaseListener, testCase, TestPhase.LOCAL_PREPARE);
-            runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_PREPARE);
+            runPhase(testPhaseListener, testCase, LOCAL_PREPARE);
+            runPhase(testPhaseListener, testCase, GLOBAL_PREPARE);
 
             LOGGER.info("Starting run phase...");
-            remoteClient.invokeOnTestOnAllWorkers(testId, new StartTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestOperation());
 
             LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
             sleepSeconds(TEST_RUNTIME_SECONDS);
             LOGGER.info("Finished running");
 
             LOGGER.info("Stopping test...");
-            remoteClient.invokeOnTestOnAllWorkers(testId, new StopTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StopTestOperation());
             testPhaseListener.await(TestPhase.RUN);
 
-            runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_VERIFY);
-            runPhase(testPhaseListener, testCase, TestPhase.LOCAL_VERIFY);
+            runPhase(testPhaseListener, testCase, GLOBAL_VERIFY);
+            runPhase(testPhaseListener, testCase, LOCAL_VERIFY);
 
-            runPhase(testPhaseListener, testCase, TestPhase.GLOBAL_TEARDOWN);
-            runPhase(testPhaseListener, testCase, TestPhase.LOCAL_TEARDOWN);
+            runPhase(testPhaseListener, testCase, GLOBAL_TEARDOWN);
+            runPhase(testPhaseListener, testCase, LOCAL_TEARDOWN);
         } finally {
            // componentRegistry.removeTests();
 

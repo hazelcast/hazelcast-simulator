@@ -54,7 +54,6 @@ import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperatio
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
 
@@ -66,7 +65,6 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     private static final String DASHES = "---------------------------";
 
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
-    private static final int DELAY_MS = 5000;
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
@@ -210,6 +208,8 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processCreateTest(CreateTestOperation operation) {
+        LOGGER.info(operation.getTestCase().toString());
+
         TestCase testCase = operation.getTestCase();
         int testIndex = operation.getTestIndex();
         WorkerConnector workerConnector = worker.getWorkerConnector();
@@ -220,10 +220,6 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         String testId = testCase.getId();
         if (tests.containsKey(testId)) {
             throw new IllegalStateException(format("Can't init TestCase: %s, another test with testId [%s] already exists",
-                    operation, testId));
-        }
-        if (!testId.isEmpty() && !isValidFileName(testId)) {
-            throw new IllegalArgumentException(format("Can't init TestCase: %s, testId [%s] is an invalid filename",
                     operation, testId));
         }
 
