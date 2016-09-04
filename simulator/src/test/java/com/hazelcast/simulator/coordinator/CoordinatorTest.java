@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.junit.After;
 import org.junit.Before;

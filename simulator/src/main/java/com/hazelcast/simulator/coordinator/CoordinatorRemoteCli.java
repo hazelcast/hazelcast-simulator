@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.protocol.connector.CoordinatorRemoteConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;

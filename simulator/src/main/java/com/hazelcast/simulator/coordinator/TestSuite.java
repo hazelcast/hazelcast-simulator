@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.common;
+package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;

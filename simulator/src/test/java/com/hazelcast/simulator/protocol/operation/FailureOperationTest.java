@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.test.TestException;
 import org.junit.Before;

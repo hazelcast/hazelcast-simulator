@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.common;
 
+import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
@@ -9,7 +10,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Map;
 
-import static com.hazelcast.simulator.common.TestSuite.loadTestSuite;
+import static com.hazelcast.simulator.coordinator.TestSuite.loadTestSuite;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;

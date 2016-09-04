@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.TestSuite;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;

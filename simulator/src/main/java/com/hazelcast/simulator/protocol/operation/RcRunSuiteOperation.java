@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.coordinator.TestSuite;
 
 public class RcRunSuiteOperation implements SimulatorOperation {
 

@@ -4,7 +4,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.common.TestSuite;
+import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.coordinator.DeploymentPlan;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
