@@ -58,7 +58,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
     static final int DEFAULT_DURATION_SECONDS = 60;
-    static final int DEFAULT_WARMUP_DURATION_SECONDS = 0;
     private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
@@ -80,15 +79,13 @@ final class CoordinatorCli {
 
     private final OptionSpec<String> durationSpec = parser.accepts("duration",
             "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
-                    + "the test will not stop due to timeout.")
+                    + "the test will run until the test decides to stop.")
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
     private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-            "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d.")
-            .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_WARMUP_DURATION_SECONDS));
-
-    private final OptionSpec waitForTestCaseSpec = parser.accepts("waitForTestCaseCompletion",
-            "Wait for the TestCase to finish its RUN phase. Can be combined with --duration to limit runtime.");
+            "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
+                    + "the test will warmup until the test decides to stop.")
+            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
             "Properties that override the properties in a given test-case, e.g. --overrides"
@@ -116,7 +113,6 @@ final class CoordinatorCli {
     private final OptionSpec<Integer> clientsSpec = parser.accepts("clients",
             "Number of cluster client Worker JVMs.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
 
     private final OptionSpec<Integer> dedicatedMemberMachinesSpec = parser.accepts("dedicatedMemberMachines",
             "Controls the number of dedicated member machines. For example when there are 4 machines,"
@@ -317,21 +313,17 @@ final class CoordinatorCli {
             return null;
         }
 
-        int durationSeconds = getDurationSeconds(durationSpec);
-        boolean hasWaitForTestCase = options.has(waitForTestCaseSpec);
-        if (!options.has(durationSpec) && hasWaitForTestCase) {
-            durationSeconds = 0;
-        }
-
         TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec))
-                .setDurationSeconds(durationSeconds)
-                .setWarmupSeconds(getDurationSeconds(warmupSpec))
-                .setWaitForTestCase(hasWaitForTestCase)
+                .setDurationSeconds(getDurationSeconds(options, durationSpec))
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                 .setParallel(options.has(parallelSpec))
                 .setTargetType(options.valueOf(targetTypeSpec))
                 .setTargetCount(options.valueOf(targetCountSpec));
+
+        if (options.has(warmupSpec)) {
+            testSuite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
+        }
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
         if (!options.has(monitorPerformanceSpec)) {
@@ -343,7 +335,7 @@ final class CoordinatorCli {
         return testSuite;
     }
 
-    private int getDurationSeconds(OptionSpec<String> optionSpec) {
+    public static int getDurationSeconds(OptionSet options, OptionSpec<String> optionSpec) {
         int duration;
         String value = options.valueOf(optionSpec);
         try {
@@ -366,6 +358,11 @@ final class CoordinatorCli {
             throw new CommandLineExitException("duration must be a positive number, but was: " + duration);
         }
         return duration;
+    }
+
+    private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
+        String sub = value.substring(0, value.length() - 1);
+        return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
 
     private ComponentRegistry newComponentRegistry(SimulatorProperties simulatorProperties) {
@@ -464,10 +461,6 @@ final class CoordinatorCli {
         return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
     }
 
-    private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
-        String sub = value.substring(0, value.length() - 1);
-        return (int) timeUnit.toSeconds(Integer.parseInt(sub));
-    }
 
     public static void main(String[] args) {
         LOGGER.info("Hazelcast Simulator Coordinator");

@@ -33,6 +33,7 @@ import java.util.jar.JarFile;
 
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public final class CommonUtils {
@@ -175,9 +176,17 @@ public final class CommonUtils {
         }
     }
 
-    public static void sleepMillis(int millis) {
+    public static void sleepUntilMs(long deadlineMs) {
+        long now = System.currentTimeMillis();
+        long duration = deadlineMs - now;
+        if (duration > 0) {
+            sleepMillis(duration);
+        }
+    }
+
+    public static void sleepMillis(long millis) {
         try {
-            TimeUnit.MILLISECONDS.sleep(millis);
+            MILLISECONDS.sleep(millis);
         } catch (InterruptedException ignore) {
             ignore(ignore);
         }
@@ -208,7 +217,7 @@ public final class CommonUtils {
 
     public static void sleepMillisThrowException(int millis) {
         try {
-            TimeUnit.MILLISECONDS.sleep(millis);
+            MILLISECONDS.sleep(millis);
         } catch (InterruptedException e) {
             throw rethrow(e);
         }
@@ -216,7 +225,7 @@ public final class CommonUtils {
 
     /**
      * Sleeps a random amount of time.
-     *
+     * <p>
      * The call is ignored if maxDelayNanos equals or smaller than zero.
      *
      * @param random        the Random used to randomize
