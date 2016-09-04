@@ -52,7 +52,6 @@ public class StartWorkersTask {
 
     private final RemoteClient remoteClient;
     private final ComponentRegistry componentRegistry;
-    private final Echoer echoer;
     private final int startupDelayMs;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> memberDeploymentPlan;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> clientDeploymentPlan;
@@ -67,9 +66,7 @@ public class StartWorkersTask {
             int startupDelayMs) {
         this.remoteClient = remoteClient;
         this.componentRegistry = componentRegistry;
-        this.echoer = new Echoer(remoteClient);
         this.startupDelayMs = startupDelayMs;
-
         this.memberDeploymentPlan = filterByWorkerType(true, deploymentPlan);
         this.clientDeploymentPlan = filterByWorkerType(false, deploymentPlan);
     }
@@ -87,8 +84,8 @@ public class StartWorkersTask {
 
         if (componentRegistry.workerCount() > 0) {
             WorkerData firstWorker = componentRegistry.getFirstWorker();
-            echoer.echo("Worker for global test phases will be %s (%s)",
-                    firstWorker.getAddress(), firstWorker.getSettings().getWorkerType());
+            LOGGER.info(format("Worker for global test phases will be %s (%s)",
+                    firstWorker.getAddress(), firstWorker.getSettings().getWorkerType()));
         }
 
         echoStartComplete();
@@ -97,21 +94,21 @@ public class StartWorkersTask {
 
     private void echoStartWorkers() {
         started = System.nanoTime();
-        echoer.echo(HORIZONTAL_RULER);
-        echoer.echo("Starting Workers...");
-        echoer.echo(HORIZONTAL_RULER);
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info("Starting Workers...");
+        LOGGER.info(HORIZONTAL_RULER);
 
-        echoer.echo("Starting %d Workers (%d members, %d clients)...",
+        LOGGER.info(format("Starting %d Workers (%d members, %d clients)...",
                 count(memberDeploymentPlan) + count(clientDeploymentPlan),
-                count(memberDeploymentPlan), count(clientDeploymentPlan));
+                count(memberDeploymentPlan), count(clientDeploymentPlan)));
     }
 
     private void echoStartComplete() {
         long elapsedSeconds = getElapsedSeconds(started);
-        echoer.echo(HORIZONTAL_RULER);
-        echoer.echo("Finished starting of %s Worker JVMs (%s seconds)",
-                count(memberDeploymentPlan) + count(clientDeploymentPlan), elapsedSeconds);
-        echoer.echo(HORIZONTAL_RULER);
+        LOGGER.info(HORIZONTAL_RULER);
+        LOGGER.info(format("Finished starting of %s Worker JVMs (%s seconds)",
+                count(memberDeploymentPlan) + count(clientDeploymentPlan), elapsedSeconds));
+        LOGGER.info(HORIZONTAL_RULER);
     }
 
     private void startWorkers(boolean isMember, Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan) {

@@ -45,7 +45,6 @@ public class TerminateWorkersTask {
     private final ComponentRegistry componentRegistry;
     private final SimulatorProperties simulatorProperties;
     private final RemoteClient remoteClient;
-    private final Echoer echoer;
 
     public TerminateWorkersTask(
             SimulatorProperties simulatorProperties,
@@ -54,13 +53,12 @@ public class TerminateWorkersTask {
         this.simulatorProperties = simulatorProperties;
         this.componentRegistry = componentRegistry;
         this.remoteClient = remoteClient;
-        this.echoer = new Echoer(remoteClient);
     }
 
     public void run() {
         int currentWorkerCount = componentRegistry.workerCount();
 
-        echoer.echo("Terminating %d Workers...", currentWorkerCount);
+        LOGGER.info(format("Terminating %d Workers...", currentWorkerCount));
         terminateWorkers();
 
         waitForWorkerShutdown(currentWorkerCount);
