@@ -27,9 +27,11 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
@@ -44,16 +46,14 @@ import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.TestUtils.createTmpDirectory;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -332,61 +332,61 @@ public class RunTestSuiteTaskTest {
     }
 
     private void verifyRemoteClient() {
-        int numberOfTests = testSuite.size();
-        boolean isStopTestOperation = (testSuite.getDurationSeconds() > 0);
+        int testCount = testSuite.size();
         List<TestPhase> expectedTestPhases = getExpectedTestPhases();
 
-        // calculate how many remote calls we expect:
-        // - StartTestOperations
-        // - StopTestOperations
-        // - StarTestPhaseOperation the first worker
-        // - StarTestPhaseOperation to all workers
-        int expectedStartTest = 0;
-        int expectedStartTestPhaseOnFirstWorker = 0;
-        int expectedStartTestPhaseOnAllWorkers = 0;
-        // increase expected counters for each TestPhase
+        // in the remainingPhaseCount the remaining number of calls per phase. Eventually everything should be 0.
+        Map<TestPhase, AtomicInteger> remainingPhaseCount = new HashMap<TestPhase, AtomicInteger>();
         for (TestPhase testPhase : expectedTestPhases) {
-            if (testPhase == WARMUP || testPhase == RUN) {
-                expectedStartTest++;
-            } else if (testPhase.isGlobal()) {
-                expectedStartTestPhaseOnFirstWorker++;
-            } else {
-                expectedStartTestPhaseOnAllWorkers++;
-            }
+            remainingPhaseCount.put(testPhase, new AtomicInteger(testCount));
         }
-        int expectedStopTest = (isStopTestOperation ? expectedStartTest : 0);
 
-        // verify number of remote calls
-        ArgumentCaptor<SimulatorOperation> argumentCaptor = ArgumentCaptor.forClass(SimulatorOperation.class);
-        verify(remoteClient, times(numberOfTests)).invokeOnAllWorkers(any(CreateTestOperation.class));
-        int expectedTimes = numberOfTests * expectedStartTestPhaseOnFirstWorker;
-        verify(remoteClient, times(expectedTimes)).invokeOnTestOnFirstWorker(anyString(), any(StartTestPhaseOperation.class));
-        expectedTimes = numberOfTests * (expectedStartTestPhaseOnAllWorkers + expectedStartTest + expectedStopTest);
-        verify(remoteClient, times(expectedTimes)).invokeOnTestOnAllWorkers(anyString(), argumentCaptor.capture());
-        verify(remoteClient, atLeastOnce()).logOnAllAgents(anyString());
+        // we check if the create calls have been made
+        verify(remoteClient, times(testCount)).invokeOnAllWorkers(any(CreateTestOperation.class));
 
-        // assert captured arguments
-        int actualStartTestOperations = 0;
-        int actualStopTestOperation = 0;
-        int actualStartTestPhaseOperations = 0;
-        for (SimulatorOperation operation : argumentCaptor.getAllValues()) {
-            if (operation instanceof StartTestOperation) {
-                actualStartTestOperations++;
+        // now we suck up all 'invokeOnTestOnAllWorkers'
+        ArgumentCaptor<SimulatorOperation> allTestOperations = ArgumentCaptor.forClass(SimulatorOperation.class);
+        verify(remoteClient, atLeast(0)).invokeOnTestOnAllWorkers(anyString(), allTestOperations.capture());
+
+        // now we suck up all 'invokeOnTestOnFirstWorker'
+        ArgumentCaptor<SimulatorOperation> firstTestOperations = ArgumentCaptor.forClass(SimulatorOperation.class);
+        verify(remoteClient, atLeast(0)).invokeOnTestOnFirstWorker(anyString(), firstTestOperations.capture());
+
+        int actualStopTestCount = 0;
+
+        //
+        for (SimulatorOperation operation : allTestOperations.getAllValues()) {
+            if (operation instanceof StartTestPhaseOperation) {
+                remainingPhaseCount.get(((StartTestPhaseOperation) operation).getTestPhase()).decrementAndGet();
+            } else if (operation instanceof StartTestOperation) {
+                StartTestOperation startTestOperation = (StartTestOperation) operation;
+                TestPhase phase = startTestOperation.isWarmup() ? WARMUP : RUN;
+                remainingPhaseCount.get(phase).decrementAndGet();
             } else if (operation instanceof StopTestOperation) {
-                actualStopTestOperation++;
-            } else if (operation instanceof StartTestPhaseOperation) {
-                actualStartTestPhaseOperations++;
-                TestPhase actual = ((StartTestPhaseOperation) operation).getTestPhase();
-                assertTrue(format("expected TestPhases should contain %s, but where %s", actual, expectedTestPhases),
-                        expectedTestPhases.contains(actual));
+                actualStopTestCount++;
             } else {
-                fail("Unwanted SimulatorOperation: " + operation.getClass().getSimpleName());
+                fail("Unrecognized operation: " + operation);
             }
         }
-        assertEquals(expectedStartTest * numberOfTests, actualStartTestOperations);
-        assertEquals(expectedStartTestPhaseOnAllWorkers * numberOfTests, actualStartTestPhaseOperations);
-        if (isStopTestOperation) {
-            assertEquals(expectedStopTest * numberOfTests, actualStopTestOperation);
+
+        for (SimulatorOperation operation : firstTestOperations.getAllValues()) {
+            if (operation instanceof StartTestPhaseOperation) {
+                remainingPhaseCount.get(((StartTestPhaseOperation) operation).getTestPhase()).decrementAndGet();
+            } else {
+                fail("Unrecognized operation: " + operation);
+            }
+        }
+
+        if (testSuite.getDurationSeconds() > 0 && testSuite.getWarmupSeconds() > 0) {
+            assertEquals("actualStopTestCount incorrect", 2 * testCount, actualStopTestCount);
+        } else if (testSuite.getDurationSeconds() != 0 || testSuite.getWarmupSeconds() != 0) {
+            assertEquals("actualStopTestCount incorrect", testCount, actualStopTestCount);
+        }
+
+        for (Map.Entry<TestPhase, AtomicInteger> entry : remainingPhaseCount.entrySet()) {
+            TestPhase phase = entry.getKey();
+            int value = entry.getValue().get();
+            assertEquals("Number of remaining occurrences for phase: " + phase + " incorrect", 0, value);
         }
     }
 
@@ -398,6 +398,7 @@ public class RunTestSuiteTaskTest {
             expectedTestPhases.remove(TestPhase.GLOBAL_VERIFY);
             expectedTestPhases.remove(TestPhase.LOCAL_VERIFY);
         }
+
         if (testSuite.getWarmupSeconds() == 0) {
             // exclude warmup test phases
             expectedTestPhases.remove(WARMUP);
