@@ -42,6 +42,13 @@ public class TestSuiteTest {
         assertEquals(0, testSuite.getMaxTestCaseIdLength());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void loadTestSuite_whenInvalidTestId() throws Exception {
+        String txt = "*@class=AtomicLong" + NEW_LINE;
+
+        createTestSuite(txt);
+    }
+
     @Test
     public void loadTestSuite_singleTestWithTestName() throws Exception {
         String txt = "atomicLongTest@class=AtomicLong" + NEW_LINE
@@ -175,7 +182,6 @@ public class TestSuiteTest {
         TestSuite testSuite = new TestSuite();
         testSuite.addTest(new TestCase("abc"));
         testSuite.addTest(new TestCase("88888888"));
-        testSuite.addTest(new TestCase(null));
         testSuite.addTest(new TestCase("abcDEF"));
         testSuite.addTest(new TestCase(""));
         testSuite.addTest(new TestCase("four"));

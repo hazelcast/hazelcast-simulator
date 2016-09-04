@@ -17,8 +17,8 @@ package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
@@ -50,8 +52,9 @@ public class ComponentRegistry {
     private static final Logger LOGGER = Logger.getLogger(ComponentRegistry.class);
 
     private final AtomicInteger agentIndex = new AtomicInteger();
-    private final AtomicInteger testIndex = new AtomicInteger();
-
+    private final AtomicInteger testIndexGenerator = new AtomicInteger();
+    // a map with all id's and its count. This is used to make sure each id is unique.
+    private final Map<String, AtomicLong> ids = new HashMap<String, AtomicLong>();
     private final List<AgentData> agents = synchronizedList(new ArrayList<AgentData>());
     private final List<WorkerData> workers = synchronizedList(new ArrayList<WorkerData>());
     private final ConcurrentMap<String, TestData> tests = new ConcurrentHashMap<String, TestData>();
@@ -302,19 +305,22 @@ public class ComponentRegistry {
     }
 
     public synchronized List<TestData> addTests(TestSuite testSuite) {
-        for (TestCase testCase : testSuite.getTestCaseList()) {
-            if (tests.containsKey(testCase.getId())) {
-                throw new IllegalArgumentException(format("Already a test running with id '%s'", testCase.getId()));
-            }
-        }
-
         List<TestData> result = new ArrayList<TestData>(testSuite.size());
         for (TestCase testCase : testSuite.getTestCaseList()) {
-            int testIndex = this.testIndex.incrementAndGet();
+            String id = testCase.getId();
+            AtomicLong count = ids.get(id);
+            if (count == null) {
+                ids.put(id, new AtomicLong(1));
+            } else {
+                id = id + "__" + count.getAndIncrement();
+            }
+            int testIndex = testIndexGenerator.incrementAndGet();
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, testIndex);
+            testCase.setId(id);
+
             TestData testData = new TestData(testIndex, testAddress, testCase, testSuite);
             result.add(testData);
-            tests.put(testCase.getId(), testData);
+            tests.put(id, testData);
         }
         return result;
     }

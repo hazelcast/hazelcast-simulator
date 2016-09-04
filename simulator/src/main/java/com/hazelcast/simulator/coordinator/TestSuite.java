@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
@@ -38,6 +39,8 @@ import static java.util.Collections.singletonMap;
 
 @SuppressWarnings(value = "checkstyle:methodcount")
 public class TestSuite {
+
+    private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
     private int durationSeconds;
@@ -141,12 +144,12 @@ public class TestSuite {
     public int getMaxTestCaseIdLength() {
         int maxLength = Integer.MIN_VALUE;
         for (TestCase testCase : testCaseList) {
-            String testCaseId = testCase.getId();
-            if (testCaseId != null && !testCaseId.isEmpty() && testCaseId.length() > maxLength) {
-                maxLength = testCaseId.length();
+            String testId = testCase.getId();
+            if (!testId.isEmpty() && testId.length() > maxLength) {
+                maxLength = testId.length();
             }
         }
-        return (maxLength > 0) ? maxLength : 0;
+        return maxLength > 0 ? maxLength : 0;
     }
 
     @Override
@@ -168,12 +171,12 @@ public class TestSuite {
 
         Map<String, TestCase> testCases = createTestCases(properties);
         if (testCases.size() == 1) {
-            // use classname instead of empty testId in single test scenarios
+            // use classname instead of empty desc in single test scenarios
             TestCase testCase = testCases.values().iterator().next();
             String className = testCase.getClassname();
             if (testCase.getId().isEmpty() && className != null) {
-                String testId = className.substring(className.lastIndexOf('.') + 1);
-                testCases = singletonMap(testId, new TestCase(testId, testCase.getProperties()));
+                String desc = className.substring(className.lastIndexOf('.') + 1);
+                testCases = singletonMap(desc, new TestCase(desc, testCase.getProperties()));
             }
         }
 
@@ -203,21 +206,29 @@ public class TestSuite {
             String value = (String) properties.get(property);
 
             int indexOfAt = property.indexOf('@');
-            String testCaseId = "";
+            String testId = "";
             String field = property;
             if (indexOfAt > -1) {
-                testCaseId = property.substring(0, indexOfAt);
+                testId = property.substring(0, indexOfAt);
                 field = property.substring(indexOfAt + 1);
             }
 
-            if (value.isEmpty()) {
-                throw new IllegalArgumentException(format("Value of property %s in testId [%s] is empty!", property, testCaseId));
+            if (!testId.isEmpty() && !isValidTestId(testId)) {
+                throw new IllegalArgumentException(format("TestId [%s] is not a valid id", testId));
             }
 
-            TestCase testCase = getOrCreateTestCase(testCases, testCaseId);
+            if (value.isEmpty()) {
+                throw new IllegalArgumentException(format("Value of property %s in testId [%s] is empty!", property, testId));
+            }
+
+            TestCase testCase = getOrCreateTestCase(testCases, testId);
             testCase.setProperty(field, value);
         }
         return testCases;
+    }
+
+    private static boolean isValidTestId(String fileName) {
+        return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
     }
 
     private static TestCase getOrCreateTestCase(Map<String, TestCase> testCases, String testCaseId) {

@@ -25,11 +25,12 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class TestCase {
     private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
-    private final String id;
+    private String id;
     private final Map<String, String> properties = new HashMap<String, String>();
 
     public TestCase(String id) {
@@ -37,10 +38,14 @@ public class TestCase {
     }
 
     public TestCase(String id, Map<String, String> properties) {
-        this.id = id;
+        this.id = checkNotNull(id, "id can't be null");
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
         }
+    }
+
+    public void setId(String id) {
+        this.id = checkNotNull(id, "id can't be null");
     }
 
     public String getId() {

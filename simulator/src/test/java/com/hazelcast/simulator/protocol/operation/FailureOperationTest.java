@@ -23,19 +23,18 @@ public class FailureOperationTest {
     private SimulatorAddress agentAddress = new SimulatorAddress(AGENT, 2, 0, 0);
 
     private TestException cause;
-    private TestSuite testSuite;
+    private TestCase testCase;
 
     private FailureOperation operation;
     private FailureOperation fullOperation;
 
     @Before
     public void before() {
-        testSuite = new TestSuite();
-
+        testCase = new TestCase(TEST_ID);
         cause = new TestException("expected exception");
         operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, cause);
         fullOperation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, "127.0.0.1:5701",
-                "C_A1_W1-member", TEST_ID, null).setTestSuite(testSuite);
+                "C_A1_W1-member", TEST_ID, null).setTestCase(testCase);
     }
 
     @Test
@@ -90,8 +89,6 @@ public class FailureOperationTest {
 
     @Test
     public void testGetFileMessage_withTestCase() {
-        testSuite.addTest(new TestCase(TEST_ID));
-
         String message = fullOperation.getFileMessage();
 
         assertNotNull(message);
@@ -100,6 +97,8 @@ public class FailureOperationTest {
 
     @Test
     public void testGetFileMessage_whenTestIdIsUnknown() {
+        fullOperation.setTestCase(null);
+
         String message = fullOperation.getFileMessage();
 
         assertNotNull(message);
