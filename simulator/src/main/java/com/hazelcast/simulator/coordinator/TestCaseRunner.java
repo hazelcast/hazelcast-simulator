@@ -157,7 +157,7 @@ final class TestCaseRunner implements TestPhaseListener {
             throw rethrow(e);
         }
 
-        return hasFailure();
+        return !hasFailure();
     }
 
     private void run0() {

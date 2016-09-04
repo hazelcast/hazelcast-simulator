@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -64,10 +65,10 @@ public class RunTestSuiteTask {
         this.performanceStatsCollector = performanceStatsCollector;
     }
 
-    public void run() {
+    public boolean run() {
         List<TestData> tests = componentRegistry.addTests(testSuite);
         try {
-            run0(tests);
+            return run0(tests);
         } finally {
             testPhaseListeners.removeAllListeners(runners);
             componentRegistry.removeTests(testSuite);
@@ -75,7 +76,7 @@ public class RunTestSuiteTask {
         }
     }
 
-    private void run0(List<TestData> tests) {
+    private boolean run0(List<TestData> tests) {
         int testCount = testSuite.size();
         boolean parallel = testSuite.isParallel() && testCount > 1;
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
@@ -103,12 +104,9 @@ public class RunTestSuiteTask {
 
         echoTestSuiteStart(testCount, parallel);
         long started = System.nanoTime();
-        if (parallel) {
-            runParallel();
-        } else {
-            runSequential();
-        }
+        boolean success = parallel ? runParallel() : runSequential();
         echoTestSuiteEnd(testCount, started);
+        return success;
     }
 
     private void echoTestSuiteDuration(boolean isParallel) {
@@ -123,14 +121,17 @@ public class RunTestSuiteTask {
         }
     }
 
-    private void runParallel() {
+    private boolean runParallel() {
+        final AtomicBoolean success = new AtomicBoolean(true);
         ThreadSpawner spawner = new ThreadSpawner("runParallel", true);
         for (final TestCaseRunner runner : runners) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        runner.run();
+                        if (!runner.run()) {
+                            success.set(false);
+                        }
                     } catch (Exception e) {
                         throw rethrow(e);
                     }
@@ -138,17 +139,22 @@ public class RunTestSuiteTask {
             });
         }
         spawner.awaitCompletion();
+        return success.get();
     }
 
-    private void runSequential() {
+    private boolean runSequential() {
+        boolean success = true;
         for (TestCaseRunner runner : runners) {
-            runner.run();
+            if (!runner.run()) {
+                success = false;
+            }
             boolean hasCriticalFailure = failureCollector.hasCriticalFailure();
             if (hasCriticalFailure && testSuite.isFailFast()) {
                 LOGGER.info("Aborting TestSuite due to critical failure");
                 break;
             }
         }
+        return success;
     }
 
     private void echoTestSuiteStart(int testCount, boolean isParallel) {
