@@ -187,7 +187,7 @@ public class PerformanceMonitorTest {
 
         @Override
         public String getPublicIpAddress() {
-            return LOCALHOST;
+            return "127.0.0.1";
         }
 
         @Override

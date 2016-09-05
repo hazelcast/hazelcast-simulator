@@ -66,7 +66,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * <p>
  * Multiple TestCases can be run in parallel, by having multiple TestCaseRunners in parallel.
  */
-final class TestCaseRunner implements TestPhaseListener {
+public final class TestCaseRunner implements TestPhaseListener {
 
     private static final int RUN_PHASE_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS = 30;
@@ -98,13 +98,13 @@ final class TestCaseRunner implements TestPhaseListener {
     private final int logRunPhaseIntervalSeconds;
 
     @SuppressWarnings("checkstyle:parameternumber")
-    TestCaseRunner(TestData testData,
-                   RemoteClient remoteClient,
-                   Map<TestPhase, CountDownLatch> testPhaseSyncMap,
-                   FailureCollector failureCollector,
-                   ComponentRegistry componentRegistry,
-                   PerformanceStatsCollector performanceStatsCollector,
-                   int performanceMonitorIntervalSeconds) {
+    public TestCaseRunner(TestData testData,
+                          RemoteClient remoteClient,
+                          Map<TestPhase, CountDownLatch> testPhaseSyncMap,
+                          FailureCollector failureCollector,
+                          ComponentRegistry componentRegistry,
+                          PerformanceStatsCollector performanceStatsCollector,
+                          int performanceMonitorIntervalSeconds) {
         this.testData = testData;
         this.testCase = testData.getTestCase();
         this.testSuite = testData.getTestSuite();
@@ -141,7 +141,7 @@ final class TestCaseRunner implements TestPhaseListener {
         phaseCompletedMap.get(testPhase).add(workerAddress);
     }
 
-    boolean run() {
+    public boolean run() {
         testData.initStartTime();
         try {
             run0();

@@ -143,7 +143,7 @@ public class PerformanceStatsCollector {
         return result;
     }
 
-    void logDetailedPerformanceInfo(double runningTimeSeconds) {
+    public void logDetailedPerformanceInfo(double runningTimeSeconds) {
         PerformanceStats totalPerformanceStats = new PerformanceStats();
         Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
 
