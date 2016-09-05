@@ -392,7 +392,7 @@ public final class Coordinator {
 
         LOGGER.info("Run starting...");
 
-        new RunTestSuiteTask(testSuite,
+        boolean success = new RunTestSuiteTask(testSuite,
                 coordinatorParameters,
                 componentRegistry,
                 failureCollector,
@@ -400,7 +400,11 @@ public final class Coordinator {
                 remoteClient,
                 performanceStatsCollector).run();
 
-        LOGGER.info("Run complete!");
+        if (success) {
+            LOGGER.info("Run complete!");
+        } else {
+            throw new RuntimeException("Run completed with failures!");
+        }
     }
 
     public String killWorker(RcKillWorkerOperation op) throws Exception {
