@@ -31,12 +31,12 @@ import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
@@ -283,39 +283,19 @@ public final class Coordinator {
         return log;
     }
 
-    public void install(String versionSpec) throws Exception {
+
+    public void download(RcDownloadOperation operation) throws Exception {
         awaitInteractiveModeInitialized();
 
-        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents ....");
-        new InstallVendorTask(
+        LOGGER.info("Downloading ....");
+
+        new DownloadTask(
+                coordinatorParameters.getSessionId(),
                 simulatorProperties,
-                componentRegistry.getAgentIps(),
-                singleton(versionSpec),
-                coordinatorParameters.getSessionId()).run();
-        LOGGER.info("Install successful!");
-    }
+                outputDirectory,
+                componentRegistry).run();
 
-    public String testStatus(RcTestStatusOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
-
-        TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
-        if (data == null) {
-            return "null";
-        }
-
-        TestPhase phase = data.getTestPhase();
-        return phase == null ? "null" : phase.desc();
-    }
-
-    public void testStop(RcTestStopOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
-
-        TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
-        if (data == null) {
-            throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
-        }
-
-        data.setStopRequested(true);
+        LOGGER.info("Downloading complete!");
     }
 
     public void exit() {
@@ -345,13 +325,91 @@ public final class Coordinator {
         }).start();
     }
 
+    public void install(String versionSpec) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents ....");
+        new InstallVendorTask(
+                simulatorProperties,
+                componentRegistry.getAgentIps(),
+                singleton(versionSpec),
+                coordinatorParameters.getSessionId()).run();
+        LOGGER.info("Install successful!");
+    }
+
     public String printLayout() throws Exception {
         awaitInteractiveModeInitialized();
 
         return componentRegistry.printLayout();
     }
 
-    public String startWorkers(RcWorkerStartOperation op) throws Exception {
+    public String testStatus(RcTestStatusOperation op) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (test == null) {
+            return "null";
+        }
+
+        return test.getStatusString();
+    }
+
+    public void testStop(RcTestStopOperation op) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (data == null) {
+            throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
+        }
+
+        data.setStopRequested(true);
+    }
+
+    public void testRun(RcTestRunOperation op, Promise promise) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        LOGGER.info("Run starting...");
+        final RunTestSuiteTask runTestSuiteTask = new RunTestSuiteTask(op.getTestSuite(),
+                coordinatorParameters,
+                componentRegistry,
+                failureCollector,
+                testPhaseListeners,
+                remoteClient,
+                performanceStatsCollector);
+
+        if (op.isAsync()) {
+            if (op.getTestSuite().size() > 1) {
+                throw new IllegalArgumentException("1 test in testsuite allowed");
+            }
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    runTestSuiteTask.run();
+                }
+            }).start();
+
+            for (; ; ) {
+                sleepSeconds(1);
+                for (TestData testData : componentRegistry.getTests()) {
+                    if (testData.getTestSuite() == op.getTestSuite()) {
+                        promise.answer(ResponseType.SUCCESS, testData.getAddress().toString());
+                    }
+                }
+            }
+        } else {
+            boolean success = runTestSuiteTask.run();
+            LOGGER.info("Run complete!");
+
+            if (success) {
+                promise.answer(ResponseType.SUCCESS);
+            } else {
+                promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, "Run completed with failures!");
+            }
+        }
+    }
+
+    public String workerStart(RcWorkerStartOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
@@ -422,51 +480,7 @@ public final class Coordinator {
         return WorkerData.toAddressString(workers);
     }
 
-    public void runSuite(RcTestRunOperation op, Promise promise) throws Exception {
-        awaitInteractiveModeInitialized();
-
-        LOGGER.info("Run starting...");
-        final RunTestSuiteTask runTestSuiteTask = new RunTestSuiteTask(op.getTestSuite(),
-                coordinatorParameters,
-                componentRegistry,
-                failureCollector,
-                testPhaseListeners,
-                remoteClient,
-                performanceStatsCollector);
-
-        if (op.isAsync()) {
-            if (op.getTestSuite().size() > 1) {
-                throw new IllegalArgumentException("1 test in testsuite allowed");
-            }
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    runTestSuiteTask.run();
-                }
-            }).start();
-
-            for (; ; ) {
-                sleepSeconds(1);
-                for (TestData testData : componentRegistry.getTests()) {
-                    if (testData.getTestSuite() == op.getTestSuite()) {
-                        promise.answer(ResponseType.SUCCESS, testData.getAddress().toString());
-                    }
-                }
-            }
-        } else {
-            boolean success = runTestSuiteTask.run();
-            LOGGER.info("Run complete!");
-
-            if (success) {
-                promise.answer(ResponseType.SUCCESS);
-            } else {
-                promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, "Run completed with failures!");
-            }
-        }
-    }
-
-    public String killWorker(RcWorkerKillOperation op) throws Exception {
+    public String workerKill(RcWorkerKillOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerQuery workerQuery = op.getWorkerQuery();
@@ -500,17 +514,4 @@ public final class Coordinator {
         LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
     }
 
-    public void download(RcDownloadOperation operation) throws Exception {
-        awaitInteractiveModeInitialized();
-
-        LOGGER.info("Downloading ....");
-
-        new DownloadTask(
-                coordinatorParameters.getSessionId(),
-                simulatorProperties,
-                outputDirectory,
-                componentRegistry).run();
-
-        LOGGER.info("Downloading complete!");
-    }
 }

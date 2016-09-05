@@ -285,10 +285,13 @@ public class ComponentRegistry {
         List<TestData> tests = new ArrayList<TestData>(this.tests.values());
         sb.append(format("    Tests %s", tests.size())).append('\n');
         for (TestData testData : tests) {
+
             sb.append("        ")
                     .append(testData.getAddress())
                     .append(" ")
                     .append(testData.getTestCase().getId())
+                    .append(" ")
+                    .append(testData.getStatusString())
                     .append('\n');
         }
 
@@ -323,16 +326,6 @@ public class ComponentRegistry {
             tests.put(id, testData);
         }
         return result;
-    }
-
-    public synchronized void removeTests(TestSuite testSuite) {
-        for (Map.Entry<String, TestData> entry : tests.entrySet()) {
-            TestData testData = entry.getValue();
-            if (testData.getTestSuite().equals(testSuite)) {
-                String testId = entry.getKey();
-                tests.remove(testId);
-            }
-        }
     }
 
     public int testCount() {

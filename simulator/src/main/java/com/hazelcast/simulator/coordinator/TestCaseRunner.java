@@ -46,6 +46,8 @@ import static com.hazelcast.simulator.common.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
 import static com.hazelcast.simulator.common.TestPhase.WARMUP;
+import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.FAILED;
+import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -157,9 +159,11 @@ public final class TestCaseRunner implements TestPhaseListener {
             }
         } catch (Exception e) {
             throw rethrow(e);
+        } finally {
+            testData.setCompletedStatus(hasFailure() ? FAILED : SUCCESS);
         }
 
-        return !hasFailure();
+        return testData.getCompletedStatus() == SUCCESS;
     }
 
     private void run0() {

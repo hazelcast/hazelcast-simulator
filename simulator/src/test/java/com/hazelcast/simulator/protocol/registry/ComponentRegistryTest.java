@@ -302,25 +302,25 @@ public class ComponentRegistryTest {
         assertEquals("foo__2", test3.getId());
     }
 
-    @Test
-    public void testRemoveTests() {
-        TestSuite testSuite1 = new TestSuite()
-                .addTest(new TestCase("Test1a"))
-                .addTest(new TestCase("Test1b"));
-        componentRegistry.addTests(testSuite1);
-
-        TestSuite testSuite2 = new TestSuite()
-                .addTest(new TestCase("Test2a"))
-                .addTest(new TestCase("Test2b"));
-        componentRegistry.addTests(testSuite2);
-
-        componentRegistry.removeTests(testSuite1);
-
-        assertEquals(2, componentRegistry.testCount());
-        for (TestData testData : componentRegistry.getTests()) {
-            assertSame(testSuite2, testData.getTestSuite());
-        }
-    }
+//    @Test
+//    public void testRemoveTests() {
+//        TestSuite testSuite1 = new TestSuite()
+//                .addTest(new TestCase("Test1a"))
+//                .addTest(new TestCase("Test1b"));
+//        componentRegistry.addTests(testSuite1);
+//
+//        TestSuite testSuite2 = new TestSuite()
+//                .addTest(new TestCase("Test2a"))
+//                .addTest(new TestCase("Test2b"));
+//        componentRegistry.addTests(testSuite2);
+//
+//        componentRegistry.removeTests(testSuite1);
+//
+//        assertEquals(2, componentRegistry.testCount());
+//        for (TestData testData : componentRegistry.getTests()) {
+//            assertSame(testSuite2, testData.getTestSuite());
+//        }
+//    }
 
     @Test
     public void testGetTests() {

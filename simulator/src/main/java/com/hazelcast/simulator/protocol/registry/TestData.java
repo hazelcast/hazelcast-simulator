@@ -20,7 +20,15 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
+import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.IN_PROGRESS;
+
 public class TestData {
+
+    public enum CompletedStatus {
+        IN_PROGRESS,
+        FAILED,
+        SUCCESS
+    }
 
     private final int testIndex;
     private final SimulatorAddress address;
@@ -29,12 +37,21 @@ public class TestData {
     private volatile long startTimeMillis;
     private volatile TestPhase testPhase;
     private volatile boolean stopRequested;
+    private volatile CompletedStatus completedStatus = IN_PROGRESS;
 
     TestData(int testIndex, SimulatorAddress address, TestCase testCase, TestSuite testSuite) {
         this.testIndex = testIndex;
         this.address = address;
         this.testCase = testCase;
         this.testSuite = testSuite;
+    }
+
+    public CompletedStatus getCompletedStatus() {
+        return completedStatus;
+    }
+
+    public void setCompletedStatus(CompletedStatus completedStatus) {
+        this.completedStatus = completedStatus;
     }
 
     /**
@@ -80,5 +97,14 @@ public class TestData {
 
     public long getStartTimeMillis() {
         return startTimeMillis;
+    }
+
+    public String getStatusString() {
+        TestData.CompletedStatus status = getCompletedStatus();
+        if (status == TestData.CompletedStatus.IN_PROGRESS) {
+            return testPhase.desc();
+        } else {
+            return completedStatus == CompletedStatus.SUCCESS ? "completed" : "failed";
+        }
     }
 }

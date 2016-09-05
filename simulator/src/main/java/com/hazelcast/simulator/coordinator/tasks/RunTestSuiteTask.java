@@ -78,7 +78,6 @@ public class RunTestSuiteTask {
             return run0(tests);
         } finally {
             testPhaseListeners.removeAllListeners(runners);
-            componentRegistry.removeTests(testSuite);
             performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
     }
