@@ -49,6 +49,7 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsOnlyWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
 /**
@@ -507,25 +508,24 @@ public class CoordinatorRemoteCli implements Closeable {
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
                 "The versionSpec of the member, e.g. maven=3.7. It will default to what is configured in the"
-                        + " simulator.properties")
+                        + " simulator.properties.")
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
-                "The type of machine to start. member, litemember, javaclient (native clients will be added soon) etc")
+                "The type of machine to start. member, litemember, javaclient (native clients will be added soon) etc.")
                 .withRequiredArg().ofType(String.class).defaultsTo("member");
 
         private final OptionSpec<Integer> countSpec = parser.accepts("count",
-                "The number of workers to start")
+                "The number of workers to start.")
                 .withRequiredArg().ofType(Integer.class).defaultsTo(1);
 
         private final OptionSpec<String> configSpec = parser.accepts("config",
-                "The file containing the configuration to use to start up the worker. E.g. Hazelcast configuration")
+                "The file containing the configuration to use to start up the worker. E.g. Hazelcast configuration.")
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> agentSpec = parser.accepts("agent",
-                "The simulator address of the agent to start the worker on")
+                "The simulator address of the agent to start the worker on.")
                 .withRequiredArg().ofType(String.class);
-
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -541,12 +541,17 @@ public class CoordinatorRemoteCli implements Closeable {
 
             LOGGER.info(format("Starting %s workers", count));
 
+            String hzConfig = null;
+            if (options.has(configSpec)) {
+                hzConfig = fileAsText(options.valueOf(configSpec));
+            }
+
             return new RcStartWorkerOperation(
                     count,
                     options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
                     options.valueOf(workerTypeSpec),
-                    options.valueOf(configSpec),
+                    hzConfig,
                     loadAgentAddress(options, agentSpec));
         }
     }
