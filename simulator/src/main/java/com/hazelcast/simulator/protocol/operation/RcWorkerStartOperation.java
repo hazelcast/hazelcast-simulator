@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-public class RcStartWorkerOperation implements SimulatorOperation {
+public class RcWorkerStartOperation implements SimulatorOperation {
     private int count;
     private String versionSpec;
     private String vmOptions;
@@ -23,7 +23,7 @@ public class RcStartWorkerOperation implements SimulatorOperation {
     private String hzConfig;
     private String agentAddress;
 
-    public RcStartWorkerOperation(int count, String versionSpec, String vmOptions,
+    public RcWorkerStartOperation(int count, String versionSpec, String vmOptions,
                                   String workerType, String hzConfig, String agentAddress) {
         this.count = count;
         this.versionSpec = versionSpec;

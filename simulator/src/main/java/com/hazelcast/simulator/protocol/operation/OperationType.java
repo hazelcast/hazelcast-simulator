@@ -37,14 +37,14 @@ public enum OperationType {
     // Coordinator Remote operations
     RC_INSTALL(RcInstallOperation.class, 2000),
     RC_EXIT(RcStopCoordinatorOperation.class, 2001),
-    RC_START_WORKER(RcStartWorkerOperation.class, 2002),
-    RC_RUN_SUITE(RcRunSuiteOperation.class, 2003),
-    RC_KILL_WORKER(RcKillWorkerOperation.class, 2004),
-    RC_WORKER_SCRIPT(RcWorkerScriptOperation.class, 2005),
-    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2006),
-    RC_DOWNLOAD(RcDownloadOperation.class, 2007),
-    RC_TEST_STATUS(RcTestStatusOperation.class, 2008),
-    RC_TEST_STOP(RcTestStopOperation.class, 2009),
+    RC_TEST_RUN(RcTestRunOperation.class, 2002),
+    RC_TEST_STATUS(RcTestStatusOperation.class, 2003),
+    RC_TEST_STOP(RcTestStopOperation.class, 2004),
+    RC_WORKER_KILL(RcWorkerKillOperation.class, 2005),
+    RC_WORKER_SCRIPT(RcWorkerScriptOperation.class, 2006),
+    RC_WORKER_START(RcWorkerStartOperation.class, 2007),
+    RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2008),
+    RC_DOWNLOAD(RcDownloadOperation.class, 2009),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 3000),

@@ -28,9 +28,9 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
-import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
@@ -82,20 +82,20 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
             case RC_INSTALL:
                 coordinator.install(((RcInstallOperation) operation).getVersionSpec());
                 break;
-            case RC_START_WORKER:
-                promise.answer(SUCCESS, coordinator.startWorkers((RcStartWorkerOperation) operation));
+            case RC_WORKER_START:
+                promise.answer(SUCCESS, coordinator.startWorkers((RcWorkerStartOperation) operation));
                 return;
-            case RC_RUN_SUITE:
-                coordinator.runSuite(((RcRunSuiteOperation) operation).getTestSuite());
-                break;
-            case RC_KILL_WORKER:
-                promise.answer(SUCCESS, coordinator.killWorker((RcKillWorkerOperation) operation));
+            case RC_TEST_RUN:
+                coordinator.runSuite(((RcTestRunOperation) operation), promise);
+                return;
+            case RC_WORKER_KILL:
+                promise.answer(SUCCESS, coordinator.killWorker((RcWorkerKillOperation) operation));
                 return;
             case RC_TEST_STATUS:
                 promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) operation));
                 return;
             case RC_TEST_STOP:
-                coordinator.testStop((RcTestStopOperation)  operation);
+                coordinator.testStop((RcTestStopOperation) operation);
                 break;
             case RC_EXIT:
                 coordinator.exit();

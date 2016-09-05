@@ -15,17 +15,22 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
-import com.hazelcast.simulator.coordinator.TestSuite;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 
-public class RcRunSuiteOperation implements SimulatorOperation {
+public class RcWorkerKillOperation implements SimulatorOperation {
+    private final String command;
+    private final WorkerQuery workerQuery;
 
-    private TestSuite testSuite;
-
-    public RcRunSuiteOperation(TestSuite testSuite) {
-        this.testSuite = testSuite;
+    public RcWorkerKillOperation(String command, WorkerQuery workerQuery) {
+        this.command = command;
+        this.workerQuery = workerQuery;
     }
 
-    public TestSuite getTestSuite() {
-        return testSuite;
+    public String getCommand() {
+        return command;
+    }
+
+    public WorkerQuery getWorkerQuery() {
+        return workerQuery;
     }
 }

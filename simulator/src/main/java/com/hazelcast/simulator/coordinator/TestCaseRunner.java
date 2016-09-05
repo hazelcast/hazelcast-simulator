@@ -178,7 +178,7 @@ public final class TestCaseRunner implements TestPhaseListener {
             echo("Skipping Test warmup");
         }
 
-        executeRunOrWarmup(TestPhase.RUN);
+        executeRunOrWarmup(RUN);
 
         if (isVerifyEnabled) {
             executePhase(GLOBAL_VERIFY);
@@ -215,9 +215,14 @@ public final class TestCaseRunner implements TestPhaseListener {
         waitForGlobalTestPhaseCompletion(phase);
     }
 
+    @SuppressWarnings("checkstyle:npathcomplexity")
     private void executeRunOrWarmup(TestPhase phase) {
-        testData.setTestPhase(phase);
+        if (testData.isStopRequested()) {
+            echo(format("Skipping %s, test stopped.", phase.desc()));
+            return;
+        }
 
+        testData.setTestPhase(phase);
         start(phase);
 
         long startMs = currentTimeMillis();

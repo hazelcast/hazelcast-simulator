@@ -25,13 +25,15 @@ import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
-import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
@@ -45,6 +47,7 @@ import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -348,7 +351,7 @@ public final class Coordinator {
         return componentRegistry.printLayout();
     }
 
-    public String startWorkers(RcStartWorkerOperation op) throws Exception {
+    public String startWorkers(RcWorkerStartOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
@@ -419,27 +422,51 @@ public final class Coordinator {
         return WorkerData.toAddressString(workers);
     }
 
-    public void runSuite(TestSuite testSuite) throws Exception {
+    public void runSuite(RcTestRunOperation op, Promise promise) throws Exception {
         awaitInteractiveModeInitialized();
 
         LOGGER.info("Run starting...");
-
-        boolean success = new RunTestSuiteTask(testSuite,
+        final RunTestSuiteTask runTestSuiteTask = new RunTestSuiteTask(op.getTestSuite(),
                 coordinatorParameters,
                 componentRegistry,
                 failureCollector,
                 testPhaseListeners,
                 remoteClient,
-                performanceStatsCollector).run();
+                performanceStatsCollector);
 
-        if (success) {
-            LOGGER.info("Run complete!");
+        if (op.isAsync()) {
+            if (op.getTestSuite().size() > 1) {
+                throw new IllegalArgumentException("1 test in testsuite allowed");
+            }
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    runTestSuiteTask.run();
+                }
+            }).start();
+
+            for (; ; ) {
+                sleepSeconds(1);
+                for (TestData testData : componentRegistry.getTests()) {
+                    if (testData.getTestSuite() == op.getTestSuite()) {
+                        promise.answer(ResponseType.SUCCESS, testData.getAddress().toString());
+                    }
+                }
+            }
         } else {
-            throw new RuntimeException("Run completed with failures!");
+            boolean success = runTestSuiteTask.run();
+            LOGGER.info("Run complete!");
+
+            if (success) {
+                promise.answer(ResponseType.SUCCESS);
+            } else {
+                promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, "Run completed with failures!");
+            }
         }
     }
 
-    public String killWorker(RcKillWorkerOperation op) throws Exception {
+    public String killWorker(RcWorkerKillOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         WorkerQuery workerQuery = op.getWorkerQuery();

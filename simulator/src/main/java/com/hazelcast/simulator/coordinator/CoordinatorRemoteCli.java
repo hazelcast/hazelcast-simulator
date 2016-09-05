@@ -22,14 +22,14 @@ import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
-import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
-import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
-import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
@@ -87,6 +87,7 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
+    @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     public void run() {
         if (args.length == 0) {
             printHelpAndExit();
@@ -107,6 +108,8 @@ public class CoordinatorRemoteCli implements Closeable {
             new ExitCli().run(subArgs);
         } else if ("test-run".equals(cmd)) {
             new TestRunCli().run(subArgs);
+        } else if ("test-start".equals(cmd)) {
+            new TestStartCli().run(subArgs);
         } else if ("test-status".equals(cmd)) {
             new TestStatusCli().run(subArgs);
         } else if ("test-stop".equals(cmd)) {
@@ -129,7 +132,8 @@ public class CoordinatorRemoteCli implements Closeable {
                         + "download        Downloads all artifacts from the workers                                    \n"
                         + "install         Installs vendor software on the remote machines                             \n"
                         + "print-layout    Prints the cluster-layout                                                   \n"
-                        + "test-run        Runs a test                                                                 \n"
+                        + "test-run        Runs a test and wait for completion                                         \n"
+                        + "test-start      Starts a test asynchronously                                                \n"
                         + "test-stop       Stops a test                                                                \n"
                         + "test-status     Checks the status of a test                                                 \n"
                         + "stop            Stops the Coordinator remote session                                        \n"
@@ -532,7 +536,7 @@ public class CoordinatorRemoteCli implements Closeable {
                         + "    }catch(error){}"
                         + "}";
             }
-            return new RcKillWorkerOperation(command, workerQuery);
+            return new RcWorkerKillOperation(command, workerQuery);
         }
     }
 
@@ -604,7 +608,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 hzConfig = fileAsText(options.valueOf(configSpec));
             }
 
-            return new RcStartWorkerOperation(
+            return new RcWorkerStartOperation(
                     count,
                     options.valueOf(versionSpecSpec),
                     options.valueOf(vmOptionsSpec),
@@ -614,9 +618,43 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class TestRunCli extends AbstractCli {
+    private abstract class TestRunStartCli extends AbstractCli {
+        protected final OptionSpec<String> durationSpec = parser.accepts("duration",
+                "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
+                        + "the test will run until the test decides to stop.")
+                .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
+
+        protected final OptionSpec<String> warmupSpec = parser.accepts("warmup",
+                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
+                        + "the test will warmup until the test decides to stop.")
+                .withRequiredArg().ofType(String.class);
+
+        protected final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
+                format("Defines the type of Workers which execute the RUN phase."
+                        + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
+                        + " List of allowed types: %s", TargetType.getIdsAsString()))
+                .withRequiredArg().ofType(TargetType.class).defaultsTo(TargetType.PREFER_CLIENT);
+
+        protected final OptionSpec<Integer> targetCountSpec = parser.accepts("targetCount",
+                "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
+                .withRequiredArg().ofType(Integer.class).defaultsTo(0);
+
+        protected final OptionSpec parallelSpec = parser.accepts("parallel",
+                "If defined tests are run in parallel.");
+
+        protected final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verify",
+                "Defines if tests are verified.")
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+        protected final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
+                "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
+                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+    }
+
+    private class TestRunCli extends TestRunStartCli {
         private final String help
-                = "The 'run' command runs a test suite\n"
+                = "The 'test-run' command runs a test suite and waits for its completion.\n"
+                + "\n"
                 + "A testsuite can contain a single test, or multiple tests when using test4@someproperty=10\n"
                 + "By default the test are run in sequential, but can be controlled using the --parallel flag\n"
                 + "\n"
@@ -640,36 +678,6 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
                 + "coordinator-remote run --targetType member --targetCount 3 \n\n";
 
-        private final OptionSpec<String> durationSpec = parser.accepts("duration",
-                "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
-                        + "the test will run until the test decides to stop.")
-                .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
-
-        private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-                "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
-                        + "the test will warmup until the test decides to stop.")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
-                format("Defines the type of Workers which execute the RUN phase."
-                        + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
-                        + " List of allowed types: %s", TargetType.getIdsAsString()))
-                .withRequiredArg().ofType(TargetType.class).defaultsTo(TargetType.PREFER_CLIENT);
-
-        private final OptionSpec<Integer> targetCountSpec = parser.accepts("targetCount",
-                "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-        private final OptionSpec parallelSpec = parser.accepts("parallel",
-                "If defined tests are run in parallel.");
-
-        private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verify",
-                "Defines if tests are verified.")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
-
-        private final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
-                "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -703,7 +711,71 @@ public class CoordinatorRemoteCli implements Closeable {
             }
 
             LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
-            return new RcRunSuiteOperation(suite);
+            return new RcTestRunOperation(suite, false);
+        }
+    }
+
+    private class TestStartCli extends TestRunStartCli {
+        private final String help
+                = "The 'test=start' command runs a test suite asynchronously and returns the id's of the created tests.\n"
+                + "\n"
+                + "A testsuite can contain a single test, or multiple tests when using test4@someproperty=10\n"
+                + "By default the test are run in sequential, but can be controlled using the --parallel flag\n"
+                + "\n"
+                + "By default a test will prefer to run on client and of none available, it will try to run on\n"
+                + "The members. Also it will use either all clients or all members as drivers of the test. This\n"
+                + "behavior can be controlled using the --targetType and --targetCount options"
+                + "\n"
+                + "Examples\n"
+                + "# runs a file 'test.properties' for 1 minute\n"
+                + "coordinator-remote run\n\n"
+                + "# runs atomiclong.properties for 1 minute\n"
+                + "coordinator-remote run atomiclong.properties\n\n"
+                + "# runs a test with a warmup period of 5 minute and a duration of 1 hour\n"
+                + "coordinator-remote run --warmup 5m --duration 1h\n\n"
+                + "# runs a test by running all tests in the suite in parallel for 10m.\n"
+                + "coordinator-remote run --duration 10m --parallel suite.properties\n\n"
+                + "# run a test but disable the verification\n"
+                + "coordinator-remote run --verify false\n\n"
+                + "# run a test but disable the fail fast mechanism\n"
+                + "coordinator-remote run --failFast \n\n"
+                + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
+                + "coordinator-remote run --targetType member --targetCount 3 \n\n";
+
+
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsWithHelp(parser, help, args);
+        }
+
+        @Override
+        protected SimulatorOperation newOperation() {
+            List testsuiteFiles = options.nonOptionArguments();
+            File testSuiteFile;
+            if (testsuiteFiles.size() > 1) {
+                throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
+            } else if (testsuiteFiles.size() == 1) {
+                testSuiteFile = new File((String) testsuiteFiles.get(0));
+            } else {
+                testSuiteFile = new File("test.properties");
+            }
+
+            LOGGER.info("File:" + testSuiteFile);
+
+            TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
+                    .setDurationSeconds(getDurationSeconds(options, durationSpec))
+                    .setTargetType(options.valueOf(targetTypeSpec))
+                    .setTargetCount(options.valueOf(targetCountSpec))
+                    .setParallel(options.has(parallelSpec))
+                    .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
+                    .setFailFast(options.valueOf(failFastSpec));
+
+            if (options.has(warmupSpec)) {
+                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
+            }
+
+            LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
+            return new RcTestRunOperation(suite, true);
         }
     }
 
