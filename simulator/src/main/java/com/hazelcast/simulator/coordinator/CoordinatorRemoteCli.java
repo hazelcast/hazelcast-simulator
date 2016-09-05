@@ -27,6 +27,7 @@ import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
@@ -112,6 +113,8 @@ public class CoordinatorRemoteCli implements Closeable {
             new PrintClusterLayoutCli().run(subArgs);
         } else if ("run".equals(cmd)) {
             new RunCli().run(subArgs);
+        } else if ("test-status".equals(cmd)) {
+            new TestStatusCli().run(subArgs);
         } else if ("script-worker".equals(cmd)) {
             new ScriptWorkerCli().run(subArgs);
         } else if ("start-worker".equals(cmd)) {
@@ -231,6 +234,34 @@ public class CoordinatorRemoteCli implements Closeable {
             String versionSpec = nonOptionArguments.get(0);
             LOGGER.info("Installing [" + versionSpec + "]");
             return new RcInstallOperation(args[0]);
+        }
+    }
+
+    private class TestStatusCli extends AbstractCli {
+        private final String help =
+              "Returns the status of a test"
+                      + "\n"
+                      + "Examples\n"
+                      + "# Checks the status of some test.\n"
+                      + "coordinator-remote test-status C_A*_W*_T1\n";
+
+        private final NonOptionArgumentSpec<String> argumentSpec = parser
+                .nonOptions("test address").ofType(String.class);
+
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsWithHelp(parser, help, args);
+        }
+
+        @Override
+        protected SimulatorOperation newOperation() {
+            List<String> nonOptionArguments = options.valuesOf(argumentSpec);
+            if (nonOptionArguments.size() != 1) {
+                throw new CommandLineExitException("Too many arguments");
+            }
+
+            String testId = nonOptionArguments.get(0);
+            return new RcTestStatusOperation(testId);
         }
     }
 

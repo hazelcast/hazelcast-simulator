@@ -31,6 +31,7 @@ import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.Promise;
@@ -63,6 +64,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         this.performanceStatsCollector = performanceStatsCollector;
     }
 
+    @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     @Override
     protected void processOperation(OperationType operationType, SimulatorOperation operation,
                                     SimulatorAddress sourceAddress, Promise promise) throws Exception {
@@ -87,6 +89,9 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 break;
             case RC_KILL_WORKER:
                 promise.answer(SUCCESS, coordinator.killWorker((RcKillWorkerOperation) operation));
+                return;
+            case RC_TEST_STATUS:
+                promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) operation));
                 return;
             case RC_EXIT:
                 coordinator.exit();

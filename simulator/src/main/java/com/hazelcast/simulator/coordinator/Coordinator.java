@@ -32,10 +32,12 @@ import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
@@ -70,14 +72,13 @@ import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-@SuppressWarnings("checkstyle:classdataabstractioncoupling")
+@SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public final class Coordinator {
 
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
     private static final int INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES = 5;
-
 
     private final File outputDirectory;
 
@@ -288,6 +289,18 @@ public final class Coordinator {
                 singleton(versionSpec),
                 coordinatorParameters.getSessionId()).run();
         LOGGER.info("Install successful!");
+    }
+
+    public String testStatus(RcTestStatusOperation op) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (data == null) {
+            return "null";
+        }
+
+        TestPhase phase = data.getTestPhase();
+        return phase == null ? "null" : phase.desc();
     }
 
     public void exit() {

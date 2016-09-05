@@ -346,4 +346,13 @@ public class ComponentRegistry {
     public TestData getTest(String testId) {
         return tests.get(testId);
     }
+
+    public TestData getTestByAddress(SimulatorAddress address) {
+        for (TestData test : getTests()) {
+            if (test.getAddress().equals(address)) {
+                return test;
+            }
+        }
+        return null;
+    }
 }

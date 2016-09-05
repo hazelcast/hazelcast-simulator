@@ -43,6 +43,7 @@ public enum OperationType {
     RC_WORKER_SCRIPT(RcWorkerScriptOperation.class, 2005),
     RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2006),
     RC_DOWNLOAD(RcDownloadOperation.class, 2007),
+    RC_TEST_STATUS(RcTestStatusOperation.class, 2008),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 3000),

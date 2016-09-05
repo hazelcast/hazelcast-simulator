@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
@@ -26,12 +27,21 @@ public class TestData {
     private final TestCase testCase;
     private final TestSuite testSuite;
     private volatile long startTimeMillis;
+    private volatile TestPhase testPhase;
 
     TestData(int testIndex, SimulatorAddress address, TestCase testCase, TestSuite testSuite) {
         this.testIndex = testIndex;
         this.address = address;
         this.testCase = testCase;
         this.testSuite = testSuite;
+    }
+
+    public TestPhase getTestPhase() {
+        return testPhase;
+    }
+
+    public void setTestPhase(TestPhase testPhase) {
+        this.testPhase = testPhase;
     }
 
     public int getTestIndex() {

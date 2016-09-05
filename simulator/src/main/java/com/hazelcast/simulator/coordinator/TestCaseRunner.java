@@ -114,7 +114,9 @@ public final class TestCaseRunner implements TestPhaseListener {
         this.performanceStatsCollector = performanceStatsCollector;
         this.componentRegistry = componentRegistry;
 
-        this.prefix = padRight(testCase.getId(), testSuite.getMaxTestCaseIdLength() + 1);
+        String testAddress = testData.getAddress().toString();
+        this.prefix = padRight(testAddress + ":" + testCase.getId()
+                , testSuite.getMaxTestCaseIdLength() + 1 + testAddress.length());
         this.testPhaseSyncMap = testPhaseSyncMap;
 
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
@@ -195,23 +197,27 @@ public final class TestCaseRunner implements TestPhaseListener {
         echo("Completed Test initialization");
     }
 
-    private void executePhase(TestPhase testPhase) {
+    private void executePhase(TestPhase phase) {
         if (hasFailure()) {
-            throw new TestCaseAbortedException("Skipping Test " + testPhase.desc() + " (critical failure)", testPhase);
+            throw new TestCaseAbortedException("Skipping Test " + phase.desc() + " (critical failure)", phase);
         }
 
-        echo("Starting Test " + testPhase.desc());
-        if (testPhase.isGlobal()) {
-            remoteClient.invokeOnTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
+        echo("Starting Test " + phase.desc());
+        testData.setTestPhase(phase);
+        if (phase.isGlobal()) {
+            remoteClient.invokeOnTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(phase));
         } else {
-            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(phase));
         }
-        waitForPhaseCompletion(testPhase);
-        echo("Completed Test " + testPhase.desc());
-        waitForGlobalTestPhaseCompletion(testPhase);
+
+        waitForPhaseCompletion(phase);
+        echo("Completed Test " + phase.desc());
+        waitForGlobalTestPhaseCompletion(phase);
     }
 
     private void executeRunOrWarmup(TestPhase phase) {
+        testData.setTestPhase(phase);
+
         start(phase);
 
         long startMs = currentTimeMillis();
