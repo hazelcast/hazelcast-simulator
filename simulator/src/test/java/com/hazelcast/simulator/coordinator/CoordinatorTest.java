@@ -1,23 +1,19 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class CoordinatorTest {
 
-    private String sessionId = "CoordinatorTest-" + System.currentTimeMillis();
     private SimulatorProperties properties;
     private Coordinator coordinator;
     private TestSuite testSuite;
@@ -32,9 +28,8 @@ public class CoordinatorTest {
 
         properties = mock(SimulatorProperties.class);
 
-        CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
-        when(coordinatorParameters.getSessionId()).thenReturn(sessionId);
-        when(coordinatorParameters.getSimulatorProperties()).thenReturn(properties);
+        CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
+                .setSimulatorProperties(properties);
 
         deploymentPlan = new DeploymentPlan();
 
@@ -43,9 +38,7 @@ public class CoordinatorTest {
 
     @After
     public void after() {
-        deleteQuiet(new File(sessionId).getAbsoluteFile());
-
-        TestEnvironmentUtils.tearDownFakeEnvironment();
+        tearDownFakeEnvironment();
     }
 
     // todo: this test tests nothing; it just triggers code to be touched.

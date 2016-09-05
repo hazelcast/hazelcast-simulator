@@ -35,8 +35,8 @@ public class DeploymentPlanTest {
 
     @Before
     public void before() {
-        workerParametersMap.put(WorkerType.MEMBER, mock(WorkerParameters.class));
-        workerParametersMap.put(JAVA_CLIENT, mock(WorkerParameters.class));
+        workerParametersMap.put(WorkerType.MEMBER, new WorkerParameters());
+        workerParametersMap.put(JAVA_CLIENT, new WorkerParameters());
 
         firstAgent = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
         secondAgent = componentRegistry.addAgent("192.168.0.2", "192.168.0.2").getAddress();
@@ -284,8 +284,8 @@ public class DeploymentPlanTest {
             componentRegistry.addAgent(agent.getPublicAddress(), agent.getPrivateAddress());
         }
 
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-        when(workerParameters.getVersionSpec()).thenReturn("outofthebox");
+        WorkerParameters workerParameters = new WorkerParameters()
+                .setVersionSpec("outofthebox");
 
         Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
         workerParametersMap.put(WorkerType.MEMBER, workerParameters);

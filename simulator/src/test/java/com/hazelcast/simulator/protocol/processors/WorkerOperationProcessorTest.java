@@ -52,7 +52,7 @@ public class WorkerOperationProcessorTest {
     private static final Class DEFAULT_TEST = SuccessTest.class;
     private static final String DEFAULT_TEST_ID = DEFAULT_TEST.getSimpleName();
 
-    private final TestCase defaultTestCase = mock(TestCase.class);
+    private TestCase defaultTestCase;
     private final HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
     private final Worker worker = mock(Worker.class);
     private final SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
@@ -65,8 +65,7 @@ public class WorkerOperationProcessorTest {
         properties = new HashMap<String, String>();
         setTestCaseClass(DEFAULT_TEST.getName());
 
-        when(defaultTestCase.getId()).thenReturn(DEFAULT_TEST_ID);
-        when(defaultTestCase.getProperties()).thenReturn(properties);
+        defaultTestCase = new TestCase(DEFAULT_TEST_ID, properties);
 
         when(hazelcastInstance.getUserContext()).thenReturn(new ConcurrentHashMap<String, Object>());
 
@@ -176,9 +175,9 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void process_CreateTest_invalidClassPath() throws Exception {
-        setTestCaseClass("not.found.SuccessTest");
-
-        ResponseType responseType = runCreateTestOperation(defaultTestCase);
+        TestCase testCase = new TestCase("id")
+                .setProperty("class", "not.found.SuccessTest");
+        ResponseType responseType = runCreateTestOperation(testCase);
 
         assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         assertEquals(0, processor.getTests().size());
@@ -190,11 +189,7 @@ public class WorkerOperationProcessorTest {
 
     private TestCase createTestCase(Class testClass, String testId) {
         setTestCaseClass(testClass.getName());
-        TestCase testCase = mock(TestCase.class);
-        when(testCase.getId()).thenReturn(testId);
-        when(testCase.getProperties()).thenReturn(properties);
-
-        return testCase;
+        return new TestCase(testId, properties);
     }
 
     private ResponseType runCreateTestOperation(TestCase testCase) throws Exception {

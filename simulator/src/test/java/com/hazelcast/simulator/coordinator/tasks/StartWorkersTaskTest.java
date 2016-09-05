@@ -42,9 +42,8 @@ public class StartWorkersTaskTest {
 
     @Before
     public void before() {
-        WorkerParameters workerParameters = mock(WorkerParameters.class);
-        workerParametersMap.put(WorkerType.MEMBER, workerParameters);
-        workerParametersMap.put(WorkerType.JAVA_CLIENT, workerParameters);
+        workerParametersMap.put(WorkerType.MEMBER, new WorkerParameters());
+        workerParametersMap.put(WorkerType.JAVA_CLIENT, new WorkerParameters());
 
         componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
         componentRegistry.addAgent("192.168.0.2", "192.168.0.2");

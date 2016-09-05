@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,34 +25,44 @@ import java.util.Map;
  */
 public class WorkerParameters {
 
-    private final int workerStartupTimeout;
-    private final String versionSpec;
-    private final String workerScript;
-    private final Map<String, String> environment;
-
-    public WorkerParameters(String versionSpec,
-                            int workerStartupTimeout,
-                            String workerScript,
-                            Map<String, String> environment) {
-        this.workerStartupTimeout = workerStartupTimeout;
-        this.versionSpec = versionSpec;
-        this.workerScript = workerScript;
-        this.environment = environment;
-    }
-
-    public Map<String, String> getEnvironment() {
-        return environment;
-    }
+    private int workerStartupTimeout;
+    private String versionSpec;
+    private String workerScript;
+    private Map<String, String> environment = new HashMap<String, String>();
 
     public int getWorkerStartupTimeout() {
         return workerStartupTimeout;
+    }
+
+    public WorkerParameters setWorkerStartupTimeout(int workerStartupTimeout) {
+        this.workerStartupTimeout = workerStartupTimeout;
+        return this;
     }
 
     public String getVersionSpec() {
         return versionSpec;
     }
 
+    public WorkerParameters setVersionSpec(String versionSpec) {
+        this.versionSpec = versionSpec;
+        return this;
+    }
+
     public String getWorkerScript() {
         return workerScript;
+    }
+
+    public WorkerParameters setWorkerScript(String workerScript) {
+        this.workerScript = workerScript;
+        return this;
+    }
+
+    public Map<String, String> getEnvironment() {
+        return environment;
+    }
+
+    public WorkerParameters setEnvironment(Map<String, String> environment) {
+        this.environment = environment;
+        return this;
     }
 }

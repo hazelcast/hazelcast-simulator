@@ -372,11 +372,11 @@ public final class Coordinator {
                 ? simulatorProperties.getVersionSpec()
                 : op.getVersionSpec();
 
-        WorkerParameters workerParameters = new WorkerParameters(
-                versionSpec,
-                simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"),
-                loadWorkerScript(workerType, simulatorProperties.get("VENDOR")),
-                environment);
+        WorkerParameters workerParameters = new WorkerParameters()
+                .setVersionSpec(versionSpec)
+                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")))
+                .setEnvironment(environment);
 
         SimulatorAddress agent = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
         DeploymentPlan deploymentPlan = createDeploymentPlan(

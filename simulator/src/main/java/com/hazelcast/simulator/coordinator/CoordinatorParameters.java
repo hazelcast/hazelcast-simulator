@@ -17,6 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.utils.Preconditions;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,67 +27,84 @@ import java.util.Date;
  */
 public class CoordinatorParameters {
 
-    private final SimulatorProperties simulatorProperties;
-    private final String workerClassPath;
-    private final boolean skipDownload;
-    private final TestPhase lastTestPhaseToSync;
-    private final int workerVmStartupDelayMs;
-    private final String afterCompletionFile;
-    private final String sessionId;
-    private final int performanceMonitorIntervalSeconds;
-
-    @SuppressWarnings("checkstyle:parameternumber")
-    CoordinatorParameters(String sessionId,
-                          SimulatorProperties properties,
-                          String workerClassPath,
-                          TestPhase lastTestPhaseToSync,
-                          int workerVmStartupDelayMs,
-                          boolean skipDownload,
-                          String afterCompletionFile,
-                          int performanceMonitorIntervalSeconds) {
-        this.sessionId = sessionId == null ? createSessionId() : sessionId;
-        this.simulatorProperties = properties;
-        this.workerClassPath = workerClassPath;
-        this.lastTestPhaseToSync = lastTestPhaseToSync;
-        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
-        this.skipDownload = skipDownload;
-        this.afterCompletionFile = afterCompletionFile;
-        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
-    }
+    private SimulatorProperties simulatorProperties;
+    private String workerClassPath;
+    private boolean skipDownload;
+    private TestPhase lastTestPhaseToSync = TestPhase.getLastTestPhase();
+    private int workerVmStartupDelayMs;
+    private String afterCompletionFile;
+    private String sessionId = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    private int performanceMonitorIntervalSeconds;
 
     public int getPerformanceMonitorIntervalSeconds() {
         return performanceMonitorIntervalSeconds;
     }
 
-    String getSessionId() {
+    public CoordinatorParameters setPerformanceMonitorIntervalSeconds(int performanceMonitorIntervalSeconds) {
+        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
+        return this;
+    }
+
+    public String getSessionId() {
         return sessionId;
     }
 
-    int getWorkerVmStartupDelayMs() {
+    public CoordinatorParameters setSessionId(String sessionId) {
+        this.sessionId = Preconditions.checkNotNull(sessionId, "sessionId can't be null");
+        return this;
+    }
+
+    public int getWorkerVmStartupDelayMs() {
         return workerVmStartupDelayMs;
+    }
+
+    public CoordinatorParameters setWorkerVmStartupDelayMs(int workerVmStartupDelayMs) {
+        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
+        return this;
     }
 
     public SimulatorProperties getSimulatorProperties() {
         return simulatorProperties;
     }
 
-    String getWorkerClassPath() {
+    public CoordinatorParameters setSimulatorProperties(SimulatorProperties simulatorProperties) {
+        this.simulatorProperties = simulatorProperties;
+        return this;
+    }
+
+    public String getWorkerClassPath() {
         return workerClassPath;
+    }
+
+    public CoordinatorParameters setWorkerClassPath(String workerClassPath) {
+        this.workerClassPath = workerClassPath;
+        return this;
     }
 
     public TestPhase getLastTestPhaseToSync() {
         return lastTestPhaseToSync;
     }
 
-    boolean skipDownload() {
+    public CoordinatorParameters setLastTestPhaseToSync(TestPhase lastTestPhaseToSync) {
+        this.lastTestPhaseToSync = lastTestPhaseToSync;
+        return this;
+    }
+
+    public boolean skipDownload() {
         return skipDownload;
     }
 
-    String getAfterCompletionFile() {
+    public String getAfterCompletionFile() {
         return afterCompletionFile;
     }
 
-    private static String createSessionId() {
-        return new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    public CoordinatorParameters setAfterCompletionFile(String afterCompletionFile) {
+        this.afterCompletionFile = afterCompletionFile;
+        return this;
+    }
+
+    public CoordinatorParameters setSkipDownload(boolean skipDownload) {
+        this.skipDownload = skipDownload;
+        return this;
     }
 }

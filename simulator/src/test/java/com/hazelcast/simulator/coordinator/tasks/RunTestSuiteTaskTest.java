@@ -317,9 +317,9 @@ public class RunTestSuiteTaskTest {
         PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
         TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
 
-        CoordinatorParameters coordinatorParameters = mock(CoordinatorParameters.class);
-        when(coordinatorParameters.getPerformanceMonitorIntervalSeconds()).thenReturn(monitorPerformanceMonitorIntervalSeconds);
-        when(coordinatorParameters.getSimulatorProperties()).thenReturn(simulatorProperties);
+        CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
+                .setPerformanceMonitorIntervalSeconds(monitorPerformanceMonitorIntervalSeconds)
+                .setSimulatorProperties(simulatorProperties);
 
         testSuite.setVerifyEnabled(verifyEnabled)
                 .setParallel(parallel)

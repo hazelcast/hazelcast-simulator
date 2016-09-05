@@ -233,11 +233,11 @@ public class AgentSmokeTest implements FailureListener {
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "0");
         environment.put("HAZELCAST_CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
 
-        WorkerParameters workerParameters = new WorkerParameters(
-                "outofthebox",
-                60000,
-                fileAsText(internalDistPath() + "/conf/worker-hazelcast-member.sh"),
-                environment);
+        WorkerParameters workerParameters = new WorkerParameters()
+                .setVersionSpec("outofthebox")
+                .setWorkerStartupTimeout(60000)
+                .setWorkerScript(fileAsText(internalDistPath() + "/conf/worker-hazelcast-member.sh"))
+                .setEnvironment(environment);
         DeploymentPlan deploymentPlan = createSingleInstanceDeploymentPlan(AGENT_IP_ADDRESS, workerParameters);
         new StartWorkersTask(deploymentPlan.getWorkerDeployment(), remoteClient, componentRegistry, 0).run();
     }
