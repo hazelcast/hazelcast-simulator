@@ -247,7 +247,7 @@ public final class TestCaseRunner implements TestPhaseListener {
             }
 
             long nowMs = currentTimeMillis();
-            if (nowMs > timeoutMs || isPhaseCompleted(phase)) {
+            if (nowMs > timeoutMs || isPhaseCompleted(phase) || testData.isStopRequested()) {
                 echo(format("Test finished %s", phase.desc()));
                 break;
             }

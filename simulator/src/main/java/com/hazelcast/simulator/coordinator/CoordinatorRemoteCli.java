@@ -28,6 +28,7 @@ import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.TargetType;
@@ -62,13 +63,6 @@ import static java.lang.String.format;
  * at com.hazelcast.simulator.coordinator.RemoteClient.invokeOnTestOnFirstWorker(RemoteClient.java:93)
  * at com.hazelcast.simulator.coordinator.TestCaseRunner.executePhase(TestCaseRunner.java:198)
  * <p>
- * nice to have
- * - chaos monkeys
- * - cancel running test
- * - cancel all running tests
- * - scaling up down workers
- * <p>
- * done
  */
 public class CoordinatorRemoteCli implements Closeable {
 
@@ -107,20 +101,22 @@ public class CoordinatorRemoteCli implements Closeable {
             new DownloadCli().run(subArgs);
         } else if ("install".equals(cmd)) {
             new InstallCli().run(subArgs);
-        } else if ("kill-worker".equals(cmd)) {
-            new KillWorkerCli().run(subArgs);
         } else if ("print-layout".equals(cmd)) {
             new PrintClusterLayoutCli().run(subArgs);
-        } else if ("run".equals(cmd)) {
-            new RunCli().run(subArgs);
-        } else if ("test-status".equals(cmd)) {
-            new TestStatusCli().run(subArgs);
-        } else if ("script-worker".equals(cmd)) {
-            new ScriptWorkerCli().run(subArgs);
-        } else if ("start-worker".equals(cmd)) {
-            new StartWorkerCli().run(subArgs);
         } else if ("stop".equals(cmd)) {
             new ExitCli().run(subArgs);
+        } else if ("test-run".equals(cmd)) {
+            new TestRunCli().run(subArgs);
+        } else if ("test-status".equals(cmd)) {
+            new TestStatusCli().run(subArgs);
+        } else if ("test-stop".equals(cmd)) {
+            new TestStopCli().run(subArgs);
+        } else if ("worker-kill".equals(cmd)) {
+            new WorkerKill().run(subArgs);
+        } else if ("worker-script".equals(cmd)) {
+            new WorkerScriptCli().run(subArgs);
+        } else if ("worker-start".equals(cmd)) {
+            new WorkerStartCli().run(subArgs);
         } else {
             printHelpAndExit();
         }
@@ -132,12 +128,15 @@ public class CoordinatorRemoteCli implements Closeable {
                         + "--------------------------                                                                  \n"
                         + "download        Downloads all artifacts from the workers                                    \n"
                         + "install         Installs vendor software on the remote machines                             \n"
-                        + "kill-worker     Kills one or more workers                                                   \n"
                         + "print-layout    Prints the cluster-layout                                                   \n"
-                        + "run             Runs a test                                                                 \n"
-                        + "script-worker   Executes a script on workers                                                \n"
-                        + "start-worker    Starts workers                                                              \n"
-                        + "stop            Stops the Coordinator remote session                                        ");
+                        + "test-run        Runs a test                                                                 \n"
+                        + "test-stop       Stops a test                                                                \n"
+                        + "test-status     Checks the status of a test                                                 \n"
+                        + "stop            Stops the Coordinator remote session                                        \n"
+                        + "worker-kill     Kills one or more workers                                                   \n"
+                        + "worker-script   Executes a script on workers                                                \n"
+                        + "worker-start    Starts workers                                                              ");
+
         System.exit(1);
     }
 
@@ -239,11 +238,11 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private class TestStatusCli extends AbstractCli {
         private final String help =
-              "Returns the status of a test"
-                      + "\n"
-                      + "Examples\n"
-                      + "# Checks the status of some test.\n"
-                      + "coordinator-remote test-status C_A*_W*_T1\n";
+                "Returns the status of a test"
+                        + "\n"
+                        + "Examples\n"
+                        + "# Checks the status of some test.\n"
+                        + "coordinator-remote test-status C_A*_W*_T1\n";
 
         private final NonOptionArgumentSpec<String> argumentSpec = parser
                 .nonOptions("test address").ofType(String.class);
@@ -265,6 +264,34 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
+    private class TestStopCli extends AbstractCli {
+        private final String help =
+                "Ask a test to stop its warmup or running phase. It is especially useful for tests that run without a duration."
+                        + "\n"
+                        + "Examples\n"
+                        + "# Stops a test.\n"
+                        + "coordinator-remote test-stop C_A*_W*_T1\n";
+
+        private final NonOptionArgumentSpec<String> argumentSpec = parser
+                .nonOptions("test address").ofType(String.class);
+
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            return initOptionsWithHelp(parser, help, args);
+        }
+
+        @Override
+        protected SimulatorOperation newOperation() {
+            List<String> nonOptionArguments = options.valuesOf(argumentSpec);
+            if (nonOptionArguments.size() != 1) {
+                throw new CommandLineExitException("Too many arguments");
+            }
+
+            String testId = nonOptionArguments.get(0);
+            return new RcTestStopOperation(testId);
+        }
+    }
+
     private class DownloadCli extends AbstractCli {
         private final String help = ""
                 + "The download command downloads all artifacts from the workers.\n";
@@ -280,9 +307,9 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class ScriptWorkerCli extends AbstractCli {
+    private class WorkerScriptCli extends AbstractCli {
         private final String help
-                = "The 'script-worker' commands executes a Bash-script or Javascript on workers\n"
+                = "The 'worker-script' commands executes a Bash-script or Javascript on workers\n"
                 + "\n"
                 + "Various filter options are available like --versionSpec, --workerType, --agent, --worker\n"
                 + "\n"
@@ -298,19 +325,19 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "Examples\n"
                 + "# takes a threadump on all workers\n"
-                + "coordinator-remote script  --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --command 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on at most 2 workers\n"
-                + "coordinator-remote script  --maxCount 2 --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --maxCount 2 --command 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on all member\n"
-                + "coordinator-remote script  --workerType member --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --workerType member --command 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on all workers with a specific version\n"
-                + "coordinator-remote script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
+                + "coordinator-remote worker-script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
                 + "# takes a threaddump on all member on agent C_A1\n"
-                + "coordinator-remote script --workerType member --agent C_A1 --command 'bash:jstack $PID'\n\n"
+                + "coordinator-remote worker-script --workerType member --agent C_A1 --command 'bash:jstack $PID'\n\n"
                 + "# takes a threaddump on C_A1_W1\n"
-                + "coordinator-remote script --worker C_A1_W1 --command 'bash:jstack $PID'\n\n"
+                + "coordinator-remote worker-script --worker C_A1_W1 --command 'bash:jstack $PID'\n\n"
                 + "# executes a javascript on all workers\n"
-                + "coordinator-remote script --command 'js:java.lang.System.out.println(\"hello\")'";
+                + "coordinator-remote worker-script --command 'js:java.lang.System.out.println(\"hello\")'";
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
                 "The versionSpec of the worker to select e.g  maven=3.7 or git=master")
@@ -405,9 +432,9 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class KillWorkerCli extends AbstractCli {
+    private class WorkerKill extends AbstractCli {
         private final String help
-                = "The 'kill-worker' command kills one or more workers. The killing can be done based using an exact\n"
+                = "The 'worker-kill' command kills one or more workers. The killing can be done based using an exact\n"
                 + "worker address or using various filters like versionSpec, etc.\n"
                 + "\n"
                 + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
@@ -416,27 +443,27 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "By default the worker is killed using a System.exit call, however one can also use a bash script\n"
                 + "or a javascript which is executed inside the JMV\n"
                 + "\n"
-                + "If a script is used, the big difference between the 'script-worker' and the 'kill-worker' command\n"
-                + "is when the 'script-worker' kills the JVM, it will lead to a failure. With the 'kill-worker' the\n"
+                + "If a script is used, the big difference between the 'worker-script' and the 'worker-kill' command\n"
+                + "is when the 'worker-script' kills the JVM, it will lead to a failure. With the 'worker-kill' the\n"
                 + "failure is expected and the call will wait till the worker has actually died.\n"
                 + "\n"
                 + "Examples\n"
                 + "# kills one member using System.exit(0)\n"
-                + "coordinator-remote kill-worker\n\n"
+                + "coordinator-remote worker-kill\n\n"
                 + "# kill 2 java clients\n"
-                + "coordinator-remote kill-worker --maxCount 2 --workerType javaclient\n\n"
+                + "coordinator-remote worker-kill --maxCount 2 --workerType javaclient\n\n"
                 + "# kills 3 litemembers using version spec git=master clients\n"
-                + "coordinator-remote kill-worker --maxCount 3 --workerType litemember --versionSpec git=master\n\n"
+                + "coordinator-remote worker-kill --maxCount 3 --workerType litemember --versionSpec git=master\n\n"
                 + "# kills 1 member on agent C_A1\n"
-                + "coordinator-remote kill-worker --agent C_A1 \n\n"
+                + "coordinator-remote worker-kill --agent C_A1 \n\n"
                 + "# kills member C_A1_W1\n"
-                + "coordinator-remote kill-worker --worker C_A1_W1 \n\n"
+                + "coordinator-remote worker-kill --worker C_A1_W1 \n\n"
                 + "# kill one member using OOME\n"
-                + "coordinator-remote kill-worker --command OOME \n\n"
+                + "coordinator-remote worker-kill --command OOME \n\n"
                 + "# kill one member using bash command kill -9\n"
-                + "coordinator-remote kill-worker --command 'bash:kill -9 $PID'\n\n"
+                + "coordinator-remote worker-kill --command 'bash:kill -9 $PID'\n\n"
                 + "# kill one member using javascript which calls System.exit\n"
-                + "coordinator-remote kill-worker --command 'js:java.lang.System.exit(0);'";
+                + "coordinator-remote worker-kill --command 'js:java.lang.System.exit(0);'";
 
         private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
                 "The versionSpec of the member to kill, e.g. maven=3.7. The default value is null, meaning that the versionSpec"
@@ -509,29 +536,29 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class StartWorkerCli extends AbstractCli {
+    private class WorkerStartCli extends AbstractCli {
         private final String help
-                = "The 'start-worker' command starts one or more workers.\n"
+                = "The 'worker-start' command starts one or more workers.\n"
                 + "\n"
-                + "Before a test run run, the appropriate workers need to be started using 'start-workers'\n"
+                + "Before a test run run, the appropriate workers need to be started using 'worker-starts'\n"
                 + "\n"
                 + "By default the workers will be spread so that the number of worker on each agent is in balance.\n"
                 + "Using the coordinator --dedicatedMemberMachines setting dedicated member agents can be created.\n"
                 + "\n"
-                + "The start-workers command will NOT install software when a --versionSpec is used. Make sure that\n"
+                + "The worker-starts command will NOT install software when a --versionSpec is used. Make sure that\n"
                 + "appropriate calls to the install command have been made easier.\n"
                 + "\n"
                 + "Examples\n"
                 + "# starts 1 members\n"
-                + "coordinator-remote start-worker\n\n"
+                + "coordinator-remote worker-start\n\n"
                 + "# starts 2 java clients\n"
-                + "coordinator-remote start-worker --count 2 --workerType javaclient\n\n"
+                + "coordinator-remote worker-start --count 2 --workerType javaclient\n\n"
                 + "# starts 3 litemembers using version spec git=master clients\n"
-                + "coordinator-remote start-worker --count --workerType litemember --versionSpec git=master\n\n"
+                + "coordinator-remote worker-start --count --workerType litemember --versionSpec git=master\n\n"
                 + "# starts 1 member on agent C_A1\n"
-                + "coordinator-remote start-worker --agent C_A1 \n\n"
+                + "coordinator-remote worker-start --agent C_A1 \n\n"
                 + "# starts 1 client with a custom client-hazelcast.xml file\n"
-                + "coordinator-remote start-worker --config client-hazelcast.xml \n\n";
+                + "coordinator-remote worker-start --config client-hazelcast.xml \n\n";
 
         private final OptionSpec<String> vmOptionsSpec = parser.accepts("vmOptions",
                 "Worker JVM options (quotes can be used).")
@@ -587,7 +614,7 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class RunCli extends AbstractCli {
+    private class TestRunCli extends AbstractCli {
         private final String help
                 = "The 'run' command runs a test suite\n"
                 + "A testsuite can contain a single test, or multiple tests when using test4@someproperty=10\n"

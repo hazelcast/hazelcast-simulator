@@ -28,6 +28,7 @@ public class TestData {
     private final TestSuite testSuite;
     private volatile long startTimeMillis;
     private volatile TestPhase testPhase;
+    private volatile boolean stopRequested;
 
     TestData(int testIndex, SimulatorAddress address, TestCase testCase, TestSuite testSuite) {
         this.testIndex = testIndex;
@@ -36,8 +37,21 @@ public class TestData {
         this.testSuite = testSuite;
     }
 
+    /**
+     * Returns its current status.
+     *
+     * @return current state.
+     */
     public TestPhase getTestPhase() {
         return testPhase;
+    }
+
+    public void setStopRequested(boolean stopRequested) {
+        this.stopRequested = stopRequested;
+    }
+
+    public boolean isStopRequested() {
+        return stopRequested;
     }
 
     public void setTestPhase(TestPhase testPhase) {

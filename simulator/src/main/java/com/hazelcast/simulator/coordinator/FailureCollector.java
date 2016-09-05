@@ -98,7 +98,6 @@ public class FailureCollector {
     private FailureOperation enrich(FailureOperation failure) {
         String testId = failure.getTestId();
         if (testId != null) {
-
             TestData testData = componentRegistry.getTest(testId);
             if (testData != null) {
                 failure.setTestCase(testData.getTestCase());

@@ -32,6 +32,7 @@ import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcRunSuiteOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.Promise;
@@ -93,6 +94,9 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
             case RC_TEST_STATUS:
                 promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) operation));
                 return;
+            case RC_TEST_STOP:
+                coordinator.testStop((RcTestStopOperation)  operation);
+                break;
             case RC_EXIT:
                 coordinator.exit();
                 break;

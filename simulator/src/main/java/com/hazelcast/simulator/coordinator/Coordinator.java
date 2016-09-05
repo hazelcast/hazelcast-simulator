@@ -33,6 +33,7 @@ import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcKillWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcStartWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
+import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.AgentData;
@@ -301,6 +302,17 @@ public final class Coordinator {
 
         TestPhase phase = data.getTestPhase();
         return phase == null ? "null" : phase.desc();
+    }
+
+    public void testStop(RcTestStopOperation op) throws Exception {
+        awaitInteractiveModeInitialized();
+
+        TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (data == null) {
+            throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
+        }
+
+        data.setStopRequested(true);
     }
 
     public void exit() {

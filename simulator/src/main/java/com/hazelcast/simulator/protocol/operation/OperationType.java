@@ -44,6 +44,7 @@ public enum OperationType {
     RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2006),
     RC_DOWNLOAD(RcDownloadOperation.class, 2007),
     RC_TEST_STATUS(RcTestStatusOperation.class, 2008),
+    RC_TEST_STOP(RcTestStopOperation.class, 2009),
 
     // AgentOperationProcessor
     INIT_SESSION(InitSessionOperation.class, 3000),
