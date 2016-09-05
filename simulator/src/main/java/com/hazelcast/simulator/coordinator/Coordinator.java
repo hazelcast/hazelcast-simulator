@@ -325,6 +325,7 @@ public final class Coordinator {
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers....");
 
         Map<String, String> environment = new HashMap<String, String>();
+        environment.putAll(simulatorProperties.asMap());
         environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
         environment.put("LOG4j_CONFIG", loadLog4jConfig());
         environment.put("JVM_OPTIONS", op.getVmOptions());
