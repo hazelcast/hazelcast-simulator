@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.coordinator;
+package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;

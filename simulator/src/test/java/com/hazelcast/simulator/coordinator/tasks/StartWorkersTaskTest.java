@@ -1,6 +1,10 @@
-package com.hazelcast.simulator.coordinator;
+package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.coordinator.DeploymentPlan;
+import com.hazelcast.simulator.coordinator.RemoteClient;
+import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;

@@ -1,10 +1,17 @@
-package com.hazelcast.simulator.coordinator;
+package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.coordinator.FailureCollector;
+import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
+import com.hazelcast.simulator.coordinator.RemoteClient;
+import com.hazelcast.simulator.coordinator.TestPhaseListeners;
+import com.hazelcast.simulator.coordinator.TestSuite;
+import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -40,7 +47,7 @@ import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.WARMUP;
-import static com.hazelcast.simulator.coordinator.RunTestSuiteTask.getTestPhaseSyncMap;
+import static com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;

@@ -15,12 +15,10 @@
  */
 package com.hazelcast.simulator.test;
 
+/**
+ * The TestContext is they way for a test to get access to test related information. Most importantly if a test is running.
+ */
 public interface TestContext {
-
-    /**
-     * Default IP address which is used if no public IP address is defined.
-     */
-    String LOCALHOST = "127.0.0.1";
 
     /**
      * Returns the id of the current test.
@@ -47,9 +45,12 @@ public interface TestContext {
     boolean isStopped();
 
     /**
-     * Stops the run/warmup phase. In most cases an outside duration is passed and the test will run as long as needed or
+     * Stops the run or warmup phase. In most cases an outside duration is passed and the test will run as long as needed or
      * until an exception is thrown. But in certain condition the implementer of a test wants to stop the run/warmup phase
      * directly.
+     *
+     * Once stopped, the test moves on to the next phase. If the warmup is stopped, the test will eventually move on to the
+     * run phase.
      */
     void stop();
 
@@ -60,8 +61,8 @@ public interface TestContext {
      * written async, so you could easily kill the by flooding it or causing other problems. So don't use this as a debug logging
      * alternative.
      *
-     * @param msg
-     * @param args
+     * @param msg the message to send
+     * @param args the arguments
      */
     void echoCoordinator(String msg, Object... args);
 }

@@ -131,7 +131,7 @@ public class FailureCollector {
         return criticalFailureCounter.get() + nonCriticalFailureCounter.get();
     }
 
-    boolean hasCriticalFailure() {
+    public boolean hasCriticalFailure() {
         return criticalFailureCounter.get() > 0;
     }
 

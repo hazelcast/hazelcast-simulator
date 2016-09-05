@@ -24,7 +24,7 @@ import java.util.Date;
 /**
  * Parameters for Simulator Coordinator.
  */
-class CoordinatorParameters {
+public class CoordinatorParameters {
 
     private final SimulatorProperties simulatorProperties;
     private final String workerClassPath;
@@ -54,7 +54,7 @@ class CoordinatorParameters {
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
     }
 
-    int getPerformanceMonitorIntervalSeconds() {
+    public int getPerformanceMonitorIntervalSeconds() {
         return performanceMonitorIntervalSeconds;
     }
 
@@ -66,7 +66,7 @@ class CoordinatorParameters {
         return workerVmStartupDelayMs;
     }
 
-    SimulatorProperties getSimulatorProperties() {
+    public SimulatorProperties getSimulatorProperties() {
         return simulatorProperties;
     }
 
@@ -74,7 +74,7 @@ class CoordinatorParameters {
         return workerClassPath;
     }
 
-    TestPhase getLastTestPhaseToSync() {
+    public TestPhase getLastTestPhaseToSync() {
         return lastTestPhaseToSync;
     }
 

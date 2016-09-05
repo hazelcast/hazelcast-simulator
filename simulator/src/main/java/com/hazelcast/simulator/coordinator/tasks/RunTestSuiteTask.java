@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-package com.hazelcast.simulator.coordinator;
+package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.coordinator.CoordinatorParameters;
+import com.hazelcast.simulator.coordinator.FailureCollector;
+import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
+import com.hazelcast.simulator.coordinator.RemoteClient;
+import com.hazelcast.simulator.coordinator.TestCaseRunner;
+import com.hazelcast.simulator.coordinator.TestPhaseListeners;
+import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
