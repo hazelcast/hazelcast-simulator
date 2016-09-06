@@ -357,6 +357,8 @@ public final class Coordinator {
     public void testStop(RcTestStopOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
+        LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
+
         TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
         if (data == null) {
             throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));

@@ -17,6 +17,7 @@ package com.hazelcast.simulator.protocol.core;
 
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.worker.Promise;
 
@@ -25,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_TEST_NOT_FOUND;
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 
 /**
  * Manages {@link TestOperationProcessor} instances for tests.
@@ -61,7 +63,11 @@ public class TestProcessorManager {
     public void processOnTest(Response response, SimulatorOperation operation, SimulatorAddress source, int testAddressIndex) {
         TestOperationProcessor processor = testProcessors.get(testAddressIndex);
         if (processor == null) {
-            response.addPart(localAddress, FAILURE_TEST_NOT_FOUND);
+            if (operation instanceof StopTestOperation) {
+                response.addPart(localAddress, SUCCESS);
+            } else {
+                response.addPart(localAddress, FAILURE_TEST_NOT_FOUND);
+            }
         } else {
             processOperation(processor, response, operation, source);
         }

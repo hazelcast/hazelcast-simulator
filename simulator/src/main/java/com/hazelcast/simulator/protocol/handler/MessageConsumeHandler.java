@@ -28,8 +28,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 
 import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
+import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static java.lang.String.format;
 
 /**
@@ -62,26 +64,31 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
                     localAddress));
         }
 
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                Promise promise = new Promise() {
-                    @Override
-                    public void answer(ResponseType responseType, String payload) {
-                        Response response = new Response(messageId, msg.getSource())
-                                .addPart(localAddress, responseType, payload);
-                        ctx.writeAndFlush(response);
-                    }
-                };
+        try {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Promise promise = new Promise() {
+                        @Override
+                        public void answer(ResponseType responseType, String payload) {
+                            Response response = new Response(messageId, msg.getSource())
+                                    .addPart(localAddress, responseType, payload);
+                            ctx.writeAndFlush(response);
+                        }
+                    };
 
-                try {
-                    processor.process(fromSimulatorMessage(msg), msg.getSource(), promise);
-                } catch (ProcessException e) {
-                    promise.answer(e.getResponseType(), e.getMessage());
-                } catch (Exception e) {
-                    promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, e.getMessage());
+                    try {
+                        processor.process(fromSimulatorMessage(msg), msg.getSource(), promise);
+                    } catch (ProcessException e) {
+                        promise.answer(e.getResponseType(), e.getMessage());
+                    } catch (Exception e) {
+                        promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, e.getMessage());
+                    }
                 }
-            }
-        });
+            });
+        } catch (RejectedExecutionException ignore) {
+            // if the executor is terminated, we can just ignore any rejected since we are shutting down
+            ignore(ignore);
+        }
     }
 }
