@@ -21,6 +21,7 @@ import com.hazelcast.simulator.protocol.core.ClientConnectorManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseCodec;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
+import com.hazelcast.simulator.protocol.core.ResponseFutureListener;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessageCodec;
 import io.netty.buffer.ByteBuf;
@@ -31,7 +32,6 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import static com.hazelcast.simulator.protocol.core.ResponseCodec.isResponse;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_WORKER_NOT_FOUND;
@@ -52,15 +52,11 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
     private final AddressLevel addressLevel;
 
     private final ClientConnectorManager clientConnectorManager;
-    private final ExecutorService executorService;
 
-    public ForwardToWorkerHandler(SimulatorAddress localAddress, ClientConnectorManager clientConnectorManager,
-                                  ExecutorService executorService) {
+    public ForwardToWorkerHandler(SimulatorAddress localAddress, ClientConnectorManager clientConnectorManager) {
         this.localAddress = localAddress;
         this.addressLevel = localAddress.getAddressLevel();
-
         this.clientConnectorManager = clientConnectorManager;
-        this.executorService = executorService;
     }
 
     @Override
@@ -104,15 +100,34 @@ public class ForwardToWorkerHandler extends SimpleChannelInboundHandler<ByteBuf>
             buffer.retain();
             futureList.add(clientConnector.writeAsync(buffer));
         }
-        executorService.submit(new Runnable() {
+
+        // if we don't need to wait for anything, we are done.
+        if (futureList.isEmpty()) {
+            ctx.writeAndFlush(response);
+            return;
+        }
+
+        ResponseFutureListener listener = new ResponseFutureListener() {
+            private int responsesRemaining = futureList.size();
+
             @Override
-            public void run() {
-                for (ResponseFuture future : futureList) {
-                    response.addAllParts(future.getResponse());
+            public void onCompletion(Response r) {
+                int remaining;
+                synchronized (this) {
+                    responsesRemaining--;
+                    remaining = responsesRemaining;
+                    response.addAllParts(r);
                 }
-                ctx.writeAndFlush(response);
+
+                if (remaining == 0) {
+                    ctx.writeAndFlush(response);
+                }
             }
-        });
+        };
+
+        for (ResponseFuture future : futureList) {
+            future.addListener(listener);
+        }
     }
 
     private void forwardResponse(ChannelHandlerContext ctx, ByteBuf buffer, int workerAddressIndex) {

@@ -93,8 +93,7 @@ public class AgentConnector extends AbstractServerConnector implements ClientPip
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
-        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, getClientConnectorManager(),
-                getScheduledExecutor()));
+        pipeline.addLast("forwardToWorkerHandler", new ForwardToWorkerHandler(localAddress, getClientConnectorManager()));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getScheduledExecutor()));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, COORDINATOR, futureMap, addressIndex));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(this));

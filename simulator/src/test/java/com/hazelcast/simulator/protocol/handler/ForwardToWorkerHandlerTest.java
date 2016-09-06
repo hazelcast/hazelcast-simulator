@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 public class ForwardToWorkerHandlerTest {
 
     private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
-    private final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(2, "ForwardToWorkerHandlerTest");
 
     @Mock
     private Attribute<Integer> forwardAddressIndexAttribute;
@@ -50,8 +49,7 @@ public class ForwardToWorkerHandlerTest {
 
         ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
-        forwardToWorkerHandler = new ForwardToWorkerHandler(SimulatorAddress.COORDINATOR, clientConnectorManager,
-                executorService);
+        forwardToWorkerHandler = new ForwardToWorkerHandler(SimulatorAddress.COORDINATOR, clientConnectorManager);
     }
 
     @After
@@ -59,9 +57,6 @@ public class ForwardToWorkerHandlerTest {
         if (buffer != null) {
             buffer.release();
         }
-
-        executorService.shutdown();
-        executorService.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     @Test
