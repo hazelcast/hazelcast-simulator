@@ -2,7 +2,7 @@
 
 #
 # This test starts a set of members, and a set of clients, and while the clients are executing some test
-# the members are by one one destroyed and restarted.
+# the members are by one one shutdown and restart.
 #
 
 set -e

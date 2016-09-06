@@ -41,6 +41,7 @@ import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
+import com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
@@ -354,7 +355,7 @@ public final class Coordinator {
         return test.getStatusString();
     }
 
-    public void testStop(RcTestStopOperation op) throws Exception {
+    public String testStop(RcTestStopOperation op) throws Exception {
         awaitInteractiveModeInitialized();
 
         LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
@@ -364,7 +365,13 @@ public final class Coordinator {
             throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
         }
 
-        data.setStopRequested(true);
+        for (; ; ) {
+            data.setStopRequested(true);
+            sleepSeconds(1);
+            if (data.getCompletedStatus() == CompletedStatus.SUCCESS || data.getCompletedStatus() == CompletedStatus.FAILED) {
+                return data.getStatusString();
+            }
+        }
     }
 
     public void testRun(RcTestRunOperation op, Promise promise) throws Exception {

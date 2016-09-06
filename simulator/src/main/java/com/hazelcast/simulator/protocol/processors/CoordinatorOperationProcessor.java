@@ -28,12 +28,12 @@ import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
 import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
+import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
@@ -95,8 +95,8 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) operation));
                 return;
             case RC_TEST_STOP:
-                coordinator.testStop((RcTestStopOperation) operation);
-                break;
+                promise.answer(SUCCESS, coordinator.testStop((RcTestStopOperation) operation));
+                return;
             case RC_EXIT:
                 coordinator.exit();
                 break;
