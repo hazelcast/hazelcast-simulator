@@ -16,15 +16,16 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.utils.BashCommand;
-import com.hazelcast.simulator.utils.JavascriptCommand;
-import com.hazelcast.simulator.utils.ThreadSpawner;
+import com.hazelcast.simulator.utils.EmbeddedScriptCommand;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -39,44 +40,70 @@ public class ScriptExecutor {
         this.hazelcastInstance = hazelcastInstance;
     }
 
-    public void execute(final ExecuteScriptOperation operation) {
+    public void execute(final ExecuteScriptOperation operation, final Promise promise) {
+        if (operation.isFireAndForget()) {
+            promise.answer(ResponseType.SUCCESS);
+        }
+
         String fullCommand = operation.getCommand();
         int indexColon = fullCommand.indexOf(":");
-        String type = fullCommand.substring(0, indexColon);
+        String extension = fullCommand.substring(0, indexColon);
         final String command = fullCommand.substring(indexColon + 1);
-        ThreadSpawner spawner = new ThreadSpawner(type + "[" + operation.getCommand() + "]");
 
-        if (type.equals("js")) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Object result = new JavascriptCommand(command)
-                                .addEnvironment("hazelcastInstance", hazelcastInstance)
-                                .execute();
-                        LOGGER.info(format("Javascript [%s] with [%s]", command, result));
-                    } catch (Exception e) {
-                        LOGGER.warn(format("Failed to process javascript command '%s'", command), e);
-                    }
-                }
-            });
-        } else if (type.equals("bash")) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    Map<String, Object> environment = new HashMap<String, Object>();
-                    File pidFile = new File(getUserDir(), "worker.pid");
-                    if (pidFile.exists()) {
-                        environment.put("PID", fileAsText(pidFile));
-                    }
-                    new BashCommand(command)
-                            .setDirectory(getUserDir())
-                            .addEnvironment(environment)
-                            .execute();
-                }
-            });
+        final Callable<String> task;
+        if (extension.equals("bash")) {
+            task = newBashScriptCallable(command);
         } else {
-            throw new IllegalArgumentException("Unhandled script type: " + type);
+            task = newGenericScriptCallable(extension, command);
         }
+
+        new Thread() {
+            public void run() {
+                try {
+                    String result = task.call();
+                    promise.answer(ResponseType.SUCCESS, result);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to execute script: " + command, e);
+                    promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, e.getMessage());
+                }
+            }
+        }.start();
+    }
+
+    private Callable<String> newBashScriptCallable(final String command) {
+        Callable<String> task;
+        task = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                Map<String, Object> environment = new HashMap<String, Object>();
+                File pidFile = new File(getUserDir(), "worker.pid");
+                if (pidFile.exists()) {
+                    environment.put("PID", fileAsText(pidFile));
+                }
+
+                return new BashCommand(command)
+                        .setDirectory(getUserDir())
+                        .addEnvironment(environment)
+                        .setThrowsException(true)
+                        .execute();
+            }
+        };
+        return task;
+    }
+
+    private Callable<String> newGenericScriptCallable(final String extension, final String command) {
+        Callable<String> task;
+        task = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                Object result = new EmbeddedScriptCommand(command)
+                        .addEnvironment("hazelcastInstance", hazelcastInstance)
+                        .setExtension(extension)
+                        .execute();
+                LOGGER.info(format("Script [%s] with [%s]", command, result));
+                return result == null ? "null" : result.toString();
+            }
+        };
+        return task;
     }
 }

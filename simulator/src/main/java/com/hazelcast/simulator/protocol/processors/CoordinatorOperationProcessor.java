@@ -101,8 +101,8 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 coordinator.exit();
                 break;
             case RC_WORKER_SCRIPT:
-                coordinator.workerScript((RcWorkerScriptOperation) operation);
-                break;
+                coordinator.workerScript((RcWorkerScriptOperation) operation, promise);
+                return;
             case RC_PRINT_LAYOUT:
                 promise.answer(ResponseType.SUCCESS, coordinator.printLayout());
                 return;

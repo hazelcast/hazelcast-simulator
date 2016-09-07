@@ -25,6 +25,8 @@ import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
@@ -52,6 +54,7 @@ import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -508,19 +511,41 @@ public final class Coordinator {
         return WorkerData.toAddressString(result);
     }
 
-    public void workerScript(RcWorkerScriptOperation operation) throws Exception {
+    public void workerScript(RcWorkerScriptOperation operation, Promise promise) throws Exception {
         awaitInteractiveModeInitialized();
 
         List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
 
         LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
 
+        List<ResponseFuture> futures = new ArrayList<ResponseFuture>();
         for (WorkerData worker : workers) {
-            coordinatorConnector.invoke(worker.getAddress(), new ExecuteScriptOperation(operation.getCommand()));
+            ResponseFuture f = coordinatorConnector.invokeAsync(worker.getAddress(),
+                    new ExecuteScriptOperation(operation.getCommand(), operation.isFireAndForget()));
+            futures.add(f);
             LOGGER.info("Script send to worker [" + worker.getAddress() + "]");
         }
 
-        LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
-    }
+        if (operation.isFireAndForget()) {
+            promise.answer(ResponseType.SUCCESS);
+            return;
+        }
 
+        StringBuilder sb = new StringBuilder();
+        for (ResponseFuture future : futures) {
+            Response response = future.get();
+            Response.Part errorPart = response.getFirstErrorPart();
+            if (errorPart != null) {
+                promise.answer(errorPart.getType(), errorPart.getPayload());
+                return;
+            }
+
+            for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
+                sb.append(entry.getKey()).append("=").append(entry.getValue().getPayload()).append("\n");
+            }
+        }
+
+        LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
+        promise.answer(ResponseType.SUCCESS, sb.toString());
+    }
 }

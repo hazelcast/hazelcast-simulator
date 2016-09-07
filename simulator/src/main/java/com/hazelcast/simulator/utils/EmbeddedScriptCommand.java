@@ -22,29 +22,41 @@ import javax.script.ScriptEngineManager;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JavascriptCommand {
-    private static final Logger LOGGER = Logger.getLogger(JavascriptCommand.class);
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
+
+public class EmbeddedScriptCommand {
+    private static final Logger LOGGER = Logger.getLogger(EmbeddedScriptCommand.class);
 
     private final String command;
     private Map<String, Object> environment = new HashMap<String, Object>();
+    private String extension = "js";
 
-    public JavascriptCommand(String command) {
+    public EmbeddedScriptCommand(String command) {
         this.command = command;
     }
 
-    public JavascriptCommand addEnvironment(String variable, Object value) {
+    public EmbeddedScriptCommand addEnvironment(String variable, Object value) {
         this.environment.put(variable, value);
         return this;
     }
 
-    public Object execute() throws Exception {
+    public EmbeddedScriptCommand setExtension(String extension) {
+        this.extension = checkNotNull(extension, "extension can't be null");
+        return this;
+    }
+
+    public Object execute() {
         ScriptEngineManager engineManager = new ScriptEngineManager();
-        ScriptEngine engine = engineManager.getEngineByExtension("js");
+        ScriptEngine engine = engineManager.getEngineByExtension(extension);
         for (Map.Entry<String, Object> entry : environment.entrySet()) {
             engine.put(entry.getKey(), entry.getValue());
         }
 
         LOGGER.info(command);
-        return engine.eval(command);
+        try {
+            return engine.eval(command);
+        } catch (javax.script.ScriptException e) {
+            throw new ScriptException("Failed to execute command [" + command + "]", e);
+        }
     }
 }

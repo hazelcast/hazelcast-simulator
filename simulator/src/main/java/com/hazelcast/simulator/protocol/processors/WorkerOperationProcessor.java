@@ -100,8 +100,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 promise.answer(SUCCESS);
                 break;
             case EXECUTE_SCRIPT:
-                scriptExecutor.execute((ExecuteScriptOperation) operation);
-                promise.answer(SUCCESS);
+                scriptExecutor.execute((ExecuteScriptOperation) operation, promise);
                 break;
             default:
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);

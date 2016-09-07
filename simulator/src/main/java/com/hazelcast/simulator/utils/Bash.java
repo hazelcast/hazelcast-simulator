@@ -32,19 +32,19 @@ public class Bash {
         this.user = simulatorProperties.getUser();
     }
 
-    public StringBuilder execute(String command) {
+    public String execute(String command) {
         return new BashCommand(command).execute();
     }
 
-    public StringBuilder executeQuiet(String command) {
+    public String executeQuiet(String command) {
         return execute(command + " || true");
     }
 
-    public StringBuilder ssh(String ip, String command) {
+    public String ssh(String ip, String command) {
         return ssh(ip, command, false);
     }
 
-    public StringBuilder ssh(String ip, String command, boolean throwException) {
+    public String ssh(String ip, String command, boolean throwException) {
         String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
         return new BashCommand(sshCommand).setThrowsException(throwException).execute();
     }

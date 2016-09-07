@@ -45,7 +45,7 @@ public class NativeUtilsTest {
         NativeUtils.execute("pwd && false");
     }
 
-    @Test(expected = CommandLineExitException.class)
+    @Test(expected = ScriptException.class)
     public void testExecute_withException() {
         NativeUtils.execute("pwd && false", true);
     }

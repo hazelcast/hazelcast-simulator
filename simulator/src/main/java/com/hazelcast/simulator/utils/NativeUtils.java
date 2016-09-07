@@ -27,11 +27,11 @@ public final class NativeUtils {
     private NativeUtils() {
     }
 
-    public static StringBuilder execute(String command) {
+    public static String execute(String command) {
         return new BashCommand(command).execute();
     }
 
-    public static StringBuilder execute(String command, boolean throwException) {
+    public static String execute(String command, boolean throwException) {
         return new BashCommand(command)
                 .setThrowsException(throwException)
                 .execute();

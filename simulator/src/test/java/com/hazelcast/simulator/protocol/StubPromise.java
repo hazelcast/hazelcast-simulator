@@ -9,15 +9,33 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class StubPromise extends Promise implements Future<ResponseType> {
-    private volatile ResponseType result;
+
+
+    private volatile ResponseType responseType;
+    private volatile String response;
 
     @Override
     public void answer(ResponseType responseType, String payload) {
-        this.result = responseType;
+        synchronized (this) {
+            if (this.responseType != null) {
+                return;
+            }
+
+            this.responseType = responseType;
+            this.response = payload;
+            notifyAll();
+        }
     }
 
-    public ResponseType join(){
-        return result;
+    public ResponseType join() {
+        try {
+            return get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -32,16 +50,22 @@ public class StubPromise extends Promise implements Future<ResponseType> {
 
     @Override
     public boolean isDone() {
-        return false;
+        return responseType != null;
     }
 
     @Override
     public ResponseType get() throws InterruptedException, ExecutionException {
-        return result;
+        synchronized (this) {
+            while (responseType == null) {
+                wait();
+            }
+
+            return responseType;
+        }
     }
 
     @Override
     public ResponseType get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }

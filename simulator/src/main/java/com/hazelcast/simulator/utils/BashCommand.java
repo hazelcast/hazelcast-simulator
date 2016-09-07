@@ -88,7 +88,7 @@ public class BashCommand {
         return sb.toString();
     }
 
-    public StringBuilder execute() {
+    public String execute() {
         StringBuilder sb = new StringBuilder();
 
         String command = command();
@@ -118,8 +118,7 @@ public class BashCommand {
 
             if (shellExitStatus != 0) {
                 if (throwException) {
-                    throw new CommandLineExitException(format("Failed to execute [%s]", command),
-                            new CommandLineExitException(sb.toString()));
+                    throw new ScriptException(format("Failed to execute [%s]", command));
                 }
                 LOGGER.error(format("Failed to execute [%s]", command));
                 LOGGER.error(sb.toString());
@@ -130,7 +129,7 @@ public class BashCommand {
                 }
             }
 
-            return sb;
+            return sb.toString();
         } catch (Exception e) {
             throw rethrow(e);
         }

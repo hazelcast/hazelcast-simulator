@@ -69,8 +69,7 @@ public class AgentUtilsTest {
     public void testCheckInstallation_isStatic_whenInstallationIsOkay() {
         setCloudProvider(PROVIDER_STATIC);
 
-        StringBuilder result = new StringBuilder("Warning: foobar SIM-OK");
-        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn(result);
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn("Warning: foobar SIM-OK");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
@@ -82,8 +81,7 @@ public class AgentUtilsTest {
     public void testCheckInstallation_isStatic_whenInstallationIsNotOkay() {
         setCloudProvider(PROVIDER_STATIC);
 
-        StringBuilder result = new StringBuilder("Warning: foobar SIM-NOK");
-        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn(result);
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn("Warning: foobar SIM-NOK");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
     }

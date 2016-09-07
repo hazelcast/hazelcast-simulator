@@ -368,6 +368,10 @@ public class CoordinatorRemoteCli implements Closeable {
                 "If workers should be picked randomly or predictably")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
 
+        private final OptionSpec fireAndForget = parser.accepts("fireAndForget",
+                "If the command is a fire and forget and no waiting for a response.");
+
+
         @Override
         protected OptionSet newOptions(String[] args) {
             return initOptionsWithHelp(parser, help, args);
@@ -401,7 +405,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
             String cmd = (String) nonOptionArguments.get(0);
             LOGGER.info("Executing [" + cmd + "]");
-            return new RcWorkerScriptOperation(cmd, workerQuery);
+            return new RcWorkerScriptOperation(cmd, workerQuery, options.has(fireAndForget));
         }
     }
 

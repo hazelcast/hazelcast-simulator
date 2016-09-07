@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.worker;
+package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.protocol.core.ResponseType;
+public class ScriptException extends RuntimeException {
 
-public abstract class Promise {
-
-    public final void answer(ResponseType responseType) {
-        answer(responseType, null);
+    public ScriptException(String message) {
+        super(message);
     }
 
-    public abstract void answer(ResponseType responseType, String payload);
+    public ScriptException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

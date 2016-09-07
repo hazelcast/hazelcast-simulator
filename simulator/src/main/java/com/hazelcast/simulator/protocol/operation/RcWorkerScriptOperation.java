@@ -21,10 +21,12 @@ public class RcWorkerScriptOperation implements SimulatorOperation {
 
     private final String command;
     private final WorkerQuery workerQuery;
+    private final boolean fireAndForget;
 
-    public RcWorkerScriptOperation(String command, WorkerQuery workerQuery) {
+    public RcWorkerScriptOperation(String command, WorkerQuery workerQuery, boolean fireAndForget) {
         this.command = command;
         this.workerQuery = workerQuery;
+        this.fireAndForget = fireAndForget;
     }
 
     public String getCommand() {
@@ -33,5 +35,9 @@ public class RcWorkerScriptOperation implements SimulatorOperation {
 
     public WorkerQuery getWorkerQuery() {
         return workerQuery;
+    }
+
+    public boolean isFireAndForget() {
+        return fireAndForget;
     }
 }

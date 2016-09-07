@@ -31,7 +31,7 @@ public class BashCommandTest {
         new BashCommand("pwd && false").execute();
     }
 
-    @Test(expected = CommandLineExitException.class)
+    @Test(expected = ScriptException.class)
     public void testExecute_withException() {
         new BashCommand("pwd && false").setThrowsException(true).execute();
     }

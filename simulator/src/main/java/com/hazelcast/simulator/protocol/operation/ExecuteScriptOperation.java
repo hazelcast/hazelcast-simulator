@@ -18,12 +18,18 @@ package com.hazelcast.simulator.protocol.operation;
 public class ExecuteScriptOperation implements SimulatorOperation {
 
     private String command;
+    private boolean fireAndForget;
 
-    public ExecuteScriptOperation(String command) {
+    public ExecuteScriptOperation(String command, boolean fireAndForget) {
         this.command = command;
+        this.fireAndForget = fireAndForget;
     }
 
     public String getCommand() {
         return command;
+    }
+
+    public boolean isFireAndForget() {
+        return fireAndForget;
     }
 }
