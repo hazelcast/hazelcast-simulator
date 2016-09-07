@@ -30,20 +30,15 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.utils.JavascriptCommand;
-import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Promise;
+import com.hazelcast.simulator.worker.ScriptExecutor;
 import com.hazelcast.simulator.worker.Worker;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -52,8 +47,6 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_ASYNC;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_SYNC;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
 
@@ -72,6 +65,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     private final HazelcastInstance hazelcastInstance;
     private final Worker worker;
     private final SimulatorAddress workerAddress;
+    private final ScriptExecutor scriptExecutor;
 
     public WorkerOperationProcessor(WorkerType type, HazelcastInstance hazelcastInstance,
                                     Worker worker, SimulatorAddress workerAddress) {
@@ -79,6 +73,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         this.hazelcastInstance = hazelcastInstance;
         this.worker = worker;
         this.workerAddress = workerAddress;
+        this.scriptExecutor = new ScriptExecutor(hazelcastInstance);
     }
 
     public Collection<TestContainer> getTests() {
@@ -105,7 +100,7 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 promise.answer(SUCCESS);
                 break;
             case EXECUTE_SCRIPT:
-                processExecuteScript((ExecuteScriptOperation) operation);
+                scriptExecutor.execute((ExecuteScriptOperation) operation);
                 promise.answer(SUCCESS);
                 break;
             default:
@@ -116,47 +111,6 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     @Override
     protected void onProcessOperationFailure(Throwable t) {
         ExceptionReporter.report(null, t);
-    }
-
-    private void processExecuteScript(final ExecuteScriptOperation operation) {
-        String fullCommand = operation.getCommand();
-        int indexColon = fullCommand.indexOf(":");
-        String type = fullCommand.substring(0, indexColon);
-        final String command = fullCommand.substring(indexColon + 1);
-        ThreadSpawner spawner = new ThreadSpawner(type + "[" + operation.getCommand() + "]");
-
-        if (type.equals("js")) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Object result = new JavascriptCommand(command)
-                                .addEnvironment("hazelcastInstance", hazelcastInstance)
-                                .execute();
-                        LOGGER.info(format("Javascript [%s] with [%s]", command, result));
-                    } catch (Exception e) {
-                        LOGGER.warn(format("Failed to process javascript command '%s'", command), e);
-                    }
-                }
-            });
-        } else if (type.equals("bash")) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    Map<String, Object> environment = new HashMap<String, Object>();
-                    File pidFile = new File(getUserDir(), "worker.pid");
-                    if (pidFile.exists()) {
-                        environment.put("PID", fileAsText(pidFile));
-                    }
-                    new BashCommand(command)
-                            .setDirectory(getUserDir())
-                            .addEnvironment(environment)
-                            .execute();
-                }
-            });
-        } else {
-            throw new IllegalArgumentException("Unhandled script type: " + type);
-        }
     }
 
     private void processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress, Promise promise)
