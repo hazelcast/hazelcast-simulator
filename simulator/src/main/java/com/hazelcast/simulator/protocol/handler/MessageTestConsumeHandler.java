@@ -15,65 +15,57 @@
  */
 package com.hazelcast.simulator.protocol.handler;
 
-import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
-import com.hazelcast.simulator.protocol.core.TestProcessorManager;
-import io.netty.channel.ChannelHandlerContext;
+//import com.hazelcast.simulator.protocol.core.TestProcessorManager;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.AttributeKey;
-import org.apache.log4j.Logger;
-
-import java.util.concurrent.ExecutorService;
-
-import static com.hazelcast.simulator.protocol.operation.OperationCodec.fromSimulatorMessage;
-import static java.lang.String.format;
 
 /**
  * A {@link SimpleChannelInboundHandler} to to deserialize a {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}
  * from a received {@link SimulatorMessage} and execute it on the {@link TestProcessorManager} of the addressed Simulator Test.
  */
-public class MessageTestConsumeHandler extends SimpleChannelInboundHandler<SimulatorMessage> {
+public class MessageTestConsumeHandler {
+    //extends
+//} SimpleChannelInboundHandler<SimulatorMessage> {
 
-    private static final Logger LOGGER = Logger.getLogger(MessageTestConsumeHandler.class);
-
-    private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
-
-    private final TestProcessorManager testProcessorManager;
-    private final SimulatorAddress localAddress;
-    private final ExecutorService executorService;
-
-    public MessageTestConsumeHandler(TestProcessorManager testProcessorManager, SimulatorAddress localAddress,
-                                     ExecutorService executorService) {
-        this.testProcessorManager = testProcessorManager;
-        this.localAddress = localAddress;
-        this.executorService = executorService;
-    }
-
-    @Override
-    public void channelRead0(final ChannelHandlerContext ctx, final SimulatorMessage msg) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
-        }
-
-        final int testAddressIndex = ctx.attr(forwardAddressIndex).get();
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                Response response = new Response(msg);
-                if (testAddressIndex == 0) {
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
-                    }
-                    testProcessorManager.processOnAllTests(response, fromSimulatorMessage(msg), msg.getSource());
-                } else {
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
-                    }
-                    testProcessorManager.processOnTest(response, fromSimulatorMessage(msg), msg.getSource(), testAddressIndex);
-                }
-                ctx.writeAndFlush(response);
-            }
-        });
-    }
+//    private static final Logger LOGGER = Logger.getLogger(MessageTestConsumeHandler.class);
+//
+//    private final AttributeKey<Integer> forwardAddressIndex = AttributeKey.valueOf("forwardAddressIndex");
+//
+//    private final TestProcessorManager testProcessorManager;
+//    private final SimulatorAddress localAddress;
+//    private final ExecutorService executorService;
+//
+//    public MessageTestConsumeHandler(TestProcessorManager testProcessorManager, SimulatorAddress localAddress,
+//                                     ExecutorService executorService) {
+//        this.testProcessorManager = testProcessorManager;
+//        this.localAddress = localAddress;
+//        this.executorService = executorService;
+//    }
+//
+//    @Override
+//    public void channelRead0(final ChannelHandlerContext ctx, final SimulatorMessage msg) {
+//        if (LOGGER.isTraceEnabled()) {
+//            LOGGER.trace(format("[%d] %s MessageTestConsumeHandler is consuming message...", msg.getMessageId(), localAddress));
+//        }
+//
+//        final int testAddressIndex = ctx.attr(forwardAddressIndex).get();
+//        executorService.submit(new Runnable() {
+//            @Override
+//            public void run() {
+//                Response response = new Response(msg);
+//                if (testAddressIndex == 0) {
+//                    if (LOGGER.isTraceEnabled()) {
+//                        LOGGER.trace(format("[%d] forwarding message to all tests", msg.getMessageId()));
+//                    }
+//                    testProcessorManager.processOnAllTests(response, fromSimulatorMessage(msg), msg.getSource());
+//                } else {
+//                    if (LOGGER.isTraceEnabled()) {
+//                        LOGGER.trace(format("[%d] forwarding message to test %d", msg.getMessageId(), testAddressIndex));
+//                    }
+//                    testProcessorManager.processOnTest(response, fromSimulatorMessage(msg), msg.getSource(), testAddressIndex);
+//                }
+//                ctx.writeAndFlush(response);
+//            }
+//        });
+//    }
 }

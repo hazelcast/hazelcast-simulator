@@ -15,39 +15,31 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartTestOperation;
+import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.Promise;
 import com.hazelcast.simulator.worker.ScriptExecutor;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.worker.testcontainer.TestContainer;
-import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
+import com.hazelcast.simulator.worker.testcontainer.TestContainerManager;
 import org.apache.log4j.Logger;
-
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_ASYNC;
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.DEEP_NESTED_SYNC;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.TestUtils.getUserContextKeyFromTestId;
 import static java.lang.String.format;
 
 /**
@@ -55,40 +47,36 @@ import static java.lang.String.format;
  */
 public class WorkerOperationProcessor extends AbstractOperationProcessor {
 
-    private static final String DASHES = "---------------------------";
-
     private static final Logger LOGGER = Logger.getLogger(WorkerOperationProcessor.class);
 
-    private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
-
-    private final WorkerType type;
-    private final HazelcastInstance hazelcastInstance;
     private final Worker worker;
+    private final TestContainerManager testContainerManager;
     private final SimulatorAddress workerAddress;
     private final ScriptExecutor scriptExecutor;
 
-    public WorkerOperationProcessor(WorkerType type, HazelcastInstance hazelcastInstance,
-                                    Worker worker, SimulatorAddress workerAddress) {
-        this.type = type;
-        this.hazelcastInstance = hazelcastInstance;
+    public WorkerOperationProcessor(TestContainerManager testContainerManager,
+                                    ScriptExecutor scriptExecutor,
+                                    Worker worker,
+                                    SimulatorAddress workerAddress) {
+        this.testContainerManager = testContainerManager;
         this.worker = worker;
+        this.scriptExecutor = scriptExecutor;
         this.workerAddress = workerAddress;
-        this.scriptExecutor = new ScriptExecutor(hazelcastInstance);
     }
 
-    public Collection<TestContainer> getTests() {
-        return tests.values();
+    public TestContainerManager getTestContainerManager() {
+        return testContainerManager;
     }
 
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation op,
-                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
-        switch (operationType) {
+    protected void processOperation(SimulatorMessage msg, SimulatorOperation op, Promise promise) throws Exception {
+        switch (msg.getOperationType()) {
             case INTEGRATION_TEST:
-                processIntegrationTest((IntegrationTestOperation) op, sourceAddress, promise);
+                processIntegrationTest((IntegrationTestOperation) op, msg.getSource(), promise);
                 return;
             case PING:
-                processPing(sourceAddress);
+                WorkerConnector workerConnector = worker.getWorkerConnector();
+                LOGGER.debug(format("Pinged by %s (queue size: %d)...", msg.getSource(), workerConnector.getMessageQueueSize()));
                 promise.answer(SUCCESS);
                 break;
             case TERMINATE_WORKER:
@@ -96,14 +84,28 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
                 promise.answer(SUCCESS);
                 break;
             case CREATE_TEST:
-                processCreateTest((CreateTestOperation) op);
+                CreateTestOperation createTestOperation = (CreateTestOperation) op;
+                testContainerManager.createTest(createTestOperation);
                 promise.answer(SUCCESS);
                 break;
             case EXECUTE_SCRIPT:
                 scriptExecutor.execute((ExecuteScriptOperation) op, promise);
+                return;
+            case START_TEST_PHASE:
+                StartTestPhaseOperation startTestPhaseOperation = (StartTestPhaseOperation) op;
+                testContainerManager.startTestPhase(msg.getDestination(), startTestPhaseOperation.getTestPhase());
+                promise.answer(SUCCESS);
+                break;
+            case START_TEST:
+                testContainerManager.start((StartTestOperation) op, msg.getDestination());
+                promise.answer(SUCCESS);
+                break;
+            case STOP_TEST:
+                testContainerManager.stop(msg.getDestination());
+                promise.answer(SUCCESS);
                 break;
             default:
-                throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
+                throw new ProcessException("Unsupported operation:" + op, UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
     }
 
@@ -112,12 +114,12 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         ExceptionReporter.report(null, t);
     }
 
-    private void processIntegrationTest(IntegrationTestOperation operation, SimulatorAddress sourceAddress, Promise promise)
+    private void processIntegrationTest(IntegrationTestOperation op, SimulatorAddress sourceAddress, Promise promise)
             throws Exception {
         SimulatorOperation nestedOperation;
         Response response;
         ResponseFuture future;
-        switch (operation.getType()) {
+        switch (op.getType()) {
             case NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync nested integration test message");
                 response = worker.getWorkerConnector().invoke(sourceAddress, nestedOperation);
@@ -147,53 +149,11 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
         promise.answer(response.getFirstErrorResponseType());
     }
 
-    private void processPing(SimulatorAddress sourceAddress) {
-        WorkerConnector workerConnector = worker.getWorkerConnector();
-        LOGGER.debug(format("Pinged by %s (queue size: %d)...", sourceAddress, workerConnector.getMessageQueueSize()));
-    }
-
-    private void processTerminateWorker(TerminateWorkerOperation operation) {
+    private void processTerminateWorker(TerminateWorkerOperation op) {
         LOGGER.warn("Terminating worker");
-        if (type == WorkerType.MEMBER) {
-            sleepSeconds(operation.getMemberWorkerShutdownDelaySeconds());
-        }
-        worker.shutdown(operation.isEnsureProcessShutdown());
-    }
-
-    private void processCreateTest(CreateTestOperation operation) {
-        LOGGER.info(operation.getTestCase().toString());
-
-        TestCase testCase = operation.getTestCase();
-        int testIndex = operation.getTestIndex();
-        WorkerConnector workerConnector = worker.getWorkerConnector();
-        if (workerConnector.getTest(testIndex) != null) {
-            throw new IllegalStateException(format("Can't init TestCase: %s, another test with testIndex %d already exists",
-                    operation, testIndex));
-        }
-        String testId = testCase.getId();
-        if (tests.containsKey(testId)) {
-            throw new IllegalStateException(format("Can't init TestCase: %s, another test with testId [%s] already exists",
-                    operation, testId));
-        }
-
-        LOGGER.info(format("%s Initializing test %s %s%n%s", DASHES, testId, DASHES, testCase));
-
-        TestContextImpl testContext = new TestContextImpl(
-                hazelcastInstance, testId, worker.getPublicIpAddress(), workerConnector);
-
-        TestContainer testContainer = new TestContainer(testContext, testCase);
-        SimulatorAddress testAddress = workerAddress.getChild(testIndex);
-        TestOperationProcessor processor = new TestOperationProcessor(worker, type, testContainer, testAddress);
-
-        workerConnector.addTest(testIndex, processor);
-        tests.put(testId, testContainer);
-
-        if (type == WorkerType.MEMBER) {
-            hazelcastInstance.getUserContext().put(getUserContextKeyFromTestId(testId), testContainer.getTestInstance());
-        }
-    }
-
-    public void remove(String id) {
-        tests.remove(id);
+//        if (type == WorkerType.MEMBER) {
+//            sleepSeconds(operation.getMemberWorkerShutdownDelaySeconds());
+//        }
+        worker.shutdown(op.isEnsureProcessShutdown());
     }
 }

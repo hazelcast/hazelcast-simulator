@@ -78,7 +78,7 @@ public class MessageConsumeHandler extends SimpleChannelInboundHandler<Simulator
                     };
 
                     try {
-                        processor.process(fromSimulatorMessage(msg), msg.getSource(), promise);
+                        processor.process(msg, fromSimulatorMessage(msg), promise);
                     } catch (ProcessException e) {
                         promise.answer(e.getResponseType(), e.getMessage());
                     } catch (Exception e) {

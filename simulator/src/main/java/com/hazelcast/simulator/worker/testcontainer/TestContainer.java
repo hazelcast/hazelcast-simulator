@@ -46,6 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
@@ -85,6 +86,7 @@ public class TestContainer {
     private final Class testClass;
     private final RunStrategy runStrategy;
     private final TestPerformanceTracker testPerformanceTracker;
+    private final AtomicReference<TestPhase> testPhaseReference = new AtomicReference<TestPhase>(null);
 
     public TestContainer(TestContextImpl targetInstance, TestCase testCase) {
         this(targetInstance, null, testCase);
@@ -113,6 +115,18 @@ public class TestContainer {
         propertyBinding.ensureNoUnusedProperties();
 
         this.testPerformanceTracker = new TestPerformanceTracker(this);
+    }
+
+    public TestPhase getTestPhase() {
+        return testPhaseReference.get();
+    }
+
+    public boolean trySetTestPhase(TestPhase phase) {
+        return testPhaseReference.compareAndSet(null, phase);
+    }
+
+    public TestPhase unsetPhase() {
+        return testPhaseReference.getAndSet(null);
     }
 
     public TestPerformanceTracker getTestPerformanceTracker() {

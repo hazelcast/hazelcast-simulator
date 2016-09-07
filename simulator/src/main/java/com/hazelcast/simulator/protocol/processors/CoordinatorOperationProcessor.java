@@ -21,9 +21,9 @@ import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
@@ -67,17 +67,16 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
 
     @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation op,
-                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
-        switch (operationType) {
+    protected void processOperation(SimulatorMessage msg, SimulatorOperation op, Promise promise) throws Exception {
+        switch (msg.getOperationType()) {
             case FAILURE:
                 failureCollector.notify((FailureOperation) op);
                 break;
             case PHASE_COMPLETED:
-                promise.answer(processPhaseCompletion((PhaseCompletedOperation) op, sourceAddress));
+                promise.answer(processPhaseCompletion((PhaseCompletedOperation) op, msg.getSource()));
                 return;
             case PERFORMANCE_STATE:
-                performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) op).getPerformanceStats());
+                performanceStatsCollector.update(msg.getSource(), ((PerformanceStatsOperation) op).getPerformanceStats());
                 break;
             case RC_INSTALL:
                 coordinator.install(((RcInstallOperation) op).getVersionSpec());
@@ -101,8 +100,8 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 coordinator.exit();
                 break;
             case RC_WORKER_SCRIPT:
-                coordinator.workerScript((RcWorkerScriptOperation) op, promise);
-                return;
+                coordinator.workerScript((RcWorkerScriptOperation) op,promise);
+                break;
             case RC_PRINT_LAYOUT:
                 promise.answer(ResponseType.SUCCESS, coordinator.printLayout());
                 return;
@@ -115,14 +114,14 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         promise.answer(SUCCESS);
     }
 
-    private ResponseType processPhaseCompletion(PhaseCompletedOperation op, SimulatorAddress sourceAddress) {
+    private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
         if (!TEST.equals(sourceAddress.getAddressLevel())) {
-            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", op.getTestPhase(), sourceAddress));
+            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", operation.getTestPhase(), sourceAddress));
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
         int testIndex = sourceAddress.getTestIndex();
         SimulatorAddress workerAddress = sourceAddress.getParent();
-        testPhaseListeners.onCompletion(testIndex, op.getTestPhase(), workerAddress);
+        testPhaseListeners.onCompletion(testIndex, operation.getTestPhase(), workerAddress);
         return SUCCESS;
     }
 }

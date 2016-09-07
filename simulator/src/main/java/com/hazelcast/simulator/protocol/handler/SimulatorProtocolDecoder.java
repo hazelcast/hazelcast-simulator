@@ -38,7 +38,7 @@ import static java.lang.String.format;
 
 /**
  * A {@link ByteToMessageDecoder} to decode a received {@link ByteBuf} to a {@link SimulatorMessage} or {@link Response}.
- *
+ * <p>
  * If the destination address of a received {@link SimulatorMessage} is not for the {@link AddressLevel} of this Simulator
  * component, the {@link ByteBuf} is passed to the next handler.
  */
@@ -95,7 +95,7 @@ public class SimulatorProtocolDecoder extends ByteToMessageDecoder {
                     dstAddressLevel));
         }
 
-        if (dstAddressLevel == addressLevel) {
+        if (dstAddressLevel == addressLevel || (addressLevel == AddressLevel.WORKER && dstAddressLevel == AddressLevel.TEST)) {
             SimulatorMessage message = SimulatorMessageCodec.decodeSimulatorMessage(buffer);
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(format("[%d] %s %s will consume %s", messageId, addressLevel, localAddress, message));
