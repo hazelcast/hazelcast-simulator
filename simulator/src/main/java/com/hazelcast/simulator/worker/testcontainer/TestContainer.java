@@ -65,7 +65,7 @@ import static java.util.Arrays.asList;
 
 /**
  * Container for test instances.
- *
+ * <p>
  * It is responsible for:
  * <ul>
  * <li>Creates the test class instance by its fully qualified class name.</li>
@@ -168,8 +168,10 @@ public class TestContainer {
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
-        if (testPhase == LOCAL_AFTER_WARMUP) {
-            testContext.afterLocalWarmup();
+        if (testPhase == WARMUP) {
+            testContext.beforeWarmup();
+        } else if (testPhase == LOCAL_AFTER_WARMUP) {
+            testContext.afterWarmup();
         }
 
         Callable task = taskPerPhaseMap.get(testPhase);

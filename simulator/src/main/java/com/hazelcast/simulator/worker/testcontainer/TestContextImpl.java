@@ -30,8 +30,11 @@ public class TestContextImpl implements TestContext {
     private final String publicIpAddress;
     private final WorkerConnector workerConnector;
     private volatile boolean stopped;
+    private volatile boolean warmingUp;
 
-    public TestContextImpl(HazelcastInstance hazelcastInstance, String testId, String publicIpAddress,
+    public TestContextImpl(HazelcastInstance hazelcastInstance,
+                           String testId,
+                           String publicIpAddress,
                            WorkerConnector workerConnector) {
         this.hazelcastInstance = hazelcastInstance;
         this.testId = testId;
@@ -63,7 +66,16 @@ public class TestContextImpl implements TestContext {
         stopped = true;
     }
 
-    public void afterLocalWarmup() {
+    public boolean isWarmingUp() {
+        return warmingUp;
+    }
+
+    public void beforeWarmup() {
+        warmingUp = true;
+    }
+
+    public void afterWarmup() {
+        warmingUp = false;
         stopped = false;
     }
 

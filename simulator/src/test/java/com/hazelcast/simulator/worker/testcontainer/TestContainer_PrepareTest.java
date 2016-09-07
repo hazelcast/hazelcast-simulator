@@ -7,11 +7,11 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestContainer_WarmupTest extends TestContainer_AbstractTest {
+public class TestContainer_PrepareTest extends TestContainer_AbstractTest {
 
     @Test
     public void testLocalWarmup() throws Exception {
-        WarmupTest test = new WarmupTest();
+        PrepareTest test = new PrepareTest();
         testContainer = createTestContainer(test);
         testContainer.invoke(TestPhase.LOCAL_PREPARE);
 
@@ -21,7 +21,7 @@ public class TestContainer_WarmupTest extends TestContainer_AbstractTest {
 
     @Test
     public void testGlobalWarmup() throws Exception {
-        WarmupTest test = new WarmupTest();
+        PrepareTest test = new PrepareTest();
         testContainer = createTestContainer(test);
         testContainer.invoke(TestPhase.GLOBAL_PREPARE);
 
@@ -29,7 +29,7 @@ public class TestContainer_WarmupTest extends TestContainer_AbstractTest {
         assertTrue(test.globalPrepareCalled);
     }
 
-    private static class WarmupTest extends BaseTest {
+    private static class PrepareTest extends BaseTest {
 
         private boolean localPrepareCalled;
         private boolean globalPrepareCalled;
