@@ -13,6 +13,7 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.common.WorkerType;
 import org.junit.After;
@@ -21,6 +22,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
@@ -46,6 +48,7 @@ public class RemoteClientTest {
 
     private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
     private RemoteClient remoteClient;
+    private SimulatorAddress testAddress;
 
     @Before
     public void before() {
@@ -64,7 +67,7 @@ public class RemoteClientTest {
         TestSuite testSuite = new TestSuite();
         testSuite.addTest(testCase);
 
-        componentRegistry.addTests(testSuite);
+        testAddress = componentRegistry.addTests(testSuite).get(0).getAddress();
     }
 
     @After
@@ -203,7 +206,7 @@ public class RemoteClientTest {
         initMock(ResponseType.SUCCESS);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.invokeOnTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnAllWorkers(testAddress,DEFAULT_OPERATION);
 
         verify(coordinatorConnector).invoke(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
@@ -214,7 +217,7 @@ public class RemoteClientTest {
         initMock(ResponseType.UNBLOCKED_BY_FAILURE);
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
-        remoteClient.invokeOnTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnAllWorkers(testAddress,DEFAULT_OPERATION);
 
         verify(coordinatorConnector).invoke(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
@@ -226,7 +229,7 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
 
         try {
-            remoteClient.invokeOnTestOnAllWorkers(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+            remoteClient.invokeOnTestOnAllWorkers(testAddress,DEFAULT_OPERATION);
         } finally {
             verify(coordinatorConnector).invoke(eq(ALL_WORKERS.getChild(1)), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);
@@ -239,7 +242,7 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
-        remoteClient.invokeOnTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnFirstWorker(testAddress, DEFAULT_OPERATION);
 
         verify(coordinatorConnector).invoke(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
@@ -251,7 +254,7 @@ public class RemoteClientTest {
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
-        remoteClient.invokeOnTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+        remoteClient.invokeOnTestOnFirstWorker(testAddress, DEFAULT_OPERATION);
 
         verify(coordinatorConnector).invoke(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
         verifyNoMoreInteractions(coordinatorConnector);
@@ -264,7 +267,7 @@ public class RemoteClientTest {
         SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
 
         try {
-            remoteClient.invokeOnTestOnFirstWorker(DEFAULT_TEST_ID, DEFAULT_OPERATION);
+            remoteClient.invokeOnTestOnFirstWorker(testAddress, DEFAULT_OPERATION);
         } finally {
             verify(coordinatorConnector).invoke(eq(testOnFirstWorkerAddress), eq(DEFAULT_OPERATION));
             verifyNoMoreInteractions(coordinatorConnector);

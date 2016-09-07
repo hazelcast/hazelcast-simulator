@@ -80,7 +80,7 @@ public final class TestCaseRunner implements TestPhaseListener {
     private final ConcurrentMap<TestPhase, List<SimulatorAddress>> phaseCompletedMap
             = new ConcurrentHashMap<TestPhase, List<SimulatorAddress>>();
 
-    private final TestData testData;
+    private final TestData test;
     private final TestCase testCase;
     private final TestSuite testSuite;
 
@@ -100,23 +100,23 @@ public final class TestCaseRunner implements TestPhaseListener {
     private final int logRunPhaseIntervalSeconds;
 
     @SuppressWarnings("checkstyle:parameternumber")
-    public TestCaseRunner(TestData testData,
+    public TestCaseRunner(TestData test,
                           RemoteClient remoteClient,
                           Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                           FailureCollector failureCollector,
                           ComponentRegistry componentRegistry,
                           PerformanceStatsCollector performanceStatsCollector,
                           int performanceMonitorIntervalSeconds) {
-        this.testData = testData;
-        this.testCase = testData.getTestCase();
-        this.testSuite = testData.getTestSuite();
+        this.test = test;
+        this.testCase = test.getTestCase();
+        this.testSuite = test.getTestSuite();
 
         this.remoteClient = remoteClient;
         this.failureCollector = failureCollector;
         this.performanceStatsCollector = performanceStatsCollector;
         this.componentRegistry = componentRegistry;
 
-        String testAddress = testData.getAddress().toString();
+        String testAddress = test.getAddress().toString();
         this.prefix = padRight(testAddress + ":" + testCase.getId()
                 , testSuite.getMaxTestCaseIdLength() + 1 + testAddress.length());
         this.testPhaseSyncMap = testPhaseSyncMap;
@@ -146,7 +146,7 @@ public final class TestCaseRunner implements TestPhaseListener {
     }
 
     public boolean run() {
-        testData.initStartTime();
+        test.initStartTime();
         try {
             run0();
         } catch (TestCaseAbortedException e) {
@@ -160,10 +160,10 @@ public final class TestCaseRunner implements TestPhaseListener {
         } catch (Exception e) {
             throw rethrow(e);
         } finally {
-            testData.setCompletedStatus(hasFailure() ? FAILED : SUCCESS);
+            test.setCompletedStatus(hasFailure() ? FAILED : SUCCESS);
         }
 
-        return testData.getCompletedStatus() == SUCCESS;
+        return test.getCompletedStatus() == SUCCESS;
     }
 
     private void run0() {
@@ -197,7 +197,7 @@ public final class TestCaseRunner implements TestPhaseListener {
 
     private void createTest() {
         echo("Starting Test initialization");
-        remoteClient.invokeOnAllWorkers(new CreateTestOperation(testData.getTestIndex(), testCase));
+        remoteClient.invokeOnAllWorkers(new CreateTestOperation(test.getTestIndex(), testCase));
         echo("Completed Test initialization");
     }
 
@@ -207,11 +207,11 @@ public final class TestCaseRunner implements TestPhaseListener {
         }
 
         echo("Starting Test " + phase.desc());
-        testData.setTestPhase(phase);
+        test.setTestPhase(phase);
         if (phase.isGlobal()) {
-            remoteClient.invokeOnTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(phase));
+            remoteClient.invokeOnTestOnFirstWorker(test.getAddress(), new StartTestPhaseOperation(phase));
         } else {
-            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(phase));
+            remoteClient.invokeOnTestOnAllWorkers(test.getAddress(), new StartTestPhaseOperation(phase));
         }
 
         waitForPhaseCompletion(phase);
@@ -221,12 +221,12 @@ public final class TestCaseRunner implements TestPhaseListener {
 
     @SuppressWarnings("checkstyle:npathcomplexity")
     private void executeRunOrWarmup(TestPhase phase) {
-        if (testData.isStopRequested()) {
+        if (test.isStopRequested()) {
             echo(format("Skipping %s, test stopped.", phase.desc()));
             return;
         }
 
-        testData.setTestPhase(phase);
+        test.setTestPhase(phase);
         start(phase);
 
         long startMs = currentTimeMillis();
@@ -256,7 +256,7 @@ public final class TestCaseRunner implements TestPhaseListener {
             }
 
             long nowMs = currentTimeMillis();
-            if (nowMs > timeoutMs || isPhaseCompleted(phase) || testData.isStopRequested()) {
+            if (nowMs > timeoutMs || isPhaseCompleted(phase) || test.isStopRequested()) {
                 echo(format("Test finished %s", phase.desc()));
                 break;
             }
@@ -275,13 +275,15 @@ public final class TestCaseRunner implements TestPhaseListener {
     private void start(TestPhase phase) {
         echo(format("Starting Test %s start on %s", phase.desc(), targetType.toString(targetCount)));
         List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-        remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestOperation(targetType, targetWorkers, phase != RUN));
+        remoteClient.invokeOnTestOnAllWorkers(
+                test.getAddress(),
+                new StartTestOperation(targetType, targetWorkers, phase != RUN));
         echo(format("Completed Test %s start", phase.desc()));
     }
 
     public void stop(TestPhase phase) {
         echo(format("Executing Test %s stop", phase.desc()));
-        remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StopTestOperation());
+        remoteClient.invokeOnTestOnAllWorkers(test.getAddress(), new StopTestOperation());
         try {
             waitForPhaseCompletion(phase);
             echo(format("Completed Test %s stop", phase.desc()));
@@ -299,7 +301,6 @@ public final class TestCaseRunner implements TestPhaseListener {
                     phase == RUN ? "Running" : "Warming up ",
                     secondsToHuman(MILLISECONDS.toSeconds(elapsedMs)),
                     formatPercentage(elapsedMs, durationMs));
-
         }
 
         if (performanceMonitorIntervalSeconds > 0) {

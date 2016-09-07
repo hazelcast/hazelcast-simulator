@@ -11,7 +11,6 @@ import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.TestSuite;
-import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -59,7 +58,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -349,11 +347,11 @@ public class RunTestSuiteTaskTest {
 
         // now we suck up all 'invokeOnTestOnAllWorkers'
         ArgumentCaptor<SimulatorOperation> allTestOperations = ArgumentCaptor.forClass(SimulatorOperation.class);
-        verify(remoteClient, atLeast(0)).invokeOnTestOnAllWorkers(anyString(), allTestOperations.capture());
+        verify(remoteClient, atLeast(0)).invokeOnTestOnAllWorkers(any(SimulatorAddress.class), allTestOperations.capture());
 
         // now we suck up all 'invokeOnTestOnFirstWorker'
         ArgumentCaptor<SimulatorOperation> firstTestOperations = ArgumentCaptor.forClass(SimulatorOperation.class);
-        verify(remoteClient, atLeast(0)).invokeOnTestOnFirstWorker(anyString(), firstTestOperations.capture());
+        verify(remoteClient, atLeast(0)).invokeOnTestOnFirstWorker(any(SimulatorAddress.class), firstTestOperations.capture());
 
         int actualStopTestCount = 0;
 
@@ -382,7 +380,7 @@ public class RunTestSuiteTaskTest {
 
         int expectedStopCount = testCount;
         if (testSuite.getWarmupSeconds() >= 0) {
-            expectedStopCount+=testCount;
+            expectedStopCount += testCount;
         }
         assertEquals("actualStopTestCount incorrect", expectedStopCount, actualStopTestCount);
 

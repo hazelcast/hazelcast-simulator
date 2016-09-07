@@ -84,14 +84,13 @@ public class RemoteClient implements Closeable {
         validateResponse(operation, response);
     }
 
-    public void invokeOnTestOnAllWorkers(String testId, SimulatorOperation operation) {
-        Response response = coordinatorConnector.invoke(componentRegistry.getTest(testId).getAddress(), operation);
+    public void invokeOnTestOnAllWorkers(SimulatorAddress testAddress, SimulatorOperation operation) {
+        Response response = coordinatorConnector.invoke(testAddress, operation);
         validateResponse(operation, response);
     }
 
-    public void invokeOnTestOnFirstWorker(String testId, SimulatorOperation operation) {
+    public void invokeOnTestOnFirstWorker(SimulatorAddress testAddress, SimulatorOperation operation) {
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
-        SimulatorAddress testAddress = componentRegistry.getTest(testId).getAddress();
         Response response = coordinatorConnector.invoke(firstWorkerAddress.getChild(testAddress.getTestIndex()), operation);
         validateResponse(operation, response);
     }

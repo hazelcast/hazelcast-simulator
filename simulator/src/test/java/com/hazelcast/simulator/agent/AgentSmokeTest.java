@@ -4,17 +4,17 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.coordinator.DeploymentPlan;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.RemoteClient;
-import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
-import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
+import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
+import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
+import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
@@ -25,6 +25,7 @@ import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
 import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -182,7 +183,8 @@ public class AgentSmokeTest implements FailureListener {
             testSuite.addTest(testCase);
 
             componentRegistry.addTests(testSuite);
-            int testIndex = componentRegistry.getTest(testCase.getId()).getTestIndex();
+            TestData test = componentRegistry.getTest(testCase.getId());
+            int testIndex = test.getTestIndex();
             LOGGER.info(format("Created TestSuite for %s with index %d", testCase.getId(), testIndex));
 
             TestPhaseListenerImpl testPhaseListener = new TestPhaseListenerImpl();
@@ -194,29 +196,29 @@ public class AgentSmokeTest implements FailureListener {
             LOGGER.info("InitTest phase...");
             remoteClient.invokeOnAllWorkers(new CreateTestOperation(testIndex, testCase));
 
-            runPhase(testPhaseListener, testCase, SETUP);
+            runPhase(testPhaseListener, test, SETUP);
 
-            runPhase(testPhaseListener, testCase, LOCAL_PREPARE);
-            runPhase(testPhaseListener, testCase, GLOBAL_PREPARE);
+            runPhase(testPhaseListener, test, LOCAL_PREPARE);
+            runPhase(testPhaseListener, test, GLOBAL_PREPARE);
 
             LOGGER.info("Starting run phase...");
-            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(test.getAddress(), new StartTestOperation());
 
             LOGGER.info("Running for " + TEST_RUNTIME_SECONDS + " seconds");
             sleepSeconds(TEST_RUNTIME_SECONDS);
             LOGGER.info("Finished running");
 
             LOGGER.info("Stopping test...");
-            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StopTestOperation());
+            remoteClient.invokeOnTestOnAllWorkers(test.getAddress(), new StopTestOperation());
             testPhaseListener.await(TestPhase.RUN);
 
-            runPhase(testPhaseListener, testCase, GLOBAL_VERIFY);
-            runPhase(testPhaseListener, testCase, LOCAL_VERIFY);
+            runPhase(testPhaseListener, test, GLOBAL_VERIFY);
+            runPhase(testPhaseListener, test, LOCAL_VERIFY);
 
-            runPhase(testPhaseListener, testCase, GLOBAL_TEARDOWN);
-            runPhase(testPhaseListener, testCase, LOCAL_TEARDOWN);
+            runPhase(testPhaseListener, test, GLOBAL_TEARDOWN);
+            runPhase(testPhaseListener, test, LOCAL_TEARDOWN);
         } finally {
-           // componentRegistry.removeTests();
+            // componentRegistry.removeTests();
 
             LOGGER.info("Terminating workers...");
             new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
@@ -242,12 +244,12 @@ public class AgentSmokeTest implements FailureListener {
         new StartWorkersTask(deploymentPlan.getWorkerDeployment(), remoteClient, componentRegistry, 0).run();
     }
 
-    private void runPhase(TestPhaseListenerImpl listener, TestCase testCase, TestPhase testPhase) throws Exception {
+    private void runPhase(TestPhaseListenerImpl listener, TestData testData, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
         if (testPhase.isGlobal()) {
-            remoteClient.invokeOnTestOnFirstWorker(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnFirstWorker(testData.getAddress(),new StartTestPhaseOperation(testPhase));
         } else {
-            remoteClient.invokeOnTestOnAllWorkers(testCase.getId(), new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnAllWorkers(testData.getAddress(), new StartTestPhaseOperation(testPhase));
         }
         listener.await(testPhase);
     }
