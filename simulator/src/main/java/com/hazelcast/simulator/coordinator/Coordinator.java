@@ -168,7 +168,10 @@ public final class Coordinator {
                 }
                 throw e;
             } finally {
-                new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
+                if (remoteClient != null) {
+                    new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
+                }
+
                 try {
                     failureCollector.logFailureInfo();
                 } finally {
@@ -227,6 +230,7 @@ public final class Coordinator {
             }
             spawner.awaitCompletion();
         } catch (Exception e) {
+            LOGGER.fatal(e.getMessage(), e);
             throw new CommandLineExitException("Could not start CoordinatorConnector", e);
         }
     }
@@ -278,7 +282,9 @@ public final class Coordinator {
 
     private void echo(String message, Object... args) {
         String log = echoLocal(message, args);
-        remoteClient.logOnAllAgents(log);
+        if (remoteClient != null) {
+            remoteClient.logOnAllAgents(log);
+        }
     }
 
     private static String echoLocal(String message, Object... args) {
@@ -286,7 +292,6 @@ public final class Coordinator {
         LOGGER.info(log);
         return log;
     }
-
 
     public void download(RcDownloadOperation operation) throws Exception {
         awaitInteractiveModeInitialized();

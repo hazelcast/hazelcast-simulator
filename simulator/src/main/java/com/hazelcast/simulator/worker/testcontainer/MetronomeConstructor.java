@@ -37,6 +37,7 @@ public class MetronomeConstructor {
 
     private final Class<? extends Metronome> metronomeClass;
     private final Metronome masterMetronome;
+    private final long intervalNanos;
 
     public MetronomeConstructor(String executionGroup, PropertyBinding binding, int threadCount) {
         String property = toPropertyName(executionGroup, "interval");
@@ -51,6 +52,7 @@ public class MetronomeConstructor {
             intervalNanos = round(SECONDS.toNanos(1) / ratePerSecond);
         }
 
+        this.intervalNanos = intervalNanos;
         if (intervalNanos == 0) {
             this.metronomeClass = EmptyMetronome.class;
             this.masterMetronome = EmptyMetronome.INSTANCE;
@@ -62,7 +64,7 @@ public class MetronomeConstructor {
             try {
                 constructor = metronomeClass.getConstructor(Long.TYPE, Integer.TYPE, PropertyBinding.class, String.class);
             } catch (NoSuchMethodException e) {
-                throw new IllegalStateException("Metronome [%s], does not have the right constructor", e);
+                throw new IllegalTestException("Metronome [%s], does not have the right constructor", e);
             }
 
             try {
@@ -71,6 +73,10 @@ public class MetronomeConstructor {
                 throw new IllegalTestException("Failed to create a master metronome instance", e);
             }
         }
+    }
+
+    public long getIntervalNanos() {
+        return intervalNanos;
     }
 
     private static long parseInterval(String property, String value) {

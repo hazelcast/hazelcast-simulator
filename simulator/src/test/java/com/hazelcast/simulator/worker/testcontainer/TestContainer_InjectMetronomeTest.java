@@ -5,7 +5,6 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
@@ -13,7 +12,6 @@ import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.TestSupport.assertInstanceOf;
-import static com.hazelcast.simulator.worker.metronome.MetronomeType.SLEEPING;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

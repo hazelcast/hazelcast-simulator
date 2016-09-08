@@ -64,6 +64,9 @@ class TimeStepRunStrategy extends RunStrategy {
             MetronomeConstructor metronomeConstructor = new MetronomeConstructor(executionGroup, binding, threadCount);
             metronomeSettingsMap.put(executionGroup, metronomeConstructor);
 
+            LOGGER.info(format("executionGroup [%s] using interval: %s class=%s",
+                    executionGroup, metronomeConstructor.getIntervalNanos(), metronomeConstructor.getMetronomeClass().getName()));
+
             Class runnerClass = new TimeStepRunnerCodeGenerator().compile(
                     testContainer.getTestCase().getId(),
                     executionGroup,

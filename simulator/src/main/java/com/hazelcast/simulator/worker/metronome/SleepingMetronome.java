@@ -17,13 +17,15 @@ package com.hazelcast.simulator.worker.metronome;
 
 import com.hazelcast.simulator.worker.testcontainer.PropertyBinding;
 
+import java.util.concurrent.locks.LockSupport;
+
 import static com.hazelcast.simulator.worker.testcontainer.PropertyBinding.toPropertyName;
 import static java.lang.System.nanoTime;
-import static java.util.concurrent.locks.LockSupport.parkNanos;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
- * Simple {@link Metronome} implementation which sleeps on a fixed interval.
+ * Simple {@link Metronome} implementation which sleeps on a fixed interval. The SleepingMetronome is best when there
+ * are many threads and you don't want all threads to spin.
  * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
  */
@@ -39,8 +41,7 @@ public final class SleepingMetronome implements Metronome {
     }
 
     public SleepingMetronome(long intervalNanos, int threadCount, PropertyBinding binding, String prefix) {
-        this.intervalNanos = intervalNanos / threadCount;
-        this.accountForCoordinatedOmission = binding.loadAsBoolean(toPropertyName(prefix, "accountForCoordinatedOmission"), true);
+        this(intervalNanos / threadCount, binding.loadAsBoolean(toPropertyName(prefix, "accountForCoordinatedOmission"), true));
     }
 
     public SleepingMetronome(Metronome m) {
@@ -56,9 +57,9 @@ public final class SleepingMetronome implements Metronome {
             nextNanos = nanoTime() + nextLong(0, intervalNanos);
         }
 
-        long delayNanos = nextNanos - nanoTime();
-        if (delayNanos > 0) {
-            parkNanos(delayNanos);
+        long now;
+        while ((now = System.nanoTime()) < nextNanos) {
+            LockSupport.parkNanos(nextNanos - now);
         }
 
         long expectedStartNanos = nextNanos;
