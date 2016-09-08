@@ -16,11 +16,11 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.connector.WorkerConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.connector.ServerConnector;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestContext;
 
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
 
 public class TestContextImpl implements TestContext {
@@ -28,18 +28,18 @@ public class TestContextImpl implements TestContext {
     private final HazelcastInstance hazelcastInstance;
     private final String testId;
     private final String publicIpAddress;
-    private final WorkerConnector workerConnector;
+    private final ServerConnector connector;
     private volatile boolean stopped;
     private volatile boolean warmingUp;
 
     public TestContextImpl(HazelcastInstance hazelcastInstance,
                            String testId,
                            String publicIpAddress,
-                           WorkerConnector workerConnector) {
+                           ServerConnector connector) {
         this.hazelcastInstance = hazelcastInstance;
         this.testId = testId;
         this.publicIpAddress = publicIpAddress;
-        this.workerConnector = workerConnector;
+        this.connector = connector;
     }
 
     public HazelcastInstance getTargetInstance() {
@@ -70,11 +70,11 @@ public class TestContextImpl implements TestContext {
         return warmingUp;
     }
 
-    public void beforeWarmup() {
+    void beforeWarmup() {
         warmingUp = true;
     }
 
-    public void afterWarmup() {
+    void afterWarmup() {
         warmingUp = false;
         stopped = false;
     }
@@ -82,6 +82,6 @@ public class TestContextImpl implements TestContext {
     @Override
     public void echoCoordinator(String msg, Object... args) {
         String message = format(msg, args);
-        workerConnector.invokeAsync(SimulatorAddress.COORDINATOR, new LogOperation(message));
+        connector.invokeAsync(COORDINATOR, new LogOperation(message));
     }
 }
