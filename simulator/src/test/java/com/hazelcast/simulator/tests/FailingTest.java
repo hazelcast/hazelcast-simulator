@@ -39,7 +39,7 @@ public class FailingTest extends AbstractTest{
     public int count = 0;
 
     @Run
-    public void timestep() {
+    public void run() {
         if (!testContext.isStopped()) {
             sleepSeconds(1);
             count++;
