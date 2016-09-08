@@ -29,7 +29,7 @@ public class EmbeddedScriptCommand {
 
     private final String command;
     private Map<String, Object> environment = new HashMap<String, Object>();
-    private String extension = "js";
+    private String engineName = "js";
 
     public EmbeddedScriptCommand(String command) {
         this.command = command;
@@ -40,14 +40,14 @@ public class EmbeddedScriptCommand {
         return this;
     }
 
-    public EmbeddedScriptCommand setExtension(String extension) {
-        this.extension = checkNotNull(extension, "extension can't be null");
+    public EmbeddedScriptCommand setEngineName(String engineName) {
+        this.engineName = checkNotNull(engineName, "engineName can't be null");
         return this;
     }
 
     public Object execute() {
         ScriptEngineManager engineManager = new ScriptEngineManager();
-        ScriptEngine engine = engineManager.getEngineByExtension(extension);
+        ScriptEngine engine = engineManager.getEngineByName(engineName);
         for (Map.Entry<String, Object> entry : environment.entrySet()) {
             engine.put(entry.getKey(), entry.getValue());
         }

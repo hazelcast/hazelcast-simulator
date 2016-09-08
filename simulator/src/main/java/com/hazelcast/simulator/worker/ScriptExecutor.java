@@ -98,7 +98,7 @@ public class ScriptExecutor {
             public String call() throws Exception {
                 Object result = new EmbeddedScriptCommand(command)
                         .addEnvironment("hazelcastInstance", hazelcastInstance)
-                        .setExtension(extension)
+                        .setEngineName(extension)
                         .execute();
                 LOGGER.info(format("Script [%s] with [%s]", command, result));
                 return result == null ? "null" : result.toString();
