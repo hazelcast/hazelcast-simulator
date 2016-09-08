@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
-import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.connector.Connector;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
@@ -40,18 +40,18 @@ public class KillWorkersTask {
     private static final int WORKER_TERMINATION_CHECK_DELAY = 5;
 
     private final ComponentRegistry componentRegistry;
-    private final CoordinatorConnector coordinatorConnector;
+    private final Connector connector;
     private final String command;
     private final WorkerQuery workerQuery;
     private final List<WorkerData> result = new ArrayList<WorkerData>();
 
     public KillWorkersTask(
             ComponentRegistry componentRegistry,
-            CoordinatorConnector coordinatorConnector,
+            Connector connector,
             String command,
             WorkerQuery workerQuery) {
         this.componentRegistry = componentRegistry;
-        this.coordinatorConnector = coordinatorConnector;
+        this.connector = connector;
         this.command = command;
         this.workerQuery = workerQuery;
     }
@@ -84,7 +84,7 @@ public class KillWorkersTask {
         for (WorkerData victim : victims) {
             victim.setIgnoreFailures(true);
 
-            coordinatorConnector.invokeAsync(victim.getAddress(), new ExecuteScriptOperation(command, true));
+            connector.invokeAsync(victim.getAddress(), new ExecuteScriptOperation(command, true));
 
             LOGGER.info("Kill send to worker [" + victim.getAddress() + "]");
         }

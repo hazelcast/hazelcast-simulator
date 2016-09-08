@@ -19,6 +19,7 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.connector.AgentConnectorImpl;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import org.apache.log4j.Logger;
 
@@ -71,7 +72,7 @@ public class Agent {
         this.cloudIdentity = cloudIdentity;
         this.cloudCredential = cloudCredential;
 
-        this.agentConnector = new AgentConnector(this, workerProcessManager, port, threadPoolSize);
+        this.agentConnector = new AgentConnectorImpl(this, workerProcessManager, port, threadPoolSize);
         this.failureSender = new WorkerProcessFailureHandlerImpl(publicAddress, agentConnector);
         this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
                 workerLastSeenTimeoutSeconds);

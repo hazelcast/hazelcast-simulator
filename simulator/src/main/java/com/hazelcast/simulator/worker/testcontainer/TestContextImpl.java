@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
+import com.hazelcast.simulator.protocol.connector.Connector;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestContext;
 
@@ -28,14 +28,14 @@ public class TestContextImpl implements TestContext {
     private final HazelcastInstance hazelcastInstance;
     private final String testId;
     private final String publicIpAddress;
-    private final ServerConnector connector;
+    private final Connector connector;
     private volatile boolean stopped;
     private volatile boolean warmingUp;
 
     public TestContextImpl(HazelcastInstance hazelcastInstance,
                            String testId,
                            String publicIpAddress,
-                           ServerConnector connector) {
+                           Connector connector) {
         this.hazelcastInstance = hazelcastInstance;
         this.testId = testId;
         this.publicIpAddress = publicIpAddress;

@@ -11,7 +11,7 @@ import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.TestSuite;
-import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.connector.Connector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -109,11 +109,11 @@ public class RunTestSuiteTaskTest {
 
         Response response = new Response(1, SimulatorAddress.COORDINATOR, address, ResponseType.SUCCESS);
 
-        CoordinatorConnector connector = mock(CoordinatorConnector.class);
+        Connector connector = mock(Connector.class);
         when(connector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
 
         remoteClient = mock(RemoteClient.class);
-        when(remoteClient.getCoordinatorConnector()).thenReturn(connector);
+        when(remoteClient.getConnector()).thenReturn(connector);
     }
 
     @After
