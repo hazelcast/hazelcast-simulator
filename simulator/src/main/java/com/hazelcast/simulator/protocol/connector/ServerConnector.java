@@ -73,7 +73,7 @@ public interface ServerConnector {
      */
     ResponseFuture submit(SimulatorAddress destination, SimulatorOperation op);
 
-    ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
