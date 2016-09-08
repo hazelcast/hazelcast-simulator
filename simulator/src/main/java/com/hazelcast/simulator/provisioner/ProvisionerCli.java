@@ -53,13 +53,6 @@ final class ProvisionerCli {
     private final OptionSpec installSpec = parser.accepts("install",
             "Installs Simulator on all provisioned machines.");
 
-    private final OptionSpec<String> downloadSpec = parser.accepts("download",
-            "Download all files from the remote Worker directories. Use --clean to delete all Worker directories.")
-            .withOptionalArg().ofType(String.class).defaultsTo("workers");
-
-    private final OptionSpec cleanSpec = parser.accepts("clean",
-            "Cleans the remote Worker directories on the provisioned machines.");
-
     private final OptionSpec killSpec = parser.accepts("kill",
             "Kills the Java processes on all provisioned machines (via killall -9 java).");
 
@@ -95,11 +88,6 @@ final class ProvisionerCli {
                 provisioner.installJava();
             } else if (options.has(installSpec)) {
                 provisioner.installSimulator();
-            } else if (options.has(downloadSpec)) {
-                String dir = options.valueOf(downloadSpec);
-                provisioner.download(dir);
-            } else if (options.has(cleanSpec)) {
-                provisioner.clean();
             } else if (options.has(killSpec)) {
                 provisioner.killJavaProcesses();
             } else if (options.has(terminateSpec)) {

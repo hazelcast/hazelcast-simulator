@@ -34,9 +34,9 @@ import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
 
-public class DownloadTask {
+public class ArtifactDownloadTask {
 
-    private static final Logger LOGGER = Logger.getLogger(DownloadTask.class);
+    private static final Logger LOGGER = Logger.getLogger(ArtifactDownloadTask.class);
     private static final String RSYNC_COMMAND = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
 
     private final String sessionId;
@@ -47,10 +47,10 @@ public class DownloadTask {
     private final String sshOptions;
     private final String sshUser;
 
-    public DownloadTask(String sessionId,
-                        SimulatorProperties simulatorProperties,
-                        File outputDirectory,
-                        ComponentRegistry componentRegistry) {
+    public ArtifactDownloadTask(String sessionId,
+                                SimulatorProperties simulatorProperties,
+                                File outputDirectory,
+                                ComponentRegistry componentRegistry) {
         this.sessionId = sessionId;
         this.simulatorProperties = simulatorProperties;
         this.outputDirectory = outputDirectory;

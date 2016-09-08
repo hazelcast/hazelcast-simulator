@@ -103,20 +103,6 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
     }
 
     @Test
-    public void testDownload() {
-        provisioner.download("workers");
-
-        verify(bash, atLeastOnce()).executeQuiet(anyString());
-    }
-
-    @Test
-    public void testClean() {
-        provisioner.clean();
-
-        verify(bash).ssh(eq("127.0.0.1"), anyString());
-    }
-
-    @Test
     public void testKill() {
         provisioner.killJavaProcesses();
 

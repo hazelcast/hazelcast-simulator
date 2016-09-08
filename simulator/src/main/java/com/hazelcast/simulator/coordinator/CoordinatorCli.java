@@ -62,13 +62,15 @@ final class CoordinatorCli {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
-    final Coordinator coordinator;
-    final TestSuite testSuite;
-    final CoordinatorParameters coordinatorParameters;
-    final ComponentRegistry componentRegistry;
-    final Map<WorkerType, WorkerParameters> workerParametersMap;
-    final SimulatorProperties simulatorProperties;
-    final DeploymentPlan deploymentPlan;
+    CoordinatorDownloader downloader;
+    CoordinatorRun coordinatorRun;
+    CoordinatorRemoteReceiver receiver;
+    TestSuite testSuite;
+    CoordinatorParameters coordinatorParameters;
+    ComponentRegistry componentRegistry;
+    Map<WorkerType, WorkerParameters> workerParametersMap;
+    SimulatorProperties simulatorProperties;
+    DeploymentPlan deploymentPlan;
 
     private final OptionParser parser = new OptionParser();
 
@@ -193,24 +195,45 @@ final class CoordinatorCli {
     private final OptionSpec remoteSpec = parser.accepts("remote",
             "Puts Coordinator into remote control mode for coordinator-remote");
 
+    private final OptionSpec downloadSpec = parser.accepts("download",
+            "Downloads all worker artifacts");
+
+    private final OptionSpec cleanSpec = parser.accepts("clean",
+            "Cleans the remote Worker directories on the provisioned machines.");
+
     private final OptionSet options;
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
 
-        this.testSuite = loadTestSuite();
-
         this.simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
-
         this.componentRegistry = newComponentRegistry(simulatorProperties);
 
-        this.coordinatorParameters = loadCoordinatorParameters();
+        if (options.has(downloadSpec) || options.has(cleanSpec)) {
+            this.downloader = new CoordinatorDownloader(componentRegistry, simulatorProperties);
+        } else if (options.has(remoteSpec)) {
+            this.coordinatorParameters = loadCoordinatorParameters();
+            this.receiver = new CoordinatorRemoteReceiver(componentRegistry, coordinatorParameters);
+        } else {
+            this.testSuite = loadTestSuite();
+            this.simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
+            this.coordinatorParameters = loadCoordinatorParameters();
+            this.workerParametersMap = loadWorkerParameters();
+            this.deploymentPlan = newDeploymentPlan();
+            this.coordinatorRun = new CoordinatorRun(componentRegistry, coordinatorParameters, testSuite, deploymentPlan);
+        }
+    }
 
-        this.workerParametersMap = loadWorkerParameters();
-
-        this.deploymentPlan = newDeploymentPlan();
-
-        this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+    void run() throws Exception {
+        if (options.has(downloadSpec)) {
+            downloader.download();
+        } else if (options.has(cleanSpec)) {
+            downloader.clean();
+        } else if (options.has(remoteSpec)) {
+            receiver.start();
+        } else {
+            coordinatorRun.run();
+        }
     }
 
     private CoordinatorParameters loadCoordinatorParameters() {
@@ -304,20 +327,8 @@ final class CoordinatorCli {
         return Integer.parseInt(intervalSeconds);
     }
 
-    void run() {
-        if (options.has(remoteSpec)) {
-            coordinator.startRemoteMode();
-        } else {
-            coordinator.run(deploymentPlan, testSuite);
-            LOGGER.info("completed");
-        }
-    }
 
     private TestSuite loadTestSuite() {
-        if (options.hasArgument(remoteSpec)) {
-            return null;
-        }
-
         TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec))
                 .setDurationSeconds(getDurationSeconds(options, durationSpec))
                 .setFailFast(options.valueOf(failFastSpec))
@@ -465,7 +476,6 @@ final class CoordinatorCli {
     public static String loadLog4jConfig() {
         return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
     }
-
 
     public static void main(String[] args) {
         LOGGER.info("Hazelcast Simulator Coordinator");

@@ -12,10 +12,10 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CoordinatorTest {
+public class CoordinatorRunTest {
 
     private SimulatorProperties properties;
-    private Coordinator coordinator;
+    private CoordinatorRun coordinator;
     private TestSuite testSuite;
     private DeploymentPlan deploymentPlan;
 
@@ -33,7 +33,7 @@ public class CoordinatorTest {
 
         deploymentPlan = new DeploymentPlan();
 
-        coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+        coordinator = new CoordinatorRun(componentRegistry, coordinatorParameters,testSuite,deploymentPlan);
     }
 
     @After
@@ -43,10 +43,10 @@ public class CoordinatorTest {
 
     // todo: this test tests nothing; it just triggers code to be touched.
     @Test
-    public void testRun() {
+    public void testRun() throws Exception {
         when(properties.getCloudProvider()).thenReturn(PROVIDER_LOCAL);
         when(properties.getVersionSpec()).thenReturn("outofthebox");
 
-        coordinator.run(deploymentPlan, testSuite);
+        coordinator.run();
     }
 }

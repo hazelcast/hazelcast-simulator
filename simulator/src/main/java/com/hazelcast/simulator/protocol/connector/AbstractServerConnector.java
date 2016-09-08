@@ -147,6 +147,8 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void shutdown() {
+        LOGGER.info(format("Shutdown of %s...", getClass().getName()));
+
         if (!isStarted.compareAndSet(true, false)) {
             throw new SimulatorProtocolException("ServerConnector cannot be shutdown twice or if not been started!");
         }

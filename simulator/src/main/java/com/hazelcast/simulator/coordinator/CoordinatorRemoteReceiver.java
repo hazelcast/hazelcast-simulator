@@ -18,7 +18,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
-import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
+import com.hazelcast.simulator.coordinator.tasks.ArtifactDownloadTask;
 import com.hazelcast.simulator.coordinator.tasks.InstallVendorTask;
 import com.hazelcast.simulator.coordinator.tasks.KillWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
@@ -47,7 +47,6 @@ import com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Promise;
@@ -68,7 +67,6 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScrip
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
-import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
@@ -81,14 +79,10 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
-public final class Coordinator {
+public class CoordinatorRemoteReceiver {
 
-    private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
-
-    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+    private static final Logger LOGGER = Logger.getLogger(CoordinatorRemoteReceiver.class);
     private static final int INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES = 5;
-
-    private final File outputDirectory;
 
     private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
@@ -102,14 +96,14 @@ public final class Coordinator {
     private final Bash bash;
 
     private final TestPhase lastTestPhaseToSync;
+    private final File outputDirectory;
 
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
     private CountDownLatch remoteModeInitialized = new CountDownLatch(1);
 
-    Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters) {
-
+    CoordinatorRemoteReceiver(ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters) {
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
         this.componentRegistry = componentRegistry;
         this.coordinatorParameters = coordinatorParameters;
@@ -119,123 +113,9 @@ public final class Coordinator {
         this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
     }
 
-    private void logConfiguration(DeploymentPlan deploymentPlan) {
-        echoLocal("Total number of agents: %s", componentRegistry.agentCount());
-        echoLocal("Total number of Hazelcast member workers: %s", deploymentPlan.getMemberWorkerCount());
-        echoLocal("Total number of Hazelcast client workers: %s", deploymentPlan.getClientWorkerCount());
-        echoLocal("Last TestPhase to sync: %s", lastTestPhaseToSync);
-        echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
+    public void start() {
+        logConfiguration();
 
-        int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
-        if (performanceIntervalSeconds > 0) {
-            echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
-        } else {
-            echoLocal("Performance monitor disabled");
-        }
-    }
-
-    void run(DeploymentPlan deploymentPlan, TestSuite testSuite) {
-        logConfiguration(deploymentPlan);
-
-        checkInstallation(bash, simulatorProperties, componentRegistry);
-        new InstallVendorTask(
-                simulatorProperties,
-                componentRegistry.getAgentIps(),
-                deploymentPlan.getVersionSpecs(),
-                coordinatorParameters.getSessionId()).run();
-
-        try {
-            try {
-                startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-                startCoordinatorConnector();
-                startRemoteClient();
-                new StartWorkersTask(
-                        deploymentPlan.getWorkerDeployment(),
-                        remoteClient,
-                        componentRegistry,
-                        coordinatorParameters.getWorkerVmStartupDelayMs()).run();
-
-                new RunTestSuiteTask(testSuite,
-                        coordinatorParameters,
-                        componentRegistry,
-                        failureCollector,
-                        testPhaseListeners,
-                        remoteClient,
-                        performanceStatsCollector).run();
-            } catch (CommandLineExitException e) {
-                for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureCollector.getFailureCount() == 0; i++) {
-                    sleepSeconds(1);
-                }
-                throw e;
-            } finally {
-                if (remoteClient != null) {
-                    new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
-                }
-
-                try {
-                    failureCollector.logFailureInfo();
-                } finally {
-                    if (coordinatorConnector != null) {
-                        echo("Shutdown of ClientConnector...");
-                        coordinatorConnector.shutdown();
-                    }
-                    stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-                }
-            }
-        } finally {
-            close();
-        }
-    }
-
-    private void close() {
-        closeQuietly(remoteClient);
-
-        if (!coordinatorParameters.skipDownload()) {
-            new DownloadTask(
-                    coordinatorParameters.getSessionId(),
-                    simulatorProperties,
-                    outputDirectory,
-                    componentRegistry).run();
-        }
-        executeAfterCompletion();
-
-        OperationTypeCounter.printStatistics();
-    }
-
-    private void executeAfterCompletion() {
-        if (coordinatorParameters.getAfterCompletionFile() != null) {
-            echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
-            bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
-            echoLocal("Finished after-completion script");
-        }
-    }
-
-    private void startCoordinatorConnector() {
-        try {
-            CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
-                    this, failureCollector, testPhaseListeners, performanceStatsCollector);
-
-            coordinatorConnector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
-            coordinatorConnector.start();
-
-            ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
-            for (final AgentData agentData : componentRegistry.getAgents()) {
-                final int agentPort = simulatorProperties.getAgentPort();
-                spawner.spawn(new Runnable() {
-                    @Override
-                    public void run() {
-                        coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
-                    }
-                });
-            }
-            spawner.awaitCompletion();
-        } catch (Exception e) {
-            LOGGER.fatal(e.getMessage(), e);
-            throw new CommandLineExitException("Could not start CoordinatorConnector", e);
-        }
-    }
-
-    void startRemoteMode() {
         echoLocal("Coordinator remote mode starting...");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
@@ -251,18 +131,23 @@ public final class Coordinator {
                 coordinatorParameters.getSessionId()).run();
 
 
+
+        remoteModeInitialized.countDown();
+
+        echoLocal("Coordinator remote mode started...");
+    }
+
+    private void logConfiguration() {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
+
         int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
+
         if (performanceIntervalSeconds > 0) {
             echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
         } else {
             echoLocal("Performance monitor disabled");
         }
-
-        remoteModeInitialized.countDown();
-
-        echoLocal("Coordinator remote mode started...");
     }
 
     private void awaitInteractiveModeInitialized() throws Exception {
@@ -294,11 +179,9 @@ public final class Coordinator {
     }
 
     public void download(RcDownloadOperation operation) throws Exception {
-        awaitInteractiveModeInitialized();
-
         LOGGER.info("Downloading ....");
 
-        new DownloadTask(
+        new ArtifactDownloadTask(
                 coordinatorParameters.getSessionId(),
                 simulatorProperties,
                 outputDirectory,
@@ -332,6 +215,29 @@ public final class Coordinator {
                 }
             }
         }).start();
+    }
+
+    private void close() {
+        closeQuietly(remoteClient);
+
+        if (!coordinatorParameters.skipDownload()) {
+            new ArtifactDownloadTask(
+                    coordinatorParameters.getSessionId(),
+                    simulatorProperties,
+                    outputDirectory,
+                    componentRegistry).run();
+        }
+        executeAfterCompletion();
+
+        OperationTypeCounter.printStatistics();
+    }
+
+    private void executeAfterCompletion() {
+        if (coordinatorParameters.getAfterCompletionFile() != null) {
+            echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
+            bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
+            echoLocal("Finished after-completion script");
+        }
     }
 
     public void install(String versionSpec) throws Exception {
@@ -440,7 +346,35 @@ public final class Coordinator {
         environment.put("JVM_OPTIONS", op.getVmOptions());
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 "" + coordinatorParameters.getPerformanceMonitorIntervalSeconds());
+        environment.put("HAZELCAST_CONFIG", loadConfig(op, workerType));
 
+        String versionSpec = op.getVersionSpec() == null
+                ? simulatorProperties.getVersionSpec()
+                : op.getVersionSpec();
+
+        WorkerParameters workerParameters = new WorkerParameters()
+                .setVersionSpec(versionSpec)
+                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")))
+                .setEnvironment(environment);
+
+        SimulatorAddress agent = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
+        DeploymentPlan deploymentPlan = createDeploymentPlan(
+                componentRegistry, workerParameters, workerType, op.getCount(), agent);
+
+        List<WorkerData> workers = new StartWorkersTask(
+                deploymentPlan.getWorkerDeployment(),
+                remoteClient,
+                componentRegistry,
+                coordinatorParameters.getWorkerVmStartupDelayMs()
+        ).run();
+
+        LOGGER.info("Workers started!");
+
+        return WorkerData.toAddressString(workers);
+    }
+
+    private String loadConfig(RcWorkerStartOperation op, WorkerType workerType) {
         String config;
         if (WorkerType.MEMBER.equals(workerType)) {
             config = initMemberHzConfig(
@@ -468,33 +402,7 @@ public final class Coordinator {
         } else {
             throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
         }
-
-        environment.put("HAZELCAST_CONFIG", config);
-
-        String versionSpec = op.getVersionSpec() == null
-                ? simulatorProperties.getVersionSpec()
-                : op.getVersionSpec();
-
-        WorkerParameters workerParameters = new WorkerParameters()
-                .setVersionSpec(versionSpec)
-                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
-                .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")))
-                .setEnvironment(environment);
-
-        SimulatorAddress agent = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
-        DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry, workerParameters, workerType, op.getCount(), agent);
-
-        List<WorkerData> workers = new StartWorkersTask(
-                deploymentPlan.getWorkerDeployment(),
-                remoteClient,
-                componentRegistry,
-                coordinatorParameters.getWorkerVmStartupDelayMs()
-        ).run();
-
-        LOGGER.info("Workers started!");
-
-        return WorkerData.toAddressString(workers);
+        return config;
     }
 
     public String workerKill(RcWorkerKillOperation op) throws Exception {
@@ -552,5 +460,32 @@ public final class Coordinator {
 
         LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
         promise.answer(ResponseType.SUCCESS, sb.toString());
+    }
+
+    private void startCoordinatorConnector() {
+        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
+                this, failureCollector, testPhaseListeners, performanceStatsCollector);
+
+        coordinatorConnector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
+        coordinatorConnector.start();
+
+        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            final int agentPort = simulatorProperties.getAgentPort();
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
+                }
+            });
+        }
+        spawner.awaitCompletion();
+
+        LOGGER.info("Remote client starting....");
+        int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
+
+        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
+        remoteClient.invokeOnAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
+        LOGGER.info("Remote client started successfully!");
     }
 }
