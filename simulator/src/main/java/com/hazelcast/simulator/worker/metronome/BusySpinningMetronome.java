@@ -15,18 +15,21 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
+import com.hazelcast.simulator.worker.testcontainer.PropertyBinding;
+
+import static com.hazelcast.simulator.worker.testcontainer.PropertyBinding.toPropertyName;
 import static java.lang.System.nanoTime;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which busy loops on a fixed interval.
- *
+ * <p>
  * If an execution takes more than the intervalNanos, the request are queued and get processed as soon as the system
  * has time for time. This queue will get processed as fast as possible and there metronome will not introduce any deliberate
  * slowdowns. For more information see:
  * https://vanilla-java.github.io/2016/07/20/Latency-for-a-set-Throughput.html
- *
- *
+ * <p>
+ * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
  */
 public final class BusySpinningMetronome implements Metronome {
@@ -38,6 +41,17 @@ public final class BusySpinningMetronome implements Metronome {
     BusySpinningMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
         this.intervalNanos = intervalNanos;
         this.accountForCoordinatedOmission = accountForCoordinatedOmission;
+    }
+
+    public BusySpinningMetronome(long intervalNanos, int threadCount, PropertyBinding binding, String prefix) {
+        this.intervalNanos = intervalNanos / threadCount;
+        this.accountForCoordinatedOmission = binding.loadAsBoolean(toPropertyName(prefix, "accountForCoordinatedOmission"), true);
+    }
+
+    public BusySpinningMetronome(Metronome m) {
+        BusySpinningMetronome master = (BusySpinningMetronome) m;
+        this.intervalNanos = master.intervalNanos;
+        this.accountForCoordinatedOmission = master.accountForCoordinatedOmission;
     }
 
     @Override
@@ -55,5 +69,9 @@ public final class BusySpinningMetronome implements Metronome {
         long expectedStartNanos = nextNanos;
         nextNanos = expectedStartNanos + intervalNanos;
         return accountForCoordinatedOmission ? expectedStartNanos : nanoTime();
+    }
+
+    public long getIntervalNanos() {
+        return intervalNanos;
     }
 }

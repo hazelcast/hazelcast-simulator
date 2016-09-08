@@ -15,13 +15,16 @@
  */
 package com.hazelcast.simulator.worker.metronome;
 
+import com.hazelcast.simulator.worker.testcontainer.PropertyBinding;
+
+import static com.hazelcast.simulator.worker.testcontainer.PropertyBinding.toPropertyName;
 import static java.lang.System.nanoTime;
 import static java.util.concurrent.locks.LockSupport.parkNanos;
 import static org.apache.commons.lang3.RandomUtils.nextLong;
 
 /**
  * Simple {@link Metronome} implementation which sleeps on a fixed interval.
- *
+ * <p>
  * The wait interval on the first {@link #waitForNext()} call is randomized.
  */
 public final class SleepingMetronome implements Metronome {
@@ -33,6 +36,17 @@ public final class SleepingMetronome implements Metronome {
     SleepingMetronome(long intervalNanos, boolean accountForCoordinatedOmission) {
         this.intervalNanos = intervalNanos;
         this.accountForCoordinatedOmission = accountForCoordinatedOmission;
+    }
+
+    public SleepingMetronome(long intervalNanos, int threadCount, PropertyBinding binding, String prefix) {
+        this.intervalNanos = intervalNanos / threadCount;
+        this.accountForCoordinatedOmission = binding.loadAsBoolean(toPropertyName(prefix, "accountForCoordinatedOmission"), true);
+    }
+
+    public SleepingMetronome(Metronome m) {
+        SleepingMetronome master = (SleepingMetronome) m;
+        this.intervalNanos = master.intervalNanos;
+        this.accountForCoordinatedOmission = master.accountForCoordinatedOmission;
     }
 
     @Override

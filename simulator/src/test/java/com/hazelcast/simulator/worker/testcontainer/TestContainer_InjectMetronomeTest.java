@@ -5,6 +5,7 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.worker.metronome.BusySpinningMetronome;
 import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import com.hazelcast.simulator.worker.metronome.SleepingMetronome;
@@ -26,8 +27,8 @@ public class TestContainer_InjectMetronomeTest extends TestContainer_AbstractTes
         TestCase testCase = new TestCase("TestContainerMetronomeTest")
                 .setProperty("class", MetronomeTest.class)
                 .setProperty("threadCount", 1)
-                .setProperty("intervalUs", 5)
-                .setProperty("metronomeType", SLEEPING.name());
+                .setProperty("interval", "5us")
+                .setProperty("metronomeClass", SleepingMetronome.class);
 
         testContainer = new TestContainer(testContext, testCase);
         MetronomeTest testInstance = (MetronomeTest) testContainer.getTestInstance();

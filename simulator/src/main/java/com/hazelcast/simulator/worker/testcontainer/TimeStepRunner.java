@@ -20,7 +20,6 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
@@ -38,7 +37,6 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
 
     @InjectTestContext
     protected TestContext testContext;
-    @InjectMetronome
     protected Metronome metronome;
 
     protected final ILogger logger = Logger.getLogger(getClass());

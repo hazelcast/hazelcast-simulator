@@ -428,7 +428,7 @@ public class TimeStepModel {
 
         private Probability loadProbability(Method method) {
             String propertyName = method.getName() + "Prob";
-            String valueString = propertyBinding.loadProperty(propertyName);
+            String valueString = propertyBinding.load(propertyName);
 
             double value;
             if (valueString == null) {

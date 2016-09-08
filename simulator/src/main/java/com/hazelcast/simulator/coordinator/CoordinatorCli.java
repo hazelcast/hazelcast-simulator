@@ -365,7 +365,7 @@ final class CoordinatorCli {
         return duration;
     }
 
-    private static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
+    public static int parseDurationWithoutLastChar(TimeUnit timeUnit, String value) {
         String sub = value.substring(0, value.length() - 1);
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }

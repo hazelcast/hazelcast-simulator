@@ -26,9 +26,8 @@ import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.utils.BindException;
+import com.hazelcast.simulator.utils.PropertyBindingSupport;
 import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeBuilder;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -42,6 +41,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTo
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
+import static com.hazelcast.simulator.utils.StringUtil.capitalizeFirst;
 import static java.lang.String.format;
 
 /**
@@ -53,30 +53,24 @@ import static java.lang.String.format;
  * <li>Metronome instance in fields annotated with {@link InjectMetronome}</li>
  * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
- *
+ * <p>
  * The {@link PropertyBinding} also keeps track of all used properties. This makes it possible to detect if there are any unused
  * properties (so properties which are not bound). See {@link #ensureNoUnusedProperties()}.
  */
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class PropertyBinding {
 
-    // properties
-    public int intervalUs;
-    public double ratePerSecond;
-    public MetronomeType metronomeType = MetronomeBuilder.DEFAULT_METRONOME_TYPE;
-    public boolean accountForCoordinatedOmission = true;
-
     // if we want to measure latency. Normally this is always true; but in its current setting, hdr can cause contention
     // and I want a switch that turns of hdr recording. Perhaps that with some tuning this isn't needed.
     public boolean measureLatency = true;
 
+    // this can be removed as soon as the @InjectMetronome/worker functionality is dropped
+    private MetronomeConstructor workerMetronomeConstructor;
     private final Class<? extends Probe> probeClass;
-    private final Class<? extends Metronome> metronomeClass;
     private TestContextImpl testContext;
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<String>();
-    private final MetronomeBuilder metronomeBuilder = new MetronomeBuilder();
 
     public PropertyBinding(TestCase testCase) {
         this.testCase = testCase;
@@ -85,7 +79,8 @@ public class PropertyBinding {
 
         bind(this);
 
-        this.metronomeClass = loadMetronomeClass();
+        this.workerMetronomeConstructor = new MetronomeConstructor(
+                "", this, loadAsInt("threadCount", RunWithWorkersRunStrategy.DEFAULT_THREAD_COUNT));
         this.probeClass = loadProbeClass();
     }
 
@@ -96,7 +91,7 @@ public class PropertyBinding {
 
     public void ensureNoUnusedProperties() {
         if (!unusedProperties.isEmpty()) {
-            throw new BindException(format("Unused properties %s have not been found on '%s'"
+            throw new BindException(format("The following properties %s have not been used on '%s'"
                     , unusedProperties, testCase.getClassname()));
         }
     }
@@ -105,14 +100,75 @@ public class PropertyBinding {
         return probeMap;
     }
 
-    public String loadProperty(String propertyName) {
-        checkNotNull(propertyName, "propertyName can't be null");
+    public String load(String property) {
+        checkNotNull(property, "propertyName can't be null");
 
-        String value = testCase.getProperty(propertyName);
+        String value = testCase.getProperty(property);
         if (value != null) {
-            unusedProperties.remove(propertyName);
+            unusedProperties.remove(property);
         }
         return value;
+    }
+
+    public int loadAsInt(String property, int defaultValue) {
+        String value = load(property);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalTestException(format("Property [%s] with value [%s] is not an int", property, value));
+        }
+    }
+
+    public double loadAsDouble(String property, double defaultValue) {
+        String value = load(property);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalTestException(format("Property [%s] with value [%s] is not a double", property, value));
+        }
+    }
+
+    public boolean loadAsBoolean(String property, boolean defaultValue) {
+        String value = load(property);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        try {
+            return Boolean.parseBoolean(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalTestException(format("Property [%s] with value [%s] is not a double", property, value));
+        }
+    }
+
+    public <E> Class<E> loadAsClass(String property, Class<E> defaultValue) {
+        String value = load(property);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        try {
+            return (Class<E>) PropertyBindingSupport.class.getClassLoader().loadClass(value);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalTestException(
+                    format("Property [%s] with value [%s] points to a non existing class", property, value));
+        }
+    }
+
+    public static String toPropertyName(String prefix, String name) {
+        if (prefix.equals("")) {
+            return name;
+        }
+
+        return prefix + capitalizeFirst(name);
     }
 
     public void bind(Object object) {
@@ -148,7 +204,7 @@ public class PropertyBinding {
             setFieldValue(object, field, probe);
         } else if (field.isAnnotationPresent(InjectMetronome.class)) {
             assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
-            Metronome metronome = metronomeBuilder.build();
+            Metronome metronome = workerMetronomeConstructor.newInstance();
             setFieldValue(object, field, metronome);
         }
     }
@@ -158,23 +214,6 @@ public class PropertyBinding {
             throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
                     annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
         }
-    }
-
-    public Class<? extends Metronome> getMetronomeClass() {
-        return metronomeClass;
-    }
-
-    private Class<? extends Metronome> loadMetronomeClass() {
-        metronomeBuilder
-                .withIntervalMicros(intervalUs)
-                .withAccountForCoordinatedOmission(accountForCoordinatedOmission)
-                .withMetronomeType(metronomeType);
-
-        if (ratePerSecond > 0) {
-            metronomeBuilder.withRatePerSecond(ratePerSecond);
-        }
-
-        return metronomeBuilder.getMetronomeClass();
     }
 
     public Class<? extends Probe> getProbeClass() {

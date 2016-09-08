@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static com.hazelcast.simulator.worker.testcontainer.PropertyBinding.toPropertyName;
 import static java.lang.String.format;
 
 /**
@@ -41,46 +42,35 @@ class TimeStepRunStrategy extends RunStrategy {
     private final TestContext testContext;
     private final Object testInstance;
     private final TimeStepModel timeStepModel;
-    private final PropertyBinding propertyBinding;
+    private final PropertyBinding binding;
     private volatile TimeStepRunner[] runners;
+    private final Map<String, MetronomeConstructor> metronomeSettingsMap = new HashMap<String, MetronomeConstructor>();
     private final Map<String, Class> runnerClassMap = new HashMap<String, Class>();
     private final Map<String, Integer> threadCountMap = new HashMap<String, Integer>();
     private int totalThreadCount;
 
     TimeStepRunStrategy(TestContainer testContainer) {
-        this.propertyBinding = testContainer.getPropertyBinding();
-        this.propertyBinding.bind(this);
+        this.binding = testContainer.getPropertyBinding();
 
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
-        this.timeStepModel = new TimeStepModel(testInstance.getClass(), propertyBinding);
+        this.timeStepModel = new TimeStepModel(testInstance.getClass(), binding);
 
         for (String executionGroup : timeStepModel.getExecutionGroups()) {
+            int threadCount = binding.loadAsInt(toPropertyName(executionGroup, "threadCount"), DEFAULT_THREAD_COUNT);
+            totalThreadCount += threadCount;
+            threadCountMap.put(executionGroup, threadCount);
+
+            MetronomeConstructor metronomeConstructor = new MetronomeConstructor(executionGroup, binding, threadCount);
+            metronomeSettingsMap.put(executionGroup, metronomeConstructor);
+
             Class runnerClass = new TimeStepRunnerCodeGenerator().compile(
                     testContainer.getTestCase().getId(),
                     executionGroup,
                     timeStepModel,
-                    propertyBinding.getMetronomeClass(),
-                    propertyBinding.getProbeClass());
+                    metronomeConstructor.getMetronomeClass(),
+                    binding.getProbeClass());
             runnerClassMap.put(executionGroup, runnerClass);
-
-            int threadCount = loadThreadCount(executionGroup);
-            totalThreadCount += threadCount;
-            threadCountMap.put(executionGroup, threadCount);
-        }
-    }
-
-    private int loadThreadCount(String group) {
-        String threadCountName = group.equals("") ? "threadCount" : group + "ThreadCount";
-        String value = propertyBinding.loadProperty(threadCountName);
-        if (value == null) {
-            return DEFAULT_THREAD_COUNT;
-        } else {
-            try {
-                return Integer.parseInt(value);
-            } catch (NumberFormatException e) {
-                throw new IllegalTestException("property " + threadCountName + " with value '" + value + "' is not an Integer");
-            }
         }
     }
 
@@ -170,9 +160,13 @@ class TimeStepRunStrategy extends RunStrategy {
             Constructor<TimeStepRunner> constructor = runnerClass
                     .getConstructor(testInstance.getClass(), TimeStepModel.class, String.class);
 
+            MetronomeConstructor metronomeConstructor = metronomeSettingsMap.get(executionGroup);
+
             for (int thread = 0; thread < threadCountMap.get(executionGroup); thread++) {
+
                 TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel, executionGroup);
-                propertyBinding.bind(runner);
+                runner.metronome = metronomeConstructor.newInstance();
+                binding.bind(runner);
                 returnRunners[k] = runner;
                 k++;
             }

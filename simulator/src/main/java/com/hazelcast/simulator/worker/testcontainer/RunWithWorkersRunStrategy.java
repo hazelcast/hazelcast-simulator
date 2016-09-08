@@ -35,21 +35,20 @@ import static java.lang.String.format;
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class RunWithWorkersRunStrategy extends RunStrategy {
 
-    private static final int DEFAULT_THREAD_COUNT = 10;
+    static final int DEFAULT_THREAD_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(RunWithWorkersRunStrategy.class);
 
-    // properties
-    public int threadCount = DEFAULT_THREAD_COUNT;
-
+    private int threadCount;
     private final TestContainer testContainer;
     private final Method runWithWorkersMethod;
     private final TestContext testContext;
     private final Object testInstance;
 
     public RunWithWorkersRunStrategy(TestContainer testContainer, Method runWithWorkersMethod) {
-        testContainer.getPropertyBinding().bind(this);
+        PropertyBinding binding = testContainer.getPropertyBinding();
 
+        this.threadCount = binding.loadAsInt("threadCount", DEFAULT_THREAD_COUNT);
         this.testContainer = testContainer;
         this.testContext = testContainer.getTestContext();
         this.testInstance = testContainer.getTestInstance();
