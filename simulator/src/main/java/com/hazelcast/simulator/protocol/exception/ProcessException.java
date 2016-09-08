@@ -21,6 +21,11 @@ public class ProcessException extends RuntimeException {
     private final ResponseType responseType;
 
     public ProcessException(ResponseType responseType) {
+        this(null, responseType);
+    }
+
+    public ProcessException(String msg, ResponseType responseType) {
+        super(msg);
         this.responseType = responseType;
     }
 
