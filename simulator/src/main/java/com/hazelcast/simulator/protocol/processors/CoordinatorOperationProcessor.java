@@ -101,7 +101,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 break;
             case RC_WORKER_SCRIPT:
                 coordinator.workerScript((RcWorkerScriptOperation) op, promise);
-                break;
+                return;
             case RC_PRINT_LAYOUT:
                 promise.answer(ResponseType.SUCCESS, coordinator.printLayout());
                 return;
@@ -114,14 +114,14 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         promise.answer(SUCCESS);
     }
 
-    private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
+    private ResponseType processPhaseCompletion(PhaseCompletedOperation op, SimulatorAddress sourceAddress) {
         if (!TEST.equals(sourceAddress.getAddressLevel())) {
-            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", operation.getTestPhase(), sourceAddress));
+            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", op.getTestPhase(), sourceAddress));
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
         int testIndex = sourceAddress.getTestIndex();
         SimulatorAddress workerAddress = sourceAddress.getParent();
-        testPhaseListeners.onCompletion(testIndex, operation.getTestPhase(), workerAddress);
+        testPhaseListeners.onCompletion(testIndex, op.getTestPhase(), workerAddress);
         return SUCCESS;
     }
 }
