@@ -104,7 +104,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     AbstractServerConnector(SimulatorAddress localAddress, int port,
                             int threadPoolSize, ScheduledExecutorService executorService) {
         this.localAddress = localAddress;
-        this.addressIndex = (COORDINATOR.equals(localAddress) ? 0 : localAddress.getAddressIndex());
+        this.addressIndex = COORDINATOR.equals(localAddress) ? 0 : localAddress.getAddressIndex();
         this.port = port;
         this.group = new NioEventLoopGroup(threadPoolSize);
         this.executorService = executorService;
