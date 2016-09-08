@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.coordinator.Coordinator;
+import com.hazelcast.simulator.coordinator.CoordinatorRemoteReceiver;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -54,12 +54,13 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     private final FailureCollector failureCollector;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsCollector performanceStatsCollector;
-    private final Coordinator coordinator;
+    private final CoordinatorRemoteReceiver receiver;
 
-    public CoordinatorOperationProcessor(Coordinator coordinator, FailureCollector failureCollector,
+    public CoordinatorOperationProcessor(CoordinatorRemoteReceiver receiver,
+                                         FailureCollector failureCollector,
                                          TestPhaseListeners testPhaseListeners,
                                          PerformanceStatsCollector performanceStatsCollector) {
-        this.coordinator = coordinator;
+        this.receiver = receiver;
         this.failureCollector = failureCollector;
         this.testPhaseListeners = testPhaseListeners;
         this.performanceStatsCollector = performanceStatsCollector;
@@ -80,34 +81,34 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) op).getPerformanceStats());
                 break;
             case RC_INSTALL:
-                coordinator.install(((RcInstallOperation) op).getVersionSpec());
+                receiver.install(((RcInstallOperation) op).getVersionSpec());
                 break;
             case RC_WORKER_START:
-                promise.answer(SUCCESS, coordinator.workerStart((RcWorkerStartOperation) op));
+                promise.answer(SUCCESS, receiver.workerStart((RcWorkerStartOperation) op));
                 return;
             case RC_TEST_RUN:
-                coordinator.testRun(((RcTestRunOperation) op), promise);
+                receiver.testRun(((RcTestRunOperation) op), promise);
                 return;
             case RC_WORKER_KILL:
-                promise.answer(SUCCESS, coordinator.workerKill((RcWorkerKillOperation) op));
+                promise.answer(SUCCESS, receiver.workerKill((RcWorkerKillOperation) op));
                 return;
             case RC_TEST_STATUS:
-                promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) op));
+                promise.answer(SUCCESS, receiver.testStatus((RcTestStatusOperation) op));
                 return;
             case RC_TEST_STOP:
-                promise.answer(SUCCESS, coordinator.testStop((RcTestStopOperation) op));
+                promise.answer(SUCCESS, receiver.testStop((RcTestStopOperation) op));
                 return;
             case RC_EXIT:
-                coordinator.exit();
+                receiver.exit();
                 break;
             case RC_WORKER_SCRIPT:
-                coordinator.workerScript((RcWorkerScriptOperation) op, promise);
+                receiver.workerScript((RcWorkerScriptOperation) op, promise);
                 return;
             case RC_PRINT_LAYOUT:
-                promise.answer(ResponseType.SUCCESS, coordinator.printLayout());
+                promise.answer(ResponseType.SUCCESS, receiver.printLayout());
                 return;
             case RC_DOWNLOAD:
-                coordinator.download((RcDownloadOperation) op);
+                receiver.download((RcDownloadOperation) op);
                 break;
             default:
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);

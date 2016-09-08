@@ -50,7 +50,6 @@ import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
@@ -159,86 +158,7 @@ class Provisioner {
         echoImportant("Finished installing Simulator on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
-    void download(final String target) {
-        ensureIsRemoteSetup(properties, "download");
 
-        long started = System.nanoTime();
-        echoImportant("Download artifacts of %s machines...", componentRegistry.agentCount());
-        bash.execute("mkdir -p " + target);
-
-        ThreadSpawner spawner = new ThreadSpawner("download", true);
-
-        final String baseCommand = "rsync --copy-links %s-avv -e \"ssh %s\" %s@%%s:%%s %s";
-        final String sshOptions = properties.getSshOptions();
-        final String sshUser = properties.getUser();
-
-        final String workersPath = format("hazelcast-simulator-%s/workers/*", getSimulatorVersion());
-
-        final String rsyncCommand = format(baseCommand, "", sshOptions, sshUser, target);
-        final String rsyncCommandSuffix = format(baseCommand, "--backup --suffix=-%s ", sshOptions, sshUser, target);
-
-        final File agentOut = new File(target, "agent.out");
-        final File agentErr = new File(target, "agent.err");
-
-        // download Worker logs
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    String ip = agentData.getPublicAddress();
-
-                    echo("Downloading Worker logs from %s", ip);
-                    bash.executeQuiet(format(rsyncCommand, ip, workersPath));
-                }
-            });
-        }
-
-        // download Agent logs
-        spawner.spawn(new Runnable() {
-            @Override
-            public void run() {
-                for (final AgentData agentData : componentRegistry.getAgents()) {
-                    String ip = agentData.getPublicAddress();
-                    String agentAddress = agentData.getAddress().toString();
-
-                    echo("Downloading Agent logs from %s", ip);
-                    bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.out"));
-                    bash.executeQuiet(format(rsyncCommandSuffix, ip, ip, "agent.err"));
-
-                    rename(agentOut, new File(target, agentAddress + '-' + ip + "-agent.out"));
-                    rename(agentErr, new File(target, agentAddress + '-' + ip + "-agent.err"));
-                }
-            }
-        });
-
-        spawner.awaitCompletion();
-
-        long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished downloading artifacts of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
-    }
-
-    void clean() {
-        ensureIsRemoteSetup(properties, "clean");
-
-        long started = System.nanoTime();
-        echoImportant("Cleaning Worker homes of %s machines...", componentRegistry.agentCount());
-        final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
-
-        ThreadSpawner spawner = new ThreadSpawner("clean", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    echo("Cleaning %s", agentData.getPublicAddress());
-                    bash.ssh(agentData.getPublicAddress(), cleanCommand);
-                }
-            });
-        }
-        spawner.awaitCompletion();
-
-        long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished cleaning Worker homes of %s machines (%s seconds)", componentRegistry.agentCount(), elapsed);
-    }
 
     void killJavaProcesses() {
         ensureIsRemoteSetup(properties, "kill");

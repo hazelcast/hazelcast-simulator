@@ -109,46 +109,6 @@ public class ProvisionerCliTest {
     }
 
     @Test
-    public void testRun_download_defaultDirectory() {
-        args.add("--download");
-
-        ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.setProvisioner(provisioner);
-        cli.run();
-
-        verify(provisioner).download("workers");
-        verify(provisioner).shutdown();
-        verifyNoMoreInteractions(provisioner);
-    }
-
-    @Test
-    public void testRun_download_customDirectory() {
-        args.add("--download");
-        args.add("outputDir");
-
-        ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.setProvisioner(provisioner);
-        cli.run();
-
-        verify(provisioner).download("outputDir");
-        verify(provisioner).shutdown();
-        verifyNoMoreInteractions(provisioner);
-    }
-
-    @Test
-    public void testRun_clean() {
-        args.add("--clean");
-
-        ProvisionerCli cli = new ProvisionerCli(getArgs());
-        cli.setProvisioner(provisioner);
-        cli.run();
-
-        verify(provisioner).clean();
-        verify(provisioner).shutdown();
-        verifyNoMoreInteractions(provisioner);
-    }
-
-    @Test
     public void testRun_kill() {
         args.add("--kill");
 
