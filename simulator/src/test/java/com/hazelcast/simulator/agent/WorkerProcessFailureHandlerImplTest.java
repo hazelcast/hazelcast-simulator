@@ -2,6 +2,7 @@ package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.connector.AgentConnectorImpl;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
@@ -57,7 +58,7 @@ public class WorkerProcessFailureHandlerImplTest {
 
         Response response = new Response(messageId, COORDINATOR, workerAddress, SUCCESS);
 
-        agentConnector = mock(AgentConnector.class);
+        agentConnector = mock(AgentConnectorImpl.class);
         when(agentConnector.invoke(any(SimulatorAddress.class), any(SimulatorOperation.class))).thenReturn(response);
         when(agentConnector.getFutureMap()).thenReturn(futureMap);
 

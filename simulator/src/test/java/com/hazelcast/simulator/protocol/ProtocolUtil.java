@@ -6,6 +6,7 @@ import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
+import com.hazelcast.simulator.protocol.connector.AgentConnectorImpl;
 import com.hazelcast.simulator.protocol.connector.ClientConnector;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.connector.ServerConnector;
@@ -144,7 +145,7 @@ class ProtocolUtil {
 
         WorkerProcessManager workerProcessManager = new WorkerProcessManager();
 
-        AgentConnector agentConnector = new AgentConnector(agent, workerProcessManager, port, 0);
+        AgentConnectorImpl agentConnector = new AgentConnectorImpl(agent, workerProcessManager, port, 0);
         when(agent.getAgentConnector()).thenReturn(agentConnector);
 
         for (int workerIndex = 1; workerIndex <= numberOfWorkers; workerIndex++) {

@@ -40,10 +40,10 @@ import static java.lang.String.format;
 
 /**
  * Starts all Simulator Workers.
- *
+ * <p>
  * It receives a map with {@link SimulatorAddress} of the Agent to start the Workers on as key.
  * The value is a list of {@link WorkerProcessSettings}, where each item corresponds to a single Worker to create.
- *
+ * <p>
  * The Workers will be created in order: First all member Workers are started, then all client Workers.
  * This is done to prevent clients running into a non existing cluster.
  */
@@ -178,7 +178,7 @@ public class StartWorkersTask {
         @Override
         public void run() {
             CreateWorkerOperation operation = new CreateWorkerOperation(workersSettings, startupDelayMs);
-            Response response = remoteClient.getCoordinatorConnector().invoke(agentAddress, operation);
+            Response response = remoteClient.getConnector().invoke(agentAddress, operation);
 
             ResponseType responseType = response.getFirstErrorResponseType();
             if (responseType != SUCCESS) {

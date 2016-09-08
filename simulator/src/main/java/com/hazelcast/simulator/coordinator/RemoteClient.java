@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
+import com.hazelcast.simulator.protocol.connector.Connector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -41,14 +41,14 @@ import static java.lang.String.format;
  */
 public class RemoteClient implements Closeable {
 
-    private final CoordinatorConnector coordinatorConnector;
+    private final Connector connector;
     private final ComponentRegistry componentRegistry;
     private final WorkerPingThread workerPingThread;
 
-    public RemoteClient(CoordinatorConnector coordinatorConnector,
+    public RemoteClient(Connector connector,
                         ComponentRegistry componentRegistry,
                         int workerPingIntervalMillis) {
-        this.coordinatorConnector = coordinatorConnector;
+        this.connector = connector;
         this.componentRegistry = componentRegistry;
         this.workerPingThread = new WorkerPingThread(workerPingIntervalMillis);
 
@@ -57,41 +57,41 @@ public class RemoteClient implements Closeable {
         }
     }
 
-    public CoordinatorConnector getCoordinatorConnector() {
-        return coordinatorConnector;
+    public Connector getConnector() {
+        return connector;
     }
 
     public void logOnAllAgents(String message) {
-        coordinatorConnector.invoke(ALL_AGENTS, new LogOperation(message));
+        connector.invoke(ALL_AGENTS, new LogOperation(message));
     }
 
     public void logOnAllWorkers(String message) {
-        coordinatorConnector.invoke(ALL_WORKERS, new LogOperation(message));
+        connector.invoke(ALL_WORKERS, new LogOperation(message));
     }
 
     public void invokeOnAllAgents(SimulatorOperation operation) {
-        Response response = coordinatorConnector.invoke(ALL_AGENTS, operation);
+        Response response = connector.invoke(ALL_AGENTS, operation);
         validateResponse(operation, response);
     }
 
     public void invokeOnAllWorkers(SimulatorOperation operation) {
-        Response response = coordinatorConnector.invoke(ALL_WORKERS, operation);
+        Response response = connector.invoke(ALL_WORKERS, operation);
         validateResponse(operation, response);
     }
 
     public void invokeOnFirstWorker(SimulatorOperation operation) {
-        Response response = coordinatorConnector.invoke(componentRegistry.getFirstWorker().getAddress(), operation);
+        Response response = connector.invoke(componentRegistry.getFirstWorker().getAddress(), operation);
         validateResponse(operation, response);
     }
 
     public void invokeOnTestOnAllWorkers(SimulatorAddress testAddress, SimulatorOperation operation) {
-        Response response = coordinatorConnector.invoke(testAddress, operation);
+        Response response = connector.invoke(testAddress, operation);
         validateResponse(operation, response);
     }
 
     public void invokeOnTestOnFirstWorker(SimulatorAddress testAddress, SimulatorOperation operation) {
         SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
-        Response response = coordinatorConnector.invoke(firstWorkerAddress.getChild(testAddress.getTestIndex()), operation);
+        Response response = connector.invoke(firstWorkerAddress.getChild(testAddress.getTestIndex()), operation);
         validateResponse(operation, response);
     }
 
