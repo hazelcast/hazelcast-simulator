@@ -17,6 +17,7 @@ package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 import java.util.concurrent.ConcurrentMap;
 
@@ -58,4 +59,5 @@ public interface ServerConnector extends Connector {
      * @return the {@link ResponseFuture} map
      */
     ConcurrentMap<String, ResponseFuture> getFutureMap();
+
 }
