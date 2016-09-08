@@ -70,7 +70,7 @@ public class AbstractServerConnectorTest {
         resetLogLevel();
 
         if (shutdownAfterTest) {
-            testServerConnector.shutdown();
+            testServerConnector.close();
         }
     }
 
@@ -85,7 +85,7 @@ public class AbstractServerConnectorTest {
         shutdownAfterTest = false;
         testServerConnector.start();
 
-        testServerConnector.shutdown();
+        testServerConnector.close();
 
         verify(executorService).shutdown();
         verify(executorService).awaitTermination(anyLong(), any(TimeUnit.class));
@@ -96,8 +96,8 @@ public class AbstractServerConnectorTest {
         shutdownAfterTest = false;
         testServerConnector.start();
 
-        testServerConnector.shutdown();
-        testServerConnector.shutdown();
+        testServerConnector.close();
+        testServerConnector.close();
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
@@ -117,7 +117,7 @@ public class AbstractServerConnectorTest {
         };
 
         responseSetter.start();
-        testServerConnector.shutdown();
+        testServerConnector.close();
         responseSetter.join();
 
         Response response = future.get();

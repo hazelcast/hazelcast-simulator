@@ -114,6 +114,8 @@ public class CoordinatorRemoteReceiver {
     }
 
     public void start() {
+        registerShutdownHook();
+
         logConfiguration();
 
         echoLocal("Coordinator remote mode starting...");
@@ -121,8 +123,8 @@ public class CoordinatorRemoteReceiver {
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
         startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+
         startCoordinatorConnector();
-        startRemoteClient();
 
         new InstallVendorTask(
                 simulatorProperties,
@@ -130,11 +132,22 @@ public class CoordinatorRemoteReceiver {
                 singleton(simulatorProperties.getVersionSpec()),
                 coordinatorParameters.getSessionId()).run();
 
-
-
         remoteModeInitialized.countDown();
 
         echoLocal("Coordinator remote mode started...");
+    }
+
+    private void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    close();
+                } catch (Throwable t) {
+                    LOGGER.fatal(t.getMessage(), t);
+                }
+            }
+        });
     }
 
     private void logConfiguration() {
@@ -153,22 +166,6 @@ public class CoordinatorRemoteReceiver {
     private void awaitInteractiveModeInitialized() throws Exception {
         if (!remoteModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
             throw new TimeoutException("Coordinator interactive mode failed to complete");
-        }
-    }
-
-    private void startRemoteClient() {
-        LOGGER.info("Remote client starting....");
-        int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
-
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
-        remoteClient.invokeOnAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
-        LOGGER.info("Remote client started successfully!");
-    }
-
-    private void echo(String message, Object... args) {
-        String log = echoLocal(message, args);
-        if (remoteClient != null) {
-            remoteClient.logOnAllAgents(log);
         }
     }
 
@@ -195,8 +192,6 @@ public class CoordinatorRemoteReceiver {
 
         new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
 
-        close();
-
         new Thread(new Runnable() {
             private static final int DELAY = 5000;
 
@@ -204,11 +199,6 @@ public class CoordinatorRemoteReceiver {
             public void run() {
                 try {
                     Thread.sleep(DELAY);
-
-                    if (coordinatorConnector != null) {
-                        echo("Shutdown of ClientConnector...");
-                        coordinatorConnector.shutdown();
-                    }
                     CommonUtils.exit(0);
                 } catch (Exception e) {
                     LOGGER.warn("Failed to shutdown", e);
@@ -219,6 +209,7 @@ public class CoordinatorRemoteReceiver {
 
     private void close() {
         closeQuietly(remoteClient);
+        closeQuietly(coordinatorConnector);
 
         if (!coordinatorParameters.skipDownload()) {
             new ArtifactDownloadTask(
@@ -226,18 +217,16 @@ public class CoordinatorRemoteReceiver {
                     simulatorProperties,
                     outputDirectory,
                     componentRegistry).run();
+
+            if (coordinatorParameters.getAfterCompletionFile() != null) {
+                echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
+                bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
+                echoLocal("Finished after-completion script");
+            }
         }
-        executeAfterCompletion();
+
 
         OperationTypeCounter.printStatistics();
-    }
-
-    private void executeAfterCompletion() {
-        if (coordinatorParameters.getAfterCompletionFile() != null) {
-            echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
-            bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
-            echoLocal("Finished after-completion script");
-        }
     }
 
     public void install(String versionSpec) throws Exception {

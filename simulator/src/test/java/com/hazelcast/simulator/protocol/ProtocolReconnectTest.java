@@ -83,7 +83,7 @@ public class ProtocolReconnectTest {
         response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
-        newConnector.shutdown();
+        newConnector.close();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
@@ -125,7 +125,7 @@ public class ProtocolReconnectTest {
         assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
 
         // shutdown second connection
-        secondConnector.shutdown();
+        secondConnector.close();
 
         // assert that there are no connections found anymore
         response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);

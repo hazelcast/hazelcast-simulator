@@ -123,7 +123,7 @@ public class AgentSmokeTest implements FailureListener {
     public void after() {
         try {
             LOGGER.info("Shutdown of CoordinatorConnector...");
-            coordinatorConnector.shutdown();
+            coordinatorConnector.close();
             LOGGER.info("Shutdown of Agent...");
             agentStarter.shutdown();
             LOGGER.info("Finally shutdown agent");

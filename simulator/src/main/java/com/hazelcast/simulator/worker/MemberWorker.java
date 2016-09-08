@@ -265,7 +265,7 @@ public final class MemberWorker implements Worker {
 
             if (workerConnector != null) {
                 echo("Stopping WorkerConnector...");
-                workerConnector.shutdown();
+                workerConnector.close();
             }
 
             OperationTypeCounter.printStatistics(Level.DEBUG);

@@ -103,7 +103,7 @@ class ProtocolUtil {
     static void shutdownCoordinatorConnector() {
         LOGGER.info("Shutdown of Coordinator...");
         if (coordinatorConnector != null) {
-            coordinatorConnector.shutdown();
+            coordinatorConnector.close();
             coordinatorConnector = null;
         }
     }
@@ -113,7 +113,7 @@ class ProtocolUtil {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    connector.shutdown();
+                    connector.close();
                 }
             });
         }

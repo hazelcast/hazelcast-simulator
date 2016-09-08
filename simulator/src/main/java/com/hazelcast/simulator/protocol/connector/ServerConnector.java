@@ -18,12 +18,13 @@ package com.hazelcast.simulator.protocol.connector;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
+import java.io.Closeable;
 import java.util.concurrent.ConcurrentMap;
 
 /**
  * Connector which listens for incoming Simulator component connections.
  */
-public interface ServerConnector extends Connector {
+public interface ServerConnector extends Connector, Closeable {
 
     int DEFAULT_SHUTDOWN_QUIET_PERIOD = 0;
     int DEFAULT_SHUTDOWN_TIMEOUT = 15;
@@ -36,7 +37,7 @@ public interface ServerConnector extends Connector {
     /**
      * Stops to listen on the incoming port.
      */
-    void shutdown();
+    void close();
 
     /**
      * Returns the {@link SimulatorAddress} of this Simulator component.

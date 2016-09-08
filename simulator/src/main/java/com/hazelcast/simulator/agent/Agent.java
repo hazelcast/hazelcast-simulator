@@ -208,7 +208,7 @@ public class Agent {
             workerProcessFailureMonitor.shutdown();
 
             echo("Stopping AgentConnector...");
-            agentConnector.shutdown();
+            agentConnector.close();
 
             echo("Removing PID file...");
             deleteQuiet(pidFile);

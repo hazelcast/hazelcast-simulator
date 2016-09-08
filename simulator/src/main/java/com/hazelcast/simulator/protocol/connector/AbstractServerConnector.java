@@ -146,7 +146,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public void shutdown() {
+    public void close() {
         LOGGER.info(format("Shutdown of %s...", getClass().getName()));
 
         if (!isStarted.compareAndSet(true, false)) {

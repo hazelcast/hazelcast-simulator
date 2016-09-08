@@ -183,7 +183,8 @@ public class CoordinatorRun {
         new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
 
         failureCollector.logFailureInfo();
-        coordinatorConnector.shutdown();
+
+        closeQuietly(coordinatorConnector);
         stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
         closeQuietly(remoteClient);
@@ -194,8 +195,8 @@ public class CoordinatorRun {
                     simulatorProperties,
                     outputDirectory,
                     componentRegistry).run();
+            executeAfterCompletion();
         }
-        executeAfterCompletion();
 
         OperationTypeCounter.printStatistics();
     }

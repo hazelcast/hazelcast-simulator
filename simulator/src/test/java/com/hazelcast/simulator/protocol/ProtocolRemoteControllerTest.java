@@ -39,7 +39,7 @@ public class ProtocolRemoteControllerTest {
     @AfterClass
     public static void afterClass() {
         coordinatorRemoteConnector.close();
-        coordinatorConnector.shutdown();
+        coordinatorConnector.close();
 
         resetLogLevel();
     }
