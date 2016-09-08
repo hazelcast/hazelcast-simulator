@@ -260,8 +260,8 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     private SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
-        System.out.println("op:"+op);
-        long messageId = messageIds == null?0:messageIds.incrementAndGet();
+        System.out.println("op:" + op);
+        long messageId = messageIds == null ? 0 : messageIds.incrementAndGet();
         return new SimulatorMessage(dst, src, messageId, getOperationType(op), toJson(op));
     }
 
