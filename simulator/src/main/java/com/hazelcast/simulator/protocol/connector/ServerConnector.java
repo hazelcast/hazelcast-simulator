@@ -15,17 +15,15 @@
  */
 package com.hazelcast.simulator.protocol.connector;
 
-import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 import java.util.concurrent.ConcurrentMap;
 
 /**
  * Connector which listens for incoming Simulator component connections.
  */
-public interface ServerConnector {
+public interface ServerConnector extends Connector {
 
     int DEFAULT_SHUTDOWN_QUIET_PERIOD = 0;
     int DEFAULT_SHUTDOWN_TIMEOUT = 15;
@@ -60,64 +58,4 @@ public interface ServerConnector {
      * @return the {@link ResponseFuture} map
      */
     ConcurrentMap<String, ResponseFuture> getFutureMap();
-
-    /**
-     * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     *
-     * The {@link SimulatorOperation} is put on a queue and a {@link ResponseFuture} is returned to wait for the result.
-     * Does not support a destination {@link SimulatorAddress} with a wildcard.
-     *
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param op   the {@link SimulatorOperation} to send
-     * @return a {@link ResponseFuture} to wait for the result of the operation
-     */
-    ResponseFuture submit(SimulatorAddress destination, SimulatorOperation op);
-
-    ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
-
-    /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     *
-     * Blocks until the {@link Response} is received.
-     *
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param op   the {@link SimulatorOperation} to send
-     * @return a {@link Response} with the result of the call
-     */
-    Response invoke(SimulatorAddress destination, SimulatorOperation op);
-
-    /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     *
-     * Blocks until the {@link Response} is received.
-     *
-     * @param source      the {@link SimulatorAddress} of the source
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param op   the {@link SimulatorOperation} to send
-     * @return a {@link Response} with the result of the call
-     */
-    Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op);
-
-    /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     *
-     * Does not support a destination {@link SimulatorAddress} with a wildcard.
-     *
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param op   the {@link SimulatorOperation} to send
-     * @return a {@link ResponseFuture} with returns the result of the call
-     */
-    ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation op);
-
-    /**
-     * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     *
-     * Does not support a destination {@link SimulatorAddress} with a wildcard.
-     *
-     * @param source      the {@link SimulatorAddress} of the source
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param op   the {@link SimulatorOperation} to send
-     * @return a {@link ResponseFuture} with returns the result of the call
-     */
-    ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op);
 }
