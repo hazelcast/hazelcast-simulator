@@ -19,8 +19,8 @@ public class TestContainer_BasicTest extends TestContainer_AbstractTest {
 
     @Test
     public void testConstructor_withTestcase() {
-        TestCase testCase = new TestCase("TestContainerWithTestcaseTest");
-        testCase.setProperty("class", SuccessTest.class.getName());
+        TestCase testCase = new TestCase("TestContainerWithTestcaseTest")
+                .setProperty("class", SuccessTest.class.getName());
 
         testContainer = new TestContainer(testContext, testCase);
 
@@ -39,8 +39,8 @@ public class TestContainer_BasicTest extends TestContainer_AbstractTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructor_withNullTestContext_withTestCase() {
-        TestCase testCase = new TestCase("TestContainerNullContextTest");
-        testCase.setProperty("class", SuccessTest.class.getName());
+        TestCase testCase = new TestCase("TestContainerNullContextTest")
+                .setProperty("class", SuccessTest.class);
 
         new TestContainer(null, testCase);
     }

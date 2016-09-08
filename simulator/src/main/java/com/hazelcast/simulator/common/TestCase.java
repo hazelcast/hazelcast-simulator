@@ -69,9 +69,9 @@ public class TestCase {
         return this;
     }
 
-    public TestCase setProperty(String name, Object value) {
-        setProperty(name, value.toString());
-        return this;
+    public TestCase setProperty(String name, Object v) {
+        String value = v instanceof Class ? ((Class) v).getName() : v.toString();
+        return setProperty(name, value);
     }
 
     public Map<String, String> getProperties() {

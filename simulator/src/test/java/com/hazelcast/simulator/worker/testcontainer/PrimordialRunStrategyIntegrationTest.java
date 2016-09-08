@@ -42,7 +42,7 @@ public class PrimordialRunStrategyIntegrationTest {
         DummyTest testInstance = new DummyTest();
         TestCase testCase = new TestCase("id")
                 .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));

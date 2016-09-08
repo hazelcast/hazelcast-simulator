@@ -211,7 +211,7 @@ public class TimeStepModel_probabilityTest {
             throw new RuntimeException(e);
         }
 
-        TestCase testCase = new TestCase("foo").setProperty("class", clazz.getName());
+        TestCase testCase = new TestCase("foo").setProperty("class", clazz);
         for (Map.Entry<String, Double> entry : probs.entrySet()) {
             testCase.setProperty(entry.getKey(), entry.getValue());
         }

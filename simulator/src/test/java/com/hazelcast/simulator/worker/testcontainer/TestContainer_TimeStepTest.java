@@ -33,7 +33,7 @@ public class TestContainer_TimeStepTest extends TestContainer_AbstractTest {
         TestWithAllTimeStepPhases testInstance = new TestWithAllTimeStepPhases();
         TestCase testCase = new TestCase("id")
                 .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
@@ -88,7 +88,7 @@ public class TestContainer_TimeStepTest extends TestContainer_AbstractTest {
 
         TestCase testCase = new TestCase("id")
                 .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));

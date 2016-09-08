@@ -32,7 +32,7 @@ public class TestContainer_TimeStep_MultipleExecutionGroupsTest extends TestCont
         TestCase testCase = new TestCase("multipleExecutionGroupsTest")
                 .setProperty("group1ThreadCount", 2)
                 .setProperty("group2ThreadCount", 3)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));

@@ -225,8 +225,8 @@ public class TestOperationProcessorTest {
             when(worker.getWorkerConnector()).thenReturn(workerConnector);
 
             String testId = testClass.getSimpleName();
-            TestCase testCase = new TestCase(testId);
-            testCase.setProperty("class", testClass.getName());
+            TestCase testCase = new TestCase(testId)
+                    .setProperty("class", testClass);
 
             TestContextImpl testContext = new TestContextImpl(
                     mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));

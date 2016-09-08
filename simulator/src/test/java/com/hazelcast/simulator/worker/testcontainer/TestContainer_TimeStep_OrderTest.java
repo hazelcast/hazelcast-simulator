@@ -30,7 +30,7 @@ public class TestContainer_TimeStep_OrderTest extends TestContainer_AbstractTest
         TestInstance testInstance = new TestInstance();
         TestCase testCase = new TestCase("exceptionTest")
                 .setProperty("threadCount", 1)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));

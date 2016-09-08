@@ -145,8 +145,8 @@ public class AgentSmokeTest implements FailureListener {
 
     @Test(timeout = 300000)
     public void testSuccess() throws Exception {
-        TestCase testCase = new TestCase("testSuccess");
-        testCase.setProperty("class", SuccessTest.class.getName());
+        TestCase testCase = new TestCase("testSuccess")
+                .setProperty("class", SuccessTest.class);
         executeTestCase(testCase);
     }
 
@@ -154,8 +154,8 @@ public class AgentSmokeTest implements FailureListener {
     public void testThrowingFailures() throws Exception {
         failureCollector.addListener(this);
 
-        TestCase testCase = new TestCase("testThrowingFailures");
-        testCase.setProperty("class", FailingTest.class.getName());
+        TestCase testCase = new TestCase("testThrowingFailures")
+                .setProperty("class", FailingTest.class);
 
         executeTestCase(testCase);
 

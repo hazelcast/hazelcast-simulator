@@ -28,7 +28,7 @@ public class TestContainer_TimeStep_StopTest extends TestContainer_AbstractTest 
         TimeStepStopTest testInstance = new TimeStepStopTest();
         TestCase testCase = new TestCase("stopTest")
                 .setProperty("threadCount", 1)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));

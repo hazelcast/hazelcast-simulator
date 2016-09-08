@@ -24,7 +24,7 @@ public class TestContainer_InjectMetronomeTest extends TestContainer_AbstractTes
     @Test
     public void testConstructor_withTestcase() throws Exception {
         TestCase testCase = new TestCase("TestContainerMetronomeTest")
-                .setProperty("class", MetronomeTest.class.getName())
+                .setProperty("class", MetronomeTest.class)
                 .setProperty("threadCount", 1)
                 .setProperty("intervalUs", 5)
                 .setProperty("metronomeType", SLEEPING.name());

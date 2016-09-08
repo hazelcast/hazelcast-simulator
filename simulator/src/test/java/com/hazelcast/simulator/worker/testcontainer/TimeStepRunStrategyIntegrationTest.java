@@ -52,7 +52,7 @@ public class TimeStepRunStrategyIntegrationTest {
         TestWithAllRunPhases testInstance = new TestWithAllRunPhases();
         TestCase testCase = new TestCase(TEST_ID)
                 .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
@@ -107,7 +107,7 @@ public class TimeStepRunStrategyIntegrationTest {
         TestWithAllRunPhasesAndWarmup testInstance = new TestWithAllRunPhasesAndWarmup();
         TestCase testCase = new TestCase(TEST_ID)
                 .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
@@ -213,7 +213,7 @@ public class TimeStepRunStrategyIntegrationTest {
 
         TestCase testCase = new TestCase("someid")
                 .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass().getName());
+                .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
                 mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
