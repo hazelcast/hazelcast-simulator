@@ -81,26 +81,26 @@ public class WorkerOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+    protected void processOperation(OperationType operationType, SimulatorOperation op,
                                     SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case INTEGRATION_TEST:
-                processIntegrationTest((IntegrationTestOperation) operation, sourceAddress, promise);
+                processIntegrationTest((IntegrationTestOperation) op, sourceAddress, promise);
                 return;
             case PING:
                 processPing(sourceAddress);
                 promise.answer(SUCCESS);
                 break;
             case TERMINATE_WORKER:
-                processTerminateWorker((TerminateWorkerOperation) operation);
+                processTerminateWorker((TerminateWorkerOperation) op);
                 promise.answer(SUCCESS);
                 break;
             case CREATE_TEST:
-                processCreateTest((CreateTestOperation) operation);
+                processCreateTest((CreateTestOperation) op);
                 promise.answer(SUCCESS);
                 break;
             case EXECUTE_SCRIPT:
-                scriptExecutor.execute((ExecuteScriptOperation) operation, promise);
+                scriptExecutor.execute((ExecuteScriptOperation) op, promise);
                 break;
             default:
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);

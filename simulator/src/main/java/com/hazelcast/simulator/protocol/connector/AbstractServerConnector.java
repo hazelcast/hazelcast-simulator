@@ -190,20 +190,20 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation) {
+    public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation op) {
         checkNoWildcardAllowed(destination);
 
-        return submit(localAddress, destination, operation);
+        return submit(localAddress, destination, op);
     }
 
     @Override
-    public Response invoke(SimulatorAddress destination, SimulatorOperation operation) {
-        return invoke(localAddress, destination, operation);
+    public Response invoke(SimulatorAddress destination, SimulatorOperation op) {
+        return invoke(localAddress, destination, op);
     }
 
     @Override
-    public Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+    public Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op) {
+        SimulatorMessage message = createSimulatorMessage(source, destination, op);
         Response response = new Response(message);
 
         List<ResponseFuture> futureList = invokeAsync(message);
@@ -218,15 +218,15 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation operation) {
-        return invokeAsync(localAddress, destination, operation);
+    public ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation op) {
+        return invokeAsync(localAddress, destination, op);
     }
 
     @Override
-    public ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
+    public ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op) {
         checkNoWildcardAllowed(destination);
 
-        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+        SimulatorMessage message = createSimulatorMessage(source, destination, op);
         return invokeAsync(message).get(0);
     }
 
@@ -250,8 +250,8 @@ abstract class AbstractServerConnector implements ServerConnector {
         return messageQueue.size();
     }
 
-    ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation) {
-        SimulatorMessage message = createSimulatorMessage(source, destination, operation);
+    ResponseFuture submit(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op) {
+        SimulatorMessage message = createSimulatorMessage(source, destination, op);
         String futureKey = createFutureKey(source, message.getMessageId(), 0);
         ResponseFuture responseFuture = createInstance(messageQueueFutures, futureKey);
         messageQueue.add(message);

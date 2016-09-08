@@ -41,23 +41,23 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
 
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
-    public final void process(SimulatorOperation operation, SimulatorAddress sourceAddress, Promise promise) throws Exception {
-        OperationType operationType = getOperationType(operation);
+    public final void process(SimulatorOperation op, SimulatorAddress sourceAddress, Promise promise) throws Exception {
+        OperationType operationType = getOperationType(op);
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace(getClass().getSimpleName() + ".process(" + operation.getClass().getSimpleName() + ')');
+            LOGGER.trace(getClass().getSimpleName() + ".process(" + op.getClass().getSimpleName() + ')');
         }
         OperationTypeCounter.received(operationType);
         try {
             switch (operationType) {
                 case INTEGRATION_TEST:
-                    processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress, promise);
+                    processIntegrationTest(operationType, (IntegrationTestOperation) op, sourceAddress, promise);
                     return;
                 case LOG:
-                    processLog((LogOperation) operation, sourceAddress);
+                    processLog((LogOperation) op, sourceAddress);
                     promise.answer(SUCCESS);
                     break;
                 default:
-                    processOperation(operationType, operation, sourceAddress, promise);
+                    processOperation(operationType, op, sourceAddress, promise);
                     return;
             }
         } catch (Exception e) {
@@ -71,25 +71,25 @@ abstract class AbstractOperationProcessor implements OperationProcessor {
         LOGGER.fatal(t.getMessage(), t);
     }
 
-    private void processIntegrationTest(OperationType operationType, IntegrationTestOperation operation,
+    private void processIntegrationTest(OperationType operationType, IntegrationTestOperation op,
                                         SimulatorAddress sourceAddress, Promise promise) throws Exception {
-        switch (operation.getType()) {
+        switch (op.getType()) {
             case EQUALS:
-                if (!IntegrationTestOperation.TEST_DATA.equals(operation.getTestData())) {
+                if (!IntegrationTestOperation.TEST_DATA.equals(op.getTestData())) {
                     throw new IllegalStateException("operationData has not the expected value");
                 }
                 break;
             default:
-                processOperation(operationType, operation, sourceAddress, promise);
+                processOperation(operationType, op, sourceAddress, promise);
                 return;
         }
         promise.answer(SUCCESS);
     }
 
-    private void processLog(LogOperation operation, SimulatorAddress sourceAddress) {
-        LOGGER.log(operation.getLevel(), format("[%s] %s", sourceAddress, operation.getMessage()));
+    private void processLog(LogOperation op, SimulatorAddress sourceAddress) {
+        LOGGER.log(op.getLevel(), format("[%s] %s", sourceAddress, op.getMessage()));
     }
 
-    abstract void processOperation(OperationType operationType, SimulatorOperation operation,
+    abstract void processOperation(OperationType operationType, SimulatorOperation op,
                                    SimulatorAddress sourceAddress, Promise promise) throws Exception;
 }

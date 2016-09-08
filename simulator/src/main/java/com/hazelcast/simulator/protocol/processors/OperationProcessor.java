@@ -24,5 +24,5 @@ import com.hazelcast.simulator.worker.Promise;
  */
 public interface OperationProcessor {
 
-    void process(SimulatorOperation operation, SimulatorAddress sourceAddress, Promise promise) throws Exception;
+    void process(SimulatorOperation op, SimulatorAddress sourceAddress, Promise promise) throws Exception;
 }

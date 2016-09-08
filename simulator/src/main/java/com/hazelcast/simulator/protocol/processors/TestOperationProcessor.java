@@ -90,18 +90,18 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+    protected void processOperation(OperationType operationType, SimulatorOperation op,
                                     SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case INTEGRATION_TEST:
-                promise.answer(processIntegrationTest((IntegrationTestOperation) operation, sourceAddress));
+                promise.answer(processIntegrationTest((IntegrationTestOperation) op, sourceAddress));
                 return;
             case START_TEST_PHASE:
-                processStartTestPhase((StartTestPhaseOperation) operation);
+                processStartTestPhase((StartTestPhaseOperation) op);
                 promise.answer(SUCCESS);
                 break;
             case START_TEST:
-                processStartTest((StartTestOperation) operation);
+                processStartTest((StartTestOperation) op);
                 promise.answer(SUCCESS);
                 break;
             case STOP_TEST:

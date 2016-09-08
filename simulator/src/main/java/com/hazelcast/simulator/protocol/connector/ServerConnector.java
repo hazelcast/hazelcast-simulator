@@ -68,10 +68,10 @@ public interface ServerConnector {
      * Does not support a destination {@link SimulatorAddress} with a wildcard.
      *
      * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
+     * @param op   the {@link SimulatorOperation} to send
      * @return a {@link ResponseFuture} to wait for the result of the operation
      */
-    ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture submit(SimulatorAddress destination, SimulatorOperation op);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -79,10 +79,10 @@ public interface ServerConnector {
      * Blocks until the {@link Response} is received.
      *
      * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
+     * @param op   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
      */
-    Response invoke(SimulatorAddress destination, SimulatorOperation operation);
+    Response invoke(SimulatorAddress destination, SimulatorOperation op);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -91,10 +91,10 @@ public interface ServerConnector {
      *
      * @param source      the {@link SimulatorAddress} of the source
      * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
+     * @param op   the {@link SimulatorOperation} to send
      * @return a {@link Response} with the result of the call
      */
-    Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
+    Response invoke(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -102,10 +102,10 @@ public interface ServerConnector {
      * Does not support a destination {@link SimulatorAddress} with a wildcard.
      *
      * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
+     * @param op   the {@link SimulatorOperation} to send
      * @return a {@link ResponseFuture} with returns the result of the call
      */
-    ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture invokeAsync(SimulatorAddress destination, SimulatorOperation op);
 
     /**
      * Writes a {@link SimulatorOperation} to a {@link SimulatorAddress}.
@@ -114,8 +114,8 @@ public interface ServerConnector {
      *
      * @param source      the {@link SimulatorAddress} of the source
      * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
+     * @param op   the {@link SimulatorOperation} to send
      * @return a {@link ResponseFuture} with returns the result of the call
      */
-    ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation operation);
+    ResponseFuture invokeAsync(SimulatorAddress source, SimulatorAddress destination, SimulatorOperation op);
 }

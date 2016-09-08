@@ -30,7 +30,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 public class CoordinatorRemoteOperationProcessor extends AbstractOperationProcessor {
 
     @Override
-    public final void processOperation(OperationType operationType, SimulatorOperation operation,
+    public final void processOperation(OperationType operationType, SimulatorOperation op,
                                        SimulatorAddress sourceAddress, Promise promise) {
         switch (operationType) {
             default:

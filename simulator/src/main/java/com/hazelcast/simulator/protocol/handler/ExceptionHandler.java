@@ -62,8 +62,8 @@ public class ExceptionHandler extends ChannelHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error("Caught unhandled exception in Netty pipeline", cause);
 
-        FailureOperation operation = new FailureOperation("Uncaught Netty exception", NETTY_EXCEPTION, workerAddress,
+        FailureOperation op = new FailureOperation("Uncaught Netty exception", NETTY_EXCEPTION, workerAddress,
                 agentAddress, cause);
-        serverConnector.submit(COORDINATOR, operation);
+        serverConnector.submit(COORDINATOR, op);
     }
 }

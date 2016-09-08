@@ -67,18 +67,18 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+    protected void processOperation(OperationType operationType, SimulatorOperation op,
                                     SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case INTEGRATION_TEST:
-                processIntegrationTest((IntegrationTestOperation) operation, sourceAddress, promise);
+                processIntegrationTest((IntegrationTestOperation) op, sourceAddress, promise);
                 return;
             case INIT_SESSION:
-                agent.setSessionId(((InitSessionOperation) operation).getSessionId());
+                agent.setSessionId(((InitSessionOperation) op).getSessionId());
                 promise.answer(SUCCESS);
                 return;
             case CREATE_WORKER:
-                processCreateWorker((CreateWorkerOperation) operation, promise);
+                processCreateWorker((CreateWorkerOperation) op, promise);
                 return;
             case START_TIMEOUT_DETECTION:
                 processStartTimeoutDetection();
@@ -94,11 +94,11 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
     }
 
     private void processIntegrationTest(
-            IntegrationTestOperation operation, SimulatorAddress sourceAddress, Promise promise) throws Exception {
+            IntegrationTestOperation op, SimulatorAddress sourceAddress, Promise promise) throws Exception {
         SimulatorOperation nestedOperation;
         Response response;
         ResponseFuture future;
-        switch (operation.getType()) {
+        switch (op.getType()) {
             case NESTED_SYNC:
                 nestedOperation = new LogOperation("Sync nested integration test message");
                 response = agent.getAgentConnector().invoke(sourceAddress, nestedOperation);
@@ -130,12 +130,12 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
         }
     }
 
-    private void processCreateWorker(CreateWorkerOperation operation, Promise promise) throws Exception {
+    private void processCreateWorker(CreateWorkerOperation op, Promise promise) throws Exception {
         ArrayList<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
-        for (WorkerProcessSettings workerProcessSettings : operation.getWorkerProcessSettings()) {
+        for (WorkerProcessSettings workerProcessSettings : op.getWorkerProcessSettings()) {
             WorkerProcessLauncher launcher = new WorkerProcessLauncher(agent, workerProcessManager, workerProcessSettings);
             LaunchWorkerCallable task = new LaunchWorkerCallable(launcher, workerProcessSettings);
-            Future<Boolean> future = executorService.schedule(task, operation.getDelayMs(), MILLISECONDS);
+            Future<Boolean> future = executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
             futures.add(future);
         }
         for (Future<Boolean> future : futures) {

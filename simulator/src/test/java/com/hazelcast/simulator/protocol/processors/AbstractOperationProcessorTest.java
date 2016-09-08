@@ -71,7 +71,7 @@ public class AbstractOperationProcessorTest {
         private OperationType operationType;
 
         @Override
-        protected void processOperation(OperationType operationType, SimulatorOperation operation,
+        protected void processOperation(OperationType operationType, SimulatorOperation op,
                                         SimulatorAddress sourceAddress, Promise promise) throws Exception {
             this.operationType = operationType;
             promise.answer(ResponseType.SUCCESS);

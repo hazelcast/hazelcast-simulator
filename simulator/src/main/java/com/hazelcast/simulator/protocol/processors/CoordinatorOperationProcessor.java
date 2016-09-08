@@ -67,47 +67,47 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
 
     @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation operation,
+    protected void processOperation(OperationType operationType, SimulatorOperation op,
                                     SimulatorAddress sourceAddress, Promise promise) throws Exception {
         switch (operationType) {
             case FAILURE:
-                failureCollector.notify((FailureOperation) operation);
+                failureCollector.notify((FailureOperation) op);
                 break;
             case PHASE_COMPLETED:
-                promise.answer(processPhaseCompletion((PhaseCompletedOperation) operation, sourceAddress));
+                promise.answer(processPhaseCompletion((PhaseCompletedOperation) op, sourceAddress));
                 return;
             case PERFORMANCE_STATE:
-                performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) operation).getPerformanceStats());
+                performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) op).getPerformanceStats());
                 break;
             case RC_INSTALL:
-                coordinator.install(((RcInstallOperation) operation).getVersionSpec());
+                coordinator.install(((RcInstallOperation) op).getVersionSpec());
                 break;
             case RC_WORKER_START:
-                promise.answer(SUCCESS, coordinator.workerStart((RcWorkerStartOperation) operation));
+                promise.answer(SUCCESS, coordinator.workerStart((RcWorkerStartOperation) op));
                 return;
             case RC_TEST_RUN:
-                coordinator.testRun(((RcTestRunOperation) operation), promise);
+                coordinator.testRun(((RcTestRunOperation) op), promise);
                 return;
             case RC_WORKER_KILL:
-                promise.answer(SUCCESS, coordinator.workerKill((RcWorkerKillOperation) operation));
+                promise.answer(SUCCESS, coordinator.workerKill((RcWorkerKillOperation) op));
                 return;
             case RC_TEST_STATUS:
-                promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) operation));
+                promise.answer(SUCCESS, coordinator.testStatus((RcTestStatusOperation) op));
                 return;
             case RC_TEST_STOP:
-                promise.answer(SUCCESS, coordinator.testStop((RcTestStopOperation) operation));
+                promise.answer(SUCCESS, coordinator.testStop((RcTestStopOperation) op));
                 return;
             case RC_EXIT:
                 coordinator.exit();
                 break;
             case RC_WORKER_SCRIPT:
-                coordinator.workerScript((RcWorkerScriptOperation) operation, promise);
+                coordinator.workerScript((RcWorkerScriptOperation) op, promise);
                 return;
             case RC_PRINT_LAYOUT:
                 promise.answer(ResponseType.SUCCESS, coordinator.printLayout());
                 return;
             case RC_DOWNLOAD:
-                coordinator.download((RcDownloadOperation) operation);
+                coordinator.download((RcDownloadOperation) op);
                 break;
             default:
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
@@ -115,14 +115,14 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         promise.answer(SUCCESS);
     }
 
-    private ResponseType processPhaseCompletion(PhaseCompletedOperation operation, SimulatorAddress sourceAddress) {
+    private ResponseType processPhaseCompletion(PhaseCompletedOperation op, SimulatorAddress sourceAddress) {
         if (!TEST.equals(sourceAddress.getAddressLevel())) {
-            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", operation.getTestPhase(), sourceAddress));
+            LOGGER.error(format("Retrieved PhaseCompletedOperation %s from %s", op.getTestPhase(), sourceAddress));
             return EXCEPTION_DURING_OPERATION_EXECUTION;
         }
         int testIndex = sourceAddress.getTestIndex();
         SimulatorAddress workerAddress = sourceAddress.getParent();
-        testPhaseListeners.onCompletion(testIndex, operation.getTestPhase(), workerAddress);
+        testPhaseListeners.onCompletion(testIndex, op.getTestPhase(), workerAddress);
         return SUCCESS;
     }
 }

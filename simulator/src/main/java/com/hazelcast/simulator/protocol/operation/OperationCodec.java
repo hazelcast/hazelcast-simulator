@@ -28,8 +28,8 @@ public final class OperationCodec {
     private OperationCodec() {
     }
 
-    public static String toJson(SimulatorOperation operation) {
-        return GSON.toJson(operation);
+    public static String toJson(SimulatorOperation op) {
+        return GSON.toJson(op);
     }
 
     public static SimulatorOperation fromJson(String json, Class<? extends SimulatorOperation> classType) {

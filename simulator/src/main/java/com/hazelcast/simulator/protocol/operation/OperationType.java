@@ -76,13 +76,13 @@ public enum OperationType {
     /**
      * Returns the {@link OperationType} of a {@link SimulatorOperation}.
      *
-     * @param operation the {@link SimulatorOperation}
+     * @param op the {@link SimulatorOperation}
      * @return the {@link OperationType} of the {@link SimulatorOperation}
      */
-    public static OperationType getOperationType(SimulatorOperation operation) {
-        OperationType operationType = OperationTypeRegistry.OPERATION_TYPES.get(operation.getClass());
+    public static OperationType getOperationType(SimulatorOperation op) {
+        OperationType operationType = OperationTypeRegistry.OPERATION_TYPES.get(op.getClass());
         if (operationType == null) {
-            throw new IllegalArgumentException(format("Operation %s has not been registered!", operation.getClass().getName()));
+            throw new IllegalArgumentException(format("Operation %s has not been registered!", op.getClass().getName()));
         }
         return operationType;
     }

@@ -53,34 +53,34 @@ public class TestProcessorManager {
         testProcessors.remove(testIndex);
     }
 
-    public void processOnAllTests(Response response, SimulatorOperation operation, SimulatorAddress source) {
+    public void processOnAllTests(Response response, SimulatorOperation op, SimulatorAddress source) {
         for (Map.Entry<Integer, TestOperationProcessor> entry : testProcessors.entrySet()) {
             TestOperationProcessor processor = entry.getValue();
-            processOperation(processor, response, operation, source);
+            processOperation(processor, response, op, source);
         }
     }
 
-    public void processOnTest(Response response, SimulatorOperation operation, SimulatorAddress source, int testAddressIndex) {
+    public void processOnTest(Response response, SimulatorOperation op, SimulatorAddress source, int testAddressIndex) {
         TestOperationProcessor processor = testProcessors.get(testAddressIndex);
         if (processor == null) {
-            if (operation instanceof StopTestOperation) {
+            if (op instanceof StopTestOperation) {
                 response.addPart(localAddress, SUCCESS);
             } else {
                 response.addPart(localAddress, FAILURE_TEST_NOT_FOUND);
             }
         } else {
-            processOperation(processor, response, operation, source);
+            processOperation(processor, response, op, source);
         }
     }
 
-    private void processOperation(TestOperationProcessor processor, Response response, SimulatorOperation operation,
+    private void processOperation(TestOperationProcessor processor, Response response, SimulatorOperation op,
                                   SimulatorAddress source) {
         SimulatorAddress testAddress = processor.getTestAddress();
 
-        // ResponseType responseType = processor.process(operation, source);
+        // ResponseType responseType = processor.process(op, source);
         DummyPromise promise = new DummyPromise();
         try {
-            processor.process(operation, source, promise);
+            processor.process(op, source, promise);
         } catch (ProcessException e) {
             promise.answer(e.getResponseType());
         } catch (Exception e) {

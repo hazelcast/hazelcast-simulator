@@ -108,12 +108,12 @@ public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, C
     /**
      * Sends a {@link SimulatorMessage} to the addressed Simulator component.
      *
-     * @param operation the {@link SimulatorOperation} to send
+     * @param op the {@link SimulatorOperation} to send
      * @return a {@link Response} with the response of all addressed Simulator components.
      */
-    public Response write(SimulatorOperation operation) {
+    public Response write(SimulatorOperation op) {
         SimulatorMessage message = new SimulatorMessage(COORDINATOR, REMOTE, messageIds.incrementAndGet(),
-                getOperationType(operation), toJson(operation));
+                getOperationType(op), toJson(op));
 
         Response response = new Response(message);
         List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();

@@ -134,12 +134,11 @@ public class WorkerConnector extends AbstractServerConnector {
      *
      * @param testAddress the {@link SimulatorAddress} of the sending test
      * @param destination the {@link SimulatorAddress} of the destination
-     * @param operation   the {@link SimulatorOperation} to send
-     * @return a {@link ResponseFuture} to wait for the result of the operation
+     * @param op   the {@link SimulatorOperation} to send
+     * @return a {@link ResponseFuture} to wait for the result of the op
      */
-    public ResponseFuture submitFromTest(SimulatorAddress testAddress, SimulatorAddress destination,
-                                         SimulatorOperation operation) {
-        return submit(testAddress, destination, operation);
+    public ResponseFuture submitFromTest(SimulatorAddress testAddress, SimulatorAddress destination, SimulatorOperation op) {
+        return submit(testAddress, destination, op);
     }
 
     /**
