@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.common.TestCase;
 
 import java.util.Map;
@@ -27,16 +28,19 @@ public class CreateTestOperation implements SimulatorOperation {
     /**
      * Test index for the {@link com.hazelcast.simulator.protocol.core.SimulatorAddress}.
      */
+    @SerializedName("testIndex")
     private final int testIndex;
 
     /**
      * Test id for for {@link TestCase}.
      */
+    @SerializedName("testId")
     private final String testId;
 
     /**
      * Test parameters which are injected to public variables of the same name.
      */
+    @SerializedName("properties")
     private final Map<String, String> properties;
 
     public CreateTestOperation(int testIndex, TestCase testCase) {

@@ -15,9 +15,13 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ExecuteScriptOperation implements SimulatorOperation {
 
+    @SerializedName("command")
     private String command;
+    @SerializedName("fireAndForget")
     private boolean fireAndForget;
 
     public ExecuteScriptOperation(String command, boolean fireAndForget) {

@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.TargetType;
@@ -31,16 +32,19 @@ public class StartTestOperation implements SimulatorOperation {
     /**
      * Defines which Workers should execute the RUN phase by their {@link WorkerType}.
      */
+    @SerializedName("targetType")
     private final TargetType targetType;
 
     /**
      * Defines which Workers should execute the RUN phase by their {@link SimulatorAddress}.
      */
+    @SerializedName("targetWorkers")
     private final List<String> targetWorkers;
 
     /**
      * If this is a warmup or the actual run.
      */
+    @SerializedName("warmup")
     private final boolean warmup;
 
     public StartTestOperation() {

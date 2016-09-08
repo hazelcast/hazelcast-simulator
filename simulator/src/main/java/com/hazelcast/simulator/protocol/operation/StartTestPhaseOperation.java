@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.common.TestPhase;
 
 /**
@@ -25,6 +26,7 @@ public class StartTestPhaseOperation implements SimulatorOperation {
     /**
      * Defines the {@link TestPhase} which should be started.
      */
+    @SerializedName("testPhase")
     private final String testPhase;
 
     public StartTestPhaseOperation(TestPhase testPhase) {

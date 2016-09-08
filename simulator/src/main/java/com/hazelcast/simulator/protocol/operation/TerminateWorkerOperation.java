@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Initiates the shutdown process of the Worker.
  */
@@ -26,6 +28,7 @@ public class TerminateWorkerOperation implements SimulatorOperation {
      *
      * Client Workers can ignore this parameter.
      */
+    @SerializedName("memberWorkerShutdownDelaySeconds")
     private final int memberWorkerShutdownDelaySeconds;
 
     /**
@@ -37,6 +40,7 @@ public class TerminateWorkerOperation implements SimulatorOperation {
      * This switch should not be set in integration tests, otherwise the logging will be gone in
      * subsequent tests. This may also kill the JVM of the test itself.
      */
+    @SerializedName("ensureProcessShutdown")
     private final boolean ensureProcessShutdown;
 
     public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds, boolean ensureProcessShutdown) {
