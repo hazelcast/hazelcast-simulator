@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
@@ -178,13 +177,6 @@ final class CoordinatorCli {
             "Client Worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
-    private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            format("The file containing the simulator properties. If no file is explicitly configured,"
-                            + " first the working directory is checked for a file '%s'."
-                            + " All missing properties are always loaded from SIMULATOR_HOME/conf/%s",
-                    PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
             "Sets the license key for Hazelcast Enterprise Edition.")
             .withRequiredArg().ofType(String.class);
@@ -206,7 +198,7 @@ final class CoordinatorCli {
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
 
-        this.simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
+        this.simulatorProperties = loadSimulatorProperties();
         this.componentRegistry = newComponentRegistry(simulatorProperties);
 
         if (options.has(downloadSpec) || options.has(cleanSpec)) {
@@ -216,7 +208,6 @@ final class CoordinatorCli {
             this.receiver = new CoordinatorRemoteReceiver(componentRegistry, coordinatorParameters);
         } else {
             this.testSuite = loadTestSuite();
-            this.simulatorProperties = loadSimulatorProperties(options, propertiesFileSpec);
             this.coordinatorParameters = loadCoordinatorParameters();
             this.workerParametersMap = loadWorkerParameters();
             this.deploymentPlan = newDeploymentPlan();

@@ -44,9 +44,12 @@ public final class SimulatorUtils {
         return componentRegistry;
     }
 
-    public static SimulatorProperties loadSimulatorProperties(OptionSet options, OptionSpec<String> propertiesFileSpec) {
+    public static SimulatorProperties loadSimulatorProperties() {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
-        simulatorProperties.init(getPropertiesFile(options, propertiesFileSpec));
+        File file = new File(FileUtils.getUserDir(), "simulator.properties");
+        if (file.exists()) {
+            simulatorProperties.init(file);
+        }
 
         return simulatorProperties;
     }

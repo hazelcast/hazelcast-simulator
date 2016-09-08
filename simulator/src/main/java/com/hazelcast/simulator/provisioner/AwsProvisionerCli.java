@@ -30,24 +30,15 @@ import joptsimple.OptionSpec;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static java.lang.String.format;
 
 final class AwsProvisionerCli {
 
     private final OptionParser parser = new OptionParser();
-
-    private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            format("The file containing the simulator properties. If no file is explicitly configured,"
-                            + " first the working directory is checked for a file '%s'."
-                            + " All missing properties are always loaded from SIMULATOR_HOME/conf/%s",
-                    PROPERTIES_FILE_NAME, PROPERTIES_FILE_NAME))
-            .withRequiredArg().ofType(String.class);
 
     private final OptionSpec<Integer> scaleSpec = parser.accepts("scale",
             "Desired number of machines to scale to.")
@@ -68,9 +59,9 @@ final class AwsProvisionerCli {
         AwsProvisioner.logHeader();
 
         AwsProvisionerCli cli = new AwsProvisionerCli();
-        OptionSet options = initOptionsWithHelp(cli.parser, args);
+        initOptionsWithHelp(cli.parser, args);
 
-        SimulatorProperties properties = loadSimulatorProperties(options, cli.propertiesFileSpec);
+        SimulatorProperties properties = loadSimulatorProperties();
         ComponentRegistry componentRegistry = loadComponentRegister(new File(getUserDir(), AgentsFile.NAME), false);
 
         try {

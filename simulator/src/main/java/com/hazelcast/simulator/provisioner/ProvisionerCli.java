@@ -25,7 +25,6 @@ import org.jclouds.compute.ComputeService;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTIES_FILE_NAME;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isCloudProvider;
@@ -59,12 +58,6 @@ final class ProvisionerCli {
     private final OptionSpec terminateSpec = parser.accepts("terminate",
             "Terminates all provisioned machines.");
 
-    private final OptionSpec<String> propertiesFileSpec = parser.accepts("propertiesFile",
-            "The file containing the Simulator properties. If no file is explicitly configured, first the local working directory"
-                    + " is checked for a file '" + PROPERTIES_FILE_NAME + "'. All missing properties are always loaded from"
-                    + " '$SIMULATOR_HOME/conf/" + PROPERTIES_FILE_NAME + "'.")
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSet options;
 
     private Provisioner provisioner;
@@ -72,7 +65,7 @@ final class ProvisionerCli {
     ProvisionerCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
 
-        SimulatorProperties properties = loadSimulatorProperties(options, propertiesFileSpec);
+        SimulatorProperties properties = loadSimulatorProperties();
         ComputeService computeService = isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null;
         Bash bash = new Bash(properties);
 

@@ -28,6 +28,7 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
@@ -369,13 +370,10 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_withLocalSetup() {
-        File simulatorProperties = new File("simulator.properties").getAbsoluteFile();
+        File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
         writeText(format("%s=%s", PROPERTY_CLOUD_PROVIDER, CloudProviderUtils.PROVIDER_LOCAL), simulatorProperties);
 
         try {
-            args.add("--propertiesFile");
-            args.add(simulatorProperties.getAbsolutePath());
-
             CoordinatorCli cli = createCoordinatorCli();
 
             ComponentRegistry componentRegistry = cli.componentRegistry;

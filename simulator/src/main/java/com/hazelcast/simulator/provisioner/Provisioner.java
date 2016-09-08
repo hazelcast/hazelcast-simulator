@@ -158,8 +158,6 @@ class Provisioner {
         echoImportant("Finished installing Simulator on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
-
-
     void killJavaProcesses() {
         ensureIsRemoteSetup(properties, "kill");
 

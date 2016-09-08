@@ -67,15 +67,6 @@ public class SimulatorUtilsTest {
     }
 
     @Test
-    public void testLoadSimulatorProperties() {
-        OptionSet options = mock(OptionSet.class);
-        when(options.has(any(OptionSpec.class))).thenReturn(false);
-
-        SimulatorProperties properties = loadSimulatorProperties(options, null);
-        assertNotNull(properties);
-    }
-
-    @Test
     public void testGetPropertiesFile() {
         OptionSet options = mock(OptionSet.class);
         when(options.has(any(OptionSpec.class))).thenReturn(true);
