@@ -35,6 +35,16 @@ public class CoordinatorParameters {
     private String afterCompletionFile;
     private String sessionId = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
     private int performanceMonitorIntervalSeconds;
+    private String licenseKey;
+
+    public String getLicenseKey() {
+        return licenseKey;
+    }
+
+    public CoordinatorParameters setLicenseKey(String licenseKey) {
+        this.licenseKey = licenseKey;
+        return this;
+    }
 
     public int getPerformanceMonitorIntervalSeconds() {
         return performanceMonitorIntervalSeconds;

@@ -101,7 +101,7 @@ public class CoordinatorRemoteReceiver {
     private RemoteClient remoteClient;
     private CoordinatorConnector coordinatorConnector;
 
-    private CountDownLatch remoteModeInitialized = new CountDownLatch(1);
+    private CountDownLatch initialized = new CountDownLatch(1);
 
     CoordinatorRemoteReceiver(ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters) {
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
@@ -132,7 +132,7 @@ public class CoordinatorRemoteReceiver {
                 singleton(simulatorProperties.getVersionSpec()),
                 coordinatorParameters.getSessionId()).run();
 
-        remoteModeInitialized.countDown();
+        initialized.countDown();
 
         echoLocal("Coordinator remote mode started...");
     }
@@ -163,9 +163,9 @@ public class CoordinatorRemoteReceiver {
         }
     }
 
-    private void awaitInteractiveModeInitialized() throws Exception {
-        if (!remoteModeInitialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
-            throw new TimeoutException("Coordinator interactive mode failed to complete");
+    private void awaitInitialized() throws Exception {
+        if (!initialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
+            throw new TimeoutException("Coordinator remote mode failed to initialize");
         }
     }
 
@@ -173,38 +173,6 @@ public class CoordinatorRemoteReceiver {
         String log = message == null ? "null" : format(message, args);
         LOGGER.info(log);
         return log;
-    }
-
-    public void download(RcDownloadOperation operation) throws Exception {
-        LOGGER.info("Downloading ....");
-
-        new ArtifactDownloadTask(
-                coordinatorParameters.getSessionId(),
-                simulatorProperties,
-                outputDirectory,
-                componentRegistry).run();
-
-        LOGGER.info("Downloading complete!");
-    }
-
-    public void exit() {
-        LOGGER.info("Shutting down....");
-
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
-
-        new Thread(new Runnable() {
-            private static final int DELAY = 5000;
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(DELAY);
-                    CommonUtils.exit(0);
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to shutdown", e);
-                }
-            }
-        }).start();
     }
 
     private void close() {
@@ -229,8 +197,44 @@ public class CoordinatorRemoteReceiver {
         OperationTypeCounter.printStatistics();
     }
 
+    public void download(RcDownloadOperation operation) throws Exception {
+        awaitInitialized();
+
+        LOGGER.info("Downloading ....");
+
+        new ArtifactDownloadTask(
+                coordinatorParameters.getSessionId(),
+                simulatorProperties,
+                outputDirectory,
+                componentRegistry).run();
+
+        LOGGER.info("Downloading complete!");
+    }
+
+    public void exit() throws Exception {
+        awaitInitialized();
+
+        LOGGER.info("Shutting down....");
+
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
+
+        new Thread(new Runnable() {
+            private static final int DELAY = 5000;
+
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(DELAY);
+                    CommonUtils.exit(0);
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to shutdown", e);
+                }
+            }
+        }).start();
+    }
+
     public void install(String versionSpec) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents ....");
         new InstallVendorTask(
@@ -242,13 +246,13 @@ public class CoordinatorRemoteReceiver {
     }
 
     public String printLayout() throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         return componentRegistry.printLayout();
     }
 
     public String testStatus(RcTestStatusOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
         if (test == null) {
@@ -259,7 +263,7 @@ public class CoordinatorRemoteReceiver {
     }
 
     public String testStop(RcTestStopOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
 
@@ -278,7 +282,7 @@ public class CoordinatorRemoteReceiver {
     }
 
     public void testRun(RcTestRunOperation op, Promise promise) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         LOGGER.info("Run starting...");
         final RunTestSuiteTask runTestSuiteTask = new RunTestSuiteTask(op.getTestSuite(),
@@ -322,7 +326,7 @@ public class CoordinatorRemoteReceiver {
     }
 
     public String workerStart(RcWorkerStartOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
 
@@ -355,8 +359,7 @@ public class CoordinatorRemoteReceiver {
                 deploymentPlan.getWorkerDeployment(),
                 remoteClient,
                 componentRegistry,
-                coordinatorParameters.getWorkerVmStartupDelayMs()
-        ).run();
+                coordinatorParameters.getWorkerVmStartupDelayMs()).run();
 
         LOGGER.info("Workers started!");
 
@@ -369,23 +372,20 @@ public class CoordinatorRemoteReceiver {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    "",
+                    coordinatorParameters.getLicenseKey(),
                     simulatorProperties, false);
         } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    "",
+                    coordinatorParameters.getLicenseKey(),
                     simulatorProperties, true);
-
-            LOGGER.info(config);
         } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
             config = initClientHzConfig(
                     op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
                     componentRegistry,
                     simulatorProperties,
-                    "");
-
+                    coordinatorParameters.getLicenseKey());
         } else {
             throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
         }
@@ -393,7 +393,7 @@ public class CoordinatorRemoteReceiver {
     }
 
     public String workerKill(RcWorkerKillOperation op) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         WorkerQuery workerQuery = op.getWorkerQuery();
 
@@ -412,7 +412,7 @@ public class CoordinatorRemoteReceiver {
     }
 
     public void workerScript(RcWorkerScriptOperation operation, Promise promise) throws Exception {
-        awaitInteractiveModeInitialized();
+        awaitInitialized();
 
         List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
 

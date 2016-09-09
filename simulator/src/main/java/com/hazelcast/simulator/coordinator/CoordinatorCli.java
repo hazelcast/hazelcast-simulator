@@ -235,7 +235,8 @@ final class CoordinatorCli {
                 .setAfterCompletionFile(getConfigurationFile("after-completion.sh").getAbsolutePath())
                 .setPerformanceMonitorIntervalSeconds(getPerformanceMonitorInterval())
                 .setSkipDownload(options.has(skipDownloadSpec))
-                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec));
+                .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
+                .setLicenseKey(options.valueOf(licenseKeySpec));
 
         if (options.has(sessionIdSpec)) {
             coordinatorParameters.setSessionId(options.valueOf(sessionIdSpec));
@@ -245,15 +246,14 @@ final class CoordinatorCli {
     }
 
     private Map<WorkerType, WorkerParameters> loadWorkerParameters() {
-        String licenseKey = options.valueOf(licenseKeySpec);
-        Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
-        result.put(WorkerType.MEMBER, loadMemberWorkerParameters(licenseKey));
-        result.put(WorkerType.LITE_MEMBER, loadLiteMemberWorkerParameters(licenseKey));
-        result.put(WorkerType.JAVA_CLIENT, loadJavaClientWorkerParameters(licenseKey));
+         Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
+        result.put(WorkerType.MEMBER, loadMemberWorkerParameters());
+        result.put(WorkerType.LITE_MEMBER, loadLiteMemberWorkerParameters());
+        result.put(WorkerType.JAVA_CLIENT, loadJavaClientWorkerParameters());
         return result;
     }
 
-    private WorkerParameters loadJavaClientWorkerParameters(String licenseKey) {
+    private WorkerParameters loadJavaClientWorkerParameters() {
         Map<String, String> env = new HashMap<String, String>();
         env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         env.put("LOG4j_CONFIG", loadLog4jConfig());
@@ -261,7 +261,11 @@ final class CoordinatorCli {
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
-                initClientHzConfig(loadClientHzConfig(), componentRegistry, simulatorProperties, licenseKey));
+                initClientHzConfig(
+                        loadClientHzConfig(),
+                        componentRegistry,
+                        simulatorProperties,
+                        coordinatorParameters.getLicenseKey()));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
@@ -270,7 +274,7 @@ final class CoordinatorCli {
                 .setEnvironment(env);
     }
 
-    private WorkerParameters loadLiteMemberWorkerParameters(String licenseKey) {
+    private WorkerParameters loadLiteMemberWorkerParameters() {
         Map<String, String> env = new HashMap<String, String>();
         env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         env.put("LOG4j_CONFIG", loadLog4jConfig());
@@ -278,7 +282,10 @@ final class CoordinatorCli {
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
-                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, licenseKey, simulatorProperties, true));
+                initMemberHzConfig(loadMemberHzConfig(),
+                        componentRegistry,
+                        coordinatorParameters.getLicenseKey(),
+                        simulatorProperties, true));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
@@ -287,7 +294,7 @@ final class CoordinatorCli {
                 .setEnvironment(env);
     }
 
-    private WorkerParameters loadMemberWorkerParameters(String licenseKey) {
+    private WorkerParameters loadMemberWorkerParameters() {
         Map<String, String> env = new HashMap<String, String>();
         env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         env.put("LOG4j_CONFIG", loadLog4jConfig());
@@ -295,7 +302,11 @@ final class CoordinatorCli {
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
-                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, licenseKey, simulatorProperties, false));
+                initMemberHzConfig(
+                        loadMemberHzConfig(),
+                        componentRegistry,
+                        coordinatorParameters.getLicenseKey(),
+                        simulatorProperties, false));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
