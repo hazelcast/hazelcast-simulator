@@ -193,7 +193,6 @@ public class CoordinatorRemoteReceiver {
             }
         }
 
-
         OperationTypeCounter.printStatistics();
     }
 
