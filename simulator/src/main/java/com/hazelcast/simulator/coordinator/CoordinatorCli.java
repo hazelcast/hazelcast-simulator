@@ -21,6 +21,7 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -246,7 +247,7 @@ final class CoordinatorCli {
     }
 
     private Map<WorkerType, WorkerParameters> loadWorkerParameters() {
-         Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
+        Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
         result.put(WorkerType.MEMBER, loadMemberWorkerParameters());
         result.put(WorkerType.LITE_MEMBER, loadLiteMemberWorkerParameters());
         result.put(WorkerType.JAVA_CLIENT, loadJavaClientWorkerParameters());
@@ -329,13 +330,20 @@ final class CoordinatorCli {
 
 
     private TestSuite loadTestSuite() {
+        WorkerQuery workerQuery = new WorkerQuery()
+                .setTargetType(options.valueOf(targetTypeSpec));
+
+        int targetCount = options.valueOf(targetCountSpec);
+        if (targetCount > 0) {
+            workerQuery.setMaxCount(targetCount);
+        }
+
         TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec))
                 .setDurationSeconds(getDurationSeconds(options, durationSpec))
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                 .setParallel(options.has(parallelSpec))
-                .setTargetType(options.valueOf(targetTypeSpec))
-                .setTargetCount(options.valueOf(targetCountSpec));
+                .setWorkerQuery(workerQuery);
 
         if (options.has(warmupSpec)) {
             testSuite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));

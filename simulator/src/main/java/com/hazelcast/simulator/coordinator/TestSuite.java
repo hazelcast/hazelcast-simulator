@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -48,8 +48,7 @@ public class TestSuite {
     private int warmupSeconds = -1;
     private boolean failFast;
     private boolean parallel;
-    private TargetType targetType;
-    private int targetCount;
+    private WorkerQuery workerQuery;
     private boolean verifyEnabled;
 
     public TestSuite setVerifyEnabled(boolean verifyEnabled) {
@@ -70,22 +69,13 @@ public class TestSuite {
         return parallel;
     }
 
-    public TestSuite setTargetType(TargetType targetType) {
-        this.targetType = targetType;
+    public WorkerQuery getWorkerQuery() {
+        return workerQuery;
+    }
+
+    public TestSuite setWorkerQuery(WorkerQuery workerQuery) {
+        this.workerQuery = workerQuery;
         return this;
-    }
-
-    public TargetType getTargetType() {
-        return targetType;
-    }
-
-    public TestSuite setTargetCount(int targetCount) {
-        this.targetCount = targetCount;
-        return this;
-    }
-
-    public int getTargetCount() {
-        return targetCount;
     }
 
     public List<TestCase> getTestCaseList() {
@@ -159,9 +149,8 @@ public class TestSuite {
                 + ", warmupSeconds=" + warmupSeconds
                 + ", failFast=" + failFast
                 + ", parallel=" + parallel
-                + ", targetType=" + targetType
-                + ", targetCount=" + targetCount
                 + ", verifyEnabled=" + verifyEnabled
+                + ", workerQuery=" + workerQuery
                 + ", testCaseList=" + testCaseList
                 + '}';
     }

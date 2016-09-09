@@ -16,15 +16,18 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.coordinator.TestSuite;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 
 public class RcTestRunOperation implements SimulatorOperation {
 
+    private final WorkerQuery query;
     private TestSuite testSuite;
     private boolean async;
 
-    public RcTestRunOperation(TestSuite testSuite, boolean async) {
+    public RcTestRunOperation(TestSuite testSuite, boolean async, WorkerQuery query) {
         this.testSuite = testSuite;
         this.async = async;
+        this.query = query;
     }
 
     public TestSuite getTestSuite() {
@@ -33,5 +36,9 @@ public class RcTestRunOperation implements SimulatorOperation {
 
     public boolean isAsync() {
         return async;
+    }
+
+    public WorkerQuery getQuery() {
+        return query;
     }
 }

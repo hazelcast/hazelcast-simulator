@@ -26,8 +26,9 @@ import com.hazelcast.simulator.coordinator.TestCaseRunner;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
+import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
@@ -38,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.hazelcast.simulator.protocol.registry.WorkerData.toAddressString;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
@@ -75,14 +77,47 @@ public class RunTestSuiteTask {
     public boolean run() {
         List<TestData> tests = componentRegistry.addTests(testSuite);
         try {
-            return run0(tests);
+            List<WorkerData> targets = initTargets();
+            return run0(tests, targets);
         } finally {
             testPhaseListeners.removeAllListeners(runners);
-            performanceStatsCollector.logDetailedPerformanceInfo(testSuite.getDurationSeconds());
         }
     }
 
-    private boolean run0(List<TestData> tests) {
+    private List<WorkerData> initTargets() {
+        WorkerQuery workerQuery = testSuite.getWorkerQuery();
+        List<WorkerData> targets = workerQuery.execute(componentRegistry.getWorkers());
+        if (targets.isEmpty()) {
+            throw new IllegalStateException("No workers found for query:" + workerQuery);
+        }
+
+        List<WorkerData> clients = filter(targets, false);
+        List<WorkerData> members = filter(targets, true);
+
+        LOGGER.info("Using: " + workerQuery);
+        if (members.isEmpty()) {
+            LOGGER.info(format("Using %s clients [%s]", clients.size(), toAddressString(clients)));
+        } else if (clients.isEmpty()) {
+            LOGGER.info(format("Using %s members [%s]", members.size(), toAddressString(members)));
+        } else {
+            LOGGER.info(format("Using %s clients [%s]", clients.size(), toAddressString(clients)));
+            LOGGER.info(format("Using %s members [%s]", members.size(), toAddressString(members)));
+        }
+        return targets;
+    }
+
+    private List<WorkerData> filter(List<WorkerData> targets, boolean isMember) {
+        List<WorkerData> result = new ArrayList<WorkerData>(targets.size());
+        for (WorkerData worker : targets) {
+            if (worker.isMemberWorker() == isMember) {
+                result.add(worker);
+            }
+        }
+
+        return result;
+    }
+
+    private boolean run0(List<TestData> tests, List<WorkerData> targets) {
         int testCount = testSuite.size();
         boolean parallel = testSuite.isParallel() && testCount > 1;
         Map<TestPhase, CountDownLatch> testPhaseSyncMap = getTestPhaseSyncMap(testCount, parallel,
@@ -91,6 +126,7 @@ public class RunTestSuiteTask {
         LOGGER.info("Starting TestSuite");
         echoTestSuiteDuration(parallel);
 
+
         for (TestData testData : tests) {
             int testIndex = testData.getTestIndex();
             TestCase testCase = testData.getTestCase();
@@ -98,6 +134,7 @@ public class RunTestSuiteTask {
 
             TestCaseRunner runner = new TestCaseRunner(
                     testData,
+                    targets,
                     remoteClient,
                     testPhaseSyncMap,
                     failureCollector,
@@ -172,12 +209,12 @@ public class RunTestSuiteTask {
         }
         LOGGER.info(HORIZONTAL_RULER);
 
-        int targetCount = testSuite.getTargetCount();
-        if (targetCount > 0) {
-            TargetType targetType = testSuite.getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
-            List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-            LOGGER.info(format("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers));
-        }
+//        Integer targetCount = testSuite.getWorkerQuery().getMaxCount();
+//        if (targetCount > 0) {
+//            TargetType targetType = testSuite.getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
+//            List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+//            LOGGER.info(format("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers));
+//        }
     }
 
     private void echoTestSuiteEnd(int testCount, long started) {

@@ -31,6 +31,16 @@ public class WorkerQuery {
     private Integer maxCount;
     private WorkerType workerType;
     private boolean random;
+    private TargetType targetType = TargetType.ALL;
+
+    public TargetType getTargetType() {
+        return targetType;
+    }
+
+    public WorkerQuery setTargetType(TargetType targetType) {
+        this.targetType = targetType;
+        return this;
+    }
 
     public boolean isRandom() {
         return random;
@@ -86,15 +96,30 @@ public class WorkerQuery {
         return this;
     }
 
-    public List<WorkerData> execute(List<WorkerData> workers) {
+    public List<WorkerData> execute(List<WorkerData> input) {
+        switch (targetType) {
+            case ALL:
+                return select(input, null);
+            case MEMBER:
+                return select(input, true);
+            case CLIENT:
+                return select(input, false);
+            case PREFER_CLIENT:
+                List<WorkerData> result = select(input, false);
+                return !result.isEmpty() ? result : select(input, true);
+            default:
+                throw new IllegalStateException("Unrecognized targetType:" + targetType);
+        }
+    }
+
+    private List<WorkerData> select(List<WorkerData> input, Boolean isMember) {
         if (random) {
-            workers = randomize(workers);
+            input = randomize(input);
         }
 
-
-        List<WorkerData> result = new ArrayList<WorkerData>(workers.size());
-        for (WorkerData worker : workers) {
-            if (!isVictim(worker)) {
+        List<WorkerData> result = new ArrayList<WorkerData>(input.size());
+        for (WorkerData worker : input) {
+            if (!isTarget(worker, isMember)) {
                 continue;
             }
 
@@ -114,45 +139,89 @@ public class WorkerQuery {
     }
 
     @SuppressWarnings("checkstyle:npathcomplexity")
-    private boolean isVictim(WorkerData workerData) {
-        WorkerProcessSettings workerProcessSettings = workerData.getSettings();
+    private boolean isTarget(WorkerData worker, Boolean isMember) {
+        WorkerProcessSettings workerProcessSettings = worker.getSettings();
 
-        if (versionSpec != null) {
-            if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
-                return false;
-            }
-        }
-
-        if (workerAddresses != null) {
-            boolean found = false;
-            for (String address : workerAddresses) {
-                if (workerData.getAddress().toString().equals(address)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                return false;
-            }
-        }
-
-        if (agentAddresses != null) {
-            boolean found = false;
-            for (String agentAddress : agentAddresses) {
-                if (workerData.getAddress().getParent().toString().equals(agentAddress)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                return false;
-            }
-        }
-
-        if (!workerProcessSettings.getWorkerType().equals(workerType)) {
+        if (hasIsMemberConflict(worker, isMember)
+                || hasVersionSpecConflict(workerProcessSettings)
+                || hasWorkerAddressConflict(worker)
+                || hasAgentAddressConflict(worker)
+                || hasWorkerTypeConflict(workerProcessSettings)) {
             return false;
         }
 
         return true;
+    }
+
+    private boolean hasWorkerTypeConflict(WorkerProcessSettings workerProcessSettings) {
+        if (workerType != null) {
+            if (!workerProcessSettings.getWorkerType().equals(workerType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasAgentAddressConflict(WorkerData worker) {
+        if (agentAddresses != null) {
+            boolean found = false;
+            for (String agentAddress : agentAddresses) {
+                if (worker.getAddress().getParent().toString().equals(agentAddress)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasWorkerAddressConflict(WorkerData worker) {
+        if (workerAddresses != null) {
+            boolean found = false;
+            for (String address : workerAddresses) {
+                if (worker.getAddress().toString().equals(address)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasVersionSpecConflict(WorkerProcessSettings workerProcessSettings) {
+        if (versionSpec != null) {
+            if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasIsMemberConflict(WorkerData worker, Boolean isMember) {
+        if (isMember != null) {
+            if (worker.isMemberWorker() != isMember) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "WorkerQuery{"
+                + "versionSpec='" + versionSpec + '\''
+                + ", maxCount=" + maxCount
+                + ", workerType=" + workerType
+                + ", random=" + random
+                + ", targetType=" + targetType
+                + ", workerAddresses=" + workerAddresses
+                + ", agentAddresses=" + agentAddresses
+                + '}';
     }
 }

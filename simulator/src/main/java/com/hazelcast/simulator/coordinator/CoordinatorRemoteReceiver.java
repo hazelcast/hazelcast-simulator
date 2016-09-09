@@ -397,16 +397,14 @@ public class CoordinatorRemoteReceiver {
 
         WorkerQuery workerQuery = op.getWorkerQuery();
 
-        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s]...",
-                workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
+        LOGGER.info(format("Killing %s...", workerQuery));
 
         List<WorkerData> result = new KillWorkersTask(
                 componentRegistry, coordinatorConnector, op.getCommand(), workerQuery).run();
 
         LOGGER.info("\n" + componentRegistry.printLayout());
 
-        LOGGER.info(format("Killing %s worker with versionSpec [%s] and workerType [%s] completed!",
-                workerQuery.getMaxCount(), workerQuery.getVersionSpec(), workerQuery.getWorkerType()));
+        LOGGER.info(format("Killing %s complete", workerQuery));
 
         return WorkerData.toAddressString(result);
     }

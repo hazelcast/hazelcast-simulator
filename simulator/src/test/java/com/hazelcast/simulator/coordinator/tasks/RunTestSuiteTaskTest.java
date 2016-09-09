@@ -24,6 +24,7 @@ import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.TestData;
+import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -319,10 +320,13 @@ public class RunTestSuiteTaskTest {
                 .setPerformanceMonitorIntervalSeconds(monitorPerformanceMonitorIntervalSeconds)
                 .setSimulatorProperties(simulatorProperties);
 
+        WorkerQuery query = new WorkerQuery().setTargetType(TargetType.ALL);
+        if (targetCount > 0) {
+            query.setMaxCount(targetCount);
+        }
         testSuite.setVerifyEnabled(verifyEnabled)
                 .setParallel(parallel)
-                .setTargetType(TargetType.ALL)
-                .setTargetCount(targetCount);
+                .setWorkerQuery(query);
 
         RunTestSuiteTask task = new RunTestSuiteTask(testSuite, coordinatorParameters, componentRegistry, failureCollector,
                 testPhaseListeners, remoteClient, performanceStatsCollector);

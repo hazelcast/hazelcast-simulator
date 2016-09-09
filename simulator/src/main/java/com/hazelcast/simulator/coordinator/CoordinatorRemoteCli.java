@@ -319,9 +319,9 @@ public class CoordinatorRemoteCli implements Closeable {
                 "The versionSpec of the worker to select e.g  maven=3.7 or git=master")
                 .withRequiredArg().ofType(String.class);
 
-        final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
+        final ArgumentAcceptingOptionSpec<String> workerTypeSpec = parser.accepts("workerType",
                 "The type of machine to select, e.g. member, litemember, javaclient (native clients will be added soon) etc")
-                .withRequiredArg().ofType(String.class).defaultsTo("member");
+                .withRequiredArg().ofType(String.class);
 
         final ArgumentAcceptingOptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
                 "The maximum number of workers to select. It can safely be called with a maxCount larger than "
@@ -406,6 +406,7 @@ public class CoordinatorRemoteCli implements Closeable {
 
         @Override
         protected OptionSet newOptions(String[] args) {
+            workerTypeSpec.defaultsTo("member");
             return initOptionsWithHelp(parser, help, args);
         }
 
@@ -467,6 +468,7 @@ public class CoordinatorRemoteCli implements Closeable {
         @Override
         protected OptionSet newOptions(String[] args) {
             maxCountSpec.defaultsTo(1);
+            workerTypeSpec.defaultsTo("member");
             return initOptionsOnlyWithHelp(parser, help, args);
         }
 
@@ -603,37 +605,80 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private abstract class TestRunStartCli extends AbstractCli {
-        protected final OptionSpec<String> durationSpec = parser.accepts("duration",
+    private abstract class TestRunStartCli extends WorkerQueryableCli {
+        final OptionSpec<String> durationSpec = parser.accepts("duration",
                 "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
                         + "the test will run until the test decides to stop.")
                 .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
-        protected final OptionSpec<String> warmupSpec = parser.accepts("warmup",
+        final OptionSpec<String> warmupSpec = parser.accepts("warmup",
                 "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
                         + "the test will warmup until the test decides to stop.")
                 .withRequiredArg().ofType(String.class);
 
-        protected final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
+        final OptionSpec<TargetType> targetTypeSpec = parser.accepts("targetType",
                 format("Defines the type of Workers which execute the RUN phase."
                         + " The type PREFER_CLIENT selects client Workers if they are available, member Workers otherwise."
                         + " List of allowed types: %s", TargetType.getIdsAsString()))
                 .withRequiredArg().ofType(TargetType.class).defaultsTo(TargetType.PREFER_CLIENT);
 
-        protected final OptionSpec<Integer> targetCountSpec = parser.accepts("targetCount",
-                "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-        protected final OptionSpec parallelSpec = parser.accepts("parallel",
+        final OptionSpec parallelSpec = parser.accepts("parallel",
                 "If defined tests are run in parallel.");
 
-        protected final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verify",
+        final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verify",
                 "Defines if tests are verified.")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-        protected final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
+        final OptionSpec<Boolean> failFastSpec = parser.accepts("failFast",
                 "Defines if the TestSuite should fail immediately when a test from a TestSuite fails instead of continuing.")
                 .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
+
+        @Override
+        WorkerQuery newQuery() {
+            WorkerQuery query = super.newQuery();
+
+            if (query.getWorkerAddresses() == null) {
+                query.setTargetType(options.valueOf(targetTypeSpec));
+            }
+
+            return query;
+        }
+
+        @Override
+        protected SimulatorOperation newOperation() {
+            List testsuiteFiles = options.nonOptionArguments();
+            File testSuiteFile;
+            if (testsuiteFiles.size() > 1) {
+                throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
+            } else if (testsuiteFiles.size() == 1) {
+                testSuiteFile = new File((String) testsuiteFiles.get(0));
+            } else {
+                testSuiteFile = new File("test.properties");
+            }
+
+
+//            if (options.has(workersSpec) && options.has(targetTypeSpec)) {
+//                throw new CommandLineExitException("--workerSpec and targetTypeSpec can't be enabled at the same time.")
+//            }
+//
+            LOGGER.info("File:" + testSuiteFile);
+
+            TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
+                    .setDurationSeconds(getDurationSeconds(options, durationSpec))
+                    .setWorkerQuery(newQuery())
+                    .setParallel(options.has(parallelSpec))
+                    .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
+                    .setFailFast(options.valueOf(failFastSpec));
+
+            if (options.has(warmupSpec)) {
+                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
+            }
+
+            LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
+            return new RcTestRunOperation(suite, isAsync(), newQuery());
+        }
+
+        abstract boolean isAsync();
     }
 
     private class TestRunCli extends TestRunStartCli {
@@ -670,33 +715,8 @@ public class CoordinatorRemoteCli implements Closeable {
         }
 
         @Override
-        protected SimulatorOperation newOperation() {
-            List testsuiteFiles = options.nonOptionArguments();
-            File testSuiteFile;
-            if (testsuiteFiles.size() > 1) {
-                throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
-            } else if (testsuiteFiles.size() == 1) {
-                testSuiteFile = new File((String) testsuiteFiles.get(0));
-            } else {
-                testSuiteFile = new File("test.properties");
-            }
-
-            LOGGER.info("File:" + testSuiteFile);
-
-            TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
-                    .setDurationSeconds(getDurationSeconds(options, durationSpec))
-                    .setTargetType(options.valueOf(targetTypeSpec))
-                    .setTargetCount(options.valueOf(targetCountSpec))
-                    .setParallel(options.has(parallelSpec))
-                    .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
-                    .setFailFast(options.valueOf(failFastSpec));
-
-            if (options.has(warmupSpec)) {
-                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
-            }
-
-            LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
-            return new RcTestRunOperation(suite, false);
+        boolean isAsync() {
+            return false;
         }
     }
 
@@ -734,33 +754,8 @@ public class CoordinatorRemoteCli implements Closeable {
         }
 
         @Override
-        protected SimulatorOperation newOperation() {
-            List testsuiteFiles = options.nonOptionArguments();
-            File testSuiteFile;
-            if (testsuiteFiles.size() > 1) {
-                throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
-            } else if (testsuiteFiles.size() == 1) {
-                testSuiteFile = new File((String) testsuiteFiles.get(0));
-            } else {
-                testSuiteFile = new File("test.properties");
-            }
-
-            LOGGER.info("File:" + testSuiteFile);
-
-            TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
-                    .setDurationSeconds(getDurationSeconds(options, durationSpec))
-                    .setTargetType(options.valueOf(targetTypeSpec))
-                    .setTargetCount(options.valueOf(targetCountSpec))
-                    .setParallel(options.has(parallelSpec))
-                    .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
-                    .setFailFast(options.valueOf(failFastSpec));
-
-            if (options.has(warmupSpec)) {
-                suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
-            }
-
-            LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
-            return new RcTestRunOperation(suite, true);
+        boolean isAsync() {
+            return true;
         }
     }
 

@@ -29,6 +29,7 @@ import com.hazelcast.simulator.protocol.registry.WorkerData;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -98,9 +99,11 @@ public final class TestCaseRunner implements TestPhaseListener {
 
     private final int performanceMonitorIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
+    private final List<WorkerData> targets;
 
     @SuppressWarnings("checkstyle:parameternumber")
     public TestCaseRunner(TestData test,
+                          List<WorkerData> targets,
                           RemoteClient remoteClient,
                           Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                           FailureCollector failureCollector,
@@ -121,9 +124,10 @@ public final class TestCaseRunner implements TestPhaseListener {
                 , testSuite.getMaxTestCaseIdLength() + 1 + testAddress.length());
         this.testPhaseSyncMap = testPhaseSyncMap;
 
+        this.targets = targets;
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
-        this.targetType = testSuite.getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
-        this.targetCount = testSuite.getTargetCount();
+        this.targetType = testSuite.getWorkerQuery().getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
+        this.targetCount = targets.size();
 
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
         if (performanceMonitorIntervalSeconds > 0) {
@@ -146,6 +150,8 @@ public final class TestCaseRunner implements TestPhaseListener {
     }
 
     public boolean run() {
+        logDetails();
+
         test.initStartTime();
         try {
             run0();
@@ -193,6 +199,11 @@ public final class TestCaseRunner implements TestPhaseListener {
 
         executePhase(GLOBAL_TEARDOWN);
         executePhase(LOCAL_TEARDOWN);
+    }
+
+    private void logDetails() {
+        LOGGER.info(format("Test %s using %s workers [%s]",
+                testCase.getId(), targets.size(), WorkerData.toAddressString(targets)));
     }
 
     private void createTest() {
@@ -274,10 +285,18 @@ public final class TestCaseRunner implements TestPhaseListener {
 
     private void start(TestPhase phase) {
         echo(format("Starting Test %s start on %s", phase.desc(), targetType.toString(targetCount)));
-        List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
+
+        List<String> addresses = new LinkedList<String>();
+        for (WorkerData workers : targets) {
+            addresses.add(workers.getAddress().toString());
+        }
+
+        echo(format("Test %s using workers %s", phase.desc(), WorkerData.toAddressString(targets)));
+
         remoteClient.invokeOnTestOnAllWorkers(
                 test.getAddress(),
-                new StartTestOperation(targetType, targetWorkers, phase != RUN));
+                new StartTestOperation(targetType, addresses, phase != RUN));
+
         echo(format("Completed Test %s start", phase.desc()));
     }
 
