@@ -35,6 +35,7 @@ import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
+import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.NonOptionArgumentSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -43,6 +44,7 @@ import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_DURATION_SECONDS;
@@ -311,7 +313,59 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class WorkerScriptCli extends AbstractCli {
+    private abstract class WorkerQueryableCli extends AbstractCli {
+
+        final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
+                "The versionSpec of the worker to select e.g  maven=3.7 or git=master")
+                .withRequiredArg().ofType(String.class);
+
+        final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
+                "The type of machine to select, e.g. member, litemember, javaclient (native clients will be added soon) etc")
+                .withRequiredArg().ofType(String.class).defaultsTo("member");
+
+        final ArgumentAcceptingOptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
+                "The maximum number of workers to select. It can safely be called with a maxCount larger than "
+                        + "the actual number of workers.")
+                .withRequiredArg().ofType(Integer.class);
+
+        final OptionSpec<String> agentsSpec = parser.accepts("agents",
+                "Comma separated list of agent simulator addresses containing the workers to select")
+                .withRequiredArg().ofType(String.class);
+
+        final OptionSpec<String> workersSpec = parser.accepts("workers",
+                "Comma separated list of simulator addresses of the workers to select. If this option is set, all other search "
+                        + " constraints are ignored.")
+                .withRequiredArg().ofType(String.class);
+
+        final OptionSpec randomSpec = parser.accepts("random",
+                "If workers should be picked randomly or predictably");
+
+        WorkerQuery newQuery() {
+            WorkerQuery query = new WorkerQuery().setRandom(options.has(randomSpec));
+
+            List<String> workerAddresses = loadAddresses(options, workersSpec, AddressLevel.WORKER);
+            if (workerAddresses == null) {
+                List<String> agentAddresses = loadAddresses(options, agentsSpec, AddressLevel.AGENT);
+
+                Integer maxCount = options.valueOf(maxCountSpec);
+                if (maxCount != null) {
+                    if (maxCount <= 0) {
+                        throw new CommandLineExitException("--maxCount can't be smaller than 1");
+                    }
+                }
+
+                return query.setAgentAddresses(agentAddresses)
+                        .setWorkerType(options.valueOf(workerTypeSpec))
+                        .setVersionSpec(options.valueOf(versionSpecSpec))
+                        .setMaxCount(maxCount);
+            } else {
+                return query.setWorkerAddresses(workerAddresses);
+            }
+        }
+    }
+
+    private class WorkerScriptCli extends WorkerQueryableCli {
+
         private final String help
                 = "The 'worker-script' commands executes a Bash-script or Javascript on workers\n"
                 + "\n"
@@ -341,40 +395,14 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# takes a threadump on all workers with a specific version\n"
                 + "coordinator-remote worker-script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
                 + "# takes a threaddump on all member on agent C_A1\n"
-                + "coordinator-remote worker-script --workerType member --agent C_A1 --command 'bash:jstack $PID'\n\n"
+                + "coordinator-remote worker-script --workerType member --agents C_A1 --command 'bash:jstack $PID'\n\n"
                 + "# takes a threaddump on C_A1_W1\n"
-                + "coordinator-remote worker-script --worker C_A1_W1 --command 'bash:jstack $PID'\n\n"
+                + "coordinator-remote worker-script --workers C_A1_W1 --command 'bash:jstack $PID'\n\n"
                 + "# executes a javascript on all workers\n"
                 + "coordinator-remote worker-script --command 'js:java.lang.System.out.println(\"hello\")'";
 
-        private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
-                "The versionSpec of the worker to select e.g  maven=3.7 or git=master")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
-                "The type of machine to select, e.g. member, litemember, javaclient (native clients will be added soon) etc")
-                .withRequiredArg().ofType(String.class).defaultsTo("member");
-
-        private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
-                "The maximum number of workers to select. It can safely be called with a maxCount larger than "
-                        + "the actual number of workers.")
-                .withRequiredArg().ofType(Integer.class);
-
-        private final OptionSpec<String> agentSpec = parser.accepts("agent",
-                "The simulator address of the agent owning the worker")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<String> workerSpec = parser.accepts("worker",
-                "The simulator address of the worker. This is useful if you want to execute a script on a particular worker.")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
-                "If workers should be picked randomly or predictably")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
         private final OptionSpec fireAndForget = parser.accepts("fireAndForget",
                 "If the command is a fire and forget and no waiting for a response.");
-
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -388,28 +416,80 @@ public class CoordinatorRemoteCli implements Closeable {
                 throw new CommandLineExitException("Only 1 argument allowed. Use single quotes, e.g. 'bash:jstack $PID'");
             }
 
-            String agent = loadAgentAddress(options, agentSpec);
-            String worker = loadWorkerAddress(options, workerSpec);
-            if (agent != null && worker != null) {
-                throw new CommandLineExitException("---agent and --worker can't both be set");
-            }
-
-            Integer maxCount = options.valueOf(maxCountSpec);
-            if (maxCount != null && maxCount <= 0) {
-                throw new CommandLineExitException("--maxCount can't be smaller than 1");
-            }
-
-            WorkerQuery workerQuery = new WorkerQuery()
-                    .setAgentAddress(agent)
-                    .setWorkerAddress(worker)
-                    .setWorkerType(options.valueOf(workerTypeSpec))
-                    .setVersionSpec(options.valueOf(versionSpecSpec))
-                    .setMaxCount(maxCount)
-                    .setRandom(options.valueOf(randomSpec));
+            WorkerQuery workerQuery = newQuery();
 
             String cmd = (String) nonOptionArguments.get(0);
             LOGGER.info("Executing [" + cmd + "]");
             return new RcWorkerScriptOperation(cmd, workerQuery, options.has(fireAndForget));
+        }
+    }
+
+    private class WorkerKill extends WorkerQueryableCli {
+        private final String help
+                = "The 'worker-kill' command kills one or more workers. The killing can be done based using an exact\n"
+                + "worker address or using various filters like versionSpec, etc.\n"
+                + "\n"
+                + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
+                + "one can enable shuffling of members."
+                + "\n"
+                + "By default the worker is killed using a System.exit call, however one can also use a bash script\n"
+                + "or a javascript which is executed inside the JMV\n"
+                + "\n"
+                + "If a script is used, the big difference between the 'worker-script' and the 'worker-kill' command\n"
+                + "is when the 'worker-script' kills the JVM, it will lead to a failure. With the 'worker-kill' the\n"
+                + "failure is expected and the call will wait till the worker has actually died.\n"
+                + "\n"
+                + "By default there is no maximum of the items to kill, so if no criteria are given, all workers are\n"
+                + "killed!\n"
+                + "\n"
+                + "Examples\n"
+                + "# kills one member using System.exit(0)\n"
+                + "coordinator-remote --maxCount 1 worker-kill\n\n"
+                + "# kill 2 java clients\n"
+                + "coordinator-remote worker-kill --maxCount 2 --workerType javaclient\n\n"
+                + "# kills 3 litemembers using version spec git=master clients\n"
+                + "coordinator-remote worker-kill --maxCount 3 --workerType litemember --versionSpec git=master\n\n"
+                + "# kills all workers on agent C_A1\n"
+                + "coordinator-remote worker-kill --agent C_A1 \n\n"
+                + "# kills worker C_A1_W1\n"
+                + "coordinator-remote worker-kill --worker C_A1_W1 \n\n"
+                + "# kill one member using OOME\n"
+                + "coordinator-remote worker-kill --maxCount 1 --command OOME \n\n"
+                + "# kill one member using bash command kill -9\n"
+                + "coordinator-remote worker-kill --maxCount 1 --command 'bash:kill -9 $PID'\n\n"
+                + "# kill one member using javascript which calls System.exit\n"
+                + "coordinator-remote worker-kill --maxCount 1 --command 'js:java.lang.System.exit(0);'";
+
+        private final OptionSpec<String> commandSpec = parser.accepts("command",
+                "The way to kill the worker. E.g. 'System.exit', 'OOME', 'bash:kill -9 $PID', 'js:somescript")
+                .withRequiredArg().ofType(String.class).defaultsTo("System.exit");
+
+        @Override
+        protected OptionSet newOptions(String[] args) {
+            maxCountSpec.defaultsTo(1);
+            return initOptionsOnlyWithHelp(parser, help, args);
+        }
+
+        @Override
+        protected SimulatorOperation newOperation() {
+            String command = loadCommand();
+
+            return new RcWorkerKillOperation(command, newQuery());
+        }
+
+        private String loadCommand() {
+            String command = options.valueOf(commandSpec);
+            if ("System.exit".equals(command)) {
+                command = "js:java.lang.System.exit(0);";
+            } else if ("OOME".equals(command)) {
+                command = "var list = new java.util.ArrayList();\n"
+                        + "while(true){\n"
+                        + "    try{"
+                        + "         list.add( new Array(10000));"
+                        + "    }catch(error){}"
+                        + "}";
+            }
+            return command;
         }
     }
 
@@ -444,109 +524,6 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private class WorkerKill extends AbstractCli {
-        private final String help
-                = "The 'worker-kill' command kills one or more workers. The killing can be done based using an exact\n"
-                + "worker address or using various filters like versionSpec, etc.\n"
-                + "\n"
-                + "By default the selection of members is deterministic, however using the --randomSpec setting\n"
-                + "one can enable shuffling of members."
-                + "\n"
-                + "By default the worker is killed using a System.exit call, however one can also use a bash script\n"
-                + "or a javascript which is executed inside the JMV\n"
-                + "\n"
-                + "If a script is used, the big difference between the 'worker-script' and the 'worker-kill' command\n"
-                + "is when the 'worker-script' kills the JVM, it will lead to a failure. With the 'worker-kill' the\n"
-                + "failure is expected and the call will wait till the worker has actually died.\n"
-                + "\n"
-                + "Examples\n"
-                + "# kills one member using System.exit(0)\n"
-                + "coordinator-remote worker-kill\n\n"
-                + "# kill 2 java clients\n"
-                + "coordinator-remote worker-kill --maxCount 2 --workerType javaclient\n\n"
-                + "# kills 3 litemembers using version spec git=master clients\n"
-                + "coordinator-remote worker-kill --maxCount 3 --workerType litemember --versionSpec git=master\n\n"
-                + "# kills 1 member on agent C_A1\n"
-                + "coordinator-remote worker-kill --agent C_A1 \n\n"
-                + "# kills member C_A1_W1\n"
-                + "coordinator-remote worker-kill --worker C_A1_W1 \n\n"
-                + "# kill one member using OOME\n"
-                + "coordinator-remote worker-kill --command OOME \n\n"
-                + "# kill one member using bash command kill -9\n"
-                + "coordinator-remote worker-kill --command 'bash:kill -9 $PID'\n\n"
-                + "# kill one member using javascript which calls System.exit\n"
-                + "coordinator-remote worker-kill --command 'js:java.lang.System.exit(0);'";
-
-        private final OptionSpec<String> versionSpecSpec = parser.accepts("versionSpec",
-                "The versionSpec of the member to kill, e.g. maven=3.7. The default value is null, meaning that the versionSpec"
-                        + "is not part of the selection criteria ")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<String> workerTypeSpec = parser.accepts("workerType",
-                "The type of machine to kill. member, litemember, client:java (native clients will be added soon) etc")
-                .withRequiredArg().ofType(String.class).defaultsTo("member");
-
-        private final OptionSpec<Integer> maxCountSpec = parser.accepts("maxCount",
-                "The maximum number of workers to kill. It can safely be called with a maxCount larger than "
-                        + "the actual number of workers.")
-                .withRequiredArg().ofType(Integer.class).defaultsTo(1);
-
-        private final OptionSpec<String> agentSpec = parser.accepts("agent",
-                "The simulator address of the agent owning the worker to kill")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<String> workerSpec = parser.accepts("worker",
-                "The simulator address of the worker to kill")
-                .withRequiredArg().ofType(String.class);
-
-        private final OptionSpec<String> commandSpec = parser.accepts("command",
-                "The way to kill the worker. E.g. 'System.exit', 'OOME', 'bash:kill -9 $PID', 'js:somescript")
-                .withRequiredArg().ofType(String.class).defaultsTo("System.exit");
-
-        private final OptionSpec<Boolean> randomSpec = parser.accepts("random",
-                "If workers should be picked randomly or predictably")
-                .withRequiredArg().ofType(Boolean.class).defaultsTo(false);
-
-        @Override
-        protected OptionSet newOptions(String[] args) {
-            return initOptionsOnlyWithHelp(parser, help, args);
-        }
-
-        @Override
-        protected SimulatorOperation newOperation() {
-            int maxCount = options.valueOf(maxCountSpec);
-            if (maxCount <= 0) {
-                throw new CommandLineExitException("--maxCount can't be smaller than 1");
-            }
-
-            String agentAddress = loadAgentAddress(options, agentSpec);
-            String workerAddress = loadWorkerAddress(options, workerSpec);
-            if (agentAddress != null && workerAddress != null) {
-                throw new CommandLineExitException("--agent and --worker can't both be set");
-            }
-
-            WorkerQuery workerQuery = new WorkerQuery()
-                    .setAgentAddress(agentAddress)
-                    .setWorkerAddress(workerAddress)
-                    .setWorkerType(options.valueOf(workerTypeSpec))
-                    .setVersionSpec(options.valueOf(versionSpecSpec))
-                    .setMaxCount(maxCount)
-                    .setRandom(options.valueOf(randomSpec));
-
-            String command = options.valueOf(commandSpec);
-            if ("System.exit".equals(command)) {
-                command = "js:java.lang.System.exit(0);";
-            } else if ("OOME".equals(command)) {
-                command = "var list = new java.util.ArrayList();\n"
-                        + "while(true){\n"
-                        + "    try{"
-                        + "         list.add( new Array(10000));"
-                        + "    }catch(error){}"
-                        + "}";
-            }
-            return new RcWorkerKillOperation(command, workerQuery);
-        }
-    }
 
     private class WorkerStartCli extends AbstractCli {
         private final String help
@@ -568,7 +545,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "# starts 3 litemembers using version spec git=master clients\n"
                 + "coordinator-remote worker-start --count --workerType litemember --versionSpec git=master\n\n"
                 + "# starts 1 member on agent C_A1\n"
-                + "coordinator-remote worker-start --agent C_A1 \n\n"
+                + "coordinator-remote worker-start --agents C_A1 \n\n"
                 + "# starts 1 client with a custom client-hazelcast.xml file\n"
                 + "coordinator-remote worker-start --config client-hazelcast.xml \n\n";
 
@@ -593,8 +570,8 @@ public class CoordinatorRemoteCli implements Closeable {
                 "The file containing the configuration to use to start up the worker. E.g. Hazelcast configuration.")
                 .withRequiredArg().ofType(String.class);
 
-        private final OptionSpec<String> agentSpec = parser.accepts("agent",
-                "The simulator address of the agent to start the worker on.")
+        private final OptionSpec<String> agentsSpec = parser.accepts("agents",
+                "Comma separated list of agents the workers can start on")
                 .withRequiredArg().ofType(String.class);
 
         @Override
@@ -622,7 +599,7 @@ public class CoordinatorRemoteCli implements Closeable {
                     options.valueOf(vmOptionsSpec),
                     options.valueOf(workerTypeSpec),
                     hzConfig,
-                    loadAgentAddress(options, agentSpec));
+                    loadAddresses(options, agentsSpec, AddressLevel.AGENT));
         }
     }
 
@@ -787,41 +764,32 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-    private static String loadAgentAddress(OptionSet options, OptionSpec<String> spec) {
-        String agentAddress = options.valueOf(spec);
-        if (agentAddress != null) {
-            SimulatorAddress address;
-            try {
-                address = SimulatorAddress.fromString(agentAddress);
-            } catch (Exception e) {
-                throw new CommandLineExitException("Agent address [" + agentAddress
-                        + "] is not a valid simulator address", e);
-            }
-
-            if (!address.getAddressLevel().equals(AddressLevel.AGENT)) {
-                throw new CommandLineExitException("Agent address [" + agentAddress
-                        + "] is not a valid agent address, it's a " + address.getAddressLevel() + " address");
-            }
+    private static List<String> loadAddresses(OptionSet options, OptionSpec<String> spec, AddressLevel addressLevel) {
+        String addresses = options.valueOf(spec);
+        if (addresses == null) {
+            return null;
         }
-        return agentAddress;
-    }
 
-    private static String loadWorkerAddress(OptionSet options, OptionSpec<String> spec) {
-        String workerAddress = options.valueOf(spec);
-        if (workerAddress != null) {
-            SimulatorAddress address;
-            try {
-                address = SimulatorAddress.fromString(workerAddress);
-            } catch (Exception e) {
-                throw new CommandLineExitException("Worker address [" + workerAddress
-                        + "] is not a valid simulator address", e);
-            }
+        List<String> result = new LinkedList<String>();
+        for (String addressString : addresses.split(",")) {
 
-            if (!address.getAddressLevel().equals(AddressLevel.WORKER)) {
-                throw new CommandLineExitException("Worker address [" + workerAddress
-                        + "] is not a valid worker address, it's a " + address.getAddressLevel() + " address");
+            if (addressString != null) {
+                SimulatorAddress address;
+                try {
+                    address = SimulatorAddress.fromString(addressString);
+                } catch (Exception e) {
+                    throw new CommandLineExitException("Worker address [" + addressString
+                            + "] is not a valid simulator address", e);
+                }
+
+                if (!address.getAddressLevel().equals(addressLevel)) {
+                    throw new CommandLineExitException("address [" + addressString
+                            + "] is not a valid " + addressLevel + " address, it's a " + address.getAddressLevel() + " address");
+                }
             }
+            result.add(addressString);
         }
-        return workerAddress;
+
+        return result;
     }
 }

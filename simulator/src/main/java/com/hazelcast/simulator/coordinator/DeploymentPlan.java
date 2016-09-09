@@ -67,13 +67,23 @@ public final class DeploymentPlan {
 
         plan.initAgentWorkerLayouts(componentRegistry);
 
-        plan.assignToMultipleAgents(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER));
+        List<SimulatorAddress> agents = allAgents(componentRegistry);
 
-        plan.assignToMultipleAgents(clientCount, clientType, workerParametersMap.get(clientType));
+        plan.assignToAgents(memberCount, WorkerType.MEMBER, workerParametersMap.get(WorkerType.MEMBER), agents);
+
+        plan.assignToAgents(clientCount, clientType, workerParametersMap.get(clientType), agents);
 
         plan.printLayout();
 
         return plan;
+    }
+
+    private static List<SimulatorAddress> allAgents(ComponentRegistry componentRegistry) {
+        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>();
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            result.add(agentData.getAddress());
+        }
+        return result;
     }
 
     public static DeploymentPlan createDeploymentPlan(
@@ -81,7 +91,7 @@ public final class DeploymentPlan {
             WorkerParameters workerParameters,
             WorkerType workerType,
             int workerCount,
-            SimulatorAddress agentAddress) {
+            List<SimulatorAddress> agentAddresses) {
 
         if (workerCount < 0) {
             throw new IllegalArgumentException("workerCount can't be smaller than 0");
@@ -91,43 +101,16 @@ public final class DeploymentPlan {
 
         plan.initAgentWorkerLayouts(componentRegistry);
 
-        if (agentAddress == null) {
-            plan.assignToMultipleAgents(workerCount, workerType, workerParameters);
-        } else {
-            plan.assignToSingleAgent(workerCount, workerType, workerParameters, agentAddress);
+        if (agentAddresses == null) {
+            agentAddresses = allAgents(componentRegistry);
         }
+
+        plan.assignToAgents(workerCount, workerType, workerParameters, agentAddresses);
+
 
         plan.printLayout();
 
         return plan;
-    }
-
-    private void assignToSingleAgent(int workerCount, WorkerType workerType, WorkerParameters workerParameters,
-                                     SimulatorAddress agentAddress) {
-        AgentWorkerLayout agent = null;
-        for (AgentWorkerLayout agentLayout : agentWorkerLayouts) {
-            if (agentLayout.agentData.getAddress().equals(agentAddress)) {
-                agent = agentLayout;
-                break;
-            }
-        }
-
-        if (agent == null) {
-            throw new IllegalArgumentException(format("Agent [%s] does not exist", agentAddress));
-        }
-
-        if (!agent.allowed(workerType)) {
-            throw new IllegalArgumentException(format("Agent [%s] does not accept workers of type [%s]",
-                    agentAddress, workerType));
-        }
-
-        for (int k = 0; k < workerCount; k++) {
-            WorkerProcessSettings workerProcessSettings = agent.addWorker(
-                    workerType, workerParameters);
-
-            List<WorkerProcessSettings> processSettingsList = workerDeployment.get(agent.agentData.getAddress());
-            processSettingsList.add(workerProcessSettings);
-        }
     }
 
     // just for testing
@@ -140,10 +123,14 @@ public final class DeploymentPlan {
         return deploymentPlan;
     }
 
-    private void assignToMultipleAgents(int workerCount, WorkerType workerType, WorkerParameters parameters) {
+    private void assignToAgents(int workerCount, WorkerType workerType, WorkerParameters parameters,
+                                List<SimulatorAddress> agents) {
 
         for (int i = 0; i < workerCount; i++) {
             AgentWorkerLayout agentWorkerLayout = nextAgent(workerType);
+            if (!agents.contains(agentWorkerLayout.agentData.getAddress())) {
+                continue;
+            }
 
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
                     workerType, parameters);
@@ -185,6 +172,7 @@ public final class DeploymentPlan {
     private AgentWorkerLayout nextAgent(WorkerType workerType) {
         AgentWorkerLayout smallest = null;
         for (AgentWorkerLayout agent : agentWorkerLayouts) {
+
             if (!agent.allowed(workerType)) {
                 continue;
             }

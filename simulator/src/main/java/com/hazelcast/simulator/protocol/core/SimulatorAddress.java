@@ -15,14 +15,18 @@
  */
 package com.hazelcast.simulator.protocol.core;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import static java.lang.Integer.parseInt;
 
 /**
  * Address object which (uniquely) identifies one or more Simulator components.
- *
+ * <p>
  * Supports wildcards on each {@link AddressLevel} to target all components on that address level.
  * For example a {@link SimulatorMessage} to <tt>C_A2_W*_T1</tt> will be sent to <tt>C_A2_W1_T1</tt> and <tt>C_A2_W2_T1</tt>.
- *
+ * <p>
  * <pre>
  *                                               +---+
  * REMOTE                                        + R +
@@ -252,6 +256,30 @@ public class SimulatorAddress {
         int testIndex = getAddressIndex(AddressLevel.WORKER, addressLevel, "T*", sections);
 
         return new SimulatorAddress(addressLevel, agentIndex, workerIndex, testIndex);
+    }
+
+    public static List<SimulatorAddress> fromString(List<String> list) {
+        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>(list.size());
+        for (String address : list) {
+            result.add(fromString(address));
+        }
+        return result;
+    }
+
+    public static String toString(Collection<SimulatorAddress> addresses) {
+        StringBuilder sb = new StringBuilder();
+
+        boolean first = true;
+        for (SimulatorAddress address : addresses) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(address);
+        }
+
+        return sb.toString();
     }
 
     private static int getAddressIndex(AddressLevel parentLevel, AddressLevel level, String wildcard, String[] sections) {

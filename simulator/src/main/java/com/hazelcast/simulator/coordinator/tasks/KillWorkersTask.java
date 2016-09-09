@@ -57,28 +57,25 @@ public class KillWorkersTask {
     }
 
     public List<WorkerData> run() throws Exception {
-        LOGGER.info("Killing " + workerQuery.getMaxCount() + " workers starting");
-
         List<WorkerData> victims = workerQuery.execute(componentRegistry.getWorkers());
+
         if (victims.isEmpty()) {
             LOGGER.info("No victims found");
             return victims;
         }
 
+        LOGGER.info("Killing " + victims.size() + " workers starting");
+
         killWorkers(victims);
 
         awaitTermination(victims);
 
-        LOGGER.info("Killing " + workerQuery.getMaxCount() + " workers complete");
+        LOGGER.info("Killing " + victims.size() + " workers complete");
 
         return result;
     }
 
     private void killWorkers(List<WorkerData> victims) {
-        if (victims.size() < workerQuery.getMaxCount()) {
-            LOGGER.info(format("Killing %s of the requested %s workers", victims.size(), workerQuery.getMaxCount()));
-        }
-
         LOGGER.info(format("Killing [%s]", toAddressString(victims)));
 
         for (WorkerData victim : victims) {
@@ -114,8 +111,8 @@ public class KillWorkersTask {
         if (aliveVictims.isEmpty()) {
             LOGGER.info(format("Killing of workers [%s] success", toAddressString(victims)));
         } else {
-            LOGGER.info(format("Killing of workers [%s] failed, following failed to terminate [%s]",
-                    toAddressString(victims), toAddressString(victims)));
+            LOGGER.info(format("Killing of %s workers failed, following failed to terminate [%s]",
+                    aliveVictims.size(), toAddressString(aliveVictims)));
         }
     }
 }

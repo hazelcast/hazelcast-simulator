@@ -17,7 +17,6 @@ package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +26,8 @@ import static java.util.Collections.shuffle;
 public class WorkerQuery {
 
     private String versionSpec;
-    private SimulatorAddress workerAddress;
-    private SimulatorAddress agentAddress;
+    private List<String> workerAddresses;
+    private List<String> agentAddresses;
     private Integer maxCount;
     private WorkerType workerType;
     private boolean random;
@@ -51,21 +50,21 @@ public class WorkerQuery {
         return this;
     }
 
-    public SimulatorAddress getWorkerAddress() {
-        return workerAddress;
+    public List<String> getWorkerAddresses() {
+        return workerAddresses;
     }
 
-    public WorkerQuery setWorkerAddress(String workerAddress) {
-        this.workerAddress = workerAddress == null ? null : SimulatorAddress.fromString(workerAddress);
+    public WorkerQuery setWorkerAddresses(List<String> workerAddresses) {
+        this.workerAddresses = workerAddresses;
         return this;
     }
 
-    public SimulatorAddress getAgentAddress() {
-        return agentAddress;
+    public List<String> getAgentAddresses() {
+        return agentAddresses;
     }
 
-    public WorkerQuery setAgentAddress(String agentAddress) {
-        this.agentAddress = agentAddress == null ? null : SimulatorAddress.fromString(agentAddress);
+    public WorkerQuery setAgentAddresses(List<String> agentAddresses) {
+        this.agentAddresses = agentAddresses;
         return this;
     }
 
@@ -124,14 +123,28 @@ public class WorkerQuery {
             }
         }
 
-        if (workerAddress != null) {
-            if (!workerData.getAddress().equals(workerAddress)) {
+        if (workerAddresses != null) {
+            boolean found = false;
+            for (String address : workerAddresses) {
+                if (workerData.getAddress().toString().equals(address)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
                 return false;
             }
         }
 
-        if (agentAddress != null) {
-            if (!workerData.getAddress().getParent().equals(agentAddress)) {
+        if (agentAddresses != null) {
+            boolean found = false;
+            for (String agentAddress : agentAddresses) {
+                if (workerData.getAddress().getParent().toString().equals(agentAddress)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
                 return false;
             }
         }

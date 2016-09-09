@@ -15,22 +15,28 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import java.util.List;
+
 public class RcWorkerStartOperation implements SimulatorOperation {
     private int count;
     private String versionSpec;
     private String vmOptions;
     private String workerType;
     private String hzConfig;
-    private String agentAddress;
+    private List<String> agentAddresses;
 
-    public RcWorkerStartOperation(int count, String versionSpec, String vmOptions,
-                                  String workerType, String hzConfig, String agentAddress) {
+    public RcWorkerStartOperation(int count,
+                                  String versionSpec,
+                                  String vmOptions,
+                                  String workerType,
+                                  String hzConfig,
+                                  List<String> agentAddresses) {
         this.count = count;
         this.versionSpec = versionSpec;
         this.vmOptions = vmOptions;
         this.workerType = workerType;
         this.hzConfig = hzConfig;
-        this.agentAddress = agentAddress;
+        this.agentAddresses = agentAddresses;
     }
 
     public int getCount() {
@@ -53,7 +59,7 @@ public class RcWorkerStartOperation implements SimulatorOperation {
         return hzConfig;
     }
 
-    public String getAgentAddress() {
-        return agentAddress;
+    public List<String> getAgentAddress() {
+        return agentAddresses;
     }
 }

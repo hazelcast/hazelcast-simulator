@@ -350,9 +350,10 @@ public class CoordinatorRemoteReceiver {
                 .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")))
                 .setEnvironment(environment);
 
-        SimulatorAddress agent = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
+        List<SimulatorAddress> agents = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
+
         DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry, workerParameters, workerType, op.getCount(), agent);
+                componentRegistry, workerParameters, workerType, op.getCount(), agents);
 
         List<WorkerData> workers = new StartWorkersTask(
                 deploymentPlan.getWorkerDeployment(),
