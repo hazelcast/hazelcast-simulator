@@ -28,11 +28,11 @@ import static java.util.concurrent.locks.LockSupport.parkNanos;
  * <p>
  * Normally with the {@link BusySpinningMetronome} or {@link SleepingMetronome} when 1 thread is blocked, it will not pick
  * up requests it should have picked up and it builds up a bubble. Once the thread is unblocked, this bubble needs to get
- * processed. Even though coordinated omission is resolved by determing the latency on the expected start time, while this
+ * processed. Even though coordinated omission is resolved by determining the latency on the expected start time, while this
  * bubble is building up there is less load, and once the thread completes, the whole bubble needs to get processed.
  * <p>
  * With the ConstantCombinedRateMetronome this bubble is less likely to happen because as long as there is a thread available,
- * it will take over the work of the blocked threads. This way you get a more stable rate of requests.
+ * it will take over the work of the blocked threads. This way you get less bubbles and a more stable rate of requests.
  */
 public class ConstantCombinedRateMetronome implements Metronome {
 
