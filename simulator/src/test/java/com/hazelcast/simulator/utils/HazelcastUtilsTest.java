@@ -93,7 +93,7 @@ public class HazelcastUtilsTest {
         assertTrue(memberConfig.contains("<!--LICENSE-KEY-->"));
         assertTrue(memberConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
 
-        String memberHzConfig = initMemberHzConfig(memberConfig, componentRegistry, 5701, "licenseKey2342", properties, false);
+        String memberHzConfig = initMemberHzConfig(memberConfig, componentRegistry, "licenseKey2342", properties, false);
 
         assertNotNull(memberHzConfig);
         assertTrue(memberHzConfig.contains("licenseKey2342"));
@@ -109,7 +109,7 @@ public class HazelcastUtilsTest {
         assertTrue(clientConfig.contains("<!--MEMBERS-->"));
         assertTrue(clientConfig.contains("<!--LICENSE-KEY-->"));
 
-        String clientHzConfig = initClientHzConfig(clientConfig, componentRegistry, 5701, "licenseKey2342");
+        String clientHzConfig = initClientHzConfig(clientConfig, componentRegistry, properties, "licenseKey2342");
 
         assertNotNull(clientHzConfig);
         assertTrue(clientHzConfig.contains("licenseKey2342"));

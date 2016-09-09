@@ -26,10 +26,11 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.worker.MemberWorker;
-import com.hazelcast.simulator.common.WorkerType;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -138,48 +139,65 @@ public final class HazelcastUtils {
         }
     }
 
-    public static String initMemberHzConfig(String memberHzConfig, ComponentRegistry componentRegistry, int port,
-                                            String licenseKey, SimulatorProperties properties, boolean liteMember) {
-        String addressConfig = createAddressConfig("member", componentRegistry, port);
-        memberHzConfig = updateAddressAndLicenseKey(memberHzConfig, addressConfig, licenseKey);
+    public static String initMemberHzConfig(String memberHzConfig,
+                                            ComponentRegistry componentRegistry,
+                                            String licenseKey,
+                                            SimulatorProperties properties,
+                                            boolean liteMember) {
+
+        ConfigFileTemplate template = new ConfigFileTemplate(memberHzConfig);
+        template.addEnvironment("agents", componentRegistry.getAgents());
+        template.addEnvironment("licenseKey", licenseKey);
+        template.addEnvironment(properties.asMap());
+
+        template.addReplacement("<!--MEMBERS-->",
+                createAddressConfig("member", componentRegistry, properties.getHazelcastPort()));
+
+        if (licenseKey != null) {
+            template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
+        }
 
         String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
+
         if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
             String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
             String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
-            memberHzConfig = memberHzConfig.replace("<!--MANAGEMENT_CENTER_CONFIG-->",
+            template.addReplacement("<!--MANAGEMENT_CENTER_CONFIG-->",
                     format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
                             updateIntervalAttr, manCenterURL));
         }
 
         if (liteMember) {
-            memberHzConfig = memberHzConfig.replace("<!--LITE_MEMBER_CONFIG-->", "<lite-member enabled=\"true\"/>");
+            template.addReplacement("<!--LITE_MEMBER_CONFIG-->", "<lite-member enabled=\"true\"/>");
         }
 
-        return memberHzConfig;
+        return template.render();
     }
 
-    public static String initClientHzConfig(String clientHzConfig, ComponentRegistry componentRegistry, int port,
+    public static String initClientHzConfig(String clientHzConfig,
+                                            ComponentRegistry componentRegistry,
+                                            SimulatorProperties simulatorProperties,
                                             String licenseKey) {
-        String addressConfig = createAddressConfig("address", componentRegistry, port);
-        return updateAddressAndLicenseKey(clientHzConfig, addressConfig, licenseKey);
+        ConfigFileTemplate template = new ConfigFileTemplate(clientHzConfig);
+        template.addEnvironment("agents", componentRegistry.getAgents());
+        template.addEnvironment("licenseKey", licenseKey);
+        template.addEnvironment(simulatorProperties.asMap());
+
+        template.addReplacement("<!--MEMBERS-->",
+                createAddressConfig("address", componentRegistry, simulatorProperties.getHazelcastPort()));
+        if (licenseKey != null) {
+            template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
+        }
+
+        return template.render();
     }
 
-    public static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
+    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, int port) {
         StringBuilder members = new StringBuilder();
         for (AgentData agentData : componentRegistry.getAgents()) {
             String hostAddress = agentData.getPrivateAddress();
             members.append(format("<%s>%s:%d</%s>%n", tagName, hostAddress, port, tagName));
         }
         return members.toString();
-    }
-
-    private static String updateAddressAndLicenseKey(String hzConfig, String addressConfig, String licenseKey) {
-        hzConfig = hzConfig.replace("<!--MEMBERS-->", addressConfig);
-        if (licenseKey != null) {
-            String licenseConfig = format("<license-key>%s</license-key>", licenseKey);
-            hzConfig = hzConfig.replace("<!--LICENSE-KEY-->", licenseConfig);
-        }
-        return hzConfig;
     }
 }

@@ -369,14 +369,12 @@ public class CoordinatorRemoteReceiver {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    simulatorProperties.getHazelcastPort(),
                     "",
                     simulatorProperties, false);
         } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    simulatorProperties.getHazelcastPort(),
                     "",
                     simulatorProperties, true);
 
@@ -385,7 +383,7 @@ public class CoordinatorRemoteReceiver {
             config = initClientHzConfig(
                     op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    simulatorProperties.getHazelcastPort(),
+                    simulatorProperties,
                     "");
 
         } else {

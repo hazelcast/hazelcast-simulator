@@ -6,6 +6,7 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.SimulatorUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +14,9 @@ import org.junit.Test;
 import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -39,21 +42,21 @@ public class MemberWorkerTest {
 
     @Before
     public void before() {
-        setupFakeUserDir();
+        setupFakeEnvironment();
 
         ComponentRegistry componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
-        SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("none");
+        SimulatorProperties properties =  new SimulatorProperties();
+        properties.set("MANAGEMENT_CENTER_URL","none");
 
         String memberHzConfig = fileAsText(localResourceDirectory() + "/hazelcast.xml");
-        memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, 5701, null, properties, false);
+        memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, null, properties, false);
         memberConfigFile = new File(getUserDir(), "hazelcast.xml");
         appendText(memberHzConfig, memberConfigFile);
 
         String clientHzConfig = fileAsText(localResourceDirectory() + "/client-hazelcast.xml");
-        clientHzConfig = initClientHzConfig(clientHzConfig, componentRegistry, 5701, null);
+        clientHzConfig = initClientHzConfig(clientHzConfig, componentRegistry, properties, null);
         clientConfigFile = new File(getUserDir(), "client-hazelcast.xml");
         appendText(clientHzConfig, clientConfigFile);
     }
@@ -66,7 +69,7 @@ public class MemberWorkerTest {
         }
 
         Hazelcast.shutdownAll();
-        teardownFakeUserDir();
+        tearDownFakeEnvironment();
     }
 
     @Test

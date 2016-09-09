@@ -261,7 +261,7 @@ final class CoordinatorCli {
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
-                initClientHzConfig(loadClientHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(), licenseKey));
+                initClientHzConfig(loadClientHzConfig(), componentRegistry, simulatorProperties, licenseKey));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
@@ -278,8 +278,7 @@ final class CoordinatorCli {
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
-                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(),
-                        licenseKey, simulatorProperties, true));
+                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, licenseKey, simulatorProperties, true));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
@@ -296,8 +295,7 @@ final class CoordinatorCli {
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
-                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, simulatorProperties.getHazelcastPort(),
-                        licenseKey, simulatorProperties, false));
+                initMemberHzConfig(loadMemberHzConfig(), componentRegistry, licenseKey, simulatorProperties, false));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
