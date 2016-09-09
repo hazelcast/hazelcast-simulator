@@ -123,6 +123,19 @@ public class PropertyBinding {
         }
     }
 
+    public long loadAsLong(String property, long defaultValue) {
+        String value = load(property);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalTestException(format("Property [%s] with value [%s] is not an long", property, value));
+        }
+    }
+
     public double loadAsDouble(String property, double defaultValue) {
         String value = load(property);
         if (value == null) {

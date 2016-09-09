@@ -60,7 +60,9 @@ class TimeStepRunnerCodeGenerator {
             String executionGroup,
             TimeStepModel timeStepModel,
             Class<? extends Metronome> metronomeClass,
-            Class<? extends Probe> probeClass) {
+            Class<? extends Probe> probeClass,
+            long logFrequency,
+            long logRateMs) {
         String className = timeStepModel.getTestClass().getSimpleName();
         if (!"".equals(executionGroup)) {
             className += "_" + executionGroup + "_";
@@ -71,7 +73,8 @@ class TimeStepRunnerCodeGenerator {
         if (!"".equals(testCaseId)) {
             className += testCaseId;
         }
-        JavaFileObject file = createJavaFileObject(className, executionGroup, metronomeClass, timeStepModel, probeClass);
+        JavaFileObject file = createJavaFileObject(
+                className, executionGroup, metronomeClass, timeStepModel, probeClass, logFrequency, logRateMs);
         return compile(javaCompiler, file, className);
     }
 
@@ -123,7 +126,9 @@ class TimeStepRunnerCodeGenerator {
             String executionGroup,
             Class<? extends Metronome> metronomeClass,
             TimeStepModel timeStepModel,
-            Class<? extends Probe> probeClass) {
+            Class<? extends Probe> probeClass,
+            long logFrequency,
+            long logRateMs) {
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_24);
             cfg.setClassForTemplateLoading(this.getClass(), "/");
@@ -141,6 +146,13 @@ class TimeStepRunnerCodeGenerator {
             root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass(executionGroup)));
             root.put("hasProbe", new HasProbeMethod());
             root.put("className", className);
+            if (logFrequency > 0) {
+                root.put("logFrequency", "" + logFrequency);
+            }
+
+            if (logRateMs > 0) {
+                root.put("logRateMs", "" + logRateMs);
+            }
 
             Template temp = cfg.getTemplate("TimeStepRunner.ftl");
             StringWriter out = new StringWriter();

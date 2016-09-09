@@ -32,10 +32,11 @@ public final class ThrottlingLogger {
     private final ILogger delegate;
     private final long maximumRateNanos;
 
-    private ThrottlingLogger(ILogger delegate, long maximumRateMs) {
+    public ThrottlingLogger(ILogger delegate, long maximumRateMs) {
         if (delegate == null) {
             throw new IllegalArgumentException("Logger cannot be null");
         }
+
         if (maximumRateMs <= 0) {
             throw new IllegalArgumentException("Maximum rate must be great than 0. Current rate: " + maximumRateMs);
         }
@@ -77,16 +78,30 @@ public final class ThrottlingLogger {
             return;
         }
 
+        if (!requestLogSlot()) {
+            return;
+        }
+
+        delegate.log(level, message);
+    }
+
+    public boolean requestLogSlot() {
         long timeNow = System.nanoTime();
         long currentNotBefore = nextMessageNotBefore.get();
 
         if (timeNow < currentNotBefore) {
             // it's too soon to log
+            return false;
+        }
+
+        return nextMessageNotBefore.compareAndSet(currentNotBefore, timeNow + maximumRateNanos);
+    }
+
+    public void logInSlot(Level level, String message) {
+        if (!delegate.isLoggable(level)) {
             return;
         }
 
-        if (nextMessageNotBefore.compareAndSet(currentNotBefore, timeNow + maximumRateNanos)) {
-            delegate.log(level, message);
-        }
+        delegate.log(level, message);
     }
 }

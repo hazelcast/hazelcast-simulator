@@ -74,10 +74,6 @@ public class ExecutorTest extends AbstractTest {
         for (Future future : state.futureList) {
             future.get();
         }
-
-        if (state.iteration % 10000 == 0) {
-            logger.info(Thread.currentThread().getName() + " At iteration: " + state.iteration);
-        }
     }
 
     @AfterRun

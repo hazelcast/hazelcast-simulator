@@ -36,6 +36,8 @@ import static java.lang.String.format;
 class TimeStepRunStrategy extends RunStrategy {
 
     private static final int DEFAULT_THREAD_COUNT = 10;
+    private static final int DEFAULT_LOG_FREQUENCY = 0;
+    private static final int DEFAULT_LOG_RATE_MS = 0;
 
     private static final Logger LOGGER = Logger.getLogger(TimeStepRunStrategy.class);
 
@@ -67,12 +69,18 @@ class TimeStepRunStrategy extends RunStrategy {
             LOGGER.info(format("executionGroup [%s] using interval: %s class=%s",
                     executionGroup, metronomeConstructor.getIntervalNanos(), metronomeConstructor.getMetronomeClass().getName()));
 
+            long logFrequency = binding.loadAsLong(toPropertyName(executionGroup, "logFrequency"), DEFAULT_LOG_FREQUENCY);
+            long logRateMs = binding.loadAsLong(toPropertyName(executionGroup, "logRateMs"), DEFAULT_LOG_RATE_MS);
+
             Class runnerClass = new TimeStepRunnerCodeGenerator().compile(
                     testContainer.getTestCase().getId(),
                     executionGroup,
                     timeStepModel,
                     metronomeConstructor.getMetronomeClass(),
-                    binding.getProbeClass());
+                    binding.getProbeClass(),
+                    logFrequency,
+                    logRateMs);
+
             runnerClassMap.put(executionGroup, runnerClass);
         }
     }

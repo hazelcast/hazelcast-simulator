@@ -52,17 +52,21 @@ public class MetronomeConstructor {
             intervalNanos = round(SECONDS.toNanos(1) / ratePerSecond);
         }
 
+        // we read the metronome up front so we doing get an unused properties error if interval is 0,
+        // but the user did configure a metronome.
+        Class<SleepingMetronome> configuredMetronomeClass = binding.loadAsClass(
+                toPropertyName(executionGroup, "metronomeClass"), SleepingMetronome.class);
+
         this.intervalNanos = intervalNanos;
         if (intervalNanos == 0) {
             this.metronomeClass = EmptyMetronome.class;
             this.masterMetronome = EmptyMetronome.INSTANCE;
         } else {
-            this.metronomeClass = binding.loadAsClass(
-                    toPropertyName(executionGroup, "metronomeClass"), SleepingMetronome.class);
+            this.metronomeClass = configuredMetronomeClass;
 
             Constructor<? extends Metronome> constructor;
             try {
-                constructor = metronomeClass.getConstructor(Long.TYPE, Integer.TYPE, PropertyBinding.class, String.class);
+                constructor = this.metronomeClass.getConstructor(Long.TYPE, Integer.TYPE, PropertyBinding.class, String.class);
             } catch (NoSuchMethodException e) {
                 throw new IllegalTestException("Metronome [%s], does not have the right constructor", e);
             }

@@ -5,7 +5,10 @@ import com.hazelcast.simulator.worker.*;
 import com.hazelcast.simulator.worker.tasks.*;
 import com.hazelcast.simulator.worker.metronome.*;
 import com.hazelcast.simulator.probes.*;
+import com.hazelcast.simulator.utils.*;
+
 import java.util.*;
+import java.util.logging.*;
 import java.util.concurrent.atomic.*;
 
 public class ${className} extends TimeStepRunner {
@@ -34,6 +37,12 @@ public class ${className} extends TimeStepRunner {
 </#if>
 <#if threadStateClass??>
         final ${threadStateClass} threadState = (${threadStateClass})this.threadState;
+</#if>
+<#if logFrequency??>
+        long logCounter = 0;
+</#if>
+<#if logRateMs??>
+        final ThrottlingLogger throttlingLogger = new ThrottlingLogger(logger, ${logRateMs});
 </#if>
 
 <#if timeStepMethods?size gt 1>
@@ -79,6 +88,18 @@ public class ${className} extends TimeStepRunner {
 </#if>
             iteration++;
             iterations.lazySet(iteration);
+<#if logFrequency??>
+            logCounter++;
+            if(logCounter == ${logFrequency}){
+                logger.info("At " + logCounter);
+                logCounter=0;
+            }
+</#if>
+<#if logRateMs??>
+            if(throttlingLogger.requestLogSlot()){
+                throttlingLogger.logInSlot(Level.INFO, "At "+iteration);
+            }
+</#if>
         }
     }
 <#macro timestepMethodCall m>
