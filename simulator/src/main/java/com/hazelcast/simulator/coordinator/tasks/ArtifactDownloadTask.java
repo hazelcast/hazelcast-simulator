@@ -74,9 +74,12 @@ public class ArtifactDownloadTask {
         File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
         String workerPath = workerHome.getAbsolutePath();
 
-        execute(format("mv %s/%s/* %s || true", workerPath, sessionId, outputDirectory.getAbsolutePath()));
-        execute(format("rmdir %s/%s || true", workerPath, sessionId));
-        execute(format("rmdir %s || true", workerPath));
+        if ("*".equals(sessionId)) {
+            execute(format("cp -r %s/* %s || true", workerPath, outputDirectory.getAbsolutePath()));
+        } else {
+            execute(format("cp -r %s/%s/* %s || true", workerPath, sessionId, outputDirectory.getAbsolutePath()));
+        }
+
         execute(format("mv ./agent.err %s/ || true", outputDirectory.getAbsolutePath()));
         execute(format("mv ./agent.out %s/ || true", outputDirectory.getAbsolutePath()));
     }
@@ -113,8 +116,11 @@ public class ArtifactDownloadTask {
         public void run() {
             String workersPath = format("hazelcast-simulator-%s/workers/%s", getSimulatorVersion(), sessionId);
 
-            String rsyncCommand = format(RSYNC_COMMAND, "", sshOptions, sshUser,
-                    outputDirectory.getParentFile().getAbsolutePath());
+            String targetDirectory = "*".equals(sessionId)
+                    ? outputDirectory.getAbsolutePath()
+                    : outputDirectory.getParentFile().getAbsolutePath();
+
+            String rsyncCommand = format(RSYNC_COMMAND, "", sshOptions, sshUser, targetDirectory);
 
             LOGGER.info(format("Downloading Worker logs from %s", ip));
             bash.executeQuiet(format(rsyncCommand, ip, workersPath));

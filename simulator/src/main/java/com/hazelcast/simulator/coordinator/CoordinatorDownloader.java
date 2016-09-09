@@ -33,7 +33,7 @@ public class CoordinatorDownloader {
     }
 
     public void download() throws Exception {
-        new ArtifactDownloadTask("", simulatorProperties, getUserDir(), componentRegistry).run();
+        new ArtifactDownloadTask("*", simulatorProperties, getUserDir(), componentRegistry).run();
     }
 
     public void clean() throws Exception {
