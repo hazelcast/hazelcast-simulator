@@ -128,6 +128,7 @@ import java.lang.annotation.Target;
  *     class=yourtest
  *     logRateMs=1000
  * </code>
+ * Time rate based logging is very useful to prevent overloading the system with log entries.
  *
  * Time rate based logging can be configured per execution group. If there is an execution group producer, then the logRate can
  * be configured using:
