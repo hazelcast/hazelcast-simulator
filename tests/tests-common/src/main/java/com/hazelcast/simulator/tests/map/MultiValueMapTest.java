@@ -40,6 +40,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
@@ -80,12 +81,11 @@ public class MultiValueMapTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.5)
-    public void put(ThreadState state, Probe probe, @StartNanos long startNanos) {
+    public void put(ThreadState state) {
         int key = state.getRandomKey();
         int count = key % maxNestedValues;
         SillySequence sillySequence = new SillySequence(key, count);
         map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
-        probe.done(startNanos);
     }
 
     @TimeStep(prob = -1)
@@ -100,7 +100,8 @@ public class MultiValueMapTest extends AbstractTest {
         }
 
         if (throttlingLogger.requestLogSlot()) {
-            throttlingLogger.info(format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
+            throttlingLogger.logInSlot(Level.INFO,
+                    format("Query 'payloadField[any]= %d' returned %d results.", key, result.size()));
         }
 
         for (Object resultSillySequence : result) {

@@ -30,20 +30,21 @@ import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.extractor.ValueReader;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.StartNanos;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
@@ -51,19 +52,12 @@ import static org.junit.Assert.assertEquals;
 
 public class ExtractorMapTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        QUERY,
-    }
-
     public int keyCount = 100000;
     public int nestedValuesCount = 100;
     public int indexValuesCount = 5;
-    public double putProbability = 0.5;
     public boolean useIndex;
     public boolean usePortable;
 
-    private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
     private final ThrottlingLogger throttlingLogger = ThrottlingLogger.newLogger(logger, 5000);
     private IMap<Integer, Object> map;
 
@@ -71,10 +65,6 @@ public class ExtractorMapTest extends AbstractTest {
     public void setUp() {
         String mapName = usePortable ? "Portable " + name : name;
         map = targetInstance.getMap(mapName);
-
-        operationSelectorBuilder
-                .addOperation(Operation.PUT, putProbability)
-                .addDefaultOperation(Operation.QUERY);
     }
 
     @Prepare(global = true)
@@ -97,50 +87,37 @@ public class ExtractorMapTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker(operationSelectorBuilder);
+    @TimeStep(prob = 0.5)
+    public void put(ThreadState state) {
+        int key = state.getRandomKey();
+        SillySequence sillySequence = new SillySequence(key, nestedValuesCount);
+        map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
     }
 
-    private class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
-
-        public Worker(OperationSelectorBuilder<Operation> operationSelectorBuilder) {
-            super(operationSelectorBuilder);
+    @TimeStep(prob = -1)
+    public void query(ThreadState state, Probe probe, @StartNanos long startedNanos) {
+        int key = state.getRandomKey();
+        int index = key % nestedValuesCount;
+        String query = format("payloadFromExtractor[%d]", index);
+        Predicate predicate = Predicates.equal(query, key);
+        Collection<Object> result = null;
+        try {
+            result = map.values(predicate);
+        } finally {
+            probe.done(startedNanos);
         }
 
-        @Override
-        protected void timeStep(Operation operation, Probe probe) throws Exception {
-            int key = getRandomKey();
-            long started;
-
-            switch (operation) {
-                case PUT:
-                    SillySequence sillySequence = new SillySequence(key, nestedValuesCount);
-                    started = System.nanoTime();
-                    map.put(key, usePortable ? sillySequence.getPortable() : sillySequence);
-                    probe.done(started);
-                    break;
-                case QUERY:
-                    int index = key % nestedValuesCount;
-                    String query = format("payloadFromExtractor[%d]", index);
-                    Predicate predicate = Predicates.equal(query, key);
-                    started = System.nanoTime();
-                    Collection<Object> result = null;
-                    try {
-                        result = map.values(predicate);
-                    } finally {
-                        probe.done(started);
-                    }
-                    throttlingLogger.info(format("Query 'payloadFromExtractor[%d]= %d' returned %d results.", index, key,
-                            result.size()));
-                    for (Object resultSillySequence : result) {
-                        assertValidSequence(key, resultSillySequence);
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Unsupported operation: " + operation);
-            }
+        if (throttlingLogger.requestLogSlot()) {
+            throttlingLogger.logInSlot(Level.INFO,
+                    format("Query 'payloadFromExtractor[%d]= %d' returned %d results.", index, key, result.size()));
         }
+
+        for (Object resultSillySequence : result) {
+            state.assertValidSequence(key, resultSillySequence);
+        }
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private int getRandomKey() {
             return abs(randomInt(keyCount)) % indexValuesCount;
