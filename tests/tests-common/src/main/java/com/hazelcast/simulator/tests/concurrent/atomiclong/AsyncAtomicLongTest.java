@@ -17,24 +17,26 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.AsyncAtomicLong;
 import com.hazelcast.core.DistributedObject;
+import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.StopException;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.metronome.Metronome;
-import com.hazelcast.simulator.worker.metronome.MetronomeBuilder;
-import com.hazelcast.simulator.worker.metronome.MetronomeType;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractAsyncWorker;
+import com.hazelcast.simulator.utils.ExceptionReporter;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
@@ -47,22 +49,13 @@ import static org.junit.Assert.assertEquals;
 
 public class AsyncAtomicLongTest extends AbstractTest {
 
-    private enum Operation {
-        PUT,
-        GET
-    }
-
     // properties
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int countersLength = 1000;
-    public MetronomeType metronomeType = MetronomeType.SLEEPING;
-    public int metronomeIntervalMs = (int) TimeUnit.SECONDS.toMillis(1);
     public int assertEventuallySeconds = 300;
+    // infinite batch size. If no batch-size is set, one can easily overload the system with requests.
+    // unless backpressure is enabled.
     public int batchSize = -1;
-
-    public double writeProb = 1.0;
-
-    private final OperationSelectorBuilder<Operation> builder = new OperationSelectorBuilder<Operation>();
 
     private IAtomicLong totalCounter;
     private AsyncAtomicLong[] counters;
@@ -78,84 +71,62 @@ public class AsyncAtomicLongTest extends AbstractTest {
                 counters[i] = (AsyncAtomicLong) targetInstance.getAtomicLong(names[i]);
             }
         }
-
-        builder.addOperation(Operation.PUT, writeProb)
-                .addDefaultOperation(Operation.GET);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
-    }
-
-    private class Worker extends AbstractAsyncWorker<Operation, Long> {
-
-        private final List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
-        private final Metronome metronome = new MetronomeBuilder()
-                .withMetronomeType(metronomeType)
-                .withIntervalMicros(metronomeIntervalMs)
-                .build();
-
-        private long increments;
-
-        public Worker() {
-            super(builder);
+    @BeforeRun
+    public void beforeRun() {
+        // once this test is converted to a 3.7+ test, we can get rid of this since it will be supported on the clients.
+        if (isClient(targetInstance)) {
+            throw new StopException();
         }
+    }
 
-        @Override
-        protected void timeStep(Operation operation) throws Exception {
-            if (isClient(targetInstance)) {
+    @TimeStep
+    public void write(ThreadState state, Probe probe, @StartNanos long startNanos) {
+        AsyncAtomicLong counter = state.getRandomCounter();
+        state.increments++;
+        ICompletableFuture<Long> future = counter.asyncIncrementAndGet();
+        state.add(future);
+        future.andThen(new LongExecutionCallback(probe, startNanos));
+    }
+
+    @TimeStep(prob = -1)
+    public void get(ThreadState state, Probe probe, @StartNanos long startNanos) {
+        AsyncAtomicLong counter = state.getRandomCounter();
+        ICompletableFuture<Long> future = counter.asyncGet();
+        state.add(future);
+        future.andThen(new LongExecutionCallback(probe, startNanos));
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        totalCounter.addAndGet(state.increments);
+    }
+
+    public class ThreadState extends BaseThreadState {
+
+        final List<ICompletableFuture> batch = new LinkedList<ICompletableFuture>();
+        long increments;
+
+        void add(ICompletableFuture<Long> future) {
+            if (batchSize <= 0) {
                 return;
             }
 
-            AsyncAtomicLong counter = getRandomCounter();
-
-            ICompletableFuture<Long> future;
-            switch (operation) {
-                case PUT:
-                    increments++;
-                    future = counter.asyncIncrementAndGet();
-                    break;
-                case GET:
-                    future = counter.asyncGet();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-            future.andThen(this);
-
-            if (batchSize > 0) {
-                batch.add(future);
-
-                if (batch.size() == batchSize) {
-                    for (ICompletableFuture batchFuture : batch) {
-                        try {
-                            batchFuture.get();
-                        } catch (Exception e) {
-                            throw rethrow(e);
-                        }
+            batch.add(future);
+            if (batch.size() == batchSize) {
+                for (ICompletableFuture batchFuture : batch) {
+                    try {
+                        batchFuture.get();
+                    } catch (Exception e) {
+                        throw rethrow(e);
                     }
-                    batch.clear();
                 }
+                batch.clear();
             }
-
-            metronome.waitForNext();
         }
 
-        @Override
-        protected void handleResponse(Long response) {
-        }
-
-        @Override
-        protected void handleFailure(Throwable t) {
-        }
-
-        @Override
-        public void afterRun() {
-            totalCounter.addAndGet(increments);
-        }
-
-        private AsyncAtomicLong getRandomCounter() {
+        AsyncAtomicLong getRandomCounter() {
             int index = randomInt(counters.length);
             return counters[index];
         }
@@ -201,4 +172,24 @@ public class AsyncAtomicLongTest extends AbstractTest {
         logger.info(getOperationCountInformation(targetInstance));
     }
 
+    private class LongExecutionCallback implements ExecutionCallback<Long> {
+        private final Probe probe;
+        private final long startNanos;
+
+        LongExecutionCallback(Probe probe, long startNanos) {
+            this.probe = probe;
+            this.startNanos = startNanos;
+        }
+
+        @Override
+        public void onResponse(Long aLong) {
+            probe.done(startNanos);
+        }
+
+        @Override
+        public void onFailure(Throwable throwable) {
+            onResponse(startNanos);
+            ExceptionReporter.report(testContext.getTestId(), throwable);
+        }
+    }
 }

@@ -11,6 +11,14 @@ import static org.junit.Assert.fail;
 
 public class TimeStepModel_IllegalTest {
 
+    // ====================== StartNanos ===========================
+    @Test
+    public void test_intendedStartTimeIllegalType() {
+        assertBroken("class CLAZZ{\n"
+                + "@TimeStep public void timeStep(@StartNanos double x){}\n"
+                + "}\n");
+    }
+
     // ====================== threadState ===========================
 
     @Test
@@ -117,7 +125,7 @@ public class TimeStepModel_IllegalTest {
     @Test
     public void test_tooManyArgumentsForTimeStep() {
         assertBroken("public class CLAZZ{\n"
-                + "@TimeStep public void timeStep(ArrayList a1, ArrayList a2, ArrayList a3){}\n"
+                + "@TimeStep public void timeStep(ArrayList a1, ArrayList a2, ArrayList a3, ArrayList a4){}\n"
                 + "}\n");
     }
 

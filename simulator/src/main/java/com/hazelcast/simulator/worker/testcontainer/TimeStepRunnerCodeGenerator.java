@@ -21,6 +21,7 @@ import com.hazelcast.simulator.worker.metronome.EmptyMetronome;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
 import freemarker.template.Configuration;
+import freemarker.template.SimpleNumber;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.TemplateMethodModelEx;
@@ -143,6 +144,7 @@ class TimeStepRunnerCodeGenerator {
             root.put("metronomeClass", getMetronomeClass(metronomeClass));
             root.put("timeStepMethods", timeStepModel.getActiveTimeStepMethods(executionGroup));
             root.put("probeClass", getClassName(probeClass));
+            root.put("isStartNanos", new IsStartNanos(timeStepModel));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
             root.put("Probe", Probe.class);
             root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass(executionGroup)));
@@ -221,6 +223,38 @@ class TimeStepRunnerCodeGenerator {
             }
 
             return ((Class) arg2).isAssignableFrom((Class) arg1);
+        }
+    }
+
+    private static final class IsStartNanos implements TemplateMethodModelEx {
+
+        private final TimeStepModel timeStepModel;
+
+        public IsStartNanos(TimeStepModel timeStepModel) {
+            this.timeStepModel = timeStepModel;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object exec(List list) throws TemplateModelException {
+            if (list.size() != 2) {
+                throw new TemplateModelException("Wrong number of arguments for method isAssignableFrom()."
+                        + " Method has two required parameters: [Class, SimpleNumber]. Found: " + list.size());
+            }
+
+            Object arg1 = ((WrapperTemplateModel) list.get(0)).getWrappedObject();
+            if (!(arg1 instanceof Method)) {
+                throw new TemplateModelException("Wrong type of the first parameter."
+                        + " It should be Method. Found: " + arg1.getClass());
+            }
+
+            Object arg2 = list.get(1);
+            if (!(arg2 instanceof SimpleNumber)) {
+                throw new TemplateModelException("Wrong type of the second parameter."
+                        + " It should be SimpleNumber. Found: " + arg2.getClass());
+            }
+
+            return timeStepModel.hasStartNanosAnnotation((Method) arg1, ((SimpleNumber) arg2).getAsNumber().intValue() - 1);
         }
     }
 

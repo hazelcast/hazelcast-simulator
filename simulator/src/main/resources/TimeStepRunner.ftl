@@ -116,20 +116,16 @@ public class ${className} extends TimeStepRunner {
        testInstance.${m.getName()}(
         <#list  m.parameterTypes as param>
             <#if param?counter gt 1>,</#if>
-            <@timestepMethodArg a=param m=m/>
+
+            <#if isStartNanos(m, param?counter)>
+                <#if metronomeClass??>startNanos<#else>System.nanoTime()</#if>
+            <#elseif isAssignableFrom(param, Probe)>
+                <#if probeClass??>${method.name}Probe<#else>com.hazelcast.simulator.probes.impl.DeadProbe.INSTANCE</#if>
+            <#else>
+                threadState
+            </#if>
         </#list>
     )
     </@compress>
-</#macro>
-<#macro timestepMethodArg a m>
-    <#if isAssignableFrom(a, Probe)>
-        <#if probeClass??>
-        ${m.name}Probe
-        <#else>
-        com.hazelcast.simulator.probes.impl.DeadProbe.INSTANCE
-        </#if>
-    <#else>
-        threadState
-    </#if>
 </#macro>
 }

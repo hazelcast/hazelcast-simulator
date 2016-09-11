@@ -18,10 +18,12 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -176,7 +178,7 @@ public class TimeStepModel {
 
         validateUniqueMethodNames(methods);
         validateModifiers(methods);
-        validateTimeStepArguments(methods);
+        validateTimeStepParameters(methods);
 
         for (Method method : methods) {
             TimeStep timeStep = method.getAnnotation(TimeStep.class);
@@ -219,12 +221,41 @@ public class TimeStepModel {
         return true;
     }
 
-    private void validateTimeStepArguments(List<Method> methods) {
+    private void validateTimeStepParameters(List<Method> methods) {
         for (Method method : methods) {
-            if (method.getParameterTypes().length > 2) {
+            int parameterCount = method.getParameterTypes().length;
+            if (parameterCount > 3) {
                 throw new IllegalTestException("TimeStep method '" + method + "' can't have more than two arguments");
             }
+
+
+            Class<?>[] parameterTypes = method.getParameterTypes();
+
+            for (int parameterIndex = 0; parameterIndex < parameterCount; parameterIndex++) {
+                if (!hasStartNanosAnnotation(method, parameterIndex)) {
+                    continue;
+                }
+
+                Class parameterType = parameterTypes[parameterIndex];
+                if (!Long.TYPE.equals(parameterType)) {
+                    throw new IllegalTestException("TimeStep method '" + method + "' contains an illegal "
+                            + StartNanos.class.getSimpleName() + " parameter at index " + parameterIndex
+                            + ". Only type: long is allowed but found: " + parameterType.getName());
+                }
+            }
         }
+    }
+
+    public boolean hasStartNanosAnnotation(Method method, int parameterIndex) {
+        Annotation[][] parametersAnnotations = method.getParameterAnnotations();
+        Annotation[] parameterAnnotations = parametersAnnotations[parameterIndex];
+        for (Annotation annotation : parameterAnnotations) {
+            if ((annotation instanceof StartNanos)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void validateUniqueMethodNames(List<Method> methods) {
@@ -323,24 +354,25 @@ public class TimeStepModel {
 
         private void collectThreadStateClass(Set<Class> classes, List<Method> methods) {
             for (Method method : methods) {
-                for (Class<?> paramType : method.getParameterTypes()) {
-                    if (paramType.isAssignableFrom(Probe.class)) {
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                for (int parameterIndex = 0; parameterIndex < parameterTypes.length; parameterIndex++) {
+                    Class paramType = parameterTypes[parameterIndex];
+
+                    if (paramType.isAssignableFrom(Probe.class)
+                            || hasStartNanosAnnotation(method, parameterIndex)) {
                         continue;
                     }
 
                     if (paramType.isPrimitive()) {
                         throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
                                 + " Thread state can't be a primitive.", method, paramType));
-                    }
-                    if (paramType.isInterface()) {
+                    } else if (paramType.isInterface()) {
                         throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
                                 + " Thread state can't be an interface.", method, paramType));
-                    }
-                    if (isAbstract(paramType.getModifiers())) {
+                    } else if (isAbstract(paramType.getModifiers())) {
                         throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
-                                + " Thread state can't be an abstract.", method, paramType));
-                    }
-                    if (!isPublic(paramType.getModifiers())) {
+                                + " Thread state can't be abstract.", method, paramType));
+                    } else if (!isPublic(paramType.getModifiers())) {
                         throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
                                 + " Thread state should be public.", method, paramType));
                     }
