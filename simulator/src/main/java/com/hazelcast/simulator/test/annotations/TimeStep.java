@@ -93,7 +93,7 @@ import java.lang.annotation.Target;
  * Normally all timestep methods from a test belong to the same execution group; meaning that there is a group of threads will
  * will call each timestep method using some distribution. But in some cases this is unwanted, e.g. a typical producer/consumer
  * test. In such cases one can make use of execution groups:
- * <pre>
+ * <code>
  *     @TimeStep(executionGroup="producer")
  *     public void produce(){
  *         ...
@@ -103,7 +103,7 @@ import java.lang.annotation.Target;
  *     public void consume(){
  *          ...
  *     }
- * </pre>
+ * </code>
  * In this case there are 2 execution groups: producer and consumer and each will get their own threads where the producer
  * timestep threads calls methods from the 'producer' execution group, and the consumer timestep threads, call methods from
  * the 'consumer' execution-group.
@@ -151,6 +151,35 @@ import java.lang.annotation.Target;
  * <h1>Stopping a timestep thread</h1>
  * A Timestep thread can also stop itself by throwing the {@link com.hazelcast.simulator.test.StopException}. This doesn't lead
  * to an error, it is just a signal for the test that the thread is ready.
+ *
+ * <h1>Probes</h1>
+ * By default every timestep method will get its own probe. E.g.
+ * <code>
+ *     @TimeStep(prob=0.9)
+ *     public void read(){
+ *         ...
+ *     }
+ *
+ *     @TimeStep(prob=0.10)
+ *     public void write(){
+ *          ...
+ *     }
+ * </code>
+ * In this case 2 probes that keep track of writer or read. So by default tracking latency is taken care of by the timestep
+ * runner. In some cases, especially with async testing, the completion of the system being tested, doesn't align with the
+ * completion of the timestep method. So the latency can't be determined by the timestep runner. In such cases one can
+ * get access to the Probe and startTime like this:
+ * <code>
+ *     @TimeStep(prob=0.9)
+ *     public void asyncCall(Probe probe, @StartNanos long startNanos){
+ *         ...
+ *     }
+ * </code>
+ * One can decide to e.g. make use of an completion listener to determine when the call completed and record the right latency
+ * on the probe.
+ *
+ * Keep in mind that the current iteration (and therefor numbers like throughput) are based on completion of the timestep method,
+ * but that doesn't need to mean completion of the async call.
  *
  * <h1>Logging</h1>
  * By default a timestep based thread will not log anything during the run/warmup period. But sometimes some logging is required,

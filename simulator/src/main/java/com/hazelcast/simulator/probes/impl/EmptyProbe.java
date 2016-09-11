@@ -34,7 +34,7 @@ public class EmptyProbe implements Probe {
     }
 
     @Override
-    public void done(long startedNanos) {
+    public void done(long startNanos) {
     }
 
     @Override

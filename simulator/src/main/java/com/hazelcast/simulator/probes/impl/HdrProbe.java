@@ -55,13 +55,13 @@ public class HdrProbe implements Probe {
     }
 
     @Override
-    public void done(long startedNanos) {
-        if (startedNanos <= 0) {
+    public void done(long startNanos) {
+        if (startNanos <= 0) {
             throw new IllegalArgumentException("startedNanos has to be a positive number");
         }
 
         long nowNanos = System.nanoTime();
-        recordValue(nowNanos - startedNanos);
+        recordValue(nowNanos - startNanos);
     }
 
     @Override
