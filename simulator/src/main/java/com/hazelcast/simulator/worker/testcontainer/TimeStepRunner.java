@@ -20,7 +20,6 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.lang.reflect.Constructor;
@@ -33,9 +32,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.lang.String.format;
 
-public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
+public abstract class TimeStepRunner implements Runnable {
 
-    @InjectTestContext
     protected TestContext testContext;
     protected Metronome metronome;
 
@@ -47,6 +45,7 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
     protected final TimeStepModel timeStepModel;
     protected final byte[] timeStepProbabilities;
     protected final Map<String, Probe> probeMap = new HashMap<String, Probe>();
+    protected long maxIterations;
 
     public TimeStepRunner(Object testInstance, TimeStepModel timeStepModel, String executionGroup) {
         this.testInstance = testInstance;
@@ -56,13 +55,10 @@ public abstract class TimeStepRunner implements Runnable, PropertyBindingAware {
         this.timeStepProbabilities = timeStepModel.getTimeStepProbabilityArray(executionGroup);
     }
 
-
-
     public String getExecutionGroup() {
         return executionGroup;
     }
 
-    @Override
     public void bind(PropertyBinding binding) {
         for (Method method : timeStepModel.getActiveTimeStepMethods(executionGroup)) {
             Probe probe = binding.getOrCreateProbe(method.getName(), false);

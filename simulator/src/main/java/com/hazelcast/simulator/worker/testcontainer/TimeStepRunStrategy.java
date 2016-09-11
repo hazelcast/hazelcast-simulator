@@ -49,6 +49,8 @@ class TimeStepRunStrategy extends RunStrategy {
     private final Map<String, MetronomeConstructor> metronomeSettingsMap = new HashMap<String, MetronomeConstructor>();
     private final Map<String, Class> runnerClassMap = new HashMap<String, Class>();
     private final Map<String, Integer> threadCountMap = new HashMap<String, Integer>();
+    private final Map<String, Long> warmupIterationMap = new HashMap<String, Long>();
+    private final Map<String, Long> runIterationMap = new HashMap<String, Long>();
     private int totalThreadCount;
 
     TimeStepRunStrategy(TestContainer testContainer) {
@@ -72,6 +74,12 @@ class TimeStepRunStrategy extends RunStrategy {
             long logFrequency = binding.loadAsLong(toPropertyName(executionGroup, "logFrequency"), DEFAULT_LOG_FREQUENCY);
             long logRateMs = binding.loadAsLong(toPropertyName(executionGroup, "logRateMs"), DEFAULT_LOG_RATE_MS);
 
+            long warmupIterations = binding.loadAsLong(toPropertyName(executionGroup, "warmupIterations"), 0);
+            warmupIterationMap.put(executionGroup, warmupIterations);
+
+            long iterations = binding.loadAsLong(toPropertyName(executionGroup, "iterations"), 0);
+            runIterationMap.put(executionGroup, iterations);
+
             Class runnerClass = new TimeStepRunnerCodeGenerator().compile(
                     testContainer.getTestCase().getId(),
                     executionGroup,
@@ -79,7 +87,8 @@ class TimeStepRunStrategy extends RunStrategy {
                     metronomeConstructor.getMetronomeClass(),
                     binding.getProbeClass(),
                     logFrequency,
-                    logRateMs);
+                    logRateMs,
+                    warmupIterations > 0 || iterations > 0);
 
             runnerClassMap.put(executionGroup, runnerClass);
         }
@@ -108,7 +117,7 @@ class TimeStepRunStrategy extends RunStrategy {
                     if (totalThreadCount <= 0) {
                         return null;
                     }
-                    runners = createRunners();
+                    runners = createRunners(false);
                     onRunStarted();
                     ThreadSpawner spawner = spawnThreads(runners, false);
                     spawner.awaitCompletion();
@@ -132,7 +141,7 @@ class TimeStepRunStrategy extends RunStrategy {
                     if (totalThreadCount <= 0) {
                         return null;
                     }
-                    runners = createRunners();
+                    runners = createRunners(true);
                     onRunStarted();
                     ThreadSpawner spawner = spawnThreads(runners, true);
                     spawner.awaitCompletion();
@@ -162,7 +171,7 @@ class TimeStepRunStrategy extends RunStrategy {
     }
 
     @SuppressWarnings("unchecked")
-    private TimeStepRunner[] createRunners() throws Exception {
+    private TimeStepRunner[] createRunners(boolean warmup) throws Exception {
         TimeStepRunner[] returnRunners = new TimeStepRunner[totalThreadCount];
 
         int k = 0;
@@ -174,10 +183,12 @@ class TimeStepRunStrategy extends RunStrategy {
             MetronomeConstructor metronomeConstructor = metronomeSettingsMap.get(executionGroup);
 
             for (int thread = 0; thread < threadCountMap.get(executionGroup); thread++) {
-
                 TimeStepRunner runner = constructor.newInstance(testInstance, timeStepModel, executionGroup);
+
+                runner.testContext = binding.getTestContext();
+                runner.maxIterations = warmup ? warmupIterationMap.get(executionGroup) : runIterationMap.get(executionGroup);
                 runner.metronome = metronomeConstructor.newInstance();
-                binding.bind(runner);
+                runner.bind(binding);
                 returnRunners[k] = runner;
                 k++;
             }

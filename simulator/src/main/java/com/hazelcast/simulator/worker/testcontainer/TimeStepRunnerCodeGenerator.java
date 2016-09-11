@@ -62,7 +62,8 @@ class TimeStepRunnerCodeGenerator {
             Class<? extends Metronome> metronomeClass,
             Class<? extends Probe> probeClass,
             long logFrequency,
-            long logRateMs) {
+            long logRateMs,
+            boolean hasIterationCap) {
         String className = timeStepModel.getTestClass().getSimpleName();
         if (!"".equals(executionGroup)) {
             className += "_" + executionGroup + "_";
@@ -74,7 +75,7 @@ class TimeStepRunnerCodeGenerator {
             className += testCaseId;
         }
         JavaFileObject file = createJavaFileObject(
-                className, executionGroup, metronomeClass, timeStepModel, probeClass, logFrequency, logRateMs);
+                className, executionGroup, metronomeClass, timeStepModel, probeClass, logFrequency, logRateMs, hasIterationCap);
         return compile(javaCompiler, file, className);
     }
 
@@ -128,7 +129,8 @@ class TimeStepRunnerCodeGenerator {
             TimeStepModel timeStepModel,
             Class<? extends Probe> probeClass,
             long logFrequency,
-            long logRateMs) {
+            long logRateMs,
+            boolean hasIterationCap) {
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_24);
             cfg.setClassForTemplateLoading(this.getClass(), "/");
@@ -152,6 +154,10 @@ class TimeStepRunnerCodeGenerator {
 
             if (logRateMs > 0) {
                 root.put("logRateMs", "" + logRateMs);
+            }
+
+            if (hasIterationCap) {
+                root.put("hasIterationCap", "true");
             }
 
             Template temp = cfg.getTemplate("TimeStepRunner.ftl");

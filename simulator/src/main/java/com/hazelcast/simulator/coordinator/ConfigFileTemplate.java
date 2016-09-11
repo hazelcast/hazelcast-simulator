@@ -85,7 +85,6 @@ public class ConfigFileTemplate {
 
         for (Map.Entry<String, String> entry : hardReplacements.entrySet()) {
             s = s.replace(entry.getKey(), entry.getValue());
-
         }
 
         return s;

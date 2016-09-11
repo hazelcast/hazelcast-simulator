@@ -49,6 +49,10 @@ public class ${className} extends TimeStepRunner {
         final byte[] probs  = this.timeStepProbabilities;
 </#if>
 
+<#if hasIterationCap??>
+        final long maxIterations = this.maxIterations;
+</#if>
+
         long iteration = 0;
         while (!testContext.isStopped()) {
 <#if probeClass??>
@@ -98,6 +102,11 @@ public class ${className} extends TimeStepRunner {
 <#if logRateMs??>
             if(throttlingLogger.requestLogSlot()){
                 throttlingLogger.logInSlot(Level.INFO, "At "+iteration);
+            }
+</#if>
+<#if hasIterationCap??>
+            if(iteration==maxIterations){
+                break;
             }
 </#if>
         }
