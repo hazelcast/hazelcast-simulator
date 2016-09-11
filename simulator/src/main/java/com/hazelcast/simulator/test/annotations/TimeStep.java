@@ -32,10 +32,62 @@ import java.lang.annotation.Target;
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation
  * to create a runner with the least amount of overhead.  The {@link TimeStep} looks a lot like the  @Benchmark from JMH.
  *
+ * <h1>Probabilities</h1>
+ * THe simplest timestep test has a single timestep method, but in reality there is often some kind of ratio, e.g. 10% write
+ * and 90% read. This can be done configuring probability:
+ * <code>
+ *     @TimeStep(prob=0.9)
+ *     public void read(){
+ *         ...
+ *     }
+ *
+ *     @TimeStep(prob=0.10)
+ *     public void write(){
+ *
+ *     }
+ * </code>
+ * The sum of the probabilities needs to be 1.
+ *
+ * For backwards compatibility reasons one of the timestep methods can be the 'default' by assigning -1 to its probability.
+ * It means that whatever remains, will be given to that method. For example the above 90/10 could also be configured using:
+ * <code>
+ *     @TimeStep(prob=0.9)
+ *     public void read(){
+ *         ...
+ *     }
+ *
+ *     @TimeStep(prob=-1)
+ *     public void write(){
+ *
+ *     }
+ * </code>
+ *
+ * <h1>Thread state</h1>
+ * In a lot of cases a timestep thread needs to have some thread specific context e.g. counters. THe thread-state needs to be
+ * a public class with a public no arg constructor, or a constructor receiving the test instance.
+ *
+ * <code>
+ *     @TimeStep
+ *     public void timestep(ThreadState context){
+ *        ...
+ *     }
+ *
+ *     public class ThreadContext{
+ *         int counter;
+ *     }
+ * </code>
+ * Each thread will get its own instance of the ThreadContext. In practice you probably want to extend from the
+ * {@link com.hazelcast.simulator.test.BaseThreadState} since it has convenience functions for randomization. The Thread state
+ * can be used on the TimeStep methods, but also in the {@link BeforeRun} and {@link AfterRun} methods where the {@link BeforeRun}
+ * can take of initialization, and the {@link AfterRun} can take care of some post processing. For a full example see the
+ * AtomicLongTest.
+ *
  * <h1>Code generation</h1>
- * The timestep based tests rely on code generation and the motto is that you should not pay for a feature if it isn't used. For
- * example where logging is not configured, no logging code is generated. If there is only a single timestep method, then there
- * is no randomization. This way we can reduce the overhead by the benchmark framework to the bare minimum.
+ * The timestep based tests rely on code generation for the actual code to call the timestep methods. This prevents the need
+ * for reflection and and the motto is that you should not pay for a feature if it isn't used. For example where logging is not
+ * configured, no logging code is generated. If there is only a single timestep method, then there is no randomization. This way
+ * we can reduce the overhead by the benchmark framework to the bare minimum. The generated code of the TimeStepRunner can be
+ * found in the worker directory.
  *
  * <h1>Execution groups</h1>
  * Normally all timestep methods from a test belong to the same execution group; meaning that there is a group of threads will
@@ -55,6 +107,9 @@ import java.lang.annotation.Target;
  * In this case there are 2 execution groups: producer and consumer and each will get their own threads where the producer
  * timestep threads calls methods from the 'producer' execution group, and the consumer timestep threads, call methods from
  * the 'consumer' execution-group.
+ *
+ * Most of the features are configured per timestep group and by default the group "" is used. So you can configure probabilities,
+ * metronomes, thread context etc per execution group.
  *
  * <h1>Threadcount</h1>
  * A timestep test run multiple timestep threads in parallel. This can be configured using the threadCount property:
@@ -198,7 +253,7 @@ import java.lang.annotation.Target;
  * <code>
  *     class=yourtest
  *     interval=10ms
- *     class= com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome
+ *     metronomeClass=com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome
  * </code>
  *
  * @see BeforeRun
