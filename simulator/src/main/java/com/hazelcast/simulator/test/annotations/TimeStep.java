@@ -137,6 +137,70 @@ import java.lang.annotation.Target;
  *     producerRateMs=1000
  * </code>
  *
+ * <h1>Latency testing</h1>
+ * For Latency testing you normally want to rate the number of requests per second. This can be done by setting the interval:
+ * <code>
+ *     class=yourtest
+ *     interval=10ms
+ *     threadCount=2
+ * </code>
+ * In this example there will be 2 threads, that together will make 1 request every 10ms (so after 1 second, 100 requests have
+ * been made). Interval can be configured with ns, us, ms, s, m, h. Keep in mind that the interval is per machine, so if the
+ * interval is 10ms and there are 2 machines, on average there is 1 request every 5ms.
+ *
+ * The interval can also be configured using the ratePerSecond property:
+ * <code>
+ *     class=yourtest
+ *     ratePerSecond=100
+ *     threadCount=2
+ * </code>
+ * It is converted to interval under the hood, so there is no difference at runtime.
+ *
+ * If there are multiple execution groups, the interval can be configured using:
+ * <code>
+ *     class=yourtest
+ *     producerInterval=10ms
+ *     producerThreadCount=2
+ * </code>
+ *
+ * <h2>Coordinated omission</h2>
+ * A lot of testing frameworks are suffering from a problem called coordinated omission:
+ * https://www.infoq.com/presentations/latency-pitfalls
+ * By default coordinated omission is prevented by determining the latency based on the expected start-time instead of the actual
+ * start time. This is all done under the hood and not something you need to worry about. In some cases you want to see the
+ * impact of coordinated omission and you can allow for it using:
+ * <code>
+ *     class=yourtest
+ *     interval=10ms
+ *     accountForCoordinatedOmission=false
+ * </code>
+ *
+ * <h2>Different flavors of metronomes</h2>
+ * Internally a {@link com.hazelcast.simulator.worker.metronome.Metronome} is used to control the rate of requests. There are
+ * currently 3 out of the box implementations:
+ * <ol>
+ *     <li>{@link com.hazelcast.simulator.worker.metronome.SleepingMetronome}: which used LockSupport.park for waiting.
+ *     This metronome is the default and useful if you don't want to consume a lot of CPU cycles.</li>
+ *     <li>{@link com.hazelcast.simulator.worker.metronome.BusySpinningMetronome}: which used busy spinning for waiting.
+ *     It will give you the best time, but it will totally consume a single core. You certainly don't want to use this
+ *     metronome when having many load generating threads.
+ *     </li>
+ *     <li>{@link com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome} is special type of metronome. The
+ *     first 2 metronomes have a rate per thread; if a thread gets blocked, a bubble of requests will build up that needs
+ *     to get processed as soon as the thread unblocks. Even though coordinated omission by default is taken care of, the bubble
+ *     might not what you want because it means that you will get a dip in system pressure and then a peek, which
+ *     both can influence the benchmark. With the ConstantCombinedRateMetronome as long as their is a thread available, a
+ *     requests will be made. THis prevents building up the bubble and will give a more stable request rate.
+ *     </li>
+ * </ol>
+ *
+ * The metronome type can be configured using:
+ * <code>
+ *     class=yourtest
+ *     interval=10ms
+ *     class= com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome
+ * </code>
+ *
  * @see BeforeRun
  * @see AfterRun
  */
