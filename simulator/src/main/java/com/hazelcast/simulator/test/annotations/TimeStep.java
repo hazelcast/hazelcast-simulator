@@ -32,6 +32,20 @@ import java.lang.annotation.Target;
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation
  * to create a runner with the least amount of overhead.  The {@link TimeStep} looks a lot like the  @Benchmark from JMH.
  *
+ * <h1>Iterations</h1>
+ * TimeStep based tests have out of the box support for running a given number of iterations. This can be configured using
+ * <code>
+ *     class=yourtest
+ *     iterations=1000000
+ *     warmupIterations=10000
+ * </code>
+ * For the warmupIterations to work, the test needs to be run with a warmupDuration (probably --warmup 0). The test will run
+ * as long as the duration or till it runs into a timeout.
+ *
+ * <h1>Stopping a timestep thread</h1>
+ * A Timestep thread can also stop itself by throwing the {@link com.hazelcast.simulator.test.StopException}. This doesn't lead
+ * to an error, it is just a signal for the test that the thread is ready.
+ *
  * @see BeforeRun
  * @see AfterRun
  */
