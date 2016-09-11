@@ -32,6 +32,30 @@ import java.lang.annotation.Target;
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation
  * to create a runner with the least amount of overhead.  The {@link TimeStep} looks a lot like the  @Benchmark from JMH.
  *
+ * <h1>Code generation</h1>
+ * The timestep based tests rely on code generation and the motto is that you should not pay for a feature if it isn't used. For
+ * example where logging is not configured, no logging code is generated. If there is only a single timestep method, then there
+ * is no randomization. This way we can reduce the overhead by the benchmark framework to the bare minimum.
+ *
+ * <h1>Execution groups</h1>
+ * Normally all timestep methods from a test belong to the same execution group; meaning that there is a group of threads will
+ * will call each timestep method using some distribution. But in some cases this is unwanted, e.g. a typical producer/consumer
+ * test. In such cases one can make use of execution groups:
+ * <pre>
+ *     @TimeStep(executionGroup="producer")
+ *     public void produce(){
+ *         ...
+ *     }
+ *
+ *     @TimeStep(executionGroup="consumer")
+ *     public void consume(){
+ *
+ *     }
+ * </pre>
+ * In this case there are 2 execution groups: producer and consumer and each will get their own threads where the producer
+ * timestep threads calls methods from the 'producer' execution group, and the consumer timestep threads, call methods from
+ * the 'consumer' execution-group.
+ *
  * <h1>Threadcount</h1>
  * A timestep test run multiple timestep threads in parallel. This can be configured using the threadCount property:
  * <code>
@@ -82,7 +106,8 @@ import java.lang.annotation.Target;
  * </ol>
  *
  * <h2>Frequency based logging</h2>
- * Frequency based logging can be configured using:
+ * With frequency based logging each timestep thread will add a log entry every so many calls. Frequency based logging can be
+ * configured using:
  * <code>
  *     class=yourtest
  *     logFrequency=10000
