@@ -49,7 +49,7 @@ import java.lang.annotation.Target;
  *
  *     @TimeStep(executionGroup="consumer")
  *     public void consume(){
- *
+ *          ...
  *     }
  * </pre>
  * In this case there are 2 execution groups: producer and consumer and each will get their own threads where the producer
