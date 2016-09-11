@@ -32,6 +32,22 @@ import java.lang.annotation.Target;
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation
  * to create a runner with the least amount of overhead.  The {@link TimeStep} looks a lot like the  @Benchmark from JMH.
  *
+ * <h1>Threadcount</h1>
+ * A timestep test run multiple timestep threads in parallel. This can be configured using the threadCount property:
+ * <code>
+ *     class=yourtest
+ *     threadCount=1
+ * </code>
+ * Threadcount defaults to 10.
+ *
+ * If there are multiple execution groups, each group can be configured independently. Imagine there is some kind of producer
+ * consumer test, then each execution group is configured using:
+ * <code>
+ *     class=yourtest
+ *     producerThreadCount=2
+ *     consumerThreadCount=4
+ * </code>
+ *
  * <h1>Iterations</h1>
  * TimeStep based tests have out of the box support for running a given number of iterations. This can be configured using
  * <code>
@@ -39,12 +55,61 @@ import java.lang.annotation.Target;
  *     iterations=1000000
  *     warmupIterations=10000
  * </code>
+ * This will run each timestep thread for 10k iterations during the warmup, and 1M iterations during the regular run.
+ *
  * For the warmupIterations to work, the test needs to be run with a warmupDuration (probably --warmup 0). The test will run
  * as long as the duration or till it runs into a timeout.
+ *
+ * Each exception group can be configured independently. So imagine there is a producer and consumer execution group, then
+ * the producers can be configured using:
+ * <code>
+ *     class=yourtest
+ *     producerWarmupIterations=10000
+ *     producerIterations=1000000
+ * </code>
+ * In this example the producer has a configured number of iterations for warmup and running, the consumer has no such limitation.
  *
  * <h1>Stopping a timestep thread</h1>
  * A Timestep thread can also stop itself by throwing the {@link com.hazelcast.simulator.test.StopException}. This doesn't lead
  * to an error, it is just a signal for the test that the thread is ready.
+ *
+ * <h1>Logging</h1>
+ * By default a timestep based thread will not log anything during the run/warmup period. But sometimes some logging is required,
+ * e.g. when needing to do some debugging. There are 2 out of the box options for logging:
+ * <ol>
+ *     <li>frequency based: e.g. every 1000th iteration</li>
+ *     <li>time rate based: e.g. every 100ms</li>
+ * </ol>
+ *
+ * <h2>Frequency based logging</h2>
+ * Frequency based logging can be configured using:
+ * <code>
+ *     class=yourtest
+ *     logFrequency=10000
+ * </code>
+ * Meaning that each timestep thread will log an entry every 10000th calls.
+ *
+ * Frequency based logging can be configured per execution group. If there is an execution group producer, then the logFrequency
+ * can be configured using:
+ * <code>
+ *     class=yourtest
+ *     producerLogFrequency=10000
+ * </code>
+ *
+ * <h2>Time rate based logging</h2>
+ * The time rate based logging allows for a log entry per timestep thread to be written at a maximum rate. E.g. if we want to see
+ * at most 1 time a second a log entry, we can configure the test:
+ * <code>
+ *     class=yourtest
+ *     logRateMs=1000
+ * </code>
+ *
+ * Time rate based logging can be configured per execution group. If there is an execution group producer, then the logRate can
+ * be configured using:
+ * <code>
+ *     class=yourtest
+ *     producerRateMs=1000
+ * </code>
  *
  * @see BeforeRun
  * @see AfterRun
