@@ -57,6 +57,11 @@ public class WorkerData {
         this.ignoreFailures = ignoreFailures;
     }
 
+    @Override
+    public String toString() {
+        return "WorkerData{address=" + address + '}';
+    }
+
     public static String toAddressString(Collection<WorkerData> workers) {
         StringBuilder sb = new StringBuilder();
 

@@ -127,12 +127,12 @@ public class Agent {
         return ensureExistingDirectory(workersDir, sessionId);
     }
 
-    void start() {
+    public void start() {
         agentConnector.start();
         workerProcessFailureMonitor.start();
     }
 
-    void shutdown() {
+    public void shutdown() {
         ShutdownThread thread = new AgentShutdownThread(false);
         thread.start();
         thread.awaitShutdown();
@@ -191,6 +191,10 @@ public class Agent {
 
     public String getSessionId() {
         return sessionId;
+    }
+
+    public String getCloudProvider() {
+        return cloudProvider;
     }
 
     private final class AgentShutdownThread extends ShutdownThread {

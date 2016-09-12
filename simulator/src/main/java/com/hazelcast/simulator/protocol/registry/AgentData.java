@@ -94,6 +94,10 @@ public class AgentData {
         return currentWorkerIndex.incrementAndGet();
     }
 
+    public int getCurrentWorkerIndex() {
+        return currentWorkerIndex.incrementAndGet();
+    }
+
     /**
      * Used for tests to set a correct value for the next Worker index.
      *
@@ -142,5 +146,10 @@ public class AgentData {
             return publicIp;
         }
         return publicIp + " " + privateIp;
+    }
+
+    @Override
+    public String toString() {
+        return "AgentData{address=" + address + '}';
     }
 }

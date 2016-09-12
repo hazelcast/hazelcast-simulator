@@ -19,9 +19,13 @@ import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 
 public class RcWorkerScriptOperation implements SimulatorOperation {
 
-    private final String command;
-    private final WorkerQuery workerQuery;
-    private final boolean fireAndForget;
+    private String command;
+    private WorkerQuery workerQuery = new WorkerQuery();
+    private boolean fireAndForget;
+
+    public RcWorkerScriptOperation(String command) {
+        this.command = command;
+    }
 
     public RcWorkerScriptOperation(String command, WorkerQuery workerQuery, boolean fireAndForget) {
         this.command = command;
@@ -31,6 +35,16 @@ public class RcWorkerScriptOperation implements SimulatorOperation {
 
     public String getCommand() {
         return command;
+    }
+
+    public RcWorkerScriptOperation setWorkerQuery(WorkerQuery workerQuery) {
+        this.workerQuery = workerQuery;
+        return this;
+    }
+
+    public RcWorkerScriptOperation setFireAndForget(boolean fireAndForget) {
+        this.fireAndForget = fireAndForget;
+        return this;
     }
 
     public WorkerQuery getWorkerQuery() {

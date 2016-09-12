@@ -21,7 +21,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-final class AgentCli {
+public final class AgentCli {
 
     private static final int DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS = 180;
 

@@ -82,8 +82,8 @@ public class WorkerQuery {
         return maxCount;
     }
 
-    public WorkerQuery setMaxCount(Integer count) {
-        this.maxCount = count;
+    public WorkerQuery setMaxCount(Integer maxCount) {
+        this.maxCount = maxCount;
         return this;
     }
 

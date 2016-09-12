@@ -48,7 +48,8 @@ public class TestSuite {
     private int warmupSeconds = -1;
     private boolean failFast;
     private boolean parallel;
-    private WorkerQuery workerQuery;
+    // a 'select all' workerQuery by default
+    private WorkerQuery workerQuery = new WorkerQuery();
     private boolean verifyEnabled;
 
     public TestSuite setVerifyEnabled(boolean verifyEnabled) {

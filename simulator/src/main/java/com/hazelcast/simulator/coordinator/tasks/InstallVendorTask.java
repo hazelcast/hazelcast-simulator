@@ -15,13 +15,14 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
+import com.hazelcast.simulator.common.RunMode;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.BashCommand;
 import org.apache.log4j.Logger;
 
 import java.util.Set;
 
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.runMode;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FormatUtils.join;
 
@@ -49,8 +50,12 @@ public class InstallVendorTask {
     }
 
     public void run() {
+        if (runMode(simulatorProperties) == RunMode.Embedded) {
+            return;
+        }
+
         String ipString = "";
-        if (!isLocal(simulatorProperties)) {
+        if (runMode(simulatorProperties) == RunMode.Remote) {
             ipString = join(publicIps, ",");
         }
 
@@ -62,7 +67,6 @@ public class InstallVendorTask {
 
             new BashCommand(installFile)
                     .addParams(sessionId, versionSpec, ipString)
-                    .addParams()
                     .addEnvironment(simulatorProperties.asMap())
                     .execute();
 

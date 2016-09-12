@@ -71,8 +71,14 @@ public final class MemberWorker implements Worker {
 
     private ShutdownThread shutdownThread;
 
-    MemberWorker(WorkerType type, String publicAddress, int agentIndex, int workerIndex, int workerPort, String hzConfigFile,
-                 boolean autoCreateHzInstance, int workerPerformanceMonitorIntervalSeconds) throws Exception {
+    public MemberWorker(WorkerType type,
+                        String publicAddress,
+                        int agentIndex,
+                        int workerIndex,
+                        int workerPort,
+                        String hzConfigFile,
+                        boolean autoCreateHzInstance,
+                        int workerPerformanceMonitorIntervalSeconds) throws Exception {
         this.type = type;
         this.publicAddress = publicAddress;
 
@@ -89,7 +95,7 @@ public final class MemberWorker implements Worker {
         signalStartToAgent();
     }
 
-    void start() {
+    public void start() {
         workerConnector.start();
 
         if (performanceMonitor != null) {
@@ -147,6 +153,7 @@ public final class MemberWorker implements Worker {
     private void signalStartToAgent() {
         String address = getHazelcastAddress(type, publicAddress, hazelcastInstance);
         File file = new File(getUserDir(), "worker.address");
+        System.out.println("worker.address: " + file.getAbsolutePath());
         writeText(address, file);
     }
 

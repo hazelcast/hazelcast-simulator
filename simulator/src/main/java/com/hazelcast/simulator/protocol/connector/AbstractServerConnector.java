@@ -139,6 +139,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel channel) {
+                        channel.config().setReuseAddress(true);
                         configureServerPipeline(channel.pipeline(), AbstractServerConnector.this);
                     }
                 });

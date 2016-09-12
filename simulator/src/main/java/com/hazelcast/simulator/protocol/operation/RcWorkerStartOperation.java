@@ -15,15 +15,21 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.common.WorkerType;
+
 import java.util.List;
 
 public class RcWorkerStartOperation implements SimulatorOperation {
-    private int count;
+    private int count = 1;
     private String versionSpec;
-    private String vmOptions;
-    private String workerType;
+    private String vmOptions = "";
+    private String workerType = WorkerType.MEMBER.name();
     private String hzConfig;
     private List<String> agentAddresses;
+
+    public RcWorkerStartOperation() {
+
+    }
 
     public RcWorkerStartOperation(int count,
                                   String versionSpec,
@@ -37,6 +43,36 @@ public class RcWorkerStartOperation implements SimulatorOperation {
         this.workerType = workerType;
         this.hzConfig = hzConfig;
         this.agentAddresses = agentAddresses;
+    }
+
+    public RcWorkerStartOperation setCount(int count) {
+        this.count = count;
+        return this;
+    }
+
+    public RcWorkerStartOperation setVersionSpec(String versionSpec) {
+        this.versionSpec = versionSpec;
+        return this;
+    }
+
+    public RcWorkerStartOperation setVmOptions(String vmOptions) {
+        this.vmOptions = vmOptions;
+        return this;
+    }
+
+    public RcWorkerStartOperation setWorkerType(String workerType) {
+        this.workerType = workerType;
+        return this;
+    }
+
+    public RcWorkerStartOperation setHzConfig(String hzConfig) {
+        this.hzConfig = hzConfig;
+        return this;
+    }
+
+    public RcWorkerStartOperation setAgentAddresses(List<String> agentAddresses) {
+        this.agentAddresses = agentAddresses;
+        return this;
     }
 
     public int getCount() {

@@ -65,7 +65,9 @@ public class WorkerProcessManager {
         if (workerProcess == null) {
             LOGGER.warn("Should update LastSeenTimestamp for unknown WorkerJVM: " + sourceAddress);
         } else {
-            LOGGER.info("Updated LastSeenTimestamp for: " + sourceAddress);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Updated LastSeenTimestamp for: " + sourceAddress);
+            }
             workerProcess.updateLastSeen();
         }
     }
@@ -87,8 +89,13 @@ public class WorkerProcessManager {
         workerProcesses.remove(workerProcess.getAddress());
         try {
             // this sends SIGTERM on *nix
-            workerProcess.getProcess().destroy();
-            workerProcess.getProcess().waitFor();
+            Process process = workerProcess.getProcess();
+            if (process == null) {
+                LOGGER.error("TODO: Embedded worker not SHUTDOWN!!!");
+            } else {
+                process.destroy();
+                process.waitFor();
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to destroy Worker process: " + workerProcess, e);
         }

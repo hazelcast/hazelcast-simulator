@@ -3,6 +3,8 @@
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
+    <!--LITE_MEMBER_CONFIG-->
+
     <group>
         <name>workers</name>
     </group>

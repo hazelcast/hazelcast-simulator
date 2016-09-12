@@ -23,7 +23,6 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,8 +48,6 @@ import static java.util.Collections.unmodifiableList;
  * Keeps track of all Simulator components which are running.
  */
 public class ComponentRegistry {
-    private static final Logger LOGGER = Logger.getLogger(ComponentRegistry.class);
-
     private final AtomicInteger agentIndex = new AtomicInteger();
     private final AtomicInteger testIndexGenerator = new AtomicInteger();
     // a map with all id's and its count. This is used to make sure each id is unique.
@@ -64,6 +61,10 @@ public class ComponentRegistry {
         agents.add(agentData);
 
         return agentData;
+    }
+
+    public int getInitialTestIndex() {
+        return testIndexGenerator.get();
     }
 
     public int getDedicatedMemberMachines() {

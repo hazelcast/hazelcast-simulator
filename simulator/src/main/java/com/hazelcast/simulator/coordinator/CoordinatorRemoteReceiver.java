@@ -27,7 +27,6 @@ import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
-import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
@@ -65,6 +64,8 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
+import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
+import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -308,7 +309,8 @@ public class CoordinatorRemoteReceiver {
                 sleepSeconds(1);
                 for (TestData testData : componentRegistry.getTests()) {
                     if (testData.getTestSuite() == op.getTestSuite()) {
-                        promise.answer(ResponseType.SUCCESS, testData.getAddress().toString());
+                        promise.answer(SUCCESS, testData.getAddress().toString());
+                        return;
                     }
                 }
             }
@@ -317,9 +319,9 @@ public class CoordinatorRemoteReceiver {
             LOGGER.info("Run complete!");
 
             if (success) {
-                promise.answer(ResponseType.SUCCESS);
+                promise.answer(SUCCESS);
             } else {
-                promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, "Run completed with failures!");
+                promise.answer(EXCEPTION_DURING_OPERATION_EXECUTION, "Run completed with failures!");
             }
         }
     }
@@ -425,7 +427,7 @@ public class CoordinatorRemoteReceiver {
         }
 
         if (operation.isFireAndForget()) {
-            promise.answer(ResponseType.SUCCESS);
+            promise.answer(SUCCESS);
             return;
         }
 
@@ -444,7 +446,7 @@ public class CoordinatorRemoteReceiver {
         }
 
         LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
-        promise.answer(ResponseType.SUCCESS, sb.toString());
+        promise.answer(SUCCESS, sb.toString());
     }
 
     private void startCoordinatorConnector() {

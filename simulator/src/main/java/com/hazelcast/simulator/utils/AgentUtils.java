@@ -15,13 +15,14 @@
  */
 package com.hazelcast.simulator.utils;
 
+import com.hazelcast.simulator.common.RunMode;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.runMode;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
@@ -36,12 +37,13 @@ public final class AgentUtils {
     }
 
     public static void checkInstallation(Bash bash, SimulatorProperties properties, ComponentRegistry registry) {
-        if (isLocal(properties)) {
+        if (runMode(properties) != RunMode.Remote) {
             return;
         }
+
         ThreadSpawner spawner = new ThreadSpawner("checkInstallation", true);
         for (AgentData agentData : registry.getAgents()) {
-            spawner.spawn(new CheckInstallationRunnable(agentData, bash));
+            spawner.spawn(new CheckAgentInstallationTask(agentData, bash));
         }
         spawner.awaitCompletion();
     }
@@ -51,7 +53,7 @@ public final class AgentUtils {
         ThreadSpawner spawner = new ThreadSpawner("startAgents", true);
         int agentPort = properties.getAgentPort();
         for (AgentData agentData : registry.getAgents()) {
-            spawner.spawn(new StartRunnable(logger, bash, properties, agentData, agentPort));
+            spawner.spawn(new StartAgentTask(logger, bash, properties, agentData, agentPort));
         }
         spawner.awaitCompletion();
         logger.info(format("Successfully started %d Agents", registry.agentCount()));
@@ -63,18 +65,18 @@ public final class AgentUtils {
         logger.info(format("Stopping %d Agents...", registry.agentCount()));
         ThreadSpawner spawner = new ThreadSpawner("stopAgents", true);
         for (AgentData agentData : registry.getAgents()) {
-            spawner.spawn(new StopRunnable(logger, bash, properties, agentData, startHarakiriMonitorCommand));
+            spawner.spawn(new StopAgentTask(logger, bash, properties, agentData, startHarakiriMonitorCommand));
         }
         spawner.awaitCompletion();
         logger.info(format("Successfully stopped %d Agents", registry.agentCount()));
     }
 
-    private static class CheckInstallationRunnable implements Runnable {
+    private static class CheckAgentInstallationTask implements Runnable {
 
         private final AgentData agentData;
         private final Bash bash;
 
-        CheckInstallationRunnable(AgentData agentData, Bash bash) {
+        CheckAgentInstallationTask(AgentData agentData, Bash bash) {
             this.agentData = agentData;
             this.bash = bash;
         }
@@ -98,21 +100,21 @@ public final class AgentUtils {
         }
     }
 
-    private static final class StartRunnable implements Runnable {
+    private static final class StartAgentTask implements Runnable {
 
         private final Logger logger;
         private final Bash bash;
-        private final boolean isLocal;
 
         private final String ip;
         private final String mandatoryParameters;
         private final String optionalParameters;
         private final String ec2Parameters;
+        private final RunMode runMode;
 
-        private StartRunnable(Logger logger, Bash bash, SimulatorProperties properties, AgentData agentData, int agentPort) {
+        private StartAgentTask(Logger logger, Bash bash, SimulatorProperties properties, AgentData agentData, int agentPort) {
             this.logger = logger;
             this.bash = bash;
-            this.isLocal = isLocal(properties);
+            this.runMode = CloudProviderUtils.runMode(properties);
 
             this.ip = agentData.getPublicAddress();
             this.mandatoryParameters = format("--addressIndex %d --publicAddress %s --port %s",
@@ -120,6 +122,7 @@ public final class AgentUtils {
             this.optionalParameters = format(" --threadPoolSize %d --workerLastSeenTimeoutSeconds %d",
                     properties.getAgentThreadPoolSize(),
                     properties.getWorkerLastSeenTimeoutSeconds());
+
             if (isEC2(properties)) {
                 this.ec2Parameters = format(" --cloudProvider %s --cloudIdentity %s --cloudCredential %s",
                         properties.getCloudProvider(),
@@ -132,15 +135,24 @@ public final class AgentUtils {
 
         @Override
         public void run() {
-            if (isLocal) {
-                runLocal();
-            } else {
-                runRemote();
+            switch (runMode) {
+                case Remote:
+                    runRemote();
+                    break;
+                case Embedded:
+                    // do nothing.
+                    break;
+                case Local:
+                    runLocal();
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown runMode:" + runMode);
             }
         }
 
         private void runLocal() {
             logger.info(format("Starting Agent on %s", ip));
+
             execute(format("nohup %s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
                     getSimulatorHome(), mandatoryParameters, optionalParameters));
 
@@ -159,20 +171,20 @@ public final class AgentUtils {
         }
     }
 
-    private static final class StopRunnable implements Runnable {
+    private static final class StopAgentTask implements Runnable {
 
         private final Logger logger;
         private final Bash bash;
-        private final boolean isLocal;
+        private final RunMode runMode;
 
         private final String ip;
         private final String startHarakiriMonitorCommand;
 
-        private StopRunnable(Logger logger, Bash bash, SimulatorProperties properties, AgentData agentData,
-                             String startHarakiriMonitorCommand) {
+        private StopAgentTask(Logger logger, Bash bash, SimulatorProperties properties, AgentData agentData,
+                              String startHarakiriMonitorCommand) {
             this.logger = logger;
             this.bash = bash;
-            this.isLocal = isLocal(properties);
+            this.runMode = CloudProviderUtils.runMode(properties);
 
             this.ip = agentData.getPublicAddress();
             this.startHarakiriMonitorCommand = startHarakiriMonitorCommand;
@@ -180,10 +192,18 @@ public final class AgentUtils {
 
         @Override
         public void run() {
-            if (isLocal) {
-                runLocal();
-            } else {
-                runRemote();
+            switch (runMode) {
+                case Remote:
+                    runRemote();
+                    break;
+                case Embedded:
+                    // do nothing.
+                    break;
+                case Local:
+                    runLocal();
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown runMode:" + runMode);
             }
         }
 

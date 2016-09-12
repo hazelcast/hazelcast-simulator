@@ -20,14 +20,28 @@ import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 
 public class RcTestRunOperation implements SimulatorOperation {
 
-    private final WorkerQuery query;
+    private WorkerQuery query = new WorkerQuery();
     private TestSuite testSuite;
     private boolean async;
+
+    public RcTestRunOperation(TestSuite testSuite) {
+        this.testSuite = testSuite;
+    }
 
     public RcTestRunOperation(TestSuite testSuite, boolean async, WorkerQuery query) {
         this.testSuite = testSuite;
         this.async = async;
         this.query = query;
+    }
+
+    public RcTestRunOperation setQuery(WorkerQuery query) {
+        this.query = query;
+        return this;
+    }
+
+    public RcTestRunOperation setAsync(boolean async) {
+        this.async = async;
+        return this;
     }
 
     public TestSuite getTestSuite() {

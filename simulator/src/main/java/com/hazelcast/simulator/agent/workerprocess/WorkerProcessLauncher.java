@@ -56,10 +56,10 @@ public class WorkerProcessLauncher {
     private final Agent agent;
     private final WorkerProcessManager workerProcessManager;
     private final WorkerProcessSettings workerProcessSettings;
-
     private File sessionDir;
 
-    public WorkerProcessLauncher(Agent agent, WorkerProcessManager workerProcessManager,
+    public WorkerProcessLauncher(Agent agent,
+                                 WorkerProcessManager workerProcessManager,
                                  WorkerProcessSettings workerProcessSettings) {
         this.agent = agent;
         this.workerProcessManager = workerProcessManager;

@@ -33,8 +33,6 @@ public class StubPromise extends Promise implements Future<ResponseType> {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -54,13 +52,23 @@ public class StubPromise extends Promise implements Future<ResponseType> {
     }
 
     @Override
-    public ResponseType get() throws InterruptedException, ExecutionException {
+    public ResponseType get() throws InterruptedException {
         synchronized (this) {
             while (responseType == null) {
                 wait();
             }
 
             return responseType;
+        }
+    }
+
+    public String getResponse() throws InterruptedException  {
+        synchronized (this) {
+            while (responseType == null) {
+                wait();
+            }
+
+            return response;
         }
     }
 
