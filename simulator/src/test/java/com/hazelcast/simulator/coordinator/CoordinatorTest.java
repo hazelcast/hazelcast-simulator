@@ -210,9 +210,9 @@ public class CoordinatorTest {
         coordinator.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
 
         StubPromise promise = new StubPromise();
-        coordinator.workerScript(new RcWorkerScriptOperation("js:10"), promise);
+        coordinator.workerScript(new RcWorkerScriptOperation("js:'a'"), promise);
 
         assertEquals(SUCCESS, promise.get());
-        assertEquals(format("C_A1_W%s=10", (initialWorkerIndex + 1)), promise.getResponse().replace("\n", ""));
+        assertEquals(format("C_A1_W%s=a", (initialWorkerIndex + 1)), promise.getResponse().replace("\n", ""));
     }
 }
