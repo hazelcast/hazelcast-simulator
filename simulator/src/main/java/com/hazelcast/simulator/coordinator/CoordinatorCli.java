@@ -137,9 +137,6 @@ final class CoordinatorCli {
                     + " The session ID is used for creating the working directory")
             .withRequiredArg().ofType(String.class);
 
-    private final OptionSpec monitorPerformanceSpec = parser.accepts("monitorPerformance",
-            "If defined performance of tests is tracked.");
-
     private final OptionSpec<Boolean> verifyEnabledSpec = parser.accepts("verifyEnabled",
             "Defines if tests are verified.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
@@ -317,10 +314,6 @@ final class CoordinatorCli {
     }
 
     private int getPerformanceMonitorInterval() {
-        if (!options.has(monitorPerformanceSpec)) {
-            return 0;
-        }
-
         String intervalSeconds = simulatorProperties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
         if (intervalSeconds == null || intervalSeconds.isEmpty()) {
             return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
@@ -355,7 +348,7 @@ final class CoordinatorCli {
         }
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
-        if (!options.has(monitorPerformanceSpec)) {
+        if (coordinatorParameters.getPerformanceMonitorIntervalSeconds() == 0) {
             for (TestCase testCase : testSuite.getTestCaseList()) {
                 testCase.setProperty("measureLatency", "false");
             }

@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.worker.performance.PerformanceStats;
 import org.junit.Before;
@@ -9,6 +8,8 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.worker.performance.PerformanceStats.aggregateAll;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -25,47 +26,51 @@ public class PerformanceStatsCollectorTest {
     private PerformanceStatsCollector emptyPerformanceStatsCollector;
     private PerformanceStatsCollector performanceStatsCollector;
 
-    private SimulatorAddress worker1;
-    private SimulatorAddress worker2;
+    private SimulatorAddress a1w1;
+    private SimulatorAddress a2w1;
+    private SimulatorAddress a1w2;
+    private SimulatorAddress a2w2;
 
-    private SimulatorAddress agentAddress1;
-    private SimulatorAddress agentAddress2;
+    private SimulatorAddress a1;
+    private SimulatorAddress a2;
 
     @Before
     public void before() {
         emptyPerformanceStatsCollector = new PerformanceStatsCollector();
         performanceStatsCollector = new PerformanceStatsCollector();
 
-        worker1 = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
-        worker2 = new SimulatorAddress(AddressLevel.WORKER, 2, 1, 0);
+        a1w1 = new SimulatorAddress(WORKER, 1, 1, 0);
+        a1w2 = new SimulatorAddress(WORKER, 1, 2, 0);
+        a2w1 = new SimulatorAddress(WORKER, 2, 1, 0);
+        a2w2 = new SimulatorAddress(WORKER, 2, 2, 0);
 
-        agentAddress1 = worker1.getParent();
-        agentAddress2 = worker2.getParent();
+        a1 = a1w1.getParent();
+        a2 = a2w1.getParent();
     }
 
     @Test
     public void testFormatPerformanceNumbers() {
-        update(worker1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
+        update(a1w1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
 
-        String performance = performanceStatsCollector.formatPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = performanceStatsCollector.formatIntervalPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ops"));
     }
 
     @Test
     public void testFormatPerformanceNumbers_testCaseNotFound() {
-        String performance = performanceStatsCollector.formatPerformanceNumbers("notFound");
+        String performance = performanceStatsCollector.formatIntervalPerformanceNumbers("notFound");
         assertFalse(performance.contains("ops"));
     }
 
     @Test
     public void testFormatPerformanceNumbers_onEmptyContainer() {
-        String performance = emptyPerformanceStatsCollector.formatPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = emptyPerformanceStatsCollector.formatIntervalPerformanceNumbers(TEST_CASE_ID_1);
         assertFalse(performance.contains("ops"));
     }
 
     @Test
     public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
-        SimulatorAddress worker = new SimulatorAddress(AddressLevel.WORKER, 3, 1, 0);
+        SimulatorAddress worker = new SimulatorAddress(WORKER, 3, 1, 0);
 
         Map<String, PerformanceStats> performanceStats = new HashMap<String, PerformanceStats>();
         performanceStats.put(TEST_CASE_ID_1, new PerformanceStats(
@@ -73,7 +78,7 @@ public class PerformanceStatsCollectorTest {
 
         performanceStatsCollector.update(worker, performanceStats);
 
-        String performance = performanceStatsCollector.formatPerformanceNumbers(TEST_CASE_ID_1);
+        String performance = performanceStatsCollector.formatIntervalPerformanceNumbers(TEST_CASE_ID_1);
         assertTrue(performance.contains("ms"));
         assertFalse(performance.contains("µs"));
     }
@@ -86,11 +91,11 @@ public class PerformanceStatsCollectorTest {
 
     @Test
     public void testGet() {
-        update(worker1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
-        update(worker1, TEST_CASE_ID_1, new PerformanceStats(1500, 150, 550, 1600.0d, 1700, 2400));
-        update(worker2, TEST_CASE_ID_1, new PerformanceStats(800, 100, 300, 2200.0d, 2400, 2800));
+        update(a1w1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
+        update(a1w1, TEST_CASE_ID_1, new PerformanceStats(1500, 150, 550, 1600.0d, 1700, 2400));
+        update(a2w1, TEST_CASE_ID_1, new PerformanceStats(800, 100, 300, 2200.0d, 2400, 2800));
 
-        PerformanceStats performanceStats = performanceStatsCollector.get(TEST_CASE_ID_1);
+        PerformanceStats performanceStats = performanceStatsCollector.get(TEST_CASE_ID_1, true);
 
         assertFalse(performanceStats.isEmpty());
         assertEquals(2300, performanceStats.getOperationCount());
@@ -103,56 +108,78 @@ public class PerformanceStatsCollectorTest {
 
     @Test
     public void testGet_testCaseNotFound() {
-        PerformanceStats performanceStats = performanceStatsCollector.get("notFound");
+        PerformanceStats performanceStats = performanceStatsCollector.get("notFound", true);
 
         assertTrue(performanceStats.isEmpty());
     }
 
     @Test
     public void testGet_onEmptyContainer() {
-        PerformanceStats performanceStats = emptyPerformanceStatsCollector.get(TEST_CASE_ID_1);
+        PerformanceStats performanceStats = emptyPerformanceStatsCollector.get(TEST_CASE_ID_1, true);
 
         assertTrue(performanceStats.isEmpty());
     }
 
     @Test
     public void testCalculatePerformanceStats() {
-        update(worker1, TEST_CASE_ID_1, new PerformanceStats(1000, 200, 500, 1900.0d, 1800, 2500));
-        update(worker1, TEST_CASE_ID_2, new PerformanceStats(1500, 900, 800, 2300.0d, 2000, 2700));
+        PerformanceStats a1w1Stats = new PerformanceStats(100, 10, 100.0, 50, 100, 200);
+        PerformanceStats a1w2Stats = new PerformanceStats(200, 20, 200.0, 60, 110, 210);
 
-        update(worker1, TEST_CASE_ID_1, new PerformanceStats(1500, 150, 550, 1600.0d, 1700, 2400));
-        update(worker1, TEST_CASE_ID_2, new PerformanceStats(2000, 950, 850, 2400.0d, 2100, 2800));
+        update(a1w1, TEST_CASE_ID_1, a1w1Stats);
+        update(a1w2, TEST_CASE_ID_1, a1w2Stats);
 
-        update(worker2, TEST_CASE_ID_1, new PerformanceStats(800, 100, 300, 2200.0d, 2400, 2800));
-        update(worker2, TEST_CASE_ID_2,  new PerformanceStats(1200, 700, 600, 2700.0d, 2600, 2900));
+        PerformanceStats a2w1Stats = new PerformanceStats(300, 30, 300.0, 70, 120, 220);
+        PerformanceStats a2w2Stats = new PerformanceStats(400, 40, 400.0, 80, 120, 230);
 
-        PerformanceStats totalPerformanceStats = new PerformanceStats();
-        Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
+        update(a2w1, TEST_CASE_ID_1, a2w1Stats);
+        update(a2w2, TEST_CASE_ID_1, a2w2Stats);
 
-        performanceStatsCollector.calculatePerformanceStats(totalPerformanceStats, agentPerformanceStatsMap);
+        PerformanceStats totalStats = new PerformanceStats();
+        Map<SimulatorAddress, PerformanceStats> agentStats = new HashMap<SimulatorAddress, PerformanceStats>();
 
-        assertEquals(2, agentPerformanceStatsMap.size());
+        performanceStatsCollector.calculatePerformanceStats(TEST_CASE_ID_1, totalStats, agentStats);
 
-        PerformanceStats performanceStatsAgent1 = agentPerformanceStatsMap.get(agentAddress1);
-        assertEquals(3500, performanceStatsAgent1.getOperationCount());
-        assertEquals(1100, performanceStatsAgent1.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(1400, performanceStatsAgent1.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2100, performanceStatsAgent1.getIntervalLatency999PercentileNanos());
-        assertEquals(2800, performanceStatsAgent1.getIntervalLatencyMaxNanos());
+        assertEquals(2, agentStats.size());
 
-        PerformanceStats performanceStatsAgent2 = agentPerformanceStatsMap.get(agentAddress2);
-        assertEquals(2000, performanceStatsAgent2.getOperationCount());
-        assertEquals(800, performanceStatsAgent2.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(900, performanceStatsAgent2.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2600, performanceStatsAgent2.getIntervalLatency999PercentileNanos());
-        assertEquals(2900, performanceStatsAgent2.getIntervalLatencyMaxNanos());
+        assertPerfStatEquals(aggregateAll(a1w1Stats, a1w2Stats), agentStats.get(a1));
+        assertPerfStatEquals(aggregateAll(a2w1Stats, a2w2Stats), agentStats.get(a2));
 
-        assertFalse(totalPerformanceStats.isEmpty());
-        assertEquals(5500, totalPerformanceStats.getOperationCount());
-        assertEquals(1900, totalPerformanceStats.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2300, totalPerformanceStats.getTotalThroughput(), ASSERT_EQUALS_DELTA);
-        assertEquals(2600, totalPerformanceStats.getIntervalLatency999PercentileNanos());
-        assertEquals(2900, totalPerformanceStats.getIntervalLatencyMaxNanos());
+        assertPerfStatEquals(aggregateAll(a1w1Stats, a1w2Stats, a2w1Stats, a2w2Stats), totalStats);
+    }
+
+    @Test
+    public void testCalculatePerformanceStats_differentTests() {
+        PerformanceStats a1w1Stats = new PerformanceStats(100, 10, 100.0, 50, 100, 200);
+        PerformanceStats a1w2Stats = new PerformanceStats(200, 20, 200.0, 60, 110, 210);
+
+        update(a1w1, TEST_CASE_ID_1, a1w1Stats);
+        update(a1w2, TEST_CASE_ID_2, a1w2Stats);
+
+        PerformanceStats a2w1Stats = new PerformanceStats(300, 30, 300.0, 70, 120, 220);
+        PerformanceStats a2w2Stats = new PerformanceStats(400, 40, 400.0, 80, 120, 230);
+
+        update(a2w1, TEST_CASE_ID_1, a2w1Stats);
+        update(a2w2, TEST_CASE_ID_2, a2w2Stats);
+
+        PerformanceStats totalStats = new PerformanceStats();
+        Map<SimulatorAddress, PerformanceStats> agentStats = new HashMap<SimulatorAddress, PerformanceStats>();
+
+        performanceStatsCollector.calculatePerformanceStats(TEST_CASE_ID_1, totalStats, agentStats);
+
+        assertEquals(2, agentStats.size());
+
+        assertPerfStatEquals(a1w1Stats, agentStats.get(a1));
+        assertPerfStatEquals(a2w1Stats, agentStats.get(a2));
+
+        assertPerfStatEquals(aggregateAll(a1w1Stats, a2w1Stats), totalStats);
+    }
+
+    private void assertPerfStatEquals(PerformanceStats expected, PerformanceStats actual) {
+        assertEquals(expected.getOperationCount(), actual.getOperationCount());
+        assertEquals(expected.getIntervalThroughput(), actual.getIntervalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(actual.getTotalThroughput(), actual.getTotalThroughput(), ASSERT_EQUALS_DELTA);
+        assertEquals(actual.getIntervalLatency999PercentileNanos(), actual.getIntervalLatency999PercentileNanos());
+        assertEquals(actual.getIntervalLatencyMaxNanos(), actual.getIntervalLatencyMaxNanos());
     }
 
     @Test
@@ -160,7 +187,7 @@ public class PerformanceStatsCollectorTest {
         PerformanceStats totalPerformanceStats = new PerformanceStats();
         Map<SimulatorAddress, PerformanceStats> agentPerformanceStatsMap = new HashMap<SimulatorAddress, PerformanceStats>();
 
-        emptyPerformanceStatsCollector.calculatePerformanceStats(totalPerformanceStats, agentPerformanceStatsMap);
+        emptyPerformanceStatsCollector.calculatePerformanceStats("foo", totalPerformanceStats, agentPerformanceStatsMap);
 
         assertEquals(0, agentPerformanceStatsMap.size());
         assertTrue(totalPerformanceStats.isEmpty());
