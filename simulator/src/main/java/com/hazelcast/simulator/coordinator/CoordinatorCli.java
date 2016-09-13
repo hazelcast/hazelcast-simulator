@@ -217,7 +217,8 @@ final class CoordinatorCli {
                     LOGGER.info("Coordinator is started in interactive mode. Waiting for commands from the coordinator-remote");
                 } else {
                     coordinatorRun.init(deploymentPlan);
-                    coordinatorRun.run(testSuite);
+                    boolean success = coordinatorRun.run(testSuite);
+                    System.exit(success ? 0 : 1);
                 }
             }
         } catch (Throwable t) {
