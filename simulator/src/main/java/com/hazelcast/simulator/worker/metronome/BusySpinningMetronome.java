@@ -45,7 +45,7 @@ public final class BusySpinningMetronome implements Metronome {
     }
 
     public BusySpinningMetronome(long intervalNanos, int threadCount, PropertyBinding binding, String prefix) {
-        this(intervalNanos / threadCount, binding.loadAsBoolean(toPropertyName(prefix, "accountForCoordinatedOmission"), true));
+        this(intervalNanos * threadCount, binding.loadAsBoolean(toPropertyName(prefix, "accountForCoordinatedOmission"), true));
     }
 
     public BusySpinningMetronome(Metronome m) {

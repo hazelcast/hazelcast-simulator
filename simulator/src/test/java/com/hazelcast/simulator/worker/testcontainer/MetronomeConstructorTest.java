@@ -67,7 +67,7 @@ public class MetronomeConstructorTest {
         assertEquals(SleepingMetronome.class, m.getClass());
         SleepingMetronome metronome = (SleepingMetronome) m;
 
-        assertEquals(2, metronome.getIntervalNanos());
+        assertEquals(200, metronome.getIntervalNanos());
     }
 
     @Test

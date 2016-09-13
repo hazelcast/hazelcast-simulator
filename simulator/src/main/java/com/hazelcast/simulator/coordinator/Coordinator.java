@@ -190,7 +190,9 @@ public class Coordinator implements Closeable {
     public void close() {
         stopTests();
 
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
+        if (client != null) {
+            new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
+        }
 
         closeQuietly(client);
 

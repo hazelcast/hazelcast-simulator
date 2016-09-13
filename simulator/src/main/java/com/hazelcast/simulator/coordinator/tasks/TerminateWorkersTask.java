@@ -32,11 +32,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * This task shuts down all workers.
- *
+ * <p>
  * - ClientConnectionManager talks about index, but it should be id.
- *
+ * <p>
  * todo:
- *  - worker ping thread
+ * - worker ping thread
  */
 public class TerminateWorkersTask {
 
