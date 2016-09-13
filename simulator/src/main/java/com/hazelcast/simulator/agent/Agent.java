@@ -23,6 +23,7 @@ import com.hazelcast.simulator.protocol.connector.AgentConnectorImpl;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
 import org.apache.log4j.Logger;
 
+import java.io.Closeable;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,7 +34,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 
-public class Agent {
+public class Agent implements Closeable {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
 
@@ -122,7 +123,8 @@ public class Agent {
         LOGGER.info("Agent started!");
     }
 
-    public void shutdown() {
+    @Override
+    public void close() {
         ShutdownThread thread = new AgentShutdownThread(false);
         thread.start();
         thread.awaitShutdown();

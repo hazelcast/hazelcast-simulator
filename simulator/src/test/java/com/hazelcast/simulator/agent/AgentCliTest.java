@@ -29,7 +29,7 @@ public class AgentCliTest {
     @After
     public void after() {
         if (agent != null) {
-            agent.shutdown();
+            agent.close();
         }
 
         tearDownFakeEnvironment();

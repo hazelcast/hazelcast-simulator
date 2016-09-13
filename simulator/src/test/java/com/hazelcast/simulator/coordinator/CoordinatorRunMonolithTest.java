@@ -19,6 +19,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.internalDistPath;
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
+import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -30,14 +31,15 @@ import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 
-public class CoordinatorRunTest {
+public class CoordinatorRunMonolithTest {
 
     private String hzConfig;
     private ComponentRegistry componentRegistry;
     private Agent agent;
     private AgentData agentData;
-    private CoordinatorRun run;
+    private CoordinatorRunMonolith run;
     private WorkerParameters workerParameters;
+    private Coordinator coordinator;
 
     @Before
     public void before() {
@@ -73,13 +75,16 @@ public class CoordinatorRunTest {
                 .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
                 .setWorkerScript(fileAsText(scriptFile));
 
-        this.run = new CoordinatorRun(componentRegistry, coordinatorParameters);
+        this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+        coordinator.skipShutdownHook=true;
+        coordinator.start();
+        this.run = new CoordinatorRunMonolith(coordinator);
     }
 
     @After
     public void after() throws InterruptedException {
-        closeQuietly(run);
-        agent.shutdown();
+        closeQuietly(coordinator);
+        closeQuietly(agent);
         tearDownFakeEnvironment();
     }
 
@@ -91,7 +96,7 @@ public class CoordinatorRunTest {
                         .setProperty("threadCount", 1)
                         .setProperty("class", SuccessTest.class));
 
-        DeploymentPlan deploymentPlan = DeploymentPlan.createDeploymentPlan(
+        DeploymentPlan deploymentPlan = createDeploymentPlan(
                 componentRegistry,
                 workerParameters,
                 WorkerType.MEMBER,
@@ -99,7 +104,9 @@ public class CoordinatorRunTest {
                 singletonList(new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0)));
 
         run.init(deploymentPlan);
-        boolean success = this.run.run(suite);
+
+        boolean success = run.run(suite);
+
         assertTrue(success);
     }
 
@@ -111,7 +118,7 @@ public class CoordinatorRunTest {
                         .setProperty("threadCount", 1)
                         .setProperty("class", FailingTest.class));
 
-        DeploymentPlan deploymentPlan = DeploymentPlan.createDeploymentPlan(
+        DeploymentPlan deploymentPlan = createDeploymentPlan(
                 componentRegistry,
                 workerParameters,
                 WorkerType.MEMBER,
@@ -119,7 +126,9 @@ public class CoordinatorRunTest {
                 singletonList(new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0)));
 
         run.init(deploymentPlan);
-        boolean success = this.run.run(suite);
+
+        boolean success = run.run(suite);
+
         assertFalse(success);
     }
 }

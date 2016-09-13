@@ -310,7 +310,7 @@ public class AgentSmokeTest implements FailureListener {
             }
 
             private void shutdown() {
-                agent.shutdown();
+                agent.close();
             }
         }
     }

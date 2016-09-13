@@ -39,7 +39,6 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -64,8 +63,8 @@ final class CoordinatorCli {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
     CoordinatorDownloader downloader;
-    CoordinatorRun coordinatorRun;
-    CoordinatorRemoteReceiver receiver;
+    CoordinatorRunMonolith coordinatorRun;
+    Coordinator coordinator;
     TestSuite testSuite;
     CoordinatorParameters coordinatorParameters;
     ComponentRegistry componentRegistry;
@@ -205,15 +204,24 @@ final class CoordinatorCli {
 
         if (options.has(downloadSpec) || options.has(cleanSpec)) {
             this.downloader = new CoordinatorDownloader(componentRegistry, simulatorProperties);
-        } else if (options.has(remoteSpec)) {
-            this.coordinatorParameters = loadCoordinatorParameters();
-            this.receiver = new CoordinatorRemoteReceiver(componentRegistry, coordinatorParameters);
         } else {
-            this.testSuite = loadTestSuite();
             this.coordinatorParameters = loadCoordinatorParameters();
-            this.workerParametersMap = loadWorkerParameters();
-            this.deploymentPlan = newDeploymentPlan();
-            this.coordinatorRun = new CoordinatorRun(componentRegistry, coordinatorParameters);
+            this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+
+            if (options.has(remoteSpec)) {
+                int coordinatorPort = simulatorProperties.getCoordinatorPort();
+                if (coordinatorPort == 0) {
+                    throw new CommandLineExitException("Can't run with --remote mode, and not have a coordinator port enabled."
+                            + "Please add COORDINATOR_PORT=5000 to your simulator.properties.");
+                }
+            }
+
+            if (!options.has(remoteSpec)) {
+                this.testSuite = loadTestSuite();
+                this.workerParametersMap = loadWorkerParameters();
+                this.deploymentPlan = newDeploymentPlan();
+                this.coordinatorRun = new CoordinatorRunMonolith(coordinator);
+            }
         }
     }
 
@@ -224,15 +232,14 @@ final class CoordinatorCli {
             } else if (options.has(cleanSpec)) {
                 downloader.clean();
             } else if (options.has(remoteSpec)) {
-                receiver.start();
+                coordinator.start();
             } else {
+                coordinator.start();
                 coordinatorRun.init(deploymentPlan);
                 coordinatorRun.run(testSuite);
             }
         } catch (Throwable t) {
             LOGGER.fatal(t.getMessage(), t);
-        } finally {
-            closeQuietly(coordinatorRun);
         }
     }
 

@@ -22,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import sun.management.resources.agent;
 
 import java.io.File;
 
@@ -29,19 +30,22 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirector
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class CoordinatorRemoteReceiverTest {
+public class CoordinatorTest {
 
-    private static CoordinatorRemoteReceiver remote;
+    private static Coordinator coordinator;
     private static String hzConfig;
     private static ComponentRegistry componentRegistry;
     private static String hzClientConfig;
     private static AgentData agentData;
+    private static Agent agent;
+
     private int initialWorkerIndex;
     private int initialTestIndex;
 
@@ -59,14 +63,15 @@ public class CoordinatorRemoteReceiverTest {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties);
 
-        Agent agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
+        agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
         agent.setSessionId(coordinatorParameters.getSessionId());
 
         componentRegistry = new ComponentRegistry();
         agentData = componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
-        remote = new CoordinatorRemoteReceiver(componentRegistry, coordinatorParameters);
-        remote.start();
+        coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+        coordinator.skipShutdownHook = true;
+        coordinator.start();
     }
 
     @Before
@@ -77,12 +82,13 @@ public class CoordinatorRemoteReceiverTest {
 
     @After
     public void after() throws Exception {
-        remote.workerKill(new RcWorkerKillOperation("js:java.lang.System.exit(0);", new WorkerQuery()));
+        coordinator.workerKill(new RcWorkerKillOperation("js:java.lang.System.exit(0);", new WorkerQuery()));
     }
 
     @AfterClass
     public static void afterClass() {
-        // remote.exit();
+        closeQuietly(coordinator);
+        closeQuietly(agent);
         tearDownFakeEnvironment();
     }
 
@@ -102,7 +108,7 @@ public class CoordinatorRemoteReceiverTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                String status = remote.testStatus(new RcTestStatusOperation(testId));
+                String status = coordinator.testStatus(new RcTestStatusOperation(testId));
                 System.out.println("Status:" + status + " expected:" + expectedState);
                 assertEquals(expectedState, status);
             }
@@ -112,52 +118,52 @@ public class CoordinatorRemoteReceiverTest {
     @Test
     public void workersStart_multipleWorkers() throws Exception {
         assertEquals("C_A1_W" + (initialWorkerIndex + 1),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
         assertEquals("C_A1_W" + (initialWorkerIndex + 2),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
         assertEquals("C_A1_W" + (initialWorkerIndex + 3),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
     }
 
     @Test
     public void workerStart_multipleClients() throws Exception {
         assertEquals("C_A1_W" + (initialWorkerIndex + 1),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
         assertEquals("C_A1_W" + (initialWorkerIndex + 2),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("javaclient").setHzConfig(hzClientConfig)));
         assertEquals("C_A1_W" + (initialWorkerIndex + 3),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("javaclient").setHzConfig(hzClientConfig)));
     }
 
     @Test
     public void workerStart_multipleLiteMembers() throws Exception {
         assertEquals("C_A1_W" + (initialWorkerIndex + 1),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
         assertEquals("C_A1_W" + (initialWorkerIndex + 2),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
         assertEquals("C_A1_W" + (initialWorkerIndex + 3),
-                remote.workerStart(new RcWorkerStartOperation()
+                coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
     }
 
     @Test
     public void testStartTest() throws Exception {
-        remote.workerStart(new RcWorkerStartOperation()
+        coordinator.workerStart(new RcWorkerStartOperation()
                 .setHzConfig(hzConfig));
 
         TestSuite suite = newBasicTestSuite()
                 .setDurationSeconds(10);
 
         StubPromise promise = new StubPromise();
-        remote.testRun(new RcTestRunOperation(suite).setAsync(true), promise);
+        coordinator.testRun(new RcTestRunOperation(suite).setAsync(true), promise);
         assertEquals(SUCCESS, promise.get());
 
         String testId = promise.getResponse();
@@ -168,20 +174,20 @@ public class CoordinatorRemoteReceiverTest {
 
     @Test
     public void testStopTest() throws Exception {
-        remote.workerStart(new RcWorkerStartOperation()
+        coordinator.workerStart(new RcWorkerStartOperation()
                 .setHzConfig(hzConfig));
 
         TestSuite suite = newBasicTestSuite()
                 .setDurationSeconds(0);
 
         StubPromise promise = new StubPromise();
-        remote.testRun(new RcTestRunOperation(suite).setAsync(true), promise);
+        coordinator.testRun(new RcTestRunOperation(suite).setAsync(true), promise);
 
         String testId = promise.getResponse();
 
         assertTestStateEventually(testId, "run");
 
-        remote.testStop(new RcTestStopOperation(testId));
+        coordinator.testStop(new RcTestStopOperation(testId));
 
         assertTestCompletesEventually(testId);
     }
@@ -189,24 +195,24 @@ public class CoordinatorRemoteReceiverTest {
     @Test
     public void testRun() throws Exception {
         // start worker.
-        remote.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
+        coordinator.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
 
         TestSuite suite = newBasicTestSuite();
 
         StubPromise promise = new StubPromise();
-        remote.testRun(new RcTestRunOperation(suite).setAsync(false), promise);
+        coordinator.testRun(new RcTestRunOperation(suite).setAsync(false), promise);
 
         assertEquals(SUCCESS, promise.get());
     }
 
     @Test
     public void workerScript() throws Exception {
-        remote.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
+        coordinator.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
 
         StubPromise promise = new StubPromise();
-        remote.workerScript(new RcWorkerScriptOperation("js:10"), promise);
+        coordinator.workerScript(new RcWorkerScriptOperation("js:10"), promise);
 
         assertEquals(SUCCESS, promise.get());
-        assertEquals(format("C_A1_W%s=10", (initialWorkerIndex + 1)), promise.getResponse().replace("\n",""));
+        assertEquals(format("C_A1_W%s=10", (initialWorkerIndex + 1)), promise.getResponse().replace("\n", ""));
     }
 }

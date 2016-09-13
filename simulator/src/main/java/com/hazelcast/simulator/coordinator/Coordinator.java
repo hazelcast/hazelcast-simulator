@@ -51,6 +51,7 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
 
+import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,38 +82,35 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
-public class CoordinatorRemoteReceiver {
+public class Coordinator implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(CoordinatorRemoteReceiver.class);
-    private static final int INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES = 5;
+    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
+    private static final int INITIALIZED_TIMEOUT_MINUTES = 5;
 
-    private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
-    private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
-
-    private final ComponentRegistry componentRegistry;
-    private final CoordinatorParameters coordinatorParameters;
-
-    private final FailureCollector failureCollector;
+    ComponentRegistry componentRegistry;
+    RemoteClient client;
+    final CoordinatorParameters parameters;
+    final FailureCollector failureCollector;
+    final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
+    final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
+    final File outputDirectory;
+    // for testing purposes; we don't want to have a shutdownhook registered.
+    boolean skipShutdownHook;
 
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
-
     private final TestPhase lastTestPhaseToSync;
-    private final File outputDirectory;
-
-    private RemoteClient client;
+    private final CountDownLatch initialized = new CountDownLatch(1);
     private CoordinatorConnector connector;
 
-    private CountDownLatch initialized = new CountDownLatch(1);
-
-    CoordinatorRemoteReceiver(ComponentRegistry componentRegistry, CoordinatorParameters coordinatorParameters) {
-        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), coordinatorParameters.getSessionId()));
+    Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
+        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
         this.componentRegistry = componentRegistry;
-        this.coordinatorParameters = coordinatorParameters;
+        this.parameters = parameters;
         this.failureCollector = new FailureCollector(outputDirectory, componentRegistry);
-        this.simulatorProperties = coordinatorParameters.getSimulatorProperties();
+        this.simulatorProperties = parameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
-        this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
+        this.lastTestPhaseToSync = parameters.getLastTestPhaseToSync();
     }
 
     public void start() {
@@ -120,7 +118,7 @@ public class CoordinatorRemoteReceiver {
 
         logConfiguration();
 
-        echoLocal("Coordinator remote mode starting...");
+        echoLocal("Coordinator starting...");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
@@ -132,14 +130,18 @@ public class CoordinatorRemoteReceiver {
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
                 singleton(simulatorProperties.getVersionSpec()),
-                coordinatorParameters.getSessionId()).run();
+                parameters.getSessionId()).run();
 
         initialized.countDown();
 
-        echoLocal("Coordinator remote mode started...");
+        echoLocal("Coordinator started...");
     }
 
     private void registerShutdownHook() {
+        if (skipShutdownHook) {
+            return;
+        }
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -156,17 +158,21 @@ public class CoordinatorRemoteReceiver {
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
-        int performanceIntervalSeconds = coordinatorParameters.getPerformanceMonitorIntervalSeconds();
+        int performanceIntervalSeconds = parameters.getPerformanceMonitorIntervalSeconds();
 
         if (performanceIntervalSeconds > 0) {
             echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
         } else {
             echoLocal("Performance monitor disabled");
         }
+
+        if (simulatorProperties.getCoordinatorPort() > 0) {
+            echoLocal("Coordinator remote enabled on port " + simulatorProperties.getCoordinatorPort());
+        }
     }
 
     private void awaitInitialized() throws Exception {
-        if (!initialized.await(INTERACTIVE_MODE_INITIALIZE_TIMEOUT_MINUTES, MINUTES)) {
+        if (!initialized.await(INITIALIZED_TIMEOUT_MINUTES, MINUTES)) {
             throw new TimeoutException("Coordinator remote mode failed to initialize");
         }
     }
@@ -177,33 +183,6 @@ public class CoordinatorRemoteReceiver {
         return log;
     }
 
-    private void close() {
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
-
-        closeQuietly(client);
-
-        closeQuietly(connector);
-
-        stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-
-        if (!coordinatorParameters.skipDownload()) {
-            new ArtifactDownloadTask(
-                    coordinatorParameters.getSessionId(),
-                    simulatorProperties,
-                    outputDirectory,
-                    componentRegistry).run();
-
-            if (coordinatorParameters.getAfterCompletionFile() != null) {
-                echoLocal("Executing after-completion script: " + coordinatorParameters.getAfterCompletionFile());
-                bash.execute(coordinatorParameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
-                echoLocal("Finished after-completion script");
-            }
-        }
-
-        OperationTypeCounter.printStatistics();
-
-        failureCollector.logFailureInfo();
-    }
 
     public void download(RcDownloadOperation operation) throws Exception {
         awaitInitialized();
@@ -211,7 +190,7 @@ public class CoordinatorRemoteReceiver {
         LOGGER.info("Downloading ....");
 
         new ArtifactDownloadTask(
-                coordinatorParameters.getSessionId(),
+                parameters.getSessionId(),
                 simulatorProperties,
                 outputDirectory,
                 componentRegistry).run();
@@ -247,7 +226,7 @@ public class CoordinatorRemoteReceiver {
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
                 singleton(versionSpec),
-                coordinatorParameters.getSessionId()).run();
+                parameters.getSessionId()).run();
         LOGGER.info("Install successful!");
     }
 
@@ -292,7 +271,7 @@ public class CoordinatorRemoteReceiver {
 
         LOGGER.info("Run starting...");
         final RunTestSuiteTask runTestSuiteTask = new RunTestSuiteTask(op.getTestSuite(),
-                coordinatorParameters,
+                parameters,
                 componentRegistry,
                 failureCollector,
                 testPhaseListeners,
@@ -345,7 +324,7 @@ public class CoordinatorRemoteReceiver {
         environment.put("LOG4j_CONFIG", loadLog4jConfig());
         environment.put("JVM_OPTIONS", op.getVmOptions());
         environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                "" + coordinatorParameters.getPerformanceMonitorIntervalSeconds());
+                "" + parameters.getPerformanceMonitorIntervalSeconds());
         environment.put("HAZELCAST_CONFIG", loadConfig(op, workerType));
 
         String versionSpec = op.getVersionSpec() == null
@@ -367,7 +346,7 @@ public class CoordinatorRemoteReceiver {
                 deploymentPlan.getWorkerDeployment(),
                 client,
                 componentRegistry,
-                coordinatorParameters.getWorkerVmStartupDelayMs()).run();
+                parameters.getWorkerVmStartupDelayMs()).run();
 
         LOGGER.info("Workers started!");
 
@@ -380,20 +359,20 @@ public class CoordinatorRemoteReceiver {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    coordinatorParameters.getLicenseKey(),
+                    parameters.getLicenseKey(),
                     simulatorProperties, false);
         } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    coordinatorParameters.getLicenseKey(),
+                    parameters.getLicenseKey(),
                     simulatorProperties, true);
         } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
             config = initClientHzConfig(
                     op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
                     componentRegistry,
                     simulatorProperties,
-                    coordinatorParameters.getLicenseKey());
+                    parameters.getLicenseKey());
         } else {
             throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
         }
@@ -455,6 +434,34 @@ public class CoordinatorRemoteReceiver {
         promise.answer(SUCCESS, sb.toString());
     }
 
+    public void close() {
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
+
+        closeQuietly(client);
+
+        closeQuietly(connector);
+
+        stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+
+        if (!parameters.skipDownload()) {
+            new ArtifactDownloadTask(
+                    parameters.getSessionId(),
+                    simulatorProperties,
+                    outputDirectory,
+                    componentRegistry).run();
+
+            if (parameters.getAfterCompletionFile() != null) {
+                echoLocal("Executing after-completion script: " + parameters.getAfterCompletionFile());
+                bash.execute(parameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
+                echoLocal("Finished after-completion script");
+            }
+        }
+
+        OperationTypeCounter.printStatistics();
+
+        failureCollector.logFailureInfo();
+    }
+
     private void startCoordinatorConnector() {
         CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
                 this, failureCollector, testPhaseListeners, performanceStatsCollector);
@@ -478,7 +485,7 @@ public class CoordinatorRemoteReceiver {
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
         client = new RemoteClient(connector, componentRegistry, workerPingIntervalMillis);
-        client.invokeOnAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
+        client.invokeOnAllAgents(new InitSessionOperation(parameters.getSessionId()));
         LOGGER.info("Remote client started successfully!");
     }
 }

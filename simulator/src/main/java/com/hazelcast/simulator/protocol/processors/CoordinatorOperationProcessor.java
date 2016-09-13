@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.coordinator.CoordinatorRemoteReceiver;
+import com.hazelcast.simulator.coordinator.Coordinator;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
@@ -54,9 +54,9 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
     private final FailureCollector failureCollector;
     private final TestPhaseListeners testPhaseListeners;
     private final PerformanceStatsCollector performanceStatsCollector;
-    private final CoordinatorRemoteReceiver receiver;
+    private final Coordinator receiver;
 
-    public CoordinatorOperationProcessor(CoordinatorRemoteReceiver receiver,
+    public CoordinatorOperationProcessor(Coordinator receiver,
                                          FailureCollector failureCollector,
                                          TestPhaseListeners testPhaseListeners,
                                          PerformanceStatsCollector performanceStatsCollector) {
