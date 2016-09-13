@@ -76,7 +76,6 @@ public final class TestCaseRunner implements TestPhaseListener {
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_VERBOSE_DELAY_SECONDS = 300;
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
-    private static final ConcurrentMap<TestPhase, Object> LOG_TEST_PHASE_COMPLETION = new ConcurrentHashMap<TestPhase, Object>();
 
     private final ConcurrentMap<TestPhase, List<SimulatorAddress>> phaseCompletedMap
             = new ConcurrentHashMap<TestPhase, List<SimulatorAddress>>();
@@ -280,6 +279,8 @@ public final class TestCaseRunner implements TestPhaseListener {
 
         stop(phase);
 
+        long actualDurationMs = currentTimeMillis() - startMs;
+        LOGGER.info("\n" + performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), actualDurationMs));
         waitForGlobalTestPhaseCompletion(phase);
     }
 
@@ -323,7 +324,7 @@ public final class TestCaseRunner implements TestPhaseListener {
         }
 
         if (performanceMonitorIntervalSeconds > 0) {
-            msg += performanceStatsCollector.formatPerformanceNumbers(testCase.getId());
+            msg += performanceStatsCollector.formatIntervalPerformanceNumbers(testCase.getId());
         }
 
         LOGGER.info(prefix + msg);
@@ -384,14 +385,13 @@ public final class TestCaseRunner implements TestPhaseListener {
         if (testPhaseSyncMap == null) {
             return;
         }
+
         CountDownLatch latch = decrementAndGetCountDownLatch(testPhase);
         if (!hasFailure()) {
             await(latch);
         }
 
-        if (LOG_TEST_PHASE_COMPLETION.putIfAbsent(testPhase, true) == null) {
-            LOGGER.info("Completed TestPhase " + testPhase.desc());
-        }
+        LOGGER.info(testCase.getId() + " completed waiting for global TestPhase " + testPhase.desc());
     }
 
     private int getExpectedWorkerCount(TestPhase testPhase) {

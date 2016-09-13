@@ -208,13 +208,6 @@ public class RunTestSuiteTask {
             LOGGER.info(format("Running %s tests (%s)", testCount, isParallel ? "parallel" : "sequentially"));
         }
         LOGGER.info(HORIZONTAL_RULER);
-
-//        Integer targetCount = testSuite.getWorkerQuery().getMaxCount();
-//        if (targetCount > 0) {
-//            TargetType targetType = testSuite.getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
-//            List<String> targetWorkers = componentRegistry.getWorkerAddresses(targetType, targetCount);
-//            LOGGER.info(format("RUN phase will be executed on %s: %s", targetType.toString(targetCount), targetWorkers));
-//        }
     }
 
     private void echoTestSuiteEnd(int testCount, long started) {

@@ -36,7 +36,6 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static javafx.scene.input.KeyCode.F;
 import static org.junit.Assert.assertEquals;
 
 public class CoordinatorCliTest {

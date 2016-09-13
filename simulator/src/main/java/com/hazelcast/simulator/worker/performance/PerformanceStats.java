@@ -21,7 +21,7 @@ import static java.lang.Math.max;
 
 /**
  * Container to transfer performance statistics for some time window.
- *
+ * <p>
  * Has methods to combine {@link PerformanceStats} instances by adding or setting maximum values.
  */
 public class PerformanceStats {
@@ -45,6 +45,7 @@ public class PerformanceStats {
         this.operationCount = EMPTY_OPERATION_COUNT;
         this.intervalThroughput = EMPTY_THROUGHPUT;
     }
+
 
     /**
      * Creates a {@link PerformanceStats} instance with values.
@@ -71,6 +72,15 @@ public class PerformanceStats {
         this.intervalLatencyMaxNanos = intervalLatencyMaxNanos;
     }
 
+    public PerformanceStats(PerformanceStats original) {
+        this.operationCount = original.operationCount;
+        this.intervalThroughput = original.intervalThroughput;
+        this.totalThroughput = original.totalThroughput;
+        this.intervalLatencyAvgNanos = original.intervalLatencyAvgNanos;
+        this.intervalLatency999PercentileNanos = original.intervalLatency999PercentileNanos;
+        this.intervalLatencyMaxNanos = original.intervalLatencyMaxNanos;
+    }
+
     /**
      * Combines two {@link PerformanceStats} instances, e.g. from different Simulator Workers.
      *
@@ -82,14 +92,14 @@ public class PerformanceStats {
 
     /**
      * Combines {@link PerformanceStats} instances, e.g. from different Simulator Workers.
-     *
+     * <p>
      * For the real-time performance monitor during the {@link TestPhase#RUN} the
      * maximum value should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats}
      * instances of the last interval.
-     *
+     * <p>
      * For the total performance number and the performance per Simulator Agent, the added values should be set, so we get the
      * summed up operation count and throughput values.
-     *
+     * <p>
      * The method always sets the maximum values for latency.
      *
      * @param other                          {@link PerformanceStats} which should be added to this instance
@@ -169,5 +179,14 @@ public class PerformanceStats {
                 + ", intervalLatency999PercentileNanos=" + intervalLatency999PercentileNanos
                 + ", intervalMaxLatencyNanos=" + intervalLatencyMaxNanos
                 + '}';
+    }
+
+
+    public static PerformanceStats aggregateAll(PerformanceStats... stats) {
+        PerformanceStats result = new PerformanceStats();
+        for (PerformanceStats s : stats) {
+            result.add(s);
+        }
+        return result;
     }
 }
