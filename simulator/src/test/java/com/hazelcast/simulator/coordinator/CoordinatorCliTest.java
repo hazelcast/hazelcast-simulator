@@ -100,6 +100,16 @@ public class CoordinatorCliTest {
         assertEquals(CoordinatorCli.DEFAULT_DURATION_SECONDS, testSuite.getDurationSeconds());
     }
 
+    @Test(expected = CommandLineExitException.class)
+    public void testNoRemotePort() {
+        File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
+        writeText("COORDINATOR_PORT=0",simulatorProperties);
+
+        args.add("--remote");
+
+        createCoordinatorCli();
+    }
+
     @Test
     public void testInit_duration() {
         args.add("--duration");
