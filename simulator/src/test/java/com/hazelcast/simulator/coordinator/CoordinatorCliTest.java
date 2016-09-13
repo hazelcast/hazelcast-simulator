@@ -274,24 +274,21 @@ public class CoordinatorCliTest {
         createCoordinatorCli();
     }
 
+    @Test(expected = CommandLineExitException.class)
+    public void testInit_negativeClients() {
+        args.add("--members");
+        args.add("1");
+        args.add("--clients");
+        args.add("-1");
+        args.add(testSuiteFile.getAbsolutePath());
+        createCoordinatorCli();
+    }
+
     @Test
     public void testInit_workersAndClients() {
         args.add("--members");
         args.add("2");
         args.add("--clients");
-        args.add("1");
-        args.add(testSuiteFile.getAbsolutePath());
-
-        CoordinatorCli cli = createCoordinatorCli();
-        assertEquals(2, count(cli.deploymentPlan, WorkerType.MEMBER));
-        assertEquals(1, count(cli.deploymentPlan, WorkerType.JAVA_CLIENT));
-    }
-
-    @Test
-    public void testInit_workersAndClients_oldProperties() {
-        args.add("--memberWorkerCount");
-        args.add("2");
-        args.add("--clientWorkerCount");
         args.add("1");
         args.add(testSuiteFile.getAbsolutePath());
 
