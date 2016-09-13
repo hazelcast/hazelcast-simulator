@@ -57,7 +57,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
-    static final int DEFAULT_DURATION_SECONDS = 60;
+    static final int DEFAULT_DURATION_SECONDS = 0;
     private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
@@ -356,8 +356,9 @@ final class CoordinatorCli {
             workerQuery.setMaxCount(targetCount);
         }
 
+        int durationSeconds = getDurationSeconds(options, durationSpec);
         TestSuite testSuite = TestSuite.loadTestSuite(testSuiteFile, options.valueOf(overridesSpec))
-                .setDurationSeconds(getDurationSeconds(options, durationSpec))
+                .setDurationSeconds(durationSeconds)
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                 .setParallel(options.has(parallelSpec))

@@ -20,7 +20,9 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
+import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.FAILED;
 import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.IN_PROGRESS;
+import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.SUCCESS;
 
 public class TestData {
 
@@ -48,6 +50,10 @@ public class TestData {
 
     public CompletedStatus getCompletedStatus() {
         return completedStatus;
+    }
+
+    public boolean isCompleted() {
+        return completedStatus == FAILED || completedStatus == SUCCESS;
     }
 
     public void setCompletedStatus(CompletedStatus completedStatus) {

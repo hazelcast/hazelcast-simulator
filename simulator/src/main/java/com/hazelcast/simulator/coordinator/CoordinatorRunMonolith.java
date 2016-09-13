@@ -55,6 +55,10 @@ public class CoordinatorRunMonolith {
     }
 
     public boolean run(TestSuite testSuite) throws Exception {
+        if (testSuite.getDurationSeconds() == 0) {
+            LOGGER.info("Test suite runs without time-limit, it will complete when it decides it's ready or CTRL-C is pressed");
+        }
+
         try {
             new RunTestSuiteTask(testSuite,
                     coordinator.parameters,

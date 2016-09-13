@@ -42,7 +42,6 @@ import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
@@ -54,7 +53,9 @@ import org.apache.log4j.Logger;
 import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -101,6 +102,7 @@ public class Coordinator implements Closeable {
     private final Bash bash;
     private final TestPhase lastTestPhaseToSync;
     private final CountDownLatch initialized = new CountDownLatch(1);
+    private final int testCompletionTimeoutSeconds;
     private CoordinatorConnector connector;
 
     Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
@@ -111,6 +113,7 @@ public class Coordinator implements Closeable {
         this.simulatorProperties = parameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
         this.lastTestPhaseToSync = parameters.getLastTestPhaseToSync();
+        this.testCompletionTimeoutSeconds = simulatorProperties.getAsInteger("TEST_COMPLETION_TIMEOUT_SECONDS");
     }
 
     public void start() {
@@ -183,6 +186,89 @@ public class Coordinator implements Closeable {
         return log;
     }
 
+    @Override
+    public void close() {
+        stopTests();
+
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
+
+        closeQuietly(client);
+
+        closeQuietly(connector);
+
+        stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+
+        if (!parameters.skipDownload()) {
+            new ArtifactDownloadTask(
+                    parameters.getSessionId(),
+                    simulatorProperties,
+                    outputDirectory,
+                    componentRegistry).run();
+
+            if (parameters.getAfterCompletionFile() != null) {
+                echoLocal("Executing after-completion script: " + parameters.getAfterCompletionFile());
+                bash.execute(parameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
+                echoLocal("Finished after-completion script");
+            }
+        }
+
+        OperationTypeCounter.printStatistics();
+
+        failureCollector.logFailureInfo();
+    }
+
+    private void stopTests() {
+        Collection<TestData> tests = componentRegistry.getTests();
+        for (TestData testData : tests) {
+            testData.setStopRequested(true);
+        }
+
+        for (int k = 0; k < testCompletionTimeoutSeconds; k++) {
+            Iterator<TestData> it = tests.iterator();
+            while (it.hasNext()) {
+                TestData test = it.next();
+
+                if (test.isCompleted()) {
+                    it.remove();
+                }
+            }
+
+            sleepSeconds(1);
+
+            if (tests.isEmpty()) {
+                return;
+            }
+        }
+
+        LOGGER.info("The following tests failed to complete:" + tests);
+    }
+
+    private void startCoordinatorConnector() {
+        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
+                this, failureCollector, testPhaseListeners, performanceStatsCollector);
+
+        connector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
+        connector.start();
+
+        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
+        for (final AgentData agentData : componentRegistry.getAgents()) {
+            final int agentPort = simulatorProperties.getAgentPort();
+            spawner.spawn(new Runnable() {
+                @Override
+                public void run() {
+                    connector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
+                }
+            });
+        }
+        spawner.awaitCompletion();
+
+        LOGGER.info("Remote client starting....");
+        int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
+
+        client = new RemoteClient(connector, componentRegistry, workerPingIntervalMillis);
+        client.invokeOnAllAgents(new InitSessionOperation(parameters.getSessionId()));
+        LOGGER.info("Remote client started successfully!");
+    }
 
     public void download(RcDownloadOperation operation) throws Exception {
         awaitInitialized();
@@ -252,18 +338,23 @@ public class Coordinator implements Closeable {
 
         LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
 
-        TestData data = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
-        if (data == null) {
+        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (test == null) {
             throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
         }
 
-        for (; ; ) {
-            data.setStopRequested(true);
+        for (int k = 0; k < testCompletionTimeoutSeconds; k++) {
+            test.setStopRequested(true);
+
             sleepSeconds(1);
-            if (data.getCompletedStatus() == CompletedStatus.SUCCESS || data.getCompletedStatus() == CompletedStatus.FAILED) {
-                return data.getStatusString();
+
+            if (test.isCompleted()) {
+                return test.getStatusString();
             }
         }
+
+        throw new Exception("Test failed to stop within " + testCompletionTimeoutSeconds
+                + " seconds, current status:" + test.getStatusString());
     }
 
     public void testRun(RcTestRunOperation op, Promise promise) throws Exception {
@@ -434,58 +525,5 @@ public class Coordinator implements Closeable {
         promise.answer(SUCCESS, sb.toString());
     }
 
-    public void close() {
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
 
-        closeQuietly(client);
-
-        closeQuietly(connector);
-
-        stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
-
-        if (!parameters.skipDownload()) {
-            new ArtifactDownloadTask(
-                    parameters.getSessionId(),
-                    simulatorProperties,
-                    outputDirectory,
-                    componentRegistry).run();
-
-            if (parameters.getAfterCompletionFile() != null) {
-                echoLocal("Executing after-completion script: " + parameters.getAfterCompletionFile());
-                bash.execute(parameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
-                echoLocal("Finished after-completion script");
-            }
-        }
-
-        OperationTypeCounter.printStatistics();
-
-        failureCollector.logFailureInfo();
-    }
-
-    private void startCoordinatorConnector() {
-        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
-                this, failureCollector, testPhaseListeners, performanceStatsCollector);
-
-        connector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
-        connector.start();
-
-        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            final int agentPort = simulatorProperties.getAgentPort();
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    connector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
-                }
-            });
-        }
-        spawner.awaitCompletion();
-
-        LOGGER.info("Remote client starting....");
-        int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
-
-        client = new RemoteClient(connector, componentRegistry, workerPingIntervalMillis);
-        client.invokeOnAllAgents(new InitSessionOperation(parameters.getSessionId()));
-        LOGGER.info("Remote client started successfully!");
-    }
 }
