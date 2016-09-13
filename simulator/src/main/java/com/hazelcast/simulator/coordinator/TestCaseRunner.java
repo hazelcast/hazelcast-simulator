@@ -279,12 +279,17 @@ public final class TestCaseRunner implements TestPhaseListener {
 
         stop(phase);
 
+        logPerformanceInfo(startMs);
+
+        waitForGlobalTestPhaseCompletion(phase);
+    }
+
+    private void logPerformanceInfo(long startMs) {
         long actualDurationMs = currentTimeMillis() - startMs;
         if (performanceMonitorIntervalSeconds > 0) {
             LOGGER.info("Performance " + testCase.getId() + "\n"
                     + performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), actualDurationMs));
         }
-        waitForGlobalTestPhaseCompletion(phase);
     }
 
     private void start(TestPhase phase) {
