@@ -120,7 +120,8 @@ public final class TestCaseRunner implements TestPhaseListener {
 
         String testAddress = test.getAddress().toString();
         this.prefix = padRight(testAddress + ":" + testCase.getId()
-                , testSuite.getMaxTestCaseIdLength() + 1 + testAddress.length());
+                , testSuite.getMaxTestCaseIdLength() + 2 + testAddress.length());
+
         this.testPhaseSyncMap = testPhaseSyncMap;
 
         this.targets = targets;
