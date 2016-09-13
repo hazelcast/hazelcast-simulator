@@ -185,9 +185,6 @@ final class CoordinatorCli {
     private final OptionSpec skipDownloadSpec = parser.accepts("skipDownload",
             "Prevents downloading of the created worker artifacts.");
 
-    private final OptionSpec remoteSpec = parser.accepts("remote",
-            "Puts Coordinator into remote control mode for coordinator-remote");
-
     private final OptionSpec downloadSpec = parser.accepts("download",
             "Downloads all worker artifacts");
 
@@ -208,16 +205,15 @@ final class CoordinatorCli {
             this.coordinatorParameters = loadCoordinatorParameters();
             this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
 
-            if (options.has(remoteSpec)) {
+            this.testSuite = loadTestSuite();
+
+            if (testSuite == null) {
                 int coordinatorPort = simulatorProperties.getCoordinatorPort();
                 if (coordinatorPort == 0) {
-                    throw new CommandLineExitException("Can't run with --remote mode, and not have a coordinator port enabled."
-                            + "Please add COORDINATOR_PORT=5000 to your simulator.properties.");
+                    throw new CommandLineExitException("Can't run without a testSuite, and not have a coordinator port enabled."
+                            + "Please add COORDINATOR_PORT=5000 to your simulator.properties or run with a testsuite.");
                 }
-            }
-
-            if (!options.has(remoteSpec)) {
-                this.testSuite = loadTestSuite();
+            } else {
                 this.workerParametersMap = loadWorkerParameters();
                 this.deploymentPlan = newDeploymentPlan();
                 this.coordinatorRun = new CoordinatorRunMonolith(coordinator);
@@ -231,12 +227,14 @@ final class CoordinatorCli {
                 downloader.download();
             } else if (options.has(cleanSpec)) {
                 downloader.clean();
-            } else if (options.has(remoteSpec)) {
-                coordinator.start();
             } else {
                 coordinator.start();
-                coordinatorRun.init(deploymentPlan);
-                coordinatorRun.run(testSuite);
+                if (testSuite == null) {
+                    LOGGER.info("Coordinator is started in interactive mode. Waiting for commands from the coordinator-remote");
+                } else {
+                    coordinatorRun.init(deploymentPlan);
+                    coordinatorRun.run(testSuite);
+                }
             }
         } catch (Throwable t) {
             LOGGER.fatal(t.getMessage(), t);
@@ -345,6 +343,11 @@ final class CoordinatorCli {
 
 
     private TestSuite loadTestSuite() {
+        File testSuiteFile = getTestSuiteFile();
+        if (testSuiteFile == null) {
+            return null;
+        }
+
         WorkerQuery workerQuery = new WorkerQuery()
                 .setTargetType(options.valueOf(targetTypeSpec));
 
@@ -353,7 +356,7 @@ final class CoordinatorCli {
             workerQuery.setMaxCount(targetCount);
         }
 
-        TestSuite testSuite = TestSuite.loadTestSuite(getTestSuiteFile(), options.valueOf(overridesSpec))
+        TestSuite testSuite = TestSuite.loadTestSuite(testSuiteFile, options.valueOf(overridesSpec))
                 .setDurationSeconds(getDurationSeconds(options, durationSpec))
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
@@ -421,10 +424,6 @@ final class CoordinatorCli {
     }
 
     private DeploymentPlan newDeploymentPlan() {
-        if (options.has(remoteSpec)) {
-            return null;
-        }
-
         WorkerType workerType = new WorkerType(options.valueOf(clientTypeSpec));
         if (workerType.isMember()) {
             throw new CommandLineExitException("client workerType can't be [member]");
@@ -458,7 +457,7 @@ final class CoordinatorCli {
         } else if (testsuiteFiles.size() == 1) {
             testSuiteFile = new File((String) testsuiteFiles.get(0));
         } else {
-            testSuiteFile = new File("test.properties");
+            return null;
         }
 
         LOGGER.info("Loading TestSuite file: " + testSuiteFile.getAbsolutePath());

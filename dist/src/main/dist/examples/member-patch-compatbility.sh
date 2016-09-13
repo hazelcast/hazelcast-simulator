@@ -10,7 +10,7 @@ version_1=maven=3.7.1
 version_2=maven=3.7
 
 # start the coordinator in remote mode
-coordinator --remote --monitorPerformance
+coordinator --monitorPerformance
 
 coordinator-remote install ${version_1}
 coordinator-remote install ${version_2}

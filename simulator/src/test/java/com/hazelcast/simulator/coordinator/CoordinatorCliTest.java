@@ -33,9 +33,11 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static javafx.scene.input.KeyCode.F;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class CoordinatorCliTest {
 
@@ -84,6 +86,7 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit() {
+        args.add(testSuiteFile.getAbsolutePath());
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
@@ -94,6 +97,7 @@ public class CoordinatorCliTest {
     public void testInit_withCloudProviderStatic() {
         appendText(format("%s=%s%n", PROPERTY_CLOUD_PROVIDER, PROVIDER_STATIC), propertiesFile);
 
+        args.add(testSuiteFile.getAbsolutePath());
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
@@ -101,11 +105,9 @@ public class CoordinatorCliTest {
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testNoRemotePort() {
+    public void testNoTestSuiteAndNoCoordinatorPort() {
         File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
-        writeText("COORDINATOR_PORT=0",simulatorProperties);
-
-        args.add("--remote");
+        writeText("COORDINATOR_PORT=0", simulatorProperties);
 
         createCoordinatorCli();
     }
@@ -114,6 +116,7 @@ public class CoordinatorCliTest {
     public void testInit_duration() {
         args.add("--duration");
         args.add("423");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -125,6 +128,7 @@ public class CoordinatorCliTest {
     public void testInit_duration_withSeconds() {
         args.add("--duration");
         args.add("3s");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -136,33 +140,37 @@ public class CoordinatorCliTest {
     public void testInit_duration_withMinutes() {
         args.add("--duration");
         args.add("5m");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertEquals(TimeUnit.MINUTES.toSeconds(5), testSuite.getDurationSeconds());
+        assertEquals(MINUTES.toSeconds(5), testSuite.getDurationSeconds());
     }
 
     @Test
     public void testInit_duration_withHours() {
         args.add("--duration");
         args.add("4h");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertEquals(TimeUnit.HOURS.toSeconds(4), testSuite.getDurationSeconds());
+        assertEquals(HOURS.toSeconds(4), testSuite.getDurationSeconds());
     }
 
     @Test
     public void testInit_duration_withDays() {
         args.add("--duration");
         args.add("23d");
+        args.add(testSuiteFile.getAbsolutePath());
+
 
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertEquals(TimeUnit.DAYS.toSeconds(23), testSuite.getDurationSeconds());
+        assertEquals(DAYS.toSeconds(23), testSuite.getDurationSeconds());
     }
 
     @Test
@@ -170,6 +178,7 @@ public class CoordinatorCliTest {
         // we are fine with a zero time execution, since it's useful for a dry run
         args.add("--duration");
         args.add("0s");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -181,6 +190,7 @@ public class CoordinatorCliTest {
     public void testInit_duration_withNegativeTime() {
         args.add("--duration");
         args.add("-1");
+        args.add(testSuiteFile.getAbsolutePath());
 
         createCoordinatorCli();
     }
@@ -189,6 +199,7 @@ public class CoordinatorCliTest {
     public void testInit_duration_withNumberFormatException() {
         args.add("--duration");
         args.add("numberFormatException");
+        args.add(testSuiteFile.getAbsolutePath());
 
         createCoordinatorCli();
     }
@@ -197,6 +208,7 @@ public class CoordinatorCliTest {
     public void testInit_warmup_withNumberFormatException() {
         args.add("--warmup");
         args.add("numberFormatException");
+        args.add(testSuiteFile.getAbsolutePath());
 
         createCoordinatorCli();
     }
@@ -207,6 +219,7 @@ public class CoordinatorCliTest {
         args.add("10s");
         args.add("--warmup");
         args.add("5s");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -219,6 +232,7 @@ public class CoordinatorCliTest {
     public void testInit_warmup_withZero() {
         args.add("--warmup");
         args.add("0s");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -230,6 +244,7 @@ public class CoordinatorCliTest {
     public void testInit_waitForDuration() {
         args.add("--duration");
         args.add("42s");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -241,6 +256,7 @@ public class CoordinatorCliTest {
     public void testInit_workerClassPath() {
         args.add("--workerClassPath");
         args.add("*.jar");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -253,6 +269,7 @@ public class CoordinatorCliTest {
         args.add("0");
         args.add("--clients");
         args.add("0");
+        args.add(testSuiteFile.getAbsolutePath());
 
         createCoordinatorCli();
     }
@@ -263,6 +280,7 @@ public class CoordinatorCliTest {
         args.add("2");
         args.add("--clients");
         args.add("1");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
         assertEquals(2, count(cli.deploymentPlan, WorkerType.MEMBER));
@@ -275,6 +293,7 @@ public class CoordinatorCliTest {
         args.add("2");
         args.add("--clientWorkerCount");
         args.add("1");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
         assertEquals(2, count(cli.deploymentPlan, WorkerType.MEMBER));
@@ -285,7 +304,7 @@ public class CoordinatorCliTest {
         Map<SimulatorAddress, List<WorkerProcessSettings>> deployment = deploymentPlan.getWorkerDeployment();
         int result = 0;
         for (List<WorkerProcessSettings> list : deployment.values()) {
-            for(WorkerProcessSettings settings: list) {
+            for (WorkerProcessSettings settings : list) {
                 if (settings.getWorkerType().equals(type)) {
                     result++;
                 }
@@ -321,12 +340,14 @@ public class CoordinatorCliTest {
     public void testInit_syncToTestPhase_invalid() {
         args.add("--syncToTestPhase");
         args.add("INVALID");
+        args.add(testSuiteFile.getAbsolutePath());
 
         createCoordinatorCli();
     }
 
     @Test
     public void testInit_syncToTestPhase_default() {
+        args.add(testSuiteFile.getAbsolutePath());
         CoordinatorCli cli = createCoordinatorCli();
 
         assertEquals(TestPhase.getLastTestPhase(), cli.coordinatorParameters.getLastTestPhaseToSync());
@@ -336,6 +357,7 @@ public class CoordinatorCliTest {
     public void testInit_syncToTestPhase_globalPrepare() {
         args.add("--syncToTestPhase");
         args.add("GLOBAL_PREPARE");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -346,6 +368,7 @@ public class CoordinatorCliTest {
     public void testInit_syncToTestPhase_localVerify() {
         args.add("--syncToTestPhase");
         args.add("LOCAL_VERIFY");
+        args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
 
@@ -356,6 +379,8 @@ public class CoordinatorCliTest {
     public void testInit_memberConfigFileInWorkDir() {
         File memberConfigFile = new File("hazelcast.xml").getAbsoluteFile();
         writeText(HAZELCAST_XML, memberConfigFile);
+
+        args.add(testSuiteFile.getAbsolutePath());
 
         try {
             CoordinatorCli cli = createCoordinatorCli();
@@ -370,6 +395,7 @@ public class CoordinatorCliTest {
         File clientConfigFile = new File("client-hazelcast.xml").getAbsoluteFile();
         writeText(HAZELCAST_XML, clientConfigFile);
 
+        args.add(testSuiteFile.getAbsolutePath());
         try {
             CoordinatorCli cli = createCoordinatorCli();
             assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.JAVA_CLIENT).getEnvironment().get("HAZELCAST_CONFIG"));

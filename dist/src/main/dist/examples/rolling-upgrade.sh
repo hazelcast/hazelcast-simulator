@@ -13,7 +13,7 @@ old_version=maven=3.7
 new_version=maven=3.8
 
 # start the coordinator in remote mode
-coordinator --remote --monitorPerformance &
+coordinator --monitorPerformance &
 
 coordinator-remote install ${old_version}
 coordinator-remote install ${new_version}
