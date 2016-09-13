@@ -247,7 +247,7 @@ public class AgentSmokeTest implements FailureListener {
     private void runPhase(TestPhaseListenerImpl listener, TestData testData, TestPhase testPhase) throws Exception {
         LOGGER.info("Starting " + testPhase.desc() + " phase...");
         if (testPhase.isGlobal()) {
-            remoteClient.invokeOnTestOnFirstWorker(testData.getAddress(),new StartTestPhaseOperation(testPhase));
+            remoteClient.invokeOnTestOnFirstWorker(testData.getAddress(), new StartTestPhaseOperation(testPhase));
         } else {
             remoteClient.invokeOnTestOnAllWorkers(testData.getAddress(), new StartTestPhaseOperation(testPhase));
         }
@@ -300,11 +300,12 @@ public class AgentSmokeTest implements FailureListener {
 
             @Override
             public void run() {
-                agent = Agent.startAgent(new String[]{
+                AgentCli agentCli = new AgentCli(new String[]{
                         "--addressIndex", "1",
                         "--publicAddress", AGENT_IP_ADDRESS,
-                        "--port", String.valueOf(AGENT_PORT)
-                });
+                        "--port", String.valueOf(AGENT_PORT)});
+                agent = agentCli.agent;
+                agent.start();
                 latch.countDown();
             }
 

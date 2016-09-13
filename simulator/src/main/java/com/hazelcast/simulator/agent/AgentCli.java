@@ -20,10 +20,21 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.log4j.Logger;
+
+import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
+import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
+import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static java.lang.String.format;
 
 public final class AgentCli {
+    private static final Logger LOGGER = Logger.getLogger(AgentCli.class);
 
     private static final int DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS = 180;
+
+    final Agent agent;
 
     private final OptionParser parser = new OptionParser();
 
@@ -59,37 +70,87 @@ public final class AgentCli {
             "The cloud credential for this Agent.")
             .withRequiredArg().ofType(String.class);
 
-    private AgentCli() {
-    }
+    private final OptionSet options;
+    private final String cloudProvider;
+    private final String cloudIdentity;
+    private final String cloudCredential;
 
-    static Agent init(String[] args) {
-        Agent.logHeader();
+    AgentCli(String[] args) {
+        logHeader();
 
-        AgentCli agentCli = new AgentCli();
-        OptionSet options = CliUtils.initOptionsWithHelp(agentCli.parser, args);
+        options = CliUtils.initOptionsWithHelp(parser, args);
 
-        if (!options.has(agentCli.addressIndexSpec)) {
+        if (!options.has(addressIndexSpec)) {
             throw new CommandLineExitException("Missing parameter: --addressIndex");
         }
-        int addressIndex = options.valueOf(agentCli.addressIndexSpec);
+        int addressIndex = options.valueOf(addressIndexSpec);
 
-        if (!options.has(agentCli.publicAddressSpec)) {
+        if (!options.has(publicAddressSpec)) {
             throw new CommandLineExitException("Missing parameter: --publicAddress");
         }
-        String publicAddress = options.valueOf(agentCli.publicAddressSpec);
+        String publicAddress = options.valueOf(publicAddressSpec);
 
-        if (!options.has(agentCli.portSpec)) {
+        if (!options.has(portSpec)) {
             throw new CommandLineExitException("Missing parameter: --port");
         }
-        int port = options.valueOf(agentCli.portSpec);
+        int port = options.valueOf(portSpec);
 
-        String cloudProvider = options.valueOf(agentCli.cloudProviderSpec);
-        String cloudIdentity = options.valueOf(agentCli.cloudIdentitySpec);
-        String cloudCredential = options.valueOf(agentCli.cloudCredentialSpec);
-        Integer threadPoolSize = options.valueOf(agentCli.threadPoolSizeSpec);
-        Integer workerLastSeenTimeoutSeconds = options.valueOf(agentCli.workerLastSeenTimeoutSecondsSpec);
+        this.cloudProvider = options.valueOf(cloudProviderSpec);
+        this.cloudIdentity = options.valueOf(cloudIdentitySpec);
+        this.cloudCredential = options.valueOf(cloudCredentialSpec);
+        Integer threadPoolSize = options.valueOf(threadPoolSizeSpec);
+        Integer workerLastSeenTimeoutSeconds = options.valueOf(workerLastSeenTimeoutSecondsSpec);
 
-        return new Agent(addressIndex, publicAddress, port, cloudProvider, cloudIdentity, cloudCredential, threadPoolSize,
+        this.agent = new Agent(
+                addressIndex,
+                publicAddress,
+                port,
+                threadPoolSize,
                 workerLastSeenTimeoutSeconds);
+    }
+
+    private static void logHeader() {
+        LOGGER.info("Hazelcast Simulator Agent");
+        LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
+                getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
+        LOGGER.info(format("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath()));
+
+        logImportantSystemProperties();
+    }
+
+    private static void logImportantSystemProperties() {
+        logSystemProperty("java.class.path");
+        logSystemProperty("java.home");
+        logSystemProperty("java.vendor");
+        logSystemProperty("java.vendor.url");
+        logSystemProperty("sun.java.command");
+        logSystemProperty("java.version");
+        logSystemProperty("os.arch");
+        logSystemProperty("os.name");
+        logSystemProperty("os.version");
+        logSystemProperty("user.dir");
+        logSystemProperty("user.home");
+        logSystemProperty("user.name");
+        logSystemProperty("SIMULATOR_HOME");
+    }
+
+    private static void logSystemProperty(String name) {
+        LOGGER.info(format("%s=%s", name, System.getProperty(name)));
+    }
+
+
+    public static void main(String[] args) {
+        try {
+            AgentCli cli = new AgentCli(args);
+
+            LOGGER.info(format("CloudIdentity: %s", cli.cloudIdentity));
+            LOGGER.info(format("CloudCredential: %s", cli.cloudCredential));
+            LOGGER.info(format("CloudProvider: %s", cli.cloudProvider));
+
+            Agent agent = cli.agent;
+            agent.start();
+        } catch (Exception e) {
+            exitWithError(LOGGER, "Could not start Agent!", e);
+        }
     }
 }

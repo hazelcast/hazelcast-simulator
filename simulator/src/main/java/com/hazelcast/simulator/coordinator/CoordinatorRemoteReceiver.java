@@ -68,6 +68,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
 import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
+import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
@@ -99,8 +100,8 @@ public class CoordinatorRemoteReceiver {
     private final TestPhase lastTestPhaseToSync;
     private final File outputDirectory;
 
-    private RemoteClient remoteClient;
-    private CoordinatorConnector coordinatorConnector;
+    private RemoteClient client;
+    private CoordinatorConnector connector;
 
     private CountDownLatch initialized = new CountDownLatch(1);
 
@@ -177,8 +178,13 @@ public class CoordinatorRemoteReceiver {
     }
 
     private void close() {
-        closeQuietly(remoteClient);
-        closeQuietly(coordinatorConnector);
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
+
+        closeQuietly(client);
+
+        closeQuietly(connector);
+
+        stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
         if (!coordinatorParameters.skipDownload()) {
             new ArtifactDownloadTask(
@@ -195,6 +201,8 @@ public class CoordinatorRemoteReceiver {
         }
 
         OperationTypeCounter.printStatistics();
+
+        failureCollector.logFailureInfo();
     }
 
     public void download(RcDownloadOperation operation) throws Exception {
@@ -215,8 +223,6 @@ public class CoordinatorRemoteReceiver {
         awaitInitialized();
 
         LOGGER.info("Shutting down....");
-
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
 
         new Thread(new Runnable() {
             private static final int DELAY = 5000;
@@ -290,7 +296,7 @@ public class CoordinatorRemoteReceiver {
                 componentRegistry,
                 failureCollector,
                 testPhaseListeners,
-                remoteClient,
+                client,
                 performanceStatsCollector);
 
         if (op.isAsync()) {
@@ -359,7 +365,7 @@ public class CoordinatorRemoteReceiver {
 
         List<WorkerData> workers = new StartWorkersTask(
                 deploymentPlan.getWorkerDeployment(),
-                remoteClient,
+                client,
                 componentRegistry,
                 coordinatorParameters.getWorkerVmStartupDelayMs()).run();
 
@@ -402,7 +408,7 @@ public class CoordinatorRemoteReceiver {
         LOGGER.info(format("Killing %s...", workerQuery));
 
         List<WorkerData> result = new KillWorkersTask(
-                componentRegistry, coordinatorConnector, op.getCommand(), workerQuery).run();
+                componentRegistry, connector, op.getCommand(), workerQuery).run();
 
         LOGGER.info("\n" + componentRegistry.printLayout());
 
@@ -420,7 +426,7 @@ public class CoordinatorRemoteReceiver {
 
         List<ResponseFuture> futures = new ArrayList<ResponseFuture>();
         for (WorkerData worker : workers) {
-            ResponseFuture f = coordinatorConnector.invokeAsync(worker.getAddress(),
+            ResponseFuture f = connector.invokeAsync(worker.getAddress(),
                     new ExecuteScriptOperation(operation.getCommand(), operation.isFireAndForget()));
             futures.add(f);
             LOGGER.info("Script send to worker [" + worker.getAddress() + "]");
@@ -453,8 +459,8 @@ public class CoordinatorRemoteReceiver {
         CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
                 this, failureCollector, testPhaseListeners, performanceStatsCollector);
 
-        coordinatorConnector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
-        coordinatorConnector.start();
+        connector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
+        connector.start();
 
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -462,7 +468,7 @@ public class CoordinatorRemoteReceiver {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    coordinatorConnector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
+                    connector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
                 }
             });
         }
@@ -471,8 +477,8 @@ public class CoordinatorRemoteReceiver {
         LOGGER.info("Remote client starting....");
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
-        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, workerPingIntervalMillis);
-        remoteClient.invokeOnAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
+        client = new RemoteClient(connector, componentRegistry, workerPingIntervalMillis);
+        client.invokeOnAllAgents(new InitSessionOperation(coordinatorParameters.getSessionId()));
         LOGGER.info("Remote client started successfully!");
     }
 }

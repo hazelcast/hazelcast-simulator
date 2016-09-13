@@ -26,33 +26,23 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
-import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
-import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
-import static java.lang.String.format;
 
 public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class);
-    private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean();
 
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
     private final WorkerProcessManager workerProcessManager = new WorkerProcessManager();
-
     private final int addressIndex;
     private final String publicAddress;
     private final int port;
     private final File pidFile = new File(getUserDir(), "agent.pid");
-
-    private final String cloudProvider;
-    private final String cloudIdentity;
-    private final String cloudCredential;
 
     private final AgentConnector agentConnector;
     private final WorkerProcessFailureHandlerImpl failureSender;
@@ -60,18 +50,16 @@ public class Agent {
 
     private volatile String sessionId;
 
-    public Agent(int addressIndex, String publicAddress, int port, String cloudProvider, String cloudIdentity,
-                 String cloudCredential, int threadPoolSize, int workerLastSeenTimeoutSeconds) {
-        SHUTDOWN_STARTED.set(false);
+    public Agent(int addressIndex,
+                 String publicAddress,
+                 int port,
+                 int threadPoolSize,
+                 int workerLastSeenTimeoutSeconds) {
+        shutdownStarted.set(false);
 
         this.addressIndex = addressIndex;
         this.publicAddress = publicAddress;
         this.port = port;
-
-        this.cloudProvider = cloudProvider;
-        this.cloudIdentity = cloudIdentity;
-        this.cloudCredential = cloudCredential;
-
         this.agentConnector = new AgentConnectorImpl(this, workerProcessManager, port, threadPoolSize);
         this.failureSender = new WorkerProcessFailureHandlerImpl(publicAddress, agentConnector);
         this.workerProcessFailureMonitor = new WorkerProcessFailureMonitor(failureSender, workerProcessManager,
@@ -80,8 +68,6 @@ public class Agent {
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
 
         createPidFile();
-
-        echo("Simulator Agent is ready for action!");
     }
 
     private void createPidFile() {
@@ -128,8 +114,12 @@ public class Agent {
     }
 
     public void start() {
+        LOGGER.info("Agent starting...");
+
         agentConnector.start();
         workerProcessFailureMonitor.start();
+
+        LOGGER.info("Agent started!");
     }
 
     public void shutdown() {
@@ -138,83 +128,28 @@ public class Agent {
         thread.awaitShutdown();
     }
 
-    public static void main(String[] args) {
-        try {
-            startAgent(args);
-        } catch (Exception e) {
-            exitWithError(LOGGER, "Could not start Agent!", e);
-        }
-    }
-
-    static void logHeader() {
-        echo("Hazelcast Simulator Agent");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-        echo("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
-
-        logImportantSystemProperties();
-    }
-
-    static Agent startAgent(String[] args) {
-        Agent agent = AgentCli.init(args);
-        agent.start();
-
-        echo("CloudIdentity: %s", agent.cloudIdentity);
-        echo("CloudCredential: %s", agent.cloudCredential);
-        echo("CloudProvider: %s", agent.cloudProvider);
-
-        return agent;
-    }
-
-    private static void logImportantSystemProperties() {
-        logSystemProperty("java.class.path");
-        logSystemProperty("java.home");
-        logSystemProperty("java.vendor");
-        logSystemProperty("java.vendor.url");
-        logSystemProperty("sun.java.command");
-        logSystemProperty("java.version");
-        logSystemProperty("os.arch");
-        logSystemProperty("os.name");
-        logSystemProperty("os.version");
-        logSystemProperty("user.dir");
-        logSystemProperty("user.home");
-        logSystemProperty("user.name");
-        logSystemProperty("SIMULATOR_HOME");
-    }
-
-    private static void logSystemProperty(String name) {
-        echo("%s=%s", name, System.getProperty(name));
-    }
-
-    private static void echo(String message, Object... args) {
-        LOGGER.info(message == null ? "null" : format(message, args));
-    }
-
     public String getSessionId() {
         return sessionId;
-    }
-
-    public String getCloudProvider() {
-        return cloudProvider;
     }
 
     private final class AgentShutdownThread extends ShutdownThread {
 
         private AgentShutdownThread(boolean ensureProcessShutdown) {
-            super("AgentShutdownThread", SHUTDOWN_STARTED, ensureProcessShutdown);
+            super("AgentShutdownThread", shutdownStarted, ensureProcessShutdown);
         }
 
         @Override
         public void doRun() {
-            echo("Stopping workers...");
+            LOGGER.info("Stopping workers...");
             workerProcessManager.shutdown();
 
-            echo("Stopping WorkerProcessFailureMonitor...");
+            LOGGER.info("Stopping WorkerProcessFailureMonitor...");
             workerProcessFailureMonitor.shutdown();
 
-            echo("Stopping AgentConnector...");
+            LOGGER.info("Stopping AgentConnector...");
             agentConnector.close();
 
-            echo("Removing PID file...");
+            LOGGER.info("Removing PID file...");
             deleteQuiet(pidFile);
 
             OperationTypeCounter.printStatistics();

@@ -89,7 +89,8 @@ public class AgentCliTest {
     }
 
     private void startAgent() {
-        agent = AgentCli.init(getArgs(true));
+        AgentCli cli = new AgentCli(getArgs(true));
+        agent = cli.agent;
         agent.start();
     }
 

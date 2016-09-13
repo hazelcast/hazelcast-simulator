@@ -35,7 +35,7 @@ import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class RemoteTest {
+public class CoordinatorRemoteReceiverTest {
 
     private static CoordinatorRemoteReceiver remote;
     private static String hzConfig;
@@ -59,7 +59,7 @@ public class RemoteTest {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties);
 
-        Agent agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), "embedded", "", "", 10, 60);
+        Agent agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
         agent.setSessionId(coordinatorParameters.getSessionId());
 
@@ -85,7 +85,6 @@ public class RemoteTest {
         // remote.exit();
         tearDownFakeEnvironment();
     }
-
 
     private TestSuite newBasicTestSuite() {
         return new TestSuite()

@@ -61,6 +61,16 @@ public class WorkerParameters {
         return environment;
     }
 
+    public WorkerParameters addEnvironment(String variable, String value) {
+        environment.put(variable, value);
+        return this;
+    }
+
+    public WorkerParameters addEnvironment(Map<String, String> env) {
+        environment.putAll(env);
+        return this;
+    }
+
     public WorkerParameters setEnvironment(Map<String, String> environment) {
         this.environment = environment;
         return this;

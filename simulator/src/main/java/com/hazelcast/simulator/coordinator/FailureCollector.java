@@ -19,7 +19,6 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -146,7 +145,6 @@ public class FailureCollector {
                 LOGGER.warn(HORIZONTAL_RULER);
                 LOGGER.warn(criticalFailureCount + " critical failures have been detected!!!");
                 LOGGER.warn(HORIZONTAL_RULER);
-                throw new CommandLineExitException(criticalFailureCount + " critical failures have been detected");
             } else {
                 LOGGER.warn(HORIZONTAL_RULER);
                 LOGGER.warn(nonCriticalFailureCount + " non-critical failures have been detected!");

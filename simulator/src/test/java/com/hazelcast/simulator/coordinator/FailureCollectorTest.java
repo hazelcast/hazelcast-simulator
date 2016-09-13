@@ -179,7 +179,7 @@ public class FailureCollectorTest {
         failureCollector.logFailureInfo();
     }
 
-    @Test(expected = CommandLineExitException.class)
+    @Test
     public void testLogFailureInfo_withFailures() {
         failureCollector.notify(exceptionFailure);
         failureCollector.logFailureInfo();

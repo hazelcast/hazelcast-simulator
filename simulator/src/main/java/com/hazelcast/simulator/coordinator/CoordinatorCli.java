@@ -39,6 +39,7 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -212,19 +213,26 @@ final class CoordinatorCli {
             this.coordinatorParameters = loadCoordinatorParameters();
             this.workerParametersMap = loadWorkerParameters();
             this.deploymentPlan = newDeploymentPlan();
-            this.coordinatorRun = new CoordinatorRun(componentRegistry, coordinatorParameters, testSuite, deploymentPlan);
+            this.coordinatorRun = new CoordinatorRun(componentRegistry, coordinatorParameters);
         }
     }
 
     void run() throws Exception {
-        if (options.has(downloadSpec)) {
-            downloader.download();
-        } else if (options.has(cleanSpec)) {
-            downloader.clean();
-        } else if (options.has(remoteSpec)) {
-            receiver.start();
-        } else {
-            coordinatorRun.run();
+        try {
+            if (options.has(downloadSpec)) {
+                downloader.download();
+            } else if (options.has(cleanSpec)) {
+                downloader.clean();
+            } else if (options.has(remoteSpec)) {
+                receiver.start();
+            } else {
+                coordinatorRun.init(deploymentPlan);
+                coordinatorRun.run(testSuite);
+            }
+        } catch (Throwable t) {
+            LOGGER.fatal(t.getMessage(), t);
+        } finally {
+            closeQuietly(coordinatorRun);
         }
     }
 
