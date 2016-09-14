@@ -410,8 +410,8 @@ public final class FileUtils {
     /**
      * Copies a directory recursively.
      *
-     * @param src
-     * @param target
+     * @param src the src directory
+     * @param target the target directory
      */
     public static void copyDirectory(File src, File target) {
         for (File srcFile : src.listFiles()) {

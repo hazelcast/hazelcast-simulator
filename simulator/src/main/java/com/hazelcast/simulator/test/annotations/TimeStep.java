@@ -35,39 +35,44 @@ import java.lang.annotation.Target;
  * <h1>Probabilities</h1>
  * THe simplest timestep test has a single timestep method, but in reality there is often some kind of ratio, e.g. 10% write
  * and 90% read. This can be done configuring probability:
- * <code>
- *     @TimeStep(prob=0.9)
+ * <pre>
+ * {@code
+ *     &#064;TimeStep(prob=0.9)
  *     public void read(){
  *         ...
  *     }
  *
- *     @TimeStep(prob=0.10)
+ *     &#064;TimeStep(prob=0.10)
  *     public void write(){
  *
  *     }
- * </code>
+ * }
+ * </pre>
  * The sum of the probabilities needs to be 1.
  *
  * For backwards compatibility reasons one of the timestep methods can be the 'default' by assigning -1 to its probability.
  * It means that whatever remains, will be given to that method. For example the above 90/10 could also be configured using:
- * <code>
- *     @TimeStep(prob=0.9)
+ * <pre>
+ * {@code
+ *     &#064;TimeStep(prob=0.9)
  *     public void read(){
  *         ...
  *     }
  *
- *     @TimeStep(prob=-1)
+ *     &#064;TimeStep(prob=-1)
  *     public void write(){
  *
  *     }
- * </code>
+ * }
+ * </pre>
  *
  * <h1>Thread state</h1>
  * In a lot of cases a timestep thread needs to have some thread specific context e.g. counters. THe thread-state needs to be
  * a public class with a public no arg constructor, or a constructor receiving the test instance.
  *
- * <code>
- *     @TimeStep
+ * <pre>
+ * {@code
+ *     &#064;TimeStep
  *     public void timestep(ThreadState context){
  *        ...
  *     }
@@ -75,7 +80,8 @@ import java.lang.annotation.Target;
  *     public class ThreadContext{
  *         int counter;
  *     }
- * </code>
+ * }
+ * </pre>
  * Each thread will get its own instance of the ThreadContext. In practice you probably want to extend from the
  * {@link com.hazelcast.simulator.test.BaseThreadState} since it has convenience functions for randomization. The Thread state
  * can be used on the TimeStep methods, but also in the {@link BeforeRun} and {@link AfterRun} methods where the {@link BeforeRun}
@@ -93,17 +99,19 @@ import java.lang.annotation.Target;
  * Normally all timestep methods from a test belong to the same execution group; meaning that there is a group of threads will
  * will call each timestep method using some distribution. But in some cases this is unwanted, e.g. a typical producer/consumer
  * test. In such cases one can make use of execution groups:
- * <code>
- *     @TimeStep(executionGroup="producer")
+ * <pre>
+ * {@code
+ *     &#064;TimeStep(executionGroup="producer")
  *     public void produce(){
  *         ...
  *     }
  *
- *     @TimeStep(executionGroup="consumer")
+ *     &#064;TimeStep(executionGroup="consumer")
  *     public void consume(){
  *          ...
  *     }
- * </code>
+ * }
+ * </pre>
  * In this case there are 2 execution groups: producer and consumer and each will get their own threads where the producer
  * timestep threads calls methods from the 'producer' execution group, and the consumer timestep threads, call methods from
  * the 'consumer' execution-group.
@@ -113,27 +121,33 @@ import java.lang.annotation.Target;
  *
  * <h1>Threadcount</h1>
  * A timestep test run multiple timestep threads in parallel. This can be configured using the threadCount property:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     threadCount=1
- * </code>
+ * }
+ * </pre>
  * Threadcount defaults to 10.
  *
  * If there are multiple execution groups, each group can be configured independently. Imagine there is some kind of producer
  * consumer test, then each execution group is configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     producerThreadCount=2
  *     consumerThreadCount=4
- * </code>
+ * }
+ * </pre>
  *
  * <h1>Iterations</h1>
  * TimeStep based tests have out of the box support for running a given number of iterations. This can be configured using
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     iterations=1000000
  *     warmupIterations=10000
- * </code>
+ * }
+ * </pre>
  * This will run each timestep thread for 10k iterations during the warmup, and 1M iterations during the regular run.
  *
  * For the warmupIterations to work, the test needs to be run with a warmupDuration (probably --warmup 0). The test will run
@@ -141,11 +155,13 @@ import java.lang.annotation.Target;
  *
  * Each exception group can be configured independently. So imagine there is a producer and consumer execution group, then
  * the producers can be configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     producerWarmupIterations=10000
  *     producerIterations=1000000
- * </code>
+ * }
+ * </pre>
  * In this example the producer has a configured number of iterations for warmup and running, the consumer has no such limitation.
  *
  * <h1>Stopping a timestep thread</h1>
@@ -154,27 +170,31 @@ import java.lang.annotation.Target;
  *
  * <h1>Probes</h1>
  * By default every timestep method will get its own probe. E.g.
- * <code>
- *     @TimeStep(prob=0.9)
+ * <pre>
+ * {@code
+ *     &#064;TimeStep(prob=0.9)
  *     public void read(){
  *         ...
  *     }
  *
- *     @TimeStep(prob=0.10)
+ *     &#064;TimeStep(prob=0.10)
  *     public void write(){
  *          ...
  *     }
- * </code>
+ * }
+ * </pre>
  * In this case 2 probes that keep track of writer or read. So by default tracking latency is taken care of by the timestep
  * runner. In some cases, especially with async testing, the completion of the system being tested, doesn't align with the
  * completion of the timestep method. So the latency can't be determined by the timestep runner. In such cases one can
  * get access to the Probe and startTime like this:
- * <code>
- *     @TimeStep(prob=0.9)
+ * <pre>
+ * {@code
+ *     &#064;TimeStep(prob=0.9)
  *     public void asyncCall(Probe probe, @StartNanos long startNanos){
  *         ...
  *     }
- * </code>
+ * }
+ * </pre>
  * One can decide to e.g. make use of an completion listener to determine when the call completed and record the right latency
  * on the probe.
  *
@@ -192,60 +212,74 @@ import java.lang.annotation.Target;
  * <h2>Frequency based logging</h2>
  * With frequency based logging each timestep thread will add a log entry every so many calls. Frequency based logging can be
  * configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     logFrequency=10000
- * </code>
+ * }
+ * </pre>
  * Meaning that each timestep thread will log an entry every 10000th calls.
  *
  * Frequency based logging can be configured per execution group. If there is an execution group producer, then the logFrequency
  * can be configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     producerLogFrequency=10000
- * </code>
+ * }
+ * </pre>
  *
  * <h2>Time rate based logging</h2>
  * The time rate based logging allows for a log entry per timestep thread to be written at a maximum rate. E.g. if we want to see
  * at most 1 time a second a log entry, we can configure the test:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     logRateMs=1000
- * </code>
+ * }
+ * </pre>
  * Time rate based logging is very useful to prevent overloading the system with log entries.
  *
  * Time rate based logging can be configured per execution group. If there is an execution group producer, then the logRate can
  * be configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     producerRateMs=1000
- * </code>
+ * }
+ * </pre>
  *
  * <h1>Latency testing</h1>
  * For Latency testing you normally want to rate the number of requests per second. This can be done by setting the interval:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     interval=10ms
  *     threadCount=2
- * </code>
+ * }
+ * </pre>
  * In this example there will be 2 threads, that together will make 1 request every 10ms (so after 1 second, 100 requests have
  * been made). Interval can be configured with ns, us, ms, s, m, h. Keep in mind that the interval is per machine, so if the
  * interval is 10ms and there are 2 machines, on average there is 1 request every 5ms.
  *
  * The interval can also be configured using the ratePerSecond property:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     ratePerSecond=100
  *     threadCount=2
- * </code>
+ * }
+ * </pre>
  * It is converted to interval under the hood, so there is no difference at runtime.
  *
  * If there are multiple execution groups, the interval can be configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     producerInterval=10ms
  *     producerThreadCount=2
- * </code>
+ * }
+ * </pre>
  *
  * <h2>Coordinated omission</h2>
  * A lot of testing frameworks are suffering from a problem called coordinated omission:
@@ -253,11 +287,13 @@ import java.lang.annotation.Target;
  * By default coordinated omission is prevented by determining the latency based on the expected start-time instead of the actual
  * start time. This is all done under the hood and not something you need to worry about. In some cases you want to see the
  * impact of coordinated omission and you can allow for it using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     interval=10ms
  *     accountForCoordinatedOmission=false
- * </code>
+ * }
+ * </pre>
  *
  * <h2>Different flavors of metronomes</h2>
  * Internally a {@link com.hazelcast.simulator.worker.metronome.Metronome} is used to control the rate of requests. There are
@@ -279,11 +315,13 @@ import java.lang.annotation.Target;
  * </ol>
  *
  * The metronome type can be configured using:
- * <code>
+ * <pre>
+ * {@code
  *     class=yourtest
  *     interval=10ms
  *     metronomeClass=com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome
- * </code>
+ * }
+ * </pre>
  *
  * @see BeforeRun
  * @see AfterRun

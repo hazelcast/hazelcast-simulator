@@ -302,11 +302,12 @@ public class TimeStepModel {
     /**
      * Returns the probabilities of the {@link TimeStep} methods.
      *
-     * @return the array of probabilities for each {@link TimeStep} method
-     * or {@code null} if there is only a single {@link TimeStep} method.
-     * <p>
      * The value in the byte refers to the index of the method in the {@link #getActiveTimeStepMethods(String)}.
      * If a method has 0.5 probability and index 15, then 50% of the values in the array will point to 15.
+     *
+     * @param group the name of the execution group to get the probability array for
+     * @return the array of probabilities for each {@link TimeStep} method or {@code null} if there is only a
+     * single {@link TimeStep} method.
      */
     @SuppressFBWarnings("EI_EXPOSE_REP")
     public byte[] getTimeStepProbabilityArray(String group) {

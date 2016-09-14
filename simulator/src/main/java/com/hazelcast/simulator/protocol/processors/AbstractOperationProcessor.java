@@ -31,7 +31,7 @@ import static com.hazelcast.simulator.protocol.operation.OperationType.getOperat
 import static java.lang.String.format;
 
 /**
- * Abstract {@link OperationProcessor} with basic implementations for {@link IntegrationTestOperation}, {@link LogOperation).
+ * Abstract {@link OperationProcessor} with basic implementations for {@link IntegrationTestOperation}, {@link LogOperation}.
  */
 abstract class AbstractOperationProcessor implements OperationProcessor {
 

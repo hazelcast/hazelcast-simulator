@@ -28,7 +28,7 @@ public interface Metronome {
      * This call returns the time the call was expected to executed. This can be used to prevent the co-ordinated omission
      * problem. For more information see: https://vanilla-java.github.io/2016/07/20/Latency-for-a-set-Throughput.html
      *
-     * Returns the time the call was supposed to execute.
+     * @return the time the call was supposed to execute.
      */
     long waitForNext();
 }

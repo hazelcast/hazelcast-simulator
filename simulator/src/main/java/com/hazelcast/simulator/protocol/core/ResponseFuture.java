@@ -45,7 +45,6 @@ public final class ResponseFuture implements Future<Response> {
      *
      * @param futureMap the map of {@link ResponseFuture} where we add this one to
      * @param key       the key for this {@link ResponseFuture} in the map
-     * @return the {@link ResponseFuture} instance
      */
     public ResponseFuture(ConcurrentMap<String, ResponseFuture> futureMap, String key) {
         this.futureMap = futureMap;

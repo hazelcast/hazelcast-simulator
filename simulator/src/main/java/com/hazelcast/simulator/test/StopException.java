@@ -23,7 +23,7 @@ package com.hazelcast.simulator.test;
  * e.g.
  *
  * <pre>
- * @TimeStep
+ * {@literal @}TimeStep
  * public void timestep(ThreadState state){
  *     if(state.iterations == 1000) throw new StopException();
  *     state.iterations++;

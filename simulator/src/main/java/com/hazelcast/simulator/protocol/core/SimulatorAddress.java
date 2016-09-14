@@ -23,10 +23,10 @@ import static java.lang.Integer.parseInt;
 
 /**
  * Address object which (uniquely) identifies one or more Simulator components.
- * <p>
+ *
  * Supports wildcards on each {@link AddressLevel} to target all components on that address level.
  * For example a {@link SimulatorMessage} to <tt>C_A2_W*_T1</tt> will be sent to <tt>C_A2_W1_T1</tt> and <tt>C_A2_W2_T1</tt>.
- * <p>
+ *
  * <pre>
  *                                               +---+
  * REMOTE                                        + R +

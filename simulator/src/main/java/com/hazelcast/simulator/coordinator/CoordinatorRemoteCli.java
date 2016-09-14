@@ -57,14 +57,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
 /**
- * todo:
- * - when invalid version is used in install; no proper feedback
- * - if there are no workers, don't show a stacktrace.
- * com.hazelcast.simulator.utils.CommandLineExitException: No workers running!
- * at com.hazelcast.simulator.protocol.registry.ComponentRegistry.getFirstWorker(ComponentRegistry.java:182)
- * at com.hazelcast.simulator.coordinator.RemoteClient.invokeOnTestOnFirstWorker(RemoteClient.java:93)
- * at com.hazelcast.simulator.coordinator.TestCaseRunner.executePhase(TestCaseRunner.java:198)
- * <p>
+ * CLI to access the coordinator remotely.
  */
 public class CoordinatorRemoteCli implements Closeable {
 
