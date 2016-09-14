@@ -206,23 +206,19 @@ final class CoordinatorCli {
     }
 
     void run() throws Exception {
-        try {
-            if (options.has(downloadSpec)) {
-                downloader.download();
-            } else if (options.has(cleanSpec)) {
-                downloader.clean();
+        if (options.has(downloadSpec)) {
+            downloader.download();
+        } else if (options.has(cleanSpec)) {
+            downloader.clean();
+        } else {
+            coordinator.start();
+            if (testSuite == null) {
+                LOGGER.info("Coordinator started in interactive mode. Waiting for commands from the coordinator-remote");
             } else {
-                coordinator.start();
-                if (testSuite == null) {
-                    LOGGER.info("Coordinator is started in interactive mode. Waiting for commands from the coordinator-remote");
-                } else {
-                    coordinatorRun.init(deploymentPlan);
-                    boolean success = coordinatorRun.run(testSuite);
-                    System.exit(success ? 0 : 1);
-                }
+                coordinatorRun.init(deploymentPlan);
+                boolean success = coordinatorRun.run(testSuite);
+                System.exit(success ? 0 : 1);
             }
-        } catch (Throwable t) {
-            LOGGER.fatal(t.getMessage(), t);
         }
     }
 
