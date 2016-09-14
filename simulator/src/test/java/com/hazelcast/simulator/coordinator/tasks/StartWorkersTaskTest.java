@@ -19,6 +19,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class StartWorkersTaskTest {
                 coordinatorConnector, componentRegistry,
                 WORKER_PING_INTERVAL_MILLIS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), remoteClient, componentRegistry, 0).run();
 
         assertComponentRegistry(componentRegistry, 6, 3);
     }
@@ -76,7 +77,7 @@ public class StartWorkersTaskTest {
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(),remoteClient, componentRegistry, 0).run();
 
         assertComponentRegistry(componentRegistry, 6, 0);
     }
@@ -88,7 +89,7 @@ public class StartWorkersTaskTest {
 
         remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
-        new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), remoteClient, componentRegistry, 0).run();
     }
 
     @Test(expected = SimulatorProtocolException.class)
@@ -99,7 +100,7 @@ public class StartWorkersTaskTest {
 
             remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, WORKER_PING_INTERVAL_MILLIS);
 
-            new StartWorkersTask(deploymentPlan, remoteClient, componentRegistry, 0).run();
+            new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), remoteClient, componentRegistry, 0).run();
         }catch (RuntimeException e){
             e.printStackTrace();
             throw e;

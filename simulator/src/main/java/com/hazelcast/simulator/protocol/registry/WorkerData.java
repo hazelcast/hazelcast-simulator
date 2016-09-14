@@ -16,10 +16,12 @@
 package com.hazelcast.simulator.protocol.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Contains the metadata of a Simulator Worker.
@@ -30,11 +32,21 @@ public class WorkerData {
 
     private final SimulatorAddress address;
     private final WorkerProcessSettings settings;
+    private final Map<String, String> tags;
     private volatile boolean ignoreFailures;
 
     WorkerData(SimulatorAddress parentAddress, WorkerProcessSettings settings) {
+        this(parentAddress, settings, new HashMap<String, String>());
+    }
+
+    WorkerData(SimulatorAddress parentAddress, WorkerProcessSettings settings, Map<String, String> tags) {
         this.address = parentAddress.getChild(settings.getWorkerIndex());
         this.settings = settings;
+        this.tags = tags;
+    }
+
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     public SimulatorAddress getAddress() {

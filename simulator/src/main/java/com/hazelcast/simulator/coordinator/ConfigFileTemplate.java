@@ -16,17 +16,25 @@
 
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.protocol.registry.AgentData;
+import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.TagUtils;
 import freemarker.template.Configuration;
+import freemarker.template.SimpleScalar;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
+import freemarker.template.TemplateMethodModelEx;
+import freemarker.template.TemplateModelException;
 
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class ConfigFileTemplate {
@@ -34,9 +42,10 @@ public class ConfigFileTemplate {
     private final String rawTemplate;
     private final Map<String, String> hardReplacements = new HashMap<String, String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
+    private ComponentRegistry componentRegistry;
 
     public ConfigFileTemplate(File file) {
-        this(FileUtils.fileAsText(file));
+        this(fileAsText(file));
     }
 
     public ConfigFileTemplate(String rawTemplate) {
@@ -58,6 +67,11 @@ public class ConfigFileTemplate {
         return this;
     }
 
+    public ConfigFileTemplate withComponentRegistry(ComponentRegistry componentRegistry) {
+        this.componentRegistry = componentRegistry;
+        return this;
+    }
+
     public String render() {
         try {
             Configuration cfg = new Configuration(Configuration.VERSION_2_3_24);
@@ -68,6 +82,9 @@ public class ConfigFileTemplate {
             Map<String, Object> root = new HashMap<String, Object>();
             root.putAll(environment);
 
+             if (componentRegistry != null) {
+                root.put("agents", new Agents());
+            }
             String templateStr = loadTemplateString();
             Template template = new Template("name", new StringReader(templateStr), cfg);
             StringWriter out = new StringWriter();
@@ -88,5 +105,34 @@ public class ConfigFileTemplate {
         }
 
         return s;
+    }
+
+    private final class Agents implements TemplateMethodModelEx {
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object exec(List list) throws TemplateModelException {
+            if (list.size() == 0) {
+                return componentRegistry.getAgents();
+            } else if (list.size() == 1) {
+                Object arg1 = list.get(0);
+                if (!(arg1 instanceof SimpleScalar)) {
+                    throw new TemplateModelException("Wrong type of the first parameter."
+                            + " It should be SimpleScalar . Found: " + arg1.getClass());
+                }
+
+                Map<String, String> tags = TagUtils.parseTags(((SimpleScalar) arg1).getAsString());
+                List<AgentData> result = new ArrayList<AgentData>();
+                for (AgentData agent : componentRegistry.getAgents()) {
+                    if (TagUtils.matches(tags, agent.getTags())) {
+                        result.add(agent);
+                    }
+                }
+                return result;
+            } else {
+                throw new TemplateModelException("Wrong number of arguments for method agents()."
+                        + " Method has zero a 1 String argument, found " + list.size());
+            }
+        }
     }
 }

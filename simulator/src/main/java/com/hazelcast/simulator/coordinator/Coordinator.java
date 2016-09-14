@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
@@ -77,6 +78,7 @@ import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
+import static com.hazelcast.simulator.utils.TagUtils.matches;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -411,15 +413,6 @@ public class Coordinator implements Closeable {
 
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers....");
 
-        Map<String, String> environment = new HashMap<String, String>();
-        environment.putAll(simulatorProperties.asMap());
-        environment.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
-        environment.put("LOG4j_CONFIG", loadLog4jConfig());
-        environment.put("JVM_OPTIONS", op.getVmOptions());
-        environment.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                "" + parameters.getPerformanceMonitorIntervalSeconds());
-        environment.put("HAZELCAST_CONFIG", loadConfig(op, workerType));
-
         String versionSpec = op.getVersionSpec() == null
                 ? simulatorProperties.getVersionSpec()
                 : op.getVersionSpec();
@@ -427,16 +420,45 @@ public class Coordinator implements Closeable {
         WorkerParameters workerParameters = new WorkerParameters()
                 .setVersionSpec(versionSpec)
                 .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
-                .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")))
-                .setEnvironment(environment);
+                .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")));
 
-        List<SimulatorAddress> agents = op.getAgentAddress() == null ? null : SimulatorAddress.fromString(op.getAgentAddress());
+        List<SimulatorAddress> agents = findAgents(op);
+        LOGGER.info("Suitable agents: " + agents);
+        if (agents.isEmpty()) {
+            throw new IllegalStateException("No suitable agents found");
+        }
 
         DeploymentPlan deploymentPlan = createDeploymentPlan(
                 componentRegistry, workerParameters, workerType, op.getCount(), agents);
 
+        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
+                = deploymentPlan.getWorkerDeployment();
+
+        // we need to fix the environment of the worker so it contains the appropriate tags/configuration
+        // this can only be done after the deployment plan is made.
+        for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : workerDeployment.entrySet()) {
+            SimulatorAddress agentAddress = entry.getKey();
+            AgentData agentData = componentRegistry.getAgent(agentAddress);
+
+            for (WorkerProcessSettings workerProcessSettings : entry.getValue()) {
+                Map<String, String> env = workerProcessSettings.getEnvironment();
+                env.putAll(simulatorProperties.asMap());
+                env.put("HAZELCAST_CONFIG", loadConfig(op, workerType, agentData.getTags()));
+                env.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
+                env.put("LOG4j_CONFIG", loadLog4jConfig());
+                env.put("JVM_OPTIONS", op.getVmOptions());
+                env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
+                        "" + parameters.getPerformanceMonitorIntervalSeconds());
+                // first we add the agent tags, since each worker inherits the tags of the agent
+                env.putAll(agentData.getTags());
+                // and on top we add the specific tags for the worker
+                env.putAll(op.getTags());
+            }
+        }
+
         List<WorkerData> workers = new StartWorkersTask(
-                deploymentPlan.getWorkerDeployment(),
+                workerDeployment,
+                op.getTags(),
                 client,
                 componentRegistry,
                 parameters.getWorkerVmStartupDelayMs()).run();
@@ -446,25 +468,53 @@ public class Coordinator implements Closeable {
         return WorkerData.toAddressString(workers);
     }
 
-    private String loadConfig(RcWorkerStartOperation op, WorkerType workerType) {
+    private List<SimulatorAddress> findAgents(RcWorkerStartOperation op) {
+        List<AgentData> agents = new ArrayList<AgentData>(componentRegistry.getAgents());
+        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>();
+        for (AgentData agent : agents) {
+            List<String> expectedAgentAddresses = op.getAgentAddresses();
+
+            if (expectedAgentAddresses != null) {
+                if (!expectedAgentAddresses.contains(agent.getAddress().toString())) {
+                    continue;
+                }
+            }
+
+            Map<String, String> expectedAgentTags = op.getAgentTags();
+            if (expectedAgentTags != null) {
+                if (!matches(op.getAgentTags(), agent.getTags())) {
+                    continue;
+                }
+            }
+
+            result.add(agent.getAddress());
+        }
+        return result;
+    }
+
+    private String loadConfig(RcWorkerStartOperation op, WorkerType workerType, Map<String, String> agentTags) {
+        Map<String, String> env = new HashMap<String, String>(simulatorProperties.asMap());
+        env.putAll(agentTags);
+        env.putAll(op.getTags());
+
         String config;
         if (WorkerType.MEMBER.equals(workerType)) {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
                     parameters.getLicenseKey(),
-                    simulatorProperties, false);
+                    env, false);
         } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
             config = initMemberHzConfig(
                     op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
                     componentRegistry,
                     parameters.getLicenseKey(),
-                    simulatorProperties, true);
+                    env, true);
         } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
             config = initClientHzConfig(
                     op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
                     componentRegistry,
-                    simulatorProperties,
+                    env,
                     parameters.getLicenseKey());
         } else {
             throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");

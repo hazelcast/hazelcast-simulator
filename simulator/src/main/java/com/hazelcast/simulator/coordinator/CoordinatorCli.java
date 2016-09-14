@@ -63,7 +63,7 @@ final class CoordinatorCli {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
     CoordinatorDownloader downloader;
-    CoordinatorRunMonolith coordinatorRun;
+    CoordinatorRunMonolith runMonolith;
     Coordinator coordinator;
     TestSuite testSuite;
     CoordinatorParameters coordinatorParameters;
@@ -200,7 +200,7 @@ final class CoordinatorCli {
             } else {
                 this.workerParametersMap = loadWorkerParameters();
                 this.deploymentPlan = newDeploymentPlan();
-                this.coordinatorRun = new CoordinatorRunMonolith(coordinator);
+                this.runMonolith = new CoordinatorRunMonolith(coordinator);
             }
         }
     }
@@ -215,8 +215,8 @@ final class CoordinatorCli {
             if (testSuite == null) {
                 LOGGER.info("Coordinator started in interactive mode. Waiting for commands from the coordinator-remote");
             } else {
-                coordinatorRun.init(deploymentPlan);
-                boolean success = coordinatorRun.run(testSuite);
+                runMonolith.init(deploymentPlan);
+                boolean success = runMonolith.run(testSuite);
                 System.exit(success ? 0 : 1);
             }
         }
@@ -259,7 +259,7 @@ final class CoordinatorCli {
                 initClientHzConfig(
                         loadClientHzConfig(),
                         componentRegistry,
-                        simulatorProperties,
+                        simulatorProperties.asMap(),
                         coordinatorParameters.getLicenseKey()));
 
         return new WorkerParameters()
@@ -280,7 +280,7 @@ final class CoordinatorCli {
                 initMemberHzConfig(loadMemberHzConfig(),
                         componentRegistry,
                         coordinatorParameters.getLicenseKey(),
-                        simulatorProperties, true));
+                        simulatorProperties.asMap(), true));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
@@ -301,7 +301,7 @@ final class CoordinatorCli {
                         loadMemberHzConfig(),
                         componentRegistry,
                         coordinatorParameters.getLicenseKey(),
-                        simulatorProperties, false));
+                        simulatorProperties.asMap(), false));
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())

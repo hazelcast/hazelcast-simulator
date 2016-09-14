@@ -3,18 +3,20 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.core.Cluster;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
-import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.common.WorkerType;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,6 +24,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.internalDistDirectory;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.HazelcastUtils.createAddressConfig;
@@ -37,7 +40,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -52,7 +54,7 @@ public class HazelcastUtilsTest {
 
     private HazelcastInstance hazelcastInstance;
 
-    private SimulatorProperties properties;
+    private Map<String, String> properties = new HashMap<String, String>();
     private ComponentRegistry componentRegistry;
 
     private String memberConfig;
@@ -60,15 +62,14 @@ public class HazelcastUtilsTest {
 
     @Before
     public void before() {
-        properties = mock(SimulatorProperties.class);
-        when(properties.getVersionSpec()).thenReturn("outofthebox");
-        when(properties.get(eq("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"))).thenReturn("1234");
-        when(properties.get(eq("JAVA_CMD"), anyString())).thenReturn("java");
+        properties.put("VERSION_SPEC", "outofthebox");
+        properties.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "1234");
+        properties.put("JAVA_CMD", "java");
 
         componentRegistry = getComponentRegistryMock();
 
-        memberConfig = fileAsText("dist/src/main/dist/conf/hazelcast.xml");
-        clientConfig = fileAsText("dist/src/main/dist/conf/client-hazelcast.xml");
+        memberConfig = fileAsText(new File(internalDistDirectory(), "conf/hazelcast.xml"));
+        clientConfig = fileAsText(new File(internalDistDirectory(), "conf/client-hazelcast.xml"));
     }
 
     @AfterClass
@@ -78,7 +79,7 @@ public class HazelcastUtilsTest {
 
     @Test
     public void testCreateAddressConfig() {
-        String addressConfig = createAddressConfig("members", componentRegistry, 6666);
+        String addressConfig = createAddressConfig("members", componentRegistry, "6666");
         for (int i = 1; i <= 5; i++) {
             assertTrue(addressConfig.contains("192.168.0." + i + ":6666"));
         }
@@ -86,8 +87,8 @@ public class HazelcastUtilsTest {
 
     @Test
     public void testInitMemberHzConfig() {
-        when(properties.get("MANAGEMENT_CENTER_URL")).thenReturn("http://localhost:8080");
-        when(properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL")).thenReturn("60");
+        properties.put("MANAGEMENT_CENTER_URL", "http://localhost:8080");
+        properties.put("MANAGEMENT_CENTER_UPDATE_INTERVAL", "60");
 
         assertTrue(memberConfig.contains("<!--MEMBERS-->"));
         assertTrue(memberConfig.contains("<!--LICENSE-KEY-->"));

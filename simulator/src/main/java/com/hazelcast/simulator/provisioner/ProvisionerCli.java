@@ -23,6 +23,9 @@ import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
@@ -32,6 +35,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
+import static com.hazelcast.simulator.utils.TagUtils.parseTags;
 import static java.lang.String.format;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -58,8 +62,13 @@ final class ProvisionerCli {
     private final OptionSpec terminateSpec = parser.accepts("terminate",
             "Terminates all provisioned machines.");
 
-    private final OptionSet options;
+    private final OptionSpec<String> tagsSpec = parser.accepts("tags",
+            "Tags for an agent.")
+            .withRequiredArg().ofType(String.class);
 
+
+    private final OptionSet options;
+    private final Map<String, String> tags;
     private Provisioner provisioner;
 
     ProvisionerCli(String[] args) {
@@ -69,14 +78,24 @@ final class ProvisionerCli {
         ComputeService computeService = isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null;
         Bash bash = new Bash(properties);
 
+        this.tags = loadTags();
         this.provisioner = new Provisioner(properties, computeService, bash);
+    }
+
+
+    private Map<String, String> loadTags() {
+        if (!options.has(tagsSpec)) {
+            return new HashMap<String, String>();
+        }
+
+        return parseTags(options.valueOf(tagsSpec));
     }
 
     void run() {
         try {
             if (options.has(scaleSpec)) {
                 int size = options.valueOf(scaleSpec);
-                provisioner.scale(size);
+                provisioner.scale(size, tags);
             } else if (options.has(installJavaSpec)) {
                 provisioner.installJava();
             } else if (options.has(installSpec)) {

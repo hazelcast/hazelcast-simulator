@@ -22,6 +22,7 @@ import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
+import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -56,18 +57,21 @@ public class StartWorkersTask {
     private final int startupDelayMs;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> memberDeploymentPlan;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> clientDeploymentPlan;
+    private final Map<String, String> tags;
 
     private long started;
     private List<WorkerData> result = new LinkedList<WorkerData>();
 
     public StartWorkersTask(
             Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
+            Map<String, String> workerTags,
             RemoteClient remoteClient,
             ComponentRegistry componentRegistry,
             int startupDelayMs) {
         this.remoteClient = remoteClient;
         this.componentRegistry = componentRegistry;
         this.startupDelayMs = startupDelayMs;
+        this.tags = workerTags;
         this.memberDeploymentPlan = filterByWorkerType(true, deploymentPlan);
         this.clientDeploymentPlan = filterByWorkerType(false, deploymentPlan);
     }
@@ -118,9 +122,10 @@ public class StartWorkersTask {
         String workerType = isMember ? "member" : "client";
         for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : deploymentPlan.entrySet()) {
             SimulatorAddress agentAddress = entry.getKey();
+            AgentData agent = componentRegistry.getAgent(agentAddress);
             List<WorkerProcessSettings> workersSettings = entry.getValue();
 
-            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agentAddress, workerType));
+            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agent, workerType));
 
             if (isMember) {
                 workerIndex++;
@@ -161,33 +166,39 @@ public class StartWorkersTask {
     private final class StartWorkersOnAgentTask implements Runnable {
 
         private final List<WorkerProcessSettings> workersSettings;
-        private final SimulatorAddress agentAddress;
+        private final AgentData agent;
         private final String workerType;
         private final int startupDelayMs;
 
         private StartWorkersOnAgentTask(List<WorkerProcessSettings> workersSettings,
                                         int startupDelaysMs,
-                                        SimulatorAddress agentAddress,
+                                        AgentData agent,
                                         String workerType) {
             this.startupDelayMs = startupDelaysMs;
             this.workersSettings = workersSettings;
-            this.agentAddress = agentAddress;
+            this.agent = agent;
             this.workerType = workerType;
         }
 
         @Override
         public void run() {
             CreateWorkerOperation operation = new CreateWorkerOperation(workersSettings, startupDelayMs);
-            Response response = remoteClient.getConnector().invoke(agentAddress, operation);
+            Response response = remoteClient.getConnector().invoke(agent.getAddress(), operation);
 
             ResponseType responseType = response.getFirstErrorResponseType();
             if (responseType != SUCCESS) {
                 throw new CommandLineExitException(format("Could not create %d %s Worker on %s (%s)",
-                        workersSettings.size(), workerType, agentAddress, responseType));
+                        workersSettings.size(), workerType, agent.getAddress(), responseType));
             }
 
-            LOGGER.info(format("Created %d %s Worker on %s", workersSettings.size(), workerType, agentAddress));
-            List<WorkerData> createdWorkers = componentRegistry.addWorkers(agentAddress, workersSettings);
+            // the worker will automatically inherit all the tags of the agent it runs on and on top of that it
+            // its own tags are added.
+            Map<String, String> finalTags = new HashMap<String, String>();
+            finalTags.putAll(agent.getTags());
+            finalTags.putAll(tags);
+
+            LOGGER.info(format("Created %d %s Worker on %s", workersSettings.size(), workerType, agent.getAddress()));
+            List<WorkerData> createdWorkers = componentRegistry.addWorkers(agent.getAddress(), workersSettings, finalTags);
             result.addAll(createdWorkers);
         }
     }

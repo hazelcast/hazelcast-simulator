@@ -1,5 +1,7 @@
 package com.hazelcast.simulator;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -22,4 +24,18 @@ public class TestSupport {
         assertTrue(object + " is not an instanceof " + clazz.getName(), clazz.isAssignableFrom(object.getClass()));
         return (E) object;
     }
+
+    public static Map<String, String> toMap(String... array) {
+        if (array.length % 2 == 1) {
+            throw new IllegalArgumentException("even number of arguments expected");
+        }
+
+        Map<String, String> result = new HashMap<String, String>();
+        for (int k = 0; k < array.length; k += 2) {
+            result.put(array[k], array[k + 1]);
+        }
+        return result;
+    }
+
+
 }

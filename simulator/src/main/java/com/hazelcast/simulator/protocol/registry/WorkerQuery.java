@@ -20,7 +20,9 @@ import com.hazelcast.simulator.common.WorkerType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import static com.hazelcast.simulator.utils.TagUtils.matches;
 import static java.util.Collections.shuffle;
 
 public class WorkerQuery {
@@ -32,6 +34,16 @@ public class WorkerQuery {
     private WorkerType workerType;
     private boolean random;
     private TargetType targetType = TargetType.ALL;
+    private Map<String, String> workerTags;
+
+    public Map<String, String> getWorkerTags() {
+        return workerTags;
+    }
+
+    public WorkerQuery setWorkerTags(Map<String, String> workerTags) {
+        this.workerTags = workerTags;
+        return this;
+    }
 
     public TargetType getTargetType() {
         return targetType;
@@ -119,7 +131,7 @@ public class WorkerQuery {
 
         List<WorkerData> result = new ArrayList<WorkerData>(input.size());
         for (WorkerData worker : input) {
-            if (!isTarget(worker, isMember)) {
+            if (hasConflict(worker, isMember)) {
                 continue;
             }
 
@@ -138,22 +150,19 @@ public class WorkerQuery {
         return result;
     }
 
-    @SuppressWarnings("checkstyle:npathcomplexity")
-    private boolean isTarget(WorkerData worker, Boolean isMember) {
-        WorkerProcessSettings workerProcessSettings = worker.getSettings();
-
-        if (hasIsMemberConflict(worker, isMember)
-                || hasVersionSpecConflict(workerProcessSettings)
+    @SuppressWarnings("checkstyle:booleanexpressioncomplexity")
+    private boolean hasConflict(WorkerData worker, Boolean isMember) {
+        return hasIsMemberConflict(worker, isMember)
+                || hasVersionSpecConflict(worker)
                 || hasWorkerAddressConflict(worker)
+                || hasWorkerTagConflict(worker)
                 || hasAgentAddressConflict(worker)
-                || hasWorkerTypeConflict(workerProcessSettings)) {
-            return false;
-        }
-
-        return true;
+                || hasWorkerTypeConflict(worker);
     }
 
-    private boolean hasWorkerTypeConflict(WorkerProcessSettings workerProcessSettings) {
+    private boolean hasWorkerTypeConflict(WorkerData worker) {
+        WorkerProcessSettings workerProcessSettings = worker.getSettings();
+
         if (workerType != null) {
             if (!workerProcessSettings.getWorkerType().equals(workerType)) {
                 return true;
@@ -194,7 +203,16 @@ public class WorkerQuery {
         return false;
     }
 
-    private boolean hasVersionSpecConflict(WorkerProcessSettings workerProcessSettings) {
+    private boolean hasWorkerTagConflict(WorkerData worker) {
+        if (workerTags != null) {
+            return !matches(workerTags, worker.getTags());
+        }
+        return false;
+    }
+
+    private boolean hasVersionSpecConflict(WorkerData worker) {
+        WorkerProcessSettings workerProcessSettings = worker.getSettings();
+
         if (versionSpec != null) {
             if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
                 return true;
