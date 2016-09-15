@@ -47,6 +47,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * Keeps track of all Simulator components which are running.
  */
+@SuppressWarnings("checkstyle:methodcount")
 public class ComponentRegistry {
     private final AtomicInteger agentIndex = new AtomicInteger();
     private final AtomicInteger testIndexGenerator = new AtomicInteger();
@@ -57,9 +58,12 @@ public class ComponentRegistry {
     private final ConcurrentMap<String, TestData> tests = new ConcurrentHashMap<String, TestData>();
 
     public AgentData addAgent(String publicAddress, String privateAddress) {
-        AgentData agentData = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress);
-        agents.add(agentData);
+        return addAgent(publicAddress, privateAddress, new HashMap<String, String>());
+    }
 
+    public AgentData addAgent(String publicAddress, String privateAddress, Map<String, String> tags) {
+        AgentData agentData = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress, tags);
+        agents.add(agentData);
         return agentData;
     }
 
@@ -111,6 +115,16 @@ public class ComponentRegistry {
         return unmodifiableList(agents);
     }
 
+    public AgentData getAgent(SimulatorAddress simulatorAddress) {
+        for (AgentData agent : agents) {
+            if (agent.getAddress().equals(simulatorAddress)) {
+                return agent;
+            }
+        }
+
+        return null;
+    }
+
     public Set<String> getAgentIps() {
         Set<String> set = new HashSet<String>();
         for (AgentData agent : agents) {
@@ -140,10 +154,17 @@ public class ComponentRegistry {
         return null;
     }
 
-    public synchronized List<WorkerData> addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
+    public List<WorkerData> addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
+        return addWorkers(parentAddress, settingsList, new HashMap<String, String>());
+    }
+
+    public synchronized List<WorkerData> addWorkers(
+            SimulatorAddress parentAddress,
+            List<WorkerProcessSettings> settingsList,
+            Map<String, String> tags) {
         List<WorkerData> result = new ArrayList<WorkerData>(settingsList.size());
         for (WorkerProcessSettings settings : settingsList) {
-            WorkerData workerData = new WorkerData(parentAddress, settings);
+            WorkerData workerData = new WorkerData(parentAddress, settings, tags);
 
             AgentData agentData = agents.get(workerData.getAddress().getAgentIndex() - 1);
             agentData.addWorker(workerData);

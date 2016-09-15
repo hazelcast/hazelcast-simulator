@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
@@ -76,7 +77,7 @@ public class ProvisionerCliTest {
         cli.setProvisioner(provisioner);
         cli.run();
 
-        verify(provisioner).scale(0);
+        verify(provisioner).scale(0, new HashMap<String, String>());
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
     }
@@ -90,7 +91,7 @@ public class ProvisionerCliTest {
         cli.setProvisioner(provisioner);
         cli.run();
 
-        verify(provisioner).scale(10);
+        verify(provisioner).scale(10, new HashMap<String, String>());
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
     }

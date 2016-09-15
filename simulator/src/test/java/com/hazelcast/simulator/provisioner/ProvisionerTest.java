@@ -10,6 +10,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Set;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
@@ -58,39 +59,45 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
         deleteCloudCredentialFiles();
     }
 
+
+    // test is useless since it doesn't test anything
     @Test
     public void testScale_toNegative() {
         mockComputeServiceForScaleDown();
-        provisioner.scale(-1);
+        provisioner.scale(-1, new HashMap<String, String>());
     }
 
+    // test is useless since it doesn't test anything
     @Test
     public void testScale_toZero() {
         mockComputeServiceForScaleDown();
-        provisioner.scale(0);
+        provisioner.scale(0, new HashMap<String, String>());
     }
 
+    // test is useless since it doesn't test anything
     @Test
     public void testScale_toOne() {
-        provisioner.scale(1);
+        provisioner.scale(1, new HashMap<String, String>());
     }
 
+
+    // test is useless since it doesn't test anything
     @Test
     public void testScale_toTwo() throws Exception {
         mockComputeServiceForScaleUp();
-        provisioner.scale(2);
+        provisioner.scale(2, new HashMap<String, String>());
     }
 
     @Test(expected = IllegalStateException.class)
     public void testScale_toZero_withException() {
-        provisioner.scale(0);
+        provisioner.scale(0, new HashMap<String, String>());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testScale_toTwo_withException() throws Exception {
         IllegalStateException exception = new IllegalStateException("expected exception");
         when(computeService.createNodesInGroup(anyString(), anyInt(), any(Template.class))).thenThrow(exception);
-        provisioner.scale(2);
+        provisioner.scale(2, new HashMap<String, String>());
     }
 
     @Test

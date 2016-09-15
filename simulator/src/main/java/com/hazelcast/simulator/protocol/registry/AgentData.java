@@ -21,7 +21,9 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,8 +57,13 @@ public class AgentData {
     private final SimulatorAddress address;
     private final String publicAddress;
     private final String privateAddress;
+    private final Map<String, String> tags;
 
     public AgentData(int addressIndex, String publicAddress, String privateAddress) {
+        this(addressIndex, publicAddress, privateAddress, new HashMap<String, String>());
+    }
+
+    public AgentData(int addressIndex, String publicAddress, String privateAddress, Map<String, String> tags) {
         if (addressIndex <= 0) {
             throw new IllegalArgumentException("addressIndex must be a positive number");
         }
@@ -64,6 +71,11 @@ public class AgentData {
         this.address = new SimulatorAddress(AddressLevel.AGENT, addressIndex, 0, 0);
         this.publicAddress = checkNotNull(publicAddress, "publicAddress can't be null");
         this.privateAddress = checkNotNull(privateAddress, "privateAddress can't be null");
+        this.tags = checkNotNull(tags, "tags can't be null");
+    }
+
+    public Map<String, String> getTags() {
+        return tags;
     }
 
     public void setAgentWorkerMode(AgentWorkerMode agentWorkerMode) {

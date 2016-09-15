@@ -51,12 +51,12 @@ public class MemberWorkerTest {
         properties.set("MANAGEMENT_CENTER_URL","none");
 
         String memberHzConfig = fileAsText(localResourceDirectory() + "/hazelcast.xml");
-        memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, null, properties, false);
+        memberHzConfig = initMemberHzConfig(memberHzConfig, componentRegistry, null, properties.asMap(), false);
         memberConfigFile = new File(getUserDir(), "hazelcast.xml");
         appendText(memberHzConfig, memberConfigFile);
 
         String clientHzConfig = fileAsText(localResourceDirectory() + "/client-hazelcast.xml");
-        clientHzConfig = initClientHzConfig(clientHzConfig, componentRegistry, properties, null);
+        clientHzConfig = initClientHzConfig(clientHzConfig, componentRegistry, properties.asMap(), null);
         clientConfigFile = new File(getUserDir(), "client-hazelcast.xml");
         appendText(clientHzConfig, clientConfigFile);
     }

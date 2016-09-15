@@ -59,7 +59,7 @@ public class CoordinatorRunMonolithTest {
         this.agentData = componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
 
         this.hzConfig = fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
-        initMemberHzConfig(hzConfig, componentRegistry, null, simulatorProperties, false);
+        initMemberHzConfig(hzConfig, componentRegistry, null, simulatorProperties.asMap(), false);
 
         File scriptFile = new File(internalDistPath() + "/conf/worker-hazelcast-member.sh");
         File logFile = new File(internalDistPath() + "/conf/agent-log4j.xml");

@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
@@ -46,7 +45,6 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
-import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -55,6 +53,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 class Provisioner {
 
@@ -98,7 +97,7 @@ class Provisioner {
         return componentRegistry;
     }
 
-    void scale(int size) {
+    void scale(int size, Map<String, String> tags) {
         ensureIsCloudProviderSetup(properties, "scale");
 
         int agentSize = componentRegistry.agentCount();
@@ -108,7 +107,7 @@ class Provisioner {
             echo("Desired number of machines: " + (agentSize + delta));
             echo("Ignoring spawn machines, desired number of machines already exists.");
         } else if (delta > 0) {
-            scaleUp(delta);
+            scaleUp(delta, tags);
         } else {
             scaleDown(-delta);
         }
@@ -191,7 +190,7 @@ class Provisioner {
 
         // shutdown thread pool
         executor.shutdown();
-        awaitTermination(executor, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        awaitTermination(executor, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, SECONDS);
 
         // shutdown compute service (which holds another thread pool)
         if (computeService != null) {
@@ -202,7 +201,7 @@ class Provisioner {
     }
 
     @SuppressWarnings("PMD.PreserveStackTrace")
-    private void scaleUp(int delta) {
+    private void scaleUp(int delta, Map<String, String> tags) {
         echoImportant("Provisioning %s %s machines", delta, properties.getCloudProvider());
         echo("Current number of machines: " + componentRegistry.agentCount());
         echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
@@ -234,9 +233,7 @@ class Provisioner {
                     String publicIpAddress = node.getPublicAddresses().iterator().next();
 
                     echo(INDENTATION + publicIpAddress + " LAUNCHED");
-                    appendText(publicIpAddress + ',' + privateIpAddress + NEW_LINE, agentsFile);
-
-                    componentRegistry.addAgent(publicIpAddress, privateIpAddress);
+                    componentRegistry.addAgent(publicIpAddress, privateIpAddress, tags);
                 }
 
                 for (NodeMetadata node : nodes) {
@@ -249,6 +246,8 @@ class Provisioner {
             for (Future future : futures) {
                 future.get();
             }
+
+            AgentsFile.save(agentsFile, componentRegistry);
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }

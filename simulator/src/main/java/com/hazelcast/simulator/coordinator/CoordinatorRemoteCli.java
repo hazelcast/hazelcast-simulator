@@ -44,8 +44,10 @@ import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_DURATION_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.getDurationSeconds;
@@ -54,6 +56,7 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.TagUtils.parseTags;
 import static java.lang.String.format;
 
 /**
@@ -187,7 +190,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 if (errorPart.getPayload() != null) {
                     System.err.println(errorPart.getPayload());
                 } else {
-                    System.err.print("errorType:" + errorPart.getType());
+                    System.err.println("errorType:" + errorPart.getType());
                 }
                 throw new CommandLineExitException(
                         format("Could not process command: %s message [%s]", errorPart.getType(), errorPart.getPayload()));
@@ -331,6 +334,10 @@ public class CoordinatorRemoteCli implements Closeable {
                         + " constraints are ignored.")
                 .withRequiredArg().ofType(String.class);
 
+        final OptionSpec<String> workerTagsSpec = parser.accepts("workerTags",
+                "worker tags to look for")
+                .withRequiredArg().ofType(String.class);
+
         final OptionSpec randomSpec = parser.accepts("random",
                 "If workers should be picked randomly or predictably");
 
@@ -351,6 +358,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 return query.setAgentAddresses(agentAddresses)
                         .setWorkerType(options.valueOf(workerTypeSpec))
                         .setVersionSpec(options.valueOf(versionSpecSpec))
+                        .setWorkerTags(loadTags(options, workerTagsSpec))
                         .setMaxCount(maxCount);
             } else {
                 return query.setWorkerAddresses(workerAddresses);
@@ -520,7 +528,6 @@ public class CoordinatorRemoteCli implements Closeable {
         }
     }
 
-
     private class WorkerStartCli extends AbstractCli {
         private final String help
                 = "The 'worker-start' command starts one or more workers.\n"
@@ -532,6 +539,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "The worker-starts command will NOT install software when a --versionSpec is used. Make sure that\n"
                 + "appropriate calls to the install command have been made easier.\n"
+                + " Tags: todo: a worker will automatically inherit all the tags of the agent\n"
                 + "\n"
                 + "Examples\n"
                 + "# starts 1 members\n"
@@ -567,7 +575,16 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> agentsSpec = parser.accepts("agents",
-                "Comma separated list of agents the workers can start on")
+                "Comma separated list of agents the workers can start on. By default all agents are acceptable")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<String> agentsTags = parser.accepts("agentTags",
+                "Required tags of the agent the worker can be created on")
+                .withRequiredArg().ofType(String.class);
+
+        private final OptionSpec<String> tagsSpec = parser.accepts("tags",
+                "Comma separated list of key value pairs. These can be used to query workers, but will also be injected into "
+                        + "the configuration scripts. E.g. --tag password=peter,group=peter")
                 .withRequiredArg().ofType(String.class);
 
         @Override
@@ -589,13 +606,15 @@ public class CoordinatorRemoteCli implements Closeable {
                 hzConfig = fileAsText(options.valueOf(configSpec));
             }
 
-            return new RcWorkerStartOperation(
-                    count,
-                    options.valueOf(versionSpecSpec),
-                    options.valueOf(vmOptionsSpec),
-                    options.valueOf(workerTypeSpec),
-                    hzConfig,
-                    loadAddresses(options, agentsSpec, AddressLevel.AGENT));
+            return new RcWorkerStartOperation()
+                    .setCount(count)
+                    .setVersionSpec(options.valueOf(versionSpecSpec))
+                    .setWorkerType(options.valueOf(workerTypeSpec))
+                    .setHzConfig(hzConfig)
+                    .setVmOptions(options.valueOf(vmOptionsSpec))
+                    .setAgentAddresses(loadAddresses(options, agentsSpec, AddressLevel.AGENT))
+                    .setTags(loadTags(options, tagsSpec))
+                    .setAgentTags(loadTags(options, agentsTags));
         }
     }
 
@@ -780,5 +799,13 @@ public class CoordinatorRemoteCli implements Closeable {
         }
 
         return result;
+    }
+
+    private static Map<String, String> loadTags(OptionSet options, OptionSpec<String> spec) {
+        if (!options.has(spec)) {
+            return new HashMap<String, String>();
+        }
+
+        return parseTags(options.valueOf(spec));
     }
 }

@@ -37,6 +37,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -241,7 +244,11 @@ public class AgentSmokeTest implements FailureListener {
                 .setWorkerScript(fileAsText(internalDistPath() + "/conf/worker-hazelcast-member.sh"))
                 .setEnvironment(environment);
         DeploymentPlan deploymentPlan = createSingleInstanceDeploymentPlan(AGENT_IP_ADDRESS, workerParameters);
-        new StartWorkersTask(deploymentPlan.getWorkerDeployment(), remoteClient, componentRegistry, 0).run();
+        new StartWorkersTask(
+                deploymentPlan.getWorkerDeployment(),
+                new HashMap<String, String>(),
+                remoteClient,
+                componentRegistry, 0).run();
     }
 
     private void runPhase(TestPhaseListenerImpl listener, TestData testData, TestPhase testPhase) throws Exception {

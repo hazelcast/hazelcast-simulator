@@ -91,7 +91,7 @@ public final class DeploymentPlan {
             WorkerParameters workerParameters,
             WorkerType workerType,
             int workerCount,
-            List<SimulatorAddress> agentAddresses) {
+            List<SimulatorAddress> targetAgents) {
 
         if (workerCount < 0) {
             throw new IllegalArgumentException("workerCount can't be smaller than 0");
@@ -101,12 +101,7 @@ public final class DeploymentPlan {
 
         plan.initAgentWorkerLayouts(componentRegistry);
 
-        if (agentAddresses == null) {
-            agentAddresses = allAgents(componentRegistry);
-        }
-
-        plan.assignToAgents(workerCount, workerType, workerParameters, agentAddresses);
-
+        plan.assignToAgents(workerCount, workerType, workerParameters, targetAgents);
 
         plan.printLayout();
 
@@ -115,7 +110,7 @@ public final class DeploymentPlan {
 
     // just for testing
     public static DeploymentPlan createSingleInstanceDeploymentPlan(String agentIpAddress, WorkerParameters workerParameters) {
-        AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress);
+        AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress, new HashMap<String, String>());
         AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData);
         agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
         DeploymentPlan deploymentPlan = new DeploymentPlan();
@@ -123,14 +118,13 @@ public final class DeploymentPlan {
         return deploymentPlan;
     }
 
-    private void assignToAgents(int workerCount, WorkerType workerType, WorkerParameters parameters,
-                                List<SimulatorAddress> agents) {
+    private void assignToAgents(int workerCount,
+                                WorkerType workerType,
+                                WorkerParameters parameters,
+                                List<SimulatorAddress> targetAgents) {
 
         for (int i = 0; i < workerCount; i++) {
-            AgentWorkerLayout agentWorkerLayout = nextAgent(workerType);
-            if (!agents.contains(agentWorkerLayout.agentData.getAddress())) {
-                continue;
-            }
+            AgentWorkerLayout agentWorkerLayout = nextAgent(workerType, targetAgents);
 
             WorkerProcessSettings workerProcessSettings = agentWorkerLayout.addWorker(
                     workerType, parameters);
@@ -169,11 +163,11 @@ public final class DeploymentPlan {
         }
     }
 
-    private AgentWorkerLayout nextAgent(WorkerType workerType) {
+    private AgentWorkerLayout nextAgent(WorkerType workerType, List<SimulatorAddress> allowedAgents) {
         AgentWorkerLayout smallest = null;
         for (AgentWorkerLayout agent : agentWorkerLayouts) {
 
-            if (!agent.allowed(workerType)) {
+            if (!agent.allowed(workerType) || !allowedAgents.contains(agent.agentData.getAddress())) {
                 continue;
             }
 

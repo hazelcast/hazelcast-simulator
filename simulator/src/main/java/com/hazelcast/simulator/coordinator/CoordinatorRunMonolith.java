@@ -22,6 +22,8 @@ import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 
@@ -49,6 +51,7 @@ public class CoordinatorRunMonolith {
 
         new StartWorkersTask(
                 deploymentPlan.getWorkerDeployment(),
+                new HashMap<String, String>(),
                 coordinator.client,
                 coordinator.componentRegistry,
                 coordinator.parameters.getWorkerVmStartupDelayMs()).run();
