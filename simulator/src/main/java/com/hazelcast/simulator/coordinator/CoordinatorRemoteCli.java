@@ -335,7 +335,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
         final OptionSpec<String> workerTagsSpec = parser.accepts("workerTags",
-                "worker tags to look for")
+                "worker tags to look for.")
                 .withRequiredArg().ofType(String.class);
 
         final OptionSpec randomSpec = parser.accepts("random",
@@ -539,7 +539,14 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "The worker-starts command will NOT install software when a --versionSpec is used. Make sure that\n"
                 + "appropriate calls to the install command have been made easier.\n"
-                + " Tags: todo: a worker will automatically inherit all the tags of the agent\n"
+                + "\n"
+                + "A worker can be configured, just like an agent, with tags. This can be used for looking up certain\n"
+                + "workers e.g. for running a test, or to pass key/values to configuration script. An worker will\n"
+                + "inherit the tags of the agent it runs on and its own tags are added.\n"
+                + " \n"
+                + "A worker can assigned to a particular agent by making use of the --agent option where a list of\n"
+                + "agent simulator adresses is passed, e.g. --agent C_A1. Or by making use of the --agentTags. For\n"
+                + "example --agentTags cluster=wan1.\n"
                 + "\n"
                 + "Examples\n"
                 + "# starts 1 members\n"
@@ -550,8 +557,12 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote worker-start --count --workerType litemember --versionSpec git=master\n\n"
                 + "# starts 1 member on agent C_A1\n"
                 + "coordinator-remote worker-start --agents C_A1 \n\n"
+                + "# starts 1 member on agent with tag cluster=wan1\n"
+                + "coordinator-remote worker-start --agentTags cluster=wan1 \n\n"
+                + "# starts 1 member on agent C_A1 with tags cluster and password=123\n"
+                + "coordinator-remote worker-start --tags cluster,password=123 \n\n"
                 + "# starts 1 client with a custom client-hazelcast.xml file\n"
-                + "coordinator-remote worker-start --config client-hazelcast.xml \n\n";
+                + "coordinator-remote worker-start --config client-hazelcast.xml\n\n";
 
         private final OptionSpec<String> vmOptionsSpec = parser.accepts("vmOptions",
                 "Worker JVM options (quotes can be used).")
@@ -583,8 +594,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 .withRequiredArg().ofType(String.class);
 
         private final OptionSpec<String> tagsSpec = parser.accepts("tags",
-                "Comma separated list of key value pairs. These can be used to query workers, but will also be injected into "
-                        + "the configuration scripts. E.g. --tag password=peter,group=peter")
+                "Comma separated list of key value pairs.")
                 .withRequiredArg().ofType(String.class);
 
         @Override
@@ -669,11 +679,6 @@ public class CoordinatorRemoteCli implements Closeable {
                 testSuiteFile = new File("test.properties");
             }
 
-
-//            if (options.has(workersSpec) && options.has(targetTypeSpec)) {
-//                throw new CommandLineExitException("--workerSpec and targetTypeSpec can't be enabled at the same time.")
-//            }
-//
             LOGGER.info("File:" + testSuiteFile);
 
             TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
