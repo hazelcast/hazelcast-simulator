@@ -23,7 +23,6 @@ import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.ComputeService;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
@@ -35,7 +34,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static com.hazelcast.simulator.utils.TagUtils.parseTags;
+import static com.hazelcast.simulator.utils.TagUtils.loadTags;
 import static java.lang.String.format;
 
 @SuppressWarnings("FieldCanBeLocal")
@@ -78,17 +77,8 @@ final class ProvisionerCli {
         ComputeService computeService = isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null;
         Bash bash = new Bash(properties);
 
-        this.tags = loadTags();
+        this.tags = loadTags(options, tagsSpec);
         this.provisioner = new Provisioner(properties, computeService, bash);
-    }
-
-
-    private Map<String, String> loadTags() {
-        if (!options.has(tagsSpec)) {
-            return new HashMap<String, String>();
-        }
-
-        return parseTags(options.valueOf(tagsSpec));
     }
 
     void run() {

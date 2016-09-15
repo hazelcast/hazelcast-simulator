@@ -15,6 +15,9 @@
  */
 package com.hazelcast.simulator.utils;
 
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,4 +77,11 @@ public final class TagUtils {
         return sb.toString();
     }
 
+    public static Map<String, String> loadTags(OptionSet options, OptionSpec<String> spec) {
+        if (!options.has(spec)) {
+            return new HashMap<String, String>();
+        }
+
+        return parseTags(options.valueOf(spec));
+    }
 }

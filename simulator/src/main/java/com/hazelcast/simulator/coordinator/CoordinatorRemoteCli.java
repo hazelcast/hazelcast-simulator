@@ -35,6 +35,7 @@ import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.TagUtils;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.NonOptionArgumentSpec;
 import joptsimple.OptionParser;
@@ -44,10 +45,8 @@ import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.DEFAULT_DURATION_SECONDS;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.getDurationSeconds;
@@ -56,7 +55,6 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.TagUtils.parseTags;
 import static java.lang.String.format;
 
 /**
@@ -358,7 +356,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 return query.setAgentAddresses(agentAddresses)
                         .setWorkerType(options.valueOf(workerTypeSpec))
                         .setVersionSpec(options.valueOf(versionSpecSpec))
-                        .setWorkerTags(loadTags(options, workerTagsSpec))
+                        .setWorkerTags(TagUtils.loadTags(options, workerTagsSpec))
                         .setMaxCount(maxCount);
             } else {
                 return query.setWorkerAddresses(workerAddresses);
@@ -623,8 +621,8 @@ public class CoordinatorRemoteCli implements Closeable {
                     .setHzConfig(hzConfig)
                     .setVmOptions(options.valueOf(vmOptionsSpec))
                     .setAgentAddresses(loadAddresses(options, agentsSpec, AddressLevel.AGENT))
-                    .setTags(loadTags(options, tagsSpec))
-                    .setAgentTags(loadTags(options, agentsTags));
+                    .setTags(TagUtils.loadTags(options, tagsSpec))
+                    .setAgentTags(TagUtils.loadTags(options, agentsTags));
         }
     }
 
@@ -806,11 +804,4 @@ public class CoordinatorRemoteCli implements Closeable {
         return result;
     }
 
-    private static Map<String, String> loadTags(OptionSet options, OptionSpec<String> spec) {
-        if (!options.has(spec)) {
-            return new HashMap<String, String>();
-        }
-
-        return parseTags(options.valueOf(spec));
-    }
 }
