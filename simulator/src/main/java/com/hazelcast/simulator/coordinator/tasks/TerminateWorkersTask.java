@@ -32,11 +32,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * This task shuts down all workers.
- * <p>
- * - ClientConnectionManager talks about index, but it should be id.
- * <p>
- * todo:
- * - worker ping thread
  */
 public class TerminateWorkersTask {
 
@@ -71,6 +66,11 @@ public class TerminateWorkersTask {
         int shutdownDelaySeconds = componentRegistry.hasClientWorkers()
                 ? simulatorProperties.getMemberWorkerShutdownDelaySeconds()
                 : 0;
+
+        // prevent any failures from being printed due to killing the members.
+        for (WorkerData worker : componentRegistry.getWorkers()) {
+            worker.setIgnoreFailures(true);
+        }
 
         remoteClient.invokeOnAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
     }
