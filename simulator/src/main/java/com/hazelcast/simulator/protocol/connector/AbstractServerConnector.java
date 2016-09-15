@@ -193,10 +193,10 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     @Override
-    public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation op) {
+    public ResponseFuture submit(SimulatorAddress destination, SimulatorOperation operation) {
         checkNoWildcardAllowed(destination);
 
-        return submit(localAddress, destination, op);
+        return submit(localAddress, destination, operation);
     }
 
     @Override
@@ -263,7 +263,9 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     private SimulatorMessage createSimulatorMessage(SimulatorAddress src, SimulatorAddress dst, SimulatorOperation op) {
-        return new SimulatorMessage(dst, src, messageIds.incrementAndGet(), getOperationType(op), toJson(op));
+        System.out.println("op:" + op);
+        long messageId = messageIds == null ? 0 : messageIds.incrementAndGet();
+        return new SimulatorMessage(dst, src, messageId, getOperationType(op), toJson(op));
     }
 
     private List<ResponseFuture> invokeAsync(SimulatorMessage message) {

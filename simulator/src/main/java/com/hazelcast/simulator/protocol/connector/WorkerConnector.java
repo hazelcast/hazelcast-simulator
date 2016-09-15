@@ -16,26 +16,24 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
-import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.core.TestProcessorManager;
 import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
 import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
-import com.hazelcast.simulator.protocol.handler.MessageTestConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.ResponseEncoder;
 import com.hazelcast.simulator.protocol.handler.ResponseHandler;
 import com.hazelcast.simulator.protocol.handler.SimulatorFrameDecoder;
 import com.hazelcast.simulator.protocol.handler.SimulatorProtocolDecoder;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.OperationProcessor;
-import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
+import com.hazelcast.simulator.worker.ScriptExecutor;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.worker.testcontainer.TestContainerManager;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -53,7 +51,6 @@ public class WorkerConnector extends AbstractServerConnector {
     private final int addressIndex;
 
     private final ConnectionManager connectionManager = new ConnectionManager();
-    private final TestProcessorManager testProcessorManager;
 
     /**
      * Creates a {@link WorkerConnector} instance.
@@ -65,13 +62,19 @@ public class WorkerConnector extends AbstractServerConnector {
      * @param hazelcastInstance  the {@link HazelcastInstance} for this Simulator Worker
      * @param worker             the {@link Worker} instance of this Simulator Worker
      */
-    public WorkerConnector(int parentAddressIndex, int addressIndex, int port, WorkerType type,
-                    HazelcastInstance hazelcastInstance, Worker worker) {
+    public WorkerConnector(int parentAddressIndex,
+                           int addressIndex,
+                           int port,
+                           WorkerType type,
+                           HazelcastInstance hazelcastInstance,
+                           Worker worker) {
         super(new SimulatorAddress(WORKER, parentAddressIndex, addressIndex, 0), port, DEFAULT_THREAD_POOL_SIZE);
 
-        this.processor = new WorkerOperationProcessor(type, hazelcastInstance, worker, localAddress);
+        TestContainerManager testContainerManager = new TestContainerManager(
+                hazelcastInstance, getAddress(), worker.getPublicIpAddress(), this, type);
+        ScriptExecutor scriptExecutor = new ScriptExecutor(hazelcastInstance);
+        this.processor = new WorkerOperationProcessor(testContainerManager, scriptExecutor, worker, getAddress());
         this.addressIndex = localAddress.getAddressIndex();
-        this.testProcessorManager = new TestProcessorManager(localAddress);
     }
 
     @Override
@@ -84,8 +87,6 @@ public class WorkerConnector extends AbstractServerConnector {
         pipeline.addLast("protocolDecoder", new SimulatorProtocolDecoder(localAddress));
         pipeline.addLast("messageConsumeHandler", new MessageConsumeHandler(localAddress, processor, getScheduledExecutor()));
         pipeline.addLast("testProtocolDecoder", new SimulatorProtocolDecoder(localAddress.getChild(0)));
-        pipeline.addLast("testMessageConsumeHandler", new MessageTestConsumeHandler(testProcessorManager, localAddress,
-                getScheduledExecutor()));
         pipeline.addLast("responseHandler", new ResponseHandler(localAddress, localAddress.getParent(), futureMap, addressIndex));
         pipeline.addLast("exceptionHandler", new ExceptionHandler(serverConnector));
     }
@@ -93,52 +94,6 @@ public class WorkerConnector extends AbstractServerConnector {
     @Override
     ChannelGroup getChannelGroup() {
         return connectionManager.getChannels();
-    }
-
-    /**
-     * Gets a Simulator Test.
-     *
-     * @param testIndex the index of the Simulator Test
-     * @return the {@link TestOperationProcessor} which processes incoming
-     * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
-     */
-    public TestOperationProcessor getTest(int testIndex) {
-        return testProcessorManager.getTest(testIndex);
-    }
-
-    /**
-     * Adds a Simulator Test.
-     *
-     * @param testIndex the index of the Simulator Test
-     * @param processor the {@link TestOperationProcessor} which processes incoming
-     *                  {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} for this test
-     */
-    public void addTest(int testIndex, TestOperationProcessor processor) {
-        testProcessorManager.addTest(testIndex, processor);
-    }
-
-    /**
-     * Removes a Simulator Test.
-     *
-     * @param testIndex the index of the remote Simulator Test
-     */
-    public void removeTest(int testIndex) {
-        testProcessorManager.removeTest(testIndex);
-    }
-
-    /**
-     * Submits a {@link SimulatorOperation} to a {@link SimulatorAddress}.
-     * <p>
-     * The {@link SimulatorOperation} is put on a queue. The {@link com.hazelcast.simulator.protocol.core.Response} is not
-     * returned.
-     *
-     * @param testAddress the {@link SimulatorAddress} of the sending test
-     * @param destination the {@link SimulatorAddress} of the destination
-     * @param op   the {@link SimulatorOperation} to send
-     * @return a {@link ResponseFuture} to wait for the result of the op
-     */
-    public ResponseFuture submitFromTest(SimulatorAddress testAddress, SimulatorAddress destination, SimulatorOperation op) {
-        return submit(testAddress, destination, op);
     }
 
     /**

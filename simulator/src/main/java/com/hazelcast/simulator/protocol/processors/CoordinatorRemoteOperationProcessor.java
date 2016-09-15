@@ -15,9 +15,8 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.Promise;
 
@@ -30,9 +29,8 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPE
 public class CoordinatorRemoteOperationProcessor extends AbstractOperationProcessor {
 
     @Override
-    public final void processOperation(OperationType operationType, SimulatorOperation op,
-                                       SimulatorAddress sourceAddress, Promise promise) {
-        switch (operationType) {
+    public final void processOperation(SimulatorMessage msg, SimulatorOperation operation, Promise promise) {
+        switch (msg.getOperationType()) {
             default:
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }

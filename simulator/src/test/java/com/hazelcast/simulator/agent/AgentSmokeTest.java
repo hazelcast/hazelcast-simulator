@@ -162,8 +162,7 @@ public class AgentSmokeTest implements FailureListener {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                assertEquals("Expected 2 failures!", 2,
-                        failureOperations.size());
+                assertEquals("Expected 2 failures!", 2, failureOperations.size());
             }
         });
 
@@ -218,8 +217,6 @@ public class AgentSmokeTest implements FailureListener {
             runPhase(testPhaseListener, test, GLOBAL_TEARDOWN);
             runPhase(testPhaseListener, test, LOCAL_TEARDOWN);
         } finally {
-            // componentRegistry.removeTests();
-
             LOGGER.info("Terminating workers...");
             new TerminateWorkersTask(simulatorProperties, componentRegistry, remoteClient).run();
 

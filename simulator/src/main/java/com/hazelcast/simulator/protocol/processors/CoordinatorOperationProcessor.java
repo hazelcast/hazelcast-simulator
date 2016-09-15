@@ -21,9 +21,9 @@ import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
@@ -68,17 +68,16 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
 
     @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation op,
-                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
-        switch (operationType) {
+    protected void processOperation(SimulatorMessage msg, SimulatorOperation op, Promise promise) throws Exception {
+        switch (msg.getOperationType()) {
             case FAILURE:
                 failureCollector.notify((FailureOperation) op);
                 break;
             case PHASE_COMPLETED:
-                promise.answer(processPhaseCompletion((PhaseCompletedOperation) op, sourceAddress));
+                promise.answer(processPhaseCompletion((PhaseCompletedOperation) op, msg.getSource()));
                 return;
             case PERFORMANCE_STATE:
-                performanceStatsCollector.update(sourceAddress, ((PerformanceStatsOperation) op).getPerformanceStats());
+                performanceStatsCollector.update(msg.getSource(), ((PerformanceStatsOperation) op).getPerformanceStats());
                 break;
             case RC_INSTALL:
                 receiver.install(((RcInstallOperation) op).getVersionSpec());

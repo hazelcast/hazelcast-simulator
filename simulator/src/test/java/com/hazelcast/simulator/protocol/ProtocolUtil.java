@@ -19,7 +19,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
-import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.TestUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -127,12 +126,12 @@ class ProtocolUtil {
 
         TestContainer testContainer = mock(TestContainer.class, RETURNS_DEEP_STUBS);
         when(testContainer.getTestContext().getTestId()).thenReturn("ProtocolUtilTest");
-
-        for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
-            TestOperationProcessor processor = new TestOperationProcessor(worker, MEMBER, testContainer,
-                    workerConnector.getAddress().getChild(testIndex));
-            workerConnector.addTest(testIndex, processor);
-        }
+//
+//        for (int testIndex = 1; testIndex <= numberOfTests; testIndex++) {
+//            TestOperationProcessor processor = new TestOperationProcessor(worker, MEMBER, testContainer,
+//                    workerConnector.getAddress().getChild(testIndex));
+//            workerConnector.addTest(testIndex, processor);
+//        }
 
         workerConnector.start();
         return workerConnector;

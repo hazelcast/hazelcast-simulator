@@ -2,6 +2,7 @@ package com.hazelcast.simulator.protocol.processors;
 
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
@@ -71,10 +72,9 @@ public class AbstractOperationProcessorTest {
         private OperationType operationType;
 
         @Override
-        protected void processOperation(OperationType operationType, SimulatorOperation op,
-                                        SimulatorAddress sourceAddress, Promise promise) throws Exception {
-            this.operationType = operationType;
-            promise.answer(ResponseType.SUCCESS);
+        protected void processOperation(SimulatorMessage msg, SimulatorOperation operation, Promise promise) throws Exception {
+            this.operationType = msg.getOperationType();
+                promise.answer(ResponseType.SUCCESS);
         }
     }
 }

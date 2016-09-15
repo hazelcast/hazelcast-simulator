@@ -9,15 +9,15 @@ import com.hazelcast.simulator.coordinator.FailureListener;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestPhaseListener;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
-import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.utils.TestUtils;
@@ -40,7 +40,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURIN
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
-import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
+import static com.hazelcast.simulator.protocol.operation.OperationType.START_TEST;
 import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
@@ -98,12 +98,13 @@ public class CoordinatorOperationProcessorTest implements FailureListener {
 
     @Test
     public void testProcessOperation_unsupportedOperation() throws Exception {
-        SimulatorOperation operation = new IntegrationTestOperation();
+        SimulatorOperation operation = new StartTestOperation();
 
         try {
-            processor.processOperation(getOperationType(operation), operation, COORDINATOR, new StubPromise());
+            SimulatorMessage msg = new SimulatorMessage(COORDINATOR, COORDINATOR, 0, START_TEST, "");
+            processor.processOperation(msg, operation, null);
             fail();
-        }catch (ProcessException e){
+        } catch (ProcessException e) {
             assertEquals(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR, e.getResponseType());
         }
     }

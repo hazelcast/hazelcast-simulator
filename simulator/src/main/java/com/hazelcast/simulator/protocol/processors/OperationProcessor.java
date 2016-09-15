@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.protocol.processors;
 
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.Promise;
 
@@ -24,5 +24,5 @@ import com.hazelcast.simulator.worker.Promise;
  */
 public interface OperationProcessor {
 
-    void process(SimulatorOperation op, SimulatorAddress sourceAddress, Promise promise) throws Exception;
+    void process(SimulatorMessage msg, SimulatorOperation op, Promise promise) throws Exception;
 }

@@ -25,6 +25,7 @@ import static com.hazelcast.simulator.protocol.ProtocolUtil.startCoordinator;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.startSimulatorComponents;
 import static com.hazelcast.simulator.protocol.ProtocolUtil.stopSimulatorComponents;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.TEST;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_COORDINATOR_NOT_FOUND;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
@@ -36,22 +37,18 @@ public class ProtocolReconnectTest {
 
     @Before
     public void before() {
-        setLogLevel(Level.TRACE);
-
         startSimulatorComponents(1, 1, 1);
     }
 
     @After
     public void after() {
         stopSimulatorComponents();
-
-        resetLogLevel();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void reconnect() {
-        SimulatorAddress testAddress = new SimulatorAddress(TEST, 1, 1, 1);
         WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress testAddress = new SimulatorAddress(WORKER, 1, 1, 0);
 
         // assert that the connection is working downstream
         Response response = sendFromCoordinator(testAddress);
@@ -88,16 +85,16 @@ public class ProtocolReconnectTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT_MILLIS)
     public void connectTwice() {
-        SimulatorAddress testAddress = new SimulatorAddress(TEST, 1, 1, 1);
         WorkerConnector worker = getWorkerConnector(0);
+        SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
 
         // assert that the connection is working downstream
-        Response response = sendFromCoordinator(testAddress);
-        assertSingleTarget(response, testAddress, SUCCESS);
+        Response response = sendFromCoordinator(workerAddress);
+        assertSingleTarget(response, workerAddress, SUCCESS);
 
         // assert that the connection is working upstream
-        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
-        assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
+        response = worker.invoke(workerAddress, COORDINATOR, DEFAULT_OPERATION);
+        assertSingleTarget(response, workerAddress, COORDINATOR, SUCCESS);
 
         LOGGER.info("-------------------------------");
         LOGGER.info("Starting second connection...");
@@ -106,29 +103,29 @@ public class ProtocolReconnectTest {
         CoordinatorConnector secondConnector = startCoordinator("127.0.0.1", getAgentStartPort(), 1);
 
         // assert that first connection is still working downstream
-        response = sendFromCoordinator(testAddress);
-        assertSingleTarget(response, testAddress, SUCCESS);
+        response = sendFromCoordinator(workerAddress);
+        assertSingleTarget(response, workerAddress, SUCCESS);
 
         // assert that second connection is working downstream
-        response = secondConnector.invoke(testAddress, DEFAULT_OPERATION);
-        assertSingleTarget(response, testAddress, SUCCESS);
+        response = secondConnector.invoke(workerAddress, DEFAULT_OPERATION);
+        assertSingleTarget(response, workerAddress, SUCCESS);
 
         // assert that the connections are working upstream
-        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
-        assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
+        response = worker.invoke(workerAddress, COORDINATOR, DEFAULT_OPERATION);
+        assertSingleTarget(response, workerAddress, COORDINATOR, SUCCESS);
 
         // shutdown first connection
         shutdownCoordinatorConnector();
 
         // assert that the connections are working upstream
-        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
-        assertSingleTarget(response, testAddress, COORDINATOR, SUCCESS);
+        response = worker.invoke(workerAddress, COORDINATOR, DEFAULT_OPERATION);
+        assertSingleTarget(response, workerAddress, COORDINATOR, SUCCESS);
 
         // shutdown second connection
         secondConnector.close();
 
         // assert that there are no connections found anymore
-        response = worker.invoke(testAddress, COORDINATOR, DEFAULT_OPERATION);
-        assertSingleTarget(response, testAddress, getAgentConnector(0).getAddress(), FAILURE_COORDINATOR_NOT_FOUND);
+        response = worker.invoke(workerAddress, COORDINATOR, DEFAULT_OPERATION);
+        assertSingleTarget(response, workerAddress, getAgentConnector(0).getAddress(), FAILURE_COORDINATOR_NOT_FOUND);
     }
 }

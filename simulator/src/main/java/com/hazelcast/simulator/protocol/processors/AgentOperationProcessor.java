@@ -23,12 +23,12 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
-import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
@@ -67,11 +67,10 @@ public class AgentOperationProcessor extends AbstractOperationProcessor {
     }
 
     @Override
-    protected void processOperation(OperationType operationType, SimulatorOperation op,
-                                    SimulatorAddress sourceAddress, Promise promise) throws Exception {
-        switch (operationType) {
+    protected void processOperation(SimulatorMessage msg, SimulatorOperation op, Promise promise) throws Exception {
+        switch (msg.getOperationType()) {
             case INTEGRATION_TEST:
-                processIntegrationTest((IntegrationTestOperation) op, sourceAddress, promise);
+                processIntegrationTest((IntegrationTestOperation) op, msg.getSource(), promise);
                 return;
             case INIT_SESSION:
                 agent.setSessionId(((InitSessionOperation) op).getSessionId());
