@@ -70,6 +70,19 @@ public class AgentsFileTest {
     }
 
     @Test
+    public void testLoad_emptyTag() {
+        writeText("192.168.1.1|", agentsFile);
+
+        componentRegistry = load(agentsFile);
+        assertEquals(1, componentRegistry.agentCount());
+
+        AgentData agentData = componentRegistry.getFirstAgent();
+        assertEquals("192.168.1.1", agentData.getPublicAddress());
+        assertEquals("192.168.1.1", agentData.getPrivateAddress());
+        assertEquals(toMap(),agentData.getTags());
+    }
+
+    @Test
     public void testLoad_onlyPublicAddress() {
         writeText("192.168.1.1", agentsFile);
 

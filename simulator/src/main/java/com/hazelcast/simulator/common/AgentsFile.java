@@ -51,8 +51,10 @@ public final class AgentsFile {
 
         String content = fileAsText(agentFile);
         String[] lines = content.split(NEW_LINE);
-        int lineNumber = 1;
+        int lineNumber = 0;
         for (String line : lines) {
+            lineNumber++;
+
             line = cleanLine(line);
 
             if (line.isEmpty()) {
