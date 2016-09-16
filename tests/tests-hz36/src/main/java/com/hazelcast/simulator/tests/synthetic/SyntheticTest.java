@@ -15,25 +15,20 @@
  */
 package com.hazelcast.simulator.tests.synthetic;
 
-import com.hazelcast.client.impl.HazelcastClientProxy;
-import com.hazelcast.client.proxy.PartitionServiceProxy;
-import com.hazelcast.client.spi.ClientInvocationService;
-import com.hazelcast.client.spi.ClientPartitionService;
-import com.hazelcast.client.spi.impl.ClientInvocation;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Partition;
-import com.hazelcast.nio.Address;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.tests.helpers.KeyUtils;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.worker.tasks.IWorker;
 import com.hazelcast.spi.OperationService;
 
 import java.util.ArrayList;
@@ -44,26 +39,25 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
-import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
+import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 
 /**
  * The SyntheticTest can be used to test features like back pressure.
- *
+ * <p>
  * It can be configured with:
  * - sync invocation
  * - async invocation
  * - number of sync backups
  * - number of async backups
  * - delay of back pressing.
- *
+ * <p>
  * This test doesn't make use of any normal data-structures like an {@link com.hazelcast.core.IMap}, but uses the SPI directly to
  * execute operations and backups. This gives a lot of control on the behavior.
- *
+ * <p>
  * If for example we want to test back pressure on async backups, just set the asyncBackupCount to a value larger than 0 and if
  * you want to simulate a slow down, also set the backupDelayNanos. If this is set to a high value, on the backup you will get a
  * pileup of back up commands which eventually can lead to an OOME.
- *
+ * <p>
  * Another interesting scenario to test is a normal async invocation of a readonly operation (so no async/sync-backups) and see if
  * the system can be flooded with too many request. Normal sync operations don't cause that many problems because there is a
  * natural balance between the number of threads and the number of pending invocations.
@@ -71,120 +65,63 @@ import static com.hazelcast.simulator.utils.ReflectionUtils.getFieldValue;
 public class SyntheticTest extends AbstractTest {
 
     // properties
-    public boolean syncInvocation = true;
     public byte syncBackupCount = 0;
     public byte asyncBackupCount = 1;
     public long backupDelayNanos = 1000 * 1000;
     public boolean randomizeBackupDelay = true;
-    public KeyLocality keyLocality = KeyLocality.SHARED;
+    public KeyLocality keyLocality = SHARED;
     public int keyCount = 1000;
-    public int syncFrequency = 1;
     public String serviceName;
 
-    @InjectProbe(useForThroughput = true)
-    private Probe probe;
+    @BeforeRun
+    public void beforeRun(ThreadState state) {
+        if (isClient(targetInstance)) {
+            throw new IllegalArgumentException("SyntheticTest doesn't support clients at the moment");
+        }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+        state.operationService = HazelcastTestUtils.getOperationService(targetInstance);
+
+        int[] keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
+        for (int key : keys) {
+            Partition partition = targetInstance.getPartitionService().getPartition(key);
+            state.partitionSequence.add(partition.getPartitionId());
+        }
+        Collections.shuffle(state.partitionSequence);
     }
 
-    private class Worker implements IWorker, ExecutionCallback<Object> {
+    @TimeStep(prob = 1)
+    public void invoke(ThreadState state) throws Exception {
+        ICompletableFuture<Object> future = state.invokeOnNextPartition();
+        future.get();
+    }
+
+    @TimeStep(prob = 0)
+    public void invokeAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) throws Exception {
+        ICompletableFuture<Object> future = state.invokeOnNextPartition();
+        future.andThen(new ExecutionCallback<Object>() {
+            @Override
+            public void onResponse(Object o) {
+                probe.done(startNanos);
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                ExceptionReporter.report(testContext.getTestId(), throwable);
+            }
+        });
+    }
+
+    public class ThreadState extends BaseThreadState {
 
         private final List<Integer> partitionSequence = new ArrayList<Integer>();
-        private final List<ICompletableFuture> futureList = new ArrayList<ICompletableFuture>(syncFrequency);
         private final Random random = new Random();
 
-        private final boolean isClient;
-        private final OperationService operationService;
-        private final ClientInvocationService clientInvocationService;
-        private final ClientPartitionService clientPartitionService;
+        private OperationService operationService;
 
         private int partitionIndex;
-        private long iteration;
-
-        public Worker() {
-            if (isClient(targetInstance)) {
-                throw new IllegalArgumentException("SyntheticTest doesn't support clients at the moment");
-            }
-
-            isClient = isClient(targetInstance);
-            checkClientKeyLocality();
-
-            if (isClient) {
-                HazelcastClientProxy hazelcastClientProxy = (HazelcastClientProxy) targetInstance;
-                PartitionServiceProxy partitionService
-                        = (PartitionServiceProxy) hazelcastClientProxy.client.getPartitionService();
-
-                operationService = null;
-                clientInvocationService = hazelcastClientProxy.client.getInvocationService();
-                clientPartitionService = getFieldValue(partitionService, "partitionService");
-            } else {
-                operationService = HazelcastTestUtils.getOperationService(targetInstance);
-                clientInvocationService = null;
-                clientPartitionService = null;
-            }
-
-            int[] keys = KeyUtils.generateIntKeys(keyCount, keyLocality, targetInstance);
-            for (int key : keys) {
-                Partition partition = targetInstance.getPartitionService().getPartition(key);
-                partitionSequence.add(partition.getPartitionId());
-            }
-            Collections.shuffle(partitionSequence);
-        }
-
-        private void checkClientKeyLocality() {
-            if (isClient && keyLocality == KeyLocality.LOCAL) {
-                throw new IllegalStateException("The KeyLocality has been set to LOCAL, but the test is running on a client."
-                        + " This doesn't make sense as no keys are stored on clients.");
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (!testContext.isStopped()) {
-                    timeStep();
-                }
-            } catch (Exception e) {
-                throw rethrow(e);
-            }
-        }
-
-        private void timeStep() throws Exception {
-            ICompletableFuture<Object> future = invokeOnNextPartition();
-            if (syncInvocation) {
-                long started = System.nanoTime();
-                if (syncFrequency == 1) {
-                    future.get();
-                } else {
-                    futureList.add(future);
-                    if (iteration > 0 && iteration % syncFrequency == 0) {
-                        for (ICompletableFuture innerFuture : futureList) {
-                            innerFuture.get();
-                        }
-                        futureList.clear();
-                    }
-                }
-                probe.recordValue(System.nanoTime() - started);
-            } else {
-                future.andThen(this);
-            }
-
-            iteration++;
-        }
 
         private ICompletableFuture<Object> invokeOnNextPartition() throws Exception {
             int partitionId = nextPartitionId();
-            if (isClient) {
-                // FIXME: we have to create an invocation instead of a request
-                SyntheticRequest request = new SyntheticRequest(syncBackupCount, asyncBackupCount, backupDelayNanos);
-                request.setLocalPartitionId(partitionId);
-                ClientInvocation invocation = new ClientInvocation(null, null);
-                Address target = clientPartitionService.getPartitionOwner(partitionId);
-                // FIXME: the new invokeOnTarget is void, so we don't get a future here!
-                clientInvocationService.invokeOnTarget(invocation, target);
-            }
             SyntheticOperation operation = new SyntheticOperation(syncBackupCount, asyncBackupCount, getBackupDelayNanos());
             return operationService.invokeOnPartition(serviceName, operation, partitionId);
         }
@@ -208,31 +145,6 @@ public class SyntheticTest extends AbstractTest {
 
             return Math.abs(random.nextLong() + 1) % backupDelayNanos;
         }
-
-        @Override
-        public void onResponse(Object response) {
-            probe.done(0);
-        }
-
-        @Override
-        public void onFailure(Throwable t) {
-            ExceptionReporter.report(testContext.getTestId(), t);
-        }
-
-        @Override
-        public void afterCompletion() {
-            // nothing to do here
-        }
-
-        @Override
-        public void beforeRun() throws Exception {
-            // nothing to do here
-        }
-
-        @Override
-        public void afterRun() throws Exception {
-            // nothing to do here
-        }
     }
 
     @Teardown
@@ -240,6 +152,4 @@ public class SyntheticTest extends AbstractTest {
         logger.info(getOperationCountInformation(targetInstance));
         logger.info(getPartitionDistributionInformation(targetInstance));
     }
-
-
 }
