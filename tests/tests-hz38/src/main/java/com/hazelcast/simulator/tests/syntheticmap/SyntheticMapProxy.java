@@ -47,7 +47,7 @@ public class SyntheticMapProxy<K, V> extends AbstractDistributedObject<Synthetic
         OperationService operationService = HazelcastTestUtils.getOperationService(nodeEngine.getHazelcastInstance());
         return operationService
                 .<V>invokeOnPartition(SyntheticMapService.SERVICE_NAME, operation, partitionId)
-                .getSafely();
+                .join();
     }
 
     @Override
@@ -61,7 +61,7 @@ public class SyntheticMapProxy<K, V> extends AbstractDistributedObject<Synthetic
         OperationService operationService = HazelcastTestUtils.getOperationService(nodeEngine.getHazelcastInstance());
         operationService
                 .<V>invokeOnPartition(SyntheticMapService.SERVICE_NAME, operation, partitionId)
-                .getSafely();
+                .join();
     }
 
     @Override
