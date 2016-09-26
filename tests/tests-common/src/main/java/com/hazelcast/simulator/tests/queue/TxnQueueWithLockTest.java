@@ -22,6 +22,7 @@ import com.hazelcast.core.TransactionalQueue;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
@@ -34,12 +35,19 @@ import static org.junit.Assert.assertFalse;
  */
 public class TxnQueueWithLockTest extends AbstractTest {
 
+    private ILock firstLock;
+    private ILock secondLock;
+
+    @BeforeRun
+    public void beforeRun() {
+        firstLock = targetInstance.getLock(name + "l1");
+        secondLock = targetInstance.getLock(name + "l2");
+    }
+
     @TimeStep
     public void timeStep(ThreadState state) {
+        firstLock.lock();
         try {
-            ILock firstLock = targetInstance.getLock(name + "l1");
-            firstLock.lock();
-
             TransactionContext ctx = targetInstance.newTransactionContext();
             try {
                 ctx.beginTransaction();
@@ -47,7 +55,6 @@ public class TxnQueueWithLockTest extends AbstractTest {
                 TransactionalQueue<Integer> queue = ctx.getQueue(name + 'q');
                 queue.offer(1);
 
-                ILock secondLock = targetInstance.getLock(name + "l2");
                 secondLock.lock();
                 secondLock.unlock();
 
@@ -55,7 +62,6 @@ public class TxnQueueWithLockTest extends AbstractTest {
 
                 ctx.commitTransaction();
                 state.counter.committed++;
-
             } catch (Exception txnException) {
                 try {
                     ctx.rollbackTransaction();
@@ -66,11 +72,11 @@ public class TxnQueueWithLockTest extends AbstractTest {
                     state.counter.failedRollbacks++;
                     logger.severe(name + ": Exception in roll " + state.counter, rollException);
                 }
-            } finally {
-                firstLock.unlock();
             }
         } catch (Exception e) {
             logger.severe(name + ": outer Exception" + state.counter, e);
+        } finally {
+            firstLock.unlock();
         }
     }
 
@@ -87,9 +93,6 @@ public class TxnQueueWithLockTest extends AbstractTest {
     @Verify
     public void globalVerify() {
         IQueue queue = targetInstance.getQueue(name + 'q');
-        ILock firstLock = targetInstance.getLock(name + "l1");
-        ILock secondLock = targetInstance.getLock(name + "l2");
-
         IList<TxnCounter> results = targetInstance.getList(name + "results");
 
         TxnCounter total = new TxnCounter();
