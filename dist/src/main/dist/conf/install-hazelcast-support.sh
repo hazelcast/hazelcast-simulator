@@ -163,13 +163,12 @@ prepare_using_git()
     done
 }
 
-
-
 # throttles the number of concurrent uploads by limiting the number of child processes
 throttle_concurrent_uploads() {
-    while test $(jobs -p | wc -w) -ge "$max_current_uploads"; do
-        wait -n;
-    done
+    #while test $(jobs -p | wc -w) -ge "$max_current_uploads"; do
+    #    wait -n;
+    #done
+    echo skipping throttle
 }
 
 # uploads the files to a single agent
