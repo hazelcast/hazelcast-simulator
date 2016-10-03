@@ -144,7 +144,6 @@ public class TestOperationProcessor extends OperationProcessor {
                     try {
                         testContainer.invoke(testPhase);
                     } finally {
-                        LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                         if (testPhase == getLastTestPhase()) {
                             worker.getWorkerConnector().removeTest(testAddress.getTestIndex());
                         }
@@ -168,11 +167,7 @@ public class TestOperationProcessor extends OperationProcessor {
         OperationThread operationThread = new OperationThread(TestPhase.RUN) {
             @Override
             public void doRun() throws Exception {
-                try {
-                    testContainer.invoke(TestPhase.RUN);
-                } finally {
-                    LOGGER.info(format("%s Completed run of %s %s", DASHES, testId, DASHES));
-                }
+                testContainer.invoke(TestPhase.RUN);
             }
         };
         operationThread.start();
@@ -204,7 +199,10 @@ public class TestOperationProcessor extends OperationProcessor {
 
     private abstract class OperationThread extends Thread {
 
+        private final TestPhase testPhase;
+
         OperationThread(TestPhase testPhase) {
+            this.testPhase = testPhase;
             if (!testPhaseReference.compareAndSet(null, testPhase)) {
                 throw new IllegalStateException(format("Tried to start %s for test %s, but %s is still running!", testPhase,
                         testId, testPhaseReference.get()));
@@ -216,8 +214,9 @@ public class TestOperationProcessor extends OperationProcessor {
         public final void run() {
             try {
                 doRun();
+                LOGGER.info(format("%s %s of %s SUCCEEDED %s ", DASHES, testPhase.desc(), testId, DASHES));
             } catch (Throwable t) {
-                LOGGER.error("Error while executing test phase", t);
+                LOGGER.error(format("%s %s of %s FAILED %s ", DASHES, testPhase.desc(), testId, DASHES), t);
                 exceptionLogger.log(t, testId);
             } finally {
                 sendPhaseCompletedOperation(testPhaseReference.getAndSet(null));
