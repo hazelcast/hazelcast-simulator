@@ -146,11 +146,10 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
         try {
             new OperationThread(testPhase) {
                 @Override
-                public void doRun() throws Exception {
+                public void run0() throws Exception {
                     try {
                         testContainer.invoke(testPhase);
                     } finally {
-                        LOGGER.info(format("%s Finished %s of %s %s", DASHES, testPhase.desc(), testId, DASHES));
                         if (testPhase == getLastTestPhase()) {
                             worker.getWorkerConnector().removeTest(testAddress.getTestIndex());
                             WorkerOperationProcessor processor =
@@ -177,12 +176,8 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
         LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
         new OperationThread(testPhase) {
             @Override
-            public void doRun() throws Exception {
-                try {
-                    testContainer.invoke(testPhase);
-                } finally {
-                    LOGGER.info(format("%s Completed run of %s %s", DASHES, testId, DASHES));
-                }
+            public void run0() throws Exception {
+                testContainer.invoke(testPhase);
             }
         }.start();
     }
@@ -213,7 +208,10 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
 
     private abstract class OperationThread extends Thread {
 
+        private final TestPhase testPhase;
+
         OperationThread(TestPhase testPhase) {
+            this.testPhase = testPhase;
             if (!testPhaseReference.compareAndSet(null, testPhase)) {
                 throw new IllegalStateException(format("Tried to start %s for test %s, but %s is still running!", testPhase,
                         testId, testPhaseReference.get()));
@@ -224,15 +222,16 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
         @SuppressWarnings("PMD.AvoidCatchingThrowable")
         public final void run() {
             try {
-                doRun();
+                run0();
+                LOGGER.info(format("%s %s of %s SUCCEEDED %s ", DASHES, testPhase.desc(), testId, DASHES));
             } catch (Throwable t) {
-                LOGGER.error("Error while executing test phase", t);
+                LOGGER.error(format("%s %s of %s FAILED %s ", DASHES, testPhase.desc(), testId, DASHES), t);
                 ExceptionReporter.report(testId, t);
             } finally {
                 sendPhaseCompletedOperation(testPhaseReference.getAndSet(null));
             }
         }
 
-        abstract void doRun() throws Exception;
+        abstract void run0() throws Exception;
     }
 }
