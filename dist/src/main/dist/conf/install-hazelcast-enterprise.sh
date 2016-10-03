@@ -8,7 +8,7 @@ public_ips=$3
 
 prepare()
 {
-    echo HAZELCAST_ENTERPRISE_VERSION_SPEC $version_spec
+    echo VERSION_SPEC $version_spec
 
     if  [[ $version_spec == maven* ]] ; then
         version=${version_spec#*=}
@@ -28,10 +28,10 @@ prepare()
         echo Bring my own
         # we don't need to do anything.
     elif [[ $version_spec == outofthebox ]] ; then
-        echo "Aborting, ENTERPRISE_VERSION_SPEC 'outofthebox' is not supported for hazelcast-enterprise"
+        echo "Aborting, VERSION_SPEC 'outofthebox' is not supported for hazelcast-enterprise"
         exit 1
     else
-        echo "Aborting, invalid ENTERPRISE_VERSION_SPEC [$version_spec]"
+        echo "Aborting, invalid VERSION_SPEC [$version_spec]"
         exit 1
     fi
 }
