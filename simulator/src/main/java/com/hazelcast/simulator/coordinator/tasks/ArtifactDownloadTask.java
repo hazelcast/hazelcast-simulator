@@ -94,9 +94,7 @@ public class ArtifactDownloadTask {
             spawner.spawn(new DownloadWorkerLogs(agentData.getPublicAddress()));
         }
 
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            spawner.spawn(new DownloadAgentLogs(agentData));
-        }
+        spawner.spawn(new DownloadAgentLogs());
 
         spawner.awaitCompletion();
 
@@ -128,14 +126,14 @@ public class ArtifactDownloadTask {
     }
 
     private final class DownloadAgentLogs implements Runnable {
-        private final AgentData agentData;
-
-        private DownloadAgentLogs(AgentData agentData) {
-            this.agentData = agentData;
-        }
-
         @Override
         public void run() {
+            for (AgentData agentData : componentRegistry.getAgents()) {
+                download(agentData);
+            }
+        }
+
+        private void download(AgentData agentData) {
             String ip = agentData.getPublicAddress();
             String agentAddress = agentData.getAddress().toString();
 
