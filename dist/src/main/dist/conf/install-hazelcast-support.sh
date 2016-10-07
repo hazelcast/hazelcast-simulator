@@ -212,7 +212,7 @@ upload()
     # the public_ips is a comma separated list
     # we execute the uploading in parallel
     for public_ip in ${public_ips//,/ } ; do
-        throttle_concurrent_uploads
+        #throttle_concurrent_uploads
         upload_to_single_agent $public_ip &
     done
 
