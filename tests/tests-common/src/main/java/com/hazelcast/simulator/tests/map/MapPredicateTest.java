@@ -127,7 +127,7 @@ public class MapPredicateTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.2)
-    public void pagingPredicate(ThreadState state) {
+    public void pagePredicate(ThreadState state) {
         double maxSalary = state.randomDouble() * Employee.MAX_SALARY;
         Predicate predicate = Predicates.lessThan("salary", maxSalary);
         SalaryComparator salaryComparator = new SalaryComparator();
@@ -173,7 +173,7 @@ public class MapPredicateTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void destroyMap(ThreadState state) {
+    public void destroy(ThreadState state) {
         map.destroy();
         initMap();
         state.operationCounter.destroyCount++;
