@@ -120,7 +120,7 @@ public class ${className} extends TimeStepRunner {
             <#if isStartNanos(m, param?counter)>
                 <#if metronomeClass??>startNanos<#else>System.nanoTime()</#if>
             <#elseif isAssignableFrom(param, Probe)>
-                <#if probeClass??>${method.name}Probe<#else>com.hazelcast.simulator.probes.impl.EmptyProbe.INSTANCE</#if>
+                <#if probeClass??>${m.name}Probe<#else>com.hazelcast.simulator.probes.impl.EmptyProbe.INSTANCE</#if>
             <#else>
                 threadState
             </#if>
