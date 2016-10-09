@@ -22,7 +22,7 @@ import com.hazelcast.core.TransactionalQueue;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.BeforeRun;
+import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.helpers.TxnCounter;
@@ -38,8 +38,8 @@ public class TxnQueueWithLockTest extends AbstractTest {
     private ILock firstLock;
     private ILock secondLock;
 
-    @BeforeRun
-    public void beforeRun() {
+    @Setup
+    public void setup() {
         firstLock = targetInstance.getLock(name + "l1");
         secondLock = targetInstance.getLock(name + "l2");
     }
