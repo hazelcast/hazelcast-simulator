@@ -68,7 +68,7 @@ public class MapTimeToLiveTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.3)
-    public void asyncPutTTL(ThreadState state) {
+    public void putAsyncTTL(ThreadState state) {
         try {
             int key = state.randomInt(keyCount);
             int value = state.randomInt();
