@@ -174,7 +174,7 @@ class TimeStepRunnerCodeGenerator {
 
             return new JavaSourceFromString(className, javaCode);
         } catch (Exception e) {
-            throw new IllegalTestException(e);
+            throw new IllegalTestException(className + " ran into a code generation problem: " + e.getMessage(), e);
         }
     }
 
