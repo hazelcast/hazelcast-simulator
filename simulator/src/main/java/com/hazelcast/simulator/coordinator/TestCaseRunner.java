@@ -289,7 +289,7 @@ public final class TestCaseRunner implements TestPhaseListener {
         long actualDurationMs = currentTimeMillis() - startMs;
 
         if (performanceMonitorIntervalSeconds > 0) {
-            LOGGER.info("Waiting for all performance info");
+            LOGGER.info(testCase.getId() + " Waiting for all performance info");
             sleepSeconds(performanceMonitorIntervalSeconds);
 
             LOGGER.info("Performance " + testCase.getId() + "\n"
