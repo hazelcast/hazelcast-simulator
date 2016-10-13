@@ -121,7 +121,7 @@ public class NetworkTest extends AbstractTest {
                 threadingModel = nonBlockingIOThreadingModel;
                 break;
             case Spinning:
-                threadingModel = new SpinningIOThreadingModel(loggingService, metricsRegistry, threadGroup);
+                threadingModel = new SpinningIOThreadingModel(loggingService, threadGroup);
                 break;
             default:
                 throw new IllegalStateException("Unrecognized threading model: " + ioThreadingModel);
