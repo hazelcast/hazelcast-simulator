@@ -27,7 +27,8 @@ public enum OperationType {
 
     // OperationProcessor
     INTEGRATION_TEST(IntegrationTestOperation.class, 0),
-    LOG(LogOperation.class, 1),
+    AUTH(AuthOperation.class, 1),
+    LOG(LogOperation.class, 2),
 
     // CoordinatorOperationProcessor
     FAILURE(FailureOperation.class, 1000),

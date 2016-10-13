@@ -16,12 +16,12 @@
 package com.hazelcast.simulator.protocol.connector;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.core.TestProcessorManager;
-import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
-import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
@@ -35,7 +35,6 @@ import com.hazelcast.simulator.protocol.processors.OperationProcessor;
 import com.hazelcast.simulator.protocol.processors.TestOperationProcessor;
 import com.hazelcast.simulator.protocol.processors.WorkerOperationProcessor;
 import com.hazelcast.simulator.worker.Worker;
-import com.hazelcast.simulator.common.WorkerType;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.group.ChannelGroup;
 
@@ -76,8 +75,7 @@ public class WorkerConnector extends AbstractServerConnector {
 
     @Override
     void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
-        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
-        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
+        pipeline.addLast("connectionHandler", new ConnectionHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, localAddress.getParent()));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());

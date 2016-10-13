@@ -62,6 +62,10 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
             LOGGER.trace(format("[%d] %s <- %s received %s for %s", messageId, localAddress, remoteAddress, response, key));
         }
 
+        if (messageId == 0) {
+            return;
+        }
+
         ResponseFuture future = futureMap.get(key);
         if (future != null) {
             future.set(response);

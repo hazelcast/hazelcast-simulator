@@ -19,8 +19,7 @@ import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
-import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.MessageConsumeHandler;
 import com.hazelcast.simulator.protocol.handler.MessageEncoder;
@@ -67,8 +66,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
 
     @Override
     void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
-        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
-        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
+        pipeline.addLast("connectionListenerHandler", new ConnectionHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(COORDINATOR));
         pipeline.addLast("messageEncoder", new MessageEncoder(COORDINATOR, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());

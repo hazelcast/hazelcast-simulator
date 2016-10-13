@@ -1,8 +1,8 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class OperationCodecTest {
         String json = toJson(operation);
         assertNotNull(json);
 
-        SimulatorMessage message = new SimulatorMessage(COORDINATOR, COORDINATOR, 0, OperationType.INTEGRATION_TEST, json);
+        SimulatorMessage message = new SimulatorMessage(COORDINATOR, COORDINATOR, 1, OperationType.INTEGRATION_TEST, json);
         IntegrationTestOperation decoded = (IntegrationTestOperation) fromSimulatorMessage(message);
         assertEquals(operation.getTestData(), decoded.getTestData());
     }

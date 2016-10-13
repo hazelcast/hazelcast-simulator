@@ -21,8 +21,7 @@ import com.hazelcast.simulator.protocol.core.ConnectionManager;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.handler.ConnectionListenerHandler;
-import com.hazelcast.simulator.protocol.handler.ConnectionValidationHandler;
+import com.hazelcast.simulator.protocol.handler.ConnectionHandler;
 import com.hazelcast.simulator.protocol.handler.ExceptionHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToCoordinatorHandler;
 import com.hazelcast.simulator.protocol.handler.ForwardToWorkerHandler;
@@ -87,8 +86,7 @@ public class AgentConnectorImpl extends AbstractServerConnector implements Clien
 
     @Override
     void configureServerPipeline(ChannelPipeline pipeline, ServerConnector serverConnector) {
-        pipeline.addLast("connectionValidationHandler", new ConnectionValidationHandler());
-        pipeline.addLast("connectionListenerHandler", new ConnectionListenerHandler(connectionManager));
+        pipeline.addLast("connectionListenerHandler", new ConnectionHandler(connectionManager));
         pipeline.addLast("responseEncoder", new ResponseEncoder(localAddress));
         pipeline.addLast("messageEncoder", new MessageEncoder(localAddress, COORDINATOR));
         pipeline.addLast("frameDecoder", new SimulatorFrameDecoder());

@@ -38,6 +38,7 @@ import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureK
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getMessageId;
 import static com.hazelcast.simulator.protocol.core.SimulatorMessageCodec.getSourceAddress;
+import static com.hazelcast.simulator.protocol.operation.OperationType.AUTH;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
@@ -120,6 +121,8 @@ public class ClientConnector {
                         LOGGER.trace(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress,
                                 channel.remoteAddress()));
                     }
+
+                    sendAuthMessage();
                     return;
                 }
                 future.channel().close();
@@ -132,6 +135,11 @@ public class ClientConnector {
         } while (connectionTry++ < connectRetries);
 
         throw rethrow(exception);
+    }
+
+    private void sendAuthMessage() {
+        SimulatorMessage message = new SimulatorMessage(remoteAddress, localAddress, 0, AUTH, "AUTH");
+        writeAsync(message);
     }
 
     public void shutdown() {
