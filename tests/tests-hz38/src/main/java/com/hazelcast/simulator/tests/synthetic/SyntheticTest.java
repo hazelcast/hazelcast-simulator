@@ -35,7 +35,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.*;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getPartitionDistributionInformation;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 
 /**
  * The SyntheticTest can be used to test features like back pressure.
