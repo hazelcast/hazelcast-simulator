@@ -52,7 +52,9 @@ public final class ResponseFuture implements Future<Response> {
      */
     public static ResponseFuture createInstance(ConcurrentMap<String, ResponseFuture> futureMap, String key) {
         ResponseFuture future = new ResponseFuture(futureMap, key);
-        futureMap.put(key, future);
+        if (getMessageIdFromFutureKey(key) > 0) {
+            futureMap.put(key, future);
+        }
 
         return future;
     }

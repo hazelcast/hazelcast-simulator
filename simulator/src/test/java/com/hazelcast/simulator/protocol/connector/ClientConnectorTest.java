@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -65,6 +66,7 @@ public class ClientConnectorTest {
         verifyNoMoreInteractions(future);
 
         verify(channel, times(1)).remoteAddress();
+        verify(channel, times(1)).writeAndFlush(any(Object.class));
         verifyNoMoreInteractions(channel);
     }
 
@@ -85,6 +87,7 @@ public class ClientConnectorTest {
 
         verify(channel, times(1)).close();
         verify(channel, times(1)).remoteAddress();
+        verify(channel, times(1)).writeAndFlush(any(Object.class));
         verifyNoMoreInteractions(channel);
     }
 
@@ -104,6 +107,7 @@ public class ClientConnectorTest {
         verifyNoMoreInteractions(future);
 
         verify(channel, times(1)).remoteAddress();
+        verify(channel, times(1)).writeAndFlush(any(Object.class));
         verifyNoMoreInteractions(channel);
     }
 

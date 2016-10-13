@@ -46,7 +46,7 @@ public class OperationCodecTest {
         String json = toJson(operation);
         assertNotNull(json);
 
-        SimulatorMessage message = new SimulatorMessage(COORDINATOR, COORDINATOR, 0, OperationType.INTEGRATION_TEST, json);
+        SimulatorMessage message = new SimulatorMessage(COORDINATOR, COORDINATOR, 1, OperationType.INTEGRATION_TEST, json);
         IntegrationTestOperation decoded = (IntegrationTestOperation) fromSimulatorMessage(message);
         assertEquals(operation.getTestData(), decoded.getTestData());
     }

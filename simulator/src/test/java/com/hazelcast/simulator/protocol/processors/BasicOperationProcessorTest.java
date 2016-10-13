@@ -3,6 +3,7 @@ package com.hazelcast.simulator.protocol.processors;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.LocalExceptionLogger;
+import com.hazelcast.simulator.protocol.operation.AuthOperation;
 import com.hazelcast.simulator.protocol.operation.ChaosMonkeyOperation;
 import com.hazelcast.simulator.protocol.operation.IntegrationTestOperation;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
@@ -61,6 +62,16 @@ public class BasicOperationProcessorTest {
 
         assertEquals(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
         assertEquals(1, exceptionLogger.getExceptionCount());
+    }
+
+    @Test
+    public void testProcessAuthOperation() {
+        AuthOperation operation = new AuthOperation();
+
+        ResponseType responseType = processor.process(operation, SimulatorAddress.COORDINATOR);
+
+        assertEquals(ResponseType.SUCCESS, responseType);
+        assertEquals(0, exceptionLogger.getExceptionCount());
     }
 
     @Test

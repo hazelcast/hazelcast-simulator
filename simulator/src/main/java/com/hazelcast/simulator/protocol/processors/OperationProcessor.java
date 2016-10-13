@@ -56,6 +56,8 @@ public abstract class OperationProcessor {
             switch (operationType) {
                 case INTEGRATION_TEST:
                     return processIntegrationTest(operationType, (IntegrationTestOperation) operation, sourceAddress);
+                case AUTH:
+                    break;
                 case LOG:
                     processLog((LogOperation) operation, sourceAddress);
                     break;

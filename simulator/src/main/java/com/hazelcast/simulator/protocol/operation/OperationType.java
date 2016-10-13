@@ -27,31 +27,32 @@ public enum OperationType {
 
     // OperationProcessor
     INTEGRATION_TEST(IntegrationTestOperation.class, 0),
-    LOG(LogOperation.class, 1),
-    CHAOS_MONKEY(ChaosMonkeyOperation.class, 2),
+    AUTH(AuthOperation.class, 1),
+    LOG(LogOperation.class, 2),
+    CHAOS_MONKEY(ChaosMonkeyOperation.class, 3),
 
     // CoordinatorOperationProcessor
-    EXCEPTION(ExceptionOperation.class, 3),
-    FAILURE(FailureOperation.class, 4),
-    PHASE_COMPLETED(PhaseCompletedOperation.class, 5),
-    PERFORMANCE_STATE(PerformanceStateOperation.class, 6),
-    TEST_HISTOGRAMS(TestHistogramOperation.class, 7),
+    EXCEPTION(ExceptionOperation.class, 4),
+    FAILURE(FailureOperation.class, 5),
+    PHASE_COMPLETED(PhaseCompletedOperation.class, 6),
+    PERFORMANCE_STATE(PerformanceStateOperation.class, 7),
+    TEST_HISTOGRAMS(TestHistogramOperation.class, 8),
 
     // AgentOperationProcessor
-    INIT_TEST_SUITE(InitTestSuiteOperation.class, 8),
-    CREATE_WORKER(CreateWorkerOperation.class, 9),
-    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 10),
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 11),
+    INIT_TEST_SUITE(InitTestSuiteOperation.class, 9),
+    CREATE_WORKER(CreateWorkerOperation.class, 10),
+    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 11),
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 12),
 
     // WorkerOperationProcessor
-    PING(PingOperation.class, 12),
-    TERMINATE_WORKER(TerminateWorkerOperation.class, 13),
-    CREATE_TEST(CreateTestOperation.class, 14),
+    PING(PingOperation.class, 13),
+    TERMINATE_WORKER(TerminateWorkerOperation.class, 14),
+    CREATE_TEST(CreateTestOperation.class, 15),
 
     // TestOperationProcessor
-    START_TEST_PHASE(StartTestPhaseOperation.class, 15),
-    START_TEST(StartTestOperation.class, 16),
-    STOP_TEST(StopTestOperation.class, 17);
+    START_TEST_PHASE(StartTestPhaseOperation.class, 16),
+    START_TEST(StartTestOperation.class, 17),
+    STOP_TEST(StopTestOperation.class, 18);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;
