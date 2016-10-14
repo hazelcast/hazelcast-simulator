@@ -388,7 +388,7 @@ public final class Coordinator {
     private void moveLogFiles() {
         if (isLocal(simulatorProperties)) {
             File workerHome = newFile(getSimulatorHome(), WORKERS_HOME_NAME);
-            File targetDirectory = ensureExistingDirectory(newFile(".", WORKERS_HOME_NAME), testSuite.getId());
+            File targetDirectory = ensureExistingDirectory(newFile(WORKERS_HOME_NAME).getAbsoluteFile(), testSuite.getId());
 
             String workerPath = workerHome.getAbsolutePath();
             String targetPath = targetDirectory.getAbsolutePath();
