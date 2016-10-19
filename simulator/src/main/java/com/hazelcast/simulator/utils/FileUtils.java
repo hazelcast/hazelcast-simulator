@@ -330,6 +330,10 @@ public final class FileUtils {
     }
 
     public static String getUserHomePath() {
+        String userDirTest = System.getProperty("user.dir.test");
+        if (userDirTest != null) {
+            return new File(userDirTest).getAbsolutePath();
+        }
         return System.getProperty("user.home");
     }
 
@@ -410,7 +414,7 @@ public final class FileUtils {
     /**
      * Copies a directory recursively.
      *
-     * @param src the src directory
+     * @param src    the src directory
      * @param target the target directory
      */
     public static void copyDirectory(File src, File target) {
