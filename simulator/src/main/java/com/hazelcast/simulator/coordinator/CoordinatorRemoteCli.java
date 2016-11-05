@@ -267,7 +267,10 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private class TestStopCli extends AbstractCli {
         private final String help =
-                "Ask a test to stop its warmup or running phase. It is especially useful for tests that run without a duration."
+                "Ask a test to stop its warmup or running phase. It is especially useful for tests that run without a\n"
+                        + "duration.\n"
+                        + "This commands waits for the test to complete and returns the result status of the test\n"
+                        + " ('completed' for success)\n"
                         + "\n"
                         + "Examples\n"
                         + "# Stops a test.\n"

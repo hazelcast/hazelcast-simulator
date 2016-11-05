@@ -22,11 +22,10 @@ memberJvmArgs="${memberJvmArgs} ${gcArgs}"
 clientJvmArgs="-Xmx${clientHeapSZ} -XX:+HeapDumpOnOutOfMemoryError"
 clientJvmArgs="${clientJvmArgs} ${gcArgs}"
 
-coordinator --memberWorkerCount ${members} \
-            --clientWorkerCount ${clients} \
+coordinator --members ${members} \
+            --clients ${clients} \
             --duration ${duration} \
             --workerVmOptions "${memberJvmArgs}" \
             --clientWorkerVmOptions "${clientJvmArgs}" \
             --parallel \
-            --monitorPerformance \
              ${testsuite}.properties

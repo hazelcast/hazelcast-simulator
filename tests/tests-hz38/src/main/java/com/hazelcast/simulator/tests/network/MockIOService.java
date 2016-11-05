@@ -21,6 +21,10 @@ import com.hazelcast.config.SocketInterceptorConfig;
 import com.hazelcast.config.SymmetricEncryptionConfig;
 import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.internal.ascii.TextCommandService;
+import com.hazelcast.internal.networking.IOOutOfMemoryHandler;
+import com.hazelcast.internal.networking.ReadHandler;
+import com.hazelcast.internal.networking.SocketChannelWrapperFactory;
+import com.hazelcast.internal.networking.WriteHandler;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.logging.ILogger;
@@ -30,13 +34,9 @@ import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.IOService;
 import com.hazelcast.nio.MemberSocketInterceptor;
 import com.hazelcast.nio.Packet;
-import com.hazelcast.nio.serialization.Data;
 import com.hazelcast.nio.tcp.DefaultSocketChannelWrapperFactory;
 import com.hazelcast.nio.tcp.MemberReadHandler;
-import com.hazelcast.nio.tcp.ReadHandler;
-import com.hazelcast.nio.tcp.SocketChannelWrapperFactory;
 import com.hazelcast.nio.tcp.TcpIpConnection;
-import com.hazelcast.nio.tcp.WriteHandler;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.EventFilter;
 import com.hazelcast.spi.EventRegistration;
@@ -96,12 +96,22 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public ILogger getLogger(String name) {
-        return loggingService.getLogger(name);
+    public HazelcastThreadGroup getHazelcastThreadGroup() {
+        return hazelcastThreadGroup;
     }
 
     @Override
-    public void onOutOfMemory(OutOfMemoryError oom) {
+    public LoggingService getLoggingService() {
+        return loggingService;
+    }
+
+    @Override
+    public IOOutOfMemoryHandler getIoOutOfMemoryHandler() {
+        return new IOOutOfMemoryHandler() {
+            @Override
+            public void handle(OutOfMemoryError error) {
+            }
+        };
     }
 
     @Override
@@ -149,16 +159,6 @@ public class MockIOService implements IOService {
 
     @Override
     public void removeEndpoint(Address endpoint) {
-    }
-
-    @Override
-    public String getThreadPrefix() {
-        return hazelcastThreadGroup.getThreadPoolNamePrefix("IO");
-    }
-
-    @Override
-    public ThreadGroup getThreadGroup() {
-        return hazelcastThreadGroup.getInternalThreadGroup();
     }
 
     @Override
@@ -286,18 +286,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public Data toData(Object obj) {
-        return serializationService.toData(obj);
-    }
-
-    @Override
-    public Object toObject(Data data) {
-        return serializationService.toObject(data);
-    }
-
-    @Override
     public InternalSerializationService getSerializationService() {
-        return (InternalSerializationService) serializationService;
+        return serializationService;
     }
 
     @Override
@@ -313,7 +303,7 @@ public class MockIOService implements IOService {
     @Override
     public ReadHandler createReadHandler(final TcpIpConnection connection) {
         return new MemberReadHandler(connection, new PacketDispatcher() {
-            private ILogger logger = getLogger("MockIOService");
+            private ILogger logger = loggingService.getLogger("MockIOService");
 
             @Override
             public void dispatch(Packet packet) {
