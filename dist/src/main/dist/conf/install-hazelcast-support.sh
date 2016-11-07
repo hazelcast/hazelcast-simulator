@@ -30,13 +30,14 @@ simulator_basename=($(basename $SIMULATOR_HOME))
 # http://unix.stackexchange.com/questions/30091/fix-or-alternative-for-mktemp-in-os-x
 tmp_dir=`mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir'`
 local_install_dir="$tmp_dir/lib"
+mkdir -p $local_install_dir
 
 download()
 {
     url=$1 # the url of the artifact to download
     dir=$2 # the directory the file should be downloaded
 
-    if type "wget" >> null; then
+    if type "wget" >> /dev/null; then
         wget --no-verbose --directory-prefix=$dir $url
     else
         pushd .
@@ -171,7 +172,7 @@ throttle_concurrent_uploads() {
 }
 
 # uploads the files to a single agent
-upload_to_single_agent(){
+upload_to_remote_agent(){
     public_ip=$1
 
     remote_hz_lib=$simulator_basename/hz-lib
@@ -197,25 +198,34 @@ upload_to_single_agent(){
     done
 }
 
+upload_to_local_agent(){
+    echo "Local install"
+
+    mkdir -p $SIMULATOR_HOME/workers/$session_id/lib
+    cp -r $local_install_dir $SIMULATOR_HOME/workers/$session_id/lib
+
+    # if the local upload directory exist, it needs to be uploaded
+    if [ -d $local_upload_dir ]; then
+       echo "Uploading 'upload' directory"
+       cp -r $local_upload_dir $SIMULATOR_HOME/workers/$session_id/upload
+    fi
+}
 # uploads the installation files to all agents
 upload()
 {
     # if there are no provided public ip's, then it is a local install
     if [ -z "$public_ips" ] ; then
-        echo "Local install"
-        mkdir -p $SIMULATOR_HOME/workers/$session_id/lib
-        cp -r $local_install_dir $SIMULATOR_HOME/workers/$session_id/lib
-        return
+        upload_to_local_agent
+    else
+        # it is a remote install; so upload to each of the public ip's
+        # the public_ips is a comma separated list
+        # we execute the uploading in parallel
+        for public_ip in ${public_ips//,/ } ; do
+            #throttle_concurrent_uploads
+            upload_to_single_agent $public_ip &
+        done
+
+        # wait for all uploads to complete.
+        wait
     fi
-
-    # it is a remote install; so upload to each of the public ip's
-    # the public_ips is a comma separated list
-    # we execute the uploading in parallel
-    for public_ip in ${public_ips//,/ } ; do
-        #throttle_concurrent_uploads
-        upload_to_single_agent $public_ip &
-    done
-
-    # wait for all uploads to complete.
-    wait
 }

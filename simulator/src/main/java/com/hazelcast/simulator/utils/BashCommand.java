@@ -31,6 +31,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -42,9 +43,17 @@ public class BashCommand {
     private final Map<String, Object> environment = new HashMap<String, Object>();
     private boolean throwException;
     private File directory;
+    private boolean ensureJavaOnPath;
 
     public BashCommand(String command) {
         params.add(command);
+
+        environment.put("SIMULATOR_HOME", getSimulatorHome());
+    }
+
+    public BashCommand ensureJavaOnPath() {
+        this.ensureJavaOnPath = true;
+        return this;
     }
 
     public BashCommand addParams(Object... params) {
@@ -108,6 +117,13 @@ public class BashCommand {
             for (Map.Entry<String, Object> entry : environment.entrySet()) {
                 pb.environment().put(entry.getKey(), entry.getValue().toString());
             }
+
+            if (ensureJavaOnPath) {
+                String path = pb.environment().get("PATH");
+                String newPath = path + ":" + System.getProperty("java.home")+"/bin";
+                pb.environment().put("PATH", newPath);
+            }
+
             pb = pb.redirectErrorStream(true);
 
             Process shell = pb.start();

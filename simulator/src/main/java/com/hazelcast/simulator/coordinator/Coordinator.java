@@ -46,7 +46,6 @@ import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.Bash;
-import com.hazelcast.simulator.utils.CommonUtils;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import com.hazelcast.simulator.worker.Promise;
 import org.apache.log4j.Logger;
@@ -107,7 +106,7 @@ public class Coordinator implements Closeable {
     private final int testCompletionTimeoutSeconds;
     private CoordinatorConnector connector;
 
-    Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
+    public Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
         this.componentRegistry = componentRegistry;
         this.parameters = parameters;
@@ -119,12 +118,13 @@ public class Coordinator implements Closeable {
     }
 
     public void start() {
-        registerShutdownHook();
+        //registerShutdownHook();
 
         logConfiguration();
 
         echoLocal("Coordinator starting...");
 
+        echoLocal("Checking agent installation");
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
         startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
@@ -160,6 +160,7 @@ public class Coordinator implements Closeable {
     }
 
     private void logConfiguration() {
+        echoLocal("Cloud provider: " + simulatorProperties.getCloudProvider());
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
@@ -217,9 +218,7 @@ public class Coordinator implements Closeable {
         }
 
         OperationTypeCounter.printStatistics();
-
-        failureCollector.logFailureInfo();
-    }
+      }
 
     private void stopTests() {
         Collection<TestData> tests = componentRegistry.getTests();
@@ -300,7 +299,7 @@ public class Coordinator implements Closeable {
             public void run() {
                 try {
                     Thread.sleep(DELAY);
-                    CommonUtils.exit(0);
+                    //CommonUtils.exit(0);
                 } catch (Exception e) {
                     LOGGER.warn("Failed to shutdown", e);
                 }

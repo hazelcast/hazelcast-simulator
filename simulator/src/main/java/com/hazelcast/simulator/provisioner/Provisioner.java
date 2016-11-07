@@ -55,7 +55,7 @@ import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-class Provisioner {
+public class Provisioner {
 
     private static final int MACHINE_WARMUP_WAIT_SECONDS = 10;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
@@ -97,7 +97,7 @@ class Provisioner {
         return componentRegistry;
     }
 
-    void scale(int size, Map<String, String> tags) {
+    public void scale(int size, Map<String, String> tags) {
         ensureIsCloudProviderSetup(properties, "scale");
 
         int agentSize = componentRegistry.agentCount();
