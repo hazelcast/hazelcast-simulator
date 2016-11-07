@@ -337,6 +337,10 @@ public final class FileUtils {
         return System.getProperty("user.home");
     }
 
+    public static String getUserHome() {
+        return System.getProperty("user.home");
+    }
+
     public static File getSimulatorHome() {
         String home = System.getProperty("SIMULATOR_HOME");
         if (home != null) {
@@ -418,7 +422,15 @@ public final class FileUtils {
      * @param target the target directory
      */
     public static void copyDirectory(File src, File target) {
-        for (File srcFile : src.listFiles()) {
+        checkNotNull(src, "src can't be null");
+        checkNotNull(target, "target can't be null");
+
+        File[] files = src.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File srcFile : files) {
             if (srcFile.isDirectory()) {
                 File targetChild = new File(target, srcFile.getName());
                 ensureExistingDirectory(targetChild);

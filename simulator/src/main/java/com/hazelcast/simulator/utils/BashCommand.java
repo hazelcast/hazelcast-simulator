@@ -31,6 +31,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -45,6 +46,8 @@ public class BashCommand {
 
     public BashCommand(String command) {
         params.add(command);
+
+        environment.put("SIMULATOR_HOME", getSimulatorHome());
     }
 
     public BashCommand addParams(Object... params) {

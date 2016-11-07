@@ -137,7 +137,7 @@ public class FailureCollector {
         return hasCriticalFailuresMap.containsKey(testId);
     }
 
-    void logFailureInfo() {
+    public void logFailureInfo() {
         int criticalFailureCount = criticalFailureCounter.get();
         int nonCriticalFailureCount = nonCriticalFailureCounter.get();
         if (criticalFailureCount > 0 || nonCriticalFailureCount > 0) {

@@ -135,6 +135,7 @@ public final class AgentUtils {
 
         @Override
         public void run() {
+            System.out.println("runMode:" + runMode);
             switch (runMode) {
                 case Remote:
                     runRemote();

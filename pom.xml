@@ -101,6 +101,7 @@
         <module>dist</module>
         <module>simulator</module>
         <module>tests</module>
+        <module>simulator-boot</module>
     </modules>
 
     <scm>
@@ -137,6 +138,12 @@
             <id>danny</id>
             <name>Danny Conlon</name>
             <email>danny@hazelcast.com</email>
+            <organization>Hazelcast</organization>
+        </developer>
+        <developer>
+            <id>david</id>
+            <name>David Sondermann</name>
+            <email>david.sondermann@hazelcast.com</email>
             <organization>Hazelcast</organization>
         </developer>
     </developers>

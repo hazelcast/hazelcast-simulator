@@ -213,6 +213,7 @@ public class WorkerProcessLauncher {
         return new File(agent.getSessionDirectory(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
+                + CLASSPATH_SEPARATOR + "upload/lib/"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + CLASSPATH_SEPARATOR + CLASSPATH;

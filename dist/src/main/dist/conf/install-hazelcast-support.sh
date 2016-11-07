@@ -36,7 +36,7 @@ download()
     url=$1 # the url of the artifact to download
     dir=$2 # the directory the file should be downloaded
 
-    if type "wget" >> null; then
+    if type "wget" >> /dev/null; then
         wget --no-verbose --directory-prefix=$dir $url
     else
         pushd .

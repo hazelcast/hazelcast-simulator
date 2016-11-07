@@ -41,7 +41,7 @@ import static org.jclouds.ContextBuilder.newBuilder;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_INITIAL_PERIOD;
 import static org.jclouds.compute.config.ComputeServiceProperties.POLL_MAX_PERIOD;
 
-class ComputeServiceBuilder {
+public class ComputeServiceBuilder {
 
     private static final File PUBLIC_KEY = newFile("~", ".ssh", "id_rsa.pub");
     private static final File PRIVATE_KEY = newFile("~", ".ssh", "id_rsa");
@@ -50,11 +50,11 @@ class ComputeServiceBuilder {
 
     private final SimulatorProperties properties;
 
-    ComputeServiceBuilder(SimulatorProperties properties) {
+    public ComputeServiceBuilder(SimulatorProperties properties) {
         this.properties = Preconditions.checkNotNull(properties, "properties can't be null");
     }
 
-    ComputeService build() {
+    public ComputeService build() {
         ensurePublicPrivateKeyExist(PUBLIC_KEY, PRIVATE_KEY);
 
         if (isStatic(properties)) {
