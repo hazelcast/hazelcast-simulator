@@ -752,19 +752,19 @@ public class CoordinatorRemoteCli implements Closeable {
                 + "\n"
                 + "Examples\n"
                 + "# runs a file 'test.properties' for 1 minute\n"
-                + "coordinator-remote run\n\n"
+                + "coordinator-remote test-start\n\n"
                 + "# runs atomiclong.properties for 1 minute\n"
-                + "coordinator-remote run atomiclong.properties\n\n"
+                + "coordinator-remote test-start atomiclong.properties\n\n"
                 + "# runs a test with a warmup period of 5 minute and a duration of 1 hour\n"
-                + "coordinator-remote run --warmup 5m --duration 1h\n\n"
+                + "coordinator-remote test-start --warmup 5m --duration 1h\n\n"
                 + "# runs a test by running all tests in the suite in parallel for 10m.\n"
-                + "coordinator-remote run --duration 10m --parallel suite.properties\n\n"
+                + "coordinator-remote test-start --duration 10m --parallel suite.properties\n\n"
                 + "# run a test but disable the verification\n"
-                + "coordinator-remote run --verify false\n\n"
+                + "coordinator-remote test-start --verify false\n\n"
                 + "# run a test but disable the fail fast mechanism\n"
-                + "coordinator-remote run --failFast \n\n"
+                + "coordinator-remote test-start --failFast \n\n"
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
-                + "coordinator-remote run --targetType member --targetCount 3 \n\n";
+                + "coordinator-remote test-start --targetType member --targetCount 3 \n\n";
 
 
         @Override
