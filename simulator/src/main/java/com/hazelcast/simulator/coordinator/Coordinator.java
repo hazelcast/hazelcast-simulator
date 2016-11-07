@@ -83,7 +83,7 @@ public class Coordinator implements Closeable {
     private final int testCompletionTimeoutSeconds;
     private final CoordinatorClient client;
 
-    Coordinator(Registry registry, CoordinatorParameters parameters) {
+    public Coordinator(Registry registry, CoordinatorParameters parameters) {
         this.registry = registry;
         this.parameters = parameters;
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
@@ -101,7 +101,7 @@ public class Coordinator implements Closeable {
         return failureCollector;
     }
 
-    void start() throws Exception {
+    public void start() throws Exception {
         client.start();
 
         registerShutdownHook();

@@ -383,6 +383,51 @@ public final class FileUtils {
         return files;
     }
 
+    /**
+     * Copies a directory recursively.
+     *
+     * @param src    the src directory
+     * @param target the target directory
+     */
+    public static void copyDirectory(File src, File target) {
+        checkNotNull(src, "src can't be null");
+        checkNotNull(target, "target can't be null");
+
+        File[] files = src.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File srcFile : files) {
+            if (srcFile.isDirectory()) {
+                File targetChild = new File(target, srcFile.getName());
+                ensureExistingDirectory(targetChild);
+                copyDirectory(srcFile, targetChild);
+            } else {
+                copyFileToDirectory(srcFile, target);
+            }
+        }
+    }
+
+    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
+        for (File sourceFile : sourceFiles) {
+            copyFileToDirectory(sourceFile, targetDirectory);
+        }
+    }
+
+    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
+//        File targetFile = newFile(targetDirectory, sourceFile.getName());
+//        try {
+//            Files.copy(sourceFile, targetFile);
+//            if (sourceFile.canExecute()) {
+//                targetFile.setExecutable(true);
+//            }
+//        } catch (IOException e) {
+//            throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
+//                    targetFile.getAbsolutePath()), e);
+//        }
+    }
+
     public static File getConfigurationFile(String filename) {
         File file = new File(getUserDir(), filename).getAbsoluteFile();
         return file.exists() ? file : newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();

@@ -31,6 +31,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -47,9 +48,17 @@ public class BashCommand {
     private File directory;
     private boolean dumpOutputOnError = true;
     private boolean systemOut;
+    private boolean ensureJavaOnPath;
 
     public BashCommand(String command) {
         params.add(command);
+
+        environment.put("SIMULATOR_HOME", getSimulatorHome());
+    }
+
+    public BashCommand ensureJavaOnPath() {
+        this.ensureJavaOnPath = true;
+        return this;
     }
 
     public BashCommand addParams(Object... params) {
@@ -75,13 +84,13 @@ public class BashCommand {
         return this;
     }
 
-    public BashCommand setThrowsException(boolean throwException) {
-        this.throwException = throwException;
+    public BashCommand addEnvironment(String variable, Object value) {
+        this.environment.put(variable, value);
         return this;
     }
 
-    public BashCommand setDirectory(File directory) {
-        this.directory = checkNotNull(directory, "directory can't be null");
+    public BashCommand setThrowsException(boolean throwException) {
+        this.throwException = throwException;
         return this;
     }
 
@@ -90,12 +99,23 @@ public class BashCommand {
         return this;
     }
 
+    public BashCommand setDirectory(File directory) {
+        this.directory = checkNotNull(directory, "directory can't be null");
+        return this;
+    }
+
     private String command() {
         StringBuilder sb = new StringBuilder();
         for (String param : params) {
             sb.append(param).append(' ');
         }
-        return sb.toString();
+        String command =  sb.toString();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Executing bash command: " + command);
+        }
+
+        return command;
     }
 
     public String execute() {
@@ -103,22 +123,9 @@ public class BashCommand {
 
         String command = command();
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Executing bash command: " + command);
-        }
-
         try {
             // create a process for the shell
-            ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
-            if (directory != null) {
-                pb.directory(directory);
-            }
-
-            // fix the environment
-            for (Map.Entry<String, Object> entry : environment.entrySet()) {
-                pb.environment().put(entry.getKey(), entry.getValue().toString());
-            }
-            pb = pb.redirectErrorStream(true);
+            ProcessBuilder pb = newProcessBuilder(command);
 
             Process shell = pb.start();
             new BashStreamGobbler(shell.getInputStream(), sb).start();
@@ -147,6 +154,35 @@ public class BashCommand {
         }
     }
 
+    private ProcessBuilder newProcessBuilder(String command) {
+        ProcessBuilder pb = new ProcessBuilder("bash", "-c", command);
+        fixDirectory(pb);
+        fixEnvironment(pb);
+        fixPath(pb);
+        pb.redirectErrorStream(true);
+        return pb;
+    }
+
+    private void fixDirectory(ProcessBuilder pb) {
+        if (directory != null) {
+            pb.directory(directory);
+        }
+    }
+
+    private void fixPath(ProcessBuilder pb) {
+        if (ensureJavaOnPath) {
+            String path = pb.environment().get("PATH");
+            String newPath = path + ":" + System.getProperty("java.home") + "/bin";
+            pb.environment().put("PATH", newPath);
+        }
+    }
+
+    private void fixEnvironment(ProcessBuilder pb) {
+        for (Map.Entry<String, Object> entry : environment.entrySet()) {
+            pb.environment().put(entry.getKey(), entry.getValue().toString());
+        }
+    }
+
     private class BashStreamGobbler extends Thread {
         private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
@@ -170,7 +206,6 @@ public class BashCommand {
                             System.out.println(s);
                         }
                         LOGGER.error(s);
-
                     } else if (line.startsWith(WARN)) {
                         String s = line.substring(WARN.length(), line.length());
                         if (systemOut) {
