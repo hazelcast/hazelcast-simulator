@@ -15,13 +15,14 @@
  */
 package com.hazelcast.simulator.tests.network;
 
+import com.hazelcast.internal.networking.WriteHandler;
 import com.hazelcast.nio.Packet;
-import com.hazelcast.nio.tcp.WriteHandler;
 
 import java.nio.ByteBuffer;
 
 import static com.hazelcast.nio.Packet.FLAG_BIND;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addSequenceId;
+
 
 /**
  * a WriteHandler that at the beginning and end of the payload inserts a sequence-id.

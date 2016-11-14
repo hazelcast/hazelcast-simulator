@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.nio.tcp.WriteHandler;
+import com.hazelcast.internal.networking.WriteHandler;
 
 public interface WriteHandlerFactory {
 

@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.tests.network;
 
+import com.hazelcast.internal.networking.WriteHandler;
 import com.hazelcast.nio.tcp.MemberWriteHandler;
-import com.hazelcast.nio.tcp.WriteHandler;
 
 public class MemberWriteHandlerFactory implements WriteHandlerFactory {
 

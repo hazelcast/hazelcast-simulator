@@ -20,15 +20,13 @@ import com.hazelcast.core.Member;
 import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.instance.Node;
 import com.hazelcast.internal.metrics.MetricsRegistry;
+import com.hazelcast.internal.networking.IOThreadingModel;
+import com.hazelcast.internal.networking.nonblocking.SelectorMode;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.Packet;
-import com.hazelcast.nio.tcp.IOThreadingModel;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
-import com.hazelcast.nio.tcp.nonblocking.NonBlockingIOThreadingModel;
-import com.hazelcast.nio.tcp.nonblocking.SelectorMode;
-import com.hazelcast.nio.tcp.spinning.SpinningIOThreadingModel;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
@@ -111,30 +109,30 @@ public class NetworkTest extends AbstractTest {
             ioService.writeHandlerFactory = new TaggingWriteHandlerFactory();
         }
 
-        IOThreadingModel threadingModel;
+        IOThreadingModel threadingModel = null;
         switch (ioThreadingModel) {
-            case NonBlocking:
-                NonBlockingIOThreadingModel nonBlockingIOThreadingModel = new NonBlockingIOThreadingModel(
-                        ioService, loggingService, metricsRegistry, threadGroup);
-                selectorMode = SelectorMode.SELECT;
-                nonBlockingIOThreadingModel.setSelectorMode(selectorMode);
-                threadingModel = nonBlockingIOThreadingModel;
-                break;
-            case Spinning:
-                threadingModel = new SpinningIOThreadingModel(loggingService, threadGroup);
-                break;
+//            case NonBlocking:
+//                NonBlockingIOThreadingModel nonBlockingIOThreadingModel = new NonBlockingIOThreadingModel(
+//                        ioService, loggingService, metricsRegistry, threadGroup, null, null, null);
+//                selectorMode = SelectorMode.SELECT;
+//                nonBlockingIOThreadingModel.setSelectorMode(selectorMode);
+//                threadingModel = nonBlockingIOThreadingModel;
+//                break;
+//            case Spinning:
+//                threadingModel = new SpinningIOThreadingModel(loggingService, threadGroup);
+//                break;
             default:
                 throw new IllegalStateException("Unrecognized threading model: " + ioThreadingModel);
         }
-
-        connectionManager = new TcpIpConnectionManager(
-                ioService, ioService.serverSocketChannel, loggingService, metricsRegistry, threadingModel);
-        connectionManager.start();
-        networkCreateLock = targetInstance.getLock("connectionCreateLock");
+//
+//        connectionManager = new TcpIpConnectionManager(
+//                ioService, ioService.serverSocketChannel, loggingService, metricsRegistry, threadingModel);
+//        connectionManager.start();
+//        networkCreateLock = targetInstance.getLock("connectionCreateLock");
     }
 
     @Warmup
-    public void warmup() throws Exception {
+    public void prepare() throws Exception {
         networkCreateLock.lock();
         try {
             logger.info("Starting connections: " + (targetInstance.getCluster().getMembers().size() - 1));
@@ -312,6 +310,4 @@ public class NetworkTest extends AbstractTest {
     public void teardown() {
         connectionManager.shutdown();
     }
-
-
 }
