@@ -23,6 +23,8 @@ import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.test.FailureType.NETTY_EXCEPTION;
 
@@ -61,6 +63,10 @@ public class ExceptionHandler extends ChannelHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error("Caught unhandled exception in Netty pipeline in channel " + ctx.channel(), cause);
+
+        if (cause != null && cause instanceof IOException && "Connection reset by peer".equals(cause.getMessage())) {
+            return;
+        }
 
         FailureOperation operation = new FailureOperation("Uncaught Netty exception in channel " + ctx.channel(),
                 NETTY_EXCEPTION, workerAddress, agentAddress, cause);
