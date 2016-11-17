@@ -33,23 +33,24 @@ import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperti
 public class SimulatorProvisioner {
 
     private int machineCount;
-    private String cloudCredential;
-    private String cloudIdentity;
-    private String cloudProvider = "local";
-    private String machineSpec;
     private SimulatorProperties simulatorProperties;
 
     public SimulatorProvisioner() {
         new SimulatorInstaller().install();
         this.simulatorProperties = loadSimulatorProperties();
+        cloudProviderAwsEc2();
     }
 
     public SimulatorProvisioner cloudProviderAwsEc2() {
         return cloudProvider("aws-ec2");
     }
 
+    public SimulatorProvisioner cloudProviderLocal() {
+        return cloudProvider("local");
+    }
+
     public SimulatorProvisioner cloudProvider(String cloudProvider) {
-        this.cloudProvider = cloudProvider;
+        simulatorProperties.set("CLOUD_PROVIDER", cloudProvider);
         return this;
     }
 
@@ -63,38 +64,18 @@ public class SimulatorProvisioner {
     }
 
     public SimulatorProvisioner cloudCredential(String cloudCredential) {
-        this.cloudCredential = cloudCredential;
+        stuff(simulatorProperties, "CLOUD_CREDENTIAL", cloudCredential);
         return this;
     }
 
     public SimulatorProvisioner cloudIdentity(String cloudIdentity) {
-        this.cloudIdentity = cloudIdentity;
+        stuff(simulatorProperties, "CLOUD_IDENTITY", cloudIdentity);
         return this;
     }
 
     public SimulatorProvisioner machineSpec(String machineSpec) {
-        this.machineSpec = machineSpec;
+        simulatorProperties.set("MACHINE_SPEC", machineSpec);
         return this;
-    }
-
-    private SimulatorProperties newSimulatorProperties() {
-        if (cloudProvider != null) {
-            simulatorProperties.set("CLOUD_PROVIDER", cloudProvider);
-        }
-
-        if (cloudIdentity != null) {
-            stuff(simulatorProperties, "CLOUD_IDENTITY", cloudIdentity);
-        }
-
-        if (cloudCredential != null) {
-            stuff(simulatorProperties, "CLOUD_CREDENTIAL", cloudCredential);
-        }
-
-        if (machineSpec != null) {
-            simulatorProperties.set("MACHINE_SPEC", machineSpec);
-        }
-
-        return simulatorProperties;
     }
 
     private void stuff(SimulatorProperties simulatorProperties, String property, String value) {
@@ -108,7 +89,6 @@ public class SimulatorProvisioner {
     }
 
     public void provision() {
-        SimulatorProperties simulatorProperties = newSimulatorProperties();
         ComputeService computeService = isCloudProvider(simulatorProperties)
                 ? new ComputeServiceBuilder(simulatorProperties).build()
                 : null;

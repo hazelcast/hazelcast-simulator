@@ -23,15 +23,17 @@ import java.lang.reflect.Field;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class OptionsBuilder {
 
-    private final Options options = new Options();
+    private final Options options;
 
     public OptionsBuilder() {
         new SimulatorInstaller().install();
+        this.options = new Options();
     }
 
     public Set<String> getIgnoredClasspath() {
@@ -48,7 +50,7 @@ public class OptionsBuilder {
     }
 
     public OptionsBuilder memberConfig(Config memberConfig) {
-        this.options.memberConfig = memberConfig;
+        this.options.memberConfig = checkNotNull(memberConfig, "memberConfig can't be null");
         return this;
     }
 
@@ -58,6 +60,8 @@ public class OptionsBuilder {
     }
 
     public OptionsBuilder test(Object testInstance) {
+        checkNotNull(testInstance, "testInstance can't be null");
+
         options.testCase.setProperty("class", testInstance.getClass().getName());
 
         for (Field field : testInstance.getClass().getFields()) {
@@ -79,17 +83,27 @@ public class OptionsBuilder {
     }
 
     public OptionsBuilder test(Class testClass) {
+        checkNotNull(testClass, "testClass can't be null");
+
         options.testCase.setProperty("class", testClass.getName());
         return this;
     }
 
     public OptionsBuilder threadCount(int threadCount) {
+        if (threadCount <= 0) {
+            throw new IllegalArgumentException("threadCount must be larger than 0");
+        }
+
         options.testCase.setProperty("threadCount", threadCount);
         return this;
     }
 
-    public OptionsBuilder interval(String interval) {
-        options.testCase.setProperty("interval", interval);
+    public OptionsBuilder interval(long interval, TimeUnit unit) {
+        if (interval < 0) {
+            throw new IllegalArgumentException("interval can't be smaller than 0");
+        }
+
+        options.testCase.setProperty("interval", unit.toMicros(interval) + "us");
         return this;
     }
 
@@ -98,12 +112,11 @@ public class OptionsBuilder {
         return this;
     }
 
-    public OptionsBuilder version(String version) {
-        this.options.versionSpec = "maven=" + version;
-        return this;
-    }
-
     public OptionsBuilder duration(long duration, TimeUnit timeUnit) {
+        if (duration < 0) {
+            throw new IllegalArgumentException("duration can't be smaller than 0");
+        }
+
         this.options.durationSeconds = timeUnit.toSeconds(duration);
         return this;
     }
@@ -113,26 +126,42 @@ public class OptionsBuilder {
     }
 
     public OptionsBuilder memberCount(int memberCount) {
+        if (memberCount < 0) {
+            throw new IllegalArgumentException("memberCount can't be smaller than 0");
+        }
+
         this.options.memberCount = memberCount;
         return this;
     }
 
     public OptionsBuilder clientCount(int clientCount) {
+        if (clientCount < 0) {
+            throw new IllegalArgumentException("clientCount can't be smaller than 0");
+        }
+
         this.options.clientCount = clientCount;
         return this;
     }
 
     public OptionsBuilder memberVmOptionsAppend(String jvmArgs) {
+        checkNotNull(jvmArgs, "jvmArgs can't be null");
+
         this.options.memberVmOptions = this.options.memberVmOptions + jvmArgs + " ";
         return this;
     }
 
     public OptionsBuilder clientVmOptionsAppend(String jvmArgs) {
+        checkNotNull(jvmArgs, "jvmArgs can't be null");
+
         this.options.clientVmOptions = this.options.clientVmOptions + jvmArgs + " ";
         return this;
     }
 
     public OptionsBuilder iterations(long iterations) {
+        if (iterations < 0) {
+            throw new IllegalArgumentException("iterations can't be smaller than 0");
+        }
+
         options.testCase.setProperty("iterations", iterations);
         return this;
     }
@@ -143,11 +172,19 @@ public class OptionsBuilder {
     }
 
     public OptionsBuilder logFrequency(long logFrequency) {
+        if (logFrequency < 0) {
+            throw new IllegalArgumentException("logFrequency can't be smaller than 0");
+        }
+
         options.testCase.setProperty("logFrequency", logFrequency);
         return this;
     }
 
     public OptionsBuilder logRateMs(int logRateMs) {
+        if (logRateMs < 0) {
+            throw new IllegalArgumentException("logRateMs can't be smaller than 0");
+        }
+
         options.testCase.setProperty("logRateMs", logRateMs);
         return this;
     }

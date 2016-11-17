@@ -21,7 +21,7 @@ import com.hazelcast.simulator.utils.FileUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -38,50 +38,42 @@ class SimulatorInstaller {
         File simulatorHome = new File(FileUtils.getUserHome(), "hazelcast-simulator-" + version);
         System.setProperty("SIMULATOR_HOME", simulatorHome.getAbsolutePath());
 
-        if (simulatorHome.exists()) {
-            return;
-        }
-
         System.out.println("Installing Simulator: " + version);
 
+        File userHome = getUserHome();
         try {
-            URL url = getUrl();
-            File archive = getTargetZipFile();
-            if (archive.exists()) {
-                System.out.printf("File [%s] already exist, skipping download\n", archive.getAbsolutePath());
-            } else {
+            if (version.endsWith("SNAPSHOT")) {
+                File archive = new File(format("%s/.m2/repository/com/hazelcast/simulator/dist/%s/dist-%s-dist.tar.gz",
+                        userHome, version, version));
+
+                if (archive.exists()) {
+                    simulatorHome.delete();
+                    decompress(archive);
+                } else if (!simulatorHome.exists()) {
+                    throw new IllegalStateException("Could not install simulator, archive: "
+                            + archive.getAbsolutePath() + " not found");
+                }
+            } else if (!simulatorHome.exists()) {
+                File archive = new File(getUserHome(), format("hazelcast-simulator-%s-dist.tar.gz", version));
+
+                URL url = new URL(format("http://repo1.maven.org/maven2/"
+                        + "com/hazelcast/simulator/dist/%s/dist-%s-dist.tar.gz", version, version));
                 ReadableByteChannel rbc = Channels.newChannel(url.openStream());
                 System.out.printf("File [%s] doesn't exist; downloading\n", archive.getAbsolutePath());
                 FileOutputStream fos = new FileOutputStream(archive);
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            }
 
-            ProcessBuilder pb = new ProcessBuilder(
-                    "tar", "-xpf", archive.getAbsolutePath(), "-C", getUserHome().getAbsolutePath());
-            pb.start().waitFor();
+                decompress(archive);
+                archive.delete();
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private File getTargetZipFile() {
-        return new File(getUserHome(), format("hazelcast-simulator-%s-dist.tar.gz", version));
-    }
-
-    private URL getUrl() throws MalformedURLException {
-        if (version.endsWith("SNAPSHOT")) {
-            return new URL(
-                    format("https://oss.sonatype.org/content/repositories/snapshots/maven2/"
-                            + "com/hazelcast/simulator/dist/%s/dist-%s-dist.tar.gz", version, version));
-        } else {
-            return new URL(
-                    format("http://repo1.maven.org/maven2/"
-                            + "com/hazelcast/simulator/dist/%s/dist-%s-dist.tar.gz", version, version));
-        }
-    }
-
-    public static void main(String[] args) {
-        SimulatorInstaller installer = new SimulatorInstaller();
-        installer.install();
+    private void decompress(File archive) throws InterruptedException, IOException {
+        ProcessBuilder pb = new ProcessBuilder(
+                "tar", "-xpf", archive.getAbsolutePath(), "-C", getUserHome().getAbsolutePath());
+        pb.start().waitFor();
     }
 }

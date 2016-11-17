@@ -153,10 +153,14 @@ public final class AgentUtils {
         private void runLocal() {
             logger.info(format("Starting Agent on %s", ip));
 
-            execute(format("nohup %s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
-                    getSimulatorHome(), mandatoryParameters, optionalParameters));
+            new BashCommand(format("nohup %s/bin/agent %s%s > agent.out 2> agent.err < /dev/null &",
+                    getSimulatorHome(), mandatoryParameters, optionalParameters))
+                    .ensureJavaOnPath()
+                    .execute();
 
-            execute(format("%s/bin/.await-file-exists agent.pid", getSimulatorHome()));
+            new BashCommand(format("%s/bin/.await-file-exists agent.pid", getSimulatorHome()))
+                    .ensureJavaOnPath()
+                    .execute();
         }
 
         private void runRemote() {

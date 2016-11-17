@@ -32,7 +32,6 @@ public class Options {
     int memberCount;
     int clientCount;
     long durationSeconds;
-    String versionSpec;
     String memberVmOptions = "";
     String clientVmOptions = "";
     Config memberConfig;
@@ -48,9 +47,8 @@ public class Options {
                 ".m2/repository/com/google/code/gson/gson/",
                 ".m2/repository/com/google/guava/guava/",
                 ".m2/repository/com/google/inject/",
-                ".m2/repository/com/hazelcast/hazelcast-client/",
-                ".m2/repository/com/hazelcast/hazelcast/",
                 ".m2/repository/com/hazelcast/simulator/simulator/",
+                ".m2/repository/com/hazelcast/simulator/simulator-boot/",
                 ".m2/repository/com/hazelcast/simulator/tests-common/",
                 ".m2/repository/com/jcraft/jsch.agentproxy",
                 ".m2/repository/commons-codec/commons-codec/",
@@ -81,6 +79,8 @@ public class Options {
                 "/jre/lib/",
                 "jdk/Contents/Home/lib",
                 "/lib/idea_rt.jar");
+
+        simulatorProperties.set("VERSION_SPEC", "bringmyown");
     }
 
     private void addIgnored(String... ignored) {

@@ -50,11 +50,7 @@ public class Runner {
     }
 
     public void run() throws Exception {
-        new SimulatorInstaller().install();
-
-        updateSimulatorProperties();
-
-        prepareClasspath();
+        prepareClassPathForUploading();
 
         Coordinator coordinator = newCoordinator();
         try {
@@ -73,15 +69,17 @@ public class Runner {
         }
     }
 
-    private void prepareClasspath() {
+    private void prepareClassPathForUploading() {
         List<File> workerClassPath = getWorkerClassPath();
-        if (!workerClassPath.isEmpty()) {
-            File uploadDir = new File("upload/lib");
-            uploadDir.mkdirs();
+        if (workerClassPath.isEmpty()) {
+            return;
+        }
 
-            for (File file : workerClassPath) {
-                FileUtils.copyDirectory(file, uploadDir);
-            }
+        File uploadDir = new File("upload/lib");
+        uploadDir.mkdirs();
+
+        for (File file : workerClassPath) {
+            FileUtils.copyDirectory(file, uploadDir);
         }
     }
 
@@ -94,7 +92,14 @@ public class Runner {
             parameters.setSessionId(options.sessionId);
         }
 
-        ComponentRegistry componentRegistry = loadComponentRegister(new File("agents.txt"));
+        ComponentRegistry componentRegistry;
+        if ("local".equals(options.simulatorProperties.getCloudProvider())) {
+            componentRegistry = new ComponentRegistry();
+            componentRegistry.addAgent("localhost", "localhost");
+        } else {
+            componentRegistry = loadComponentRegister(new File("agents.txt"));
+        }
+
         Coordinator coordinator = new Coordinator(componentRegistry, parameters);
 
         coordinator.start();
@@ -206,11 +211,5 @@ public class Runner {
         }
 
         return false;
-    }
-
-    private void updateSimulatorProperties() {
-        if (options.versionSpec != null) {
-            options.simulatorProperties.set("VERSION_SPEC", options.versionSpec);
-        }
     }
 }

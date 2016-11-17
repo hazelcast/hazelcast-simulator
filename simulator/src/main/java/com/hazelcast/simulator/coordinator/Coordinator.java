@@ -160,6 +160,7 @@ public class Coordinator implements Closeable {
     }
 
     private void logConfiguration() {
+        echoLocal("Cloud provider: " + simulatorProperties.getCloudProvider());
         echoLocal("Total number of agents: %s", componentRegistry.agentCount());
         echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
 
