@@ -50,8 +50,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.Collection;
 import java.util.Collections;
 
-import static com.hazelcast.nio.Packet.FLAG_BIND;
-
 @SuppressWarnings("checkstyle:methodcount")
 public class MockIOService implements IOService {
 
@@ -308,7 +306,7 @@ public class MockIOService implements IOService {
             @Override
             public void dispatch(Packet packet) {
                 try {
-                    if (packet.isFlagSet(FLAG_BIND)) {
+                    if (packet.getPacketType() == Packet.Type.BIND) {
                         connection.getConnectionManager().handle(packet);
                     } else {
                         PacketHandler handler = packetHandler;

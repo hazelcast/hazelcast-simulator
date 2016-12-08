@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.nio.Packet.FLAG_RESPONSE;
+import static com.hazelcast.nio.Packet.FLAG_OP_RESPONSE;
 import static com.hazelcast.simulator.tests.network.NetworkTest.IOThreadingModelEnum.NonBlocking;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.addHeadTailMarkers;
 import static com.hazelcast.simulator.tests.network.PayloadUtils.checkHeadTailMarkers;
@@ -231,7 +231,7 @@ public class NetworkTest extends AbstractTest {
             checkPayloadSize(packet);
             checkPayloadContent(packet);
 
-            if (packet.isFlagSet(FLAG_RESPONSE)) {
+            if (packet.isFlagRaised(FLAG_OP_RESPONSE)) {
                 handleResponse(packet);
             } else {
                 handleRequest(packet);
@@ -247,7 +247,7 @@ public class NetworkTest extends AbstractTest {
                 addHeadTailMarkers(responsePayload);
             }
             Packet response = new Packet(responsePayload, packet.getPartitionId());
-            response.setAllFlags(FLAG_RESPONSE);
+            response.setPacketType(Packet.Type.OPERATION).raiseFlags(FLAG_OP_RESPONSE);
             packet.getConn().write(response);
         }
 
@@ -293,7 +293,7 @@ public class NetworkTest extends AbstractTest {
             int foundPayloadSize = payload == null ? 0 : payload.length;
             int expectedPayloadSize;
 
-            if (packet.isFlagSet(FLAG_RESPONSE) && !returnPayload) {
+            if (packet.isFlagRaised(FLAG_OP_RESPONSE) && !returnPayload) {
                 expectedPayloadSize = 0;
             } else {
                 expectedPayloadSize = payloadSize;
