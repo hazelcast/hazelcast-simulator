@@ -1,0 +1,45 @@
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config
+                               http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <group>
+        <name>workers</name>
+    </group>
+
+    <!--LITE_MEMBER_CONFIG-->
+
+    <network>
+        <port port-count="200" auto-increment="true">5701</port>
+        <join>
+            <multicast enabled="false"/>
+            <tcp-ip enabled="true">
+                <!--MEMBERS-->
+            </tcp-ip>
+        </join>
+    </network>
+
+    <properties>
+        <property name="hazelcast.phone.home.enabled">false</property>
+    </properties>
+
+    <!--LICENSE-KEY-->
+
+    <!--MANAGEMENT_CENTER_CONFIG-->
+
+
+    <quorum name="queue-quorum-ref" enabled="true">
+        <quorum-size>3</quorum-size>
+    </quorum>
+    
+    <queue name="quorum-queue"> 
+        <backup-count>1</backup-count>
+        <quorum-ref>queue-quorum-ref</quorum-ref>
+    </queue>
+    
+    <map name="quorum-map"> 
+        <backup-count>1</backup-count>
+        <quorum-ref>queue-quorum-ref</quorum-ref>
+    </map>
+    
+</hazelcast>
