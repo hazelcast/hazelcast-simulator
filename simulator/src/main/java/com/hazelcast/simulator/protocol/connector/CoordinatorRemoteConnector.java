@@ -112,7 +112,9 @@ public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, C
      * @return a {@link Response} with the response of all addressed Simulator components.
      */
     public Response write(SimulatorOperation op) {
-        SimulatorMessage message = new SimulatorMessage(COORDINATOR, REMOTE, messageIds.incrementAndGet(),
+        long id = messageIds.incrementAndGet();
+        System.out.println(op + " callId:" + id);
+        SimulatorMessage message = new SimulatorMessage(COORDINATOR, REMOTE, id,
                 getOperationType(op), toJson(op));
 
         Response response = new Response(message);
