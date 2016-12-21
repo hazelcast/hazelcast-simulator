@@ -213,7 +213,9 @@ final class CoordinatorCli {
         } else {
             coordinator.start();
             if (testSuite == null) {
-                LOGGER.info("Coordinator started in interactive mode. Waiting for commands from the coordinator-remote");
+                int coordinatorPort = coordinatorParameters.getSimulatorProperties().getCoordinatorPort();
+                LOGGER.info("Coordinator started in interactive mode on port " + coordinatorPort + ". "
+                        + "Waiting for commands from the coordinator-remote.");
             } else {
                 runMonolith.init(deploymentPlan);
                 boolean success = runMonolith.run(testSuite);
