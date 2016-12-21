@@ -1,27 +1,3 @@
-/*
- * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * The QuorumMapTest can be used to verify the Quorum behavior wherein
- * a continuous tests will assert the
- * 1. Adding member
- * 2. Removing member
- *    and the tests will pass or fail accordingly.
- * */
-
 package com.hazelcast.simulator.tests.quorum;
 
 import org.junit.Assert;
@@ -37,76 +13,74 @@ public class QuorumMapTest extends AbstractTest {
 
     // properties
     public int keyCount = 100;
-    public int gracePeriodInMilliSec = 2000;
+    public int gracePeriodMillis = 2000;
 
-    private int quorumCount;
-    private volatile long lastInconsistencyTimestamp;
+    private volatile LastClusterSizeChange lastClusterSizeChange;
     private IMap<Long, Long> map;
+    private int quorumCount;
 
     @Setup
     @SuppressWarnings("unchecked")
     public void setup() {
-        lastInconsistencyTimestamp = 0L;
-        quorumCount = targetInstance.getConfig().getQuorumConfig("map-quorum-ref").getSize();
-        map = targetInstance.getMap(name);
+        this.lastClusterSizeChange = new LastClusterSizeChange(0L,
+                getMemberCount());
+        this.map = targetInstance.getMap(name);
+        this.quorumCount = targetInstance.getConfig()
+                .getQuorumConfig("map-quorum-ref").getSize();
+    }
+
+    private int getMemberCount() {
+        return targetInstance.getCluster().getMembers().size();
     }
 
     @TimeStep
     public void testPut(BaseThreadState state) {
-        boolean operationFailed = false;
+        final long key = state.randomInt(keyCount);
+        final int memberCount = getMemberCount();
+        LastClusterSizeChange lastChange = lastClusterSizeChange;
 
+        if (lastChange.timestamp + gracePeriodMillis > System
+                .currentTimeMillis()) {
+            return;
+        }
         try {
-            map.put((long) state.randomInt(keyCount), 0L);
-            if (targetInstance.getCluster().getMembers().size() < quorumCount) {
-                if (lastInconsistencyTimestamp == 0L) {
-                    startGracePeriodTimer();
-                } else {
-                    if (isGracePeriodElapsed()) {
-                        operationFailed = true;
-                    }
-                }
-            } else {
-                resetGracePeriodTimer();
-            }
+            map.put(key, 0L);
+            checkGracePeriod(lastChange, true);
         } catch (QuorumException qe) {
-            if (targetInstance.getCluster().getMembers().size() >= quorumCount) {
-                if (lastInconsistencyTimestamp == 0L) {
-                    startGracePeriodTimer();
-                } else {
-                    if (isGracePeriodElapsed()) {
-                        operationFailed = true;
-                    }
-                }
-            } else {
-                resetGracePeriodTimer();
-            }
-        }
-
-        if (operationFailed) {
-            Assert.fail(String
-                    .format("Quorum count was %s and the member count was %s but the operation %s.",
-                            quorumCount,
-                            targetInstance.getCluster().getMembers().size(),
-                            hasQuorum(quorumCount, targetInstance.getCluster()
-                                    .getMembers().size()) ? "failed"
-                                    : "succeeded"));
+            checkGracePeriod(lastChange, false);
         }
     }
 
-    private boolean hasQuorum(int quorumCount, int memberCount) {
-        return memberCount >= quorumCount;
+    private void checkGracePeriod(LastClusterSizeChange lastChange,
+            boolean operationPassed) {
+        boolean hadQuorum = lastChange.clusterSize >= quorumCount;
+        if (operationPassed == hadQuorum) {
+            return;
+        }
+        int memberCount = getMemberCount();
+        if (lastChange.clusterSize != memberCount) {
+            logger.warning("Detected cluster change from "
+                    + lastChange.clusterSize + " to " + memberCount);
+            lastChange = this.lastClusterSizeChange = new LastClusterSizeChange(
+                    System.currentTimeMillis(), memberCount);
+        }
+        if (lastChange.timestamp + gracePeriodMillis > System
+                .currentTimeMillis()) {
+            return;
+        }
+        Assert.fail(String
+                .format("Quorum count was %s and the member count was %s but the operation %s.",
+                        quorumCount, lastChange.clusterSize,
+                        hadQuorum ? "failed" : "succeeded"));
     }
 
-    private boolean isGracePeriodElapsed() {
-        return (lastInconsistencyTimestamp + gracePeriodInMilliSec) < System
-                .currentTimeMillis();
-    }
+    private static class LastClusterSizeChange {
+        final long timestamp;
+        final int clusterSize;
 
-    private void startGracePeriodTimer() {
-        lastInconsistencyTimestamp = System.currentTimeMillis();
-    }
-
-    private void resetGracePeriodTimer() {
-        lastInconsistencyTimestamp = 0L;
+        private LastClusterSizeChange(long timestamp, int clusterSize) {
+            this.timestamp = timestamp;
+            this.clusterSize = clusterSize;
+        }
     }
 }
