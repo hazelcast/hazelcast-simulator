@@ -111,6 +111,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 receiver.download((RcDownloadOperation) op);
                 break;
             default:
+                LOGGER.error("Unrecognized: " + operationType);
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
         }
         promise.answer(SUCCESS);
