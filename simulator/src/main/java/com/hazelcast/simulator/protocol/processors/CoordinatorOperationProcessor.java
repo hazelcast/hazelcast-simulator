@@ -110,6 +110,8 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
             case RC_DOWNLOAD:
                 receiver.download((RcDownloadOperation) op);
                 break;
+            case AUTH:
+                return;
             default:
                 LOGGER.error("Unrecognized: " + operationType);
                 throw new ProcessException(UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
