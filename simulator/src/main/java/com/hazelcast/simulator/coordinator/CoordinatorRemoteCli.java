@@ -150,6 +150,7 @@ public class CoordinatorRemoteCli implements Closeable {
         try {
             cli = new CoordinatorRemoteCli(args);
             cli.run();
+            System.exit(0);
         } catch (Exception e) {
             System.err.print(e.getMessage());
             exitWithError(LOGGER, e.getMessage(), e);
