@@ -66,7 +66,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
         this.performanceStatsCollector = performanceStatsCollector;
     }
 
-    @SuppressWarnings("checkstyle:cyclomaticcomplexity")
+    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:returncount"})
     @Override
     protected void processOperation(OperationType operationType, SimulatorOperation op,
                                     SimulatorAddress sourceAddress, Promise promise) throws Exception {
@@ -111,7 +111,6 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 receiver.download((RcDownloadOperation) op);
                 break;
             case AUTH:
-                //promise.answer(ResponseType.SUCCESS);
                 return;
             default:
                 LOGGER.error("Unrecognized: " + operationType);

@@ -63,7 +63,7 @@ public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, C
 
     private final EventLoopGroup group = new NioEventLoopGroup();
     // we need to initialize the messageId's because multiple remote connectors could be connected at the same time.
-    private final AtomicLong messageIds = new AtomicLong(new Random().nextLong());
+    private final AtomicLong messageIds = new AtomicLong(Math.abs(new Random().nextInt(Integer.MAX_VALUE)));
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
     private final ConcurrentHashMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
     private final ExecutorService executorService = createFixedThreadPool(1, "CoordinatorRemoteConnector");
@@ -113,9 +113,7 @@ public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, C
      */
     public Response write(SimulatorOperation op) {
         long id = messageIds.incrementAndGet();
-        System.out.println(op + " callId:" + id);
-        SimulatorMessage message = new SimulatorMessage(COORDINATOR, REMOTE, id,
-                getOperationType(op), toJson(op));
+        SimulatorMessage message = new SimulatorMessage(COORDINATOR, REMOTE, id, getOperationType(op), toJson(op));
 
         Response response = new Response(message);
         List<ResponseFuture> futureList = new ArrayList<ResponseFuture>();
