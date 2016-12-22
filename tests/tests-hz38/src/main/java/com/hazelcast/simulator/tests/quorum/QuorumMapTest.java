@@ -13,6 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * The QuorumMapTest can be used to verify the Quorum behavior wherein
+ * a continuous tests will assert the
+ * 1. Adding member
+ * 2. Removing member
+ *    and the tests will pass or fail accordingly.
+ * */
+
 package com.hazelcast.simulator.tests.quorum;
 
 import org.junit.Assert;
@@ -29,25 +38,27 @@ public class QuorumMapTest extends AbstractTest {
     // properties
     public int keyCount = 100;
     public int gracePeriodInMilliSec = 2000;
-    private volatile long lastInconsistencyTimestamp = 0L;
+
+    private int quorumCount;
+    private volatile long lastInconsistencyTimestamp;
     private IMap<Long, Long> map;
 
     @Setup
     @SuppressWarnings("unchecked")
     public void setup() {
+        lastInconsistencyTimestamp = 0L;
+        quorumCount = targetInstance.getConfig().getQuorumConfig("map-quorum-ref").getSize();
         map = targetInstance.getMap(name);
     }
 
     @TimeStep
     public void testPut(BaseThreadState state) {
-        final int quorumCount = targetInstance.getConfig()
-                .getQuorumConfig("map-quorum-ref").getSize();
         boolean operationFailed = false;
 
         try {
             map.put((long) state.randomInt(keyCount), 0L);
             if (targetInstance.getCluster().getMembers().size() < quorumCount) {
-                if (!(lastInconsistencyTimestamp > 0L)) {
+                if (lastInconsistencyTimestamp == 0L) {
                     startGracePeriodTimer();
                 } else {
                     if (isGracePeriodElapsed()) {
@@ -59,7 +70,7 @@ public class QuorumMapTest extends AbstractTest {
             }
         } catch (QuorumException qe) {
             if (targetInstance.getCluster().getMembers().size() >= quorumCount) {
-                if (!(lastInconsistencyTimestamp > 0L)) {
+                if (lastInconsistencyTimestamp == 0L) {
                     startGracePeriodTimer();
                 } else {
                     if (isGracePeriodElapsed()) {
