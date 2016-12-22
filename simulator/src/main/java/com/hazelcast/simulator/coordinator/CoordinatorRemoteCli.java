@@ -239,7 +239,21 @@ public class CoordinatorRemoteCli implements Closeable {
 
     private class TestStatusCli extends AbstractCli {
         private final String help =
-                "Returns the status of a test"
+                "Returns the status of a test\n"
+                        + "Possible values:\n"
+                        + "\tcompleted\n"
+                        + "\tfailed\n"
+                        + "\tsetup\n"
+                        + "\tlocal prepare\n"
+                        + "\tglobal prepare\n"
+                        + "\twarmup\n"
+                        + "\tlocal after warmup\n"
+                        + "\tglobal after warmup\n"
+                        + "\trun\n"
+                        + "\tglobal verify\n"
+                        + "\tlocal verify\n"
+                        + "\tglobal tear down\n"
+                        + "\tlocal tear down\n"
                         + "\n"
                         + "Examples\n"
                         + "# Checks the status of some test.\n"
