@@ -36,7 +36,6 @@ public class QuorumMapTest extends AbstractTest {
     @TimeStep
     public void testPut(BaseThreadState state) {
         final long key = state.randomInt(keyCount);
-        final int memberCount = getMemberCount();
         LastClusterSizeChange lastChange = lastClusterSizeChange;
 
         if (lastChange.timestamp + gracePeriodMillis > System.currentTimeMillis()) {
