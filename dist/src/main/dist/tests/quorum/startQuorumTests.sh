@@ -11,7 +11,7 @@ coordinator-remote worker-start --count ${members}
 echo "Starting initial members completed."
 
 echo "Starting test..."
-test_id=$(coordinator-remote test-start --duration 30m test.properties)
+test_id=$(coordinator-remote test-start test.properties)
 echo "Starting test completed. Sleeping for 60s"
 sleep 60s
 
@@ -39,17 +39,10 @@ do
     fi
 done
 
-test_status=$(coordinator-remote test-status ${test_id})
+echo $(date +%T) " - Stopping Test." 
 
-echo $(date +%T) " - Test Status : " ${test_status}
-    
-    while [ "${test_status}" == "run" ]
-    do
-        echo $(date +%T) " - Test in Progress with status : " ${test_status}
-        sleep 10s
-        test_status=$(coordinator-remote test-status ${test_id})
-    done
-    
+coordinator-remote test-stop $test_id    
+
 echo $(date +%T) " - Test Completed."    
 
 coordinator-remote stop

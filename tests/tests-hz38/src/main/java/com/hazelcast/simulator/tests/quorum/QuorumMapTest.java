@@ -39,15 +39,25 @@ public class QuorumMapTest extends AbstractTest {
         final int memberCount = getMemberCount();
         LastClusterSizeChange lastChange = lastClusterSizeChange;
 
-        if (lastChange.timestamp + gracePeriodMillis > System
-                .currentTimeMillis()) {
+        if (lastChange.timestamp + gracePeriodMillis > System.currentTimeMillis()) {
+            doProtectedOperation(key, 0L);
             return;
         }
+
         try {
             map.put(key, 0L);
             checkGracePeriod(lastChange, true);
         } catch (QuorumException qe) {
             checkGracePeriod(lastChange, false);
+        }
+    }
+
+    private void doProtectedOperation(Long key, long value) {
+        try {
+            map.put(key, value);
+            logger.warning("Detected Grace Period. Ignoring Operation succeeded behaviour.");
+        } catch (QuorumException qe) {
+            logger.warning("Detected Grace Period. Ignoring Quorum Exception.");
         }
     }
 
@@ -64,8 +74,7 @@ public class QuorumMapTest extends AbstractTest {
             lastChange = this.lastClusterSizeChange = new LastClusterSizeChange(
                     System.currentTimeMillis(), memberCount);
         }
-        if (lastChange.timestamp + gracePeriodMillis > System
-                .currentTimeMillis()) {
+        if (lastChange.timestamp + gracePeriodMillis > System.currentTimeMillis()) {
             return;
         }
         Assert.fail(String
