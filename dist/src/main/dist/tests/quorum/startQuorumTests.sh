@@ -1,3 +1,4 @@
+test=${1:-cache}
 members=2
 
 echo "Starting coordinator in interactive mode..."
@@ -10,8 +11,8 @@ echo "Starting initial members..."
 coordinator-remote worker-start --count ${members}
 echo "Starting initial members completed."
 
-echo "Starting test..."
-test_id=$(coordinator-remote test-start test.properties)
+echo "Starting test for : " ${test}
+test_id=$(coordinator-remote test-start ${test}.properties)
 echo "Starting test completed. Sleeping for 60s"
 sleep 60s
 
@@ -43,6 +44,6 @@ echo $(date +%T) " - Stopping Test."
 
 coordinator-remote test-stop $test_id    
 
-echo $(date +%T) " - Test Completed."    
+echo $(date +%T) " - Test Completed for : " ${test}    
 
 coordinator-remote stop
