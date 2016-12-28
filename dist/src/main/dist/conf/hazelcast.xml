@@ -84,6 +84,23 @@
         </attributes>
     </map>
 
+    <map name="quorum-map"> 
+        <backup-count>1</backup-count>
+        <quorum-ref>map-quorum-ref</quorum-ref>
+    </map>
+    
+    <cache name="quorum-cache"> 
+        <backup-count>1</backup-count>
+        <quorum-ref>cache-quorum-ref</quorum-ref>
+    </cache>
+    
+    <quorum name="map-quorum-ref" enabled="true">
+        <quorum-size>3</quorum-size>
+    </quorum>
+    
+    <quorum name="cache-quorum-ref" enabled="true">
+        <quorum-size>3</quorum-size>
+    </quorum>
 
     <serialization>
         <portable-version>1</portable-version>
