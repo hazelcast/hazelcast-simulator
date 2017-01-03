@@ -180,6 +180,10 @@ public final class TestUtils {
         File userDir = getUserDir();
         if (userDir.exists()) {
             for (File file : userDir.listFiles()) {
+                if (file.isDirectory()) {
+                    continue;
+                }
+
                 assertFalse("exception found:" + file + " content:"
                         + FileUtils.fileAsText(file), file.getName().endsWith(".exception"));
             }
