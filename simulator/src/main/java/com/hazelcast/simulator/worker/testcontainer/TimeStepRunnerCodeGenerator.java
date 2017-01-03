@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static java.security.AccessController.doPrivileged;
@@ -55,6 +56,7 @@ import static java.util.Collections.singletonList;
 class TimeStepRunnerCodeGenerator {
 
     private final JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
+    private final File targetDirectory = new File(getUserDir(), "timestep-worker-classes");
 
     Class compile(
             String testCaseId,
@@ -65,6 +67,9 @@ class TimeStepRunnerCodeGenerator {
             long logFrequency,
             long logRateMs,
             boolean hasIterationCap) {
+
+        ensureExistingDirectory(targetDirectory);
+
         String className = timeStepModel.getTestClass().getSimpleName();
         if (!"".equals(executionGroup)) {
             className += "_" + executionGroup + "_";
@@ -91,7 +96,7 @@ class TimeStepRunnerCodeGenerator {
                 null,
                 null,
                 diagnostics,
-                asList("-d", getUserDir().getAbsolutePath()),
+                asList("-d", targetDirectory.getAbsolutePath()),
                 null,
                 singletonList(file));
 
@@ -112,7 +117,7 @@ class TimeStepRunnerCodeGenerator {
             @Override
             public Object run() {
                 try {
-                    URLClassLoader classLoader = new URLClassLoader(new URL[]{getUserDir().toURI().toURL()});
+                    URLClassLoader classLoader = new URLClassLoader(new URL[]{targetDirectory.toURI().toURL()});
                     return (Class) classLoader.loadClass(className);
                 } catch (ClassNotFoundException e) {
                     throw new IllegalTestException(e.getMessage(), e);
@@ -168,7 +173,7 @@ class TimeStepRunnerCodeGenerator {
 
             String javaCode = out.toString();
 
-            File javaFile = new File(getUserDir(), className + ".java");
+            File javaFile = new File(targetDirectory, className + ".java");
 
             writeText(javaCode, javaFile);
 
