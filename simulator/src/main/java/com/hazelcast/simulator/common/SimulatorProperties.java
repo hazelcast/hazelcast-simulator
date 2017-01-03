@@ -108,6 +108,10 @@ public class SimulatorProperties {
         try {
             inputStream = new FileInputStream(file);
             properties.load(inputStream);
+
+            if (containsKey("HAZELCAST_VERSION_SPEC")) {
+                throw new IOException("'HAZELCAST_VERSION_SPEC' property is deprecated, Use 'VERSION_SPEC' instead.");
+            }
         } catch (IOException e) {
             throw rethrow(e);
         } finally {
