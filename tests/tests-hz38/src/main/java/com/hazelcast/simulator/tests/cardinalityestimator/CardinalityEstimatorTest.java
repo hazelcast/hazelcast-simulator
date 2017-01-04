@@ -18,52 +18,70 @@ package com.hazelcast.simulator.tests.cardinalityestimator;
 
 import com.hazelcast.cardinality.CardinalityEstimator;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.core.IQueue;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
+import java.util.Random;
+
 import static org.junit.Assert.assertTrue;
 
 public class CardinalityEstimatorTest extends AbstractTest {
 
     // properties‚
-    public long elementCount = 10000000;
     public long batchSize = 1000000;
-    public float deviationLimit = 0.1f;
+    public double tolerancePercentage = 0.1;
+    public double duplicateKeysPercentage = 0.1;
+
 
     private IAtomicLong elementCounter;
-    private IQueue<Range> batchRangeQueue;
+    private IAtomicLong rangeSelectorCounter;
     private CardinalityEstimator cardinalityEstimator;
-    private int tolerance;
-    //private boolean isBatchAlloted;
+    private final Random random = new Random();
 
     @Setup
     public void setup() {
         cardinalityEstimator = targetInstance.getCardinalityEstimator(name);
-        batchRangeQueue = targetInstance.getQueue(name);
-        tolerance = (int) (elementCount * deviationLimit);
+        elementCounter = targetInstance.getAtomicLong(name);
+        rangeSelectorCounter = targetInstance.getAtomicLong("rangeSelector");
+        rangeSelectorCounter.set(100L);
     }
 
     @TimeStep
     public void loadData() {
-        if (elementCounter.get() < elementCount) {
-            Range batchRange = new Range(elementCounter.get(), elementCounter.get() + batchSize);
-            batchRangeQueue.add(batchRange);
-            elementCounter.getAndAdd(batchSize);
-            logger.info("Running range : " + batchRange.toString());
-
-            for (long i = batchRange.startIndex; i < batchRange.endIndex; i++) {
-                cardinalityEstimator.add(i);
-            }
+        Range batchRange = getRange();
+        logger.info("Running range : " + batchRange.toString());
+        for (long i = batchRange.startIndex; i < batchRange.endIndex; i++) {
+            cardinalityEstimator.add(i);
         }
     }
 
     @Verify
     public void verify() {
-        assertTrue(Math.abs(cardinalityEstimator.estimate() - addAllAvailableRanges()) < tolerance);
+        int tolerance = (int) (elementCounter.get() * tolerancePercentage);
+        assertTrue(Math.abs(cardinalityEstimator.estimate() - elementCounter.get()) < tolerance);
+    }
+
+    private Range getRange() {
+        if (rangeSelectorCounter.get() % (duplicateKeysPercentage * 100) != 0) {
+            return nextRange();
+        } else {
+            return randomRange();
+        }
+    }
+
+    private Range nextRange() {
+        long currentCounterValue = elementCounter.getAndAdd(batchSize);
+        return new Range(currentCounterValue, currentCounterValue + batchSize);
+    }
+
+    private Range randomRange() {
+        long lowerRange = 0;
+        long upperRange = elementCounter.get() - batchSize;
+        long randomValue = lowerRange + (random.nextLong() * (upperRange - lowerRange));
+        return new Range(randomValue - batchSize, randomValue);
     }
 
     @Teardown
@@ -71,18 +89,9 @@ public class CardinalityEstimatorTest extends AbstractTest {
         cardinalityEstimator.destroy();
     }
 
-    private long addAllAvailableRanges() {
-        long totalSize = 0L;
-        for (Range range : batchRangeQueue) {
-            totalSize += range.rangeSize;
-        }
-        return totalSize;
-    }
-
     private final class Range {
-        long startIndex;
-        long endIndex;
-        long rangeSize = endIndex - startIndex;
+        private long startIndex;
+        private long endIndex;
 
         Range(long startIndex, long endIndex) {
             this.startIndex = startIndex;
