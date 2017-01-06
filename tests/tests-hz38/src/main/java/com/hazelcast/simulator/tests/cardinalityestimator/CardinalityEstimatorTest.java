@@ -19,14 +19,22 @@ package com.hazelcast.simulator.tests.cardinalityestimator;
 import com.hazelcast.cardinality.CardinalityEstimator;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
-import java.util.Random;
-
 import static org.junit.Assert.assertTrue;
+
+/**
+ * The CardinalityEstimatorTest can be used to verify the Cardinality Estimation behavior. This test asserts the
+ * estimation based on the following flow
+ * 1. Test will add a configurable number (i.e batchSize) of elements in Cardinality Estimator
+ * 2. Addition  of elements can have duplicates key based on duplicateKeysPercentage configured
+ * 3. In assertion, test will verify that the element presents in Cardinality Estimator is not deviated more that
+ * tolerance configured
+ */
 
 public class CardinalityEstimatorTest extends AbstractTest {
 
@@ -39,7 +47,6 @@ public class CardinalityEstimatorTest extends AbstractTest {
     private IAtomicLong elementCounter;
     private IAtomicLong rangeSelectorCounter;
     private CardinalityEstimator cardinalityEstimator;
-    private final Random random = new Random();
 
     @Setup
     public void setup() {
@@ -50,8 +57,8 @@ public class CardinalityEstimatorTest extends AbstractTest {
     }
 
     @TimeStep
-    public void loadData() {
-        Range batchRange = getRange();
+    public void TimeStep(BaseThreadState state) {
+        Range batchRange = getRange(state);
         logger.info("Running range : " + batchRange.toString());
         for (long i = batchRange.startIndex; i < batchRange.endIndex; i++) {
             cardinalityEstimator.add(i);
@@ -61,27 +68,31 @@ public class CardinalityEstimatorTest extends AbstractTest {
     @Verify
     public void verify() {
         int tolerance = (int) (elementCounter.get() * tolerancePercentage);
+        logger.info("Actual Keys added : " + elementCounter.get());
+        logger.info("Acceptable Count(i.e. tolerance) : " + (elementCounter.get() - tolerance));
+        logger.info("Cardinality Estimation : " + cardinalityEstimator.estimate());
         assertTrue(Math.abs(cardinalityEstimator.estimate() - elementCounter.get()) < tolerance);
     }
 
-    private Range getRange() {
-        if (rangeSelectorCounter.get() % (duplicateKeysPercentage * 100) != 0) {
+    private Range getRange(BaseThreadState state) {
+        if (rangeSelectorCounter.getAndIncrement() % (duplicateKeysPercentage * 100) != 0) {
             return nextRange();
         } else {
-            return randomRange();
+            return randomRange(state);
         }
     }
 
     private Range nextRange() {
         long currentCounterValue = elementCounter.getAndAdd(batchSize);
-        return new Range(currentCounterValue, currentCounterValue + batchSize);
+        return new Range(currentCounterValue, currentCounterValue + batchSize - 1);
     }
 
-    private Range randomRange() {
+    private Range randomRange(BaseThreadState state) {
         long lowerRange = 0;
         long upperRange = elementCounter.get() - batchSize;
-        long randomValue = lowerRange + (random.nextLong() * (upperRange - lowerRange));
-        return new Range(randomValue - batchSize, randomValue);
+        long randomValue = lowerRange + (state.random.nextLong() * (upperRange - lowerRange));
+        randomValue = (randomValue <= 0) ? batchSize : randomValue;
+        return new Range(randomValue - batchSize, randomValue - 1);
     }
 
     @Teardown
