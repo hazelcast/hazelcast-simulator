@@ -133,7 +133,7 @@ public class CardinalityEstimatorTest extends AbstractTest {
         }
     }
 
-    @Verify(global = true)
+    @Verify(global = false)
     public void verify() {
         for (int k = 0; k < estimatorCount; k++) {
             CardinalityEstimator estimator = estimators[k];
