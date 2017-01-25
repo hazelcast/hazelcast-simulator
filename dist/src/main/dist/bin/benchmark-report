@@ -635,7 +635,7 @@ report_dstat()
         fi
     done
     if [ $dstat_files_found -eq 0 ]; then
-        html "No dstat information is found. Check the SIMULATOR_HOME/conf/worker.sh for an example how to enable dstat"
+        html "No dstat information is found. Check the SIMULATOR_HOME/conf/worker-hazelcast-member.sh for an example how to enable dstat"
         return
     fi
 
