@@ -251,8 +251,9 @@ import java.lang.annotation.Target;
  *
  * <h1>Latency testing</h1>
  * For Latency testing you normally want to rate the number of requests per second. This can be done by setting the interval
- * property. This property configures interval between requests per thread. So if you have 'interval=1ms' and 2 threads,
- * in total you will make 2000 operations/second.
+ * property. This property configures the interval between requests and is independent of thread count. So if interval is set
+ * to 10ms, you get 100 operations/second. If there are 2 threads, each thread will do 1 request every 20ms. If there are
+ * 4 threads, each thread will do 1 request every 40ms.
  * <p/>
  * Example:
  * <pre>
@@ -274,9 +275,10 @@ import java.lang.annotation.Target;
  *     threadCount=2
  * }
  * </pre>
- * It is converted to interval under the hood, so there is no difference at runtime. ratePerSecond, just like interval, is per
- * thread. So in the above example, you get 200 requests per second since there ratePerSecond is 100 and there are 2 threads.
- *
+ * It is converted to interval under the hood, so there is no difference at runtime. ratePerSecond, just like interval, is
+ * independent of the number of threads. If you have 200 requests per second, and 2 threads, each thread is going to do
+ * 100 requests/second. With 4 threads, each thread is going to do 50 requests/second.
+ * <p/>
  * If there are multiple execution groups, the interval can be configured using:
  * <pre>
  * {@code
