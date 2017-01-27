@@ -211,7 +211,7 @@ public class WorkerProcessLauncher {
 
         // we have to reverse the classpath to monkey patch version specific classes
         return new File(agent.getSessionDirectory(), "lib/*").getAbsolutePath()
-                + workerHome.getAbsolutePath() + "/upload/*"
+                + CLASSPATH_SEPARATOR+ workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
