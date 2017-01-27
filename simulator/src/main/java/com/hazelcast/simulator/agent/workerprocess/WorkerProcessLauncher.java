@@ -109,7 +109,7 @@ public class WorkerProcessLauncher {
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
         environment.putAll(workerProcessSettings.getEnvironment());
-        environment.put("CLASSPATH", getClasspath());
+        environment.put("CLASSPATH", getClasspath(workerHome));
         environment.put("SIMULATOR_HOME", getSimulatorHome().getAbsolutePath());
         environment.put("WORKER_ID", workerProcess.getId());
         environment.put("WORKER_TYPE", workerProcessSettings.getWorkerType().toString());
@@ -203,7 +203,7 @@ public class WorkerProcessLauncher {
         return address;
     }
 
-    private String getClasspath() {
+    private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
         String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
@@ -211,6 +211,7 @@ public class WorkerProcessLauncher {
 
         // we have to reverse the classpath to monkey patch version specific classes
         return new File(agent.getSessionDirectory(), "lib/*").getAbsolutePath()
+                + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
