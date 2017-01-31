@@ -28,7 +28,6 @@ import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ExpiryPolicy;
 import java.io.Serializable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -38,11 +37,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 /**
- * In this tests we a putting and getting to/from a cache using an expiry policy.
+ * In this tests we are putting and getting to/from a cache using an expiry policy.
  * The expiryDuration can be configured.
  * We verify that the cache is empty and items have expired.
  */
-public class ExpiryTest extends AbstractTest {
+public class TTLICacheTest extends AbstractTest {
 
     public int expiryDuration = 500;
     public int keyCount = 1000;
@@ -79,7 +78,7 @@ public class ExpiryTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.1)
-    public void getAsync(ThreadState state) throws ExecutionException, InterruptedException {
+    public void getAsync(ThreadState state) throws Exception {
         int key = state.randomInt(keyCount);
         Future<Long> future = cache.getAsync(key, expiryPolicy);
         future.get();
