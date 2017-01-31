@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.replicatedmap;
+package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.core.ReplicatedMap;
+import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -33,32 +33,34 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
-public class ReplicatedMapTimeToLiveTest extends AbstractTest {
+/**
+ * In this test we are using map put methods with an expire time.
+ *
+ * We put keys at random into the map using sync and async methods with some probability distribution.
+ * In the end we verify that the map is empty and all key value pairs have expired out of the map.
+ */
+public class MapTTLTest extends AbstractTest {
 
     // properties
-    public int keyCount = 100000;
-
+    public int keyCount = 10;
+    public int maxTTLExpiryMs = 3000;
     public int minTTLExpiryMs = 1;
-    public int maxTTLExpiryMs = 1000;
 
-    private ReplicatedMap<Integer, Integer> map;
+    private IMap<Integer, Integer> map;
     private IList<MapOperationCounter> results;
 
     @Setup
     public void setup() {
-        map = targetInstance.getReplicatedMap(name);
+        map = targetInstance.getMap(name);
         results = targetInstance.getList(name + "report");
     }
 
-    @TimeStep(prob = 0.7)
+    @TimeStep(prob = 0.4)
     public void putTTL(ThreadState state) {
         try {
             int key = state.randomInt(keyCount);
             int value = state.randomInt();
-            int delayMs = minTTLExpiryMs;
-            if (maxTTLExpiryMs > 0) {
-                delayMs += state.randomInt(maxTTLExpiryMs);
-            }
+            int delayMs = minTTLExpiryMs + state.randomInt(maxTTLExpiryMs);
             map.put(key, value, delayMs, TimeUnit.MILLISECONDS);
             state.count.putTTLCount.incrementAndGet();
         } catch (DistributedObjectDestroyedException e) {
@@ -67,6 +69,19 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
     }
 
     @TimeStep(prob = 0.3)
+    public void putAsyncTTL(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            int value = state.randomInt();
+            int delayMs = minTTLExpiryMs + state.randomInt(maxTTLExpiryMs);
+            map.putAsync(key, value, delayMs, TimeUnit.MILLISECONDS);
+            state.count.putAsyncTTLCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    @TimeStep(prob = 0.2)
     public void get(ThreadState state) {
         try {
             int key = state.randomInt(keyCount);
@@ -77,17 +92,39 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
         }
     }
 
+    @TimeStep(prob = 0.1)
+    public void getAsync(ThreadState state) {
+        try {
+            int key = state.randomInt(keyCount);
+            map.getAsync(key);
+            state.count.getAsyncCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    @TimeStep(prob = 0)
+    public void destroy(ThreadState state) {
+        try {
+            map.destroy();
+            state.count.destroyCount.incrementAndGet();
+        } catch (DistributedObjectDestroyedException e) {
+            EmptyStatement.ignore(e);
+        }
+    }
+
+    public class ThreadState extends BaseThreadState {
+
+        private final MapOperationCounter count = new MapOperationCounter();
+    }
+
     @AfterRun
     public void afterRun(ThreadState state) {
         results.add(state.count);
     }
 
-    public class ThreadState extends BaseThreadState {
-        private final MapOperationCounter count = new MapOperationCounter();
-    }
-
-    @Verify(global = false)
-    public void localVerify() {
+    @Verify
+    public void globalVerify() {
         MapOperationCounter total = new MapOperationCounter();
         for (MapOperationCounter counter : results) {
             total.add(counter);
@@ -97,9 +134,7 @@ public class ReplicatedMapTimeToLiveTest extends AbstractTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-
-                logger.info(name + ": " + "assert map Size = " + map.size());
-                assertEquals(name + ": Replicated Map should be empty, some TTL events are not processed", 0, map.size());
+                assertEquals(name + ": Map should be empty, some TTL events are not processed", 0, map.size());
             }
         });
     }

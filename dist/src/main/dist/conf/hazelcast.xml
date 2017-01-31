@@ -143,15 +143,15 @@
     <cache name="*">
     </cache>
 
-    <cache name="maxCachSmall*">
+    <cache name="maxCacheSmall*">
         <eviction max-size-policy="ENTRY_COUNT" size="271" eviction-policy="LFU"/>
     </cache>
 
-    <cache name="maxCachMedium*">
+    <cache name="maxCacheMedium*">
         <eviction max-size-policy="ENTRY_COUNT" size="1000" eviction-policy="LFU"/>
     </cache>
 
-    <cache name="maxCachLarge*">
+    <cache name="maxCacheLarge*">
         <eviction max-size-policy="ENTRY_COUNT" size="10000" eviction-policy="LFU"/>
     </cache>
 </hazelcast>
