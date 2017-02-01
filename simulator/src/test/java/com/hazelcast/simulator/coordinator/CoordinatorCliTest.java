@@ -52,7 +52,7 @@ public class CoordinatorCliTest {
     private final List<String> args = new ArrayList<String>();
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         setDistributionUserDir();
         createAgentsFileWithLocalhost();
 
