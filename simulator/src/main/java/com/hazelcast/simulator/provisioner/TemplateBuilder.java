@@ -49,7 +49,7 @@ final class TemplateBuilder {
     static final int SSH_PORT = 22;
     static final String CIDR_RANGE = "0.0.0.0/0";
 
-    private static final String DEFAULT_SUBNET_ID = "default";
+    private static final String DEFAULT = "default";
     private static final String DEFAULT_MKFS_OPTIONS = "-t ext4";
     private static final String DEFAULT_MOUNT_OPTIONS = "defaults,nofail,noatime,relatime";
 
@@ -106,8 +106,8 @@ final class TemplateBuilder {
 
         templateOptions.inboundPorts(inboundPorts());
 
-        String subnetId = simulatorProperties.get("SUBNET_ID", DEFAULT_SUBNET_ID);
-        if (DEFAULT_SUBNET_ID.equals(subnetId) || subnetId.isEmpty()) {
+        String subnetId = simulatorProperties.get("SUBNET_ID", DEFAULT);
+        if (DEFAULT.equals(subnetId) || subnetId.isEmpty()) {
             initSecurityGroup(spec, securityGroup);
             templateOptions.securityGroups(securityGroup);
         } else {
@@ -118,6 +118,17 @@ final class TemplateBuilder {
             templateOptions
                     .as(AWSEC2TemplateOptions.class)
                     .subnetId(subnetId);
+        }
+
+        String placementGroup = simulatorProperties.get("PLACEMENT_GROUP", DEFAULT);
+        if (!placementGroup.isEmpty() && !placementGroup.equals(DEFAULT)) {
+            if (!isEC2) {
+                throw new IllegalStateException("PLACEMENT_GROUP can be used only when EC2 is configured as a cloud provider.");
+            }
+            LOGGER.info("Using PlacementGroup = " + placementGroup);
+
+            templateOptions.as(AWSEC2TemplateOptions.class)
+                    .placementGroup(placementGroup);
         }
 
         if (isEC2) {
