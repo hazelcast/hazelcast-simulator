@@ -4,7 +4,7 @@
 
     <groupId>com.hazelcast.simulator</groupId>
     <artifactId>simulator-root</artifactId>
-    <version>0.9</version>
+    <version>0.9.1-SNAPSHOT</version>
     <name>Hazelcast Simulator Root</name>
     <description>Hazelcast Simulator: Stress/Performance Testing Environment for Hazelcast</description>
     <url>http://github.com/hazelcast/hazelcast-simulator</url>
