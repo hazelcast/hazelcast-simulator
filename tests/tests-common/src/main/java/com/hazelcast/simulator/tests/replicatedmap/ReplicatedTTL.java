@@ -45,7 +45,7 @@ public class ReplicatedTTL extends AbstractTest {
     private IList<MapOperationCounter> results;
 
     @Setup
-    public void setup() {
+    public void setUp() {
         map = targetInstance.getReplicatedMap(name);
         results = targetInstance.getList(name + "report");
     }
