@@ -248,11 +248,15 @@ public class Coordinator implements Closeable {
     }
 
     private void startCoordinatorConnector() {
-        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
-                this, failureCollector, testPhaseListeners, performanceStatsCollector);
+        int coordinatorPort = simulatorProperties.getCoordinatorPort();
+        if (coordinatorPort > 0) {
+            LOGGER.info(format("Listening on port %d for incoming remote operations...", coordinatorPort));
+            CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
+                    this, failureCollector, testPhaseListeners, performanceStatsCollector);
 
-        connector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
-        connector.start();
+            connector = new CoordinatorConnector(processor, coordinatorPort);
+            connector.start();
+        }
 
         ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
         for (final AgentData agentData : componentRegistry.getAgents()) {
@@ -266,7 +270,7 @@ public class Coordinator implements Closeable {
         }
         spawner.awaitCompletion();
 
-        LOGGER.info("Remote client starting....");
+        LOGGER.info("Remote client starting...");
         int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
 
         client = new RemoteClient(connector, componentRegistry, workerPingIntervalMillis);
