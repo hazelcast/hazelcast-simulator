@@ -25,9 +25,9 @@ import java.lang.annotation.Target;
  *
  * A method should contain either:
  * <ol>
- *     <li>{@link Run}</li>
- *     <li>{@link RunWithWorker}</li>
- *     <li>{@link TimeStep}</li>
+ * <li>{@link Run}</li>
+ * <li>{@link RunWithWorker}</li>
+ * <li>{@link TimeStep}</li>
  * </ol>
  * The {@link TimeStep} is the one that should be picked by default. It is the most powerful and it relies on code generation
  * to create a runner with the least amount of overhead.  The {@link TimeStep} looks a lot like the  @Benchmark from JMH.
@@ -205,8 +205,8 @@ import java.lang.annotation.Target;
  * By default a timestep based thread will not log anything during the run/warmup period. But sometimes some logging is required,
  * e.g. when needing to do some debugging. There are 2 out of the box options for logging:
  * <ol>
- *     <li>frequency based: e.g. every 1000th iteration</li>
- *     <li>time rate based: e.g. every 100ms</li>
+ * <li>frequency based: e.g. every 1000th iteration</li>
+ * <li>time rate based: e.g. every 100ms</li>
  * </ol>
  *
  * <h2>Frequency based logging</h2>
@@ -254,7 +254,7 @@ import java.lang.annotation.Target;
  * property. This property configures the interval between requests and is independent of thread count. So if interval is set
  * to 10ms, you get 100 operations/second. If there are 2 threads, each thread will do 1 request every 20ms. If there are
  * 4 threads, each thread will do 1 request every 40ms.
- * <p/>
+ *
  * Example:
  * <pre>
  * {@code
@@ -278,7 +278,7 @@ import java.lang.annotation.Target;
  * It is converted to interval under the hood, so there is no difference at runtime. ratePerSecond, just like interval, is
  * independent of the number of threads. If you have 200 requests per second, and 2 threads, each thread is going to do
  * 100 requests/second. With 4 threads, each thread is going to do 50 requests/second.
- * <p/>
+ *
  * If there are multiple execution groups, the interval can be configured using:
  * <pre>
  * {@code
@@ -306,19 +306,19 @@ import java.lang.annotation.Target;
  * Internally a {@link com.hazelcast.simulator.worker.metronome.Metronome} is used to control the rate of requests. There are
  * currently 3 out of the box implementations:
  * <ol>
- *     <li>{@link com.hazelcast.simulator.worker.metronome.SleepingMetronome}: which used LockSupport.park for waiting.
- *     This metronome is the default and useful if you don't want to consume a lot of CPU cycles.</li>
- *     <li>{@link com.hazelcast.simulator.worker.metronome.BusySpinningMetronome}: which used busy spinning for waiting.
- *     It will give you the best time, but it will totally consume a single core. You certainly don't want to use this
- *     metronome when having many load generating threads.
- *     </li>
- *     <li>{@link com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome} is special type of metronome. The
- *     first 2 metronomes have a rate per thread; if a thread gets blocked, a bubble of requests will build up that needs
- *     to get processed as soon as the thread unblocks. Even though coordinated omission by default is taken care of, the bubble
- *     might not what you want because it means that you will get a dip in system pressure and then a peek, which
- *     both can influence the benchmark. With the ConstantCombinedRateMetronome as long as their is a thread available, a
- *     requests will be made. THis prevents building up the bubble and will give a more stable request rate.
- *     </li>
+ * <li>{@link com.hazelcast.simulator.worker.metronome.SleepingMetronome}: which used LockSupport.park for waiting.
+ * This metronome is the default and useful if you don't want to consume a lot of CPU cycles.</li>
+ * <li>{@link com.hazelcast.simulator.worker.metronome.BusySpinningMetronome}: which used busy spinning for waiting.
+ * It will give you the best time, but it will totally consume a single core. You certainly don't want to use this
+ * metronome when having many load generating threads.
+ * </li>
+ * <li>{@link com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome} is special type of metronome. The
+ * first 2 metronomes have a rate per thread; if a thread gets blocked, a bubble of requests will build up that needs
+ * to get processed as soon as the thread unblocks. Even though coordinated omission by default is taken care of, the bubble
+ * might not what you want because it means that you will get a dip in system pressure and then a peek, which
+ * both can influence the benchmark. With the ConstantCombinedRateMetronome as long as their is a thread available, a
+ * requests will be made. THis prevents building up the bubble and will give a more stable request rate.
+ * </li>
  * </ol>
  *
  * The metronome type can be configured using:
