@@ -165,20 +165,26 @@ public class WorkerProcessLauncher {
     }
 
     private void copyResourcesToWorkerHome(String workerId) {
+        LOGGER.warn("------------------------");
+
         File workerHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
         String sessionId = agent.getSessionId();
         File uploadDirectory = new File(workerHome, sessionId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
-            LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
+            LOGGER.warn("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
-        String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
+
+        String copyCommand = format("cp -rfv %s/%s/upload/. %s/%s/%s/upload",
                 workerHome,
                 sessionId,
                 workerHome,
                 sessionId,
                 workerId);
         execute(copyCommand);
+
+        LOGGER.warn(copyCommand);
+
         LOGGER.info(format("Finished copying '%s' to Worker", workerHome));
     }
 
@@ -214,6 +220,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
+                + CLASSPATH_SEPARATOR + "upload/lib/"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + CLASSPATH_SEPARATOR + CLASSPATH;

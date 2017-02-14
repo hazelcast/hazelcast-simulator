@@ -80,6 +80,7 @@ public class RunTestSuiteTask {
             List<WorkerData> targets = initTargets();
             return run0(tests, targets);
         } finally {
+            failureCollector.logFailureInfo();
             testPhaseListeners.removeAllListeners(runners);
         }
     }

@@ -11,6 +11,11 @@
 # exit on failure
 set -e
 
+if [ -z "${SIMULATOR_HOME}" ] ; then
+    export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
+fi
+
+
 # Printing the command being executed (useful for debugging)
 #set -x
 
