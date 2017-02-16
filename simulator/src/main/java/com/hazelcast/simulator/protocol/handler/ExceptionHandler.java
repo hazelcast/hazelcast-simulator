@@ -62,14 +62,17 @@ public class ExceptionHandler extends ChannelHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        LOGGER.error("Caught unhandled exception in Netty pipeline in channel " + ctx.channel(), cause);
-
-        if (cause != null && cause instanceof IOException && "Connection reset by peer".equals(cause.getMessage())) {
+        if (isConnectionResetByPeerException(cause) || isConnectionResetByPeerException(cause.getCause())) {
             return;
         }
 
-        FailureOperation operation = new FailureOperation("Uncaught Netty exception in channel " + ctx.channel(),
-                NETTY_EXCEPTION, workerAddress, agentAddress, cause);
+        String message = "Caught unhandled exception in Netty pipeline in channel " + ctx.channel();
+        LOGGER.error(message, cause);
+        FailureOperation operation = new FailureOperation(message, NETTY_EXCEPTION, workerAddress, agentAddress, cause);
         serverConnector.submit(COORDINATOR, operation);
+    }
+
+    private boolean isConnectionResetByPeerException(Throwable cause) {
+        return cause instanceof IOException && "Connection reset by peer".equals(cause.getMessage());
     }
 }

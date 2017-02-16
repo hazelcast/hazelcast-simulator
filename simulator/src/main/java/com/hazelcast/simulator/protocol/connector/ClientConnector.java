@@ -23,6 +23,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -33,6 +34,7 @@ import org.apache.log4j.Logger;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createFutureKey;
 import static com.hazelcast.simulator.protocol.core.ResponseFuture.createInstance;
@@ -53,6 +55,8 @@ public class ClientConnector {
     private static final int CONNECT_RETRIES = 5;
 
     private static final Logger LOGGER = Logger.getLogger(ClientConnector.class);
+
+    private final AtomicBoolean shutdownInvoked = new AtomicBoolean();
 
     private final ClientPipelineConfigurator pipelineConfigurator;
     private final EventLoopGroup group;
@@ -93,8 +97,7 @@ public class ClientConnector {
     }
 
     private Bootstrap getBootstrap() {
-        Bootstrap bootstrap = new Bootstrap();
-        bootstrap
+        return new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
                 .remoteAddress(new InetSocketAddress(remoteHost, remotePort))
@@ -106,10 +109,9 @@ public class ClientConnector {
                         pipelineConfigurator.configureClientPipeline(channel.pipeline(), remoteAddress, futureMap);
                     }
                 });
-        return bootstrap;
     }
 
-    void connect(Bootstrap bootstrap, int connectRetryDelayMillis, int connectRetries) {
+    void connect(final Bootstrap bootstrap, int connectRetryDelayMillis, int connectRetries) {
         Exception exception = null;
         int connectionTry = 1;
         do {
@@ -121,6 +123,16 @@ public class ClientConnector {
                         LOGGER.trace(format("ClientConnector %s -> %s sends to %s", localAddress, remoteAddress,
                                 channel.remoteAddress()));
                     }
+                    channel.closeFuture().addListener(new ChannelFutureListener() {
+                        @Override
+                        public void operationComplete(ChannelFuture future) throws Exception {
+                            if (!shutdownInvoked.get()) {
+                                LOGGER.fatal(format("Connection %s -> %s (%s) closed! Reconnecting...", localAddress,
+                                        remoteAddress, future.channel().remoteAddress()));
+                                connect(bootstrap, CONNECT_RETRY_DELAY_MILLIS, CONNECT_RETRIES);
+                            }
+                        }
+                    });
 
                     sendAuthMessage();
                     return;
@@ -128,8 +140,8 @@ public class ClientConnector {
                 future.channel().close();
             } catch (Exception e) {
                 exception = e;
-                LOGGER.warn(format("Connection refused, retrying to connect %s -> %s (%d)...", localAddress, remoteAddress,
-                        connectionTry));
+                LOGGER.warn(format("Connection refused, retrying to connect %s -> %s (%d / %d)...", localAddress, remoteAddress,
+                        connectionTry, connectRetries));
                 sleepMillis(connectRetryDelayMillis * connectionTry);
             }
         } while (connectionTry++ < connectRetries);
@@ -143,6 +155,7 @@ public class ClientConnector {
     }
 
     public void shutdown() {
+        shutdownInvoked.set(true);
         if (channel.isOpen()) {
             channel.close().syncUninterruptibly();
         }
