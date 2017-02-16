@@ -53,7 +53,7 @@ import static com.hazelcast.simulator.wizard.WizardUtils.copyResourceFile;
 import static com.hazelcast.simulator.wizard.WizardUtils.getCommentedOutProperty;
 import static java.lang.String.format;
 
-public class Wizard {
+class Wizard {
 
     static final File SSH_COPY_ID_FILE = new File("ssh-copy-id-script").getAbsoluteFile();
 
@@ -118,7 +118,7 @@ public class Wizard {
                     "%n# Machine specification used for AWS (change if needed)%n#MACHINE_SPEC=%s%n",
                     simulatorProperties.get("MACHINE_SPEC")), simulatorPropertiesFile);
         } else if (isGCE(cloudProvider)) {
-            String currentUser = execute("whoami").toString().trim();
+            String currentUser = execute("whoami").trim();
 
             appendText(format(
                     "%n# These files contain your GCE credentials (change if needed)%n%s=%s%n%s=%s%n",
@@ -141,7 +141,6 @@ public class Wizard {
         } else {
             copyResourceFile(workDir, "prepare", "prepareScriptCloud");
         }
-        copyResourceFile(workDir, "download", "downloadScript");
     }
 
     void listCloudProviders() {

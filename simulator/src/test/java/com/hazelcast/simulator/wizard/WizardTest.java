@@ -52,7 +52,6 @@ public class WizardTest {
     private File testPropertiesFile;
     private File runScriptFile;
     private File prepareScriptFile;
-    private File downloadScriptFile;
     private File simulatorPropertiesFile;
     private File agentsFile;
 
@@ -85,7 +84,6 @@ public class WizardTest {
         testPropertiesFile = new File(workDir, "test.properties");
         runScriptFile = new File(workDir, "run");
         prepareScriptFile = new File(workDir, "prepare");
-        downloadScriptFile = new File(workDir, "download");
         simulatorPropertiesFile = new File(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
         agentsFile = new File(workDir, AgentsFile.NAME);
 
@@ -247,9 +245,6 @@ public class WizardTest {
 
         assertTrue(prepareScriptFile.exists());
         assertTrue(prepareScriptFile.isFile());
-
-        assertTrue(downloadScriptFile.exists());
-        assertTrue(downloadScriptFile.isFile());
 
         assertTrue(simulatorPropertiesFile.exists());
         assertTrue(simulatorPropertiesFile.isFile());

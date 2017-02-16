@@ -29,3 +29,5 @@ coordinator --members ${members} \
             --clientWorkerVmOptions "${clientJvmArgs}" \
             --parallel \
              ${testsuite}.properties
+
+coordinator --clean
