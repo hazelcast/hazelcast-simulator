@@ -124,7 +124,7 @@ public class AgentConnectorImpl extends AbstractServerConnector implements Clien
     public SimulatorAddress addWorker(int workerIndex, String workerHost, int workerPort) {
         SimulatorAddress remoteAddress = localAddress.getChild(workerIndex);
         ClientConnector clientConnector = new ClientConnector(this, getEventLoopGroup(), futureMap, localAddress, remoteAddress,
-                workerIndex, workerHost, workerPort);
+                workerIndex, workerHost, workerPort, false);
         clientConnector.start();
 
         getClientConnectorManager().addClient(workerIndex, clientConnector);

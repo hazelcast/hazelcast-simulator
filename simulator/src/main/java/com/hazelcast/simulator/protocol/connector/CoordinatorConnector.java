@@ -95,7 +95,7 @@ public class CoordinatorConnector extends AbstractServerConnector implements Cli
      */
     public void addAgent(int agentIndex, String agentHost, int agentPort) {
         ClientConnector client = new ClientConnector(this, getEventLoopGroup(), getFutureMap(), COORDINATOR,
-                COORDINATOR.getChild(agentIndex), agentIndex, agentHost, agentPort);
+                COORDINATOR.getChild(agentIndex), agentIndex, agentHost, agentPort, true);
         client.start();
 
         getClientConnectorManager().addClient(agentIndex, client);
