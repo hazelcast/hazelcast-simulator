@@ -3,12 +3,12 @@
 #
 # Script to install Hazelcast. The installation can be modified by copying it into the working directory.
 #
-# All properties from the 'simultor.properties' are passed as environment variables.
+# All properties from the 'simulator.properties' are passed as environment variables.
 #
 
-# Automatic exit on script failure
+# automatic exit on script failure
 set -e
-# Printing the command being executed (useful for debugging)
+# printing the command being executed (useful for debugging)
 #set -x
 
 local_upload_dir=upload
@@ -21,9 +21,7 @@ max_current_uploads=2
 # setting the right maven executable
 eval git_build_dir=$GIT_BUILD_DIR
 
-local_build_cache=$git_build_dir/build-cache
-
-simulator_basename=($(basename $SIMULATOR_HOME))
+local_build_cache=${git_build_dir}/build-cache
 
 # we create a tmp directory for all the artifacts
 # for more info about this command see:
@@ -31,8 +29,18 @@ simulator_basename=($(basename $SIMULATOR_HOME))
 tmp_dir=`mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir'`
 local_install_dir="$tmp_dir/lib"
 
-download()
-{
+function real_path {
+    local r=$1; local t=$(readlink ${r})
+    while [ $t ]; do
+        r=$(cd $(dirname ${r}) && cd $(dirname ${t}) && pwd -P)/$(basename ${t})
+        t=$(readlink ${r})
+    done
+    echo ${r}
+}
+
+simulator_basename=($(real_path ${SIMULATOR_HOME} | xargs basename))
+
+download() {
     url=$1 # the url of the artifact to download
     dir=$2 # the directory the file should be downloaded
 
@@ -46,8 +54,7 @@ download()
     fi
 }
 
-prepare_using_maven()
-{
+prepare_using_maven() {
     artifact_id=$1      # the artifact_id
     version=$2          # the version of the artifact, e.g. 3.6
     release_repo=$3     # the repo containing the releases
@@ -92,8 +99,7 @@ prepare_using_maven()
     download $url  $destination
 }
 
-prepare_using_git()
-{
+prepare_using_git() {
     git_branch=$1       # the branch to check out
     local_repo=$2       # the local directory to check out to
     repo_url=$3         # the remote repository
@@ -171,7 +177,7 @@ throttle_concurrent_uploads() {
 }
 
 # uploads the files to a single agent
-upload_to_single_agent(){
+upload_to_single_agent() {
     public_ip=$1
 
     remote_hz_lib=$simulator_basename/hz-lib
@@ -198,8 +204,7 @@ upload_to_single_agent(){
 }
 
 # uploads the installation files to all agents
-upload()
-{
+upload() {
     # if there are no provided public ip's, then it is a local install
     if [ -z "$public_ips" ] ; then
         echo "Local install"
