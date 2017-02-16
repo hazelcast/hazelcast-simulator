@@ -1,4 +1,0 @@
-#!/bin/bash
-
-provisioner --download
-provisioner --clean
