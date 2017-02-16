@@ -127,7 +127,7 @@ public class ClientConnector {
                         @Override
                         public void operationComplete(ChannelFuture future) throws Exception {
                             if (!shutdownInvoked.get()) {
-                                LOGGER.fatal(format("Connection %s -> %s (%s) closed! Reconnecting...", localAddress,
+                                LOGGER.error(format("Connection %s -> %s (%s) closed! Reconnecting...", localAddress,
                                         remoteAddress, future.channel().remoteAddress()));
                                 connect(bootstrap, CONNECT_RETRY_DELAY_MILLIS, CONNECT_RETRIES);
                             }
