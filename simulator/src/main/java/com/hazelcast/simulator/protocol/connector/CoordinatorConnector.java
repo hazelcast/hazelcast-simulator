@@ -40,7 +40,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.REMOTE;
 import static java.util.Collections.unmodifiableCollection;
 
 /**
- * Connector which connects to remote Simulator Agent instances.
+ * Connector for the Simulator Coordinator which connects to remote Simulator Agent instances.
  */
 public class CoordinatorConnector extends AbstractServerConnector implements ClientPipelineConfigurator {
 

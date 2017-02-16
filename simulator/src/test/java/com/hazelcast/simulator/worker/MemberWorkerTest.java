@@ -6,7 +6,6 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.utils.SimulatorUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,18 +14,14 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
+import static com.hazelcast.simulator.common.WorkerType.MEMBER;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
-import static com.hazelcast.simulator.common.WorkerType.MEMBER;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class MemberWorkerTest {
 

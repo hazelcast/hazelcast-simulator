@@ -22,21 +22,21 @@ import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 
-public class CoordinatorDownloader {
+class CoordinatorDownloader {
 
     private final ComponentRegistry componentRegistry;
     private final SimulatorProperties simulatorProperties;
 
-    public CoordinatorDownloader(ComponentRegistry componentRegistry, SimulatorProperties simulatorProperties) {
+    CoordinatorDownloader(ComponentRegistry componentRegistry, SimulatorProperties simulatorProperties) {
         this.componentRegistry = componentRegistry;
         this.simulatorProperties = simulatorProperties;
     }
 
-    public void download() throws Exception {
+    void download() throws Exception {
         new ArtifactDownloadTask("*", simulatorProperties, getUserDir(), componentRegistry).run();
     }
 
-    public void clean() throws Exception {
+    void clean() throws Exception {
         new ArtifactCleanTask(componentRegistry, simulatorProperties).run();
     }
 }

@@ -94,8 +94,8 @@ public class CardinalityEstimatorTest extends AbstractTest {
         state.threadId = (int) threadIdGenerator.getAndIncrement();
         state.totalThreadCount = (int) totalThreadCount.get();
 
-        logger.info("totalThreadCount:" + state.totalThreadCount);
-        logger.info("threadId:" + state.threadId);
+        logger.info("totalThreadCount: " + state.totalThreadCount);
+        logger.info("threadId: " + state.threadId);
     }
 
     @TimeStep(prob = 1)

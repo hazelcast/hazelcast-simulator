@@ -13,8 +13,8 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
@@ -61,12 +61,11 @@ public class WorkerProcessFailureMonitorTest {
 
 
     private WorkerProcessFailureMonitor workerProcessFailureMonitor;
-    private File simulatorHome;
     private File workersHome;
 
     @Before
     public void before() {
-        simulatorHome = setupFakeEnvironment();
+        File simulatorHome = setupFakeEnvironment();
         workersHome = new File(simulatorHome, "workers");
 
         failureHandler = mock(WorkerProcessFailureHandler.class);
@@ -135,7 +134,7 @@ public class WorkerProcessFailureMonitorTest {
                 anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
                 .thenReturn(false);
 
-        WorkerProcess workerProcess = addWorkerProcess(1);
+        addWorkerProcess(1);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -149,7 +148,7 @@ public class WorkerProcessFailureMonitorTest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        WorkerProcess workerProcess = addWorkerProcess(1);
+        addWorkerProcess(1);
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 
@@ -163,7 +162,7 @@ public class WorkerProcessFailureMonitorTest {
         String cause = throwableToString(new RuntimeException());
         File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "WorkerProcessFailureMonitorTest", cause);
 
-        System.out.println("ExceptionFile:" + exceptionFile.getAbsolutePath());
+        System.out.println("ExceptionFile: " + exceptionFile.getAbsolutePath());
 
         sleepMillis(DEFAULT_SLEEP_TIME);
 

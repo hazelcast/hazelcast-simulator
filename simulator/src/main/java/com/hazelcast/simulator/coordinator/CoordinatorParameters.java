@@ -17,59 +17,44 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.utils.Preconditions;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 /**
  * Parameters for Simulator Coordinator.
  */
 public class CoordinatorParameters {
 
+    private String sessionId = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
+    private TestPhase lastTestPhaseToSync = TestPhase.getLastTestPhase();
+
     private SimulatorProperties simulatorProperties;
     private String workerClassPath;
     private boolean skipDownload;
-    private TestPhase lastTestPhaseToSync = TestPhase.getLastTestPhase();
+    private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
-    private String afterCompletionFile;
-    private String sessionId = new SimpleDateFormat("yyyy-MM-dd__HH_mm_ss").format(new Date());
     private int performanceMonitorIntervalSeconds;
+    private String afterCompletionFile;
     private String licenseKey;
-
-    public String getLicenseKey() {
-        return licenseKey;
-    }
-
-    public CoordinatorParameters setLicenseKey(String licenseKey) {
-        this.licenseKey = licenseKey;
-        return this;
-    }
-
-    public int getPerformanceMonitorIntervalSeconds() {
-        return performanceMonitorIntervalSeconds;
-    }
-
-    public CoordinatorParameters setPerformanceMonitorIntervalSeconds(int performanceMonitorIntervalSeconds) {
-        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
-        return this;
-    }
 
     public String getSessionId() {
         return sessionId;
     }
 
     public CoordinatorParameters setSessionId(String sessionId) {
-        this.sessionId = Preconditions.checkNotNull(sessionId, "sessionId can't be null");
+        this.sessionId = checkNotNull(sessionId, "sessionId can't be null");
         return this;
     }
 
-    public int getWorkerVmStartupDelayMs() {
-        return workerVmStartupDelayMs;
+    public TestPhase getLastTestPhaseToSync() {
+        return lastTestPhaseToSync;
     }
 
-    public CoordinatorParameters setWorkerVmStartupDelayMs(int workerVmStartupDelayMs) {
-        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
+    public CoordinatorParameters setLastTestPhaseToSync(TestPhase lastTestPhaseToSync) {
+        this.lastTestPhaseToSync = lastTestPhaseToSync;
         return this;
     }
 
@@ -91,17 +76,40 @@ public class CoordinatorParameters {
         return this;
     }
 
-    public TestPhase getLastTestPhaseToSync() {
-        return lastTestPhaseToSync;
+    public boolean skipDownload() {
+        return skipDownload;
     }
 
-    public CoordinatorParameters setLastTestPhaseToSync(TestPhase lastTestPhaseToSync) {
-        this.lastTestPhaseToSync = lastTestPhaseToSync;
+    public CoordinatorParameters setSkipDownload(boolean skipDownload) {
+        this.skipDownload = skipDownload;
         return this;
     }
 
-    public boolean skipDownload() {
-        return skipDownload;
+    public boolean skipShutdownHook() {
+        return skipShutdownHook;
+    }
+
+    public CoordinatorParameters setSkipShutdownHook(boolean skipShutdownHook) {
+        this.skipShutdownHook = skipShutdownHook;
+        return this;
+    }
+
+    public int getWorkerVmStartupDelayMs() {
+        return workerVmStartupDelayMs;
+    }
+
+    public CoordinatorParameters setWorkerVmStartupDelayMs(int workerVmStartupDelayMs) {
+        this.workerVmStartupDelayMs = workerVmStartupDelayMs;
+        return this;
+    }
+
+    public int getPerformanceMonitorIntervalSeconds() {
+        return performanceMonitorIntervalSeconds;
+    }
+
+    public CoordinatorParameters setPerformanceMonitorIntervalSeconds(int performanceMonitorIntervalSeconds) {
+        this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
+        return this;
     }
 
     public String getAfterCompletionFile() {
@@ -113,8 +121,12 @@ public class CoordinatorParameters {
         return this;
     }
 
-    public CoordinatorParameters setSkipDownload(boolean skipDownload) {
-        this.skipDownload = skipDownload;
+    public String getLicenseKey() {
+        return licenseKey;
+    }
+
+    public CoordinatorParameters setLicenseKey(String licenseKey) {
+        this.licenseKey = licenseKey;
         return this;
     }
 }

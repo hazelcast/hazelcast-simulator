@@ -31,6 +31,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
@@ -155,8 +156,16 @@ public class SimulatorProperties {
         return parseInt(get("MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS", "5"));
     }
 
+    public int getWorkerStartupTimeoutSeconds() {
+        return parseInt(get("WORKER_STARTUP_TIMEOUT_SECONDS", "60"));
+    }
+
     public int getWaitForWorkerShutdownTimeoutSeconds() {
         return parseInt(get("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS", "120"));
+    }
+
+    public int getTestCompletionTimeoutSeconds() {
+        return parseInt(get("TEST_COMPLETION_TIMEOUT_SECONDS", "300"));
     }
 
     public int getCoordinatorPort() {
@@ -217,20 +226,12 @@ public class SimulatorProperties {
         properties.setProperty(name, value);
     }
 
-    public Integer getAsInteger(String property) {
-        String value = get(property);
-        if (value == null) {
-            return null;
-        }
-        return Integer.parseInt(value);
-    }
-
     public Float getAsFloat(String property) {
         String value = get(property);
         if (value == null) {
             return null;
         }
-        return Float.parseFloat(value);
+        return parseFloat(value);
     }
 
     public String getAsString() {

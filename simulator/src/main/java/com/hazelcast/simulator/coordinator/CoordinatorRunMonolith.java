@@ -17,8 +17,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
-import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -31,7 +29,8 @@ import static java.lang.String.format;
  * The CoordinatorRunMonolith takes care of the good old simple to use simulator where you automatically create some workers,
  * run a test and shut it down. None of that fancy interactive stuff.
  */
-public class CoordinatorRunMonolith {
+class CoordinatorRunMonolith {
+
     private static final int WAIT_FOR_WORKER_FAILURE_RETRY_COUNT = 10;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorRunMonolith.class);
@@ -40,21 +39,16 @@ public class CoordinatorRunMonolith {
     private final FailureCollector failureCollector;
     private final TestPhase lastTestPhaseToSync;
 
-    CoordinatorRunMonolith(Coordinator coordinator) {
+    CoordinatorRunMonolith(Coordinator coordinator, CoordinatorParameters coordinatorParameters) {
         this.coordinator = coordinator;
-        this.failureCollector = coordinator.failureCollector;
-        this.lastTestPhaseToSync = coordinator.parameters.getLastTestPhaseToSync();
+        this.failureCollector = coordinator.getFailureCollector();
+        this.lastTestPhaseToSync = coordinatorParameters.getLastTestPhaseToSync();
     }
 
     public void init(DeploymentPlan deploymentPlan) {
         logConfiguration(deploymentPlan);
 
-        new StartWorkersTask(
-                deploymentPlan.getWorkerDeployment(),
-                new HashMap<String, String>(),
-                coordinator.client,
-                coordinator.componentRegistry,
-                coordinator.parameters.getWorkerVmStartupDelayMs()).run();
+        coordinator.createStartWorkersTask(deploymentPlan.getWorkerDeployment(), new HashMap<String, String>()).run();
     }
 
     public boolean run(TestSuite testSuite) throws Exception {
@@ -63,13 +57,7 @@ public class CoordinatorRunMonolith {
         }
 
         try {
-            new RunTestSuiteTask(testSuite,
-                    coordinator.parameters,
-                    coordinator.componentRegistry,
-                    failureCollector,
-                    coordinator.testPhaseListeners,
-                    coordinator.client,
-                    coordinator.performanceStatsCollector).run();
+            coordinator.createRunTestSuiteTask(testSuite).run();
         } catch (CommandLineExitException e) {
             for (int i = 0; i < WAIT_FOR_WORKER_FAILURE_RETRY_COUNT && failureCollector.getFailureCount() == 0; i++) {
                 sleepSeconds(1);

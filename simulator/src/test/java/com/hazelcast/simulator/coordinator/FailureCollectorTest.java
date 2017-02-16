@@ -7,9 +7,7 @@ import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.TestData;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -18,7 +16,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;

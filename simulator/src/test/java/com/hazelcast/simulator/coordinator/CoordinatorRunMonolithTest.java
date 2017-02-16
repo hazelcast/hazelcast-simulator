@@ -5,7 +5,6 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -33,16 +32,14 @@ import static org.junit.Assert.assertFalse;
 
 public class CoordinatorRunMonolithTest {
 
-    private String hzConfig;
     private ComponentRegistry componentRegistry;
     private Agent agent;
-    private AgentData agentData;
     private CoordinatorRunMonolith run;
     private WorkerParameters workerParameters;
     private Coordinator coordinator;
 
     @Before
-    public void before() {
+    public void setUp() {
         setupFakeEnvironment();
 
         File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
@@ -50,21 +47,22 @@ public class CoordinatorRunMonolithTest {
         SimulatorProperties simulatorProperties = loadSimulatorProperties();
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
-                .setSimulatorProperties(simulatorProperties);
+                .setSimulatorProperties(simulatorProperties)
+                .setSkipShutdownHook(true);
 
-        this.agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
+        agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
         agent.setSessionId(coordinatorParameters.getSessionId());
-        this.componentRegistry = new ComponentRegistry();
-        this.agentData = componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
+        componentRegistry = new ComponentRegistry();
+        componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
 
-        this.hzConfig = fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
+        String hzConfig = fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
         initMemberHzConfig(hzConfig, componentRegistry, null, simulatorProperties.asMap(), false);
 
         File scriptFile = new File(internalDistPath() + "/conf/worker-hazelcast-member.sh");
         File logFile = new File(internalDistPath() + "/conf/agent-log4j.xml");
 
-        this.workerParameters = new WorkerParameters()
+        workerParameters = new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
                 .addEnvironment(simulatorProperties.asMap())
                 .addEnvironment("HAZELCAST_CONFIG", hzConfig)
@@ -72,17 +70,17 @@ public class CoordinatorRunMonolithTest {
                 .addEnvironment("AUTOCREATE_HAZELCAST_INSTANCE", "true")
                 .addEnvironment("JVM_OPTIONS", "")
                 .addEnvironment("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "10")
-                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(fileAsText(scriptFile));
 
-        this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
-        coordinator.skipShutdownHook=true;
+        coordinator = new Coordinator(componentRegistry, coordinatorParameters);
         coordinator.start();
-        this.run = new CoordinatorRunMonolith(coordinator);
+
+        run = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
     }
 
     @After
-    public void after() throws InterruptedException {
+    public void tearDown() throws InterruptedException {
         closeQuietly(coordinator);
         closeQuietly(agent);
         tearDownFakeEnvironment();

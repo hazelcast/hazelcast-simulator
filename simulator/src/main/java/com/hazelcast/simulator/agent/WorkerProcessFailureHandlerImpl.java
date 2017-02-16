@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.agent;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureHandler;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcess;
+import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureHandler;
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
 import com.hazelcast.simulator.protocol.core.Response;

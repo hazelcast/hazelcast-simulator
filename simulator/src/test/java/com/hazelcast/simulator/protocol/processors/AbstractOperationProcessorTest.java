@@ -13,9 +13,7 @@ import org.junit.Test;
 
 import static com.hazelcast.simulator.protocol.operation.IntegrationTestOperation.Type.EQUALS;
 import static com.hazelcast.simulator.protocol.processors.OperationTestUtil.process;
-import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.SUCCESS;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class AbstractOperationProcessorTest {
 

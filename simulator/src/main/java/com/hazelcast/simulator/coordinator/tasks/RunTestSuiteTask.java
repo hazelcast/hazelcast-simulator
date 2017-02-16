@@ -47,6 +47,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.String.format;
 
 public class RunTestSuiteTask {
+
     private static final Logger LOGGER = Logger.getLogger(RunTestSuiteTask.class);
 
     private final TestSuite testSuite;
@@ -88,7 +89,7 @@ public class RunTestSuiteTask {
         WorkerQuery workerQuery = testSuite.getWorkerQuery();
         List<WorkerData> targets = workerQuery.execute(componentRegistry.getWorkers());
         if (targets.isEmpty()) {
-            throw new IllegalStateException("No workers found for query:" + workerQuery);
+            throw new IllegalStateException("No workers found for query: " + workerQuery);
         }
 
         List<WorkerData> clients = filter(targets, false);
@@ -113,7 +114,6 @@ public class RunTestSuiteTask {
                 result.add(worker);
             }
         }
-
         return result;
     }
 
@@ -125,7 +125,6 @@ public class RunTestSuiteTask {
 
         LOGGER.info("Starting TestSuite");
         echoTestSuiteDuration(parallel);
-
 
         for (TestData testData : tests) {
             int testIndex = testData.getTestIndex();
@@ -220,8 +219,7 @@ public class RunTestSuiteTask {
         LOGGER.info(HORIZONTAL_RULER);
     }
 
-    static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean parallel,
-                                                              TestPhase latestTestPhaseToSync) {
+    static Map<TestPhase, CountDownLatch> getTestPhaseSyncMap(int testCount, boolean parallel, TestPhase latestTestPhaseToSync) {
         if (!parallel) {
             return null;
         }

@@ -17,7 +17,6 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.tasks.ArtifactDownloadTask;
 import com.hazelcast.simulator.coordinator.tasks.InstallVendorTask;
@@ -32,7 +31,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
 import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
 import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
@@ -79,6 +77,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
+import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -87,38 +86,39 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public class Coordinator implements Closeable {
 
-    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
     private static final int INITIALIZED_TIMEOUT_MINUTES = 5;
+    private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    ComponentRegistry componentRegistry;
-    RemoteClient client;
-    final CoordinatorParameters parameters;
-    final FailureCollector failureCollector;
-    final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
-    final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
-    final File outputDirectory;
-    // for testing purposes; we don't want to have a shutdownhook registered.
-    boolean skipShutdownHook;
+    private final CountDownLatch initialized = new CountDownLatch(1);
+    private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
+    private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
+    private final ComponentRegistry componentRegistry;
+    private final CoordinatorParameters parameters;
+    private final File outputDirectory;
+    private final FailureCollector failureCollector;
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
-    private final TestPhase lastTestPhaseToSync;
-    private final CountDownLatch initialized = new CountDownLatch(1);
     private final int testCompletionTimeoutSeconds;
+
     private CoordinatorConnector connector;
+    private RemoteClient client;
 
     Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
-        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
         this.componentRegistry = componentRegistry;
         this.parameters = parameters;
+        this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
         this.failureCollector = new FailureCollector(outputDirectory, componentRegistry);
         this.simulatorProperties = parameters.getSimulatorProperties();
         this.bash = new Bash(simulatorProperties);
-        this.lastTestPhaseToSync = parameters.getLastTestPhaseToSync();
-        this.testCompletionTimeoutSeconds = simulatorProperties.getAsInteger("TEST_COMPLETION_TIMEOUT_SECONDS");
+        this.testCompletionTimeoutSeconds = simulatorProperties.getTestCompletionTimeoutSeconds();
     }
 
-    public void start() {
+    FailureCollector getFailureCollector() {
+        return failureCollector;
+    }
+
+    void start() {
         registerShutdownHook();
 
         logConfiguration();
@@ -143,11 +143,11 @@ public class Coordinator implements Closeable {
     }
 
     private void registerShutdownHook() {
-        if (skipShutdownHook) {
+        if (parameters.skipShutdownHook()) {
             return;
         }
 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
@@ -176,18 +176,6 @@ public class Coordinator implements Closeable {
         }
     }
 
-    private void awaitInitialized() throws Exception {
-        if (!initialized.await(INITIALIZED_TIMEOUT_MINUTES, MINUTES)) {
-            throw new TimeoutException("Coordinator remote mode failed to initialize");
-        }
-    }
-
-    private static String echoLocal(String message, Object... args) {
-        String log = message == null ? "null" : format(message, args);
-        LOGGER.info(log);
-        return log;
-    }
-
     @Override
     public void close() {
         stopTests();
@@ -197,9 +185,7 @@ public class Coordinator implements Closeable {
         }
 
         closeQuietly(client);
-
         closeQuietly(connector);
-
         stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
         if (!parameters.skipDownload()) {
@@ -227,7 +213,7 @@ public class Coordinator implements Closeable {
             testData.setStopRequested(true);
         }
 
-        for (int k = 0; k < testCompletionTimeoutSeconds; k++) {
+        for (int i = 0; i < testCompletionTimeoutSeconds; i++) {
             Iterator<TestData> it = tests.iterator();
             while (it.hasNext()) {
                 TestData test = it.next();
@@ -244,7 +230,7 @@ public class Coordinator implements Closeable {
             }
         }
 
-        LOGGER.info("The following tests failed to complete:" + tests);
+        LOGGER.info("The following tests failed to complete: " + tests);
     }
 
     private void startCoordinatorConnector() {
@@ -274,10 +260,10 @@ public class Coordinator implements Closeable {
         LOGGER.info("Remote client started successfully!");
     }
 
-    public void download(RcDownloadOperation operation) throws Exception {
+    public void download() throws Exception {
         awaitInitialized();
 
-        LOGGER.info("Downloading ....");
+        LOGGER.info("Downloading...");
 
         new ArtifactDownloadTask(
                 parameters.getSessionId(),
@@ -291,7 +277,7 @@ public class Coordinator implements Closeable {
     public void exit() throws Exception {
         awaitInitialized();
 
-        LOGGER.info("Shutting down....");
+        LOGGER.info("Shutting down...");
 
         new Thread(new Runnable() {
             private static final int DELAY = 5000;
@@ -311,7 +297,7 @@ public class Coordinator implements Closeable {
     public void install(String versionSpec) throws Exception {
         awaitInitialized();
 
-        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents ....");
+        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents...");
         new InstallVendorTask(
                 simulatorProperties,
                 componentRegistry.getAgentIps(),
@@ -326,52 +312,11 @@ public class Coordinator implements Closeable {
         return componentRegistry.printLayout();
     }
 
-    public String testStatus(RcTestStatusOperation op) throws Exception {
-        awaitInitialized();
-
-        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
-        if (test == null) {
-            return "null";
-        }
-
-        return test.getStatusString();
-    }
-
-    public String testStop(RcTestStopOperation op) throws Exception {
-        awaitInitialized();
-
-        LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
-
-        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
-        if (test == null) {
-            throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
-        }
-
-        for (int k = 0; k < testCompletionTimeoutSeconds; k++) {
-            test.setStopRequested(true);
-
-            sleepSeconds(1);
-
-            if (test.isCompleted()) {
-                return test.getStatusString();
-            }
-        }
-
-        throw new Exception("Test failed to stop within " + testCompletionTimeoutSeconds
-                + " seconds, current status:" + test.getStatusString());
-    }
-
     public void testRun(RcTestRunOperation op, Promise promise) throws Exception {
         awaitInitialized();
 
         LOGGER.info("Run starting...");
-        final RunTestSuiteTask runTestSuiteTask = new RunTestSuiteTask(op.getTestSuite(),
-                parameters,
-                componentRegistry,
-                failureCollector,
-                testPhaseListeners,
-                client,
-                performanceStatsCollector);
+        final RunTestSuiteTask runTestSuiteTask = createRunTestSuiteTask(op.getTestSuite());
 
         if (op.isAsync()) {
             if (op.getTestSuite().size() > 1) {
@@ -406,12 +351,47 @@ public class Coordinator implements Closeable {
         }
     }
 
+    public String testStop(RcTestStopOperation op) throws Exception {
+        awaitInitialized();
+
+        LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
+
+        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (test == null) {
+            throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
+        }
+
+        for (int i = 0; i < testCompletionTimeoutSeconds; i++) {
+            test.setStopRequested(true);
+
+            sleepSeconds(1);
+
+            if (test.isCompleted()) {
+                return test.getStatusString();
+            }
+        }
+
+        throw new Exception("Test failed to stop within " + testCompletionTimeoutSeconds
+                + " seconds, current status: " + test.getStatusString());
+    }
+
+    public String testStatus(RcTestStatusOperation op) throws Exception {
+        awaitInitialized();
+
+        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        if (test == null) {
+            return "null";
+        }
+
+        return test.getStatusString();
+    }
+
     public String workerStart(RcWorkerStartOperation op) throws Exception {
         awaitInitialized();
 
         WorkerType workerType = new WorkerType(op.getWorkerType());
 
-        LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers....");
+        LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
 
         String versionSpec = op.getVersionSpec() == null
                 ? simulatorProperties.getVersionSpec()
@@ -419,7 +399,7 @@ public class Coordinator implements Closeable {
 
         WorkerParameters workerParameters = new WorkerParameters()
                 .setVersionSpec(versionSpec)
-                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")));
 
         List<SimulatorAddress> agents = findAgents(op);
@@ -456,70 +436,11 @@ public class Coordinator implements Closeable {
             }
         }
 
-        List<WorkerData> workers = new StartWorkersTask(
-                workerDeployment,
-                op.getTags(),
-                client,
-                componentRegistry,
-                parameters.getWorkerVmStartupDelayMs()).run();
+        List<WorkerData> workers = createStartWorkersTask(workerDeployment, op.getTags()).run();
 
         LOGGER.info("Workers started!");
 
         return WorkerData.toAddressString(workers);
-    }
-
-    private List<SimulatorAddress> findAgents(RcWorkerStartOperation op) {
-        List<AgentData> agents = new ArrayList<AgentData>(componentRegistry.getAgents());
-        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>();
-        for (AgentData agent : agents) {
-            List<String> expectedAgentAddresses = op.getAgentAddresses();
-
-            if (expectedAgentAddresses != null) {
-                if (!expectedAgentAddresses.contains(agent.getAddress().toString())) {
-                    continue;
-                }
-            }
-
-            Map<String, String> expectedAgentTags = op.getAgentTags();
-            if (expectedAgentTags != null) {
-                if (!matches(op.getAgentTags(), agent.getTags())) {
-                    continue;
-                }
-            }
-
-            result.add(agent.getAddress());
-        }
-        return result;
-    }
-
-    private String loadConfig(RcWorkerStartOperation op, WorkerType workerType, Map<String, String> agentTags) {
-        Map<String, String> env = new HashMap<String, String>(simulatorProperties.asMap());
-        env.putAll(agentTags);
-        env.putAll(op.getTags());
-
-        String config;
-        if (WorkerType.MEMBER.equals(workerType)) {
-            config = initMemberHzConfig(
-                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
-                    componentRegistry,
-                    parameters.getLicenseKey(),
-                    env, false);
-        } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
-            config = initMemberHzConfig(
-                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
-                    componentRegistry,
-                    parameters.getLicenseKey(),
-                    env, true);
-        } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
-            config = initClientHzConfig(
-                    op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
-                    componentRegistry,
-                    env,
-                    parameters.getLicenseKey());
-        } else {
-            throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
-        }
-        return config;
     }
 
     public String workerKill(RcWorkerKillOperation op) throws Exception {
@@ -577,5 +498,88 @@ public class Coordinator implements Closeable {
         promise.answer(SUCCESS, sb.toString());
     }
 
+    StartWorkersTask createStartWorkersTask(Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
+                                            Map<String, String> workerTags) {
+        return new StartWorkersTask(
+                deploymentPlan,
+                workerTags,
+                client,
+                componentRegistry,
+                parameters.getWorkerVmStartupDelayMs());
+    }
 
+    RunTestSuiteTask createRunTestSuiteTask(TestSuite testSuite) {
+        return new RunTestSuiteTask(testSuite,
+                parameters,
+                componentRegistry,
+                failureCollector,
+                testPhaseListeners,
+                client,
+                performanceStatsCollector);
+    }
+
+    private List<SimulatorAddress> findAgents(RcWorkerStartOperation op) {
+        List<AgentData> agents = new ArrayList<AgentData>(componentRegistry.getAgents());
+        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>();
+        for (AgentData agent : agents) {
+            List<String> expectedAgentAddresses = op.getAgentAddresses();
+
+            if (expectedAgentAddresses != null) {
+                if (!expectedAgentAddresses.contains(agent.getAddress().toString())) {
+                    continue;
+                }
+            }
+
+            Map<String, String> expectedAgentTags = op.getAgentTags();
+            if (expectedAgentTags != null) {
+                if (!matches(op.getAgentTags(), agent.getTags())) {
+                    continue;
+                }
+            }
+
+            result.add(agent.getAddress());
+        }
+        return result;
+    }
+
+    private String loadConfig(RcWorkerStartOperation op, WorkerType workerType, Map<String, String> agentTags) {
+        Map<String, String> env = new HashMap<String, String>(simulatorProperties.asMap());
+        env.putAll(agentTags);
+        env.putAll(op.getTags());
+
+        String config;
+        if (WorkerType.MEMBER.equals(workerType)) {
+            config = initMemberHzConfig(
+                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
+                    componentRegistry,
+                    parameters.getLicenseKey(),
+                    env, false);
+        } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
+            config = initMemberHzConfig(
+                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
+                    componentRegistry,
+                    parameters.getLicenseKey(),
+                    env, true);
+        } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
+            config = initClientHzConfig(
+                    op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
+                    componentRegistry,
+                    env,
+                    parameters.getLicenseKey());
+        } else {
+            throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
+        }
+        return config;
+    }
+
+    private void awaitInitialized() throws Exception {
+        if (!initialized.await(INITIALIZED_TIMEOUT_MINUTES, MINUTES)) {
+            throw new TimeoutException("Coordinator remote mode failed to initialize");
+        }
+    }
+
+    private static void echoLocal(String message, Object... args) {
+        String log = message == null ? "null" : format(message, args);
+        LOGGER.info(log);
+    }
 }

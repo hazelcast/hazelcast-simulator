@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -19,9 +18,7 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static com.hazelcast.simulator.utils.SimulatorUtils.getPropertiesFile;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
-import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

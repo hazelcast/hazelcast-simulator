@@ -108,21 +108,10 @@ public final class DeploymentPlan {
         return plan;
     }
 
-    // just for testing
-    public static DeploymentPlan createSingleInstanceDeploymentPlan(String agentIpAddress, WorkerParameters workerParameters) {
-        AgentData agentData = new AgentData(1, agentIpAddress, agentIpAddress, new HashMap<String, String>());
-        AgentWorkerLayout agentWorkerLayout = new AgentWorkerLayout(agentData);
-        agentWorkerLayout.addWorker(WorkerType.MEMBER, workerParameters);
-        DeploymentPlan deploymentPlan = new DeploymentPlan();
-        deploymentPlan.workerDeployment.put(agentData.getAddress(), agentWorkerLayout.workerProcessSettingsList);
-        return deploymentPlan;
-    }
-
     private void assignToAgents(int workerCount,
                                 WorkerType workerType,
                                 WorkerParameters parameters,
                                 List<SimulatorAddress> targetAgents) {
-
         for (int i = 0; i < workerCount; i++) {
             AgentWorkerLayout agentWorkerLayout = nextAgent(workerType, targetAgents);
 
@@ -285,7 +274,7 @@ public final class DeploymentPlan {
                 case MIXED:
                     return true;
                 default:
-                    throw new RuntimeException("Unhandled agentWorkerMode:" + agentData.getAgentWorkerMode());
+                    throw new RuntimeException("Unhandled agentWorkerMode: " + agentData.getAgentWorkerMode());
             }
         }
 

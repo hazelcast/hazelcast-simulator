@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.DeploymentPlan;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.WorkerParameters;
-import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseType;
@@ -14,7 +14,6 @@ import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import com.hazelcast.simulator.common.WorkerType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

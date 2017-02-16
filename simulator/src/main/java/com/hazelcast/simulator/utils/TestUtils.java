@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -112,10 +113,10 @@ public final class TestUtils {
 
         AssertionError error;
 
-        // the total timeout in ms.
+        // the total timeout in ms
         long timeoutMs = SECONDS.toMillis(timeoutSeconds);
 
-        // the time in ms when the assertTrue is going to expire.
+        // the time in ms when the assertTrue is going to expire
         long expirationMs = System.currentTimeMillis() + timeoutMs;
         int sleepMillis = ASSERT_TRUE_EVENTUALLY_INITIAL_SLEEP_MILLIS;
 
@@ -184,8 +185,7 @@ public final class TestUtils {
                     continue;
                 }
 
-                assertFalse("exception found:" + file + " content:"
-                        + FileUtils.fileAsText(file), file.getName().endsWith(".exception"));
+                assertFalse("exception found: " + file + " content: " + fileAsText(file), file.getName().endsWith(".exception"));
             }
         }
     }
@@ -199,7 +199,7 @@ public final class TestUtils {
         File exceptionFile = new File(userDir, id + ".exception");
         assertTrue(exceptionFile.getAbsolutePath() + " does not exist", exceptionFile.exists());
 
-        String text = FileUtils.fileAsText(exceptionFile);
+        String text = fileAsText(exceptionFile);
         assertTrue(format("'%s' does not contains '%s'", text, content), text.contains(content));
     }
 }

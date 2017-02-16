@@ -268,10 +268,11 @@ public final class FileUtils {
         }
 
         // we don't care about the result because multiple threads are allowed to call this method concurrently
-        // and therfore mkdir can return false if the directory has been created by another thread.
+        // and therefore mkdirs() can return false if the directory has been created by another thread
+        //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
 
-        // we just need to make sure the directory is created.
+        // we just need to make sure the directory is created
         if (!dir.exists()) {
             throw new UncheckedIOException("Could not create directory: " + dir.getAbsolutePath());
         }
@@ -281,13 +282,11 @@ public final class FileUtils {
 
     public static File ensureNewDirectory(File dir) {
         if (dir.exists()) {
-            throw new UncheckedIOException("Directory [%s] already exists");
+            throw new UncheckedIOException(format("Directory [%s] already exists", dir.getAbsoluteFile()));
         }
-
         if (!dir.mkdirs()) {
-            throw new UncheckedIOException("Could not create directory: " + dir.getAbsolutePath());
+            throw new UncheckedIOException("Could not create directory [%s]" + dir.getAbsolutePath());
         }
-
         return dir;
     }
 
@@ -414,11 +413,11 @@ public final class FileUtils {
     /**
      * Copies a directory recursively.
      *
-     * @param src    the src directory
+     * @param source the source directory
      * @param target the target directory
      */
-    public static void copyDirectory(File src, File target) {
-        for (File srcFile : src.listFiles()) {
+    public static void copyDirectory(File source, File target) {
+        for (File srcFile : source.listFiles()) {
             if (srcFile.isDirectory()) {
                 File targetChild = new File(target, srcFile.getName());
                 ensureExistingDirectory(targetChild);
