@@ -66,8 +66,8 @@ public class CoordinatorCliTest {
 
     @Before
     public void before() {
-        args.add("--sessionId");
         sessionId = "CoordinatorCliTest-" + currentTimeMillis();
+        args.add("--sessionId");
         args.add(sessionId);
     }
 
@@ -164,7 +164,6 @@ public class CoordinatorCliTest {
         args.add("--duration");
         args.add("23d");
         args.add(testSuiteFile.getAbsolutePath());
-
 
         CoordinatorCli cli = createCoordinatorCli();
 
