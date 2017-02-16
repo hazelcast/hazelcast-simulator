@@ -132,8 +132,8 @@ abstract class AbstractServerConnector implements ServerConnector {
     }
 
     private ServerBootstrap getServerBootstrap() {
-        ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(group)
+        return new ServerBootstrap()
+                .group(group)
                 .channel(NioServerSocketChannel.class)
                 .localAddress(new InetSocketAddress(port))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -143,7 +143,6 @@ abstract class AbstractServerConnector implements ServerConnector {
                         configureServerPipeline(channel.pipeline(), AbstractServerConnector.this);
                     }
                 });
-        return bootstrap;
     }
 
     @Override
