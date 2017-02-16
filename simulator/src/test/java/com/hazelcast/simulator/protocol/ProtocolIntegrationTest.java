@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
-import com.hazelcast.simulator.protocol.connector.AgentConnectorImpl;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.ResponseFuture;

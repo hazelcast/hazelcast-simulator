@@ -26,7 +26,6 @@ import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.operation.OperationType;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
 import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
-import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
 import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
 import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
@@ -108,7 +107,7 @@ public class CoordinatorOperationProcessor extends AbstractOperationProcessor {
                 promise.answer(ResponseType.SUCCESS, receiver.printLayout());
                 return;
             case RC_DOWNLOAD:
-                receiver.download((RcDownloadOperation) op);
+                receiver.download();
                 break;
             case AUTH:
                 return;

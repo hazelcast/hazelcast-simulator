@@ -58,25 +58,25 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
 
 /**
- * CLI to access the coordinator remotely.
+ * CLI to access Simulator Coordinator remotely.
  */
-public class CoordinatorRemoteCli implements Closeable {
+public final class CoordinatorRemoteCli implements Closeable {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorRemoteCli.class);
 
-    private final SimulatorProperties simulatorProperties;
-    private final int coordinatorPort;
     private final String[] args;
+    private final int coordinatorPort;
+
     private CoordinatorRemoteConnector connector;
 
-    public CoordinatorRemoteCli(String[] args) {
-        this.args = args;
-        this.simulatorProperties = new SimulatorProperties();
+    private CoordinatorRemoteCli(String[] args) {
+        SimulatorProperties simulatorProperties = new SimulatorProperties();
         File file = new File(FileUtils.getUserDir(), "simulator.properties");
         if (file.exists()) {
             simulatorProperties.init(file);
         }
 
+        this.args = args;
         this.coordinatorPort = simulatorProperties.getCoordinatorPort();
         if (coordinatorPort == 0) {
             throw new CommandLineExitException("Coordinator port is disabled!");
@@ -188,7 +188,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 if (errorPart.getPayload() != null) {
                     System.err.println(errorPart.getPayload());
                 } else {
-                    System.err.println("errorType:" + errorPart.getType());
+                    System.err.println("errorType: " + errorPart.getType());
                 }
                 throw new CommandLineExitException(
                         format("Could not process command: %s message [%s]", errorPart.getType(), errorPart.getPayload()));
@@ -694,7 +694,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 testSuiteFile = new File("test.properties");
             }
 
-            LOGGER.info("File:" + testSuiteFile);
+            LOGGER.info("File: " + testSuiteFile);
 
             TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
                     .setDurationSeconds(getDurationSeconds(options, durationSpec))
@@ -707,7 +707,7 @@ public class CoordinatorRemoteCli implements Closeable {
                 suite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
             }
 
-            LOGGER.info("Running testSuite:" + testSuiteFile.getAbsolutePath());
+            LOGGER.info("Running testSuite: " + testSuiteFile.getAbsolutePath());
             return new RcTestRunOperation(suite, isAsync(), newQuery());
         }
 

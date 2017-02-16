@@ -9,14 +9,9 @@ import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.hazelcast.simulator.TestSupport.spawn;
-import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
-import static com.hazelcast.simulator.utils.TestUtils.assertCompletesEventually;
 import static com.hazelcast.simulator.utils.TestUtils.assertNoExceptions;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;

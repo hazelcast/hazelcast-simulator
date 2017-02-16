@@ -87,7 +87,7 @@ public final class AgentUtils {
             String result;
             try {
                 result = bash.ssh(ip, format("[[ -f hazelcast-simulator-%s/bin/agent ]] && echo SIM-OK || echo SIM-NOK",
-                        SIMULATOR_VERSION), true).toString().trim();
+                        SIMULATOR_VERSION), true).trim();
             } catch (CommandLineExitException e) {
                 throw new CommandLineExitException(format(
                         "Could not connect to %s. Please check your agents.txt file for invalid IP addresses.%n%s",
@@ -146,7 +146,7 @@ public final class AgentUtils {
                     runLocal();
                     break;
                 default:
-                    throw new IllegalStateException("Unknown runMode:" + runMode);
+                    throw new IllegalStateException("Unknown runMode: " + runMode);
             }
         }
 
@@ -203,7 +203,7 @@ public final class AgentUtils {
                     runLocal();
                     break;
                 default:
-                    throw new IllegalStateException("Unknown runMode:" + runMode);
+                    throw new IllegalStateException("Unknown runMode: " + runMode);
             }
         }
 

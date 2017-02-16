@@ -8,7 +8,6 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.AgentConnector;
-import com.hazelcast.simulator.protocol.connector.AgentConnectorImpl;
 import com.hazelcast.simulator.protocol.core.ResponseType;
 import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
 import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
@@ -62,7 +61,6 @@ public class AgentOperationProcessorTest {
     private File sessionDir;
 
     private AgentOperationProcessor processor;
-    private Agent agent;
 
     @Before
     public void before() {
@@ -73,7 +71,7 @@ public class AgentOperationProcessorTest {
 
         AgentConnector agentConnector = mock(AgentConnector.class);
 
-        agent = mock(Agent.class);
+        Agent agent = mock(Agent.class);
         when(agent.getAddressIndex()).thenReturn(1);
         when(agent.getPublicAddress()).thenReturn("127.0.0.1");
         when(agent.getSessionId()).thenReturn("AgentOperationProcessorTest");

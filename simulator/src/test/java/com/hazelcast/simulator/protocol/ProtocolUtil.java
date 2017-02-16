@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.common.WorkerType.MEMBER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

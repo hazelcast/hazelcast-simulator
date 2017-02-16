@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 public class CoordinatorCliTest {
 
     private static final String HAZELCAST_XML = "<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config"
-            + NEW_LINE + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.6.xsd\""
+            + NEW_LINE + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.8.xsd\""
             + NEW_LINE + "  xmlns=\"http://www.hazelcast.com/schema/config\""
             + NEW_LINE + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />";
 
@@ -296,7 +296,7 @@ public class CoordinatorCliTest {
         assertEquals(1, count(cli.deploymentPlan, WorkerType.JAVA_CLIENT));
     }
 
-    int count(DeploymentPlan deploymentPlan, WorkerType type) {
+    private int count(DeploymentPlan deploymentPlan, WorkerType type) {
         Map<SimulatorAddress, List<WorkerProcessSettings>> deployment = deploymentPlan.getWorkerDeployment();
         int result = 0;
         for (List<WorkerProcessSettings> list : deployment.values()) {

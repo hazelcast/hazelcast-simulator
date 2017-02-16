@@ -200,7 +200,7 @@ final class CoordinatorCli {
             } else {
                 this.workerParametersMap = loadWorkerParameters();
                 this.deploymentPlan = newDeploymentPlan();
-                this.runMonolith = new CoordinatorRunMonolith(coordinator);
+                this.runMonolith = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
             }
         }
     }
@@ -266,7 +266,7 @@ final class CoordinatorCli {
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
-                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(loadWorkerScript(WorkerType.JAVA_CLIENT, simulatorProperties.get("VENDOR")))
                 .setEnvironment(env);
     }
@@ -286,7 +286,7 @@ final class CoordinatorCli {
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
-                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(loadWorkerScript(WorkerType.LITE_MEMBER, simulatorProperties.get("VENDOR")))
                 .setEnvironment(env);
     }
@@ -307,7 +307,7 @@ final class CoordinatorCli {
 
         return new WorkerParameters()
                 .setVersionSpec(simulatorProperties.getVersionSpec())
-                .setWorkerStartupTimeout(simulatorProperties.getAsInteger("WORKER_STARTUP_TIMEOUT_SECONDS"))
+                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")))
                 .setEnvironment(env);
     }

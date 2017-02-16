@@ -92,7 +92,7 @@ public abstract class TimeStepRunner implements Runnable {
             logger.info(threadName + " completed normally" + (explicitStop ? " with StopException" : ""));
         } catch (Throwable e) {
             logger.warning(threadName + " completed with exception " + e.getClass().getName()
-                    + " message:" + e.getMessage());
+                    + " message: " + e.getMessage());
             throw rethrow(e);
         }
     }

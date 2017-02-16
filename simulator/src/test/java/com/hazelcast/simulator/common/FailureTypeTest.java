@@ -4,8 +4,8 @@ import org.junit.Test;
 
 import java.util.Set;
 
-import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
+import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.fromPropertyValue;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;

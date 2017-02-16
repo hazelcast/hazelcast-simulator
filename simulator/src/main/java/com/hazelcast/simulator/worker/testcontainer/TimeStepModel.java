@@ -61,7 +61,6 @@ public class TimeStepModel {
         }
     }
 
-
     public final Class getTestClass() {
         return testClass;
     }
@@ -166,8 +165,7 @@ public class TimeStepModel {
     }
 
     private void loadTimeStepMethods() {
-        List<Method> methods = new AnnotatedMethodRetriever(testClass, TimeStep.class)
-                .findAll();
+        List<Method> methods = new AnnotatedMethodRetriever(testClass, TimeStep.class).findAll();
 
         // there is a bound on the max number of timestep methods so they fit into a byte
         // we can easily increase the number to 256 in the future
@@ -202,7 +200,6 @@ public class TimeStepModel {
         if (!isValidJavaIdentifier(executionGroup)) {
             throw new IllegalTestException(
                     method + " is using an invalid identifier for executionGroup [" + executionGroup + "]");
-
         }
     }
 
@@ -227,7 +224,6 @@ public class TimeStepModel {
             if (parameterCount > 3) {
                 throw new IllegalTestException("TimeStep method '" + method + "' can't have more than two arguments");
             }
-
 
             Class<?>[] parameterTypes = method.getParameterTypes();
 
@@ -254,7 +250,6 @@ public class TimeStepModel {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -297,7 +292,6 @@ public class TimeStepModel {
             }
         }
     }
-
 
     /**
      * Returns the probabilities of the {@link TimeStep} methods.
@@ -357,7 +351,7 @@ public class TimeStepModel {
             for (Method method : methods) {
                 Class<?>[] parameterTypes = method.getParameterTypes();
                 for (int parameterIndex = 0; parameterIndex < parameterTypes.length; parameterIndex++) {
-                    Class paramType = parameterTypes[parameterIndex];
+                    Class<?> paramType = parameterTypes[parameterIndex];
 
                     if (paramType.isAssignableFrom(Probe.class)
                             || hasStartNanosAnnotation(method, parameterIndex)) {
@@ -441,7 +435,7 @@ public class TimeStepModel {
                     totalProbability = totalProbability.add(timeStepProbability);
                     if (totalProbability.isLargerThanOne()) {
                         String message = "TimeStep method '" + method + "' with probability " + timeStepProbability
-                                + " exceeds the total probability of 1, totalProbability:" + totalProbability;
+                                + " exceeds the total probability of 1, totalProbability: " + totalProbability;
                         for (Map.Entry<Method, Probability> entry : probMap.entrySet()) {
                             message += "\n" + entry.getKey() + " " + entry.getValue();
                         }
@@ -466,7 +460,6 @@ public class TimeStepModel {
             return probMap;
         }
 
-
         private Probability loadProbability(Method method) {
             String propertyName = method.getName() + "Prob";
             String valueString = propertyBinding.load(propertyName);
@@ -484,9 +477,7 @@ public class TimeStepModel {
                             + " value '" + valueString + "' is not a valid double value", e);
                 }
             }
-
             return new Probability(value);
         }
     }
-
 }

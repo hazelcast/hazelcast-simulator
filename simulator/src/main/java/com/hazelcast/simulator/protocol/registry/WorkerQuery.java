@@ -120,7 +120,7 @@ public class WorkerQuery {
                 List<WorkerData> result = select(input, false);
                 return !result.isEmpty() ? result : select(input, true);
             default:
-                throw new IllegalStateException("Unrecognized targetType:" + targetType);
+                throw new IllegalStateException("Unrecognized targetType: " + targetType);
         }
     }
 

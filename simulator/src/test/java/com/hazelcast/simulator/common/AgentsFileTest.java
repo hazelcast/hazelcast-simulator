@@ -9,9 +9,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.hazelcast.simulator.TestSupport.toMap;
 import static com.hazelcast.simulator.common.AgentsFile.load;
@@ -22,7 +20,6 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class AgentsFileTest {
 

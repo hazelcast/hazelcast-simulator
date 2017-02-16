@@ -144,7 +144,7 @@ public final class TestCaseRunner implements TestPhaseListener {
     @Override
     public void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress) {
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Completed: " + testPhase + " from worker:" + workerAddress);
+            LOGGER.trace("Completed: " + testPhase + " from worker: " + workerAddress);
         }
         phaseCompletedMap.get(testPhase).add(workerAddress);
     }

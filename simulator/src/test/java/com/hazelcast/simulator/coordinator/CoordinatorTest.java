@@ -22,7 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import sun.management.resources.agent;
 
 import java.io.File;
 
@@ -61,7 +60,8 @@ public class CoordinatorTest {
         SimulatorProperties simulatorProperties = SimulatorUtils.loadSimulatorProperties();
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
-                .setSimulatorProperties(simulatorProperties);
+                .setSimulatorProperties(simulatorProperties)
+                .setSkipShutdownHook(true);
 
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
@@ -70,7 +70,6 @@ public class CoordinatorTest {
         componentRegistry = new ComponentRegistry();
         agentData = componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
         coordinator = new Coordinator(componentRegistry, coordinatorParameters);
-        coordinator.skipShutdownHook = true;
         coordinator.start();
     }
 
@@ -109,7 +108,7 @@ public class CoordinatorTest {
             @Override
             public void run() throws Exception {
                 String status = coordinator.testStatus(new RcTestStatusOperation(testId));
-                System.out.println("Status:" + status + " expected:" + expectedState);
+                System.out.println("Status: " + status + " expected: " + expectedState);
                 assertEquals(expectedState, status);
             }
         });
@@ -194,7 +193,7 @@ public class CoordinatorTest {
 
     @Test
     public void testRun() throws Exception {
-        // start worker.
+        // start worker
         coordinator.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
 
         TestSuite suite = newBasicTestSuite();

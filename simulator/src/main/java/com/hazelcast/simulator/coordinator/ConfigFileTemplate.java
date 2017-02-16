@@ -26,7 +26,6 @@ import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
 
-import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class ConfigFileTemplate {
@@ -43,10 +41,6 @@ public class ConfigFileTemplate {
     private final Map<String, String> hardReplacements = new HashMap<String, String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
     private ComponentRegistry componentRegistry;
-
-    public ConfigFileTemplate(File file) {
-        this(fileAsText(file));
-    }
 
     public ConfigFileTemplate(String rawTemplate) {
         this.rawTemplate = checkNotNull(rawTemplate, "rawTemplate can't be null");
@@ -82,7 +76,7 @@ public class ConfigFileTemplate {
             Map<String, Object> root = new HashMap<String, Object>();
             root.putAll(environment);
 
-             if (componentRegistry != null) {
+            if (componentRegistry != null) {
                 root.put("agents", new Agents());
             }
             String templateStr = loadTemplateString();
@@ -99,29 +93,26 @@ public class ConfigFileTemplate {
 
     private String loadTemplateString() {
         String s = rawTemplate;
-
         for (Map.Entry<String, String> entry : hardReplacements.entrySet()) {
             s = s.replace(entry.getKey(), entry.getValue());
         }
-
         return s;
     }
 
     private final class Agents implements TemplateMethodModelEx {
 
         @Override
-        @SuppressWarnings("unchecked")
         public Object exec(List list) throws TemplateModelException {
             if (list.size() == 0) {
                 return componentRegistry.getAgents();
             } else if (list.size() == 1) {
-                Object arg1 = list.get(0);
-                if (!(arg1 instanceof SimpleScalar)) {
+                Object arg = list.get(0);
+                if (!(arg instanceof SimpleScalar)) {
                     throw new TemplateModelException("Wrong type of the first parameter."
-                            + " It should be SimpleScalar . Found: " + arg1.getClass());
+                            + " It should be SimpleScalar . Found: " + arg.getClass());
                 }
 
-                Map<String, String> tags = TagUtils.parseTags(((SimpleScalar) arg1).getAsString());
+                Map<String, String> tags = TagUtils.parseTags(((SimpleScalar) arg).getAsString());
                 List<AgentData> result = new ArrayList<AgentData>();
                 for (AgentData agent : componentRegistry.getAgents()) {
                     if (TagUtils.matches(tags, agent.getTags())) {
