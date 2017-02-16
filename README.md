@@ -221,12 +221,6 @@ Having installed Simulator locally, this section describes how to prepare Simula
   ./run
   ```
 
-- Execute the created `download` script to download the log files from the Workers.
-
-  ```
-  ./download
-  ```
-
 Congratulations, you successfully ran Simulator on your remote machines! Please refer to the [Customizing your Simulator Setup section](#customizing-your-simulator-setup) to learn how to configure your test setup.
 
 
@@ -266,12 +260,6 @@ You can store the credentials in a different location, but then you need to conf
 
   ```
   ./run
-  ```
-
-- Execute the created `download` script to download the log files from the Workers.
-
-  ```
-  ./download
   ```
 
 - Execute the following command to destroy the created EC2 instances.
@@ -329,12 +317,6 @@ You can store the credentials in a different location, but then you need to conf
 
   ```
   ./run
-  ```
-
-- Execute the created `download` script to download the log files from the Workers.
-
-  ```
-  ./download
   ```
 
 - Execute the following command to destroy the created GCE instances.
@@ -886,7 +868,7 @@ coordinator-remote worker-kill 'js:code that kills the JVM'
 
 Using the JavaScript you can execute commands on the JVM without needing to have the that code on the worker. Access to the Hazelcast instance is possible using the injected `hazelcastInstance` environment variable. 
 
-In theory it is possible to execute any JVM scripting language, such as Groovy, by prefixing the command by the extension of that language, e.g., `groovy:.....`. This will cause the scripting engine to load the appropriate scripting language. But you need to make sure the appropriate JAR files are set on the worker's classpath.
+In theory it is possible to execute any JVM scripting language, such as Groovy, by prefixing the command by the extension of that language, e.g., `groovy:...`. This will cause the scripting engine to load the appropriate scripting language. But you need to make sure the appropriate JAR files are set on the worker's classpath.
 
 Another way to kill a member is by causing an OOME as shown below:
 
@@ -1293,7 +1275,7 @@ In the following code example, a `ThreadState` is defined that tracks the number
 
 ```java
 import com.hazelcast.Simulator.test.BaseThreadState
-....
+...
 
 public class MyTest extends AbstractTest{
   public int countersLength; 
