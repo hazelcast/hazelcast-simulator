@@ -68,6 +68,7 @@ public class ClientConnector {
     private final int remoteIndex;
     private final String remoteHost;
     private final int remotePort;
+    private final boolean reconnectOnClose;
 
     private Channel channel;
 
@@ -78,7 +79,7 @@ public class ClientConnector {
                     SimulatorAddress remoteAddress,
                     int remoteIndex,
                     String remoteHost,
-                    int remotePort) {
+                    int remotePort, boolean reconnectOnClose) {
         this.pipelineConfigurator = pipelineConfigurator;
         this.group = group;
         this.futureMap = futureMap;
@@ -89,6 +90,7 @@ public class ClientConnector {
         this.remoteIndex = remoteIndex;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
+        this.reconnectOnClose = reconnectOnClose;
     }
 
     public void start() {
@@ -126,7 +128,7 @@ public class ClientConnector {
                     channel.closeFuture().addListener(new ChannelFutureListener() {
                         @Override
                         public void operationComplete(ChannelFuture future) throws Exception {
-                            if (!shutdownInvoked.get()) {
+                            if (reconnectOnClose && !shutdownInvoked.get()) {
                                 LOGGER.error(format("Connection %s -> %s (%s) closed! Reconnecting...", localAddress,
                                         remoteAddress, future.channel().remoteAddress()));
                                 connect(bootstrap, CONNECT_RETRY_DELAY_MILLIS, CONNECT_RETRIES);
@@ -173,13 +175,13 @@ public class ClientConnector {
         channel.writeAndFlush(buffer);
     }
 
-    public ResponseFuture writeAsync(SimulatorMessage message) {
-        OperationTypeCounter.sent(message.getOperationType());
-        return writeAsync(message.getSource(), message.getMessageId(), message);
-    }
-
     public ResponseFuture writeAsync(ByteBuf buffer) {
         return writeAsync(getSourceAddress(buffer), getMessageId(buffer), buffer);
+    }
+
+    ResponseFuture writeAsync(SimulatorMessage message) {
+        OperationTypeCounter.sent(message.getOperationType());
+        return writeAsync(message.getSource(), message.getMessageId(), message);
     }
 
     private ResponseFuture writeAsync(SimulatorAddress source, long messageId, Object msg) {

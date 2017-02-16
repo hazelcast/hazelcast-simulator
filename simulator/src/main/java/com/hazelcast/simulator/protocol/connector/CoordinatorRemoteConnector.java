@@ -72,7 +72,8 @@ public class CoordinatorRemoteConnector implements ClientPipelineConfigurator, C
     private final CoordinatorRemoteOperationProcessor processor;
 
     public CoordinatorRemoteConnector(String coordinatorHost, int coordinatorPort) {
-        this.client = new ClientConnector(this, group, futureMap, REMOTE, COORDINATOR, 1, coordinatorHost, coordinatorPort);
+        this.client = new ClientConnector(this, group, futureMap, REMOTE, COORDINATOR, 1, coordinatorHost, coordinatorPort,
+                true);
         this.processor = new CoordinatorRemoteOperationProcessor();
     }
 

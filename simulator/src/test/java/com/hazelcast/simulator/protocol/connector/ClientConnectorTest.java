@@ -34,14 +34,14 @@ public class ClientConnectorTest {
     private Channel channel;
 
     @Before
-    public void before() throws Exception {
+    public void setUp() {
         EventLoopGroup eventLoopGroup = mock(EventLoopGroup.class);
         ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
         SimulatorAddress localAddress = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
         SimulatorAddress remoteAddress = localAddress.getChild(1);
 
         clientConnector = new ClientConnector(new TestClientPipelineConfigurator(), eventLoopGroup, futureMap, localAddress,
-                remoteAddress, 1, "localhost", 10023);
+                remoteAddress, 1, "localhost", 10023, false);
 
         bootStrap = mock(Bootstrap.class);
         channel = mock(Channel.class);
