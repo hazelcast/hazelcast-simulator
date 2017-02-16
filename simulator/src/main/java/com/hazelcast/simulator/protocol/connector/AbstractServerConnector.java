@@ -81,6 +81,7 @@ abstract class AbstractServerConnector implements ServerConnector {
     protected final ConcurrentMap<String, ResponseFuture> futureMap = new ConcurrentHashMap<String, ResponseFuture>();
     protected final SimulatorAddress localAddress;
 
+    private final String className = getClass().getSimpleName();
     private final AtomicBoolean isStarted = new AtomicBoolean();
     private final ClientConnectorManager clientConnectorManager = new ClientConnectorManager();
 
@@ -117,17 +118,16 @@ abstract class AbstractServerConnector implements ServerConnector {
     @Override
     public void start() {
         if (!isStarted.compareAndSet(false, true)) {
-            throw new SimulatorProtocolException("ServerConnector cannot be started twice or after shutdown!");
+            throw new SimulatorProtocolException(format("%s cannot be started twice or after shutdown!", className));
         }
 
+        messageQueueThread.start();
         if (port > 0) {
-            messageQueueThread.start();
-
             ServerBootstrap bootstrap = getServerBootstrap();
             ChannelFuture future = bootstrap.bind().syncUninterruptibly();
             channel = future.channel();
 
-            LOGGER.info(format("ServerConnector %s listens on %s", localAddress, channel.localAddress()));
+            LOGGER.info(format("%s %s listens on %s", className, localAddress, channel.localAddress()));
         }
     }
 
@@ -148,10 +148,9 @@ abstract class AbstractServerConnector implements ServerConnector {
 
     @Override
     public void close() {
-        LOGGER.info(format("Shutdown of %s...", getClass().getName()));
-
+        LOGGER.info(format("Shutdown of %s...", className));
         if (!isStarted.compareAndSet(true, false)) {
-            throw new SimulatorProtocolException("ServerConnector cannot be shutdown twice or if not been started!");
+            throw new SimulatorProtocolException(format("%s cannot be shutdown twice or if not been started!", className));
         }
 
         ThreadSpawner spawner = new ThreadSpawner("shutdownClientConnectors", true);
@@ -165,11 +164,9 @@ abstract class AbstractServerConnector implements ServerConnector {
         }
         spawner.awaitCompletion();
 
-        if (port > 0) {
-            messageQueueThread.shutdown();
-            if (channel != null) {
-                channel.close().syncUninterruptibly();
-            }
+        messageQueueThread.shutdown();
+        if (channel != null) {
+            channel.close().syncUninterruptibly();
         }
         group.shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, SECONDS).syncUninterruptibly();
 
@@ -327,7 +324,7 @@ abstract class AbstractServerConnector implements ServerConnector {
         private static final int WAIT_FOR_EMPTY_QUEUE_MILLIS = 100;
 
         private MessageQueueThread() {
-            super("ServerConnectorMessageQueueThread");
+            super("MessageQueueThread");
         }
 
         @Override
@@ -339,7 +336,7 @@ abstract class AbstractServerConnector implements ServerConnector {
                 try {
                     message = messageQueue.take();
                     if (POISON_PILL.equals(message)) {
-                        LOGGER.info("ServerConnectorMessageQueueThread received POISON_PILL and will stop...");
+                        LOGGER.info("MessageQueueThread received POISON_PILL and will stop...");
                         break;
                     }
 
