@@ -211,12 +211,20 @@ public class WorkerProcessLauncher {
     }
 
     private String getClasspath(File workerHome) {
-        File uploadDirectory = new File(workerHome, "upload").getAbsoluteFile();
-        String uploadClasspath = uploadDirectory.exists() ? CLASSPATH_SEPARATOR + uploadDirectory.getAbsolutePath() + "/*" : "";
         String simulatorHome = getSimulatorHome().getAbsolutePath();
         String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
+
+        String uploadClassPath = "";
+        File uploadDirectory = new File(workerHome, "upload").getAbsoluteFile();
+        if (uploadDirectory.exists() && uploadDirectory.isDirectory()) {
+            File[] files = uploadDirectory.listFiles();
+            if (files != null && files.length > 0) {
+                uploadClassPath = CLASSPATH_SEPARATOR + uploadDirectory.getAbsolutePath() + "/*";
+                LOGGER.info(format("Adding upload directory %s to classpath", uploadClassPath));
+            }
+        }
 
         // we have to reverse the classpath to monkey patch version specific classes
         return new File(agent.getSessionDirectory(), "lib/*").getAbsolutePath()
@@ -225,7 +233,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
-                + uploadClasspath
+                + uploadClassPath
                 + CLASSPATH_SEPARATOR + CLASSPATH;
     }
 
