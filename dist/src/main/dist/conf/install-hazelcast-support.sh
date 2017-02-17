@@ -182,7 +182,6 @@ upload_to_single_agent() {
 
     remote_hz_lib=${simulator_basename}/hz-lib
     remote_run_dir=${simulator_basename}/workers/${session_id}
-    remote_lib_dir=${remote_run_dir}/lib/
     remote_upload_dir=${remote_run_dir}/upload
 
     # if the local upload directory exist, it needs to be uploaded
