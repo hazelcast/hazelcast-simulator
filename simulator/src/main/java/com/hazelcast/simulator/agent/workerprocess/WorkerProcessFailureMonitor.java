@@ -142,7 +142,6 @@ public class WorkerProcessFailureMonitor {
 
         private void detectExceptions(WorkerProcess workerProcess) {
             File workerHome = workerProcess.getWorkerHome();
-
             if (!workerHome.exists()) {
                 return;
             }
@@ -160,8 +159,8 @@ public class WorkerProcessFailureMonitor {
                 }
 
                 // we delete or rename the exception file so that we don't detect the same exception again
-                boolean send = failureHandler.handle(
-                        "Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess, testId, cause);
+                boolean send = failureHandler.handle("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess,
+                        testId, cause);
 
                 if (send) {
                     deleteQuiet(exceptionFile);
@@ -200,8 +199,8 @@ public class WorkerProcessFailureMonitor {
 
             long elapsed = MILLISECONDS.toSeconds(System.currentTimeMillis() - workerProcess.getLastSeen());
             if (elapsed > 0 && elapsed % lastSeenTimeoutSeconds == 0) {
-                sendFailureOperation(
-                        format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT, workerProcess);
+                sendFailureOperation(format("Worker has not sent a message for %d seconds", elapsed), WORKER_TIMEOUT,
+                        workerProcess);
             }
         }
 
@@ -223,8 +222,8 @@ public class WorkerProcessFailureMonitor {
 
             workerProcessManager.shutdown(workerProcess);
 
-            sendFailureOperation(
-                    format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_ABNORMAL_EXIT, workerProcess);
+            sendFailureOperation(format("Worker terminated with exit code %d instead of 0", exitCode), WORKER_ABNORMAL_EXIT,
+                    workerProcess);
         }
 
         private void sendFailureOperation(String message, FailureType type, WorkerProcess workerProcess) {
