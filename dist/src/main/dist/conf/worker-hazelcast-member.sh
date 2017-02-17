@@ -12,7 +12,7 @@ set -e
 
 # redirecting output/error to the right logfiles.
 exec > worker.out
-exec 2>worker.err
+exec 2> worker.err
 
 echo $LOG4j_CONFIG>log4j.xml
 echo $HAZELCAST_CONFIG>hazelcast.xml
