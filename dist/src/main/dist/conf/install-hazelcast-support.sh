@@ -12,7 +12,6 @@ set -e
 #set -x
 
 local_upload_dir=upload
-ssh_options=${SSH_OPTIONS}
 user=${USER}
 
 # we limit the number of concurrent uploads
@@ -188,19 +187,19 @@ upload_to_single_agent() {
 
     # if the local upload directory exist, it needs to be uploaded
     if [ -d ${local_upload_dir} ]; then
-        echo "Uploading upload directory $local_upload_dir to $public_ip:remote_upload_dir"
-        ssh ${ssh_options} ${user}@${public_ip} "mkdir -p $remote_upload_dir"
-        scp ${ssh_options} -r ${local_upload_dir} simulator@${public_ip}:${remote_upload_dir}
+        echo "Uploading upload directory $local_upload_dir to $public_ip:$remote_upload_dir"
+        ssh ${SSH_OPTIONS} ${user}@${public_ip} "mkdir -p $remote_upload_dir"
+        scp ${SSH_OPTIONS} -r ${local_upload_dir} simulator@${public_ip}:${remote_upload_dir}
     fi
 
     echo "Uploading Hazelcast $local_install_dir to $public_ip:$remote_hz_lib"
-    ssh ${ssh_options} ${user}@${public_ip} "mkdir -p $remote_hz_lib"
+    ssh ${SSH_OPTIONS} ${user}@${public_ip} "mkdir -p $remote_hz_lib"
 
     # in the local_install_dir multiple directories could be created e.g. git=master, maven=3.8. Each of these
     # directories we want to upload; but we do not want to remove other non conflicting directories.
     for dir in $(find ${local_install_dir} -maxdepth 1 -type d); do
         # sync the directory and put the task in the background
-         rsync --checksum -avv --delete -L -e "ssh $ssh_options" ${local_install_dir}/* ${user}@${public_ip}:${remote_hz_lib}
+         rsync --checksum -avv --delete -L -e "ssh $SSH_OPTIONS" ${local_install_dir}/* ${user}@${public_ip}:${remote_hz_lib}
     done
 }
 
