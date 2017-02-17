@@ -178,7 +178,7 @@ public class WorkerProcessLauncher {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
-        String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/",
+        String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/ || true",
                 workerHome,
                 sessionId,
                 workerHome,
