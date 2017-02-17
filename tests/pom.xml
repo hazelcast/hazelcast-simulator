@@ -27,5 +27,6 @@
         <module>tests-hz36</module>
         <module>tests-hz37</module>
         <module>tests-hz38</module>
+        <module>tests-hz39</module>
     </modules>
 </project>

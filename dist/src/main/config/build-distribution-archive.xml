@@ -65,5 +65,12 @@
                 <include>com.hazelcast.simulator:tests-hz38</include>
             </includes>
         </dependencySet>
+        <dependencySet>
+            <outputDirectory>test-lib/39</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-hz39</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>
