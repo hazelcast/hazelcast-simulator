@@ -153,7 +153,6 @@ public final class MemberWorker implements Worker {
     private void signalStartToAgent() {
         String address = getHazelcastAddress(type, publicAddress, hazelcastInstance);
         File file = new File(getUserDir(), "worker.address");
-        System.out.println("worker.address: " + file.getAbsolutePath());
         writeText(address, file);
     }
 
