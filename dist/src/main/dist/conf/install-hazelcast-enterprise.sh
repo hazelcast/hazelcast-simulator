@@ -15,9 +15,10 @@ prepare()
 
         echo Maven using $version
 
-        prepare_using_maven "hazelcast-enterprise-all" "$version" \
-           "https://repository-hazelcast-l337.forge.cloudbees.com/release" \
-           "https://oss.sonatype.org/content/repositories/snapshots"
+        snapshot_repo="https://repository-hazelcast-l337.forge.cloudbees.com/snapshot"
+        release_repo="https://repository-hazelcast-l337.forge.cloudbees.com/release"
+
+        prepare_using_maven "hazelcast-enterprise-all" "$version" $release_repo $snapshot_repo
     elif [[ $version_spec == git* ]] ; then
         git_branch=${version_spec#*=}
 
@@ -35,7 +36,6 @@ prepare()
         exit 1
     fi
 }
-
 
 prepare
 upload
