@@ -16,14 +16,13 @@
 
 package com.hazelcast.simulator.tests.quorum;
 
-import org.junit.Assert;
-
 import com.hazelcast.core.IMap;
 import com.hazelcast.quorum.QuorumException;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import org.junit.Assert;
 
 /**
  * The QuorumMapTest can be used to verify the Quorum behavior wherein
