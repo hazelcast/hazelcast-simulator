@@ -9,7 +9,7 @@
 # automatic exit on script failure
 set -e
 # printing the command being executed (useful for debugging)
-#set -x
+set -x
 
 local_upload_dir=upload
 user=${USER}
