@@ -25,6 +25,7 @@ import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.util.Map;
@@ -39,6 +40,8 @@ import static java.lang.String.format;
  * Responsible for communication with Simulator Agents and Workers.
  */
 public class RemoteClient implements Closeable {
+
+    private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
 
     private final Connector connector;
     private final ComponentRegistry componentRegistry;
@@ -61,11 +64,19 @@ public class RemoteClient implements Closeable {
     }
 
     public void logOnAllAgents(String message) {
-        connector.submit(ALL_AGENTS, new LogOperation(message));
+        try {
+            connector.invoke(ALL_AGENTS, new LogOperation(message));
+        } catch (Exception e) {
+            LOGGER.debug("Failed to log on all agents", e);
+        }
     }
 
     public void logOnAllWorkers(String message) {
-        connector.submit(ALL_WORKERS, new LogOperation(message));
+        try {
+            connector.invoke(ALL_WORKERS, new LogOperation(message));
+        } catch (Exception e) {
+            LOGGER.debug("Failed to log on all workers", e);
+        }
     }
 
     public void invokeOnAllAgents(SimulatorOperation operation) {
