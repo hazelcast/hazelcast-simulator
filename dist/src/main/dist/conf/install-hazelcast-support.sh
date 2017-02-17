@@ -79,14 +79,18 @@ prepare_using_maven() {
         # snapshots are a bit more complex because we need to download maven-metadata first to figure out the correct url
         download ${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/maven-metadata.xml ${local_install_dir}
 
-        baseVersion=${version%-SNAPSHOT}
-        buildNumber=$(grep -o -P '(?<=buildNumber>).*(?=</buildNumber)' ${local_install_dir}/maven-metadata.xml)
-        timeStamp=$(grep -o -P '(?<=timestamp>).*(?=</timestamp)' ${local_install_dir}/maven-metadata.xml)
+        snapshot_version=$(sed -e 's/\s\+//g' ${local_install_dir}/maven-metadata.xml | grep -oPz '(?<=<snapshotVersion>\n<extension>jar</extension>\n<value>).*(?=</value>)')
+        if [ -n ${snapshot_version} ]; then
+            url=${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${snapshot_version}.jar
+        else
+            baseVersion=${version%-SNAPSHOT}
+            timeStamp=$(grep -o -P '(?<=timestamp>).*(?=</timestamp)' ${local_install_dir}/maven-metadata.xml)
+            buildNumber=$(grep -o -P '(?<=buildNumber>).*(?=</buildNumber)' ${local_install_dir}/maven-metadata.xml)
+            url=${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${baseVersion}-${timeStamp}-${buildNumber}.jar
+        fi
 
         # cleanup the garbage
         rm ${local_install_dir}/maven-metadata.xml
-
-        url=${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${baseVersion}-${timeStamp}-${buildNumber}.jar
     else
         url=${release_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar
     fi
