@@ -205,6 +205,8 @@ public class WorkerProcessLauncher {
     }
 
     private String getClasspath(File workerHome) {
+        File uploadDirectory = new File(workerHome, "upload").getAbsoluteFile();
+        String uploadClasspath = uploadDirectory.exists() ? CLASSPATH_SEPARATOR + uploadDirectory.getAbsolutePath() + "/*" : "";
         String simulatorHome = getSimulatorHome().getAbsolutePath();
         String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
@@ -216,7 +218,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
-                + CLASSPATH_SEPARATOR + workerHome + "/upload/*"
+                + uploadClasspath
                 + CLASSPATH_SEPARATOR + CLASSPATH;
     }
 
