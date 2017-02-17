@@ -25,7 +25,6 @@ import com.hazelcast.simulator.protocol.operation.PingOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
-import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.util.Map;
@@ -37,11 +36,9 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
 
 /**
- * The Remote client is responsible for communication with agents/workers. Its logic should be kept simple and
- * it should not contain any logic apart from shipping something to the right place.
+ * Responsible for communication with Simulator Agents and Workers.
  */
 public class RemoteClient implements Closeable {
-    private static final Logger LOGGER = Logger.getLogger(RemoteClient.class);
 
     private final Connector connector;
     private final ComponentRegistry componentRegistry;
@@ -64,19 +61,11 @@ public class RemoteClient implements Closeable {
     }
 
     public void logOnAllAgents(String message) {
-        try {
-            connector.invoke(ALL_AGENTS, new LogOperation(message));
-        } catch (Exception e) {
-            LOGGER.debug("Failed to log on all agents", e);
-        }
+        connector.submit(ALL_AGENTS, new LogOperation(message));
     }
 
     public void logOnAllWorkers(String message) {
-        try {
-            connector.invoke(ALL_WORKERS, new LogOperation(message));
-        } catch (Exception e) {
-            LOGGER.debug("Failed to log on all workers", e);
-        }
+        connector.submit(ALL_WORKERS, new LogOperation(message));
     }
 
     public void invokeOnAllAgents(SimulatorOperation operation) {
