@@ -4,7 +4,7 @@
 #
 # All properties from the 'simulator.properties' are passed as environment variables.
 #
-# todo:
+# TODO:
 # -
 # - selecting the right os jars
 # - selecting the right enterprise jars
@@ -34,8 +34,8 @@ prepare()
 
         echo Maven using $maven_version
 
-        snapshot_repo="https://repository-hazelcast-l337.forge.cloudbees.com/snapshot"
-        release_repo="https://repo1.maven.org/maven2"
+        snapshot_repo="https://oss.sonatype.org/content/repositories/snapshots"
+        release_repo="https://oss.sonatype.org/content/repositories/releases"
 
         prepare_using_maven "hazelcast" "$maven_version" $release_repo $snapshot_repo
         prepare_using_maven "hazelcast-client" "$maven_version" $release_repo $snapshot_repo
@@ -64,5 +64,4 @@ prepare()
 }
 
 prepare
-
 upload
