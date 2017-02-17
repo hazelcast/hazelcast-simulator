@@ -56,6 +56,7 @@ public class WorkerProcessLauncher {
     private final Agent agent;
     private final WorkerProcessManager workerProcessManager;
     private final WorkerProcessSettings workerProcessSettings;
+
     private File sessionDir;
 
     public WorkerProcessLauncher(Agent agent,
@@ -171,21 +172,21 @@ public class WorkerProcessLauncher {
     }
 
     private void copyResourcesToWorkerHome(String workerId) {
-        File workerHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
+        File workersHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
         String sessionId = agent.getSessionId();
-        File uploadDirectory = new File(workerHome, sessionId + "/upload/").getAbsoluteFile();
+        File uploadDirectory = new File(workersHome, sessionId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
             return;
         }
         String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/ || true",
-                workerHome,
+                workersHome,
                 sessionId,
-                workerHome,
+                workersHome,
                 sessionId,
                 workerId);
         execute(copyCommand);
-        LOGGER.info(format("Finished copying '%s' to Worker", workerHome));
+        LOGGER.info(format("Finished copying '%s' to Worker", workersHome));
     }
 
     private boolean hasExited(WorkerProcess workerProcess) {
@@ -222,6 +223,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
+                + CLASSPATH_SEPARATOR + workerHome + "/upload/*"
                 + CLASSPATH_SEPARATOR + CLASSPATH;
     }
 
