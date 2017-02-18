@@ -21,24 +21,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The {@link AfterWarmup} annotation can be placed on a method to trigger that it should reset any global state after
- * the warmup has completed.
+ * Deprecated. This class will be removed in Simulator 0.11.
  *
- * The {@link AfterWarmup} is used for the sake of warmup in combination with {@link TimeStep} based test. When a warmup duration
- * is defined, the timestep methods will be called in exactly the same way as during the actual run phase. Once the warmup
- * period has completed, the runner threads and their thread-state are discarded and new ones will be created for the run period.
- *
- * However it could be that some global state was modified during the warmup phase that needs to be reset. This global state
- * is reset by methods with the {@link AfterWarmup} annotation. This is done between the warmup and the run phase.
- *
- * If no warmup duration is defined, the {@link AfterWarmup} method is not called.
- *
- * Multiple {@link AfterWarmup} methods are allowed. The {@link AfterWarmup} methods on a subclass are executed before
- * the {@link AfterWarmup} methods on a super class, however there is no ordering within the same class. This is the same
- * semantics as provided by junit. Local {@link AfterWarmup} always happens before global {@link AfterWarmup}.
+ * The warmup is now implemented a lot simpler. Instead of first doing a warmup phase and then a running phase, warmup
+ * now means that first the first x seconds of a run no performance information is tracked. This greatly simplifies
+ * the internal logic, and warmup can now transparently be added to any benchmark.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@Deprecated
 public @interface AfterWarmup {
     boolean global() default true;
 }

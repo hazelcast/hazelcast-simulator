@@ -1574,10 +1574,9 @@ In this example, the test will run for five minutes. In some cases you need more
    ```
    class=example.MyTest
    iterations=1000000
-   warmupIterations=10000
    ```
 
-   In this case the warmup will run for 10k iterations and the test will run for 1000k iterations. 
+   In this case the test will run for 1000k iterations. 
  
 - **`StopException` to stop a single thread**: When a timestep thread wants to stop, it can throw a `StopException`. This exception does not lead to a failure of the test. It also has no influence on any other timestep thread.
 

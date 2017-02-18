@@ -223,7 +223,7 @@ public class CoordinatorCliTest {
 
         TestSuite testSuite = cli.testSuite;
         assertEquals(10, testSuite.getDurationSeconds());
-        assertEquals(5, testSuite.getWarmupSeconds());
+        //assertEquals(5, testSuite.getWarmupMillis());
     }
 
     @Test
@@ -235,7 +235,7 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        assertEquals(0, testSuite.getWarmupSeconds());
+        //assertEquals(0, testSuite.getWarmupMillis());
     }
 
     @Test

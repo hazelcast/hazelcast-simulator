@@ -145,20 +145,15 @@ import java.lang.annotation.Target;
  * {@code
  *     class=yourtest
  *     iterations=1000000
- *     warmupIterations=10000
  * }
  * </pre>
- * This will run each timestep thread for 10k iterations during the warmup, and 1M iterations during the regular run.
- *
- * For the warmupIterations to work, the test needs to be run with a warmupDuration (probably --warmup 0). The test will run
- * as long as the duration or till it runs into a timeout.
+ * This will run 1M iterations per worker-thread.
  *
  * Each exception group can be configured independently. So imagine there is a producer and consumer execution group, then
  * the producers can be configured using:
  * <pre>
  * {@code
  *     class=yourtest
- *     producerWarmupIterations=10000
  *     producerIterations=1000000
  * }
  * </pre>

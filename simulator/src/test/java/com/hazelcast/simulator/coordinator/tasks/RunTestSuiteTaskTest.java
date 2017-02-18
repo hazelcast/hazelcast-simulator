@@ -46,7 +46,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironme
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
-import static com.hazelcast.simulator.common.TestPhase.WARMUP;
 import static com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask.getTestPhaseSyncMap;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
@@ -172,7 +171,6 @@ public class RunTestSuiteTaskTest {
     @Test
     public void runParallel_withWarmup() {
         testSuite.setDurationSeconds(1);
-        testSuite.setWarmupSeconds(1);
         parallel = true;
         verifyEnabled = false;
 
@@ -185,7 +183,6 @@ public class RunTestSuiteTaskTest {
     @Test
     public void runParallel_withWarmup_waitForTestCase() {
         testSuite.setDurationSeconds(0);
-        testSuite.setWarmupSeconds(1);
         parallel = true;
         verifyEnabled = false;
 
@@ -364,8 +361,7 @@ public class RunTestSuiteTaskTest {
             if (operation instanceof StartTestPhaseOperation) {
                 remainingPhaseCount.get(((StartTestPhaseOperation) operation).getTestPhase()).decrementAndGet();
             } else if (operation instanceof StartTestOperation) {
-                StartTestOperation startTestOperation = (StartTestOperation) operation;
-                TestPhase phase = startTestOperation.isWarmup() ? WARMUP : RUN;
+                TestPhase phase =  RUN;
                 remainingPhaseCount.get(phase).decrementAndGet();
             } else if (operation instanceof StopTestOperation) {
                 actualStopTestCount++;
@@ -383,9 +379,6 @@ public class RunTestSuiteTaskTest {
         }
 
         int expectedStopCount = testCount;
-        if (testSuite.getWarmupSeconds() >= 0) {
-            expectedStopCount += testCount;
-        }
         assertEquals("actualStopTestCount incorrect", expectedStopCount, actualStopTestCount);
 
         for (Map.Entry<TestPhase, AtomicInteger> entry : remainingPhaseCount.entrySet()) {
@@ -404,12 +397,6 @@ public class RunTestSuiteTaskTest {
             expectedTestPhases.remove(TestPhase.LOCAL_VERIFY);
         }
 
-        if (testSuite.getWarmupSeconds() < 0) {
-            // exclude warmup test phases
-            expectedTestPhases.remove(WARMUP);
-            expectedTestPhases.remove(TestPhase.LOCAL_AFTER_WARMUP);
-            expectedTestPhases.remove(TestPhase.GLOBAL_AFTER_WARMUP);
-        }
         return expectedTestPhases;
     }
 

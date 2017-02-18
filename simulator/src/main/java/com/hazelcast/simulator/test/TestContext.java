@@ -21,25 +21,6 @@ package com.hazelcast.simulator.test;
 public interface TestContext {
 
     /**
-     * Checks if the test is currently warming up. This method is true only during the warmup and can be used inside
-     * <ol>
-     *     <li>{@link com.hazelcast.simulator.test.annotations.BeforeRun}</li>
-     *     <li>{@link com.hazelcast.simulator.test.annotations.TimeStep}</li>
-     *     <li>{@link com.hazelcast.simulator.test.annotations.AfterRun}</li>
-     * </ol>
-     * methods to do warmup specific things. For example if a different number of iterations is required during warmup, than
-     * during actual running, this method can accessed to figure out what to load.
-     *
-     * If the test isn't in the run or warmup state, the return value is undefined.
-     *
-     * Using the value inside the timestep method should be done with great care since it can lead to an incorrect warmup and
-     * then the jit needs to do a new warmup during the actual running.
-     *
-     * @return true if warming up, false otherwise.
-     */
-    boolean isWarmingUp();
-
-    /**
      * Returns the id of the current test.
      *
      * @return the id of the current test.

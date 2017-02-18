@@ -8,8 +8,10 @@ import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
-import com.hazelcast.simulator.tests.PerformanceMonitorProbeTest;
+import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.tests.DummyTest;
 import com.hazelcast.simulator.tests.SuccessTest;
+import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
 import org.junit.After;
@@ -18,7 +20,6 @@ import org.junit.Test;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
@@ -26,7 +27,7 @@ import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -53,7 +54,7 @@ public class PerformanceMonitorTest {
         serverConnector = mock(ServerConnector.class);
         when(serverConnector.getAddress()).thenReturn(workerAddress);
 
-        performanceMonitor = new PerformanceMonitor(serverConnector, tests.values(), 100, TimeUnit.MILLISECONDS);
+        performanceMonitor = new PerformanceMonitor(serverConnector, tests.values(), 1);
     }
 
     @After
@@ -91,7 +92,7 @@ public class PerformanceMonitorTest {
 
     @Test
     public void test_whenTestWithProbeWhichIsNotRunning_thenDoNothing() {
-        addTest(new com.hazelcast.simulator.tests.PerformanceMonitorTest());
+        addTest(new DummyTest());
 
         performanceMonitor.start();
 
@@ -99,68 +100,44 @@ public class PerformanceMonitorTest {
     }
 
     @Test
-    public void test_whenTestWithProbeWhichIsRunning_thenSendPerformanceStats() {
+    public void test_whenTestRunning_thenSendPerformanceStats() {
         performanceMonitor.start();
         sleepMillis(300);
 
-        PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
-        addTest(test);
+        DummyTest test = new DummyTest();
+        TestContext testContext = addTest(test);
 
-        Thread testRunnerThread = new TestRunnerThread();
-        testRunnerThread.start();
+        Thread runTestThread = new RunTestThread();
+        runTestThread.start();
 
-        test.recordValue(MICROSECONDS.toNanos(500));
-        sleepMillis(200);
+        assertTrueEventually(new AssertTask() {
+            @Override
+            public void run() throws Exception {
+                assertPerfStatsSend();
+            }
+        });
 
-        test.recordValue(MICROSECONDS.toNanos(200));
-        test.recordValue(MICROSECONDS.toNanos(300));
-        sleepMillis(200);
-
-        test.stopTest();
-        joinThread(testRunnerThread);
-
-        performanceMonitor.shutdown();
-        verifyServerConnector();
-    }
-
-    @Test
-    public void test_whenTestWithProbeWhichIsRunningWithDelay_thenSendPerformanceStats() {
-        PerformanceMonitorProbeTest test = new PerformanceMonitorProbeTest();
-        addTest(test, 200);
-
-        performanceMonitor.start();
-
-        Thread testRunnerThread = new TestRunnerThread();
-        testRunnerThread.start();
-
-        test.stopTest();
-        joinThread(testRunnerThread);
+        testContext.stop();
+        joinThread(runTestThread);
 
         performanceMonitor.shutdown();
-        verifyServerConnector();
     }
 
-    @Test
-    public void test_whenTestWithProbeWhichIsNotRunningAnymore_thenDoNothing() throws Exception {
-        addTest(new com.hazelcast.simulator.tests.PerformanceMonitorTest());
-        tests.get(TEST_NAME).invoke(TestPhase.RUN);
-
-        performanceMonitor.start();
-
-        verifyNoMoreInteractions(serverConnector);
+    private TestContext addTest(Object test) {
+        return addTest(test, 0);
     }
 
-    private void addTest(Object test) {
-        addTest(test, 0);
-    }
-
-    private void addTest(Object test, int delayMillis) {
+    private DelayTestContext addTest(Object test, int delayMillis) {
         TestCase testCase = new TestCase(TEST_NAME);
-        TestContainer testContainer = new TestContainer(new DelayTestContext(delayMillis), test, testCase);
+        testCase.setProperty("threadCount", 1);
+        DelayTestContext testContext = new DelayTestContext(delayMillis);
+        TestContainer testContainer = new TestContainer(testContext, test, testCase);
+
         tests.put(TEST_NAME, testContainer);
+        return testContext;
     }
 
-    private void verifyServerConnector() {
+    private void assertPerfStatsSend() {
         verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStatsOperation.class));
         verifyNoMoreInteractions(serverConnector);
     }
@@ -168,6 +145,7 @@ public class PerformanceMonitorTest {
     private static class DelayTestContext extends TestContextImpl {
 
         private final int delayMillis;
+        private volatile boolean stopped = false;
 
         DelayTestContext(int delayMillis) {
             super(null, TEST_NAME, "localhost", mock(WorkerConnector.class));
@@ -192,15 +170,16 @@ public class PerformanceMonitorTest {
 
         @Override
         public boolean isStopped() {
-            return true;
+            return stopped;
         }
 
         @Override
         public void stop() {
+            stopped = true;
         }
     }
 
-    private class TestRunnerThread extends Thread {
+    private class RunTestThread extends Thread {
         @Override
         public void run() {
             try {

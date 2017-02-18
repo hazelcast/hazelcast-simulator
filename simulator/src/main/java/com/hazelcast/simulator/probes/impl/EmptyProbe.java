@@ -40,4 +40,8 @@ public class EmptyProbe implements Probe {
     @Override
     public void recordValue(long latencyNanos) {
     }
+
+    @Override
+    public void reset() {
+    }
 }

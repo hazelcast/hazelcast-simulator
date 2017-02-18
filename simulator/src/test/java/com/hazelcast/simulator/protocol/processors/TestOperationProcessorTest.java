@@ -131,7 +131,7 @@ public class TestOperationProcessorTest {
         createTestOperationProcessor();
 
         List<String> targetWorkers = singletonList(new SimulatorAddress(AddressLevel.WORKER, 1, 2, 0).toString());
-        StartTestOperation operation = new StartTestOperation(TargetType.ALL, targetWorkers, false);
+        StartTestOperation operation = new StartTestOperation(TargetType.ALL, targetWorkers);
         ResponseType responseType = process(processor, operation, COORDINATOR);
         assertEquals(SUCCESS, responseType);
 

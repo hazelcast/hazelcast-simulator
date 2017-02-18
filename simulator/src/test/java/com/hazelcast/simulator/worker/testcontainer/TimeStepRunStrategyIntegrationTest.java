@@ -6,7 +6,6 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.After;
@@ -26,7 +25,6 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.TestSupport.spawn;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
-import static com.hazelcast.simulator.common.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -98,110 +96,6 @@ public class TimeStepRunStrategyIntegrationTest {
         @AfterRun
         public void afterRun() {
             afterRunCount.incrementAndGet();
-        }
-    }
-
-    @Test
-    public void testWithAllRunPhasesAndWarmup() throws Exception {
-        int threadCount = 1;
-        TestWithAllRunPhasesAndWarmup testInstance = new TestWithAllRunPhasesAndWarmup();
-        TestCase testCase = new TestCase(TEST_ID)
-                .setProperty("threadCount", threadCount)
-                .setProperty("class", testInstance.getClass());
-
-        TestContextImpl testContext = new TestContextImpl(
-                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
-        final TestContainer container = new TestContainer(testContext, testInstance, testCase);
-        container.invoke(SETUP);
-
-        Future warmupFuture = spawn(new Callable() {
-            @Override
-            public Object call() throws Exception {
-                container.invoke(WARMUP);
-                return null;
-            }
-        });
-        Thread.sleep(5000);
-        testContext.stop();
-        warmupFuture.get();
-        container.invoke(TestPhase.LOCAL_AFTER_WARMUP);
-        container.invoke(TestPhase.GLOBAL_PREPARE);
-
-        Future runFuture = spawn(new Callable() {
-            @Override
-            public Object call() throws Exception {
-                container.invoke(RUN);
-                System.out.println("Done with run");
-                return null;
-            }
-        });
-        Thread.sleep(5000);
-        testContext.stop();
-        runFuture.get();
-
-        container.invoke(TestPhase.LOCAL_TEARDOWN);
-
-        assertEquals(1, testInstance.afterWarmupCalled.get());
-        assertEquals(threadCount * 2, testInstance.states.size());
-        for (TestWithAllRunPhasesAndWarmup.ThreadState state : testInstance.states.values()) {
-            assertEquals(1, state.beforeRunCount);
-            assertEquals(1, state.afterRunCount);
-            assertTrue(state.timeStepCount > 1);
-        }
-
-        System.out.println("done");
-    }
-
-    public static class TestWithAllRunPhasesAndWarmup {
-
-        final ConcurrentHashMap<Thread, ThreadState> states = new ConcurrentHashMap<Thread, ThreadState>();
-        final AtomicLong afterWarmupCalled = new AtomicLong();
-
-        @AfterWarmup(global = false)
-        public void afterWarmup() {
-            System.out.println("afterWarmup");
-            afterWarmupCalled.incrementAndGet();
-        }
-
-        @BeforeRun
-        public void beforeRun(ThreadState state) {
-            System.out.println("beforeRun: " + Thread.currentThread() + " state: " + state);
-
-            state.beforeRunCount++;
-
-            if (states.putIfAbsent(Thread.currentThread(), state) != null) {
-                throw new IllegalStateException();
-            }
-        }
-
-        @TimeStep
-        public void timeStep(ThreadState state) throws InterruptedException {
-            System.out.println("timeStep: " + Thread.currentThread() + " state: " + state);
-
-            Thread.sleep(1000);
-
-            state.timeStepCount++;
-
-            if (!states.containsKey(Thread.currentThread())) {
-                throw new IllegalStateException();
-            }
-        }
-
-        @AfterRun
-        public void afterRun(ThreadState state) {
-            System.out.println("afterRun: " + Thread.currentThread() + " state: " + state);
-
-            state.afterRunCount++;
-
-            if (!states.containsKey(Thread.currentThread())) {
-                throw new IllegalStateException();
-            }
-        }
-
-        public static class ThreadState {
-            int beforeRunCount;
-            int afterRunCount;
-            int timeStepCount;
         }
     }
 

@@ -30,7 +30,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
@@ -147,7 +146,7 @@ public final class MemberWorker implements Worker {
             return null;
         }
         WorkerOperationProcessor processor = (WorkerOperationProcessor) workerConnector.getProcessor();
-        return new PerformanceMonitor(workerConnector, processor.getTests(), intervalSeconds, TimeUnit.SECONDS);
+        return new PerformanceMonitor(workerConnector, processor.getTests(), intervalSeconds);
     }
 
     private void signalStartToAgent() {

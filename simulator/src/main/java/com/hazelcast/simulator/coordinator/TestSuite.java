@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -44,8 +45,6 @@ public class TestSuite {
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
     private int durationSeconds;
-    // -1 means no warmup
-    private int warmupSeconds = -1;
     private boolean failFast;
     private boolean parallel;
     // a 'select all' workerQuery by default
@@ -88,15 +87,6 @@ public class TestSuite {
         return this;
     }
 
-    public TestSuite setWarmupSeconds(int warmupSeconds) {
-        this.warmupSeconds = warmupSeconds;
-        return this;
-    }
-
-    public int getWarmupSeconds() {
-        return warmupSeconds;
-    }
-
     public int getDurationSeconds() {
         return durationSeconds;
     }
@@ -112,6 +102,13 @@ public class TestSuite {
 
     public TestSuite addTest(TestCase testCase) {
         testCaseList.add(testCase);
+        return this;
+    }
+
+    public TestSuite setWarmupSeconds(long warmupSeconds) {
+        for (TestCase testCase : testCaseList) {
+            testCase.setWarmupMillis(TimeUnit.SECONDS.toMillis(warmupSeconds));
+        }
         return this;
     }
 
@@ -147,7 +144,6 @@ public class TestSuite {
     public String toString() {
         return "TestSuite{"
                 + "durationSeconds=" + durationSeconds
-                + ", warmupSeconds=" + warmupSeconds
                 + ", failFast=" + failFast
                 + ", parallel=" + parallel
                 + ", verifyEnabled=" + verifyEnabled

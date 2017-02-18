@@ -20,7 +20,6 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -75,14 +74,6 @@ public class AtomicLongTest extends AbstractTest {
     @AfterRun
     public void afterRun(ThreadState state) {
         totalCounter.addAndGet(state.increments);
-    }
-
-    @AfterWarmup
-    public void afterWarmup() {
-        for (IAtomicLong counter : counters) {
-            counter.set(0);
-        }
-        totalCounter.set(0);
     }
 
     @Verify

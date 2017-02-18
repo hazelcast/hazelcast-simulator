@@ -40,7 +40,7 @@ public class HdrProbeTest {
 
         probe.done(started);
 
-        Histogram histogram = probe.getIntervalHistogram();
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
         assertEquals(1, histogram.getTotalCount());
 
         HistogramIterationValue iterationValue = histogram.recordedValues().iterator().next();
@@ -68,7 +68,7 @@ public class HdrProbeTest {
         probe.recordValue(value2);
         probe.recordValue(value3);
 
-        Histogram histogram = probe.getIntervalHistogram();
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
         assertHistogramContent(histogram, value1, value2, value3);
     }
 
@@ -77,7 +77,7 @@ public class HdrProbeTest {
         long value = HIGHEST_TRACKABLE_VALUE * 2;
         probe.recordValue(value);
 
-        Histogram histogram = probe.getIntervalHistogram();
+        Histogram histogram = probe.getRecorder().getIntervalHistogram();
         assertHistogramContent(histogram, HIGHEST_TRACKABLE_VALUE);
     }
 
@@ -114,6 +114,6 @@ public class HdrProbeTest {
         probe.recordValue(2);
         probe.recordValue(3);
 
-        assertEquals(3, probe.getIntervalHistogram().getTotalCount());
+        assertEquals(3, probe.getRecorder().getIntervalHistogram().getTotalCount());
     }
 }

@@ -65,12 +65,12 @@ public class TestContainer_BasicTest extends TestContainer_AbstractTest {
         long now = System.currentTimeMillis();
         testContainer = createTestContainer(new BaseTest());
 
-        assertEquals(0, testContainer.getTestStartedTimestamp());
+        assertEquals(0, testContainer.getRunStartedMillis());
 
         testContainer.invoke(TestPhase.SETUP);
         testContainer.invoke(TestPhase.RUN);
 
-        long testStartedTimestamp = testContainer.getTestStartedTimestamp();
+        long testStartedTimestamp = testContainer.getRunStartedMillis();
         assertTrue(format("testStartedTimestamp should be >= %d, but was %d", now, testStartedTimestamp),
                 testStartedTimestamp >= now);
     }

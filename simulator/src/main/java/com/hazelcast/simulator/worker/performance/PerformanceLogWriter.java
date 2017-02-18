@@ -30,10 +30,10 @@ final class PerformanceLogWriter {
     private final StringBuffer sb = new StringBuffer();
     private final DecimalFormat format = new DecimalFormat("#.###");
     private final File file;
+    private boolean headerWritten;
 
     PerformanceLogWriter(File file) {
         this.file = checkNotNull(file, "file can't be null");
-        writeHeader();
     }
 
     private void writeHeader() {
@@ -48,6 +48,12 @@ final class PerformanceLogWriter {
                double operationsPerSecond,
                long numberOfTests,
                long totalTests) {
+
+        if (!headerWritten) {
+            writeHeader();
+            headerWritten = true;
+        }
+
         sb.setLength(0);
         // ms are expressed in epoch time after the decimal point
         sb.append(format.format(timeMillis * 1d / SECONDS.toMillis(1)));

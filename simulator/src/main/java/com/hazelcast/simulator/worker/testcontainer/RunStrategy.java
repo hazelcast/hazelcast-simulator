@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 abstract class RunStrategy {
 
     private volatile boolean running;
-    private volatile long startedTimeStamp;
+    private volatile long startedMillis;
 
     public abstract Callable getRunCallable();
 
@@ -67,7 +67,7 @@ abstract class RunStrategy {
      */
     final void onRunStarted() {
         running = true;
-        startedTimeStamp = System.currentTimeMillis();
+        startedMillis = System.currentTimeMillis();
     }
 
     /**
@@ -84,7 +84,7 @@ abstract class RunStrategy {
      *
      * @return the started timestamp.
      */
-    final long getStartedTimestamp() {
-        return startedTimeStamp;
+    final long getStartedMillis() {
+        return startedMillis;
     }
 }

@@ -30,7 +30,6 @@ public class TestContextImpl implements TestContext {
     private final String publicIpAddress;
     private final Connector connector;
     private volatile boolean stopped;
-    private volatile boolean warmingUp;
 
     public TestContextImpl(HazelcastInstance hazelcastInstance,
                            String testId,
@@ -64,19 +63,6 @@ public class TestContextImpl implements TestContext {
     @Override
     public void stop() {
         stopped = true;
-    }
-
-    public boolean isWarmingUp() {
-        return warmingUp;
-    }
-
-    void beforeWarmup() {
-        warmingUp = true;
-    }
-
-    void afterWarmup() {
-        warmingUp = false;
-        stopped = false;
     }
 
     @Override

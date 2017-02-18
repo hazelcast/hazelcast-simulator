@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.utils.PropertyBindingSupport;
 import org.apache.log4j.Logger;
 
 import java.util.Collections;
@@ -28,7 +27,7 @@ import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class TestCase {
-    private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
+    private static final Logger LOGGER = Logger.getLogger(TestCase.class);
 
     private String id;
     private final Map<String, String> properties = new HashMap<String, String>();
@@ -39,6 +38,8 @@ public class TestCase {
 
     public TestCase(String id, Map<String, String> properties) {
         this.id = checkNotNull(id, "id can't be null");
+        // make sure that warmupSeconds is always set
+        setWarmupMillis(0);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
         }
@@ -54,6 +55,14 @@ public class TestCase {
 
     public String getClassname() {
         return properties.get("class");
+    }
+
+    public void setWarmupMillis(long warmupSeconds) {
+        setProperty("warmupMillis", warmupSeconds);
+    }
+
+    public long getWarmupMillis() {
+        return Long.parseLong(properties.get("warmupMillis"));
     }
 
     public String getProperty(String name) {

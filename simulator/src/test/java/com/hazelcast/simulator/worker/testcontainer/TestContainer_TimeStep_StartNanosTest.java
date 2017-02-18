@@ -34,9 +34,6 @@ public class TestContainer_TimeStep_StartNanosTest extends TestContainer_Abstrac
         TestContainer container = new TestContainer(testContext, testInstance, testCase);
 
         for (TestPhase phase : TestPhase.values()) {
-            if (phase.equals(TestPhase.WARMUP)) {
-                continue;
-            }
             container.invoke(phase);
         }
 
@@ -62,9 +59,6 @@ public class TestContainer_TimeStep_StartNanosTest extends TestContainer_Abstrac
         TestContainer container = new TestContainer(testContext, testInstance, testCase);
 
         for (TestPhase phase : TestPhase.values()) {
-            if (phase.equals(TestPhase.WARMUP)) {
-                continue;
-            }
             container.invoke(phase);
         }
 

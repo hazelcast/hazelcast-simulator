@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.probes.impl;
 
 import com.hazelcast.simulator.probes.Probe;
-import org.HdrHistogram.Histogram;
 import org.HdrHistogram.Recorder;
 
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -72,7 +71,12 @@ public class HdrProbe implements Probe {
         recorder.recordValue(latencyNanos);
     }
 
-    public Histogram getIntervalHistogram() {
-        return recorder.getIntervalHistogram();
+    public Recorder getRecorder() {
+        return recorder;
+    }
+
+    @Override
+    public void reset() {
+        recorder.reset();
     }
 }

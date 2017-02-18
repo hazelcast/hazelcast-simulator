@@ -15,17 +15,13 @@
  */
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.InjectProbe;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 
-public class PerformanceMonitorTest {
+public class DummyTest {
 
-    @InjectProbe(useForThroughput = true)
-    private Probe performanceProbe;
-
-    @Run
-    public void run() {
-        performanceProbe.recordValue(50);
+    @TimeStep
+    public void timestep() throws InterruptedException {
+        Thread.sleep(100);
     }
+
 }

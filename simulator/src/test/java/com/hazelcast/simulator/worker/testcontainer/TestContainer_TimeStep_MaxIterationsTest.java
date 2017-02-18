@@ -27,7 +27,6 @@ public class TestContainer_TimeStep_MaxIterationsTest extends TestContainer_Abst
         TestCase testCase = new TestCase("stopTest")
                 .setProperty("threadCount", 1)
                 .setProperty("iterations", 100)
-                .setProperty("warmupIterations", 10)
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
@@ -40,21 +39,15 @@ public class TestContainer_TimeStep_MaxIterationsTest extends TestContainer_Abst
         }
 
         assertNoExceptions();
-        assertEquals(10, testInstance.warmupCount.get());
         assertEquals(100, testInstance.runCount.get());
     }
 
     public static class MaxIterationTest extends AbstractTest {
         private final AtomicLong runCount = new AtomicLong(0);
-        private final AtomicLong warmupCount = new AtomicLong(0);
 
         @TimeStep
         public void timeStep() {
-            if (testContext.isWarmingUp()) {
-                warmupCount.incrementAndGet();
-            } else {
-                runCount.incrementAndGet();
-            }
+            runCount.incrementAndGet();
         }
     }
 }
