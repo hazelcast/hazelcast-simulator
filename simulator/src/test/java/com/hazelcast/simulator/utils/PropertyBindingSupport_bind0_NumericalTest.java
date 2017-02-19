@@ -49,6 +49,12 @@ public class PropertyBindingSupport_bind0_NumericalTest {
     }
 
     @Test
+    public void bind_shortWithUnderscore() {
+        assertTrue(bind0(testObject, "shortField", "10_000"));
+        assertEquals(10000, testObject.shortField);
+    }
+
+    @Test
     public void bind_short_whitespace() {
         assertTrue(bind0(testObject, "shortField", " 10"));
         assertEquals(10, testObject.shortField);
@@ -72,6 +78,12 @@ public class PropertyBindingSupport_bind0_NumericalTest {
     public void bind_int() {
         assertTrue(bind0(testObject, "intField", "10"));
         assertEquals(10, testObject.intField);
+    }
+
+    @Test
+    public void bind_intWithUnderscores() {
+        assertTrue(bind0(testObject, "intField", "10_000_000"));
+        assertEquals(10 * 1000 * 1000, testObject.intField);
     }
 
     @Test
@@ -101,11 +113,26 @@ public class PropertyBindingSupport_bind0_NumericalTest {
     }
 
     @Test
+    public void bind_longWithUnderScore() {
+        assertTrue(bind0(testObject, "longField", "1_234_567_890_123"));
+        assertEquals(1234567890123L, testObject.longField);
+    }
+
+    @Test
     public void bind_Long() {
         assertTrue(bind0(testObject, "longObjectField", "null"));
         assertNull(testObject.longObjectField);
 
         assertTrue(bind0(testObject, "longObjectField", "1234567890123"));
+        assertEquals(new Long("1234567890123"), testObject.longObjectField);
+    }
+
+    @Test
+    public void bind_LongWithUnderscore() {
+        assertTrue(bind0(testObject, "longObjectField", "null"));
+        assertNull(testObject.longObjectField);
+
+        assertTrue(bind0(testObject, "longObjectField", "1_234_567_890_123"));
         assertEquals(new Long("1234567890123"), testObject.longObjectField);
     }
 
@@ -137,6 +164,12 @@ public class PropertyBindingSupport_bind0_NumericalTest {
     @Test
     public void bind_double() {
         assertTrue(bind0(testObject, "doubleField", "23420000000000.2342"));
+        assertEquals(23420000000000.2342d, testObject.doubleField, 0.0001);
+    }
+
+    @Test
+    public void bind_doubleWithUnderscore() {
+        assertTrue(bind0(testObject, "doubleField", "23_420_000_000_000.2342"));
         assertEquals(23420000000000.2342d, testObject.doubleField, 0.0001);
     }
 

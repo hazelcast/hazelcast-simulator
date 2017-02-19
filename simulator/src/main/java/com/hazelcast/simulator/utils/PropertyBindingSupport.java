@@ -192,6 +192,8 @@ public final class PropertyBindingSupport {
     }
 
     private static boolean setIntegralField(Field field, Object object, String value) throws IllegalAccessException {
+        value = removeUnderscores(value);
+
         if (Byte.TYPE.equals(field.getType())) {
             // primitive byte
             field.set(object, Byte.parseByte(value));
@@ -218,7 +220,13 @@ public final class PropertyBindingSupport {
         return true;
     }
 
+    private static String removeUnderscores(String s) {
+        return s.replaceAll("_", "");
+    }
+
     private static boolean setFloatingPointField(Field field, Object object, String value) throws IllegalAccessException {
+        value = removeUnderscores(value);
+
         if (Float.TYPE.equals(field.getType())) {
             // primitive float
             field.set(object, Float.parseFloat(value));
