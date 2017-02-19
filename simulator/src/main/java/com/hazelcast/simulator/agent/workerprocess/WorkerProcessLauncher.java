@@ -106,6 +106,7 @@ public class WorkerProcessLauncher {
         Map<String, String> environment = processBuilder.environment();
         String javaHome = getJavaHome();
         String path = javaHome + "/bin:" + environment.get("PATH");
+        environment.putAll(System.getenv());
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
         environment.putAll(workerProcessSettings.getEnvironment());
@@ -152,6 +153,10 @@ public class WorkerProcessLauncher {
 
     private String getJavaHome() {
         String javaHome = System.getProperty("java.home");
+        if (javaHome.endsWith("/jre")) {
+            javaHome = javaHome.substring(0, javaHome.length() - 4);
+        }
+
         if (javaHomePrinted.compareAndSet(false, true)) {
             LOGGER.info("java.home=" + javaHome);
         }
