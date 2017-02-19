@@ -9,14 +9,14 @@ function install {
         fi
 
         if hash apt-get 2>/dev/null; then
-                sudo apt-get update
-                sudo apt-get install -y ${PACKAGE}
-                echo apt-get available
+            sudo apt-get update
+            sudo apt-get install -y ${PACKAGE}
+            echo apt-get available
         elif hash yum 2>/dev/null; then
-                echo yum available
-                sudo yum -y install ${PACKAGE}
+            echo yum available
+            sudo yum -y install ${PACKAGE}
         else
-            	echo apt-get not available
+            echo apt-get not available
         fi
 }
 
