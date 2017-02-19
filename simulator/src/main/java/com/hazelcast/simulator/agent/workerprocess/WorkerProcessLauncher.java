@@ -153,8 +153,9 @@ public class WorkerProcessLauncher {
 
     private String getJavaHome() {
         String javaHome = System.getProperty("java.home");
-        if (javaHome.endsWith("/jre")) {
-            javaHome = javaHome.substring(0, javaHome.length() - 4);
+        String jre = "/jre";
+        if (javaHome.endsWith(jre)) {
+            javaHome = javaHome.substring(0, javaHome.length() - jre.length());
         }
 
         if (javaHomePrinted.compareAndSet(false, true)) {
