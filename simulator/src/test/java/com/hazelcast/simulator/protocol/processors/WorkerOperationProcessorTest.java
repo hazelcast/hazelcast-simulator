@@ -164,16 +164,6 @@ public class WorkerOperationProcessorTest {
     }
 
     @Test
-    public void process_CreateTest_invalidTestId() throws Exception {
-        TestCase testCase = createTestCase(SuccessTest.class, "%&/?!");
-
-        ResponseType responseType = runCreateTestOperation(testCase);
-
-        assertEquals(EXCEPTION_DURING_OPERATION_EXECUTION, responseType);
-        assertEquals(0, processor.getTests().size());
-    }
-
-    @Test
     public void process_CreateTest_invalidClassPath() throws Exception {
         TestCase testCase = new TestCase("id")
                 .setProperty("class", "not.found.SuccessTest");

@@ -23,11 +23,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 public class TestCase {
+    private static final Pattern TEST_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
+
     private static final Logger LOGGER = Logger.getLogger(PropertyBindingSupport.class);
 
     private String id;
@@ -38,14 +40,26 @@ public class TestCase {
     }
 
     public TestCase(String id, Map<String, String> properties) {
-        this.id = checkNotNull(id, "id can't be null");
+        this.id = checkId(id);
         for (Map.Entry<String, String> entry : properties.entrySet()) {
             setProperty(entry.getKey(), entry.getValue());
         }
     }
 
+    public static String checkId(String id) {
+        if (id == null) {
+            throw new NullPointerException("test id can't be null");
+        }
+
+        if ("".equals(id) || TEST_ID_PATTERN.matcher(id).matches()) {
+            return id;
+        }
+
+        throw new IllegalArgumentException("test id [" + id + "] is not a valid identifier");
+    }
+
     public void setId(String id) {
-        this.id = checkNotNull(id, "id can't be null");
+        this.id = checkId(id);
     }
 
     public String getId() {

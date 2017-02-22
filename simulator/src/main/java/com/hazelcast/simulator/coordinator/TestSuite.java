@@ -30,8 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.common.TestCase.checkId;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
@@ -39,8 +39,6 @@ import static java.util.Collections.singletonMap;
 
 @SuppressWarnings(value = "checkstyle:methodcount")
 public class TestSuite {
-
-    private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
 
     private final List<TestCase> testCaseList = new LinkedList<TestCase>();
     private int durationSeconds;
@@ -203,9 +201,7 @@ public class TestSuite {
                 field = property.substring(indexOfAt + 1);
             }
 
-            if (!testId.isEmpty() && !isValidTestId(testId)) {
-                throw new IllegalArgumentException(format("TestId [%s] is not a valid id", testId));
-            }
+            checkId(testId);
 
             if (value.isEmpty()) {
                 throw new IllegalArgumentException(format("Value of property %s in testId [%s] is empty!", property, testId));
@@ -217,9 +213,6 @@ public class TestSuite {
         return testCases;
     }
 
-    private static boolean isValidTestId(String fileName) {
-        return VALID_FILE_NAME_PATTERN.matcher(fileName).matches();
-    }
 
     private static TestCase getOrCreateTestCase(Map<String, TestCase> testCases, String testCaseId) {
         TestCase testCase = testCases.get(testCaseId);
