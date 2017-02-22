@@ -397,10 +397,13 @@ public class Coordinator implements Closeable {
                 ? simulatorProperties.getVersionSpec()
                 : op.getVersionSpec();
 
+        String vendor = simulatorProperties.get("VENDOR");
         WorkerParameters workerParameters = new WorkerParameters()
                 .setVersionSpec(versionSpec)
+                .addEnvironment("WORKER_TYPE", workerType.name())
+                .addEnvironment("VENDOR", vendor)
                 .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
-                .setWorkerScript(loadWorkerScript(workerType, simulatorProperties.get("VENDOR")));
+                .setWorkerScript(loadWorkerScript(workerType, vendor));
 
         List<SimulatorAddress> agents = findAgents(op);
         LOGGER.info("Suitable agents: " + agents);
