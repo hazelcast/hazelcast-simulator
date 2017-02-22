@@ -326,7 +326,7 @@ final class CoordinatorCli {
         String args;
         if (options.has(workerVmOptionsSpec)) {
             args = options.valueOf(workerVmOptionsSpec);
-            LOGGER.warn("'workerVmOptions' is deprecated, use 'workerArg' instead.");
+            LOGGER.warn("'workerVmOptions' is deprecated, use 'workerArgs' instead.");
         } else {
             args = options.valueOf(memberArgsSpec);
         }
