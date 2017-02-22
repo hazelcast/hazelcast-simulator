@@ -3,32 +3,20 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.RunWithWorker;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.AbstractWorkerWithMultipleProbes;
 import com.hazelcast.simulator.worker.tasks.IWorker;
 import org.junit.Test;
 
-import java.util.Map;
-
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.worker.testcontainer.TestContainer_RunTest.MultiProbeWorkerTest.Operation.FIRST_OPERATION;
-import static com.hazelcast.simulator.worker.testcontainer.TestContainer_RunTest.MultiProbeWorkerTest.Operation.SECOND_OPERATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class TestContainer_RunTest extends TestContainer_AbstractTest {
-
-    private static final int THREAD_COUNT = 3;
-    private static final int ITERATION_COUNT = 10;
 
     @Test
     public void testRun() throws Exception {
@@ -149,76 +137,6 @@ public class TestContainer_RunTest extends TestContainer_AbstractTest {
                 public void afterCompletion() {
                 }
             };
-        }
-    }
-
-    @Test
-    public void testRunWithWorker_withAbstractWorkerWithMultipleProbesWorker() throws Exception {
-        MultiProbeWorkerTest test = new MultiProbeWorkerTest();
-        testContainer = new TestContainer(testContext, test, new TestCase("foo")
-                .setProperty("threadCount", THREAD_COUNT));
-
-        testContainer.invoke(TestPhase.SETUP);
-        testContainer.invoke(TestPhase.RUN);
-
-        assertTrue(test.runWithWorkerCreated);
-        assertTrue(test.runWithWorkerCalled);
-
-        Map<String, Probe> probeMap = testContainer.getProbeMap();
-        assertEquals(MultiProbeWorkerTest.Operation.values().length, probeMap.size());
-
-        long totalCount = 0;
-        for (Probe probe : probeMap.values()) {
-            HdrProbe hdrProbe = (HdrProbe)probe;
-            totalCount += hdrProbe.getIntervalHistogram().getTotalCount();
-        }
-        assertEquals(THREAD_COUNT * ITERATION_COUNT, totalCount);
-    }
-
-    static class MultiProbeWorkerTest {
-
-        enum Operation {
-            FIRST_OPERATION,
-            SECOND_OPERATION
-        }
-
-        private final OperationSelectorBuilder<Operation> operationSelectorBuilder = new OperationSelectorBuilder<Operation>();
-
-        volatile boolean runWithWorkerCreated;
-        volatile boolean runWithWorkerCalled;
-
-        @Setup
-        public void setup() {
-            operationSelectorBuilder
-                    .addOperation(FIRST_OPERATION, 0.5)
-                    .addDefaultOperation(SECOND_OPERATION);
-        }
-
-        @RunWithWorker
-        public IWorker createWorker() {
-            runWithWorkerCreated = true;
-
-            return new Worker(operationSelectorBuilder, this);
-        }
-
-        private static class Worker extends AbstractWorkerWithMultipleProbes<Operation> {
-
-            private MultiProbeWorkerTest test;
-
-            public Worker(OperationSelectorBuilder<Operation> operationSelectorBuilder, MultiProbeWorkerTest test) {
-                super(operationSelectorBuilder);
-                this.test = test;
-            }
-
-            @Override
-            protected void timeStep(Operation operation, Probe probe) throws Exception {
-                test.runWithWorkerCalled = true;
-                if (getIteration() == ITERATION_COUNT) {
-                    stopWorker();
-                    return;
-                }
-                probe.recordValue(randomInt(5000));
-            }
         }
     }
 
