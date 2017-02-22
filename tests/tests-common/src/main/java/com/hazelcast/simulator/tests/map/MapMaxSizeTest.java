@@ -19,13 +19,12 @@ import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapMaxSizeOperationCounter;
-import com.hazelcast.simulator.worker.selector.OperationSelector;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import static com.hazelcast.config.MaxSizeConfig.MaxSizePolicy.PER_NODE;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
@@ -42,30 +41,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class MapMaxSizeTest extends AbstractTest {
 
-    private enum MapOperation {
-        PUT,
-        GET,
-        CHECK_SIZE
-    }
-
-    private enum MapPutOperation {
-        PUT_SYNC,
-        PUT_ASYNC
-    }
-
     // properties
     public int keyCount = Integer.MAX_VALUE;
-
-    public double putProb = 0.5;
-    public double getProb = 0.4;
-    public double checkProb = 0.1;
-
-    public double putUsingAsyncProb = 0.2;
-
-    private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder
-            = new OperationSelectorBuilder<MapOperation>();
-    private final OperationSelectorBuilder<MapPutOperation> mapPutOperationSelectorBuilder
-            = new OperationSelectorBuilder<MapPutOperation>();
 
     private IMap<Object, Object> map;
     private IList<MapMaxSizeOperationCounter> operationCounterList;
@@ -75,16 +52,6 @@ public class MapMaxSizeTest extends AbstractTest {
     public void setUp() {
         map = targetInstance.getMap(name);
         operationCounterList = targetInstance.getList(name + "OperationCounter");
-
-        mapOperationSelectorBuilder
-                .addOperation(MapOperation.PUT, putProb)
-                .addOperation(MapOperation.GET, getProb)
-                .addOperation(MapOperation.CHECK_SIZE, checkProb);
-
-        mapPutOperationSelectorBuilder
-                .addOperation(MapPutOperation.PUT_ASYNC, putUsingAsyncProb)
-                .addDefaultOperation(MapPutOperation.PUT_SYNC);
-
 
         if (isMemberNode(targetInstance)) {
             MaxSizeConfig maxSizeConfig = targetInstance.getConfig().getMapConfig(name).getMaxSizeConfig();
@@ -96,60 +63,43 @@ public class MapMaxSizeTest extends AbstractTest {
         }
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.5)
+    public void put(ThreadState state) {
+        int key = state.randomInt(keyCount);
+        map.put(key, state.randomInt());
+        state.operationCounter.put++;
     }
 
-    private class Worker extends AbstractWorker<MapOperation> {
+    @TimeStep(prob = 0.2)
+    public void putUsingAsyncSync(ThreadState state) {
+        int key = state.randomInt(keyCount);
+        map.putAsync(key, state.randomInt());
+        state.operationCounter.putAsync++;
+    }
+
+    @TimeStep(prob = 0.2)
+    public void get(ThreadState state) {
+        int key = state.randomInt(keyCount);
+        map.get(key);
+        state.operationCounter.get++;
+    }
+
+    @TimeStep(prob = 0.1)
+    public void check(ThreadState state) {
+        assertMapMaxSize();
+        state.operationCounter.verified++;
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounterList.add(state.operationCounter);
+    }
+
+    public class ThreadState extends BaseThreadState {
         private final MapMaxSizeOperationCounter operationCounter = new MapMaxSizeOperationCounter();
-        private final OperationSelector<MapPutOperation> mapPutSelector = mapPutOperationSelectorBuilder.build();
-
-        public Worker() {
-            super(mapOperationSelectorBuilder);
-        }
-
-        @Override
-        public void timeStep(MapOperation operation) {
-            final int key = randomInt(keyCount);
-
-            switch (operation) {
-                case PUT:
-                    final Object value = randomInt();
-                    switch (mapPutSelector.select()) {
-                        case PUT_SYNC:
-                            map.put(key, value);
-                            operationCounter.put++;
-                            break;
-                        case PUT_ASYNC:
-                            map.putAsync(key, value);
-                            operationCounter.putAsync++;
-                            break;
-                        default:
-                            throw new UnsupportedOperationException();
-                    }
-
-                    break;
-                case GET:
-                    map.get(key);
-                    operationCounter.get++;
-                    break;
-                case CHECK_SIZE:
-                    assertMapMaxSize();
-                    operationCounter.verified++;
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            operationCounterList.add(operationCounter);
-        }
     }
 
-    @Verify(global = true)
+    @Verify
     public void globalVerify() {
         MapMaxSizeOperationCounter total = new MapMaxSizeOperationCounter();
         for (MapMaxSizeOperationCounter operationCounter : operationCounterList) {
