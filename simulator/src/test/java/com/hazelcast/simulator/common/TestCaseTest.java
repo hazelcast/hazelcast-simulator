@@ -26,4 +26,20 @@ public class TestCaseTest {
 
         assertEquals("a", testCase.getProperty("x"));
     }
+
+    @Test(expected = NullPointerException.class)
+    public void whenNullTestId() {
+        new TestCase(null);
+    }
+
+    @Test
+    public void whenEmptyTestId() {
+        TestCase testCase = new TestCase("");
+        assertEquals("", testCase.getId());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void whenIllegalTestId() {
+        new TestCase("%&/?!");
+    }
 }
