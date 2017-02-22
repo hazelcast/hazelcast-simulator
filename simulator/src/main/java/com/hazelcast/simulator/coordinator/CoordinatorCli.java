@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -449,9 +450,26 @@ final class CoordinatorCli {
     }
 
     public static String loadWorkerScript(WorkerType workerType, String vendor) {
-        File file = getConfigurationFile("worker-" + vendor + "-" + workerType.name() + ".sh");
-        LOGGER.info("Loading Hazelcast worker script: " + file.getAbsolutePath());
-        return fileAsText(file);
+        List<File> files = new LinkedList<File>();
+        File confDir = new File(getSimulatorHome(), "conf");
+
+        files.add(new File("worker-" + vendor + "-" + workerType.name() + ".sh").getAbsoluteFile());
+        files.add(new File("worker-" + workerType + ".sh").getAbsoluteFile());
+        files.add(new File("worker-" + vendor + ".sh").getAbsoluteFile());
+        files.add(new File("worker.sh").getAbsoluteFile());
+
+        files.add(new File(confDir, "worker-" + vendor + "-" + workerType.name() + ".sh").getAbsoluteFile());
+        files.add(new File(confDir, "worker-" + vendor + ".sh").getAbsoluteFile());
+        files.add(new File(confDir, "worker.sh").getAbsoluteFile());
+
+        for (File file : files) {
+            if (file.exists()) {
+                LOGGER.info("Loading " + vendor + " " + workerType.name() + " worker script: " + file.getAbsolutePath());
+                return fileAsText(file);
+            }
+        }
+
+        throw new CommandLineExitException("Failed to load worker script from the following locations:" + files);
     }
 
     public static String loadMemberHzConfig() {
