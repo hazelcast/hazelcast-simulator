@@ -68,7 +68,7 @@
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.jclouds.labs</groupId>
+            <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>google-compute-engine</artifactId>
             <version>${jclouds.version}</version>
         </dependency>

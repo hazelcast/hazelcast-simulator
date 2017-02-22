@@ -62,7 +62,7 @@
         <!-- cannot update to 5.x, since they dropped Java 6 support -->
         <jopt.version>4.9</jopt.version>
 
-        <jclouds.version>1.9.2</jclouds.version>
+        <jclouds.version>2.0.0</jclouds.version>
         <amazonaws.version>1.11.53</amazonaws.version>
         <httpclient.version>4.5.2</httpclient.version>
 
