@@ -59,7 +59,7 @@ public class CoordinatorRunMonolithTest {
         String hzConfig = fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
         initMemberHzConfig(hzConfig, componentRegistry, null, simulatorProperties.asMap(), false);
 
-        File scriptFile = new File(internalDistPath() + "/conf/worker-hazelcast-member.sh");
+        File scriptFile = new File(internalDistPath() + "/conf/worker.sh");
         File logFile = new File(internalDistPath() + "/conf/agent-log4j.xml");
 
         workerParameters = new WorkerParameters()
@@ -70,6 +70,8 @@ public class CoordinatorRunMonolithTest {
                 .addEnvironment("AUTOCREATE_HAZELCAST_INSTANCE", "true")
                 .addEnvironment("JVM_OPTIONS", "")
                 .addEnvironment("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "10")
+                .addEnvironment("VENDOR", "hazelcast")
+                .addEnvironment("WORKER_TYPE", "member")
                 .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(fileAsText(scriptFile));
 
