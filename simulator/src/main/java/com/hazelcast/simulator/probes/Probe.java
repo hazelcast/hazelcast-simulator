@@ -37,4 +37,6 @@ public interface Probe {
      * @param latencyNanos latency value in nanoseconds
      */
     void recordValue(long latencyNanos);
+
+    void reset();
 }

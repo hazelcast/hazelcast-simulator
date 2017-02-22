@@ -23,17 +23,21 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static java.lang.System.currentTimeMillis;
+import static java.lang.System.nanoTime;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Monitors the performance of all running Simulator Tests.
@@ -49,11 +53,8 @@ public class PerformanceMonitor {
 
     public PerformanceMonitor(ServerConnector serverConnector,
                               Collection<TestContainer> testContainers,
-                              int workerPerformanceMonitorInterval,
-                              TimeUnit workerPerformanceIntervalTimeUnit) {
-
-        long intervalNanos = workerPerformanceIntervalTimeUnit.toNanos(workerPerformanceMonitorInterval);
-        this.thread = new PerformanceMonitorThread(serverConnector, testContainers, intervalNanos);
+                              int updateIntervalSeconds) {
+        this.thread = new PerformanceMonitorThread(serverConnector, testContainers, updateIntervalSeconds);
         thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
@@ -79,40 +80,45 @@ public class PerformanceMonitor {
      */
     private final class PerformanceMonitorThread extends Thread {
 
+        private final long scanIntervalNanos = SECONDS.toNanos(1);
         private final PerformanceLogWriter globalPerformanceLogWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         private final ServerConnector serverConnector;
         private final Collection<TestContainer> testContainers;
-        private final long intervalNanos;
+        private final long updateIntervalMillis;
+        private final List<TestContainer> dirtyContainers = new ArrayList<TestContainer>();
 
         private PerformanceMonitorThread(ServerConnector serverConnector,
                                          Collection<TestContainer> testContainers,
-                                         long intervalNanos) {
+                                         long updateIntervalSeconds) {
             super("WorkerPerformanceMonitor");
             setDaemon(true);
+            this.updateIntervalMillis = SECONDS.toMillis(updateIntervalSeconds);
             this.serverConnector = serverConnector;
             this.testContainers = testContainers;
-            this.intervalNanos = intervalNanos;
             this.globalPerformanceLogWriter = new PerformanceLogWriter(new File(getUserDir(), "performance.csv"));
         }
 
         @Override
         public void run() {
             while (!shutdown.get()) {
-                long startedNanos = System.nanoTime();
-                long currentTimestamp = System.currentTimeMillis();
+                long startNanos = nanoTime();
+                long currentTimeMillis = currentTimeMillis();
 
-                boolean runningTestFound = hasRunningTests();
-                updateTrackers(currentTimestamp);
-                sendPerformanceStats();
-                writeStatsToFiles(currentTimestamp);
+                updateTrackers(currentTimeMillis);
 
-                long elapsedNanos = System.nanoTime() - startedNanos;
-                if (intervalNanos > elapsedNanos) {
-                    if (runningTestFound) {
-                        sleepNanos(intervalNanos - elapsedNanos);
-                    } else {
+                if (!dirtyContainers.isEmpty()) {
+                    coordinatorUpdate();
+                    persist(currentTimeMillis);
+                }
+
+                long elapsedNanos = nanoTime() - startNanos;
+
+                if (scanIntervalNanos > elapsedNanos) {
+                    if (dirtyContainers.isEmpty()) {
                         sleepNanos(WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS - elapsedNanos);
+                    } else {
+                        sleepNanos(scanIntervalNanos - elapsedNanos);
                     }
                 } else {
                     LOGGER.warn(getName() + ".run() took " + NANOSECONDS.toMillis(elapsedNanos) + " ms");
@@ -120,30 +126,23 @@ public class PerformanceMonitor {
             }
         }
 
-        private boolean hasRunningTests() {
-            for (TestContainer container : testContainers) {
-                if (container.isRunning()) {
-                    return true;
-                }
-            }
-
-            return true;
-        }
-
-        private void updateTrackers(long currentTimestamp) {
-            for (TestContainer container : testContainers) {
-                container.getTestPerformanceTracker().update(currentTimestamp);
-            }
-        }
-
-        private void sendPerformanceStats() {
-            PerformanceStatsOperation operation = new PerformanceStatsOperation();
+        private void updateTrackers(long currentTimeMillis) {
+            dirtyContainers.clear();
 
             for (TestContainer container : testContainers) {
                 TestPerformanceTracker tracker = container.getTestPerformanceTracker();
-                if (tracker.isUpdated()) {
-                    operation.addPerformanceStats(container.getTestCase().getId(), tracker.createPerformanceStats());
+                if (tracker.update(updateIntervalMillis, currentTimeMillis)) {
+                    dirtyContainers.add(container);
                 }
+            }
+        }
+
+        private void coordinatorUpdate() {
+            PerformanceStatsOperation operation = new PerformanceStatsOperation();
+
+            for (TestContainer container : dirtyContainers) {
+                TestPerformanceTracker tracker = container.getTestPerformanceTracker();
+                operation.addPerformanceStats(container.getTestCase().getId(), tracker.createPerformanceStats());
             }
 
             if (operation.getPerformanceStats().size() > 0) {
@@ -151,25 +150,19 @@ public class PerformanceMonitor {
             }
         }
 
-        private void writeStatsToFiles(long currentTimestamp) {
-            if (testContainers.isEmpty()) {
-                return;
-            }
-
+        private void persist(long currentTimestamp) {
             String dateString = simpleDateFormat.format(new Date(currentTimestamp));
             long globalIntervalOperationCount = 0;
             long globalOperationsCount = 0;
             double globalIntervalThroughput = 0;
 
-            for (TestContainer container : testContainers) {
+            for (TestContainer container : dirtyContainers) {
                 TestPerformanceTracker tracker = container.getTestPerformanceTracker();
-                if (tracker.getAndResetIsUpdated()) {
-                    tracker.writeStatsToFile(currentTimestamp, dateString);
+                tracker.persist(currentTimestamp, dateString);
 
-                    globalIntervalOperationCount += tracker.getIntervalOperationCount();
-                    globalOperationsCount += tracker.getTotalOperationCount();
-                    globalIntervalThroughput += tracker.getIntervalThroughput();
-                }
+                globalIntervalOperationCount += tracker.intervalOperationCount();
+                globalOperationsCount += tracker.totalOperationCount();
+                globalIntervalThroughput += tracker.intervalThroughput();
             }
 
             // global performance stats

@@ -30,7 +30,6 @@ import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
 import com.hazelcast.simulator.utils.AnnotationFilter;
-import com.hazelcast.simulator.utils.AnnotationFilter.AfterWarmupFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.worker.performance.TestPerformanceTracker;
@@ -47,17 +46,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import static com.hazelcast.simulator.common.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.common.TestPhase.LOCAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_PREPARE;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
-import static com.hazelcast.simulator.common.TestPhase.WARMUP;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -151,8 +147,8 @@ public class TestContainer {
         return testCase;
     }
 
-    public long getTestStartedTimestamp() {
-        return runStrategy == null ? 0 : runStrategy.getStartedTimestamp();
+    public long getRunStartedMillis() {
+        return runStrategy == null ? 0 : runStrategy.getStartedMillis();
     }
 
     public boolean isRunning() {
@@ -168,12 +164,6 @@ public class TestContainer {
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
-        if (testPhase == WARMUP) {
-            testContext.beforeWarmup();
-        } else if (testPhase == LOCAL_AFTER_WARMUP) {
-            testContext.afterWarmup();
-        }
-
         Callable task = taskPerPhaseMap.get(testPhase);
         if (task == null) {
             return;
@@ -199,11 +189,6 @@ public class TestContainer {
 
             registerPrepareTasks(false);
             registerPrepareTasks(true);
-
-            taskPerPhaseMap.put(WARMUP, runStrategy.getWarmupCallable());
-
-            registerTask(AfterWarmup.class, new AfterWarmupFilter(false), LOCAL_AFTER_WARMUP);
-            registerTask(AfterWarmup.class, new AfterWarmupFilter(true), GLOBAL_AFTER_WARMUP);
 
             taskPerPhaseMap.put(RUN, runStrategy.getRunCallable());
 

@@ -39,6 +39,7 @@ import org.apache.log4j.Logger;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.getLastTestPhase;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
@@ -165,19 +166,17 @@ public class TestOperationProcessor extends AbstractOperationProcessor {
         }
     }
 
-    private void processStartTest(StartTestOperation operation) {
-        final TestPhase testPhase = operation.isWarmup() ? TestPhase.WARMUP : TestPhase.RUN;
-
+    private void processStartTest(final StartTestOperation operation) {
         if (skipRunPhase(operation)) {
-            sendPhaseCompletedOperation(testPhase);
+            sendPhaseCompletedOperation(RUN);
             return;
         }
 
         LOGGER.info(format("%s Starting run of %s %s", DASHES, testId, DASHES));
-        new OperationThread(testPhase) {
+        new OperationThread(RUN) {
             @Override
             public void run0() throws Exception {
-                testContainer.invoke(testPhase);
+                testContainer.invoke(RUN);
             }
         }.start();
     }

@@ -21,7 +21,6 @@ import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.AfterRun;
-import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -83,11 +82,6 @@ public class ProducerConsumerTest extends AbstractTest {
 
     public class ConsumerState extends BaseThreadState {
         long consumed;
-    }
-
-    @AfterWarmup
-    public void afterWarmup() {
-        workQueue.clear();
     }
 
     @Verify

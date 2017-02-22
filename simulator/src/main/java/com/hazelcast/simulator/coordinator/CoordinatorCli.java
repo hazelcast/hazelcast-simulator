@@ -85,9 +85,10 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(String.class).defaultsTo(format("%ds", DEFAULT_DURATION_SECONDS));
 
     private final OptionSpec<String> warmupSpec = parser.accepts("warmup",
-            "Amount of time to execute the warmup per test, e.g. 10s, 1m, 2h or 3d. If warmup is set to 0, "
-                    + "the test will warmup until the test decides to stop.")
-            .withRequiredArg().ofType(String.class);
+            "Amount of time for the warmup period. During the warmup period no throughput/latency metrics are tracked."
+                    + "This can be used to give the JIT the time to warmup etc. So if you have a duration of 180 seconds, "
+                    + "and a warmup of 30 seconds, only for the last 150 seconds of the run performance information is tracked.")
+            .withRequiredArg().ofType(String.class).defaultsTo("0s");
 
     private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
             "Properties that override the properties in a given test-case, e.g. --overrides"
@@ -335,16 +336,18 @@ final class CoordinatorCli {
         }
 
         int durationSeconds = getDurationSeconds(options, durationSpec);
+        int warmupSeconds = getDurationSeconds(options, warmupSpec);
+        if (durationSeconds != 0 && warmupSeconds > durationSeconds) {
+            throw new CommandLineExitException("warmup can't be larger than duration");
+        }
+
         TestSuite testSuite = TestSuite.loadTestSuite(testSuiteFile, options.valueOf(overridesSpec))
                 .setDurationSeconds(durationSeconds)
+                .setWarmupSeconds(warmupSeconds)
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
                 .setParallel(options.has(parallelSpec))
                 .setWorkerQuery(workerQuery);
-
-        if (options.has(warmupSpec)) {
-            testSuite.setWarmupSeconds(getDurationSeconds(options, warmupSpec));
-        }
 
         // if the coordinator is not monitoring performance, we don't care for measuring latencies
         if (coordinatorParameters.getPerformanceMonitorIntervalSeconds() == 0) {

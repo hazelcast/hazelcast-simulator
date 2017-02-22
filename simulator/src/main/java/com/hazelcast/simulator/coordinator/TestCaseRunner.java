@@ -36,17 +36,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
-import static com.hazelcast.simulator.common.TestPhase.GLOBAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_TEARDOWN;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_VERIFY;
-import static com.hazelcast.simulator.common.TestPhase.LOCAL_AFTER_WARMUP;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_PREPARE;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_TEARDOWN;
 import static com.hazelcast.simulator.common.TestPhase.LOCAL_VERIFY;
 import static com.hazelcast.simulator.common.TestPhase.RUN;
 import static com.hazelcast.simulator.common.TestPhase.SETUP;
-import static com.hazelcast.simulator.common.TestPhase.WARMUP;
 import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.FAILED;
 import static com.hazelcast.simulator.protocol.registry.TestData.CompletedStatus.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.await;
@@ -179,16 +176,7 @@ public final class TestCaseRunner implements TestPhaseListener {
         executePhase(LOCAL_PREPARE);
         executePhase(GLOBAL_PREPARE);
 
-        if (testSuite.getWarmupSeconds() >= 0) {
-            executeRunOrWarmup(WARMUP);
-
-            executePhase(LOCAL_AFTER_WARMUP);
-            executePhase(GLOBAL_AFTER_WARMUP);
-        } else {
-            echo("Skipping Test warmup");
-        }
-
-        executeRunOrWarmup(RUN);
+        executeRun();
 
         if (isVerifyEnabled) {
             executePhase(GLOBAL_VERIFY);
@@ -231,27 +219,29 @@ public final class TestCaseRunner implements TestPhaseListener {
     }
 
     @SuppressWarnings("checkstyle:npathcomplexity")
-    private void executeRunOrWarmup(TestPhase phase) {
+    private void executeRun() {
         if (test.isStopRequested()) {
-            echo(format("Skipping %s, test stopped.", phase.desc()));
+            echo(format("Skipping %s, test stopped.", RUN));
             return;
         }
 
-        test.setTestPhase(phase);
-        start(phase);
+        test.setTestPhase(RUN);
+        start(RUN);
 
         long startMs = currentTimeMillis();
 
-        int durationSeconds = phase == RUN ? testSuite.getDurationSeconds() : testSuite.getWarmupSeconds();
+        int durationSeconds = testSuite.getDurationSeconds();
         long durationMs;
         long timeoutMs;
         if (durationSeconds == 0) {
-            echo(format("Test will %s until it stops", phase.desc()));
+            echo(format("Test will %s until it stops", RUN));
             timeoutMs = Long.MAX_VALUE;
             durationMs = Long.MAX_VALUE;
         } else {
             durationMs = SECONDS.toMillis(durationSeconds);
-            echo(format("Test will %s for %s", phase.desc(), secondsToHuman(durationSeconds)));
+            echo(format("Test will run for %s with a warmup period of %s",
+                    secondsToHuman(durationSeconds),
+                    secondsToHuman(MILLISECONDS.toSeconds(testCase.getWarmupMillis()))));
             timeoutMs = startMs + durationMs;
         }
 
@@ -262,38 +252,38 @@ public final class TestCaseRunner implements TestPhaseListener {
             sleepUntilMs(nextSleepUntilMs);
 
             if (hasFailure()) {
-                echo(format("Critical failure detected, aborting %s phase", phase.desc()));
+                echo(format("Critical failure detected, aborting %s phase", RUN));
                 break;
             }
 
             long nowMs = currentTimeMillis();
-            if (nowMs > timeoutMs || isPhaseCompleted(phase) || test.isStopRequested()) {
-                echo(format("Test finished %s", phase.desc()));
+            if (nowMs > timeoutMs || isPhaseCompleted(RUN) || test.isStopRequested()) {
+                echo(format("Test finished %s", RUN.desc()));
                 break;
             }
 
             iteration++;
             if (iteration % logRunPhaseIntervalSeconds == 0) {
-                logProgress(phase, nowMs - startMs, durationMs);
+                logProgress(nowMs - startMs, durationMs);
             }
         }
 
-        stop(phase);
+        stop(RUN);
 
-        logPerformanceInfo(startMs);
+        logPerformanceInfo();
 
-        waitForGlobalTestPhaseCompletion(phase);
+        waitForGlobalTestPhaseCompletion(RUN);
     }
 
-    private void logPerformanceInfo(long startMs) {
-        long actualDurationMs = currentTimeMillis() - startMs;
+    private void logPerformanceInfo() {
+        long durationMillis = SECONDS.toMillis(testSuite.getDurationSeconds()) - testCase.getWarmupMillis();
 
         if (performanceMonitorIntervalSeconds > 0) {
             LOGGER.info(testCase.getId() + " Waiting for all performance info");
             sleepSeconds(performanceMonitorIntervalSeconds);
 
             LOGGER.info("Performance " + testCase.getId() + "\n"
-                    + performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), actualDurationMs));
+                    + performanceStatsCollector.detailedPerformanceInfo(testCase.getId(), durationMillis));
         }
     }
 
@@ -309,7 +299,7 @@ public final class TestCaseRunner implements TestPhaseListener {
 
         remoteClient.invokeOnTestOnAllWorkers(
                 test.getAddress(),
-                new StartTestOperation(targetType, addresses, phase != RUN));
+                new StartTestOperation(targetType, addresses));
 
         echo(format("Completed Test %s start", phase.desc()));
     }
@@ -325,13 +315,12 @@ public final class TestCaseRunner implements TestPhaseListener {
         }
     }
 
-    private void logProgress(TestPhase phase, long elapsedMs, long durationMs) {
+    private void logProgress(long elapsedMs, long durationMs) {
         String msg;
         if (durationMs == Long.MAX_VALUE) {
-            msg = format("%s %s", phase == RUN ? "Running" : "Warming up ", secondsToHuman(MILLISECONDS.toSeconds(elapsedMs)));
+            msg = format("Running %s", secondsToHuman(MILLISECONDS.toSeconds(elapsedMs)));
         } else {
-            msg = format("%s %s (%s%%)",
-                    phase == RUN ? "Running" : "Warming up ",
+            msg = format("Running %s (%s%%)",
                     secondsToHuman(MILLISECONDS.toSeconds(elapsedMs)),
                     formatPercentage(elapsedMs, durationMs));
         }

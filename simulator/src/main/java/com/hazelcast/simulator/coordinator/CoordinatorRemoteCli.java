@@ -696,8 +696,14 @@ public final class CoordinatorRemoteCli implements Closeable {
 
             LOGGER.info("File: " + testSuiteFile);
 
+            int durationSeconds = getDurationSeconds(options, durationSpec);
+            int warmupSeconds = getDurationSeconds(options, warmupSpec);
+            if (durationSeconds != 0 && warmupSeconds > durationSeconds) {
+                throw new CommandLineExitException("warmup can't be larger than duration");
+            }
             TestSuite suite = TestSuite.loadTestSuite(testSuiteFile, "")
-                    .setDurationSeconds(getDurationSeconds(options, durationSpec))
+                    .setDurationSeconds(durationSeconds)
+                    .setWarmupSeconds(warmupSeconds)
                     .setWorkerQuery(newQuery())
                     .setParallel(options.has(parallelSpec))
                     .setVerifyEnabled(options.valueOf(verifyEnabledSpec))

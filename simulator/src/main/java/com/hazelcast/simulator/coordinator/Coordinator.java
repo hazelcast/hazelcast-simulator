@@ -166,7 +166,7 @@ public class Coordinator implements Closeable {
         int performanceIntervalSeconds = parameters.getPerformanceMonitorIntervalSeconds();
 
         if (performanceIntervalSeconds > 0) {
-            echoLocal("Performance monitor enabled (%d seconds)", performanceIntervalSeconds);
+            echoLocal("Performance monitor enabled (%d seconds interval)", performanceIntervalSeconds);
         } else {
             echoLocal("Performance monitor disabled");
         }

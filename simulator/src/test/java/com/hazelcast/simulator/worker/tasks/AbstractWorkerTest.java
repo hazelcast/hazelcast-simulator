@@ -3,6 +3,7 @@ package com.hazelcast.simulator.worker.tasks;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
@@ -12,6 +13,7 @@ import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
+import org.HdrHistogram.Histogram;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -116,17 +118,6 @@ public class AbstractWorkerTest {
         assertNotNull(test.randomInt);
         assertNotNull(test.randomIntWithBond);
         assertNotNull(test.randomLong);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testGetIteration() throws Exception {
-        test.operationSelectorBuilder.addDefaultOperation(Operation.ITERATION);
-
-        testContainer.invoke(TestPhase.SETUP);
-        testContainer.invoke(TestPhase.RUN);
-
-        assertEquals(ITERATION_COUNT, test.testIteration);
-        assertEquals(THREAD_COUNT, test.workerCreated);
     }
 
     public static class WorkerTest {
