@@ -156,11 +156,19 @@ final class CoordinatorCli {
             .withRequiredArg().ofType(TestPhase.class).defaultsTo(TestPhase.getLastTestPhase());
 
     private final OptionSpec<String> workerVmOptionsSpec = parser.accepts("workerVmOptions",
-            "Member Worker JVM options (quotes can be used).")
+            "Member Worker JVM options (quotes can be used). This option is deprecated, use 'memberArgs' instead.")
+            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
+
+    private final OptionSpec<String> memberArgsSpec = parser.accepts("memberArgs",
+            "Member Worker JVM options (quotes can be used). ")
+            .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
+
+    private final OptionSpec<String> clientArgsSpec = parser.accepts("clientArgs",
+            "Client Worker JVM options (quotes can be used).")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> clientWorkerVmOptionsSpec = parser.accepts("clientWorkerVmOptions",
-            "Client Worker JVM options (quotes can be used).")
+            "Client Worker JVM options (quotes can be used). This option is deprecated, use 'clientArgs' instead.")
             .withRequiredArg().ofType(String.class).defaultsTo("-XX:+HeapDumpOnOutOfMemoryError");
 
     private final OptionSpec<String> licenseKeySpec = parser.accepts("licenseKey",
@@ -255,7 +263,7 @@ final class CoordinatorCli {
         Map<String, String> env = new HashMap<String, String>();
         env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         env.put("LOG4j_CONFIG", loadLog4jConfig());
-        env.put("JVM_OPTIONS", options.valueOf(clientWorkerVmOptionsSpec));
+        env.put("JVM_OPTIONS", loadClientArgs());
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
@@ -276,7 +284,7 @@ final class CoordinatorCli {
         Map<String, String> env = new HashMap<String, String>();
         env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         env.put("LOG4j_CONFIG", loadLog4jConfig());
-        env.put("JVM_OPTIONS", options.valueOf(clientWorkerVmOptionsSpec));
+        env.put("JVM_OPTIONS", loadClientArgs());
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
@@ -296,7 +304,7 @@ final class CoordinatorCli {
         Map<String, String> env = new HashMap<String, String>();
         env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
         env.put("LOG4j_CONFIG", loadLog4jConfig());
-        env.put("JVM_OPTIONS", options.valueOf(workerVmOptionsSpec));
+        env.put("JVM_OPTIONS", loadMemberArgs());
         env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
                 Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
         env.put("HAZELCAST_CONFIG",
@@ -311,6 +319,28 @@ final class CoordinatorCli {
                 .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
                 .setWorkerScript(loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")))
                 .setEnvironment(env);
+    }
+
+    private String loadMemberArgs() {
+        String args;
+        if (options.has(workerVmOptionsSpec)) {
+            args = options.valueOf(workerVmOptionsSpec);
+            LOGGER.warn("'workerVmOptions' is deprecated, use 'workerArg' instead.");
+        } else {
+            args = options.valueOf(memberArgsSpec);
+        }
+        return args;
+    }
+
+    private String loadClientArgs() {
+        String args;
+        if (options.has(clientWorkerVmOptionsSpec)) {
+            args = options.valueOf(clientWorkerVmOptionsSpec);
+            LOGGER.warn("'clientWorkerVmOptions' is deprecated, use 'clientArgs' instead.");
+        } else {
+            args = options.valueOf(clientArgsSpec);
+        }
+        return args;
     }
 
     private int getPerformanceMonitorInterval() {
