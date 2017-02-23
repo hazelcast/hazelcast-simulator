@@ -13,7 +13,7 @@ set -e
 
 local_upload_dir=upload
 ssh_options=${SSH_OPTIONS}
-user=${USER}
+user=${SIMULATOR_USER}
 
 # we limit the number of concurrent uploads
 max_current_uploads=2

@@ -126,7 +126,7 @@ class Wizard {
                     CLOUD_CREDENTIAL, "~/gce.pem"),
                     simulatorPropertiesFile);
             appendText(format(
-                    "%nGROUP_NAME=simulator-agent%nUSER=%s%n",
+                    "%nGROUP_NAME=simulator-agent%nSIMULATOR_USER=%s%n",
                     currentUser), simulatorPropertiesFile);
             appendText(format(
                     "%n# Machine specification used for GCE (change if needed)%nMACHINE_SPEC=%s%n",
