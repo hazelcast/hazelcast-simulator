@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -94,7 +94,7 @@ public class CoordinatorCliTest {
 
     @Test
     public void testInit_withCloudProviderStatic() {
-        appendText(format("%s=%s%n", PROPERTY_CLOUD_PROVIDER, PROVIDER_STATIC), propertiesFile);
+        appendText(format("%s=%s%n", CLOUD_PROVIDER, PROVIDER_STATIC), propertiesFile);
 
         args.add(testSuiteFile.getAbsolutePath());
         CoordinatorCli cli = createCoordinatorCli();
@@ -402,7 +402,7 @@ public class CoordinatorCliTest {
     @Test
     public void testInit_withLocalSetup() {
         File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
-        writeText(format("%s=%s", PROPERTY_CLOUD_PROVIDER, CloudProviderUtils.PROVIDER_LOCAL), simulatorProperties);
+        writeText(format("%s=%s", CLOUD_PROVIDER, CloudProviderUtils.PROVIDER_LOCAL), simulatorProperties);
 
         try {
             CoordinatorCli cli = createCoordinatorCli();
