@@ -230,7 +230,7 @@ public class SimulatorProperties {
             }
 
             return fileAsText(file).trim();
-        } else if (value.equals("~/ec2.identity") || value.equals("~/ec2.credential")) {
+        } else if (value.endsWith(".identity") || value.endsWith(".credential") || value.endsWith(".txt")) {
             throw new CommandLineExitException("file [" + value + "] is not found");
         } else {
             return value.trim();
