@@ -9,8 +9,8 @@ import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -76,8 +76,8 @@ public class HarakiriMonitorUtilsTest {
     @Test
     public void testGetStartCommand() {
         properties.setCloudProvider(PROVIDER_EC2);
-        properties.set(PROPERTY_CLOUD_IDENTITY, "identity");
-        properties.set(PROPERTY_CLOUD_CREDENTIAL, "credential");
+        properties.set(CLOUD_IDENTITY, "identity");
+        properties.set(CLOUD_CREDENTIAL, "credential");
 
         File identity = ensureExistingFile("identity");
         File credentials = ensureExistingFile("credential");

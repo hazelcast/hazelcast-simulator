@@ -16,9 +16,9 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.resetSecurityManager;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setExitExceptionSecurityManagerWithStatusZero;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_GCE;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
@@ -213,8 +213,8 @@ public class WizardTest {
         ensureExistingFile(localSimulatorPropertiesFile);
 
         appendText("invalid=unknown" + NEW_LINE, localSimulatorPropertiesFile);
-        appendText(format("%s=changed%n", PROPERTY_CLOUD_PROVIDER), localSimulatorPropertiesFile);
-        appendText(format("%s=%s%n", PROPERTY_CLOUD_IDENTITY, defaultProperties.get(PROPERTY_CLOUD_IDENTITY)),
+        appendText(format("%s=changed%n", CLOUD_PROVIDER), localSimulatorPropertiesFile);
+        appendText(format("%s=%s%n", CLOUD_IDENTITY, defaultProperties.get(CLOUD_IDENTITY)),
                 localSimulatorPropertiesFile);
 
         wizard.compareSimulatorProperties();
@@ -253,8 +253,8 @@ public class WizardTest {
         assertTrue(simulatorPropertiesContent.contains(cloudProvider));
 
         if (!isStatic(cloudProvider)) {
-            assertTrue(simulatorPropertiesContent.contains(PROPERTY_CLOUD_IDENTITY));
-            assertTrue(simulatorPropertiesContent.contains(PROPERTY_CLOUD_CREDENTIAL));
+            assertTrue(simulatorPropertiesContent.contains(CLOUD_IDENTITY));
+            assertTrue(simulatorPropertiesContent.contains(CLOUD_CREDENTIAL));
         }
 
         assertTrue(agentsFile.exists());

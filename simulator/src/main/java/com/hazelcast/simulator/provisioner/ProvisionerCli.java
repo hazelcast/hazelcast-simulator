@@ -65,7 +65,6 @@ final class ProvisionerCli {
             "Tags for an agent.")
             .withRequiredArg().ofType(String.class);
 
-
     private final OptionSet options;
     private final Map<String, String> tags;
     private Provisioner provisioner;

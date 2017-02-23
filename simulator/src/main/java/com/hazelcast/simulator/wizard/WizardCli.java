@@ -23,6 +23,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 
+import java.io.File;
+
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
@@ -108,7 +110,7 @@ final class WizardCli {
     private static SimulatorProperties getSimulatorProperties(boolean initWithWorkingDirFile) {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
         if (initWithWorkingDirFile) {
-            simulatorProperties.init(null);
+            simulatorProperties.init((File) null);
         }
         return simulatorProperties;
     }

@@ -452,7 +452,6 @@ final class CoordinatorCli {
 
     private File getTestSuiteFile() {
         File testSuiteFile;
-
         List testsuiteFiles = options.nonOptionArguments();
         if (testsuiteFiles.size() > 1) {
             throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));

@@ -29,9 +29,9 @@ import java.io.File;
 import java.util.Properties;
 import java.util.TreeSet;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_CREDENTIAL;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_IDENTITY;
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
@@ -107,12 +107,12 @@ class Wizard {
         ensureExistingFile(workDir, AgentsFile.NAME);
 
         File simulatorPropertiesFile = ensureExistingFile(workDir, SimulatorProperties.PROPERTIES_FILE_NAME);
-        writeText(format("%s=%s%n", PROPERTY_CLOUD_PROVIDER, cloudProvider), simulatorPropertiesFile);
+        writeText(format("%s=%s%n", CLOUD_PROVIDER, cloudProvider), simulatorPropertiesFile);
         if (isEC2(cloudProvider)) {
             appendText(format(
                     "%n# These files contain your AWS access key ID and secret access key (change if needed)%n#%s=%s%n#%s=%s%n",
-                    PROPERTY_CLOUD_IDENTITY, simulatorProperties.get(PROPERTY_CLOUD_IDENTITY),
-                    PROPERTY_CLOUD_CREDENTIAL, simulatorProperties.get(PROPERTY_CLOUD_CREDENTIAL)),
+                    CLOUD_IDENTITY, simulatorProperties.get(CLOUD_IDENTITY),
+                    CLOUD_CREDENTIAL, simulatorProperties.get(CLOUD_CREDENTIAL)),
                     simulatorPropertiesFile);
             appendText(format(
                     "%n# Machine specification used for AWS (change if needed)%n#MACHINE_SPEC=%s%n",
@@ -122,8 +122,8 @@ class Wizard {
 
             appendText(format(
                     "%n# These files contain your GCE credentials (change if needed)%n%s=%s%n%s=%s%n",
-                    PROPERTY_CLOUD_IDENTITY, "~/gce.id",
-                    PROPERTY_CLOUD_CREDENTIAL, "~/gce.pem"),
+                    CLOUD_IDENTITY, "~/gce.id",
+                    CLOUD_CREDENTIAL, "~/gce.pem"),
                     simulatorPropertiesFile);
             appendText(format(
                     "%nGROUP_NAME=simulator-agent%nUSER=%s%n",
@@ -186,7 +186,7 @@ class Wizard {
 
     void compareSimulatorProperties() {
         SimulatorProperties defaultProperties = new SimulatorProperties();
-        String defaultPropertiesString = defaultProperties.getAsString();
+        String defaultPropertiesString = defaultProperties.getDefaultsAsString();
         Properties userProperties = WizardUtils.getUserProperties();
 
         int size = userProperties.size();

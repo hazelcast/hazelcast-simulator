@@ -47,23 +47,23 @@ public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
-    public static final String PROPERTY_CLOUD_PROVIDER = "CLOUD_PROVIDER";
-    public static final String PROPERTY_CLOUD_IDENTITY = "CLOUD_IDENTITY";
-    public static final String PROPERTY_CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";
+    public static final String CLOUD_PROVIDER = "CLOUD_PROVIDER";
+    public static final String CLOUD_IDENTITY = "CLOUD_IDENTITY";
+    public static final String CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";
 
     private static final int WORKER_TIMEOUT_FACTOR = 3;
 
     private static final Logger LOGGER = Logger.getLogger(SimulatorProperties.class);
 
-    private final Properties properties = new Properties();
-    private final File propertiesFile;
+    private final Map<String, Value> properties = new HashMap<String, Value>();
+
 
     public SimulatorProperties() {
-        this.propertiesFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
+        File defaultPropFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
 
-        LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, propertiesFile.getAbsolutePath()));
-        check(propertiesFile);
-        load(propertiesFile);
+        LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, defaultPropFile.getAbsolutePath()));
+        check(defaultPropFile);
+        load(defaultPropFile, true);
     }
 
     public Map<String, String> asMap() {
@@ -76,26 +76,27 @@ public class SimulatorProperties {
     }
 
     /**
-     * Initializes the SimulatorProperties.
+     * Initializes the SimulatorProperties with additional properties.
      *
      * @param file the file to load the properties from. If {@code null}, the {@value #PROPERTIES_FILE_NAME} file in the working
      *             directory is tried.
      * @throws CommandLineExitException if the given file does not exist. If file is {@code null} no exception will be thrown,
      *                                  even if the {@value #PROPERTIES_FILE_NAME} file in the working directory cannot be found.
      */
-    public void init(File file) {
+    public SimulatorProperties init(File file) {
         if (file == null) {
             // if no file is explicitly given, we look in the working directory
             file = new File(getUserDir(), PROPERTIES_FILE_NAME);
             if (!file.exists()) {
                 LOGGER.info(format("Found no %s in working directory, relying on default properties", PROPERTIES_FILE_NAME));
-                return;
+                return null;
             }
         }
 
         LOGGER.info(format("Loading additional %s: %s", PROPERTIES_FILE_NAME, file.getAbsolutePath()));
         check(file);
-        load(file);
+        load(file, false);
+        return this;
     }
 
     private void check(File file) {
@@ -105,10 +106,22 @@ public class SimulatorProperties {
     }
 
     void load(File file) {
-        FileInputStream inputStream = null;
+        load(file, false);
+    }
+
+    void load(File file, boolean isDefault) {
+        FileInputStream in = null;
         try {
-            inputStream = new FileInputStream(file);
-            properties.load(inputStream);
+            in = new FileInputStream(file);
+
+            Properties p = new Properties();
+            p.load(in);
+
+            for (Map.Entry entry : p.entrySet()) {
+                String key = (String) entry.getKey();
+                String value = (String) entry.getValue();
+                properties.put(key, new Value(isDefault, value));
+            }
 
             if (containsKey("HAZELCAST_VERSION_SPEC")) {
                 throw new IOException("'HAZELCAST_VERSION_SPEC' property is deprecated, Use 'VERSION_SPEC' instead.");
@@ -116,7 +129,7 @@ public class SimulatorProperties {
         } catch (IOException e) {
             throw rethrow(e);
         } finally {
-            closeQuietly(inputStream);
+            closeQuietly(in);
         }
     }
 
@@ -129,7 +142,7 @@ public class SimulatorProperties {
     }
 
     public String getUser() {
-        return get("USER", "simulator");
+        return get("SIMULATOR_USER", "simulator");
     }
 
     public String getJdkFlavor() {
@@ -189,19 +202,39 @@ public class SimulatorProperties {
     }
 
     public String getCloudProvider() {
-        return get(PROPERTY_CLOUD_PROVIDER);
+        return get(CLOUD_PROVIDER);
     }
 
     public void setCloudProvider(String value) {
-        set(PROPERTY_CLOUD_PROVIDER, value);
+        set(CLOUD_PROVIDER, value);
     }
 
     public String getCloudIdentity() {
-        return loadPropertyFromFile(PROPERTY_CLOUD_IDENTITY);
+        return loadDirectOrFile(CLOUD_IDENTITY);
     }
 
     public String getCloudCredential() {
-        return loadPropertyFromFile(PROPERTY_CLOUD_CREDENTIAL);
+        return loadDirectOrFile(CLOUD_CREDENTIAL);
+    }
+
+    private String loadDirectOrFile(String property) {
+        String value = get(property);
+        if (value == null) {
+            throw new IllegalArgumentException(format("Simulator property '%s' is not found", property));
+        }
+
+        File file = newFile(value);
+        if (file.exists()) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(format("Loading simulator property value for %s from file: %s", property, file.getAbsolutePath()));
+            }
+
+            return fileAsText(file).trim();
+        } else if (value.equals("~/ec2.identity") || value.equals("~/ec2.credential")) {
+            throw new CommandLineExitException("file [" + value + "] is not found");
+        } else {
+            return value.trim();
+        }
     }
 
     public String get(String name) {
@@ -209,21 +242,41 @@ public class SimulatorProperties {
     }
 
     public String get(String name, String defaultValue) {
-        String value = System.getProperty(name);
-        if (value != null) {
-            return value;
+        Value value = properties.get(name);
+
+        String result = null;
+
+        // if a non default value has been set; that is being returned because highest priority
+        if (value != null && !value.isDefault) {
+            result = value.text;
         }
 
-        value = (String) properties.get(name);
-        if (value == null) {
-            value = defaultValue;
+        // then we check system properties
+        if (result == null) {
+            result = System.getProperty(name);
         }
 
-        return fixValue(name, value);
+        // then we check environment
+        // checking environment is useful for external configuration of simulator properties using exported variables
+        if (result == null) {
+            result = System.getenv(name);
+        }
+
+        // then we check the default value from the simulator.properties from the distribution
+        if (result == null && value != null) {
+            result = value.text;
+        }
+
+        // and eventually we default to the default value.
+        if (result == null) {
+            result = defaultValue;
+        }
+
+        return fixValue(name, result);
     }
 
     public void set(String name, String value) {
-        properties.setProperty(name, value);
+        properties.put(name, new Value(false, value));
     }
 
     public Float getAsFloat(String property) {
@@ -234,21 +287,8 @@ public class SimulatorProperties {
         return parseFloat(value);
     }
 
-    public String getAsString() {
-        return fileAsText(propertiesFile);
-    }
-
-    private String loadPropertyFromFile(String property) {
-        String path = get(property);
-        File file = newFile(path);
-        if (!file.exists()) {
-            throw new CommandLineExitException(format("File %s for property %s not found", file.getAbsolutePath(), property));
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(format("Loading property value for %s from file: %s", property, file.getAbsolutePath()));
-        }
-        return fileAsText(file).trim();
+    public String getDefaultsAsString() {
+        return fileAsText(newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME));
     }
 
     private String fixValue(String name, String value) {
@@ -270,5 +310,15 @@ public class SimulatorProperties {
         }
 
         return value;
+    }
+
+    private static final class Value {
+        final boolean isDefault;
+        final String text;
+
+        private Value(boolean isDefault, String text) {
+            this.isDefault = isDefault;
+            this.text = text;
+        }
     }
 }

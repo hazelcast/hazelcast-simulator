@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.PROPERTY_CLOUD_PROVIDER;
+import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
@@ -63,7 +63,7 @@ class ComputeServiceBuilder {
 
         String cloudProvider = properties.getCloudProvider();
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(format("Using %s: %s", PROPERTY_CLOUD_PROVIDER, cloudProvider));
+            LOGGER.debug(format("Using %s: %s", CLOUD_PROVIDER, cloudProvider));
         }
 
         ContextBuilder contextBuilder = newContextBuilder(cloudProvider);
