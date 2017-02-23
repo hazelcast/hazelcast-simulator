@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.amazonaws.util.StringInputStream;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.BindException;
@@ -22,8 +23,9 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,7 +35,8 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
+import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
 import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
@@ -50,6 +53,68 @@ public class TestSuite {
     // a 'select all' workerQuery by default
     private WorkerQuery workerQuery = new WorkerQuery();
     private boolean verifyEnabled;
+
+    public TestSuite() {
+    }
+
+    public TestSuite(File file) {
+        if (!file.exists()) {
+            throw new CommandLineExitException(format("TestSuite [%s] does not exist", file));
+        }
+
+        try {
+            load(fileAsText(file));
+        } catch (BindException e) {
+            String msg = format("Failed to load file [%s]. %s", file.getAbsoluteFile(), e.getMessage());
+            BindException bindException = new BindException(msg);
+            bindException.setStackTrace(e.getStackTrace());
+            throw e;
+        }
+    }
+
+    public TestSuite(String content) {
+        load(content);
+    }
+
+    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
+    private void load(String testContent) {
+        Properties properties = new Properties();
+        try {
+            InputStream in = new StringInputStream(testContent);
+            properties.load(in);
+        } catch (UnsupportedEncodingException e) {
+            throw rethrow(e);
+        } catch (IOException e) {
+            throw rethrow(e);
+        }
+
+        Map<String, TestCase> testCases = createTestCases(properties);
+        if (testCases.size() == 1) {
+            // use classname instead of empty desc in single test scenarios
+            TestCase testCase = testCases.values().iterator().next();
+            String className = testCase.getClassname();
+            if (testCase.getId().isEmpty() && className != null) {
+                String desc = className.substring(className.lastIndexOf('.') + 1);
+                testCases = singletonMap(desc, new TestCase(desc, testCase.getProperties()));
+            }
+        }
+
+        for (String testCaseId : getTestCaseIds(testCases)) {
+            TestCase testCase = testCases.get(testCaseId);
+
+            if (testCase.getClassname() == null) {
+                String msg;
+                if (testCaseId.isEmpty()) {
+                    msg = "There is no class set. Add class=YourTestClass";
+                } else {
+                    msg = format("There is no class set for test [%s]. Add %s.class=YourTestClass", testCaseId, testCaseId);
+                }
+                throw new BindException(msg);
+            }
+
+            addTest(testCase);
+        }
+    }
 
     public TestSuite setVerifyEnabled(boolean verifyEnabled) {
         this.verifyEnabled = verifyEnabled;
@@ -152,40 +217,6 @@ public class TestSuite {
                 + '}';
     }
 
-    public static TestSuite loadTestSuite(File testPropertiesFile, String propertiesOverrideString) {
-        Properties properties = loadProperties(testPropertiesFile);
-
-        Map<String, TestCase> testCases = createTestCases(properties);
-        if (testCases.size() == 1) {
-            // use classname instead of empty desc in single test scenarios
-            TestCase testCase = testCases.values().iterator().next();
-            String className = testCase.getClassname();
-            if (testCase.getId().isEmpty() && className != null) {
-                String desc = className.substring(className.lastIndexOf('.') + 1);
-                testCases = singletonMap(desc, new TestCase(desc, testCase.getProperties()));
-            }
-        }
-
-        return createTestSuite(testPropertiesFile, testCases, propertiesOverrideString);
-    }
-
-    @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-    private static Properties loadProperties(File file) {
-        FileReader reader = null;
-        try {
-            reader = new FileReader(file);
-
-            Properties properties = new Properties();
-            properties.load(reader);
-
-            return properties;
-        } catch (IOException e) {
-            throw new CommandLineExitException(format("Failed to load TestSuite property file [%s]", file.getAbsolutePath()), e);
-        } finally {
-            closeQuietly(reader);
-        }
-    }
-
     private static Map<String, TestCase> createTestCases(Properties properties) {
         Map<String, TestCase> testCases = new HashMap<String, TestCase>();
         for (String property : properties.stringPropertyNames()) {
@@ -230,31 +261,6 @@ public class TestSuite {
             testCases.put(testCaseId, testCase);
         }
         return testCase;
-    }
-
-    private static TestSuite createTestSuite(File file, Map<String, TestCase> testCases, String propertiesOverrideString) {
-        Map<String, String> propertiesOverride = parseProperties(propertiesOverrideString);
-
-        TestSuite testSuite = new TestSuite();
-        for (String testCaseId : getTestCaseIds(testCases)) {
-            TestCase testCase = testCases.get(testCaseId);
-            testCase.override(propertiesOverride);
-
-            if (testCase.getClassname() == null) {
-                String msg;
-                if (testCaseId.isEmpty()) {
-                    msg = format("There is no class set in property file [%s]. Add class=YourTestClass", file.getAbsolutePath());
-                } else {
-                    msg = format("There is no class set for test [%s] in property file [%s]. Add %s.class=YourTestClass",
-                            testCaseId, file.getAbsolutePath(), testCaseId);
-                }
-                throw new BindException(msg);
-            }
-
-            testSuite.addTest(testCase);
-        }
-
-        return testSuite;
     }
 
     private static Map<String, String> parseProperties(String overrideProperties) {

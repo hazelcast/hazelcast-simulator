@@ -91,11 +91,6 @@ final class CoordinatorCli {
                     + "and a warmup of 30 seconds, only for the last 150 seconds of the run performance information is tracked.")
             .withRequiredArg().ofType(String.class).defaultsTo("0s");
 
-    private final OptionSpec<String> overridesSpec = parser.accepts("overrides",
-            "Properties that override the properties in a given test-case, e.g. --overrides"
-                    + " \"threadcount=20,writeProb=0.2\". This makes it easy to parametrize a test.")
-            .withRequiredArg().ofType(String.class).defaultsTo("");
-
     private final OptionSpec<Integer> membersSpec = parser.accepts("members",
             "Number of cluster member Worker JVMs. If no value is specified and no mixed members are specified,"
                     + " then the number of cluster members will be equal to the number of machines in the agents file.")
@@ -353,8 +348,8 @@ final class CoordinatorCli {
     }
 
     private TestSuite loadTestSuite() {
-        File testSuiteFile = getTestSuiteFile();
-        if (testSuiteFile == null) {
+        TestSuite testSuite = loadRawTestSuite();
+        if (testSuite == null) {
             return null;
         }
 
@@ -372,8 +367,7 @@ final class CoordinatorCli {
             throw new CommandLineExitException("warmup can't be larger than duration");
         }
 
-        TestSuite testSuite = TestSuite.loadTestSuite(testSuiteFile, options.valueOf(overridesSpec))
-                .setDurationSeconds(durationSeconds)
+        testSuite.setDurationSeconds(durationSeconds)
                 .setWarmupSeconds(warmupSeconds)
                 .setFailFast(options.valueOf(failFastSpec))
                 .setVerifyEnabled(options.valueOf(verifyEnabledSpec))
@@ -387,6 +381,30 @@ final class CoordinatorCli {
             }
         }
 
+        return testSuite;
+    }
+
+    private TestSuite loadRawTestSuite() {
+        String content;
+        List testsuiteFiles = options.nonOptionArguments();
+        if (testsuiteFiles.size() > 1) {
+            throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
+        } else if (testsuiteFiles.size() == 1) {
+            content = (String) testsuiteFiles.get(0);
+        } else {
+            return null;
+        }
+
+        TestSuite testSuite;
+        File testSuiteFile = new File(content);
+        if (testSuiteFile.exists()) {
+            LOGGER.info("Loading TestSuite file: " + testSuiteFile.getAbsolutePath());
+            testSuite = new TestSuite(testSuiteFile);
+        } else if (!content.endsWith(".properties")) {
+            testSuite = new TestSuite(content);
+        } else {
+            throw new CommandLineExitException(format("TestSuite file '%s' not found", testSuiteFile));
+        }
         return testSuite;
     }
 
@@ -450,23 +468,6 @@ final class CoordinatorCli {
         return createDeploymentPlan(componentRegistry, workerParametersMap, workerType, members, clients);
     }
 
-    private File getTestSuiteFile() {
-        File testSuiteFile;
-        List testsuiteFiles = options.nonOptionArguments();
-        if (testsuiteFiles.size() > 1) {
-            throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
-        } else if (testsuiteFiles.size() == 1) {
-            testSuiteFile = new File((String) testsuiteFiles.get(0));
-        } else {
-            return null;
-        }
-
-        LOGGER.info("Loading TestSuite file: " + testSuiteFile.getAbsolutePath());
-        if (!testSuiteFile.exists()) {
-            throw new CommandLineExitException(format("TestSuite file '%s' not found", testSuiteFile));
-        }
-        return testSuiteFile;
-    }
 
     private static File getAgentsFile() {
         File file = new File("agents.txt");
