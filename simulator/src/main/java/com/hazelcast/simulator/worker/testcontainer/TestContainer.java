@@ -27,7 +27,6 @@ import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 import com.hazelcast.simulator.utils.AnnotatedMethodRetriever;
 import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
@@ -316,14 +315,6 @@ public class TestContainer {
                 .withPublicNonStaticModifier()
                 .withFilter(new AnnotationFilter.PrepareFilter(global))
                 .findAll();
-
-        List<Method> warmupMethods = new AnnotatedMethodRetriever(testClass, Warmup.class)
-                .withoutArgs()
-                .withPublicNonStaticModifier()
-                .withFilter(new AnnotationFilter.WarmupFilter(global))
-                .findAll();
-
-        localPrepareMethods.addAll(warmupMethods);
 
         taskPerPhaseMap.put(global ? GLOBAL_PREPARE : LOCAL_PREPARE, toCallable(localPrepareMethods));
     }

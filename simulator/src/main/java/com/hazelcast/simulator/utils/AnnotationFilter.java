@@ -18,7 +18,6 @@ package com.hazelcast.simulator.utils;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.test.annotations.Warmup;
 
 import java.lang.annotation.Annotation;
 
@@ -48,19 +47,6 @@ public interface AnnotationFilter<A extends Annotation> {
         @Override
         public boolean allowed(Teardown teardown) {
             return teardown.global() == isGlobal;
-        }
-    }
-
-    class WarmupFilter implements AnnotationFilter<Warmup> {
-        private final boolean isGlobal;
-
-        public WarmupFilter(boolean isGlobal) {
-            this.isGlobal = isGlobal;
-        }
-
-        @Override
-        public boolean allowed(Warmup verify) {
-            return verify.global() == isGlobal;
         }
     }
 
