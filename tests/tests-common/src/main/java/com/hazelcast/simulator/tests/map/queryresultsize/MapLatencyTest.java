@@ -16,10 +16,8 @@
 package com.hazelcast.simulator.tests.map.queryresultsize;
 
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
-import com.hazelcast.simulator.worker.tasks.IWorker;
 
 /**
  * This test creates latency probe results for {@link com.hazelcast.core.IMap#values()}, {@link com.hazelcast.core.IMap#keySet()}
@@ -40,7 +38,6 @@ public class MapLatencyTest extends AbstractMapTest {
 
     // properties
     public String keyType = "String";
-    public String operationType = "values";
     public int keyCount = -1;
 
     @Setup
@@ -64,10 +61,5 @@ public class MapLatencyTest extends AbstractMapTest {
     @Verify
     public void globalVerify() {
         baseVerify(false);
-    }
-
-    @RunWithWorker
-    public IWorker run() {
-        return baseRunWithWorker(operationType);
     }
 }

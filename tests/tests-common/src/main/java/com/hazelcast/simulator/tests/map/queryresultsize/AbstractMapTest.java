@@ -18,12 +18,13 @@ package com.hazelcast.simulator.tests.map.queryresultsize;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
@@ -121,67 +122,57 @@ abstract class AbstractMapTest extends AbstractTest {
         }
     }
 
-    IWorker baseRunWithWorker(String operationType) {
-        if ("values".equals(operationType)) {
-            return new ValuesWorker();
-        } else if ("keySet".equals(operationType)) {
-            return new KeySetWorker();
-        } else if ("entrySet".equals(operationType)) {
-            return new EntrySetWorker();
-        } else {
-            throw new IllegalArgumentException("Unknown operation type: " + operationType);
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounter.addAndGet(state.localOperationCounter);
+        exceptionCounter.addAndGet(state.localExceptionCounter);
+    }
+
+    @TimeStep(prob = 1)
+    public void values(ThreadState state) {
+        state.localOperationCounter++;
+        try {
+            map.values();
+        } catch (Exception e) {
+            if ("QueryResultSizeExceededException".equals(e.getClass().getSimpleName())) {
+                state.localExceptionCounter++;
+            } else {
+                throw rethrow(e);
+            }
         }
     }
 
-    private abstract class BaseWorker extends AbstractMonotonicWorker {
+    @TimeStep(prob = 0)
+    public void keySet(ThreadState state) {
+        state.localOperationCounter++;
+        try {
+            map.keySet();
+        } catch (Exception e) {
+            if ("QueryResultSizeExceededException".equals(e.getClass().getSimpleName())) {
+                state.localExceptionCounter++;
+            } else {
+                throw rethrow(e);
+            }
+        }
+    }
+
+    @TimeStep(prob = 0)
+    public void entrySet(ThreadState state) {
+        state.localOperationCounter++;
+        try {
+            map.entrySet();
+        } catch (Exception e) {
+            if ("QueryResultSizeExceededException".equals(e.getClass().getSimpleName())) {
+                state.localExceptionCounter++;
+            } else {
+                throw rethrow(e);
+            }
+        }
+    }
+
+    public static class ThreadState extends BaseThreadState {
 
         protected long localOperationCounter;
         protected long localExceptionCounter;
-
-        @Override
-        protected void timeStep() throws Exception {
-            localOperationCounter++;
-            try {
-                mapOperation();
-            } catch (Exception e) {
-                if ("QueryResultSizeExceededException".equals(e.getClass().getSimpleName())) {
-                    localExceptionCounter++;
-                } else {
-                    throw rethrow(e);
-                }
-            }
-        }
-
-        protected abstract void mapOperation();
-
-        @Override
-        public void afterRun() {
-            operationCounter.addAndGet(localOperationCounter);
-            exceptionCounter.addAndGet(localExceptionCounter);
-        }
-    }
-
-    class ValuesWorker extends BaseWorker {
-
-        @Override
-        protected void mapOperation() {
-            map.values();
-        }
-    }
-
-    class KeySetWorker extends BaseWorker {
-
-        @Override
-        protected void mapOperation() {
-            map.keySet();
-        }
-    }
-
-    class EntrySetWorker extends BaseWorker {
-
-        @Override
-        protected void mapOperation() {
-            map.entrySet();
-        }
     }
 }
