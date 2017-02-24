@@ -326,7 +326,7 @@ public class CoordinatorCliTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testInit_testSuite_notFound() {
-        args.add("not.found");
+        args.add("not_found.properties");
 
         createCoordinatorCli();
     }
