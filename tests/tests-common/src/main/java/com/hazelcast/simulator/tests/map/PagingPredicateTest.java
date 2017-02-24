@@ -19,14 +19,13 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.SqlPredicate;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.tests.map.helpers.Employee;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.simulator.worker.tasks.AbstractMonotonicWorker;
-import com.hazelcast.simulator.worker.tasks.IWorker;
 
 /**
  * Test to exercising PagingPredicate.
@@ -41,7 +40,7 @@ import com.hazelcast.simulator.worker.tasks.IWorker;
  * Implementation note: There is a small code duplication in worker implementations - it could be eliminated by
  * introducing a common superclass, but I believe it would just make things more complicated.
  */
-public class PagingPredicateTest extends AbstractTest {
+public final class PagingPredicateTest extends AbstractTest {
 
     // this is rather high number, make sure you have enough heap space, e.g. with JVM option -Xmx20g
     public int keyCount = 10000000;
@@ -74,64 +73,41 @@ public class PagingPredicateTest extends AbstractTest {
         streamer.await();
     }
 
-    @RunWithWorker
-    public IWorker createWorker() {
-        return sequentialWorker ? new SequentialWorker() : new ArbitraryWorker();
-    }
-
-    private class SequentialWorker extends BaseWorker {
-
-        @Override
-        protected void timeStep() throws Exception {
-            createNewPredicateIfNeeded();
-            evaluatePredicate();
-            predicate.nextPage();
+    @TimeStep
+    public void timestep(ThreadState threadState) {
+        createNewPredicateIfNeeded(threadState);
+        if (sequentialWorker) {
+            evaluatePredicate(threadState);
+            threadState.predicate.nextPage();
+        } else {
+            goToRandomPage(threadState);
+            evaluatePredicate(threadState);
         }
     }
 
-    private class ArbitraryWorker extends BaseWorker {
+    private void evaluatePredicate(ThreadState threadState) {
+        map.entrySet(threadState.predicate);
+        threadState.predicateReusedCount++;
+    }
 
-        ArbitraryWorker() {
-            predicate = createNewPredicate();
-        }
-
-        @Override
-        protected void timeStep() throws Exception {
-            createNewPredicateIfNeeded();
-            goToRandomPage();
-            evaluatePredicate();
-        }
-
-        private PagingPredicate createNewPredicate() {
-            return new PagingPredicate(pageSize);
-        }
-
-        private void goToRandomPage() {
-            int pageNumber = randomInt(maxPage);
-            predicate.setPage(pageNumber);
+    private void createNewPredicateIfNeeded(ThreadState threadState) {
+        if (threadState.predicateReusedCount == maxPredicateReuseCount) {
+            threadState.predicate = createNewPredicate();
+            threadState.predicateReusedCount = 0;
         }
     }
 
-    private abstract class BaseWorker extends AbstractMonotonicWorker {
+    private void goToRandomPage(ThreadState threadState) {
+        int pageNumber = threadState.randomInt(maxPage);
+        threadState.predicate.setPage(pageNumber);
+    }
 
+    private PagingPredicate createNewPredicate() {
+        return new PagingPredicate(innerPredicate, pageSize);
+    }
+
+    public final class ThreadState extends BaseThreadState {
         protected PagingPredicate predicate = createNewPredicate();
-
         private int predicateReusedCount;
-
-        protected void createNewPredicateIfNeeded() {
-            if (predicateReusedCount == maxPredicateReuseCount) {
-                predicate = createNewPredicate();
-                predicateReusedCount = 0;
-            }
-        }
-
-        protected void evaluatePredicate() {
-            map.entrySet(predicate);
-            predicateReusedCount++;
-        }
-
-        private PagingPredicate createNewPredicate() {
-            return new PagingPredicate(innerPredicate, pageSize);
-        }
     }
 }
