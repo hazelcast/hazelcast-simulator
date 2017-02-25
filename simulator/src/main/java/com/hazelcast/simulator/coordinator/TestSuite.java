@@ -63,7 +63,8 @@ public class TestSuite {
         }
 
         try {
-            load(fileAsText(file));
+            String testContent = fileAsText(file);
+            load(testContent);
         } catch (BindException e) {
             String msg = format("Failed to load file [%s]. %s", file.getAbsoluteFile(), e.getMessage());
             BindException bindException = new BindException(msg);
@@ -89,6 +90,10 @@ public class TestSuite {
         }
 
         Map<String, TestCase> testCases = createTestCases(properties);
+        if (testCases.isEmpty()) {
+            throw new BindException("No tests are defined.");
+        }
+
         if (testCases.size() == 1) {
             // use classname instead of empty desc in single test scenarios
             TestCase testCase = testCases.values().iterator().next();
