@@ -387,10 +387,13 @@ final class CoordinatorCli {
     private TestSuite loadRawTestSuite() {
         String content;
         List testsuiteFiles = options.nonOptionArguments();
+        File defaultTestProperties = new File("test.properties");
         if (testsuiteFiles.size() > 1) {
             throw new CommandLineExitException(format("Too many TestSuite files specified: %s", testsuiteFiles));
         } else if (testsuiteFiles.size() == 1) {
             content = (String) testsuiteFiles.get(0);
+        } else if (defaultTestProperties.exists()) {
+            content = defaultTestProperties.getPath();
         } else {
             return null;
         }

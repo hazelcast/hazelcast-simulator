@@ -129,21 +129,19 @@ public class TestSuiteTest {
 
     @Test
     public void getTestCase_null() throws Exception {
-        TestSuite testSuite = new TestSuite("");
+        TestSuite testSuite = new TestSuite("class=Foo");
 
         assertNull(testSuite.getTestCase(null));
     }
 
-    @Test
+    @Test(expected = BindException.class)
     public void getTestCase_notFound() throws Exception {
-        TestSuite testSuite = new TestSuite("");
-
-        assertNull(testSuite.getTestCase("notFound"));
+        new TestSuite("");
     }
 
     @Test
     public void getTestCase_toString() throws Exception {
-        TestSuite testSuite = new TestSuite("");
+        TestSuite testSuite = new TestSuite("class=Foo");
 
         assertNotNull(testSuite.toString());
     }

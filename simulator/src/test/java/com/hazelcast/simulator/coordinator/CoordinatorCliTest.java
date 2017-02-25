@@ -6,6 +6,7 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
@@ -15,6 +16,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,9 +59,10 @@ public class CoordinatorCliTest {
 
         createAgentsFileWithLocalhost();
 
-        testSuiteFile = ensureExistingFile("test.properties");
+        testSuiteFile = ensureExistingFile("foobar_test.properties");
 
         appendText("# CoordinatorCliTest", testSuiteFile);
+        appendText("\nclass=Foobar", testSuiteFile);
 
         propertiesFile = ensureExistingFile("simulator.properties");
     }
@@ -92,6 +95,41 @@ public class CoordinatorCliTest {
         assertEquals(CoordinatorCli.DEFAULT_DURATION_SECONDS, testSuite.getDurationSeconds());
     }
 
+    @Test(expected = BindException.class)
+    public void test_whenEmptyTestSuiteFile() throws IOException {
+        File file = File.createTempFile("foo","bar");
+        args.add(file.getAbsolutePath());
+        createCoordinatorCli();
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void test_whenNonExistingTestFile() throws IOException {
+        File file = new File("not.exist.properties");
+        args.add(file.getAbsolutePath());
+
+        CoordinatorCli cli = createCoordinatorCli();
+
+        TestSuite testSuite = cli.testSuite;
+        assertEquals(1, testSuite.getTestCaseList().size());
+    }
+
+    @Test
+    public void test_whenDirectString() throws IOException {
+        String test = "class=Foo";
+        args.add(test);
+        CoordinatorCli cli = createCoordinatorCli();
+
+        TestSuite testSuite = cli.testSuite;
+        assertEquals(1, testSuite.getTestCaseList().size());
+    }
+
+    @Test(expected = BindException.class)
+    public void test_whenDirectStringButEmpty() throws IOException {
+        String test = "";
+        args.add(test);
+        createCoordinatorCli();
+    }
+
     @Test
     public void testInit_withCloudProviderStatic() {
         appendText(format("%s=%s%n", CLOUD_PROVIDER, PROVIDER_STATIC), propertiesFile);
@@ -104,7 +142,7 @@ public class CoordinatorCliTest {
     }
 
     @Test(expected = CommandLineExitException.class)
-    public void testNoTestSuiteAndNoCoordinatorPort() {
+    public void testWhenNoTestThenCoordinatorPortEnabled() {
         File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
         writeText("COORDINATOR_PORT=0", simulatorProperties);
 
@@ -223,7 +261,7 @@ public class CoordinatorCliTest {
 
         TestSuite testSuite = cli.testSuite;
         assertEquals(10, testSuite.getDurationSeconds());
-        //assertEquals(5, testSuite.getWarmupMillis());
+        assertEquals(5000, testSuite.getTestCaseList().get(0).getWarmupMillis());
     }
 
     @Test
@@ -235,7 +273,7 @@ public class CoordinatorCliTest {
         CoordinatorCli cli = createCoordinatorCli();
 
         TestSuite testSuite = cli.testSuite;
-        //assertEquals(0, testSuite.getWarmupMillis());
+        assertEquals(0, testSuite.getTestCaseList().get(0).getWarmupMillis());
     }
 
     @Test
