@@ -239,9 +239,14 @@ public final class TestCaseRunner implements TestPhaseListener {
             durationMs = Long.MAX_VALUE;
         } else {
             durationMs = SECONDS.toMillis(durationSeconds);
-            echo(format("Test will run for %s with a warmup period of %s",
-                    secondsToHuman(durationSeconds),
-                    secondsToHuman(MILLISECONDS.toSeconds(testCase.getWarmupMillis()))));
+            long warmupSeconds = MILLISECONDS.toSeconds(testCase.getWarmupMillis());
+            if (warmupSeconds > 0) {
+                echo(format("Test will run for %s with a warmup period of %s",
+                        secondsToHuman(durationSeconds),
+                        secondsToHuman(warmupSeconds)));
+            } else {
+                echo(format("Test will run for %s without warmup", secondsToHuman(durationSeconds)));
+            }
             timeoutMs = startMs + durationMs;
         }
 
