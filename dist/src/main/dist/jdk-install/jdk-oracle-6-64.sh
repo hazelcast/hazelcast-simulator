@@ -1,15 +1,15 @@
 #!/bin/bash
 
 set -e
-
 source jdk-support.sh
 
-install wget
+installPackage wget
+
+JDK_FILE="jdk-6u45-linux-x64.bin"
 
 cd ~
-wget --no-verbose http://ec2-54-87-52-100.compute-1.amazonaws.com/jdk-6u45-linux-x64.bin
-chmod +x jdk-6u45-linux-x64.bin
-./jdk-6u45-linux-x64.bin
+wget --no-verbose -N "$BASE_URL/$JDK_FILE"
+chmod +x ${JDK_FILE}
+./${JDK_FILE}
 
-prepend 'export PATH=$JAVA_HOME/bin:$PATH' ~/.bashrc
-prepend 'export JAVA_HOME=~/jdk1.6.0_45' ~/.bashrc
+addJavaHome "~/jdk1.6.0_45"
