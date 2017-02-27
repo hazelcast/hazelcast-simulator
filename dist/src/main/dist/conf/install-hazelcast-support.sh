@@ -189,7 +189,7 @@ upload_to_single_agent() {
     if [ -d ${local_upload_dir} ]; then
         echo "Uploading upload directory $local_upload_dir to $public_ip:$remote_upload_dir"
         ssh ${SSH_OPTIONS} ${user}@${public_ip} "mkdir -p $remote_upload_dir"
-        scp ${SSH_OPTIONS} -r ${local_upload_dir} simulator@${public_ip}:${remote_upload_dir}
+        scp ${SSH_OPTIONS} -r ${local_upload_dir} ${user}@${public_ip}:${remote_upload_dir}
     fi
 
     echo "Uploading Hazelcast $local_install_dir to $public_ip:$remote_hz_lib"
