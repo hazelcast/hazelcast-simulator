@@ -38,20 +38,6 @@ function real_path {
 
 simulator_basename=$(real_path ${SIMULATOR_HOME} | xargs basename)
 
-download() {
-    url=$1 # the url of the artifact to download
-    dir=$2 # the directory the file should be downloaded
-
-    if type "wget" >> /dev/null 2>&1; then
-        wget --no-verbose --directory-prefix=${dir} ${url}
-    else
-        pushd .
-        cd ${dir}
-        curl -O ${url}
-        popd
-    fi
-}
-
 prepare_using_maven() {
     artifact_id=$1      # the artifact_id
     version=$2          # the version of the artifact, e.g. 3.9-SNAPSHOT
@@ -105,9 +91,7 @@ prepare_using_git() {
         git clone ${repo_url} ${local_repo}
     fi
 
-    pushd .
-
-    cd ${local_repo}
+    pushd ${local_repo} > /dev/null
 
     # TODO: for enterprise you need different set or repo
     # make sure all remote repos are added
@@ -143,7 +127,7 @@ prepare_using_git() {
         echo "$hash build and cached successfully"
     fi
 
-    popd
+    popd > /dev/null
 
     # we need to encode the git_branch so it deals with slashes correctly
     encoded_git_branch=${git_branch//\//\\\\}
