@@ -288,17 +288,6 @@ public class CoordinatorCliTest {
         assertEquals(42, testSuite.getDurationSeconds());
     }
 
-    @Test
-    public void testInit_workerClassPath() {
-        args.add("--workerClassPath");
-        args.add("*.jar");
-        args.add(testSuiteFile.getAbsolutePath());
-
-        CoordinatorCli cli = createCoordinatorCli();
-
-        assertEquals("*.jar", cli.coordinatorParameters.getWorkerClassPath());
-    }
-
     @Test(expected = CommandLineExitException.class)
     public void testInit_noWorkersDefined() {
         args.add("--members");
