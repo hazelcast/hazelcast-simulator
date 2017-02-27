@@ -49,15 +49,17 @@ prepare_using_maven() {
 
     # we first have a look at the local Maven repository, so it's easy to provide a custom built version
     hazelcast_jar="$HOME/.m2/repository/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar"
-    if [[ -f "${hazelcast_jar}" ]] ; then
-        # first we look in the local repo
-        echo "Found $hazelcast_jar in local repo, to $destination"
-        cp ${hazelcast_jar} ${destination}
-        return
+    if [[ "${SKIP_LOCAL_MAVEN_REPO_LOOKUP}" == "false" ]] ; then
+        echo "Searching for $hazelcast_jar in local Maven repo"
+        if [[ -f "${hazelcast_jar}" ]] ; then
+            echo "Found $hazelcast_jar in local Maven repo, copying to $destination"
+            cp ${hazelcast_jar} ${destination}
+            return
+        fi
     fi
 
     # the artifact is not found in the local repo, so we need to download it
-    echo "$hazelcast_jar is not found in local repo; downloading"
+    echo "$hazelcast_jar is not found in local Maven repo, downloading from remote repository"
     pushd ${local_install_dir} > /dev/null
     cp -r ${SIMULATOR_HOME}/conf/mvnw/.mvn .
     cp ${SIMULATOR_HOME}/conf/dependency-copy.xml pom.xml
