@@ -92,7 +92,7 @@ public class SimulatorPropertiesTest {
 
         simulatorProperties.load(workingDirFile);
 
-        assertEquals(simulatorProperties.get("FOO"),"bar");
+        assertEquals("bar", simulatorProperties.get("FOO"));
     }
 
     @Test
