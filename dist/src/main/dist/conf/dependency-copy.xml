@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>dep-download</groupId>
+    <artifactId>dep-download</artifactId>
+    <version>0.0.0</version>
+
+    <repositories>
+        <repository>
+            <id>release-repository</id>
+            <name>Release Repository</name>
+            <url>@hz-repo-release</url>
+        </repository>
+
+        <repository>
+            <id>snapshot-repository</id>
+            <name>Snapshot Repository</name>
+            <url>@hz-repo-snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>@hz-artifact</artifactId>
+            <version>@hz-version</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.10</version>
+                <configuration>
+                    <outputDirectory>@hz-output</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
