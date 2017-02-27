@@ -309,6 +309,7 @@ public class SimulatorProperties {
             return value.replace("${username}", fixedUserName.toString());
         }
 
+        value = value.trim();
         return value;
     }
 

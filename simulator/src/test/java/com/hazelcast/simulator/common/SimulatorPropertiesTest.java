@@ -85,6 +85,17 @@ public class SimulatorPropertiesTest {
     }
 
     @Test
+    public void testLoad_trimming() {
+        File workingDirFile = new File(simulatorHome, "simulator.properties");
+
+        appendText("FOO= bar ", workingDirFile);
+
+        simulatorProperties.load(workingDirFile);
+
+        assertEquals(simulatorProperties.get("FOO"),"bar");
+    }
+
+    @Test
     public void testLoad_justKey() {
         File workingDirFile = new File(simulatorHome, "simulator.properties");
         appendText("FOO", workingDirFile);
