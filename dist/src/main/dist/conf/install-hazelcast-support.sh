@@ -54,16 +54,15 @@ download() {
 
 prepare_using_maven() {
     artifact_id=$1      # the artifact_id
-    version=$2          # the version of the artifact, e.g. 3.6
+    version=$2          # the version of the artifact, e.g. 3.9-SNAPSHOT
     release_repo=$3     # the repo containing the releases
-    snapshot_repo=$4    # the repo containing the snapshot
-
-    maven_repo="$HOME/.m2/repository"
+    snapshot_repo=$4    # the repo containing the snapshots
 
     destination=${local_install_dir}/maven-${version}
     mkdir -p ${destination}
 
-    hazelcast_jar="$maven_repo/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar"
+    # we first have a look at the local Maven repository, so it's easy to provide a custom built version
+    hazelcast_jar="$HOME/.m2/repository/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar"
     if [[ -f "${hazelcast_jar}" ]] ; then
         # first we look in the local repo
         echo "Found $hazelcast_jar in local repo, to $destination"
@@ -71,31 +70,23 @@ prepare_using_maven() {
         return
     fi
 
-    # The artifact is not found in the local repo; so now we need to download it
+    # the artifact is not found in the local repo, so we need to download it
     echo "$hazelcast_jar is not found in local repo; downloading"
-    url=""
-    if  [[ ${version} == *SNAPSHOT ]] ; then
-        # snapshots are a bit more complex because we need to download maven-metadata first to figure out the correct url
-        download ${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/maven-metadata.xml ${local_install_dir}
+    pushd ${local_install_dir} > /dev/null
+    cp -r ${SIMULATOR_HOME}/conf/mvnw/.mvn .
+    cp ${SIMULATOR_HOME}/conf/dependency-copy.xml pom.xml
 
-        snapshot_version=$(sed -e 's/\s\+//g' ${local_install_dir}/maven-metadata.xml | grep -oPz '(?<=<snapshotVersion>\n<extension>jar</extension>\n<value>).*(?=</value>)')
-        if [ -n ${snapshot_version} ]; then
-            url=${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${snapshot_version}.jar
-        else
-            baseVersion=${version%-SNAPSHOT}
-            timeStamp=$(grep -o -P '(?<=timestamp>).*(?=</timestamp)' ${local_install_dir}/maven-metadata.xml)
-            buildNumber=$(grep -o -P '(?<=buildNumber>).*(?=</buildNumber)' ${local_install_dir}/maven-metadata.xml)
-            url=${snapshot_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${baseVersion}-${timeStamp}-${buildNumber}.jar
-        fi
+    sed -i "s|@hz-repo-release|${release_repo}|" pom.xml
+    sed -i "s|@hz-repo-snapshot|${snapshot_repo}|" pom.xml
+    sed -i "s|@hz-artifact|${artifact_id}|" pom.xml
+    sed -i "s|@hz-version|${version}|" pom.xml
+    sed -i "s|@hz-output|${destination}|" pom.xml
 
-        # cleanup the garbage
-        rm ${local_install_dir}/maven-metadata.xml
-    else
-        url=${release_repo}/com/hazelcast/${artifact_id}/${version}/${artifact_id}-${version}.jar
-    fi
+    ${SIMULATOR_HOME}/conf/mvnw/mvnw dependency:copy-dependencies -Dmaven.repo.local=${SIMULATOR_HOME}/m2 -q
 
-    echo "Copying $url to $destination"
-    download ${url} ${destination}
+    rm pom.xml
+    rm -r .mvn
+    popd > /dev/null
 }
 
 prepare_using_git() {
