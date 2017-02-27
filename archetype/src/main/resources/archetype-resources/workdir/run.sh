@@ -4,15 +4,16 @@ set -e
 
 provisioner --scale 4
 
-coordinator     --memberWorkerCount 2 \
-                --workerVmOptions "-ea -server -Xms2G -Xmx2G -verbosegc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log -XX:+HeapDumpOnOutOfMemoryError" \
-                --hzFile            hazelcast.xml \
-                --clientWorkerCount 2 \
-                --clientWorkerVmOptions "-ea -server -Xms2G -Xmx2G -verbosegc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log -XX:+HeapDumpOnOutOfMemoryError" \
-                --clientHzFile      client-hazelcast.xml \
-                --workerClassPath   '../target/*.jar' \
-                --duration          5m \
-                --monitorPerformance \
+# all the libs we need we copy to the upload directory. They will automatically be uploaded and put on the classpath
+# of the worker
+mkdr -p upload
+cp ../target/*.jar upload
+
+coordinator     --members 2 \
+                --memberArgs "-Xms2G -Xmx2G" \
+                --clients 2 \
+                --clientArgs "-Xms2G -Xmx2G" \
+                --duration 5m \
                 test.properties
 
 provisioner --terminate

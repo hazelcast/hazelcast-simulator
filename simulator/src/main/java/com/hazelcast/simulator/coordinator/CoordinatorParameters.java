@@ -32,7 +32,6 @@ public class CoordinatorParameters {
     private TestPhase lastTestPhaseToSync = TestPhase.getLastTestPhase();
 
     private SimulatorProperties simulatorProperties;
-    private String workerClassPath;
     private boolean skipDownload;
     private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
@@ -64,15 +63,6 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setSimulatorProperties(SimulatorProperties simulatorProperties) {
         this.simulatorProperties = simulatorProperties;
-        return this;
-    }
-
-    public String getWorkerClassPath() {
-        return workerClassPath;
-    }
-
-    public CoordinatorParameters setWorkerClassPath(String workerClassPath) {
-        this.workerClassPath = workerClassPath;
         return this;
     }
 

@@ -124,11 +124,6 @@ final class CoordinatorCli {
             "Auto create Hazelcast instances.")
             .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
-    private final OptionSpec<String> workerClassPathSpec = parser.accepts("workerClassPath",
-            "A file/directory containing the classes/jars/resources that are going to be uploaded to the agents."
-                    + " Use ';' as separator for multiple entries. The wildcard '*' can also be used.")
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSpec<String> sessionIdSpec = parser.accepts("sessionId",
             "Defines the ID of the Session. If not set the actual date will be used."
                     + " The session ID is used for creating the working directory")
@@ -232,7 +227,6 @@ final class CoordinatorCli {
     private CoordinatorParameters loadCoordinatorParameters() {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
-                .setWorkerClassPath(options.valueOf(workerClassPathSpec))
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
                 .setAfterCompletionFile(getConfigurationFile("after-completion.sh").getAbsolutePath())
                 .setPerformanceMonitorIntervalSeconds(getPerformanceMonitorInterval())
