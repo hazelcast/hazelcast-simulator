@@ -5,16 +5,11 @@
 # The installation can be modified by copying it into the working directory.
 # All properties from the 'simulator.properties' are passed as environment variables.
 #
-# TODO:
+# TODO
 # - use rsync instead of scp for upload
-# - if downloading of maven artifacts fails, no error
-# - variables to be used in quotes
-# - hz-lib maven: enterprise
 # - hz-lib git: enterprise
 #
-# done
-#
-# ideas
+# IDEAS
 # - instead of download artifacts to local machine and then uploading; download them on the target machine
 # - instead of uploading to each machine, upload to a single machine and then download from that machine
 
