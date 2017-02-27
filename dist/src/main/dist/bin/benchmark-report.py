@@ -6,21 +6,25 @@
 # - pruning of dstats to match running time
 # - when comparing benchmarks; use 1 color for all plots from 1 benchmark
 # - if no latency info is found; print warning
-# - cpu usage merging needs to be divided by number of agents.
 # - when not a lot of data points, them time issues in gnuplot (use WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS=default)
 # - timeseries: avg
 # - gnuplot y axis formatting; long numbers are unreadable because not dots or comma's
 # - throughput per member in main output directory
-# - option not to make low part of graph scrink
-# - option to show real time
+# - default gnuplot colors stink; often they are not distinguishable
+# - latency distribution doesn't show the percentiles; doesn't load xlabels.csv
 #
 # done:
 # - better commandline help
 #
 # backlog
+# - google chart option
+# - svg option
 # - latency per worker
 # - option to plot with real time.
 # - dstats merging for members?
+# - cpu usage merging needs to be divided by number of agents.
+# - option not to make low part of graph shrink
+# - option to show real time
 
 import csv
 import os
@@ -31,8 +35,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Creating a benchmark report from one or more benchmarks.')
 parser.add_argument('benchmarks', metavar='B', nargs='+',
                     help='a benchmark to be used in the comparison')
-parser.add_argument('-r', '--realtime', default='report', help='print the real time of the datapoints.')
-parser.add_argument('-o', '--output',nargs=1,
+#parser.add_argument('-r', '--realtime', default='report', help='print the real time of the datapoints.')
+parser.add_argument('-o', '--output', nargs=1,
                     help='The output directory for the report. By default a report directory in the working directory is created.')
 
 x = parser.parse_args()
@@ -141,6 +145,14 @@ class Gnuplot:
         print(self.filepath)
 
     def do_plot(self):
+        raise NotImplementedError("Please Implement this method")
+
+
+class TimeseriesGnuplot(Gnuplot):
+    def __init__(self, directory, title):
+        Gnuplot.__init__(self, directory, title)
+
+    def do_plot(self):
         #self._write("unset autoscale y")
         self._write("set title '" + self.title + "'")
         self._write("set style data lines")
@@ -179,7 +191,6 @@ class Gnuplot:
 
             self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + ", \\")
         self._complete()
-
 
 class LatencyDistributionGnuplot(Gnuplot):
     def __init__(self, directory, title):
@@ -481,7 +492,7 @@ class Benchmark:
 
     def __init__(self, src_dir, name):
         self.src_dir = src_dir
-        self.name = name;
+        self.name = name
 
         self.target_dir = os.path.join(output_dir, self.name)
         ensure_dir(self.target_dir)
@@ -538,7 +549,7 @@ class Benchmark:
             refs.append(SeriesHandle("latency", "latency_interval_std_deviation_" + name, "Interval Standard Deviation", "Latency (μs)",
                                      self.load_latency_ts, args=[file_path, 14]))
 
-            hgrm_path = os.path.join(self, src_dir, file_name + ".hgrm")
+            hgrm_path = os.path.join(src_dir, file_name + ".hgrm")
             refs.append(SeriesHandle("latency-distribution", "latency_distribution_" + name, "Latency distribution", "Latency (μs)",
                                      self.load_latency_distribution_ts, args=[hgrm_path]))
 
@@ -605,7 +616,7 @@ class Benchmark:
                     continue
 
                 ts = ts_ref.load()
-                Gnuplot(output_dir, ts_ref.title).add(ts).plot()
+                TimeseriesGnuplot(output_dir, ts_ref.title).add(ts).plot()
 
 
 class Comparison:
@@ -646,7 +657,9 @@ class Comparison:
         plots = {}
 
         for benchmark in self.benchmarks:
-            benchmark.plot_per_worker()
+            if len(benchmark.ts_references) == 0:
+                print(" benchmark ["+benchmark.name+"] benchmark.dir ["+benchmark.src_dir+"] has no data")
+                exit(1)
 
             for ref in benchmark.ts_references:
                 plot = plots.get(ref.name)
@@ -654,7 +667,7 @@ class Comparison:
                     if ref.src == "latency-distribution":
                         plot = LatencyDistributionGnuplot(output_dir, ref.title)
                     else:
-                        plot = Gnuplot(output_dir, ref.title)
+                        plot = TimeseriesGnuplot(output_dir, ref.title)
 
                     plots[ref.name] = plot
 
@@ -664,6 +677,10 @@ class Comparison:
             plot.plot()
 
         print("Done writing report [" + output_dir + "]")
+        for benchmark in self.benchmarks:
+            print(" benchmark ["+benchmark.name+"] benchmark.dir ["+benchmark.src_dir+"]")
+
+
 
 comparison = Comparison()
 comparison.compare()
