@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+export SIMULATOR_HOME=$(cd $DIR/.. && pwd)
+
+# todo: python check
+
+# todo: gnuplot check
+python $DIR/benchmark-report.py "$@"

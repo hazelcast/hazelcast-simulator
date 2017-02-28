@@ -43,6 +43,9 @@ parser.add_argument('-o', '--output', nargs=1,
 x = parser.parse_args()
 args = x.benchmarks
 
+simulator_home=os.environ['SIMULATOR_HOME']
+
+
 if not x.output:
     output_dir = "report"
 else:
@@ -213,7 +216,8 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write('set key top left')
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
         self._write("set output '" + self.filepath + "'")
-        self._write("plot 'xlabels.csv' with labels center offset 0, 1.5 point,\\")
+
+        self._write("plot '"+simulator_home+"/bin/xlabels.csv' with labels center offset 0, 1.5 point,\\")
         for ts in self.ts_list:
             ts_file = ts.to_tmp_file()
 

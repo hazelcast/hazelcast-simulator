@@ -8,5 +8,4 @@ vtune/
 .project
 .DS_Store
 *.class
-*.csv
 simulator-git.properties
