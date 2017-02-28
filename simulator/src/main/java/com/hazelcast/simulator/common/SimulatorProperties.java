@@ -119,12 +119,17 @@ public class SimulatorProperties {
 
             for (Map.Entry entry : p.entrySet()) {
                 String key = (String) entry.getKey();
+
                 String value = (String) entry.getValue();
                 properties.put(key, new Value(isDefault, value));
             }
 
             if (containsKey("HAZELCAST_VERSION_SPEC")) {
                 throw new IOException("'HAZELCAST_VERSION_SPEC' property is deprecated, Use 'VERSION_SPEC' instead.");
+            }
+
+            if (containsKey("USER")) {
+                throw new IOException("'USER' property is deprecated, Use 'SIMULATOR_USER' instead.");
             }
         } catch (IOException e) {
             throw rethrow(e);

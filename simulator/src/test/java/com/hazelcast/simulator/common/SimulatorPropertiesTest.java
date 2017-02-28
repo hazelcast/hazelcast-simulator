@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
@@ -236,6 +237,14 @@ public class SimulatorPropertiesTest {
         initProperty(customFile, CLOUD_CREDENTIAL, credentialsFile.getAbsolutePath());
 
         assertEquals("testIdentity", simulatorProperties.getCloudCredential());
+    }
+
+    @Test(expected = CommandLineExitException.class)
+    public void test_USER() {
+        File workingDirProperties = new File(simulatorHome, "simulator.properties");
+        appendText("USER=foobar", workingDirProperties);
+
+        simulatorProperties.load(workingDirProperties);
     }
 
     private void initProperty(File file, String key, String value) {
