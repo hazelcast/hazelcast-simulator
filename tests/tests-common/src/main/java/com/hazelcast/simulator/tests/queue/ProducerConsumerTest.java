@@ -47,7 +47,7 @@ public class ProducerConsumerTest extends AbstractTest {
     @TimeStep(executionGroup = "producer")
     public void produce(ProducerState state) throws Exception {
         Thread.sleep(state.randomInt(maxIntervalMillis));
-        workQueue.offer(new Long(0));
+        workQueue.offer(0L);
         state.produced++;
     }
 
