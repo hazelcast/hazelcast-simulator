@@ -113,7 +113,7 @@ public class ClientConnector {
                 });
     }
 
-    void connect(final Bootstrap bootstrap, int connectRetryDelayMillis, int connectRetries) {
+    void connect(final Bootstrap bootstrap, long connectRetryDelayMillis, int connectRetries) {
         Exception exception = null;
         int connectionTry = 1;
         do {
