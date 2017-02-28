@@ -31,7 +31,7 @@ public class Bash {
     public Bash(SimulatorProperties simulatorProperties) {
         this.user = simulatorProperties.getUser();
         this.sshOptions = simulatorProperties.getSshOptions();
-        this.scpOptions = sshOptions.replace("-t ", "");
+        this.scpOptions = sshOptions.replace("-t ", "").replace("-tt ", "");
     }
 
     public String execute(String command) {
