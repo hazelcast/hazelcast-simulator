@@ -161,7 +161,7 @@ class Provisioner {
         echoImportant("Finished installing Simulator on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
     }
 
-    void killJavaProcesses() {
+    void killJavaProcesses(final boolean sudo) {
         ensureIsRemoteSetup(properties, "kill");
 
         long started = System.nanoTime();
@@ -173,7 +173,7 @@ class Provisioner {
                 @Override
                 public void run() {
                     echo("Killing Java processes on %s", agentData.getPublicAddress());
-                    bash.killAllJavaProcesses(agentData.getPublicAddress());
+                    bash.killAllJavaProcesses(agentData.getPublicAddress(), sudo);
                 }
             });
         }

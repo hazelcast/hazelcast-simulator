@@ -161,7 +161,7 @@ public final class AgentUtils {
 
         private void runRemote() {
             logger.info(format("Killing Java processes on %s", ip));
-            bash.killAllJavaProcesses(ip);
+            bash.killAllJavaProcesses(ip, false);
 
             logger.info(format("Starting Agent on %s", ip));
             bash.ssh(ip, format("nohup hazelcast-simulator-%s/bin/agent %s%s%s > agent.out 2> agent.err < /dev/null &",

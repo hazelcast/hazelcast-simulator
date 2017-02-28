@@ -111,9 +111,9 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
 
     @Test
     public void testKill() {
-        provisioner.killJavaProcesses();
+        provisioner.killJavaProcesses(false);
 
-        verify(bash).killAllJavaProcesses(eq("127.0.0.1"));
+        verify(bash).killAllJavaProcesses(eq("127.0.0.1"), eq(false));
     }
 
     @Test

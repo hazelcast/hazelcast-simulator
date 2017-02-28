@@ -111,7 +111,7 @@ public class AgentUtilsTest {
 
         startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
-        verify(bash).killAllJavaProcesses(eq("172.16.16.1"));
+        verify(bash).killAllJavaProcesses(eq("172.16.16.1"), eq(false));
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent "));
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/.await-file-exists agent.pid"));
         verifyNoMoreInteractions(bash);
@@ -123,7 +123,7 @@ public class AgentUtilsTest {
 
         startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
-        verify(bash).killAllJavaProcesses(eq("172.16.16.1"));
+        verify(bash).killAllJavaProcesses(eq("172.16.16.1"), eq(false));
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent "));
         verify(bash).ssh(eq("172.16.16.1"), contains("/bin/.await-file-exists agent.pid"));
         verifyNoMoreInteractions(bash);

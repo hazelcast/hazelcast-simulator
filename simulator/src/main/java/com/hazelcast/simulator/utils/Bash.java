@@ -53,8 +53,12 @@ public class Bash {
         ssh(ip, command + " || true");
     }
 
-    public void killAllJavaProcesses(String ip) {
-        sshQuiet(ip, "killall -9 java");
+    public void killAllJavaProcesses(String ip, boolean sudo) {
+        if (sudo) {
+            sshQuiet(ip, "sudo killall -9 java");
+        } else {
+            sshQuiet(ip, "killall -9 java");
+        }
     }
 
     public void uploadToRemoteSimulatorDir(String ip, String src, String target) {
