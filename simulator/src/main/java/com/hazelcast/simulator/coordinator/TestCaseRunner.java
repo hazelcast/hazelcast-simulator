@@ -275,13 +275,18 @@ public final class TestCaseRunner implements TestPhaseListener {
 
         stop(RUN);
 
-        logPerformanceInfo();
+        logFinalPerformanceInfo(startMs);
 
         waitForGlobalTestPhaseCompletion(RUN);
     }
 
-    private void logPerformanceInfo() {
-        long durationMillis = SECONDS.toMillis(testSuite.getDurationSeconds()) - testCase.getWarmupMillis();
+    private void logFinalPerformanceInfo(long startMs) {
+        // the running time of the test is current time minus the start time. We can't rely on testsuite duration
+        // due to premature abortion of a test. Or if the test has no explicit duration configured
+        long durationWithWarmupMillis = currentTimeMillis() - startMs;
+
+        // then we need to subtract the warmup.
+        long durationMillis = durationWithWarmupMillis - testCase.getWarmupMillis();
 
         if (performanceMonitorIntervalSeconds > 0) {
             LOGGER.info(testCase.getId() + " Waiting for all performance info");
