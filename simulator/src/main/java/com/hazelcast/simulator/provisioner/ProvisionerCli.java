@@ -53,7 +53,7 @@ final class ProvisionerCli {
             "Installs JAVA on all provisioned machines.");
 
     private final OptionSpec installSpec = parser.accepts("install",
-            "Installs Simulator on all provisioned machines.");
+            "Installs Simulator on all provisioned machines. Previous Simulator installation for that version will be removed.");
 
     private final OptionSpec killSpec = parser.accepts("kill",
             "Kills the Java processes on all provisioned machines (via killall -9 java).");
