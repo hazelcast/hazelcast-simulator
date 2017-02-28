@@ -41,8 +41,6 @@ parser.add_argument('-o', '--output', nargs=1,
 
 x = parser.parse_args()
 args = x.benchmarks
-for arg in args:
-    print("benchmark_dir:"+arg)
 
 if not x.output:
     output_dir = "report"
@@ -581,7 +579,7 @@ class Benchmark:
         with open(path, 'rb') as csvfile:
             csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             # we need to skip the first 7 lines
-            for x in range(0, 4):
+            for x in range(0, 3):
                 next(csvreader)
             for row in csvreader:
                 result.append(KeyValue(row[0], row[column]))
@@ -630,8 +628,6 @@ class Comparison:
 
         # collect all benchmark directories and the names for the benchmarks
         for arg in args:
-            print("benchmark_dir:"+arg)
-
             if arg.startswith("[") and arg.endswith("]"):
                 if not last_benchmark:
                     print("Benchmark name "+arg+" must be preceded with a benchmark directory.")
