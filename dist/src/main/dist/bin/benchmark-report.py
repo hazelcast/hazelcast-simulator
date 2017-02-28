@@ -146,7 +146,7 @@ class Gnuplot:
         elif ts==self.ts_list[5]:
             return "brown"
         else:
-            return "green"
+            return "orchid"
 
     def plot(self):
         empty = True
