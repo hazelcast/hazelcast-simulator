@@ -1,32 +1,33 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script is executed on a freshly created node and provides the ability to
 # e.g. install software, change settings etc. If a file 'init.sh' is created in
-# the working directory, that script will be used.
+# the working directory, it will be used instead.
 
+set -e
+#set -x
 
+function installPackage {
+    PACKAGE=$1
 
-function install {
-        PACKAGE=$1
+    if hash ${PACKAGE} 2>/dev/null; then
+        echo "$PACKAGE already installed"
+        return 0
+    fi
 
-        if hash ${PACKAGE} 2>/dev/null; then
-            echo ${PACKAGE} already installed
-            return 0
-        fi
-
-        if hash apt-get 2>/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y ${PACKAGE}
-            echo apt-get available
-        elif hash yum 2>/dev/null; then
-            echo yum available
-            sudo yum -y install ${PACKAGE}
-        else
-            echo apt-get/yum not available, not installing ${PACKAGE}
-        fi
+    if hash apt-get 2>/dev/null; then
+        echo "apt-get is available!"
+        sudo apt-get update
+        sudo apt-get install -y ${PACKAGE}
+    elif hash yum 2>/dev/null; then
+        echo "yum is available!"
+        sudo yum -y install ${PACKAGE}
+    else
+        echo "apt-get AND yum are not available!"
+    fi
 }
 
-install dstat
+installPackage dstat
 
 # The following code is only executed on EC2.
 # By default the ~ directory is mapped to the / drive and this drive is quite small.
@@ -35,14 +36,14 @@ install dstat
 # to the ephemeral drive.
 if [ -d /mnt/ephemeral ] ; then
     if [ -d /mnt/ephemeral/workers ] ; then
-        echo "[/mnt/ephemeral/workers] already exist on ephemeral drive"
+        echo "[/mnt/ephemeral/workers] already exists on ephemeral drive"
     else
         echo "[/mnt/ephemeral/] exists, creating [/mnt/ephemeral/workers]"
         rm -fr hazelcast-simulator-${version}/workers
         sudo mkdir /mnt/ephemeral/workers
         sudo chown -R ${user} /mnt/ephemeral/workers/
         ln -s /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
-     fi
+    fi
 
     ver=$(awk -F. '{printf("%d%02d",$1,$2)}' <<< $(uname -r))
     if (( ${ver} < 319 )); then
@@ -51,5 +52,5 @@ if [ -d /mnt/ephemeral ] ; then
         sudo ethtool -K eth0 sg off
     fi
 else
-    echo "[/mnt/ephemeral/] is not found. Skipping linking workers to ephemeral drive."
+    echo "[/mnt/ephemeral/] is not found. Skip linking workers to ephemeral drive."
 fi
