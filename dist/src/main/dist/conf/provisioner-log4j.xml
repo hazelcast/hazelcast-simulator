@@ -45,6 +45,10 @@
         <appender-ref ref="jclouds"/>
     </logger>
 
+    <category name="net.schmizz.sshj.DefaultConfig">
+        <priority value="ERROR" />
+    </category>
+
     <!-- if there are SSH problems, put this on info or debug -->
     <logger name="net.schmizz">
         <level value="warn"/>
