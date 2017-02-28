@@ -501,9 +501,14 @@ class Benchmark:
             subdir = os.path.join(src_dir, subdir_name)
             if not os.path.isdir(subdir):
                 continue
-            if not subdir_name.startswith("C_"):
+            if not subdir_name.startswith("C_A"):
                 continue
             self.workers.append(Worker(subdir_name, subdir))
+
+        # making sure there are workers; otherwise it is an invalid benchmark
+        if len(self.workers) == 0:
+            print("Invalid Benchmark "+self.name+" from directory ["+self.src_dir+"]; no workers found")
+            exit(1)
 
         # look for all latency info
         refs = []
