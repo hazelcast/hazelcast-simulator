@@ -196,7 +196,6 @@ public class TimeStepModel {
         if (executionGroup.equals("")) {
             return;
         }
-
         if (!isValidJavaIdentifier(executionGroup)) {
             throw new IllegalTestException(
                     method + " is using an invalid identifier for executionGroup [" + executionGroup + "]");
@@ -226,7 +225,6 @@ public class TimeStepModel {
             }
 
             Class<?>[] parameterTypes = method.getParameterTypes();
-
             for (int parameterIndex = 0; parameterIndex < parameterCount; parameterIndex++) {
                 if (!hasStartNanosAnnotation(method, parameterIndex)) {
                     continue;
@@ -255,7 +253,6 @@ public class TimeStepModel {
 
     private void validateUniqueMethodNames(List<Method> methods) {
         Set<String> names = new HashSet<String>();
-
         for (Method method : methods) {
             String methodName = method.getName();
             if (!names.add(methodName)) {
@@ -371,7 +368,6 @@ public class TimeStepModel {
                         throw new IllegalTestException(format("Method '%s' contains an illegal thread state of type '%s'."
                                 + " Thread state should be public.", method, paramType));
                     }
-
                     classes.add(paramType);
                 }
             }
@@ -434,12 +430,13 @@ public class TimeStepModel {
                 } else {
                     totalProbability = totalProbability.add(timeStepProbability);
                     if (totalProbability.isLargerThanOne()) {
-                        String message = "TimeStep method '" + method + "' with probability " + timeStepProbability
-                                + " exceeds the total probability of 1, totalProbability: " + totalProbability;
+                        StringBuilder message = new StringBuilder("TimeStep method '" + method + "' with probability "
+                                + timeStepProbability + " exceeds the total probability of 1.0, totalProbability: "
+                                + totalProbability);
                         for (Map.Entry<Method, Probability> entry : probMap.entrySet()) {
-                            message += "\n" + entry.getKey() + " " + entry.getValue();
+                            message.append("\n\t").append(entry.getKey()).append(" ").append(entry.getValue());
                         }
-                        throw new IllegalTestException(message);
+                        throw new IllegalTestException(message.toString());
                     }
                     probMap.put(method, timeStepProbability);
                 }
@@ -449,12 +446,12 @@ public class TimeStepModel {
                 Probability probability = new Probability(1).sub(totalProbability);
                 probMap.put(defaultMethod, probability);
             } else if (totalProbability.isSmallerThanOne()) {
-                String message = "The total probability of TimeStep methods in test " + testClass.getName()
-                        + " is smaller than 1, found: " + totalProbability;
+                StringBuilder message = new StringBuilder("The total probability of TimeStep methods in test "
+                        + testClass.getName() + " is smaller than 1.0, found: " + totalProbability);
                 for (Map.Entry<Method, Probability> entry : probMap.entrySet()) {
-                    message += "\n" + entry.getKey() + " " + entry.getValue();
+                    message.append("\n\t").append(entry.getKey()).append(" ").append(entry.getValue());
                 }
-                throw new IllegalTestException(message);
+                throw new IllegalTestException(message.toString());
             }
 
             return probMap;
