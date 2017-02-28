@@ -323,6 +323,10 @@ class Provisioner {
 
     private void uploadJARs(String ip) {
         String simulatorVersion = getSimulatorVersion();
+
+        // first we wipe out the directory if it exists. This way we can start with a clean slate.
+        bash.ssh(ip, format("rm -fr hazelcast-simulator-%s", simulatorVersion));
+
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", simulatorVersion));
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/user-lib/", simulatorVersion));
 
