@@ -416,6 +416,7 @@ public class TimeStepModel {
 
             Method defaultMethod = null;
             Probability totalProbability = new Probability(0);
+
             for (Method method : timeStepMethods) {
                 Probability timeStepProbability = loadProbability(method);
                 if (timeStepProbability.isMinusOne()) {
@@ -425,25 +426,13 @@ public class TimeStepModel {
                                 + "only one such method is allowed");
                     }
                     defaultMethod = method;
-                } else if (timeStepProbability.isLargerThanOne()) {
-                    throw new IllegalTestException("TimeStep method '" + method + "'"
-                            + " can't have a probability larger than 1, found: " + timeStepProbability);
-                } else if (timeStepProbability.isSmallerThanZero()) {
-                    throw new IllegalTestException("TimeStep method '" + method + "'"
-                            + " can't have a probability smaller than 0, found: " + timeStepProbability);
                 } else {
                     totalProbability = totalProbability.add(timeStepProbability);
-                    if (totalProbability.isLargerThanOne()) {
-                        String message = "TimeStep method '" + method + "' with probability " + timeStepProbability
-                                + " exceeds the total probability of 1, totalProbability: " + totalProbability;
-                        for (Map.Entry<Method, Probability> entry : probMap.entrySet()) {
-                            message += "\n" + entry.getKey() + " " + entry.getValue();
-                        }
-                        throw new IllegalTestException(message);
-                    }
                     probMap.put(method, timeStepProbability);
                 }
             }
+
+            ensureNotExceedingOne(probMap, totalProbability);
 
             if (defaultMethod != null) {
                 Probability probability = new Probability(1).sub(totalProbability);
@@ -458,6 +447,21 @@ public class TimeStepModel {
             }
 
             return probMap;
+        }
+
+        private void ensureNotExceedingOne(Map<Method, Probability> probMap, Probability totalProbability) {
+            if (totalProbability.isLargerThanOne()) {
+                String message = "Test " + testClass.getName() + " has a total timestep probability of " + totalProbability
+                        + " which exceeds 1.0.";
+                for (Map.Entry<Method, Probability> entry : probMap.entrySet()) {
+                    Method method = entry.getKey();
+                    Probability probability = entry.getValue();
+                    if (probability.isLargerThanZero()) {
+                        message += "\n\t" + method + " probability=" + probability;
+                    }
+                }
+                throw new IllegalTestException(message);
+            }
         }
 
         private Probability loadProbability(Method method) {
@@ -477,7 +481,17 @@ public class TimeStepModel {
                             + " value '" + valueString + "' is not a valid double value", e);
                 }
             }
-            return new Probability(value);
+
+            Probability probability = new Probability(value);
+
+            if (probability.isLargerThanOne()) {
+                throw new IllegalTestException("TimeStep method '" + method + "'"
+                        + " can't have a probability larger than 1, found: " + probability);
+            } else if (probability.isSmallerThanZero() && !probability.isMinusOne()) {
+                throw new IllegalTestException("TimeStep method '" + method + "'"
+                        + " can't have a probability smaller than 0, found: " + probability);
+            }
+            return probability;
         }
     }
 }
