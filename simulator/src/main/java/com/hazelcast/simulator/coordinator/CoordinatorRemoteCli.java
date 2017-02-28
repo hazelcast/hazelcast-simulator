@@ -56,6 +56,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static java.lang.String.format;
+import static java.lang.System.arraycopy;
 
 /**
  * CLI to access Simulator Coordinator remotely.
@@ -160,7 +161,7 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     private static String[] removeFirst(String[] args) {
         String[] result = new String[args.length - 1];
-        System.arraycopy(args, 1, result, 0, args.length - 1);
+        arraycopy(args, 1, result, 0, result.length);
         return result;
     }
 
@@ -197,6 +198,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class InstallCli extends AbstractCli {
+
         private final String help
                 = "The 'install' command installs Hazelcast on the agents. By default the coordinator will upload to\n"
                 + "the agents what has been configured on the simulator.properties. But in case of testing multiple\n"
@@ -233,11 +235,12 @@ public final class CoordinatorRemoteCli implements Closeable {
 
             String versionSpec = nonOptionArguments.get(0);
             LOGGER.info("Installing [" + versionSpec + "]");
-            return new RcInstallOperation(args[0]);
+            return new RcInstallOperation(versionSpec);
         }
     }
 
     private class TestStatusCli extends AbstractCli {
+
         private final String help =
                 "Returns the status of a test\n"
                         + "Possible values:\n"
@@ -280,6 +283,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class TestStopCli extends AbstractCli {
+
         private final String help =
                 "Ask a test to stop its warmup or running phase. It is especially useful for tests that run without a\n"
                         + "duration.\n"
@@ -311,6 +315,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class DownloadCli extends AbstractCli {
+
         private final String help = ""
                 + "The download command downloads all artifacts from the workers.\n";
 
@@ -443,6 +448,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class WorkerKill extends WorkerQueryableCli {
+
         private final String help
                 = "The 'worker-kill' command kills one or more workers. The killing can be done based using an exact\n"
                 + "worker address or using various filters like versionSpec, etc.\n"
@@ -513,6 +519,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class PrintClusterLayoutCli extends AbstractCli {
+
         private final String help
                 = "Prints the cluster layout on the coordinator.\n";
 
@@ -528,6 +535,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class ExitCli extends AbstractCli {
+
         private final String help
                 = "Terminates the the coordinator session.\n";
 
@@ -544,6 +552,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class WorkerStartCli extends AbstractCli {
+
         private final String help
                 = "The 'worker-start' command starts one or more workers.\n"
                 + "\n"
@@ -644,6 +653,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private abstract class TestRunStartCli extends WorkerQueryableCli {
+
         final OptionSpec<String> durationSpec = parser.accepts("duration",
                 "Amount of time to execute the RUN phase per test, e.g. 10s, 1m, 2h or 3d. If duration is set to 0, "
                         + "the test will run until the test decides to stop.")
@@ -674,11 +684,9 @@ public final class CoordinatorRemoteCli implements Closeable {
         @Override
         WorkerQuery newQuery() {
             WorkerQuery query = super.newQuery();
-
             if (query.getWorkerAddresses() == null) {
                 query.setTargetType(options.valueOf(targetTypeSpec));
             }
-
             return query;
         }
 
@@ -715,6 +723,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class TestRunCli extends TestRunStartCli {
+
         private final String help
                 = "The 'test-run' command runs a test suite and waits for its completion.\n"
                 + "\n"
@@ -754,6 +763,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     private class TestStartCli extends TestRunStartCli {
+
         private final String help
                 = "The 'test=start' command runs a test suite asynchronously and returns the id's of the created tests.\n"
                 + "\n"
@@ -779,7 +789,6 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote test-start --failFast \n\n"
                 + "# runs a test on 3 members no matter if there are clients or more than 3 members in the cluster.\n"
                 + "coordinator-remote test-start --targetType member --targetCount 3 \n\n";
-
 
         @Override
         protected OptionSet newOptions(String[] args) {
@@ -817,8 +826,6 @@ public final class CoordinatorRemoteCli implements Closeable {
             }
             result.add(addressString);
         }
-
         return result;
     }
-
 }
