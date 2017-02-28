@@ -126,6 +126,28 @@ class Gnuplot:
         self.titles[ts] = title
         return self
 
+    # returns a color for the time series. We are using some hard coded colors to make sure
+    # the the colors are predictable and very much different. If there are too many time series
+    # then we just rely on the default mechanism
+    def _color(self, ts):
+        if (len(self.ts_list)) > 7:
+            return None
+
+        if ts==self.ts_list[0]:
+            return "red"
+        elif ts==self.ts_list[1]:
+            return "blue"
+        elif ts==self.ts_list[2]:
+            return "green"
+        elif ts==self.ts_list[3]:
+            return "yellow"
+        elif ts==self.ts_list[4]:
+            return "grey"
+        elif ts==self.ts_list[5]:
+            return "brown"
+        else:
+            return "green"
+
     def plot(self):
         empty = True
         for ts in self.ts_list:
@@ -197,7 +219,12 @@ class TimeseriesGnuplot(Gnuplot):
             else:
                 title_str = "title \"\""
 
-            self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + ", \\")
+            color = self._color(ts)
+            lt = ""
+            if color:
+                lt = "lt rgb \""+color+"\""
+
+            self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str +" "+lt+ ", \\")
         self._complete()
 
 
@@ -229,7 +256,12 @@ class LatencyDistributionGnuplot(Gnuplot):
             else:
                 title_str = "title \"\""
 
-            self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " with lines, \\")
+            color = self._color(ts)
+            lt = ""
+            if color:
+                lt = "lt rgb \""+color+"\""
+
+            self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " "+lt+ " with lines, \\")
 
         self._complete()
         print(self.tmp.name)
