@@ -117,7 +117,20 @@ public class ProvisionerCliTest {
         cli.setProvisioner(provisioner);
         cli.run();
 
-        verify(provisioner).killJavaProcesses();
+        verify(provisioner).killJavaProcesses(false);
+        verify(provisioner).shutdown();
+        verifyNoMoreInteractions(provisioner);
+    }
+
+    @Test
+    public void testRun_sudokill() {
+        args.add("--sudokill");
+
+        ProvisionerCli cli = new ProvisionerCli(getArgs());
+        cli.setProvisioner(provisioner);
+        cli.run();
+
+        verify(provisioner).killJavaProcesses(true);
         verify(provisioner).shutdown();
         verifyNoMoreInteractions(provisioner);
     }

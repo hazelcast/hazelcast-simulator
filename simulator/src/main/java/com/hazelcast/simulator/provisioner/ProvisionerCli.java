@@ -58,6 +58,9 @@ final class ProvisionerCli {
     private final OptionSpec killSpec = parser.accepts("kill",
             "Kills the Java processes on all provisioned machines (via killall -9 java).");
 
+    private final OptionSpec sudoKillSpec = parser.accepts("sudokill",
+            "Kills the Java processes on all provisioned machines of all users (via sudo killall -9 java).");
+
     private final OptionSpec terminateSpec = parser.accepts("terminate",
             "Terminates all provisioned machines.");
 
@@ -90,7 +93,9 @@ final class ProvisionerCli {
             } else if (options.has(installSpec)) {
                 provisioner.installSimulator();
             } else if (options.has(killSpec)) {
-                provisioner.killJavaProcesses();
+                provisioner.killJavaProcesses(false);
+            } else if (options.has(sudoKillSpec)) {
+                provisioner.killJavaProcesses(true);
             } else if (options.has(terminateSpec)) {
                 provisioner.terminate();
             } else {
