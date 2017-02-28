@@ -152,6 +152,7 @@ class Provisioner {
                 public void run() {
                     echo("Installing Simulator on %s", agentData.getPublicAddress());
                     uploadJARs(agentData.getPublicAddress());
+                    echo("Finished installing Simulator on %s", agentData.getPublicAddress());
                 }
             });
         }
