@@ -11,6 +11,9 @@
 # * ${user} -> the user name
 # * ${cloudprovider} -> the used cloud provider
 
+set -e
+#set -x
+
 # Install dstat.
 function installPackage {
     PACKAGE=$1
