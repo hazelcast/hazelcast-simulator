@@ -21,7 +21,7 @@ else
 fi
 
 # Fix for a bug in an old Kernel on EC2 instances.
-if [[ "$cloudprovider" == "aws-ec2" ]]; then
+if [[ "${cloudprovider}" == "aws-ec2" ]]; then
     ver=$(awk -F. '{printf("%d%02d",$1,$2)}' <<< $(uname -r))
     if (( ${ver} < 319 )); then
         echo 'Use Linux kernel 3.19+ when running Hazelcast on AWS'
