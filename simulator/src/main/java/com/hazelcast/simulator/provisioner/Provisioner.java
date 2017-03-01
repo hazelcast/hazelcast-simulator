@@ -389,8 +389,9 @@ class Provisioner {
     private String loadInitScript() {
         String initScript = fileAsText(initScriptFile);
 
-        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
         initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
+        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
+        initScript = initScript.replaceAll(Pattern.quote("${cloudprovider}"), properties.getCloudProvider());
 
         return initScript;
     }

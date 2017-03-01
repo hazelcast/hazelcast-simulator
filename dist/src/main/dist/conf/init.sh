@@ -1,12 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script is executed on a freshly created node and provides the ability to
 # e.g. install software, change settings etc. If a file 'init.sh' is created in
 # the working directory, it will be used instead.
+#
+# NOTE: The following variables will be replaced with its proper values:
+# + ${version} -> the Simulator version
+# * ${user} -> the user name
+# * ${cloudprovider} -> the used cloud provider
 
 set -e
 #set -x
 
+# Install dstat.
 function installPackage {
     PACKAGE=$1
 
@@ -29,6 +35,16 @@ function installPackage {
 
 installPackage dstat
 
+# Fix for a bug in an old Kernel on EC2 instances.
+if [[ "${cloudprovider}" == "aws-ec2" ]]; then
+    ver=$(awk -F. '{printf("%d%02d",$1,$2)}' <<< $(uname -r))
+    if [ ${ver} -lt 319 ]; then
+        echo 'Use Linux kernel 3.19+ when running Hazelcast on AWS'
+        echo 'Applying fix: "sudo ethtool -K eth0 sg off"'
+        sudo ethtool -K eth0 sg off
+    fi
+fi
+
 # The following code is only executed on EC2.
 # By default the ~ directory is mapped to the / drive and this drive is quite small.
 # This is a problem with e.g. heap dumps, since they can't be created even if there
@@ -43,13 +59,6 @@ if [ -d /mnt/ephemeral ] ; then
         sudo mkdir /mnt/ephemeral/workers
         sudo chown -R ${user} /mnt/ephemeral/workers/
         ln -s /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
-    fi
-
-    ver=$(awk -F. '{printf("%d%02d",$1,$2)}' <<< $(uname -r))
-    if (( ${ver} < 319 )); then
-        echo 'Use Linux kernel 3.19+ when running Hazelcast on AWS'
-        echo 'Applying fix: "sudo ethtool -K eth0 sg off"'
-        sudo ethtool -K eth0 sg off
     fi
 else
     echo "[/mnt/ephemeral/] is not found. Skip linking workers to ephemeral drive."

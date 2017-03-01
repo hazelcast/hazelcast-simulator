@@ -24,12 +24,14 @@ import static java.lang.String.format;
 
 public class Bash {
 
-    private final String sshOptions;
     private final String user;
+    private final String sshOptions;
+    private final String scpOptions;
 
     public Bash(SimulatorProperties simulatorProperties) {
-        this.sshOptions = simulatorProperties.getSshOptions();
         this.user = simulatorProperties.getUser();
+        this.sshOptions = simulatorProperties.getSshOptions();
+        this.scpOptions = sshOptions.replace("-t ", "").replace("-tt ", "");
     }
 
     public String execute(String command) {
@@ -63,13 +65,12 @@ public class Bash {
 
     public void uploadToRemoteSimulatorDir(String ip, String src, String target) {
         String command = format("rsync --checksum -avv -L -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s",
-                sshOptions, src, user, ip, getSimulatorVersion(), target);
+                scpOptions, src, user, ip, getSimulatorVersion(), target);
         execute(command);
     }
 
     public void scpToRemote(String ip, File src, String target) {
-        String command = format("scp -r %s %s %s@%s:%s", sshOptions, src.getAbsolutePath(), user, ip, target);
+        String command = format("scp -r %s %s %s@%s:%s", scpOptions, src.getAbsolutePath(), user, ip, target);
         execute(command);
     }
 }
-
