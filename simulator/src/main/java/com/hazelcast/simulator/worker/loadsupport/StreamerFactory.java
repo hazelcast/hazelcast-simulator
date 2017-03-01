@@ -32,7 +32,7 @@ import static com.hazelcast.simulator.worker.loadsupport.Streamer.DEFAULT_CONCUR
 public final class StreamerFactory {
 
     private static final AtomicBoolean CREATE_ASYNC = new AtomicBoolean(isMinVersion("3.5"));
-    private static volatile Boolean USE_REFLECTION_STREAMER = useReflectionAsyncStreamer();
+    private static final boolean USE_REFLECTION_STREAMER = useReflectionAsyncStreamer();
 
     private StreamerFactory() {
     }
