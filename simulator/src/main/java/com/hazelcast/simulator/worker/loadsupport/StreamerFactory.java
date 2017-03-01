@@ -19,9 +19,6 @@ import com.hazelcast.cache.ICache;
 import com.hazelcast.core.IMap;
 
 import javax.cache.Cache;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.BuildInfoUtils.isMinVersion;
@@ -71,18 +68,14 @@ public final class StreamerFactory {
     }
 
     private static boolean useReflectionAsyncStreamer() {
-        InvocationHandler handler = new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                return null;
-            }
-        };
-        IMap imapProxy = (IMap) Proxy.newProxyInstance(IMap.class.getClassLoader(), new Class[]{IMap.class}, handler);
+        IMap imapProxy = null;
         try {
             imapProxy.getAsync(null);
-            return false;
+            throw new AssertionError("expected NPE");
         } catch (NoSuchMethodError e) {
             return true;
+        } catch (NullPointerException e) {
+            return false;
         }
     }
 }
