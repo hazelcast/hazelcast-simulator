@@ -377,7 +377,7 @@ class Provisioner {
         File initFile = newFile("init-" + newUnsecureUuidString() + ".sh");
         writeText(loadInitScript(), initFile);
         bash.scpToRemote(ip, initFile, "init.sh");
-        bash.ssh(ip, "bash init.sh");
+        bash.sshTTY(ip, "bash init.sh");
         deleteQuiet(initFile);
     }
 
