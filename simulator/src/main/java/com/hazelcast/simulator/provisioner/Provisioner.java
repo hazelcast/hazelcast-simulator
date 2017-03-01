@@ -45,13 +45,17 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
+import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.utils.FileUtils.newFile;
+import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static com.hazelcast.simulator.utils.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
+import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -362,18 +366,26 @@ class Provisioner {
         bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", simulatorVersion));
 
         // execute the init.sh script
-        bash.ssh(ip, loadInitScript());
+        executeInitScript(ip);
     }
 
     private void uploadLibraryJar(String ip, String jarName) {
         bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/lib/" + jarName, "lib");
     }
 
+    private void executeInitScript(String ip) {
+        File initFile = newFile("init-" + newUnsecureUuidString() + ".sh");
+        writeText(loadInitScript(), initFile);
+        bash.scpToRemote(ip, initFile, "init.sh");
+        bash.ssh(ip, "echo '' | sudo -S bash init.sh");
+        deleteQuiet(initFile);
+    }
+
     private String loadInitScript() {
         String initScript = fileAsText(initScriptFile);
 
-        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
         initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
+        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
         initScript = initScript.replaceAll(Pattern.quote("${cloudprovider}"), properties.getCloudProvider());
 
         return initScript;
