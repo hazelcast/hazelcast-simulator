@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentMap;
 import static com.hazelcast.simulator.utils.FormatUtils.formatDouble;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.formatPercentage;
+import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -121,10 +122,14 @@ public class PerformanceStatsCollector {
 
         StringBuilder sb = new StringBuilder();
 
+        double throughput = totalOperationCount / runningTimeSeconds;
+        sb.append("Total running time " + secondsToHuman(Math.round(runningTimeSeconds)) + "\n");
+
         sb.append(format("Total throughput        %s%% %s ops %s ops/s\n",
                 formatPercentage(1, 1),
                 formatLong(totalOperationCount, OPERATION_COUNT_FORMAT_LENGTH),
-                formatDouble(totalOperationCount / runningTimeSeconds, THROUGHPUT_FORMAT_LENGTH)));
+                formatDouble(throughput, THROUGHPUT_FORMAT_LENGTH)));
+
 
         for (SimulatorAddress address : sort(agentPerformanceStatsMap.keySet())) {
             PerformanceStats performanceStats = agentPerformanceStatsMap.get(address);
