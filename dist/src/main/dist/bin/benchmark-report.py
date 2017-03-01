@@ -507,7 +507,8 @@ class Worker:
                 for x in range(0, 8):
                     next(csvreader)
                 for row in csvreader:
-                    result.append(KeyValue(row[0], row[column]))
+                    if column >= len(row):  # protection if column doesn't exist
+                        result.append(KeyValue(row[0], row[column]))
         return result
 
     # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
@@ -522,7 +523,8 @@ class Worker:
                 for x in range(0, 8):
                     next(csvreader)
                 for row in csvreader:
-                    result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
+                    if len(row) > 6:  # protection if column doesn't exist
+                        result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
         return result
 
 
