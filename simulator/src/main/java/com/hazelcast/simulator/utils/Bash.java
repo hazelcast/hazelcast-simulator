@@ -42,12 +42,17 @@ public class Bash {
         return execute(command + " || true");
     }
 
-    public String ssh(String ip, String command) {
-        return ssh(ip, command, false);
+    public String sshTTY(String ip, String command) {
+        return ssh(ip, command, false, true);
     }
 
-    public String ssh(String ip, String command, boolean throwException) {
-        String sshCommand = format("ssh %s %s@%s \"%s\"", sshOptions, user, ip, command);
+    public String ssh(String ip, String command) {
+        return ssh(ip, command, false, false);
+    }
+
+    public String ssh(String ip, String command, boolean throwException, boolean forceTTy) {
+        String options = sshOptions + (forceTTy ? " -tt" : "");
+        String sshCommand = format("ssh %s %s@%s \"%s\"", options, user, ip, command);
         return new BashCommand(sshCommand).setThrowsException(throwException).execute();
     }
 

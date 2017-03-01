@@ -69,11 +69,11 @@ public class AgentUtilsTest {
     public void testCheckInstallation_isStatic_whenInstallationIsOkay() {
         setCloudProvider(PROVIDER_STATIC);
 
-        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn("Warning: foobar SIM-OK");
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean(), anyBoolean())).thenReturn("Warning: foobar SIM-OK");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
 
-        verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent"), anyBoolean());
+        verify(bash).ssh(eq("172.16.16.1"), contains("/bin/agent"), anyBoolean(), anyBoolean());
         verifyNoMoreInteractions(bash);
     }
 
@@ -81,7 +81,7 @@ public class AgentUtilsTest {
     public void testCheckInstallation_isStatic_whenInstallationIsNotOkay() {
         setCloudProvider(PROVIDER_STATIC);
 
-        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenReturn("Warning: foobar SIM-NOK");
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean(), anyBoolean())).thenReturn("Warning: foobar SIM-NOK");
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
     }
@@ -90,7 +90,7 @@ public class AgentUtilsTest {
     public void testCheckInstallation_isStatic_whenSshCommandFails() {
         setCloudProvider(PROVIDER_STATIC);
 
-        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean())).thenThrow(
+        when(bash.ssh(eq("172.16.16.1"), anyString(), anyBoolean(), anyBoolean())).thenThrow(
                 new CommandLineExitException("expected exception", new CommandLineExitException("inner cause")));
 
         checkInstallation(bash, simulatorProperties, componentRegistry);
