@@ -6,12 +6,10 @@
 #
 # NOTE: We cannot use functions here, since the script directly executed on the shell.
 
+# Install dstat.
 if hash dstat 2>/dev/null; then
     echo "dstat already installed"
-    return 0
-fi
-
-if hash apt-get 2>/dev/null; then
+elif hash apt-get 2>/dev/null; then
     echo "apt-get is available!"
     sudo apt-get update
     sudo apt-get install -y dstat
