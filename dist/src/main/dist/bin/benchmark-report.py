@@ -10,12 +10,12 @@
 # - timeseries: avg
 # - gnuplot y axis formatting; long numbers are unreadable because not dots or comma's
 # - throughput per member in main output directory
-# - default gnuplot colors stink; often they are not distinguishable
 # - latency distribution doesn't show the percentiles; doesn't load xlabels.csv
 #
 # done:
 # - better commandline help
 # - throughput per worker in a single plot
+# - default gnuplot colors stink; often they are not distinguishable
 #
 # backlog
 # - google chart option
@@ -244,7 +244,8 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
         self._write("set output '" + self.filepath + "'")
 
-        self._write("plot '"+simulator_home+"/bin/xlabels.csv' with labels center offset 0, 1.5 point,\\")
+
+        self._write("plot '"+simulator_home+"/bin/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
         for ts in self.ts_list:
             ts_file = ts.to_tmp_file()
 
