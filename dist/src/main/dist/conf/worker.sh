@@ -23,6 +23,11 @@ exec 2> worker.err
 #echo old_governor: $old_governor
 #sudo cpupower frequency-set -g performance
 
+# If you have a specific java version you want to use, uncomment the following lines
+# and configure the path to the version to use.
+#JAVA_HOME=~/java/jdk1.8.0_121
+#PATH=$JAVA_HOME/bin:$PATH
+
 echo ${LOG4j_CONFIG} > log4j.xml
 echo ${HAZELCAST_CONFIG} > hazelcast.xml
 
