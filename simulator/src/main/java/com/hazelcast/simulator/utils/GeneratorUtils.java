@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
+import org.apache.commons.lang3.RandomUtils;
+
 import java.util.Random;
 
 public final class GeneratorUtils {
@@ -35,8 +37,13 @@ public final class GeneratorUtils {
      * @return the created array of Strings.
      */
     public static String[] generateStrings(int count, int length) {
+        return generateStrings(count, length, length);
+    }
+
+    public static String[] generateStrings(int count, int minLength, int maxLength) {
         String[] keys = new String[count];
         for (int i = 0; i < keys.length; i++) {
+            int length = RandomUtils.nextInt(minLength, maxLength);
             keys[i] = generateString(length);
         }
         return keys;

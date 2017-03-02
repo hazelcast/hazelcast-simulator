@@ -40,6 +40,8 @@ public class StringStringMapTest extends AbstractTest {
     public int valueCount = 10000;
     public int keyLength = 10;
     public int valueLength = 10;
+    public int minValueLength = valueLength;
+    public int maxValueLength = valueLength;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
 
@@ -56,7 +58,7 @@ public class StringStringMapTest extends AbstractTest {
     public void prepare() {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
         keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
-        values = generateStrings(valueCount, valueLength);
+        values = generateStrings(valueCount, minValueLength, maxValueLength);
 
         loadInitialData();
     }
