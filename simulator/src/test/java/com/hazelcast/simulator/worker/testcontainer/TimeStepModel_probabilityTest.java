@@ -124,6 +124,68 @@ public class TimeStepModel_probabilityTest {
     }
 
     @Test
+    public void testThousandProbability() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+        probs.put("aProb", 0.001);
+        probs.put("bProb", 0.999);
+
+        TimeStepModel model = loadModel("public class CLAZZ{\n"
+                + "@TimeStep(prob=0.001) public void a(){}\n"
+                + "@TimeStep(prob=0.999) public void b(){}\n"
+                + "}\n", probs);
+
+        assertProbability(model, "a", 0.001);
+        assertProbability(model, "b", 0.999);
+
+        assertNotNull(model.getTimeStepProbabilityArray(""));
+    }
+
+    @Test
+    public void testTenThousandProbability() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+
+        TimeStepModel model = loadModel("public class CLAZZ{\n"
+                + "@TimeStep(prob=0.0001) public void a(){}\n"
+                + "@TimeStep(prob=0.9999) public void b(){}\n"
+                + "}\n", probs);
+
+        assertProbability(model, "a", 0.0001);
+        assertProbability(model, "b", 0.9999);
+
+        assertNotNull(model.getTimeStepProbabilityArray(""));
+    }
+
+    @Test
+    public void testHundredThousandProbability() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+
+        TimeStepModel model = loadModel("public class CLAZZ{\n"
+                + "@TimeStep(prob=0.00001) public void a(){}\n"
+                + "@TimeStep(prob=0.99999) public void b(){}\n"
+                + "}\n", probs);
+
+        assertProbability(model, "a", 0.00001);
+        assertProbability(model, "b", 0.99999);
+
+        assertNotNull(model.getTimeStepProbabilityArray(""));
+    }
+
+    @Test
+    public void testMillionProbability() {
+        HashMap<String, Double> probs = new HashMap<String, Double>();
+
+        TimeStepModel model = loadModel("public class CLAZZ{\n"
+                + "@TimeStep(prob=0.000001) public void a(){}\n"
+                + "@TimeStep(prob=0.999999) public void b(){}\n"
+                + "}\n", probs);
+
+        assertProbability(model, "a", 0.000001);
+        assertProbability(model, "b", 0.999999);
+
+        assertNotNull(model.getTimeStepProbabilityArray(""));
+    }
+
+    @Test
     public void test_singleActiveMethodUsingAnnotationSettings() {
         TimeStepModel model = loadModel("public class CLAZZ{\n"
                 + "@TimeStep(prob=1) public void timeStep1(){}\n"

@@ -19,13 +19,12 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
-import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 public class Probability {
 
-    private static final int PROBABILITY_PRECISION = 3;
-    private static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
+    public static final int PROBABILITY_LENGTH = 1000 * 1000;
+    public static final int TEN = 10;
 
     private final double value;
 
@@ -75,20 +74,60 @@ public class Probability {
             return null;
         }
 
-        byte[] result = new byte[PROBABILITY_LENGTH];
-        int index = 0;
-
+        double[] methodProbabilities = new double[activeMethods.size()];
         for (int methodIndex = 0; methodIndex < activeMethods.size(); methodIndex++) {
             Method method = activeMethods.get(methodIndex);
             Probability probability = methods.get(method);
-            for (int i = 0; i < round(probability.getValue() * result.length); i++) {
-                if (index < result.length) {
-                    result[index] = (byte) methodIndex;
-                    index++;
+            methodProbabilities[methodIndex] = probability.getValue();
+        }
+
+        int[] methodRatios = methodProbabilitiesToMethodRatios(methodProbabilities);
+        return ratiosToMethodProbabilityArray(methodRatios);
+    }
+
+    static int[] methodProbabilitiesToMethodRatios(double... methodProbabilities) {
+        int[] roundedMethodProbabilities = new int[methodProbabilities.length];
+
+        for (int i = 0; i < methodProbabilities.length; i++) {
+            roundedMethodProbabilities[i] = (int) Math.round(methodProbabilities[i] * PROBABILITY_LENGTH);
+        }
+
+        // now we simplify
+        while (true) {
+            boolean powerOfTen = true;
+            for (int i = 0; i < roundedMethodProbabilities.length; i++) {
+                if (roundedMethodProbabilities[i] % TEN != 0) {
+                    powerOfTen = false;
+                    break;
                 }
             }
+            if (!powerOfTen) {
+                break;
+            }
+
+            for (int i = 0; i < roundedMethodProbabilities.length; i++) {
+                roundedMethodProbabilities[i] = roundedMethodProbabilities[i] / TEN;
+            }
         }
-        return result;
+        return roundedMethodProbabilities;
+    }
+
+    static byte[] ratiosToMethodProbabilityArray(int... methodRatios) {
+        int length = 0;
+        for (int methodIndex = 0; methodIndex < methodRatios.length; methodIndex++) {
+            length += methodRatios[methodIndex];
+        }
+
+        byte[] bytes = new byte[length];
+        int index = 0;
+        for (int methodIndex = 0; methodIndex < methodRatios.length; methodIndex++) {
+            for (int i = 0; i < methodRatios[methodIndex]; i++) {
+                bytes[index] = (byte) methodIndex;
+                index++;
+            }
+        }
+
+        return bytes;
     }
 
     private static int toInt(double v) {
