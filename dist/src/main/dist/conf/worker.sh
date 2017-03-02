@@ -16,6 +16,13 @@ set -e
 exec > worker.out
 exec 2> worker.err
 
+
+# If you want to be sure that you have the right governor installed; uncomment
+# the following 3 lines. They will force the right governor to be used.
+#old_governor=$(sudo cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+#echo old_governor: $old_governor
+#sudo cpupower frequency-set -g performance
+
 echo ${LOG4j_CONFIG} > log4j.xml
 echo ${HAZELCAST_CONFIG} > hazelcast.xml
 
