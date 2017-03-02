@@ -27,7 +27,8 @@ public enum FailureType {
     WORKER_TIMEOUT("workerTimeout", "Worker timeout", false),
     WORKER_OOME("workerOOME", "Worker OOME", true),
     WORKER_ABNORMAL_EXIT("workerAbnormalExit", "Worker abnormal exit", true),
-    WORKER_NORMAL_EXIT("workerNormalExit", "Worker normal exit", true);
+    WORKER_NORMAL_EXIT("workerNormalExit", "Worker normal exit", true),
+    WORKER_CREATE_ERROR("workerCreateError", "Worker create error", true);
 
     private final String id;
     private final String humanReadable;

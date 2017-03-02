@@ -42,14 +42,14 @@ public class FailureOperation implements SimulatorOperation {
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             Throwable cause) {
-        this(message, type, workerAddress, agentAddress, null, null, null, throwableToString(cause));
+        this(message, type, workerAddress, agentAddress, null, null, null, cause == null ? "" : throwableToString(cause));
     }
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             String hzAddress, String workerId, String testId, String cause) {
         this.message = message;
         this.type = type.name();
-        this.workerAddress = (workerAddress == null) ? null : workerAddress.toString();
+        this.workerAddress = workerAddress == null ? null : workerAddress.toString();
         this.agentAddress = agentAddress;
         this.hzAddress = hzAddress;
         this.workerId = workerId;
