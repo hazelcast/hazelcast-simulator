@@ -38,6 +38,11 @@ public class IntByteMapTest extends AbstractTest {
     public int valueCount = 1000;
     public int minSize = 16;
     public int maxSize = 2000;
+    // the number of keys that are going to be written.
+    // normally you want to keep this the same as keyCount (for reading), but it can help to expose certain problems like
+    // gc. If they writeKeyCount is very small, only a small group of objects get updated frequently and helps to prevent
+    // getting them tenured. If writeKeyCount is -1, it will automatically be set to keyCount
+    public int writeKeyCount = -1;
     public KeyLocality keyLocality = KeyLocality.SHARED;
 
     private IMap<Integer, Object> map;
@@ -51,6 +56,10 @@ public class IntByteMapTest extends AbstractTest {
 
         if (minSize > maxSize) {
             throw new IllegalStateException("minSize can't be larger than maxSize");
+        }
+
+        if (writeKeyCount == -1) {
+            writeKeyCount = keyCount;
         }
     }
 
@@ -78,7 +87,8 @@ public class IntByteMapTest extends AbstractTest {
 
     @TimeStep(prob = 0.0)
     public void set(ThreadState state) {
-        map.set(state.randomKey(), state.randomValue());
+
+        map.set(state.randomWriteKey(), state.randomValue());
     }
 
     @TimeStep(prob = -1)
@@ -90,6 +100,10 @@ public class IntByteMapTest extends AbstractTest {
 
         private int randomKey() {
             return keys[randomInt(keys.length)];
+        }
+
+        private int randomWriteKey() {
+            return keys[randomInt(writeKeyCount)];
         }
 
         private byte[] randomValue() {

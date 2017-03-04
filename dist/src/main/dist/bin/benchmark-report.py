@@ -130,21 +130,24 @@ class Gnuplot:
     # the the colors are predictable and very much different. If there are too many time series
     # then we just rely on the default mechanism
     def _color(self, ts):
-        if (len(self.ts_list)) > 7:
+        if (len(self.ts_list)) > 8:
             return None
 
-        if ts==self.ts_list[0]:
+        # for list of colors: http://www.ss.scphys.kyoto-u.ac.jp/person/yonezawa/contents/program/gnuplot/colorname_list.html
+        if ts == self.ts_list[0]:
             return "red"
-        elif ts==self.ts_list[1]:
+        elif ts == self.ts_list[1]:
             return "blue"
-        elif ts==self.ts_list[2]:
-            return "green"
-        elif ts==self.ts_list[3]:
-            return "yellow"
-        elif ts==self.ts_list[4]:
+        elif ts == self.ts_list[2]:
+            return "forest-green"
+        elif ts == self.ts_list[3]:
+            return "gold"
+        elif ts == self.ts_list[4]:
             return "grey"
-        elif ts==self.ts_list[5]:
+        elif ts == self.ts_list[5]:
             return "brown"
+        elif ts == self.ts_list[6]:
+            return "violet"
         else:
             return "orchid"
 
@@ -507,7 +510,7 @@ class Worker:
                 for x in range(0, 8):
                     next(csvreader)
                 for row in csvreader:
-                    if column >= len(row):  # protection if column doesn't exist
+                    if column < len(row):  # protection if column doesn't exist
                         result.append(KeyValue(row[0], row[column]))
         return result
 
