@@ -16,7 +16,9 @@
 
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.common.TestPhase;
+import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 
@@ -48,7 +50,13 @@ class CoordinatorRunMonolith {
     public void init(DeploymentPlan deploymentPlan) {
         logConfiguration(deploymentPlan);
 
-        coordinator.createStartWorkersTask(deploymentPlan.getWorkerDeployment(), new HashMap<String, String>()).run();
+        try {
+            coordinator.createStartWorkersTask(deploymentPlan.getWorkerDeployment(), new HashMap<String, String>()).run();
+        } catch (RuntimeException e) {
+            failureCollector.notify(
+                    new FailureOperation("Failed to create worker", FailureType.WORKER_CREATE_ERROR, null, null, null));
+            throw e;
+        }
     }
 
     public boolean run(TestSuite testSuite) throws Exception {

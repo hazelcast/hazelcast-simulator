@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TestData;
@@ -62,21 +63,24 @@ public class FailureCollector {
     public void notify(FailureOperation failure) {
         failure = enrich(failure);
 
-        WorkerData worker = componentRegistry.findWorker(failure.getWorkerAddress());
-        if (worker == null) {
-            // we are not interested in failures of workers that aren't registered any longer.
-            return;
-        }
+        if (failure.getType() != FailureType.WORKER_CREATE_ERROR) {
+            WorkerData worker = componentRegistry.findWorker(failure.getWorkerAddress());
+            if (worker == null) {
+                // we are not interested in failures of workers that aren't registered any longer.
+                return;
+            }
 
-        // it the failure is the terminal for that workers, we need to remove it from the component registry
-        if (failure.getType().isTerminal()) {
-            LOGGER.info("Removing worker " + worker.getAddress() + " from componentRegistry due to [" + failure.getType() + "]");
-            componentRegistry.removeWorker(worker.getAddress());
-        }
+            // it the failure is the terminal for that workers, we need to remove it from the component registry
+            if (failure.getType().isTerminal()) {
+                LOGGER.info("Removing worker " + worker.getAddress()
+                        + " from componentRegistry due to [" + failure.getType() + "]");
+                componentRegistry.removeWorker(worker.getAddress());
+            }
 
-        // if we don't care for the failure, we are done; no need to log anything.
-        if (worker.isIgnoreFailures() || failure.getType() == WORKER_NORMAL_EXIT) {
-            return;
+            // if we don't care for the failure, we are done; no need to log anything.
+            if (worker.isIgnoreFailures() || failure.getType() == WORKER_NORMAL_EXIT) {
+                return;
+            }
         }
 
         int failureCount = criticalFailureCounter.incrementAndGet();
@@ -107,6 +111,10 @@ public class FailureCollector {
     }
 
     private void logFailure(FailureOperation failure, long failureCount, boolean isCriticalFailure) {
+        if (failure.getType() == FailureType.WORKER_CREATE_ERROR) {
+            return;
+        }
+
         int failureNumber = failureNumberGenerator.incrementAndGet();
         if (failureCount < MAX_CONSOLE_FAILURE_COUNT) {
             if (isCriticalFailure) {
