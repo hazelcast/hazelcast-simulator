@@ -19,6 +19,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.tasks.ArtifactCleanTask;
+import com.hazelcast.simulator.coordinator.tasks.ArtifactDownloadTask;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
@@ -46,6 +48,7 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
@@ -63,7 +66,6 @@ final class CoordinatorCli {
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
-    CoordinatorDownloader downloader;
     CoordinatorRunMonolith runMonolith;
     Coordinator coordinator;
     TestSuite testSuite;
@@ -183,9 +185,7 @@ final class CoordinatorCli {
         this.simulatorProperties = loadSimulatorProperties();
         this.componentRegistry = newComponentRegistry(simulatorProperties);
 
-        if (options.has(downloadSpec) || options.has(cleanSpec)) {
-            this.downloader = new CoordinatorDownloader(componentRegistry, simulatorProperties);
-        } else {
+        if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
             this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
 
@@ -207,9 +207,9 @@ final class CoordinatorCli {
 
     void run() throws Exception {
         if (options.has(downloadSpec)) {
-            downloader.download();
+            new ArtifactDownloadTask("*", simulatorProperties, getUserDir(), componentRegistry).run();
         } else if (options.has(cleanSpec)) {
-            downloader.clean();
+            new ArtifactCleanTask(componentRegistry, simulatorProperties).run();
         } else {
             coordinator.start();
             if (testSuite == null) {
