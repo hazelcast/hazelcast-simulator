@@ -24,10 +24,16 @@ import com.hazelcast.simulator.test.annotations.InjectTestContext;
 /**
  * An Abstract Test that provides basic behavior so it doesn't need to be repeated for every test.
  *
- * Coordinator will not impose the AbstractTest to be the part of any test class.
+ * Coordinator doesn't not impose the AbstractTest to be the part of any test class. So if you want
+ * to use it, use it; otherwise you can define your own hierarchy.
  */
 public abstract class AbstractTest {
 
+    /**
+     * Returns the name of the configured data-structure. Normally your tests will contain a 'name'
+     * property so you can define e.g. 'offheapMap' or 'onheapMap' etc. This way you can change the
+     * behavior of the test by switching to a different data-structure.
+     */
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public String name = getClass().getSimpleName();
 
