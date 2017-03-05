@@ -18,45 +18,34 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.EntryListenerImpl;
 import com.hazelcast.simulator.tests.map.helpers.EventCount;
 import com.hazelcast.simulator.tests.map.helpers.ScrambledZipfianGenerator;
-import com.hazelcast.simulator.worker.selector.OperationSelector;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
-import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 /**
- * This test is using a map to generate map entry events. We use an {@link com.hazelcast.core.EntryListener} implementation to
+ * This test is using a map to generate map entry events. We use an {@link com.hazelcast.core.EntryListener}
+ * implementation to
  * count the received events. We are generating and counting add, remove, update and evict events.
  *
- * As currently the event system of Hazelcast is on a "best effort" basis, it is possible that the number of generated events will
- * not equal the number of events received. In the future the Hazelcast event system could change. For now we can say the number
- * of events received can not be greater than the number of events generated.
+ * As currently the event system of Hazelcast is on a "best effort" basis, it is possible that the number of
+ * generated events will not equal the number of events received. In the future the Hazelcast event system
+ * could change. For now we can say the number of events received can not be greater than the number of events generated.
  */
 public class MapEntryListenerTest extends AbstractTest {
-
-    private enum MapOperation {
-        PUT,
-        EVICT,
-        REMOVE,
-        DELETE
-    }
-
-    private enum MapPutOperation {
-        PUT,
-        PUT_IF_ABSENT,
-        REPLACE
-    }
 
     private static final int SLEEP_CATCH_EVENTS_MILLIS = 8000;
 
@@ -67,26 +56,16 @@ public class MapEntryListenerTest extends AbstractTest {
     public boolean randomDistributionUniform = false;
     public int maxEntryListenerDelayMs = 0;
     public int minEntryListenerDelayMs = 0;
-
-    public double putProb = 0.4;
-    public double evictProb = 0.2;
-    public double removeProb = 0.2;
-    public double deleteProb = 0.2;
-
-    public double putUsingPutIfAbsentProb = 0.25;
-    public double putUsingReplaceProb = 0.25;
+    public int threadCount;
 
     private final ScrambledZipfianGenerator keysZipfian = new ScrambledZipfianGenerator(keyCount);
-    private final OperationSelectorBuilder<MapOperation> mapOperationSelectorBuilder
-            = new OperationSelectorBuilder<MapOperation>();
-    private final OperationSelectorBuilder<MapPutOperation> mapPutOperationSelectorBuilder
-            = new OperationSelectorBuilder<MapPutOperation>();
 
     private String[] values;
     private EntryListenerImpl<Integer, String> listener;
     private IList<EventCount> eventCounts;
     private IList<EntryListenerImpl<Integer, String>> listeners;
     private IMap<Integer, String> map;
+    private final AtomicInteger threadsRemaining = new AtomicInteger();
 
     @Setup
     public void setUp() {
@@ -99,16 +78,7 @@ public class MapEntryListenerTest extends AbstractTest {
         map = targetInstance.getMap(name);
         map.addEntryListener(listener, true);
 
-        mapOperationSelectorBuilder
-                .addOperation(MapOperation.PUT, putProb)
-                .addOperation(MapOperation.EVICT, evictProb)
-                .addOperation(MapOperation.REMOVE, removeProb)
-                .addOperation(MapOperation.DELETE, deleteProb);
-
-        mapPutOperationSelectorBuilder
-                .addOperation(MapPutOperation.PUT_IF_ABSENT, putUsingPutIfAbsentProb)
-                .addOperation(MapPutOperation.REPLACE, putUsingReplaceProb)
-                .addDefaultOperation(MapPutOperation.PUT);
+        threadsRemaining.set(threadCount);
     }
 
     @Prepare(global = true)
@@ -123,120 +93,111 @@ public class MapEntryListenerTest extends AbstractTest {
         eventCounts.add(initCounter);
     }
 
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = -1)
+    public void put(ThreadState state) {
+        int key = state.randomKey();
+        map.lock(key);
+        try {
+            if (map.containsKey(key)) {
+                state.eventCount.updateCount.getAndIncrement();
+            } else {
+                state.eventCount.addCount.getAndIncrement();
+            }
+            map.put(key, state.randomValue());
+        } finally {
+            map.unlock(key);
+        }
     }
 
-    private class Worker extends AbstractWorker<MapOperation> {
-
-        private final EventCount eventCount = new EventCount();
-        private final OperationSelector<MapPutOperation> mapPutSelector = mapPutOperationSelectorBuilder.build();
-
-        public Worker() {
-            super(mapOperationSelectorBuilder);
-        }
-
-        @Override
-        protected void timeStep(MapOperation mapOperation) {
-            int key;
-
-            if (randomDistributionUniform) {
-                key = randomInt(keyCount);
-            } else {
-                key = keysZipfian.nextInt();
+    @TimeStep(prob = 0.1)
+    public void putIfAbsent(ThreadState state) {
+        int key = state.randomKey();
+        map.lock(key);
+        try {
+            if (map.putIfAbsent(key, state.randomValue()) == null) {
+                state.eventCount.addCount.getAndIncrement();
             }
+        } finally {
+            map.unlock(key);
+        }
+    }
 
-            switch (mapOperation) {
-                case PUT:
-                    putOperation(key);
-                    break;
-                case EVICT:
-                    map.lock(key);
-                    try {
-                        if (map.containsKey(key)) {
-                            eventCount.evictCount.getAndIncrement();
-                        }
-                        map.evict(key);
-                    } finally {
-                        map.unlock(key);
-                    }
-                    break;
-                case REMOVE:
-                    String oldValue = map.remove(key);
-                    if (oldValue != null) {
-                        eventCount.removeCount.getAndIncrement();
-                    }
-                    break;
-                case DELETE:
-                    map.lock(key);
-                    try {
-                        if (map.containsKey(key)) {
-                            eventCount.removeCount.getAndIncrement();
-                        }
-                        map.delete(key);
-                    } finally {
-                        map.unlock(key);
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
+    @TimeStep(prob = 0.1)
+    public void replace(ThreadState state) {
+        int key = state.randomKey();
+        String oldValue = map.get(key);
+        if (oldValue != null && map.replace(key, oldValue, state.randomValue())) {
+            state.eventCount.updateCount.getAndIncrement();
+        }
+    }
+
+    @TimeStep(prob = 0.2)
+    public void evict(ThreadState state) {
+        int key = state.randomKey();
+        map.lock(key);
+        try {
+            if (map.containsKey(key)) {
+                state.eventCount.evictCount.getAndIncrement();
             }
+            map.evict(key);
+        } finally {
+            map.unlock(key);
         }
+    }
 
-        private void putOperation(int key) {
-            String value = values[randomInt(values.length)];
+    @TimeStep(prob = 0.2)
+    public void remove(ThreadState state) {
+        int key = state.randomKey();
+        String oldValue = map.remove(key);
+        if (oldValue != null) {
+            state.eventCount.removeCount.getAndIncrement();
+        }
+    }
 
-            switch (mapPutSelector.select()) {
-                case PUT:
-                    map.lock(key);
-                    try {
-                        if (map.containsKey(key)) {
-                            eventCount.updateCount.getAndIncrement();
-                        } else {
-                            eventCount.addCount.getAndIncrement();
-                        }
-                        map.put(key, value);
-                    } finally {
-                        map.unlock(key);
-                    }
-                    break;
-                case PUT_IF_ABSENT:
-                    map.lock(key);
-                    try {
-                        if (map.putIfAbsent(key, value) == null) {
-                            eventCount.addCount.getAndIncrement();
-                        }
-                    } finally {
-                        map.unlock(key);
-                    }
-                    break;
-                case REPLACE:
-                    String oldValue = map.get(key);
-                    if (oldValue != null && map.replace(key, oldValue, value)) {
-                        eventCount.updateCount.getAndIncrement();
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
+    @TimeStep(prob = 0.2)
+    public void delete(ThreadState state) {
+        int key = state.randomKey();
+        map.lock(key);
+        try {
+            if (map.containsKey(key)) {
+                state.eventCount.removeCount.getAndIncrement();
             }
+            map.delete(key);
+        } finally {
+            map.unlock(key);
         }
+    }
 
-        @Override
-        public void afterRun() {
-            eventCounts.add(eventCount);
-        }
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        eventCounts.add(state.eventCount);
 
-        @Override
-        public void afterCompletion() {
-            // wait, so that our entry listener implementation can catch the last incoming events from other members / clients
-            sleepMillis(SLEEP_CATCH_EVENTS_MILLIS);
+
+        if (threadsRemaining.decrementAndGet() == 0) {
+            sleepSeconds(SLEEP_CATCH_EVENTS_MILLIS);
 
             listeners.add(listener);
         }
     }
 
-    @Verify(global = true)
+    public class ThreadState extends BaseThreadState {
+
+        private final EventCount eventCount = new EventCount();
+
+        String randomValue() {
+            return values[randomInt(values.length)];
+        }
+
+        int randomKey() {
+            if (randomDistributionUniform) {
+                return randomInt(keyCount);
+            } else {
+                return keysZipfian.nextInt();
+            }
+        }
+    }
+
+    @Verify
     public void globalVerify() {
         for (int i = 0; i < listeners.size() - 1; i++) {
             EntryListenerImpl a = listeners.get(i);
