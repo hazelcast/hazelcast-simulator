@@ -38,23 +38,12 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public final class CommonUtils {
 
-    private static final String EXCEPTION_SEPARATOR = "------ End remote and begin local stack-trace ------";
-
     private CommonUtils() {
     }
 
     public static String getSimulatorVersion() {
         String implementationVersion = CommonUtils.class.getPackage().getImplementationVersion();
         return (implementationVersion != null) ? implementationVersion : "SNAPSHOT";
-    }
-
-    public static void fixRemoteStackTrace(Throwable remoteCause, StackTraceElement[] localSideStackTrace) {
-        StackTraceElement[] remoteStackTrace = remoteCause.getStackTrace();
-        StackTraceElement[] newStackTrace = new StackTraceElement[localSideStackTrace.length + remoteStackTrace.length];
-        System.arraycopy(remoteStackTrace, 0, newStackTrace, 0, remoteStackTrace.length);
-        newStackTrace[remoteStackTrace.length] = new StackTraceElement(EXCEPTION_SEPARATOR, "", null, -1);
-        System.arraycopy(localSideStackTrace, 1, newStackTrace, remoteStackTrace.length + 1, localSideStackTrace.length - 1);
-        remoteCause.setStackTrace(newStackTrace);
     }
 
     public static RuntimeException rethrow(Throwable throwable) {

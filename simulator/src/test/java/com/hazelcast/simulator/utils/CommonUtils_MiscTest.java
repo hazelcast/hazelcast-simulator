@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.utils.CommonUtils.await;
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
-import static com.hazelcast.simulator.utils.CommonUtils.fixRemoteStackTrace;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
@@ -36,17 +35,6 @@ public class CommonUtils_MiscTest {
     @Test
     public void testGetSimulatorVersion() {
         assertEquals("SNAPSHOT", getSimulatorVersion());
-    }
-
-    @Test
-    public void testFixRemoteStackTrace() {
-        Throwable remoteCause = new Throwable("Expected throwable");
-        StackTraceElement[] localSideStackTrace = Thread.currentThread().getStackTrace();
-        int expectedLength = remoteCause.getStackTrace().length + localSideStackTrace.length;
-
-        fixRemoteStackTrace(remoteCause, localSideStackTrace);
-
-        assertEquals("Expected stack trace of length %d, but was %d", expectedLength, remoteCause.getStackTrace().length);
     }
 
     @Test
