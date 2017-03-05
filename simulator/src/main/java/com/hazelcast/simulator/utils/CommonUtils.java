@@ -17,13 +17,10 @@ package com.hazelcast.simulator.utils;
 
 import org.apache.log4j.Logger;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -60,17 +57,6 @@ public final class CommonUtils {
         return stringWriter.toString();
     }
 
-    public static void closeQuietly(Socket socket) {
-        if (socket == null) {
-            return;
-        }
-        try {
-            socket.close();
-        } catch (IOException ignore) {
-            ignore(ignore);
-        }
-    }
-
     public static void closeQuietly(Closeable... closeables) {
         for (Closeable c : closeables) {
             closeQuietly(c);
@@ -95,17 +81,6 @@ public final class CommonUtils {
         try {
             jarFile.close();
         } catch (IOException ignore) {
-            ignore(ignore);
-        }
-    }
-
-    public static void closeQuietly(XMLStreamWriter writer) {
-        if (writer == null) {
-            return;
-        }
-        try {
-            writer.close();
-        } catch (XMLStreamException ignore) {
             ignore(ignore);
         }
     }
