@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.worker.metronome.Metronome;
 import org.junit.Test;
@@ -85,12 +84,6 @@ public class AnnotationReflectionUtilsTest {
         private Probe defaultValueProbe;
 
         private Probe notAnnotatedProbe;
-
-        @InjectMetronome
-        private Metronome configuredMetronome;
-
-        @InjectMetronome
-        private Metronome defaultValueMetronome;
 
         private Metronome notAnnotatedMetronome;
     }
