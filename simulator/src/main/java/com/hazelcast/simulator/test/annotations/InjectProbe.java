@@ -22,6 +22,8 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates {@link com.hazelcast.simulator.probes.Probe} fields.
+ *
+ * @deprecated since 0.10.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
