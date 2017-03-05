@@ -69,6 +69,7 @@ public class PropertyBinding {
     private final Map<String, Probe> probeMap = new ConcurrentHashMap<String, Probe>();
     private final TestCase testCase;
     private final Set<String> unusedProperties = new HashSet<String>();
+    private Object vendorInstance;
 
     public PropertyBinding(TestCase testCase) {
         this.testCase = testCase;
@@ -81,6 +82,11 @@ public class PropertyBinding {
         this.workerMetronomeConstructor = new MetronomeConstructor(
                 "", this, loadAsInt("threadCount", DEFAULT_THREAD_COUNT));
         this.probeClass = loadProbeClass();
+    }
+
+    public PropertyBinding setVendorInstance(Object vendorInstance) {
+        this.vendorInstance = vendorInstance;
+        return this;
     }
 
     public PropertyBinding setTestContext(TestContextImpl testContext) {
@@ -213,7 +219,7 @@ public class PropertyBinding {
             setFieldValue(object, field, testContext);
         } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
             assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
-            setFieldValue(object, field, testContext.getTargetInstance());
+            setFieldValue(object, field, (HazelcastInstance) vendorInstance);
         } else if (field.isAnnotationPresent(InjectProbe.class)) {
             assertFieldType(fieldType, Probe.class, InjectProbe.class);
             Probe probe = getOrCreateProbe(getProbeName(field), isPartOfTotalThroughput(field));

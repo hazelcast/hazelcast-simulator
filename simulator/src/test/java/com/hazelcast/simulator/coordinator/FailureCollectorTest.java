@@ -5,7 +5,7 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.utils.TestUtils;

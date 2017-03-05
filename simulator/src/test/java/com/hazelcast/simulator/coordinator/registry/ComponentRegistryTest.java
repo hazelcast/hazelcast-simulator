@@ -3,6 +3,7 @@ package com.hazelcast.simulator.coordinator.registry;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -250,27 +251,6 @@ public class ComponentRegistryTest {
         assertEquals(4, componentRegistry.workerCount());
 
         componentRegistry.getWorkerAddresses(TargetType.MEMBER, 3);
-    }
-
-    @Test
-    public void testGetFirstWorker() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(2);
-
-        componentRegistry.addWorkers(parentAddress, settingsList);
-        assertEquals(2, componentRegistry.workerCount());
-
-        WorkerData workerData = componentRegistry.getFirstWorker();
-        assertEquals(1, workerData.getAddress().getWorkerIndex());
-        assertEquals(AddressLevel.WORKER, workerData.getAddress().getAddressLevel());
-
-        assertEquals(1, workerData.getSettings().getWorkerIndex());
-        assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
-    }
-
-    @Test(expected = CommandLineExitException.class)
-    public void testGetFirstWorker_noWorkers() {
-        componentRegistry.getFirstWorker();
     }
 
     @Test

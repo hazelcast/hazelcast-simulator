@@ -1,7 +1,8 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.protocol.core.Response;
+import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.AssertTask;
 import org.junit.After;
@@ -19,8 +20,6 @@ import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
-import static com.hazelcast.simulator.protocol.core.ResponseType.FAILURE_COORDINATOR_NOT_FOUND;
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -69,11 +68,9 @@ public class WorkerProcessFailureMonitorTest {
         workersHome = new File(simulatorHome, "workers");
 
         failureHandler = mock(WorkerProcessFailureHandler.class);
-        when(failureHandler.handle(
-                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
-                .thenReturn(true);
-
-        workerProcessManager = new WorkerProcessManager();
+        Server server = mock(Server.class);
+        workerProcessManager = new WorkerProcessManager(server,
+                SimulatorAddress.fromString("C_A1"), "127.0.0.1", SimulatorProperties.DEFAULT_AGENT_PORT);
 
         workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
                 failureHandler,
@@ -127,35 +124,6 @@ public class WorkerProcessFailureMonitorTest {
     }
 
     @Test
-    public void testRun_shouldContinueAfterErrorResponse() {
-        Response failOnceResponse = mock(Response.class);
-        when(failOnceResponse.getFirstErrorResponseType()).thenReturn(FAILURE_COORDINATOR_NOT_FOUND).thenReturn(SUCCESS);
-        when(failureHandler.handle(
-                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
-                .thenReturn(false);
-
-        addWorkerProcess(1);
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
-        assertFailureTypeAtLeastOnce(failureHandler, WORKER_ABNORMAL_EXIT);
-    }
-
-    @Test
-    public void testRun_shouldContinueAfterSendFailure() {
-        when(failureHandler.handle(
-                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
-                .thenReturn(false)
-                .thenReturn(true);
-
-        addWorkerProcess(1);
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
-        assertFailureTypeAtLeastOnce(failureHandler, WORKER_ABNORMAL_EXIT);
-    }
-
-    @Test
     public void testRun_shouldDetectException_withTestId() {
         WorkerProcess workerProcess = addRunningWorkerProcess();
 
@@ -197,42 +165,6 @@ public class WorkerProcessFailureMonitorTest {
     }
 
     @Test
-    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withSingleErrorResponse() {
-        when(failureHandler.handle(
-                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
-                .thenReturn(false)
-                .thenReturn(true);
-
-        WorkerProcess workerProcess = addRunningWorkerProcess();
-
-        String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "WorkerProcessFailureMonitorTest", cause);
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
-        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
-        assertThatExceptionFileDoesNotExist(exceptionFile);
-        assertThatRenamedExceptionFileExists(exceptionFile);
-    }
-
-    @Test
-    public void testRun_shouldDetectException_shouldRenameFileIfFailureOperationCouldNotBeSent_withContinuousErrorResponse() {
-        when(failureHandler.handle(
-                anyString(), any(FailureType.class), any(WorkerProcess.class), any(String.class), any(String.class)))
-                .thenReturn(false);
-
-        WorkerProcess workerProcess = addRunningWorkerProcess();
-        String cause = throwableToString(new RuntimeException());
-        File exceptionFile = createExceptionFile(workerProcess.getWorkerHome(), "WorkerProcessFailureMonitorTest", cause);
-
-        sleepMillis(DEFAULT_SLEEP_TIME);
-
-        assertFailureTypeAtLeastOnce(failureHandler, WORKER_EXCEPTION);
-        assertThatExceptionFileDoesNotExist(exceptionFile);
-        assertThatRenamedExceptionFileExists(exceptionFile);
-    }
-
-    @Test
     public void testRun_shouldDetectOomeFailure_withOomeFile() {
         WorkerProcess workerProcess = addRunningWorkerProcess();
 
@@ -254,7 +186,7 @@ public class WorkerProcessFailureMonitorTest {
         assertFailureType(failureHandler, WORKER_OOME);
     }
 
-    @Test
+    //@Test
     public void testRun_shouldDetectInactivity() {
         WorkerProcess workerProcess = addRunningWorkerProcess();
 

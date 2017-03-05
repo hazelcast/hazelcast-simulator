@@ -22,6 +22,8 @@ import java.lang.annotation.Target;
 
 /**
  * Annotates {@link com.hazelcast.core.HazelcastInstance} fields.
+ *
+ * todo: this annotation needs to be deprecated since it is hz specific
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

@@ -41,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_TEARDOWN;
@@ -77,15 +78,21 @@ public class TestContainer {
     private final Class testClass;
     private final RunStrategy runStrategy;
     private final TestPerformanceTracker testPerformanceTracker;
+    private final AtomicReference<TestPhase> currentPhase = new AtomicReference<TestPhase>();
 
-    public TestContainer(TestContextImpl targetInstance, TestCase testCase) {
-        this(targetInstance, null, testCase);
+    public TestContainer(TestContextImpl targetInstance, TestCase testCase, Object vendorInstance) {
+        this(targetInstance, null, testCase, vendorInstance);
     }
 
     public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase) {
+        this(testContext, givenTestInstance, testCase, null);
+    }
+
+    public TestContainer(TestContextImpl testContext, Object givenTestInstance, TestCase testCase, Object vendorInstance) {
         this.testContext = checkNotNull(testContext, "testContext can't null!");
         this.testCase = checkNotNull(testCase, "testCase can't be null!");
         this.propertyBinding = new PropertyBinding(testCase)
+                .setVendorInstance(vendorInstance)
                 .setTestContext(testContext);
 
         propertyBinding.bind(this);
@@ -105,6 +112,10 @@ public class TestContainer {
         propertyBinding.ensureNoUnusedProperties();
 
         this.testPerformanceTracker = new TestPerformanceTracker(this);
+    }
+
+    public TestPhase getCurrentPhase() {
+        return currentPhase.get();
     }
 
     public TestPerformanceTracker getTestPerformanceTracker() {
@@ -160,12 +171,16 @@ public class TestContainer {
     }
 
     public void invoke(TestPhase testPhase) throws Exception {
-        Callable task = taskPerPhaseMap.get(testPhase);
-        if (task == null) {
-            return;
+        if (!currentPhase.compareAndSet(null, testPhase)) {
+            throw new IllegalStateException(format("Tried to start %s for test %s, but %s is still running!", testPhase,
+                    testCase.getId(), currentPhase.get()));
         }
 
         try {
+            Callable task = taskPerPhaseMap.get(testPhase);
+            if (task == null) {
+                return;
+            }
             task.call();
         } catch (InvocationTargetException e) {
             Throwable t = e.getTargetException();
@@ -176,6 +191,8 @@ public class TestContainer {
             } else {
                 throw e;
             }
+        } finally {
+            currentPhase.set(null);
         }
     }
 

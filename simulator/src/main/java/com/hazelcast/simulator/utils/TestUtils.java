@@ -138,7 +138,8 @@ public final class TestUtils {
             }
 
             sleepMillisThrowException(sleepMillis);
-            sleepMillis *= ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR;
+            // we put a cap on the maximum timeout.
+            sleepMillis = (int) Math.min(SECONDS.toMillis(1), sleepMillis * ASSERT_TRUE_EVENTUALLY_SLEEP_FACTOR);
         }
     }
 

@@ -1,11 +1,10 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.probes.impl.EmptyProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
-import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -35,7 +34,7 @@ public class TestContainer_TimeStep_ProbeInjectionTest extends TestContainer_Abs
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
-                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
+                testCase.getId(), "localhost", mock(Server.class));
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
@@ -60,7 +59,7 @@ public class TestContainer_TimeStep_ProbeInjectionTest extends TestContainer_Abs
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
-                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
+                testCase.getId(), "localhost", mock(Server.class));
         final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 

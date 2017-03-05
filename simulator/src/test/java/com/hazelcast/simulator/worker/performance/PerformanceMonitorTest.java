@@ -1,19 +1,16 @@
 package com.hazelcast.simulator.worker.performance;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
-import com.hazelcast.simulator.protocol.connector.WorkerConnector;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.tests.DummyTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
+import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestContextImpl;
+import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,13 +20,11 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -42,19 +37,20 @@ public class PerformanceMonitorTest {
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
 
-    private ServerConnector serverConnector;
+    private Server server;
     private PerformanceMonitor performanceMonitor;
+    private TestManager containerManager;
 
     @Before
     public void before() {
         setupFakeUserDir();
 
-        SimulatorAddress workerAddress = new SimulatorAddress(AddressLevel.WORKER, 1, 1, 0);
+        server = mock(Server.class);
 
-        serverConnector = mock(ServerConnector.class);
-        when(serverConnector.getAddress()).thenReturn(workerAddress);
+        containerManager = mock(TestManager.class);
+        when(containerManager.getContainers()).thenReturn(tests.values());
 
-        performanceMonitor = new PerformanceMonitor(serverConnector, tests.values(), 1);
+        performanceMonitor = new PerformanceMonitor(server, containerManager, 1);
     }
 
     @After
@@ -87,7 +83,7 @@ public class PerformanceMonitorTest {
 
         performanceMonitor.start();
 
-        verifyNoMoreInteractions(serverConnector);
+        verifyNoMoreInteractions(server);
     }
 
     @Test
@@ -96,7 +92,7 @@ public class PerformanceMonitorTest {
 
         performanceMonitor.start();
 
-        verifyNoMoreInteractions(serverConnector);
+        verifyNoMoreInteractions(server);
     }
 
     @Test
@@ -138,8 +134,8 @@ public class PerformanceMonitorTest {
     }
 
     private void assertPerfStatsSend() {
-        verify(serverConnector, atLeastOnce()).submit(eq(COORDINATOR), any(PerformanceStatsOperation.class));
-        verifyNoMoreInteractions(serverConnector);
+        verify(server, atLeastOnce()).sendCoordinator(any(PerformanceStatsOperation.class));
+        verifyNoMoreInteractions(server);
     }
 
     private static class DelayTestContext extends TestContextImpl {
@@ -148,13 +144,8 @@ public class PerformanceMonitorTest {
         private volatile boolean stopped = false;
 
         DelayTestContext(int delayMillis) {
-            super(null, TEST_NAME, "localhost", mock(WorkerConnector.class));
+            super(TEST_NAME, "localhost", mock(Server.class));
             this.delayMillis = delayMillis;
-        }
-
-        @Override
-        public HazelcastInstance getTargetInstance() {
-            return null;
         }
 
         @Override

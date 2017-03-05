@@ -1,13 +1,12 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.StubPromise;
-import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
+import com.hazelcast.simulator.DummyPromise;
+import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class ScriptExecutorTest {
@@ -24,27 +23,33 @@ public class ScriptExecutorTest {
     @Test
     public void bash() {
         ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("bash:ls", false);
-        StubPromise promise = new StubPromise();
+        DummyPromise promise = new DummyPromise();
         scriptExecutor.execute(scriptOperation, promise);
-        assertEquals(SUCCESS, promise.join());
+
+        promise.assertCompletesEventually();
+        assertTrue(promise.getAnswer() instanceof String);
     }
 
     @Test
     public void javascript() {
         ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("js:java.lang.System.out.println();", false);
-        StubPromise promise = new StubPromise();
-        System.out.println();
+        DummyPromise promise = new DummyPromise();
+
         scriptExecutor.execute(scriptOperation, promise);
-        assertEquals(SUCCESS, promise.join());
+
+        promise.assertCompletesEventually();
+        assertTrue(promise.getAnswer() instanceof String);
     }
 
     @Test
     public void whenFireSndForget_thenErrorNotNoticed() {
         ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("bash:foobar", true);
-        StubPromise promise = new StubPromise();
+
+        DummyPromise promise = new DummyPromise();
 
         scriptExecutor.execute(scriptOperation, promise);
-        assertEquals(SUCCESS, promise.join());
+        promise.assertCompletesEventually();
+        assertTrue(promise.getAnswer() instanceof String);
     }
 }
 

@@ -16,23 +16,20 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.connector.CoordinatorRemoteConnector;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.RcDownloadOperation;
-import com.hazelcast.simulator.protocol.operation.RcInstallOperation;
-import com.hazelcast.simulator.protocol.operation.RcPrintLayoutOperation;
-import com.hazelcast.simulator.protocol.operation.RcStopCoordinatorOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
-import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.coordinator.registry.TargetType;
+import com.hazelcast.simulator.coordinator.operations.RcDownloadOperation;
+import com.hazelcast.simulator.coordinator.operations.RcInstallOperation;
+import com.hazelcast.simulator.coordinator.operations.RcPrintLayoutOperation;
+import com.hazelcast.simulator.coordinator.operations.RcStopCoordinatorOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStatusOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStopOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
+import com.hazelcast.simulator.protocol.core.AddressLevel;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.TagUtils;
@@ -45,6 +42,10 @@ import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -68,7 +69,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     private final String[] args;
     private final int coordinatorPort;
 
-    private CoordinatorRemoteConnector connector;
+    private CoordinatorRemote remote;
 
     private CoordinatorRemoteCli(String[] args) {
         SimulatorProperties simulatorProperties = new SimulatorProperties();
@@ -85,7 +86,7 @@ public final class CoordinatorRemoteCli implements Closeable {
     }
 
     @SuppressWarnings("checkstyle:cyclomaticcomplexity")
-    public void run() {
+    public void run() throws Exception {
         if (args.length == 0) {
             printHelpAndExit();
         }
@@ -93,8 +94,8 @@ public final class CoordinatorRemoteCli implements Closeable {
         String cmd = args[0];
         String[] subArgs = removeFirst(args);
 
-        connector = new CoordinatorRemoteConnector("localhost", coordinatorPort);
-        connector.start();
+        remote = initRemote();
+
         if ("download".equals(cmd)) {
             new DownloadCli().run(subArgs);
         } else if ("install".equals(cmd)) {
@@ -122,6 +123,10 @@ public final class CoordinatorRemoteCli implements Closeable {
         }
     }
 
+    private CoordinatorRemote initRemote() throws NotBoundException, MalformedURLException, RemoteException {
+        return (CoordinatorRemote) Naming.lookup("rmi://localhost:" + coordinatorPort + "/CoordinatorRemote");
+    }
+
     private static void printHelpAndExit() {
         System.out.println(
                 "Command         Description                                                                 \n"
@@ -143,7 +148,8 @@ public final class CoordinatorRemoteCli implements Closeable {
 
     @Override
     public void close() {
-        closeQuietly(connector);
+
+        //closeQuietly(connector);
     }
 
     public static void main(String[] args) throws Exception {
@@ -178,21 +184,12 @@ public final class CoordinatorRemoteCli implements Closeable {
         protected void run(String[] args) {
             this.options = newOptions(args);
 
-            Response response = connector.write(newOperation());
-
-            Response.Part errorPart = response.getFirstErrorPart();
-
-            if (errorPart == null) {
-                Response.Part part = response.getFirstPart();
-                System.out.println(part.getPayload() == null ? "success" : part.getPayload());
-            } else {
-                if (errorPart.getPayload() != null) {
-                    System.err.println(errorPart.getPayload());
-                } else {
-                    System.err.println("errorType: " + errorPart.getType());
-                }
+            try {
+                String result = remote.execute(newOperation());
+                System.out.println(result == null ? "success" : result);
+            } catch (Exception e) {
                 throw new CommandLineExitException(
-                        format("Could not process command: %s message [%s]", errorPart.getType(), errorPart.getPayload()));
+                        format("Could not process command: message [%s]", e.getMessage()));
             }
         }
     }

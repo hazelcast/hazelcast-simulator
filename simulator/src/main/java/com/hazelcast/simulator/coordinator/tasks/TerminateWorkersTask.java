@@ -15,19 +15,22 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
+import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.RemoteClient;
-import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
-import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.protocol.CoordinatorClient;
+import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import org.apache.log4j.Logger;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -40,28 +43,34 @@ public class TerminateWorkersTask {
     private static final Logger LOGGER = Logger.getLogger(TerminateWorkersTask.class);
     private final ComponentRegistry componentRegistry;
     private final SimulatorProperties simulatorProperties;
-    private final RemoteClient remoteClient;
+    private final CoordinatorClient client;
 
     public TerminateWorkersTask(
             SimulatorProperties simulatorProperties,
             ComponentRegistry componentRegistry,
-            RemoteClient remoteClient) {
+            CoordinatorClient client) {
         this.simulatorProperties = simulatorProperties;
         this.componentRegistry = componentRegistry;
-        this.remoteClient = remoteClient;
+        this.client = client;
     }
 
     public void run() {
-        int currentWorkerCount = componentRegistry.workerCount();
-
-        LOGGER.info(format("Terminating %d Workers...", currentWorkerCount));
-        terminateWorkers();
-
-        waitForWorkerShutdown(currentWorkerCount);
+        try {
+            run0();
+        } catch (Exception e) {
+            LOGGER.error("Failed to terminate workers", e);
+        }
     }
 
-    private void terminateWorkers() {
-        remoteClient.invokeOnAllAgents(new StopTimeoutDetectionOperation());
+    private void run0() throws TimeoutException, InterruptedException, ExecutionException {
+        int currentWorkerCount = componentRegistry.workerCount();
+        if (currentWorkerCount == 0) {
+            return;
+        }
+
+        LOGGER.info(format("Terminating %d Workers...", currentWorkerCount));
+
+        client.invokeAll(componentRegistry.getAgents(), new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         int shutdownDelaySeconds = componentRegistry.hasClientWorkers()
                 ? simulatorProperties.getMemberWorkerShutdownDelaySeconds()
@@ -72,7 +81,13 @@ public class TerminateWorkersTask {
             worker.setIgnoreFailures(true);
         }
 
-        remoteClient.invokeOnAllWorkers(new TerminateWorkerOperation(shutdownDelaySeconds, true));
+        // we send a message to terminate the workers and this will happen at some point in the future.
+        for (WorkerData worker : componentRegistry.getWorkers()) {
+            client.send(worker.getAddress(), new TerminateWorkerOperation(shutdownDelaySeconds, true));
+        }
+
+        // now we wait for the workers to die
+        waitForWorkerShutdown(currentWorkerCount);
     }
 
     private void waitForWorkerShutdown(int expectedWorkerCount) {

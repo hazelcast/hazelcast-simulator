@@ -40,9 +40,9 @@ start_agent_remote(){
     echo "[INFO]Agent $agent with index [$agent_index] starting"
 
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "killall -9 java || true"
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm agent.pid || true"
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm agent.out || true"
-    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm agent.err || true"
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.pid"
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.out"
+    ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.err"
 
     args="--addressIndex $agent_index --publicAddress $agent --port $AGENT_PORT"
 

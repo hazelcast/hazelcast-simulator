@@ -37,7 +37,7 @@ final class PerformanceLogWriter {
     }
 
     private void writeHeader() {
-        String columns = "epoch,timestamp,operations,operations-delta,operations/second,number-of-tests,total-tests\n";
+        String columns = "epoch,timestamp,operations,operations-delta,operations/second\n";
         appendText(columns, file);
     }
 
@@ -45,9 +45,7 @@ final class PerformanceLogWriter {
                String timestamp,
                long operationsTotal,
                long operationsDelta,
-               double operationsPerSecond,
-               long numberOfTests,
-               long totalTests) {
+               double operationsPerSecond) {
 
         if (!headerWritten) {
             writeHeader();
@@ -61,8 +59,6 @@ final class PerformanceLogWriter {
         sb.append(',').append(operationsTotal);
         sb.append(',').append(operationsDelta);
         sb.append(',').append(format.format(operationsPerSecond));
-        sb.append(',').append(numberOfTests);
-        sb.append(',').append(totalTests);
         sb.append('\n');
         appendText(sb.toString(), file);
     }

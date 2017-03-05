@@ -22,7 +22,7 @@ import java.util.StringTokenizer;
 
 public enum FailureType {
 
-    NETTY_EXCEPTION("nettyException", "Netty exception", false),
+    MESSAGING_EXCEPTION("messagingException", "ActiveMQ exception", true),
     WORKER_EXCEPTION("workerException", "Worker exception", false),
     WORKER_TIMEOUT("workerTimeout", "Worker timeout", false),
     WORKER_OOME("workerOOME", "Worker OOME", true),

@@ -17,6 +17,7 @@ package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.TargetType;
 
 import java.util.ArrayList;
 import java.util.List;

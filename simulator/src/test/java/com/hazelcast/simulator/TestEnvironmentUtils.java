@@ -48,6 +48,8 @@ public class TestEnvironmentUtils {
 
         System.setProperty("user.dir.test", simulatorHome.getAbsolutePath());
 
+        LOGGER.info("Fake SIMULATOR_HOME:"+simulatorHome.getAbsolutePath());
+
         originalSimulatorHome = System.getProperty("SIMULATOR_HOME");
         System.setProperty("SIMULATOR_HOME", simulatorHome.getAbsolutePath());
 

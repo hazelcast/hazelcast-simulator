@@ -27,7 +27,6 @@ public class WorkerProcess {
     private final SimulatorAddress address;
     private final String id;
     private final File workerHome;
-
     private volatile long lastSeen = System.currentTimeMillis();
     private volatile boolean oomeDetected;
     private volatile boolean isFinished;

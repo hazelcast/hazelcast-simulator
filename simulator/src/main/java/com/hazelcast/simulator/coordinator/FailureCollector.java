@@ -15,11 +15,11 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.hazelcast.simulator.common.FailureType.WORKER_CREATE_ERROR;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
@@ -63,14 +64,15 @@ public class FailureCollector {
     public void notify(FailureOperation failure) {
         failure = enrich(failure);
 
-        if (failure.getType() != FailureType.WORKER_CREATE_ERROR) {
-            WorkerData worker = componentRegistry.findWorker(failure.getWorkerAddress());
+        SimulatorAddress workerAddress = failure.getWorkerAddress();
+        if (workerAddress != null && failure.getType() != WORKER_CREATE_ERROR) {
+            WorkerData worker = componentRegistry.findWorker(workerAddress);
             if (worker == null) {
                 // we are not interested in failures of workers that aren't registered any longer.
                 return;
             }
 
-            // it the failure is the terminal for that workers, we need to remove it from the component registry
+            // if the failure is the terminal for that workers, we need to remove it from the component registry
             if (failure.getType().isTerminal()) {
                 LOGGER.info("Removing worker " + worker.getAddress()
                         + " from componentRegistry due to [" + failure.getType() + "]");
@@ -89,7 +91,7 @@ public class FailureCollector {
             hasCriticalFailuresMap.put(testId, true);
         }
 
-        logFailure(failure, failureCount, true);
+        logFailure(failure, failureCount);
 
         appendText(failure.getFileMessage(), file);
 
@@ -110,20 +112,21 @@ public class FailureCollector {
         return failure;
     }
 
-    private void logFailure(FailureOperation failure, long failureCount, boolean isCriticalFailure) {
-        if (failure.getType() == FailureType.WORKER_CREATE_ERROR) {
+    private void logFailure(FailureOperation failure, long failureCount) {
+        if (failure.getType() == WORKER_CREATE_ERROR) {
+            // create error we don't need to log; they will be logged by the CreateWorkersTask
             return;
         }
 
         int failureNumber = failureNumberGenerator.incrementAndGet();
         if (failureCount < MAX_CONSOLE_FAILURE_COUNT) {
-            if (isCriticalFailure) {
+            if (failure.getType().isTerminal()) {
                 LOGGER.warn(failure.getLogMessage(failureNumber));
             } else {
                 LOGGER.info(failure.getLogMessage(failureNumber));
             }
         } else if (failureNumber == MAX_CONSOLE_FAILURE_COUNT) {
-            if (isCriticalFailure) {
+            if (failure.getType().isTerminal()) {
                 LOGGER.warn(format("Maximum number of critical failures has been reached. "
                         + "Additional failures can be found in '%s'", file.getAbsolutePath()));
             } else {

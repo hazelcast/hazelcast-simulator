@@ -48,6 +48,7 @@ public class SimulatorProperties {
 
     public static final String PROPERTIES_FILE_NAME = "simulator.properties";
 
+    public static final int DEFAULT_AGENT_PORT = 9000;
     public static final String CLOUD_PROVIDER = "CLOUD_PROVIDER";
     public static final String CLOUD_IDENTITY = "CLOUD_IDENTITY";
     public static final String CLOUD_CREDENTIAL = "CLOUD_CREDENTIAL";

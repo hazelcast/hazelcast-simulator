@@ -18,6 +18,7 @@ package com.hazelcast.simulator.coordinator.registry;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -317,15 +318,6 @@ public class ComponentRegistry {
         }
 
         return sb.toString();
-    }
-
-    public WorkerData getFirstWorker() {
-        synchronized (workers) {
-            if (workers.size() == 0) {
-                throw new CommandLineExitException("No workers running!");
-            }
-            return workers.get(0);
-        }
     }
 
     public synchronized List<TestData> addTests(TestSuite testSuite) {

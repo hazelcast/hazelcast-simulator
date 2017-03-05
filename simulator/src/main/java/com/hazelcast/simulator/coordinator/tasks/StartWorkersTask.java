@@ -15,16 +15,14 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
+import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
+import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.coordinator.RemoteClient;
-import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseType;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.CreateWorkerOperation;
-import com.hazelcast.simulator.protocol.operation.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.protocol.CoordinatorClient;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
@@ -33,11 +31,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * Starts all Simulator Workers.
@@ -52,23 +51,22 @@ public class StartWorkersTask {
 
     private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
-    private final RemoteClient remoteClient;
+    private final CoordinatorClient client;
     private final ComponentRegistry componentRegistry;
     private final int startupDelayMs;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> memberDeploymentPlan;
     private final Map<SimulatorAddress, List<WorkerProcessSettings>> clientDeploymentPlan;
     private final Map<String, String> tags;
-
     private long started;
     private List<WorkerData> result = new LinkedList<WorkerData>();
 
     public StartWorkersTask(
             Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
             Map<String, String> workerTags,
-            RemoteClient remoteClient,
+            CoordinatorClient client,
             ComponentRegistry componentRegistry,
             int startupDelayMs) {
-        this.remoteClient = remoteClient;
+        this.client = client;
         this.componentRegistry = componentRegistry;
         this.startupDelayMs = startupDelayMs;
         this.tags = workerTags;
@@ -76,7 +74,7 @@ public class StartWorkersTask {
         this.clientDeploymentPlan = filterByWorkerType(false, deploymentPlan);
     }
 
-    public List<WorkerData> run() {
+    public List<WorkerData> run() throws Exception {
         echoStartWorkers();
 
         // first create all members
@@ -85,13 +83,7 @@ public class StartWorkersTask {
         // then create all clients
         startWorkers(false, clientDeploymentPlan);
 
-        remoteClient.invokeOnAllAgents(new StartTimeoutDetectionOperation());
-
-        if (componentRegistry.workerCount() > 0) {
-            WorkerData firstWorker = componentRegistry.getFirstWorker();
-            LOGGER.info(format("Worker for global test phases will be %s (%s)",
-                    firstWorker.getAddress(), firstWorker.getSettings().getWorkerType()));
-        }
+        client.invokeAll(componentRegistry.getAgents(), new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         echoStartComplete();
         return result;
@@ -120,6 +112,7 @@ public class StartWorkersTask {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
         int workerIndex = 0;
         String workerType = isMember ? "member" : "client";
+
         for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : deploymentPlan.entrySet()) {
             SimulatorAddress agentAddress = entry.getKey();
             AgentData agent = componentRegistry.getAgent(agentAddress);
@@ -183,12 +176,18 @@ public class StartWorkersTask {
         @Override
         public void run() {
             CreateWorkerOperation operation = new CreateWorkerOperation(workersSettings, startupDelayMs);
-            Response response = remoteClient.getConnector().invoke(agent.getAddress(), operation);
+            Future<String> f = client.submit(agent.getAddress(), operation);
+            String r;
+            try {
+                r = f.get();
+            } catch (Exception e) {
+                throw new CommandLineExitException("Failed to create workers", e);
+            }
 
-            ResponseType responseType = response.getFirstErrorResponseType();
-            if (responseType != SUCCESS) {
-                throw new CommandLineExitException(format("Could not create %d %s Worker on %s (%s)",
-                        workersSettings.size(), workerType, agent.getAddress(), responseType));
+            if (!"SUCCESS".equals(r)) {
+                LOGGER.fatal(format("Could not create %d %s Worker on %s:",
+                        workersSettings.size(), workerType, agent.getAddress()));
+                throw new CommandLineExitException("Failed to create workers");
             }
 
             // the worker will automatically inherit all the tags of the agent it runs on and on top of that it
@@ -200,6 +199,8 @@ public class StartWorkersTask {
             LOGGER.info(format("Created %d %s Worker on %s", workersSettings.size(), workerType, agent.getAddress()));
             List<WorkerData> createdWorkers = componentRegistry.addWorkers(agent.getAddress(), workersSettings, finalTags);
             result.addAll(createdWorkers);
+
+            LOGGER.info("Workers:" + componentRegistry.getWorkers());
         }
     }
 }

@@ -344,6 +344,13 @@ class Provisioner {
         uploadLibraryJar(ip, "simulator-*");
 
         // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
+
+        // activemq libraries
+        uploadLibraryJar(ip, "activemq-core*");
+        uploadLibraryJar(ip, "geronimo-jms*");
+        uploadLibraryJar(ip, "geronimo-j2ee*");
+        uploadLibraryJar(ip, "slf4j-api*");
+
         uploadLibraryJar(ip, "cache-api*");
         uploadLibraryJar(ip, "commons-codec*");
         uploadLibraryJar(ip, "commons-lang3*");
@@ -351,11 +358,9 @@ class Provisioner {
         uploadLibraryJar(ip, "gson-*");
         uploadLibraryJar(ip, "guava-*");
         uploadLibraryJar(ip, "HdrHistogram-*");
-        uploadLibraryJar(ip, "javassist-*");
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");
         uploadLibraryJar(ip, "log4j*");
-        uploadLibraryJar(ip, "netty-*");
         uploadLibraryJar(ip, "slf4j-log4j12-*");
 
         // upload remaining files

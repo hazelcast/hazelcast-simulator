@@ -4,16 +4,21 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by alarmnummer on 9/8/16.
- */
 public class ConstantCombinedRateMetronomeTest {
 
     @Test
+    public void test_getIntervalNanos(){
+        long intervalNanos = MILLISECONDS.toNanos(100);
+        ConstantCombinedRateMetronome master = new ConstantCombinedRateMetronome(intervalNanos, true);
+        assertEquals(intervalNanos, master.getIntervalNanos());
+    }
+
+    @Test
     public void test() throws InterruptedException {
-        long intervalNanos = TimeUnit.MILLISECONDS.toNanos(100);
+        long intervalNanos = MILLISECONDS.toNanos(100);
         ConstantCombinedRateMetronome master = new ConstantCombinedRateMetronome(intervalNanos, true);
 
         ConstantCombinedRateMetronome metronome1 = new ConstantCombinedRateMetronome(master);

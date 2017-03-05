@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.worker;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.core.ResponseType;
-import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
+import com.hazelcast.simulator.protocol.Promise;
+import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.EmbeddedScriptCommand;
 import org.apache.log4j.Logger;
@@ -42,7 +42,7 @@ public class ScriptExecutor {
 
     public void execute(final ExecuteScriptOperation operation, final Promise promise) {
         if (operation.isFireAndForget()) {
-            promise.answer(ResponseType.SUCCESS);
+            promise.answer("ok");
         }
 
         String fullCommand = operation.getCommand();
@@ -61,10 +61,10 @@ public class ScriptExecutor {
             public void run() {
                 try {
                     String result = task.call();
-                    promise.answer(ResponseType.SUCCESS, result);
+                    promise.answer(result);
                 } catch (Exception e) {
                     LOGGER.warn("Failed to execute script: " + command, e);
-                    promise.answer(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION, e.getMessage());
+                    promise.answer(e);
                 }
             }
         }.start();

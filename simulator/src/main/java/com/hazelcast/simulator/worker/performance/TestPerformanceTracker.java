@@ -201,9 +201,7 @@ public final class TestPerformanceTracker {
                 currentTimeString,
                 totalOperationCount,
                 intervalOperationCount,
-                intervalThroughput,
-                0,
-                0);
+                intervalThroughput);
 
         // dumps all the Histograms that have been collected to file.
         for (Map.Entry<String, Histogram> histogramEntry : intervalHistogramMap.entrySet()) {

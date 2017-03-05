@@ -15,16 +15,15 @@
  */
 package com.hazelcast.simulator.worker.performance;
 
-import com.hazelcast.simulator.protocol.connector.ServerConnector;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.PerformanceStatsOperation;
+import com.hazelcast.simulator.protocol.Server;
+import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
+import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,11 +49,15 @@ public class PerformanceMonitor {
 
     private final PerformanceMonitorThread thread;
     private final AtomicBoolean shutdown = new AtomicBoolean();
+    private final TestManager testManager;
+    private final Server server;
 
-    public PerformanceMonitor(ServerConnector serverConnector,
-                              Collection<TestContainer> testContainers,
+    public PerformanceMonitor(Server server,
+                              TestManager testManager,
                               int updateIntervalSeconds) {
-        this.thread = new PerformanceMonitorThread(serverConnector, testContainers, updateIntervalSeconds);
+        this.testManager = testManager;
+        this.server = server;
+        this.thread = new PerformanceMonitorThread(updateIntervalSeconds);
         thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
@@ -83,19 +86,13 @@ public class PerformanceMonitor {
         private final long scanIntervalNanos = SECONDS.toNanos(1);
         private final PerformanceLogWriter globalPerformanceLogWriter;
         private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        private final ServerConnector serverConnector;
-        private final Collection<TestContainer> testContainers;
         private final long updateIntervalMillis;
         private final List<TestContainer> dirtyContainers = new ArrayList<TestContainer>();
 
-        private PerformanceMonitorThread(ServerConnector serverConnector,
-                                         Collection<TestContainer> testContainers,
-                                         long updateIntervalSeconds) {
+        private PerformanceMonitorThread(long updateIntervalSeconds) {
             super("WorkerPerformanceMonitor");
             setDaemon(true);
             this.updateIntervalMillis = SECONDS.toMillis(updateIntervalSeconds);
-            this.serverConnector = serverConnector;
-            this.testContainers = testContainers;
             this.globalPerformanceLogWriter = new PerformanceLogWriter(new File(getUserDir(), "performance.csv"));
         }
 
@@ -129,7 +126,7 @@ public class PerformanceMonitor {
         private void updateTrackers(long currentTimeMillis) {
             dirtyContainers.clear();
 
-            for (TestContainer container : testContainers) {
+            for (TestContainer container : testManager.getContainers()) {
                 TestPerformanceTracker tracker = container.getTestPerformanceTracker();
                 if (tracker.update(updateIntervalMillis, currentTimeMillis)) {
                     dirtyContainers.add(container);
@@ -146,7 +143,7 @@ public class PerformanceMonitor {
             }
 
             if (operation.getPerformanceStats().size() > 0) {
-                serverConnector.submit(SimulatorAddress.COORDINATOR, operation);
+                server.sendCoordinator(operation);
             }
         }
 
@@ -171,9 +168,7 @@ public class PerformanceMonitor {
                     dateString,
                     globalOperationsCount,
                     globalIntervalOperationCount,
-                    globalIntervalThroughput,
-                    testContainers.size(),
-                    testContainers.size());
+                    globalIntervalThroughput);
         }
     }
 }

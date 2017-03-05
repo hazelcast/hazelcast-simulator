@@ -27,6 +27,7 @@ public class WorkerProcessSettings {
     private final int workerIndex;
     private final String workerType;
     private final String versionSpec;
+    // timeout in seconds
     private final int workerStartupTimeout;
     private final String workerScript;
     private final Map<String, String> environment;

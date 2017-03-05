@@ -16,8 +16,48 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
+import com.hazelcast.simulator.protocol.Server;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import org.apache.log4j.Logger;
 
-public interface WorkerProcessFailureHandler {
+import static java.lang.String.format;
 
-    boolean handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause);
+public class WorkerProcessFailureHandler {
+
+    private static final Logger LOGGER = Logger.getLogger(WorkerProcessFailureHandler.class);
+
+    private final String agentAddress;
+    private final Server server;
+
+    private int failureCount;
+
+    public WorkerProcessFailureHandler(String agentAddress, Server server) {
+        this.agentAddress = agentAddress;
+        this.server = server;
+    }
+
+    public void handle(String message, FailureType type, WorkerProcess workerProcess, String testId, String cause) {
+        SimulatorAddress workerAddress = workerProcess.getAddress();
+        String workerId = workerProcess.getId();
+
+        FailureOperation operation = new FailureOperation(
+                message,
+                type,
+                workerAddress,
+                agentAddress,
+                workerProcess.getHazelcastAddress(),
+                workerId,
+                testId,
+                cause);
+
+        if (type.isPoisonPill()) {
+            LOGGER.info(format("Worker %s (%s) finished.", workerId, workerAddress));
+        } else {
+            LOGGER.error(format("Detected failure on Worker %s (%s): %s", workerId, workerAddress,
+                    operation.getLogMessage(++failureCount)));
+        }
+
+        server.sendCoordinator(operation);
+    }
 }

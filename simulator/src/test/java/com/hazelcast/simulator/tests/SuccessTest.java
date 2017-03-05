@@ -43,12 +43,10 @@ public class SuccessTest {
 
     @Prepare(global = false)
     public void localPrepare() {
-        sleepSeconds(1);
     }
 
     @Prepare(global = true)
     public void globalPrepare() {
-        sleepSeconds(1);
     }
 
     @Verify(global = false)

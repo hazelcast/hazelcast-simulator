@@ -2,6 +2,7 @@ package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.junit.Before;

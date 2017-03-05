@@ -30,11 +30,10 @@ JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
           -Dlog4j.configuration=file:log4j.xml \
           -DSIMULATOR_HOME=$SIMULATOR_HOME \
           -DpublicAddress=$PUBLIC_ADDRESS \
-          -DagentIndex=$AGENT_INDEX \
           -DworkerType=$WORKER_TYPE \
           -DworkerId=$WORKER_ID \
-          -DworkerIndex=$WORKER_INDEX \
-          -DworkerPort=$WORKER_PORT \
+          -DworkerAddress=$WORKER_ADDRESS \
+          -DagentPort=$AGENT_PORT \
           -DworkerPerformanceMonitorIntervalSeconds=$WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS \
           -DautoCreateHzInstance=$AUTOCREATE_HAZELCAST_INSTANCE \
           -DhzConfigFile=hazelcast.xml"

@@ -3,13 +3,12 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.protocol.StubPromise;
-import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStatusOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStopOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
@@ -28,13 +27,14 @@ import java.io.File;
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class CoordinatorTest {
 
@@ -49,7 +49,7 @@ public class CoordinatorTest {
     private int initialTestIndex;
 
     @BeforeClass
-    public static void beforeClass() {
+    public static void beforeClass() throws Exception {
         setupFakeEnvironment();
 
         hzConfig = FileUtils.fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
@@ -57,7 +57,6 @@ public class CoordinatorTest {
 
         File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
         appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
-        appendText("COORDINATOR_PORT=5000\n", simulatorPropertiesFile);
 
         SimulatorProperties simulatorProperties = SimulatorUtils.loadSimulatorProperties();
 
@@ -67,10 +66,10 @@ public class CoordinatorTest {
 
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
-        agent.setSessionId(coordinatorParameters.getSessionId());
+        agent.getProcessManager().setSessionId(coordinatorParameters.getSessionId());
 
         componentRegistry = new ComponentRegistry();
-        agentData = componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
+        agentData = componentRegistry.addAgent(localIp(), localIp());
         coordinator = new Coordinator(componentRegistry, coordinatorParameters);
         coordinator.start();
     }
@@ -144,12 +143,17 @@ public class CoordinatorTest {
 
     @Test
     public void workerStart_multipleLiteMembers() throws Exception {
+        // start regular member
         assertEquals("C_A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
+
+        // start lite member
         assertEquals("C_A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
+
+        // start another lite member
         assertEquals("C_A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
@@ -163,11 +167,7 @@ public class CoordinatorTest {
         TestSuite suite = newBasicTestSuite()
                 .setDurationSeconds(10);
 
-        StubPromise promise = new StubPromise();
-        coordinator.testRun(new RcTestRunOperation(suite).setAsync(true), promise);
-        assertEquals(SUCCESS, promise.get());
-
-        String testId = promise.getResponse();
+        String testId = coordinator.testRun(new RcTestRunOperation(suite).setAsync(true));
         assertEquals("C_A*_W*_T" + (initialTestIndex + 1), testId);
 
         assertTestCompletesEventually(testId);
@@ -181,10 +181,7 @@ public class CoordinatorTest {
         TestSuite suite = newBasicTestSuite()
                 .setDurationSeconds(0);
 
-        StubPromise promise = new StubPromise();
-        coordinator.testRun(new RcTestRunOperation(suite).setAsync(true), promise);
-
-        String testId = promise.getResponse();
+        String testId = coordinator.testRun(new RcTestRunOperation(suite).setAsync(true));
 
         assertTestStateEventually(testId, "run");
 
@@ -200,20 +197,17 @@ public class CoordinatorTest {
 
         TestSuite suite = newBasicTestSuite();
 
-        StubPromise promise = new StubPromise();
-        coordinator.testRun(new RcTestRunOperation(suite).setAsync(false), promise);
+        String response = coordinator.testRun(new RcTestRunOperation(suite).setAsync(false));
 
-        assertEquals(SUCCESS, promise.get());
+        assertNull(response);
     }
 
     @Test
     public void workerScript() throws Exception {
         coordinator.workerStart(new RcWorkerStartOperation().setHzConfig(hzConfig));
 
-        StubPromise promise = new StubPromise();
-        coordinator.workerScript(new RcWorkerScriptOperation("js:'a'"), promise);
+        String result = coordinator.workerScript(new RcWorkerScriptOperation("js:'a'"));
 
-        assertEquals(SUCCESS, promise.get());
-        assertEquals(format("C_A1_W%s=a", (initialWorkerIndex + 1)), promise.getResponse().replace("\n", ""));
+        assertEquals(format("C_A1_W%s=a", (initialWorkerIndex + 1)), result.replace("\n", ""));
     }
 }

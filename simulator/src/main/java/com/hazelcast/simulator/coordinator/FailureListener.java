@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.protocol.operation.FailureOperation;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 
 public interface FailureListener {
 

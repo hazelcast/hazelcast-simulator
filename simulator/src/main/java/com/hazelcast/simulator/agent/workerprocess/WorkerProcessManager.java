@@ -15,24 +15,93 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
+import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
+import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.protocol.Promise;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.Response;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.hazelcast.simulator.common.FailureType.WORKER_CREATE_ERROR;
+import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
+import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
+import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.log4j.Level.DEBUG;
 
 public class WorkerProcessManager {
 
     private static final Logger LOGGER = Logger.getLogger(WorkerProcessManager.class);
 
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
     private final ConcurrentMap<SimulatorAddress, WorkerProcess> workerProcesses
             = new ConcurrentHashMap<SimulatorAddress, WorkerProcess>();
+    private final Server server;
+    private final SimulatorAddress agentAddress;
+    private final String publicAddress;
+    private volatile String sessionId;
+    private int agentPort;
+
+    public WorkerProcessManager(Server server, SimulatorAddress agentAddress, String publicAddress, int agentPort) {
+        this.server = server;
+        this.agentAddress = agentAddress;
+        this.publicAddress = publicAddress;
+        this.agentPort = agentPort;
+    }
+
+    public String getPublicAddress() {
+        return publicAddress;
+    }
+
+    public int getAgentPort() {
+        return agentPort;
+    }
+
+    public SimulatorAddress getAgentAddress() {
+        return agentAddress;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public File getSessionDirectory() {
+        String sessionId = this.sessionId;
+        if (sessionId == null) {
+            throw new IllegalStateException("no session active");
+        }
+
+        File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
+        return ensureExistingDirectory(workersDir, sessionId);
+    }
+
+    // launching is done asynchronous so we don't block the calling thread (messaging thread)
+    public void launch(CreateWorkerOperation op, Promise promise) throws Exception {
+        AtomicInteger remaining = new AtomicInteger(op.getSettingsList().size());
+        for (WorkerProcessSettings settings : op.getSettingsList()) {
+            WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, settings);
+            LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, settings, promise, remaining);
+            executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
+        }
+    }
 
     public void add(SimulatorAddress workerAddress, WorkerProcess workerProcess) {
         workerProcesses.put(workerAddress, workerProcess);
@@ -46,33 +115,21 @@ public class WorkerProcessManager {
         return workerProcesses.values();
     }
 
-    public void updateLastSeenTimestamp(Response response) {
-        for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
-            updateLastSeenTimestamp(entry.getKey());
-        }
-    }
-
-    public void updateLastSeenTimestamp(SimulatorAddress sourceAddress) {
-        AddressLevel sourceAddressLevel = sourceAddress.getAddressLevel();
-        if (sourceAddressLevel == AddressLevel.TEST) {
-            sourceAddress = sourceAddress.getParent();
-        } else if (sourceAddressLevel != AddressLevel.WORKER) {
-            LOGGER.warn("Should update LastSeenTimestamp for unsupported AddressLevel: " + sourceAddress);
+    public void updateLastSeenTimestamp(SimulatorAddress workerAddress) {
+        WorkerProcess workerProcess = workerProcesses.get(workerAddress);
+        if (workerProcess == null) {
+            LOGGER.warn("update LastSeenTimestamp for unknown WorkerJVM: " + workerAddress);
             return;
         }
 
-        WorkerProcess workerProcess = workerProcesses.get(sourceAddress);
-        if (workerProcess == null) {
-            LOGGER.warn("Should update LastSeenTimestamp for unknown WorkerJVM: " + sourceAddress);
-        } else {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Updated LastSeenTimestamp for: " + sourceAddress);
-            }
-            workerProcess.updateLastSeen();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Updated LastSeenTimestamp for: " + workerAddress);
         }
+        workerProcess.updateLastSeen();
     }
 
     public void shutdown() {
+        executorService.shutdown();
         ThreadSpawner spawner = new ThreadSpawner("workerJvmManagerShutdown", true);
         for (final WorkerProcess workerProcess : new ArrayList<WorkerProcess>(workerProcesses.values())) {
             spawner.spawn(new Runnable() {
@@ -98,6 +155,64 @@ public class WorkerProcessManager {
             }
         } catch (Exception e) {
             LOGGER.error("Failed to destroy Worker process: " + workerProcess, e);
+        }
+    }
+
+    final class LaunchSingleWorkerTask implements Runnable {
+
+        private final WorkerProcessLauncher launcher;
+        private final WorkerProcessSettings settings;
+        private final AtomicInteger remaining;
+        private final Promise promise;
+
+        private LaunchSingleWorkerTask(WorkerProcessLauncher launcher,
+                                       WorkerProcessSettings settings,
+                                       Promise promise,
+                                       AtomicInteger remaining) {
+            this.launcher = launcher;
+            this.settings = settings;
+            this.remaining = remaining;
+            this.promise = promise;
+        }
+
+        @Override
+        public void run() {
+            try {
+                launch();
+
+                if (remaining.decrementAndGet() == 0) {
+                    // it was the last worker needing to be created; so lets answer the promise.
+                    promise.answer("SUCCESS");
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to start Worker:" + workerProcesses, e);
+
+                SimulatorAddress workerAddress
+                        = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAddressIndex(), settings.getWorkerIndex(), 0);
+
+                server.sendCoordinator(new FailureOperation("Failed to start worker [" + workerAddress + "]",
+                        WORKER_CREATE_ERROR, workerAddress, agentAddress.toString(), e));
+
+                promise.answer(e.getMessage());
+            } catch (Throwable t) {
+                // just try to log; anything else than exception no point in dealing with promises
+                LOGGER.error("Failed to start Worker", t);
+            }
+        }
+
+        private void launch() throws Exception {
+            launcher.launch();
+
+            int workerIndex = settings.getWorkerIndex();
+
+            WorkerType workerType = settings.getWorkerType();
+            SimulatorAddress workerAddress = new SimulatorAddress(
+                    AddressLevel.WORKER, agentAddress.getAgentIndex(), workerIndex, 0);
+
+            LogOperation logOperation = new LogOperation(
+                    format("Created %s Worker %s", workerType, workerAddress), DEBUG);
+
+            server.sendCoordinator(logOperation);
         }
     }
 }
