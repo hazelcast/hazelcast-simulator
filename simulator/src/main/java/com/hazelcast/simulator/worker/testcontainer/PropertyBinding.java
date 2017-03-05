@@ -60,6 +60,8 @@ import static java.lang.String.format;
 @SuppressWarnings("checkstyle:visibilitymodifier")
 public class PropertyBinding {
 
+    static final int DEFAULT_THREAD_COUNT = 10;
+
     // if we want to measure latency. Normally this is always true; but in its current setting, hdr can cause contention
     // and I want a switch that turns of hdr recording. Perhaps that with some tuning this isn't needed.
     public boolean measureLatency = true;
@@ -81,7 +83,7 @@ public class PropertyBinding {
         bind(this);
 
         this.workerMetronomeConstructor = new MetronomeConstructor(
-                "", this, loadAsInt("threadCount", RunWithWorkersRunStrategy.DEFAULT_THREAD_COUNT));
+                "", this, loadAsInt("threadCount", DEFAULT_THREAD_COUNT));
         this.probeClass = loadProbeClass();
     }
 

@@ -22,7 +22,6 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -32,7 +31,6 @@ import com.hazelcast.simulator.utils.AnnotationFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.TeardownFilter;
 import com.hazelcast.simulator.utils.AnnotationFilter.VerifyFilter;
 import com.hazelcast.simulator.worker.performance.TestPerformanceTracker;
-import com.hazelcast.simulator.worker.tasks.IWorker;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -234,7 +232,6 @@ public class TestContainer {
             callableList.add(new MethodInvokingCallable(testInstance, setupMethod, args));
         }
 
-
         taskPerPhaseMap.put(SETUP, new CompositeCallable(callableList));
     }
 
@@ -254,17 +251,6 @@ public class TestContainer {
                 runStrategy = new PrimordialRunStrategy(testInstance, runMethod);
             }
 
-            Method runWithWorker = new AnnotatedMethodRetriever(testClass, RunWithWorker.class)
-                    .withReturnType(IWorker.class)
-                    .withoutArgs()
-                    .withPublicNonStaticModifier()
-                    .find();
-            if (runWithWorker != null) {
-                assertNoResetMethods(Run.class);
-                runAnnotations.add(RunWithWorker.class.getName());
-                runStrategy = new RunWithWorkersRunStrategy(this, runWithWorker);
-            }
-
             List<Method> timeStepMethods = new AnnotatedMethodRetriever(testClass, TimeStep.class)
                     .findAll();
             if (!timeStepMethods.isEmpty()) {
@@ -275,7 +261,7 @@ public class TestContainer {
             if (runAnnotations.size() == 0) {
                 throw new IllegalTestException(
                         "Test is missing a run strategy, it must contain one of the following annotations: "
-                                + asList(Run.class.getName(), RunWithWorker.class.getName(), TimeStep.class.getName()));
+                                + asList(Run.class.getName(), TimeStep.class.getName()));
             } else if (runAnnotations.size() > 1) {
                 throw new IllegalTestException("Test has more than one run strategy, found the following annotations: "
                         + runAnnotations);

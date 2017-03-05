@@ -2,7 +2,6 @@ import com.hazelcast.simulator.test.*;
 import com.hazelcast.simulator.test.annotations.*;
 import com.hazelcast.simulator.worker.testcontainer.*;
 import com.hazelcast.simulator.worker.*;
-import com.hazelcast.simulator.worker.tasks.*;
 import com.hazelcast.simulator.worker.metronome.*;
 import com.hazelcast.simulator.probes.*;
 import com.hazelcast.simulator.utils.*;
