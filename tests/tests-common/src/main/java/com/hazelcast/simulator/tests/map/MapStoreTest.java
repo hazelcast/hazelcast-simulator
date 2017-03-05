@@ -19,15 +19,14 @@ import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.test.AbstractTest;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
+import com.hazelcast.simulator.test.BaseThreadState;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 import com.hazelcast.simulator.tests.map.helpers.MapOperationCounter;
 import com.hazelcast.simulator.tests.map.helpers.MapStoreWithCounter;
 import com.hazelcast.simulator.utils.AssertTask;
-import com.hazelcast.simulator.worker.selector.OperationSelector;
-import com.hazelcast.simulator.worker.selector.OperationSelectorBuilder;
-import com.hazelcast.simulator.worker.tasks.AbstractWorker;
 
 import java.util.concurrent.TimeUnit;
 
@@ -47,46 +46,13 @@ import static org.junit.Assert.assertNull;
  */
 public class MapStoreTest extends AbstractTest {
 
-    private enum MapOperation {
-        LOAD_ALL,
-        PUT,
-        GET,
-        GET_ASYNC,
-        DELETE,
-        DESTROY
-    }
-
-    private enum MapPutOperation {
-        PUT,
-        PUT_ASYNC,
-        PUT_TTL,
-        PUT_IF_ABSENT,
-        REPLACE
-    }
-
     public int keyCount = 10;
-
-    public double loadAllProb = 0.1;
-    public double putProb = 0.4;
-    public double getProb = 0.2;
-    public double getAsyncProb = 0.2;
-    public double deleteProb = 0.1;
-    public double destroyProb = 0.0;
-
-    public double putUsingPutProb = 0.4;
-    public double putUsingPutAsyncProb = 0.0;
-    public double putUsingPutTTLProb = 0.3;
-    public double putUsingPutIfAbsent = 0.15;
-    public double putUsingReplaceProb = 0.15;
 
     public int mapStoreMaxDelayMs = 0;
     public int mapStoreMinDelayMs = 0;
 
     public int maxTTLExpiryMs = 3000;
     public int minTTLExpiryMs = 100;
-
-    private final OperationSelectorBuilder<MapOperation> mapOperationBuilder = new OperationSelectorBuilder<MapOperation>();
-    private final OperationSelectorBuilder<MapPutOperation> putOperationBuilder = new OperationSelectorBuilder<MapPutOperation>();
 
     private int putTTlKeyDomain;
     private int putTTlKeyRange;
@@ -104,108 +70,96 @@ public class MapStoreTest extends AbstractTest {
 
         MapStoreWithCounter.setMinMaxDelayMs(mapStoreMinDelayMs, mapStoreMaxDelayMs);
 
-        mapOperationBuilder
-                .addOperation(MapOperation.LOAD_ALL, loadAllProb)
-                .addOperation(MapOperation.PUT, putProb)
-                .addOperation(MapOperation.GET, getProb)
-                .addOperation(MapOperation.GET_ASYNC, getAsyncProb)
-                .addOperation(MapOperation.DELETE, deleteProb)
-                .addOperation(MapOperation.DESTROY, destroyProb);
-
-        putOperationBuilder
-                .addOperation(MapPutOperation.PUT, putUsingPutProb)
-                .addOperation(MapPutOperation.PUT_ASYNC, putUsingPutAsyncProb)
-                .addOperation(MapPutOperation.PUT_TTL, putUsingPutTTLProb)
-                .addOperation(MapPutOperation.PUT_IF_ABSENT, putUsingPutIfAbsent)
-                .addOperation(MapPutOperation.REPLACE, putUsingReplaceProb);
-
         assertMapStoreConfiguration(logger, targetInstance, name, MapStoreWithCounter.class);
     }
 
-
-    @RunWithWorker
-    public Worker createWorker() {
-        return new Worker();
+    @TimeStep(prob = 0.1)
+    public void loadAll(ThreadState state) {
+        map.loadAll(true);
     }
 
-    private class Worker extends AbstractWorker<MapOperation> {
+    @TimeStep(prob = 0.2)
+    public void put(ThreadState state) {
+        Integer key = state.randomKey();
+        map.put(key, state.randomValue());
+        state.operationCounter.putCount.incrementAndGet();
+    }
 
-        private final MapOperationCounter operationCounter = new MapOperationCounter();
-        private final OperationSelector<MapPutOperation> putOperationSelector = putOperationBuilder.build();
+    @TimeStep(prob = 0)
+    public void putAsync(ThreadState state) {
+        Integer key = state.randomKey();
+        map.putAsync(key, state.randomValue());
+        state.operationCounter.putAsyncCount.incrementAndGet();
+    }
 
-        public Worker() {
-            super(mapOperationBuilder);
+    @TimeStep(prob = 0.15)
+    public void putTTL(ThreadState state) {
+        Integer key = state.randomKey();
+        int delayKey = putTTlKeyDomain + state.randomInt(putTTlKeyRange);
+        int delayMs = minTTLExpiryMs + state.randomInt(maxTTLExpiryMs);
+        map.putTransient(delayKey, state.randomValue(), delayMs, TimeUnit.MILLISECONDS);
+        state.operationCounter.putTransientCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0.075)
+    public void putIfAbsent(ThreadState state) {
+        Integer key = state.randomKey();
+        map.putIfAbsent(key, state.randomValue());
+        state.operationCounter.putIfAbsentCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0.075)
+    public void replace(ThreadState state) {
+        Integer key = state.randomKey();
+        Integer orig = map.get(key);
+        if (orig != null) {
+            map.replace(key, orig, state.randomValue());
+            state.operationCounter.replaceCount.incrementAndGet();
+        }
+    }
+
+    @TimeStep(prob = 0.2)
+    public void get(ThreadState state) {
+        Integer key = state.randomKey();
+        map.get(key);
+        state.operationCounter.getCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0.2)
+    public void getAsync(ThreadState state) {
+        Integer key = state.randomKey();
+        map.getAsync(key);
+        state.operationCounter.getAsyncCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0.1)
+    public void delete(ThreadState state) {
+        Integer key = state.randomKey();
+        map.delete(key);
+        state.operationCounter.deleteCount.incrementAndGet();
+    }
+
+    @TimeStep(prob = 0)
+    public void destroy(ThreadState state) {
+        map.destroy();
+        state.operationCounter.destroyCount.incrementAndGet();
+    }
+
+    @AfterRun
+    public void afterRun(ThreadState state) {
+        operationCounterList.add(state.operationCounter);
+    }
+
+    public class ThreadState extends BaseThreadState {
+
+        final MapOperationCounter operationCounter = new MapOperationCounter();
+
+        Integer randomKey() {
+            return randomInt(keyCount);
         }
 
-        @Override
-        public void timeStep(MapOperation mapOperation) {
-            Integer key = randomInt(keyCount);
-
-            switch (mapOperation) {
-                case LOAD_ALL:
-                    map.loadAll(true);
-                    break;
-                case PUT:
-                    putOperation(key);
-                    break;
-                case GET:
-                    map.get(key);
-                    operationCounter.getCount.incrementAndGet();
-                    break;
-                case GET_ASYNC:
-                    map.getAsync(key);
-                    operationCounter.getAsyncCount.incrementAndGet();
-                    break;
-                case DELETE:
-                    map.delete(key);
-                    operationCounter.deleteCount.incrementAndGet();
-                    break;
-                case DESTROY:
-                    map.destroy();
-                    operationCounter.destroyCount.incrementAndGet();
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        private void putOperation(Integer key) {
-            Integer value = randomInt();
-
-            switch (putOperationSelector.select()) {
-                case PUT:
-                    map.put(key, value);
-                    operationCounter.putCount.incrementAndGet();
-                    break;
-                case PUT_ASYNC:
-                    map.putAsync(key, value);
-                    operationCounter.putAsyncCount.incrementAndGet();
-                    break;
-                case PUT_TTL:
-                    int delayKey = putTTlKeyDomain + randomInt(putTTlKeyRange);
-                    int delayMs = minTTLExpiryMs + randomInt(maxTTLExpiryMs);
-                    map.putTransient(delayKey, value, delayMs, TimeUnit.MILLISECONDS);
-                    operationCounter.putTransientCount.incrementAndGet();
-                    break;
-                case PUT_IF_ABSENT:
-                    map.putIfAbsent(key, value);
-                    operationCounter.putIfAbsentCount.incrementAndGet();
-                    break;
-                case REPLACE:
-                    Integer orig = map.get(key);
-                    if (orig != null) {
-                        map.replace(key, orig, value);
-                        operationCounter.replaceCount.incrementAndGet();
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
-            }
-        }
-
-        @Override
-        public void afterRun() {
-            operationCounterList.add(operationCounter);
+        Integer randomValue() {
+            return randomInt();
         }
     }
 
