@@ -30,13 +30,6 @@ public interface AnnotationFilter<A extends Annotation> {
 
     boolean allowed(A annotation);
 
-    class AlwaysFilter implements AnnotationFilter<Annotation> {
-        @Override
-        public boolean allowed(Annotation annotation) {
-            return true;
-        }
-    }
-
     class TeardownFilter implements AnnotationFilter<Teardown> {
         private final boolean isGlobal;
 

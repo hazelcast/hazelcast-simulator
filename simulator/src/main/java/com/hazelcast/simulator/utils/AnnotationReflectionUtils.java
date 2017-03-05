@@ -21,8 +21,6 @@ import java.lang.reflect.Field;
 
 public final class AnnotationReflectionUtils {
 
-    static final AnnotationFilter.AlwaysFilter ALWAYS_FILTER = new AnnotationFilter.AlwaysFilter();
-
     private AnnotationReflectionUtils() {
     }
 
