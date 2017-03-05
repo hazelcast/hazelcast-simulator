@@ -22,12 +22,10 @@ import com.hazelcast.simulator.probes.impl.EmptyProbe;
 import com.hazelcast.simulator.probes.impl.HdrProbe;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
-import com.hazelcast.simulator.test.annotations.InjectMetronome;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.PropertyBindingSupport;
-import com.hazelcast.simulator.worker.metronome.Metronome;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -50,7 +48,6 @@ import static java.lang.String.format;
  * <li>values in public fields</li>
  * <li>TestContext in fields annotated with {@link InjectTestContext}</li>
  * <li>HazelcastInstance in fields annotated with @{@link InjectHazelcastInstance}</li>
- * <li>Metronome instance in fields annotated with {@link InjectMetronome}</li>
  * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
  * <p>
@@ -218,10 +215,6 @@ public class PropertyBinding {
             assertFieldType(fieldType, Probe.class, InjectProbe.class);
             Probe probe = getOrCreateProbe(getProbeName(field), isPartOfTotalThroughput(field));
             setFieldValue(object, field, probe);
-        } else if (field.isAnnotationPresent(InjectMetronome.class)) {
-            assertFieldType(fieldType, Metronome.class, InjectMetronome.class);
-            Metronome metronome = workerMetronomeConstructor.newInstance();
-            setFieldValue(object, field, metronome);
         }
     }
 
