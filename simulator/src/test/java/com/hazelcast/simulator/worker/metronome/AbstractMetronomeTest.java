@@ -2,62 +2,40 @@ package com.hazelcast.simulator.worker.metronome;
 
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractMetronomeTest {
 
     private Metronome metronome;
 
-    abstract MetronomeType getMetronomeType();
+    public abstract Metronome createMetronome(long interval, TimeUnit unit);
 
     @Test
-    public void testWithFixedIntervalMs() {
+    public void testWithFixedInterval_50Ms() {
         int intervalMs = 50;
-        metronome = getFixedIntervalMsMetronome(intervalMs);
+        metronome = createMetronome(intervalMs, MILLISECONDS);
 
         testMetronome(intervalMs);
     }
 
     @Test
-    public void testWithFixedFrequency_25() {
-        float frequency = 25;
-        int intervalMs = 40;
-        metronome = getFixedFrequencyMetronome(frequency);
+    public void testWithFixedInterval_100Ms() {
+        int intervalMs = 100;
+        metronome = createMetronome(intervalMs, MILLISECONDS);
 
         testMetronome(intervalMs);
     }
 
     @Test
-    public void testWithFixedFrequency_100() {
-        float frequency = 100;
-        int intervalMs = 10;
-        metronome = getFixedFrequencyMetronome(frequency);
-
-        testMetronome(intervalMs);
-    }
-
-    @Test
-    public void testWithFixedFrequency_1000() {
-        float frequency = 1000;
+    public void testWithFixedInterval_1s() {
         int intervalMs = 1;
-        metronome = getFixedFrequencyMetronome(frequency);
+        metronome = createMetronome(intervalMs, MILLISECONDS);
 
         testMetronome(intervalMs);
-    }
-
-    private Metronome getFixedIntervalMsMetronome(int intervalMs) {
-        return new MetronomeBuilder()
-                .withIntervalMillis(intervalMs)
-                .withMetronomeType(getMetronomeType())
-                .build();
-    }
-
-    private Metronome getFixedFrequencyMetronome(float frequency) {
-        return new MetronomeBuilder()
-                .withRatePerSecond(frequency)
-                .withMetronomeType(getMetronomeType())
-                .build();
     }
 
     private void testMetronome(int intervalMs) {
