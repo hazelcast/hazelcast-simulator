@@ -18,13 +18,13 @@ package com.hazelcast.simulator.tests;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.Run;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.fail;
 
-public class FailingTest extends AbstractTest{
+public class FailingTest extends AbstractTest {
 
     @Prepare
     public void prepare() {
@@ -38,12 +38,10 @@ public class FailingTest extends AbstractTest{
 
     public int count = 0;
 
-    @Run
-    public void run() {
-        if (!testContext.isStopped()) {
-            sleepSeconds(1);
-            count++;
-            throw new TestException("This test should fail: "+count);
-        }
+    @TimeStep
+    public void timestep() {
+        sleepSeconds(1);
+        count++;
+        throw new TestException("This test should fail: " + count);
     }
 }

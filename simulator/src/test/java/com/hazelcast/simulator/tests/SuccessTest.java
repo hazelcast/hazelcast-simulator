@@ -15,23 +15,16 @@
  */
 package com.hazelcast.simulator.tests;
 
-import com.hazelcast.simulator.test.TestContext;
+import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
+import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
-public class SuccessTest {
-
-    private TestContext context;
-
-    @Setup
-    public void setUp(TestContext context) {
-        this.context = context;
-    }
+public class SuccessTest extends AbstractTest{
 
     @Teardown(global = false)
     public void localTearDown() {
@@ -59,12 +52,15 @@ public class SuccessTest {
     public void globalVerify() {
     }
 
-    @Run
-    public void run() {
-        while (!context.isStopped()) {
-            sleepSeconds(1);
-            System.out.println("testSuccess running");
-        }
+    @TimeStep
+    public void timestep() {
+        sleepSeconds(1);
+        System.out.println("testSuccess running");
+    }
+
+    @AfterRun
+    public void afterRun() {
         System.out.println("testSuccess completed");
+
     }
 }
