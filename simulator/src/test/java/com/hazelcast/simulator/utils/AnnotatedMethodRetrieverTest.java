@@ -2,7 +2,6 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.RunWithWorker;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -76,15 +75,6 @@ public class AnnotatedMethodRetrieverTest {
         new AnnotatedMethodRetriever(AnnotationTestClass.class, Run.class)
                 .withVoidReturnType()
                 .withoutArgs()
-                .find();
-    }
-
-    @Test(expected = ReflectionException.class)
-    public void testGetAtMostOneVoidMethodWithoutArgs_staticMethodsFound() {
-        new AnnotatedMethodRetriever(AnnotationTestClass.class, RunWithWorker.class)
-                .withVoidReturnType()
-                .withoutArgs()
-                .withPublicNonStaticModifier()
                 .find();
     }
 
@@ -175,11 +165,6 @@ public class AnnotatedMethodRetrieverTest {
         @Run
         public void multipleMethod2() {
         }
-
-        @RunWithWorker
-        public static void staticMethod() {
-        }
-
 
         @Verify
         public void verify() {
