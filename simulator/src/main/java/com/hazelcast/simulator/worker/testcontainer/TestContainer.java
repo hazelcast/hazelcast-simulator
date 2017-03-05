@@ -19,7 +19,6 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.TestContext;
-import com.hazelcast.simulator.test.annotations.AfterWarmup;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -246,7 +245,6 @@ public class TestContainer {
                     .withPublicNonStaticModifier()
                     .find();
             if (runMethod != null) {
-                assertNoResetMethods(Run.class);
                 runAnnotations.add(Run.class.getName());
                 runStrategy = new PrimordialRunStrategy(testInstance, runMethod);
             }
@@ -276,14 +274,6 @@ public class TestContainer {
         }
     }
 
-    private void assertNoResetMethods(Class<? extends Annotation> runAnnotation) {
-        List<Method> methods = new AnnotatedMethodRetriever(testClass, AfterWarmup.class).findAll();
-        if (methods.size() > 0) {
-            throw new IllegalTestException(
-                    format("Can't have reset '%s' in class '%s' since it uses '%s'",
-                            methods.get(0), testClass.getName(), runAnnotation.getName()));
-        }
-    }
 
     private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
         List<Method> methods = new AnnotatedMethodRetriever(testClass, annotationClass)
