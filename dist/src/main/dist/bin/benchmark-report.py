@@ -47,11 +47,11 @@ simulator_home=os.environ['SIMULATOR_HOME']
 
 
 if not x.output:
-    output_dir = "report"
+    report_dir = "report"
 else:
-    output_dir = x.output[0]
+    report_dir = x.output[0]
 
-print("output directory '" + output_dir + "'")
+print("output directory '" + report_dir + "'")
 
 
 # ================ html ========================
@@ -542,7 +542,7 @@ class Benchmark:
         self.src_dir = src_dir
         self.name = name
 
-        self.target_dir = os.path.join(output_dir, self.name)
+        self.target_dir = os.path.join(report_dir, self.name)
         ensure_dir(self.target_dir)
 
         # load all workers
@@ -665,14 +665,14 @@ class Benchmark:
 
     def plot_per_worker(self):
         for worker in self.workers:
-            output_dir = os.path.join(self.target_dir, worker.name)
+            report_dir = os.path.join(self.target_dir, worker.name)
 
             for ts_ref in worker.ts_references:
                 if ts_ref.src == "dstat":
                     continue
 
                 ts = ts_ref.load()
-                TimeseriesGnuplot(output_dir, ts_ref.title).add(ts).plot()
+                TimeseriesGnuplot(report_dir, ts_ref.title).add(ts).plot()
 
 
 class Comparison:
@@ -706,6 +706,11 @@ class Comparison:
         for benchmark_dir in benchmark_dirs:
             self.benchmarks.append(Benchmark(benchmark_dir, benchmark_names[benchmark_dir]))
 
+    def output_dir(self, name):
+        output_dir = os.path.join(report_dir, name)
+        ensure_dir(output_dir)
+        return output_dir
+
     def compare(self):
         plots = {}
 
@@ -718,9 +723,9 @@ class Comparison:
                 plot = plots.get(ref.name)
                 if not plot:
                     if ref.src == "latency-distribution":
-                        plot = LatencyDistributionGnuplot(output_dir, ref.title)
+                        plot = LatencyDistributionGnuplot(self.output_dir("latency"), ref.title)
                     else:
-                        plot = TimeseriesGnuplot(output_dir, ref.title)
+                        plot = TimeseriesGnuplot(self.output_dir(ref.src), ref.title)
 
                     plots[ref.name] = plot
 
@@ -732,7 +737,7 @@ class Comparison:
                     if ref.src == "throughput":
                         plot = plots.get("throughput_per_worker")
                         if not plot:
-                            plot = TimeseriesGnuplot(output_dir,
+                            plot = TimeseriesGnuplot(self.output_dir(ref.src),
                                                      "Throughput per member",
                                                      basefilename="throughput_per_worker")
                             plots["throughput_per_worker"] = plot
@@ -745,7 +750,7 @@ class Comparison:
         for plot in plots.values():
             plot.plot()
 
-        print("Done writing report [" + output_dir + "]")
+        print("Done writing report [" + report_dir + "]")
         for benchmark in self.benchmarks:
             print(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "]")
 
