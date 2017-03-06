@@ -477,15 +477,15 @@ class Worker:
                                  self.__load_dstat, args=[21]))
 
         refs.append(SeriesHandle("gc", "gc_young_size_before_gc", "Young size before gc", "Size",
-                                 self.__load_gc, args=[5, False], is_bytes=True))
+                                 self.__load_gc, args=[5, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "gc_young_size_after_gc", "Young size after gc", "Size",
-                                 self.__load_gc, args=[6, False], is_bytes=True))
+                                 self.__load_gc, args=[6, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "gc_young_size_max", "Young size max", "Size",
-                                 self.__load_gc, args=[7, False], is_bytes=True))
+                                 self.__load_gc, args=[7, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "gc_young_collected", "Young collected", "Collected",
-                                 self.__load_gc, args=[8, False], is_bytes=True))
+                                 self.__load_gc, args=[8, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "gc_allocation_rate", "Allocation rate", "Allocation rate",
-                                 self.__load_gc, args=[9, False], is_bytes=True))
+                                 self.__load_gc, args=[9, True], is_bytes=True))
 
         refs.append(SeriesHandle("gc", "gc_total_size_before_gc", "Total size before gc", "Size",
                                  self.__load_gc, args=[11, False], is_bytes=True))
@@ -499,11 +499,11 @@ class Worker:
                                  self.__load_gc, args=[15, False], is_bytes=True))
 
         refs.append(SeriesHandle("gc", "gc_tenured_size_before_gc", "Tenured size before gc", "Size",
-                                 self.__load_gc, args=[17, False], is_bytes=True))
+                                 self.__load_gc, args=[17, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "gc_tenure_size_after_gc", "Tenured size after gc", "Size",
-                                self.__load_gc, args=[18, False], is_bytes=True))
+                                self.__load_gc, args=[18, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "gc_tenured_total", "Tenured size total", "Size",
-                                self.__load_gc, args=[19, False], is_bytes=True))
+                                self.__load_gc, args=[19, True], is_bytes=True))
 
         refs.append(SeriesHandle("gc", "gc_perm_size_before_gc", "Permanent size before gc", "Size",
                                  self.__load_gc, args=[20, True], is_bytes=True))
@@ -586,16 +586,12 @@ class Worker:
 class Benchmark:
     # the directory where the original files can be found
     src_dir = ""
-    target_dir = ""
     workers = None
     name = ""
 
     def __init__(self, src_dir, name):
         self.src_dir = src_dir
         self.name = name
-
-        self.target_dir = os.path.join(report_dir, self.name)
-        ensure_dir(self.target_dir)
 
         # load all workers
         self.workers = []
@@ -715,18 +711,6 @@ class Benchmark:
         print path
         return result
 
-    def plot_per_worker(self):
-        for worker in self.workers:
-            report_dir = os.path.join(self.target_dir, worker.name)
-
-            for ts_ref in worker.ts_references:
-                if ts_ref.src == "dstat":
-                    continue
-
-                ts = ts_ref.load()
-                TimeseriesGnuplot(report_dir, ts_ref.title).add(ts).plot()
-
-
 class Comparison:
     def __init__(self):
         benchmark_dirs = []
@@ -804,14 +788,12 @@ class Comparison:
             for worker in benchmark.workers:
                 for ref in worker.ts_references:
                     if ref.src == "dstat":
-                        continue
+                        continue # dstat is already plotted
 
                     name = ref.name+"_"+worker.name
                     plot = plots.get(name)
                     if not plot:
-                        plot = TimeseriesGnuplot(output_dir,
-                                                 ref.title,
-                                                 basefilename=name)
+                        plot = TimeseriesGnuplot(self.output_dir(ref.src), ref.title ,basefilename=name)
                         plots[name] = plot
 
                     plot.add(ref.load(), worker.name)
