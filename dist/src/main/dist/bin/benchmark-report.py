@@ -476,27 +476,42 @@ class Worker:
         refs.append(SeriesHandle("dstat", "load_average_15m", "Load Average 15 Minute", "Load",
                                  self.__load_dstat, args=[21]))
 
-        refs.append(SeriesHandle("gc", "gc_young_size_before", "Young size before gc", "Pause time seconds",
-                                 self.__load_gc, args=[5]))
-        refs.append(SeriesHandle("gc", "gc_young_size_after", "Young size after gc", "Pause time seconds",
-                                 self.__load_gc, args=[6]))
-        refs.append(SeriesHandle("gc", "gc_young_size_max", "Young size max", "Pause time seconds",
-                                 self.__load_gc, args=[7]))
-        refs.append(SeriesHandle("gc", "gc_young_collected", "Young collected", "Pause time seconds",
-                                 self.__load_gc, args=[8]))
-        refs.append(SeriesHandle("gc", "gc_allocation_rate", "Allocation rate", "Pause time seconds",
-                                 self.__load_gc, args=[9]))
+        refs.append(SeriesHandle("gc", "gc_young_size_before_gc", "Young size before gc", "Size",
+                                 self.__load_gc, args=[5, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_young_size_after_gc", "Young size after gc", "Size",
+                                 self.__load_gc, args=[6, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_young_size_max", "Young size max", "Size",
+                                 self.__load_gc, args=[7, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_young_collected", "Young collected", "Collected",
+                                 self.__load_gc, args=[8, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_allocation_rate", "Allocation rate", "Allocation rate",
+                                 self.__load_gc, args=[9, False], is_bytes=True))
 
-        refs.append(SeriesHandle("gc", "gc_total_size_before", "Total size before gc", "Pause time seconds",
-                                 self.__load_gc, args=[10]))
-        refs.append(SeriesHandle("gc", "gc_total_size_after", "total size after gc", "Pause time seconds",
-                                 self.__load_gc, args=[11]))
-        # refs.append(SeriesHandle("gc", "gc_total_size_max", "Total size max", "Pause time seconds",
-        #                         self.__load_gc, args=[12]))
-        # # refs.append(SeriesHandle("gc", "gc_total_collected", "Total collected", "Pause time seconds",
-        #                         self.__load_gc, args=[13]))
-        # refs.append(SeriesHandle("gc", "gc_promotion", "Promoted", "Pause time seconds",
-        #                         self.__load_gc, args=[14]))
+        refs.append(SeriesHandle("gc", "gc_total_size_before_gc", "Total size before gc", "Size",
+                                 self.__load_gc, args=[11, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_total_size_after_gc", "total size after gc", "Size",
+                                 self.__load_gc, args=[12, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_total_size_max", "Total size max", "Size",
+                                 self.__load_gc, args=[13, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_total_collected", "Total collected", "Size",
+                                 self.__load_gc, args=[14, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_promotion", "Promoted", "Size",
+                                 self.__load_gc, args=[15, False], is_bytes=True))
+
+        refs.append(SeriesHandle("gc", "gc_tenured_size_before_gc", "Tenured size before gc", "Size",
+                                 self.__load_gc, args=[17, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_tenure_size_after_gc", "Tenured size after gc", "Size",
+                                self.__load_gc, args=[18, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_tenured_total", "Tenured size total", "Size",
+                                self.__load_gc, args=[19, False], is_bytes=True))
+
+        refs.append(SeriesHandle("gc", "gc_perm_size_before_gc", "Permanent size before gc", "Size",
+                                 self.__load_gc, args=[20, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_perm_size_after_gc", "Permanent size after gc", "Size",
+                                 self.__load_gc, args=[21, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "gc_perm_total", "Permanent size total", "Size",
+                                 self.__load_gc, args=[22, True], is_bytes=True))
+
 
     # Returns the name of the agent this worker belongs to
     def agent(self):
@@ -534,7 +549,7 @@ class Worker:
                         result.append(KeyValue(row[0], row[column]))
         return result
 
-    def __load_gc(self, column):
+    def __load_gc(self, column, filter_minus_one):
         gc_csv = os.path.join(self.directory, "gc.csv")
 
         result = []
@@ -545,7 +560,10 @@ class Worker:
                 next(csvreader)
 
                 for row in csvreader:
-                    result.append(KeyValue(row[0], row[column]))
+                    key = row[0]
+                    value = row[column]
+                    if value != "-1" or not filter_minus_one:
+                        result.append(KeyValue(key, value))
         return result
 
     # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
@@ -785,6 +803,9 @@ class Comparison:
         for benchmark in self.benchmarks:
             for worker in benchmark.workers:
                 for ref in worker.ts_references:
+                    if ref.src == "dstat":
+                        continue
+
                     name = ref.name+"_"+worker.name
                     plot = plots.get(name)
                     if not plot:
