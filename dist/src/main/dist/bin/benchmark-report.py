@@ -43,8 +43,7 @@ parser.add_argument('-o', '--output', nargs=1,
 x = parser.parse_args()
 args = x.benchmarks
 
-simulator_home=os.environ['SIMULATOR_HOME']
-
+simulator_home = os.environ['SIMULATOR_HOME']
 
 if not x.output:
     report_dir = "report"
@@ -227,10 +226,9 @@ class TimeseriesGnuplot(Gnuplot):
             color = self._color(ts)
             lt = ""
             if color:
-                lt = "lt rgb \""+color+"\""
+                lt = "lt rgb \"" + color + "\""
 
             self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
-
         self._complete()
 
         for tmp_file in tmp_files:
@@ -270,7 +268,7 @@ class LatencyDistributionGnuplot(Gnuplot):
             color = self._color(ts)
             lt = ""
             if color:
-                lt = "lt rgb \""+color+"\""
+                lt = "lt rgb \"" + color + "\""
 
             self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " " + lt + " with lines, \\")
 
@@ -489,6 +487,28 @@ class Worker:
         refs.append(SeriesHandle("dstat", "load_average_15m", "Load Average 15 Minute", "Load",
                                  self.__load_dstat, args=[21]))
 
+        refs.append(SeriesHandle("gc", "gc_young_size_before", "Young size before gc", "Pause time seconds",
+                                 self.__load_gc, args=[5]))
+        refs.append(SeriesHandle("gc", "gc_young_size_after", "Young size after gc", "Pause time seconds",
+                                 self.__load_gc, args=[6]))
+        refs.append(SeriesHandle("gc", "gc_young_size_max", "Young size max", "Pause time seconds",
+                                 self.__load_gc, args=[7]))
+        refs.append(SeriesHandle("gc", "gc_young_collected", "Young collected", "Pause time seconds",
+                                 self.__load_gc, args=[8]))
+        refs.append(SeriesHandle("gc", "gc_allocation_rate", "Allocation rate", "Pause time seconds",
+                                 self.__load_gc, args=[9]))
+
+        refs.append(SeriesHandle("gc", "gc_total_size_before", "Total size before gc", "Pause time seconds",
+                                 self.__load_gc, args=[10]))
+        refs.append(SeriesHandle("gc", "gc_total_size_after", "total size after gc", "Pause time seconds",
+                                 self.__load_gc, args=[11]))
+        # refs.append(SeriesHandle("gc", "gc_total_size_max", "Total size max", "Pause time seconds",
+        #                         self.__load_gc, args=[12]))
+        # # refs.append(SeriesHandle("gc", "gc_total_collected", "Total collected", "Pause time seconds",
+        #                         self.__load_gc, args=[13]))
+        # refs.append(SeriesHandle("gc", "gc_promotion", "Promoted", "Pause time seconds",
+        #                         self.__load_gc, args=[14]))
+
     # Returns the name of the agent this worker belongs to
     def agent(self):
         index = self.name.index("_", 3)
@@ -523,6 +543,20 @@ class Worker:
                 for row in csvreader:
                     if column < len(row):  # protection if column doesn't exist
                         result.append(KeyValue(row[0], row[column]))
+        return result
+
+    def __load_gc(self, column):
+        gc_csv = os.path.join(self.directory, "gc.csv")
+
+        result = []
+        if os.path.exists(gc_csv):
+            with open(gc_csv, 'rb') as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                # we need to skip the first line
+                next(csvreader)
+
+                for row in csvreader:
+                    result.append(KeyValue(row[0], row[column]))
         return result
 
     # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
@@ -753,10 +787,24 @@ class Comparison:
                                                      basefilename="throughput_per_worker")
                             plots["throughput_per_worker"] = plot
 
-                        if len(self.benchmarks)>1:
+                        if len(self.benchmarks) > 1:
                             plot.add(ref.load(), benchmark.name + "_" + worker.name)
                         else:
                             plot.add(ref.load(), worker.name)
+
+        # make all plots for each individual worker
+        for benchmark in self.benchmarks:
+            for worker in benchmark.workers:
+                for ref in worker.ts_references:
+                    name = ref.name+"_"+worker.name
+                    plot = plots.get(name)
+                    if not plot:
+                        plot = TimeseriesGnuplot(output_dir,
+                                                 ref.title,
+                                                 basefilename=name)
+                        plots[name] = plot
+
+                    plot.add(ref.load(), worker.name)
 
         for plot in plots.values():
             plot.plot()
