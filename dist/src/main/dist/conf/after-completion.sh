@@ -50,3 +50,14 @@ do
 
     mv "${file_name}.hgrm.bak" "${file_name}.hgrm"
 done
+
+# Conversion of gc.log to gc.csv
+gc_logs=($(find ${dir} -name gc.log))
+for gc_log in "${gc_logs[@]}"
+do
+    dir=$(dirname $gc_log)
+    gc_csv="$dir/gc.csv"
+
+    java -jar "${SIMULATOR_HOME}/lib//gcviewer-1.35-SNAPSHOT.jar"  $gc_log $gc_csv -t CSV_FULL
+done
+
