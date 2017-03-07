@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
@@ -53,7 +54,6 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
@@ -389,8 +389,9 @@ class Provisioner {
         String initScript = fileAsText(initScriptFile);
 
         initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
-        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
-        initScript = initScript.replaceAll(Pattern.quote("${cloudprovider}"), properties.getCloudProvider());
+        for (Map.Entry<String, String> entry : properties.asMap().entrySet()) {
+            initScript = initScript.replaceAll(Pattern.quote("${" +  entry.getKey() + "}"), entry.getValue());
+        }
 
         return initScript;
     }
