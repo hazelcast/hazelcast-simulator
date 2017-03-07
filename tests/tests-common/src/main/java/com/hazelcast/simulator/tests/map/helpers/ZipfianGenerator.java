@@ -18,7 +18,8 @@ package com.hazelcast.simulator.tests.map.helpers;
 
 import org.apache.log4j.Logger;
 
-import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.random;
+import java.util.Random;
+
 import static java.lang.String.format;
 
 /**
@@ -46,6 +47,7 @@ public class ZipfianGenerator extends IntegerGenerator {
     static final double ZIPFIAN_CONSTANT = 0.99;
 
     private static final Logger LOGGER = Logger.getLogger(ZipfianGenerator.class);
+    private final Random random;
 
     /**
      * Number of items.
@@ -91,8 +93,8 @@ public class ZipfianGenerator extends IntegerGenerator {
      *
      * @param items The number of items in the distribution.
      */
-    public ZipfianGenerator(long items) {
-        this(0, items - 1);
+    public ZipfianGenerator(long items, long seed) {
+        this(0, items - 1, seed);
     }
 
     /**
@@ -101,8 +103,8 @@ public class ZipfianGenerator extends IntegerGenerator {
      * @param min The smallest integer to generate in the sequence.
      * @param max The largest integer to generate in the sequence.
      */
-    public ZipfianGenerator(long min, long max) {
-        this(min, max, ZIPFIAN_CONSTANT);
+    public ZipfianGenerator(long min, long max, long seed) {
+        this(min, max, ZIPFIAN_CONSTANT, seed);
     }
 
     /**
@@ -111,8 +113,8 @@ public class ZipfianGenerator extends IntegerGenerator {
      * @param items           The number of items in the distribution.
      * @param zipfianConstant The zipfian constant to use.
      */
-    public ZipfianGenerator(long items, double zipfianConstant) {
-        this(0, items - 1, zipfianConstant);
+    public ZipfianGenerator(long items, double zipfianConstant, long seed) {
+        this(0, items - 1, zipfianConstant, seed);
     }
 
     /**
@@ -122,8 +124,8 @@ public class ZipfianGenerator extends IntegerGenerator {
      * @param max             The largest integer to generate in the sequence.
      * @param zipfianConstant The zipfian constant to use.
      */
-    public ZipfianGenerator(long min, long max, double zipfianConstant) {
-        this(min, max, zipfianConstant, zetaStatic(max - min + 1, zipfianConstant));
+    public ZipfianGenerator(long min, long max, double zipfianConstant, long seed) {
+        this(min, max, zipfianConstant, zetaStatic(max - min + 1, zipfianConstant), seed);
     }
 
     /**
@@ -135,7 +137,8 @@ public class ZipfianGenerator extends IntegerGenerator {
      * @param zipfianConstant The zipfian constant to use.
      * @param zeta            The precomputed zeta constant.
      */
-    public ZipfianGenerator(long min, long max, double zipfianConstant, double zeta) {
+    public ZipfianGenerator(long min, long max, double zipfianConstant, double zeta, long seed) {
+        random = new Random(seed);
         items = max - min + 1;
         base = min;
 
@@ -267,7 +270,7 @@ public class ZipfianGenerator extends IntegerGenerator {
     }
 
     private long computeNextLong(long itemCount) {
-        double u = random().nextDouble();
+        double u = random.nextDouble();
         double uz = u * zeta;
 
         if (uz < 1.0) {

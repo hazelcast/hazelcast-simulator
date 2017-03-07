@@ -16,6 +16,8 @@
  */
 package com.hazelcast.simulator.tests.map.helpers;
 
+import java.util.Random;
+
 import static com.hazelcast.simulator.tests.map.helpers.ZipfianUtils.hashFNV64;
 
 /**
@@ -73,9 +75,9 @@ public class ScrambledZipfianGenerator extends IntegerGenerator {
         this.max = max;
         itemCount = this.max - this.min + 1;
         if (zipfianConstant == USED_ZIPFIAN_CONSTANT) {
-            gen = new ZipfianGenerator(0, ITEM_COUNT, zipfianConstant, ZETAN);
+            gen = new ZipfianGenerator(0, ITEM_COUNT, zipfianConstant, ZETAN, new Random().nextLong());
         } else {
-            gen = new ZipfianGenerator(0, ITEM_COUNT, zipfianConstant);
+            gen = new ZipfianGenerator(0, ITEM_COUNT, zipfianConstant, new Random().nextLong());
         }
     }
 

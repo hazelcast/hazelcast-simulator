@@ -22,7 +22,9 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.simulator.tests.helpers.KeyDistribution;
 import com.hazelcast.simulator.tests.helpers.KeyLocality;
+import com.hazelcast.simulator.tests.map.helpers.ZipfianGenerator;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
@@ -44,6 +46,8 @@ public class StringStringMapTest extends AbstractTest {
     public int maxValueLength = valueLength;
     public KeyLocality keyLocality = KeyLocality.SHARED;
     public int minNumberOfMembers = 0;
+    public KeyDistribution keyDistribution = KeyDistribution.RANDOM;
+    public long zipfSeed = 10;
 
     private IMap<String, String> map;
     private String[] keys;
@@ -75,32 +79,74 @@ public class StringStringMapTest extends AbstractTest {
 
     @TimeStep(prob = -1)
     public void get(ThreadState state) {
-        String key = state.randomKey();
+        String key = state.selectKey();
         map.get(key);
     }
 
     @TimeStep(prob = 0.1)
     public void put(ThreadState state) {
-        String key = state.randomKey();
-        String value = state.randomValue();
+        String key = state.selectKey();
+        String value = state.selectValue();
         map.put(key, value);
     }
 
     @TimeStep(prob = 0)
     public void set(ThreadState state) {
-        String key = state.randomKey();
-        String value = state.randomValue();
+        String key = state.selectKey();
+        String value = state.selectValue();
         map.set(key, value);
     }
 
     public class ThreadState extends BaseThreadState {
+        private final KeyIndexSelector keyIndexSelector;
 
-        private String randomKey() {
-            return keys[randomInt(keys.length)];
+        public ThreadState() {
+            this.keyIndexSelector = createKeyIndexSelector();
         }
 
-        private String randomValue() {
+        private KeyIndexSelector createKeyIndexSelector() {
+            switch (keyDistribution) {
+                case RANDOM:
+                    return new RandomKeyIndexSelector();
+                case ZIPF:
+                    return new ZipfKeyIndexSelector();
+                default:
+                    throw new IllegalArgumentException("Unknown key distribution: " + keyDistribution);
+            }
+        }
+
+        private String selectKey() {
+            return keys[keyIndexSelector.selectIndex()];
+        }
+
+        private String selectValue() {
             return values[randomInt(values.length)];
+        }
+    }
+
+    private interface KeyIndexSelector {
+        int selectIndex();
+    }
+
+    private final class RandomKeyIndexSelector implements KeyIndexSelector {
+        private final Random random = new Random();
+
+        @Override
+        public int selectIndex() {
+            return random.nextInt(keys.length);
+        }
+    }
+
+    private final class ZipfKeyIndexSelector implements KeyIndexSelector {
+        private final ZipfianGenerator zipfianGenerator;
+
+        private ZipfKeyIndexSelector() {
+            this.zipfianGenerator = new ZipfianGenerator(keys.length, zipfSeed);
+        }
+
+        @Override
+        public int selectIndex() {
+            return zipfianGenerator.nextInt();
         }
     }
 

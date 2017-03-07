@@ -38,24 +38,15 @@ final class ZipfianUtils {
     private ZipfianUtils() {
     }
 
-    public static Random random() {
-        Random random = THREAD_LOCAL_RANDOM.get();
-        if (random == null) {
-            random = new Random(RANDOM.nextLong());
-            THREAD_LOCAL_RANDOM.set(random);
-        }
-        return random;
-    }
-
     /**
      * Generate a random ASCII string of a given length.
      */
     @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-    public static String generateASCIIString(int length) {
+    public static String generateASCIIString(int length, Random random) {
         int interval = '~' - ' ' + 1;
 
         byte[] buffer = new byte[length];
-        random().nextBytes(buffer);
+        random.nextBytes(buffer);
         for (int i = 0; i < length; i++) {
             if (buffer[i] < 0) {
                 buffer[i] = (byte) ((-buffer[i] % interval) + ' ');
