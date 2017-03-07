@@ -155,7 +155,7 @@ class TimeseriesGnuplot(Gnuplot):
 
     def _plot(self):
         # self._write("unset autoscale y")
-        self._write("set title '" + self.title + "'")
+        self._write("set title '" + self.title + "' noenhanced")
         self._write("set style data lines")
         self._write('set datafile separator ","')
         self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
@@ -210,7 +210,7 @@ class LatencyDistributionGnuplot(Gnuplot):
 
     def _plot(self):
         self._write("set datafile separator \",\"")
-        self._write("set title '" + self.title + "'")
+        self._write("set title '" + self.title + "' noenhanced")
         self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
         self._write("set grid")
         self._write("unset xtics")
@@ -783,10 +783,10 @@ class Comparison:
                     name = ref.name+"_"+worker.name
                     plot = plots.get(name)
                     if not plot:
-                        plot = TimeseriesGnuplot(self.output_dir(ref.src), ref.title, basefilename=name)
+                        plot = TimeseriesGnuplot(self.output_dir(ref.src), worker.name + " " + ref.title, basefilename=name)
                         plots[name] = plot
 
-                    plot.add(ref.load(), worker.name)
+                    plot.add(ref.load(), benchmark.name)
 
         for plot in plots.values():
             plot.plot()
