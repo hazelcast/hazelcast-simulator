@@ -1277,6 +1277,13 @@ To upload the required artifacts, create the directory `upload` in the working d
  be copied to all worker machines. It can be found in the parent directory of the worker, e.g., `../upload/someartifact`.
             
 
+## GC analysis
+
+By adding the following options to member/client args, the benchmark generator will do a gc comparison:
+```
+-Xloggc:gc.log -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps  -XX:+PrintGCDateStamps
+```
+
 # Writing a Simulator test
 
 The main part of a Simulator test is writing the actual test. The Simulator test is heavily inspired by the JUnit testing and 
