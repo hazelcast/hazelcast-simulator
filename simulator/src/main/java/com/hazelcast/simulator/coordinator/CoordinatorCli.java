@@ -19,8 +19,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
 import com.hazelcast.simulator.coordinator.tasks.ArtifactCleanTask;
-import com.hazelcast.simulator.coordinator.tasks.ArtifactDownloadTask;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.registry.TargetType;
 import com.hazelcast.simulator.protocol.registry.WorkerQuery;
@@ -172,7 +172,7 @@ final class CoordinatorCli {
             "Prevents downloading of the created worker artifacts.");
 
     private final OptionSpec downloadSpec = parser.accepts("download",
-            "Downloads all worker artifacts");
+            "Downloads all worker artifacts and applies a postprocessing.");
 
     private final OptionSpec cleanSpec = parser.accepts("clean",
             "Cleans the remote Worker directories on the provisioned machines.");
@@ -207,7 +207,10 @@ final class CoordinatorCli {
 
     void run() throws Exception {
         if (options.has(downloadSpec)) {
-            new ArtifactDownloadTask("*", simulatorProperties, getUserDir(), componentRegistry).run();
+            new DownloadTask(componentRegistry.getAgentIps(),
+                    simulatorProperties.asMap(),
+                    getUserDir(),
+                    "*").run();
         } else if (options.has(cleanSpec)) {
             new ArtifactCleanTask(componentRegistry, simulatorProperties).run();
         } else {
@@ -228,7 +231,6 @@ final class CoordinatorCli {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
-                .setAfterCompletionFile(getConfigurationFile("after-completion.sh").getAbsolutePath())
                 .setPerformanceMonitorIntervalSeconds(getPerformanceMonitorInterval())
                 .setSkipDownload(options.has(skipDownloadSpec))
                 .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))

@@ -37,6 +37,7 @@ import static java.lang.String.format;
 
 public class BashCommand {
     private static final Logger LOGGER = Logger.getLogger(BashCommand.class);
+    private static final String INFO = "[INFO]";
 
     private final List<String> params = new ArrayList<String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
@@ -54,7 +55,7 @@ public class BashCommand {
             } else if ("".equals(param)) {
                 this.params.add("\"\"");
             } else {
-                this.params.add(param.toString());
+                this.params.add('"' + param.toString() + '"');
             }
         }
         return this;
@@ -152,6 +153,9 @@ public class BashCommand {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    if (line.startsWith(INFO)) {
+                        LOGGER.info(line.substring(INFO.length(), line.length()));
+                    }
                     LOGGER.trace(line);
                     stringBuilder.append(line).append(NEW_LINE);
                 }
