@@ -24,7 +24,7 @@
 set -e
 #set -x
 
-BASE_URL="http://ec2-54-163-63-218.compute-1.amazonaws.com"
+BASE_URL="https://s3.amazonaws.com/simulator-jdk"
 
 function prepend {
     echo $1 | cat - $2 > /tmp/out && mv /tmp/out $2
