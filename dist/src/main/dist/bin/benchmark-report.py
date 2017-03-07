@@ -43,8 +43,7 @@ parser.add_argument('-o', '--output', nargs=1,
 x = parser.parse_args()
 args = x.benchmarks
 
-simulator_home=os.environ['SIMULATOR_HOME']
-
+simulator_home = os.environ['SIMULATOR_HOME']
 
 if not x.output:
     report_dir = "report"
@@ -52,37 +51,6 @@ else:
     report_dir = x.output[0]
 
 print("output directory '" + report_dir + "'")
-
-
-# ================ html ========================
-
-def html(line):
-    reportFile.write(line + '\n')
-
-
-def html_init():
-    html("<html>")
-    html("<html></head>")
-    html("<body>")
-
-
-def html_close():
-    html("</body>")
-    html("</html")
-    reportFile.close()
-
-
-def html_h1(title):
-    html("<h2>" + title + "</h2>")
-
-
-def html_h2(title):
-    html("<h2>" + title + "</h2>")
-
-
-def html_h3(title):
-    html("<h3>" + title + "</h3>")
-
 
 # ================ utils ========================
 
@@ -187,7 +155,7 @@ class TimeseriesGnuplot(Gnuplot):
 
     def _plot(self):
         # self._write("unset autoscale y")
-        self._write("set title '" + self.title + "'")
+        self._write("set title '" + self.title + "' noenhanced")
         self._write("set style data lines")
         self._write('set datafile separator ","')
         self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
@@ -227,10 +195,9 @@ class TimeseriesGnuplot(Gnuplot):
             color = self._color(ts)
             lt = ""
             if color:
-                lt = "lt rgb \""+color+"\""
+                lt = "lt rgb \"" + color + "\""
 
             self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
-
         self._complete()
 
         for tmp_file in tmp_files:
@@ -243,7 +210,7 @@ class LatencyDistributionGnuplot(Gnuplot):
 
     def _plot(self):
         self._write("set datafile separator \",\"")
-        self._write("set title '" + self.title + "'")
+        self._write("set title '" + self.title + "' noenhanced")
         self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
         self._write("set grid")
         self._write("unset xtics")
@@ -270,7 +237,7 @@ class LatencyDistributionGnuplot(Gnuplot):
             color = self._color(ts)
             lt = ""
             if color:
-                lt = "lt rgb \""+color+"\""
+                lt = "lt rgb \"" + color + "\""
 
             self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " " + lt + " with lines, \\")
 
@@ -287,8 +254,8 @@ class GoogleCharts:
         self.title = title
         self.ts = ts
         self.directory = directory
-        with open('chart_template.html', 'r') as myfile:
-            self.chart_template = myfile.read()
+        with open('chart_template.html', 'r') as f:
+            self.chart_template = f.read()
 
     def plot(self):
         filepath = os.path.join(self.directory, self.ts.name + ".html")
@@ -313,9 +280,8 @@ class GoogleCharts:
         chart = self.chart_template.replace("$rows", rows)
         ensure_dir(self.directory)
 
-        file = open(filepath, 'w')
-        file.write(chart)
-        file.close()
+        with open(filepath, 'w') as f:
+            f.write(chart)
         print filepath
 
 
@@ -489,6 +455,54 @@ class Worker:
         refs.append(SeriesHandle("dstat", "load_average_15m", "Load Average 15 Minute", "Load",
                                  self.__load_dstat, args=[21]))
 
+        refs.append(SeriesHandle("gc", "pause_time", "Pause time", "seconds",
+                                 self.__load_gc, args=[1, True]))
+
+        refs.append(SeriesHandle("gc", "young_size_before_gc", "Young size before gc", "Size",
+                                 self.__load_gc, args=[5, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "young_size_after_gc", "Young size after gc", "Size",
+                                 self.__load_gc, args=[6, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "young_size_max", "Young size max", "Size",
+                                 self.__load_gc, args=[7, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "young_collected", "Young collected", "Collected",
+                                 self.__load_gc, args=[8, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "young_collected_rate", "Young collection rate", "Collected/second",
+                                 self.__load_gc, args=[9, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "young_allocated", "Young allocated", "Allocation",
+                                 self.__load_gc, args=[10, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "allocation_rate", "Allocation rate", "Allocated/second",
+                                 self.__load_gc, args=[11, True], is_bytes=True))
+
+        refs.append(SeriesHandle("gc", "heap_size_before_gc", "Heap size before gc", "Size",
+                                 self.__load_gc, args=[12, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "heap_size_after_gc", "Heap size after gc", "Size",
+                                 self.__load_gc, args=[13, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "heap_size_max", "Heap size max", "Size",
+                                 self.__load_gc, args=[14, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "heap_collected", "Heap collected", "Size",
+                                 self.__load_gc, args=[15, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "heap_collected_rate", "Heap collected rate", "Collected/second",
+                                 self.__load_gc, args=[16, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "promotion", "Promoted", "Size",
+                                 self.__load_gc, args=[17, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "promotion_rate", "Promotion rate", "Promoted/second",
+                                 self.__load_gc, args=[18, True], is_bytes=True))
+
+        refs.append(SeriesHandle("gc", "old_size_before_gc", "Tenured size before gc", "Size",
+                                 self.__load_gc, args=[19, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "old_size_after_gc", "Tenured size after gc", "Size",
+                                self.__load_gc, args=[20, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "old_total", "Tenured size total", "Size",
+                                self.__load_gc, args=[21, True], is_bytes=True))
+
+        refs.append(SeriesHandle("gc", "meta_size_before_gc", "Meta/Perm size before gc", "Size",
+                                 self.__load_gc, args=[22, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "meta_size_after_gc", "Meta/Perm size after gc", "Size",
+                                 self.__load_gc, args=[23, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "meta_total", "Meta/Perm size total", "Size",
+                                 self.__load_gc, args=[24, True], is_bytes=True))
+
+
     # Returns the name of the agent this worker belongs to
     def agent(self):
         index = self.name.index("_", 3)
@@ -525,6 +539,23 @@ class Worker:
                         result.append(KeyValue(row[0], row[column]))
         return result
 
+    def __load_gc(self, column, filter_minus_one):
+        gc_csv = os.path.join(self.directory, "gc.csv")
+
+        result = []
+        if os.path.exists(gc_csv):
+            with open(gc_csv, 'rb') as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                # we need to skip the first line
+                next(csvreader)
+
+                for row in csvreader:
+                    key = row[0]
+                    value = row[column]
+                    if value != "-1" or not filter_minus_one:
+                        result.append(KeyValue(key, value))
+        return result
+
     # total cpu usage isn't explicitly provided by dstat, so we just sum the user+system
     def __load_dstat_cpu_total_ts(self):
         dstat_csv = os.path.join(self.directory, "dstat.csv")
@@ -545,16 +576,12 @@ class Worker:
 class Benchmark:
     # the directory where the original files can be found
     src_dir = ""
-    target_dir = ""
     workers = None
     name = ""
 
     def __init__(self, src_dir, name):
         self.src_dir = src_dir
         self.name = name
-
-        self.target_dir = os.path.join(report_dir, self.name)
-        ensure_dir(self.target_dir)
 
         # load all workers
         self.workers = []
@@ -674,18 +701,6 @@ class Benchmark:
         print path
         return result
 
-    def plot_per_worker(self):
-        for worker in self.workers:
-            report_dir = os.path.join(self.target_dir, worker.name)
-
-            for ts_ref in worker.ts_references:
-                if ts_ref.src == "dstat":
-                    continue
-
-                ts = ts_ref.load()
-                TimeseriesGnuplot(report_dir, ts_ref.title).add(ts).plot()
-
-
 class Comparison:
     def __init__(self):
         benchmark_dirs = []
@@ -753,10 +768,25 @@ class Comparison:
                                                      basefilename="throughput_per_worker")
                             plots["throughput_per_worker"] = plot
 
-                        if len(self.benchmarks)>1:
+                        if len(self.benchmarks) > 1:
                             plot.add(ref.load(), benchmark.name + "_" + worker.name)
                         else:
                             plot.add(ref.load(), worker.name)
+
+        # make all plots for each individual worker
+        for benchmark in self.benchmarks:
+            for worker in benchmark.workers:
+                for ref in worker.ts_references:
+                    if ref.src == "dstat":
+                        continue # dstat is already plotted
+
+                    name = ref.name+"_"+worker.name
+                    plot = plots.get(name)
+                    if not plot:
+                        plot = TimeseriesGnuplot(self.output_dir(ref.src), worker.name + " " + ref.title, basefilename=name)
+                        plots[name] = plot
+
+                    plot.add(ref.load(), benchmark.name)
 
         for plot in plots.values():
             plot.plot()
