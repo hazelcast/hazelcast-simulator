@@ -157,7 +157,7 @@ java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN}
 #
 # dstat --epoch -m --all -l --noheaders --nocolor --output dstat.csv 5 > /dev/null &
 # java -classpath $CLASSPATH $JVM_ARGS $MAIN
-# kill $(jobs -p)
+# kill $!
 #
 
 #########################################################################
