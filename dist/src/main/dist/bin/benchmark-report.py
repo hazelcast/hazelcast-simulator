@@ -52,37 +52,6 @@ else:
 
 print("output directory '" + report_dir + "'")
 
-
-# ================ html ========================
-
-def html(line):
-    reportFile.write(line + '\n')
-
-
-def html_init():
-    html("<html>")
-    html("<html></head>")
-    html("<body>")
-
-
-def html_close():
-    html("</body>")
-    html("</html")
-    reportFile.close()
-
-
-def html_h1(title):
-    html("<h2>" + title + "</h2>")
-
-
-def html_h2(title):
-    html("<h2>" + title + "</h2>")
-
-
-def html_h3(title):
-    html("<h3>" + title + "</h3>")
-
-
 # ================ utils ========================
 
 def dump(obj):
@@ -285,8 +254,8 @@ class GoogleCharts:
         self.title = title
         self.ts = ts
         self.directory = directory
-        with open('chart_template.html', 'r') as myfile:
-            self.chart_template = myfile.read()
+        with open('chart_template.html', 'r') as f:
+            self.chart_template = f.read()
 
     def plot(self):
         filepath = os.path.join(self.directory, self.ts.name + ".html")
@@ -311,9 +280,8 @@ class GoogleCharts:
         chart = self.chart_template.replace("$rows", rows)
         ensure_dir(self.directory)
 
-        file = open(filepath, 'w')
-        file.write(chart)
-        file.close()
+        with open(filepath, 'w') as f:
+            f.write(chart)
         print filepath
 
 
@@ -487,41 +455,52 @@ class Worker:
         refs.append(SeriesHandle("dstat", "load_average_15m", "Load Average 15 Minute", "Load",
                                  self.__load_dstat, args=[21]))
 
-        refs.append(SeriesHandle("gc", "gc_young_size_before_gc", "Young size before gc", "Size",
+        refs.append(SeriesHandle("gc", "pause_time", "Pause time", "seconds",
+                                 self.__load_gc, args=[1, True]))
+
+        refs.append(SeriesHandle("gc", "young_size_before_gc", "Young size before gc", "Size",
                                  self.__load_gc, args=[5, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_young_size_after_gc", "Young size after gc", "Size",
+        refs.append(SeriesHandle("gc", "young_size_after_gc", "Young size after gc", "Size",
                                  self.__load_gc, args=[6, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_young_size_max", "Young size max", "Size",
+        refs.append(SeriesHandle("gc", "young_size_max", "Young size max", "Size",
                                  self.__load_gc, args=[7, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_young_collected", "Young collected", "Collected",
+        refs.append(SeriesHandle("gc", "young_collected", "Young collected", "Collected",
                                  self.__load_gc, args=[8, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_allocation_rate", "Allocation rate", "Allocation rate",
+        refs.append(SeriesHandle("gc", "young_collected_rate", "Young collection rate", "Collected/second",
                                  self.__load_gc, args=[9, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "young_allocated", "Young allocated", "Allocation",
+                                 self.__load_gc, args=[10, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "allocation_rate", "Allocation rate", "Allocated/second",
+                                 self.__load_gc, args=[11, True], is_bytes=True))
 
-        refs.append(SeriesHandle("gc", "gc_total_size_before_gc", "Total size before gc", "Size",
-                                 self.__load_gc, args=[11, False], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_total_size_after_gc", "total size after gc", "Size",
+        refs.append(SeriesHandle("gc", "heap_size_before_gc", "Heap size before gc", "Size",
                                  self.__load_gc, args=[12, False], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_total_size_max", "Total size max", "Size",
+        refs.append(SeriesHandle("gc", "heap_size_after_gc", "Heap size after gc", "Size",
                                  self.__load_gc, args=[13, False], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_total_collected", "Total collected", "Size",
+        refs.append(SeriesHandle("gc", "heap_size_max", "Heap size max", "Size",
                                  self.__load_gc, args=[14, False], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_promotion", "Promoted", "Size",
+        refs.append(SeriesHandle("gc", "heap_collected", "Heap collected", "Size",
                                  self.__load_gc, args=[15, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "heap_collected_rate", "Heap collected rate", "Collected/second",
+                                 self.__load_gc, args=[16, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "promotion", "Promoted", "Size",
+                                 self.__load_gc, args=[17, False], is_bytes=True))
+        refs.append(SeriesHandle("gc", "promotion_rate", "Promotion rate", "Promoted/second",
+                                 self.__load_gc, args=[18, True], is_bytes=True))
 
-        refs.append(SeriesHandle("gc", "gc_tenured_size_before_gc", "Tenured size before gc", "Size",
-                                 self.__load_gc, args=[17, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_tenure_size_after_gc", "Tenured size after gc", "Size",
-                                self.__load_gc, args=[18, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_tenured_total", "Tenured size total", "Size",
-                                self.__load_gc, args=[19, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "old_size_before_gc", "Tenured size before gc", "Size",
+                                 self.__load_gc, args=[19, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "old_size_after_gc", "Tenured size after gc", "Size",
+                                self.__load_gc, args=[20, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "old_total", "Tenured size total", "Size",
+                                self.__load_gc, args=[21, True], is_bytes=True))
 
-        refs.append(SeriesHandle("gc", "gc_perm_size_before_gc", "Permanent size before gc", "Size",
-                                 self.__load_gc, args=[20, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_perm_size_after_gc", "Permanent size after gc", "Size",
-                                 self.__load_gc, args=[21, True], is_bytes=True))
-        refs.append(SeriesHandle("gc", "gc_perm_total", "Permanent size total", "Size",
+        refs.append(SeriesHandle("gc", "meta_size_before_gc", "Meta/Perm size before gc", "Size",
                                  self.__load_gc, args=[22, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "meta_size_after_gc", "Meta/Perm size after gc", "Size",
+                                 self.__load_gc, args=[23, True], is_bytes=True))
+        refs.append(SeriesHandle("gc", "meta_total", "Meta/Perm size total", "Size",
+                                 self.__load_gc, args=[24, True], is_bytes=True))
 
 
     # Returns the name of the agent this worker belongs to
