@@ -57,6 +57,8 @@ public class CoordinatorTest {
 
         File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
         appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
+        appendText("COORDINATOR_PORT=5000\n", simulatorPropertiesFile);
+
         SimulatorProperties simulatorProperties = SimulatorUtils.loadSimulatorProperties();
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
