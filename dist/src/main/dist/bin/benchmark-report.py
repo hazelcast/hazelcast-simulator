@@ -804,7 +804,7 @@ class Comparison:
                     name = ref.name+"_"+worker.name
                     plot = plots.get(name)
                     if not plot:
-                        plot = TimeseriesGnuplot(self.output_dir(ref.src), ref.title ,basefilename=name)
+                        plot = TimeseriesGnuplot(self.output_dir(ref.src), ref.title, basefilename=name)
                         plots[name] = plot
 
                     plot.add(ref.load(), worker.name)
