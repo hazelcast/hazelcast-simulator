@@ -211,8 +211,10 @@ class TimeseriesGnuplot(Gnuplot):
         self._write("set output '" + self.filepath + "'")
         self._write("plot \\")
 
+        tmp_files = []
         for ts in self.ts_list:
             ts_file = ts.to_tmp_file()
+            tmp_files.append(ts_file)
 
             if len(self.ts_list) > 1:
                 title = self.titles[ts]
@@ -227,8 +229,12 @@ class TimeseriesGnuplot(Gnuplot):
             if color:
                 lt = "lt rgb \""+color+"\""
 
-            self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str +" "+lt+ ", \\")
+            self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
+
         self._complete()
+
+        for tmp_file in tmp_files:
+            tmp_file.close()
 
 
 class LatencyDistributionGnuplot(Gnuplot):
@@ -247,10 +253,11 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
         self._write("set output '" + self.filepath + "'")
 
-
         self._write("plot '"+simulator_home+"/bin/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
+        tmp_files = []
         for ts in self.ts_list:
             ts_file = ts.to_tmp_file()
+            tmp_files.append(ts_file)
 
             if len(self.ts_list) > 1:
                 title = self.titles[ts]
@@ -265,9 +272,13 @@ class LatencyDistributionGnuplot(Gnuplot):
             if color:
                 lt = "lt rgb \""+color+"\""
 
-            self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " "+lt+ " with lines, \\")
+            self._write("   \"" + ts_file.name + "\" using 1:2 " + title_str + " " + lt + " with lines, \\")
 
         self._complete()
+
+        for tmp_file in tmp_files:
+            tmp_file.close()
+
         print(self.tmp.name)
 
 
