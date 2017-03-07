@@ -4,8 +4,24 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export SIMULATOR_HOME=$(cd $DIR/.. && pwd)
 
-# todo: python check
+ # Check if python is installed.
+if ! hash python 2>/dev/null ; then
+    echo python is not installed! Aborting.
+    exit 1
+fi
 
-# todo: gnuplot check
+ # Check if gnuplot is installed.
+if ! hash gnuplot 2>/dev/null ; then
+    echo gnuplot is not installed! Aborting.
+
+    os=$(uname)
+    if [[ $os == *"arwin"* ]]
+    then
+        echo gnuplot is available on OSX using homebrew: http://brewformulas.org/gnuplot
+        echo To install gnuplot using homebrew type: 'brew install gnuplot'
+    fi
+
+    exit 1
+fi
 
 python $DIR/benchmark-report.py "$@"
