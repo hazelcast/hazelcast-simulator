@@ -430,7 +430,7 @@ public class CoordinatorCliTest {
     public void testInit_withLocalSetup() {
         File simulatorProperties = new File(getUserDir(), "simulator.properties").getAbsoluteFile();
         writeText(format("%s=%s", CLOUD_PROVIDER, CloudProviderUtils.PROVIDER_LOCAL), simulatorProperties);
-
+        writeText("COORDINATOR_PORT=5000\n", simulatorProperties);
         try {
             CoordinatorCli cli = createCoordinatorCli();
 

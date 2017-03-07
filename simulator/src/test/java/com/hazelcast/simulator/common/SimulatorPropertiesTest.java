@@ -209,7 +209,7 @@ public class SimulatorPropertiesTest {
 
     @Test
     public void testGetCoordinatorPort() {
-        assertEquals(5000, simulatorProperties.getCoordinatorPort());
+        assertEquals(0, simulatorProperties.getCoordinatorPort());
     }
 
     @Test
