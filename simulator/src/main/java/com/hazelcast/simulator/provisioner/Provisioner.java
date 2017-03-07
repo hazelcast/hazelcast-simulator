@@ -239,6 +239,7 @@ class Provisioner {
 
                     echo(INDENTATION + publicIpAddress + " LAUNCHED");
                     componentRegistry.addAgent(publicIpAddress, privateIpAddress, tags);
+                    AgentsFile.save(agentsFile, componentRegistry);
                 }
 
                 for (NodeMetadata node : nodes) {
@@ -251,8 +252,6 @@ class Provisioner {
             for (Future future : futures) {
                 future.get();
             }
-
-            AgentsFile.save(agentsFile, componentRegistry);
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
