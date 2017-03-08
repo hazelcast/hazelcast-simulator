@@ -268,21 +268,6 @@ public class TestSuite {
         return testCase;
     }
 
-    private static Map<String, String> parseProperties(String overrideProperties) {
-        overrideProperties = overrideProperties.trim();
-
-        Map<String, String> result = new HashMap<String, String>();
-        if (overrideProperties.isEmpty()) {
-            return result;
-        }
-
-        for (String entry : overrideProperties.split(",")) {
-            String[] keyValue = entry.split("=");
-            result.put(keyValue[0], keyValue[1]);
-        }
-        return result;
-    }
-
     private static List<String> getTestCaseIds(Map<String, TestCase> testCases) {
         List<String> testCaseIds = new LinkedList<String>(testCases.keySet());
         Collections.sort(testCaseIds);
