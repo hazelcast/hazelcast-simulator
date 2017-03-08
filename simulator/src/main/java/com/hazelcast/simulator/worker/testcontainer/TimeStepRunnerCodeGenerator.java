@@ -45,7 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.utils.ClassUtils.getClassName;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -181,6 +180,10 @@ class TimeStepRunnerCodeGenerator {
         } catch (Exception e) {
             throw new IllegalTestException(className + " ran into a code generation problem: " + e.getMessage(), e);
         }
+    }
+
+    private static String getClassName(Class clazz) {
+        return clazz == null ? null : clazz.getName().replace('$', '.');
     }
 
     private static String getMetronomeClass(Class<? extends Metronome> metronomeClass) {
