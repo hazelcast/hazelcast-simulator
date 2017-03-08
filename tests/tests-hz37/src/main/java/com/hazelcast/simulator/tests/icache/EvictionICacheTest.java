@@ -79,9 +79,9 @@ public class EvictionICacheTest extends AbstractTest {
             putAllMap.put(random.nextInt(), value);
         }
 
-//        int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker
-//                .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
-//        estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
+        int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker
+                .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
+        estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
     }
 
     @TimeStep(prob = 0.8)

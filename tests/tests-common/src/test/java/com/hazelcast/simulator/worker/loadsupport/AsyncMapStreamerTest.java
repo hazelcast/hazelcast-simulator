@@ -1,8 +1,9 @@
 package com.hazelcast.simulator.worker.loadsupport;
 
-import com.hazelcast.cache.ICache;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Before;
@@ -14,8 +15,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
-import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -29,45 +28,45 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class AsyncCacheStreamerTest {
+public class AsyncMapStreamerTest {
 
     private static final int DEFAULT_TIMEOUT = 30000;
 
     @SuppressWarnings("unchecked")
-    private final ICache<Integer, String> cache = mock(ICache.class);
+    private final IMap<Integer, String> map = mock(IMap.class);
 
     @SuppressWarnings("unchecked")
-    private final ICompletableFuture<Void> future = mock(ICompletableFuture.class);
+    private final ICompletableFuture<String> future = mock(ICompletableFuture.class);
 
     private Streamer<Integer, String> streamer;
 
     @Before
     public void before() {
-        setupFakeUserDir();
-
-        when(cache.putAsync(anyInt(), anyString())).thenReturn(future);
+        TestEnvironmentUtils.setupFakeUserDir();
 
         StreamerFactory.enforceAsync(true);
-        streamer = StreamerFactory.getInstance(cache);
+        streamer = StreamerFactory.getInstance(map);
     }
 
     @After
     public void after() {
-        teardownFakeUserDir();
+        TestEnvironmentUtils.teardownFakeUserDir();
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
     public void testPushEntry() {
+        when(map.putAsync(anyInt(), anyString())).thenReturn(future);
+
         streamer.pushEntry(15, "value");
 
-        verify(cache).putAsync(15, "value");
-        verifyNoMoreInteractions(cache);
+        verify(map).putAsync(15, "value");
+        verifyNoMoreInteractions(map);
     }
 
     @Test(timeout = DEFAULT_TIMEOUT)
     @SuppressWarnings("unchecked")
     public void testAwait() {
-        when(cache.putAsync(anyInt(), anyString())).thenReturn(future);
+        when(map.putAsync(anyInt(), anyString())).thenReturn(future);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -96,7 +95,7 @@ public class AsyncCacheStreamerTest {
     @Test(timeout = DEFAULT_TIMEOUT, expected = IllegalArgumentException.class)
     @SuppressWarnings("unchecked")
     public void testAwait_withExceptionInFuture() {
-        when(cache.putAsync(anyInt(), anyString())).thenReturn(future);
+        when(map.putAsync(anyInt(), anyString())).thenReturn(future);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -115,7 +114,7 @@ public class AsyncCacheStreamerTest {
 
     @Test(timeout = DEFAULT_TIMEOUT)
     public void testAwait_withExceptionOnPushEntry() throws Exception {
-        doThrow(new IllegalArgumentException("expected exception")).when(cache).putAsync(anyInt(), anyString());
+        doThrow(new IllegalArgumentException("expected exception")).when(map).putAsync(anyInt(), anyString());
         final CountDownLatch latch = new CountDownLatch(1);
 
         Thread thread = new Thread() {
@@ -137,8 +136,8 @@ public class AsyncCacheStreamerTest {
         } finally {
             joinThread(thread);
 
-            verify(cache).putAsync(1, "foobar");
-            verifyNoMoreInteractions(cache);
+            verify(map).putAsync(1, "foobar");
+            verifyNoMoreInteractions(map);
         }
     }
 
@@ -147,7 +146,7 @@ public class AsyncCacheStreamerTest {
         Semaphore semaphore = mock(Semaphore.class);
         when(semaphore.tryAcquire(anyInt(), anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("expected"));
 
-        streamer = new AsyncCacheStreamer<Integer, String>(1, cache, semaphore);
+        streamer = new AsyncMapStreamer<Integer, String>(1, map, semaphore);
 
         streamer.pushEntry(1, "test");
     }
@@ -157,7 +156,7 @@ public class AsyncCacheStreamerTest {
         Semaphore semaphore = mock(Semaphore.class);
         when(semaphore.tryAcquire(anyInt(), anyLong(), any(TimeUnit.class))).thenReturn(false);
 
-        streamer = new AsyncCacheStreamer<Integer, String>(1, cache, semaphore);
+        streamer = new AsyncMapStreamer<Integer, String>(1, map, semaphore);
 
         streamer.pushEntry(1, "test");
     }
