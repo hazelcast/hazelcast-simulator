@@ -28,6 +28,14 @@
         </dependency>
 
         <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>simulator</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
             <version>${hazelcast.version}</version>

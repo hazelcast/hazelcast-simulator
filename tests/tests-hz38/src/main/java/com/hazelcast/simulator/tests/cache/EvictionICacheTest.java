@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.tests.icache;
+package com.hazelcast.simulator.tests.cache;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
@@ -79,9 +79,9 @@ public class EvictionICacheTest extends AbstractTest {
             putAllMap.put(random.nextInt(), value);
         }
 
-//        int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker
-//                .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
-//        estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
+        int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker
+                .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
+        estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
     }
 
     @TimeStep(prob = 0.8)
