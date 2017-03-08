@@ -58,22 +58,7 @@ public final class AgentCli {
             "Timeout value for worker timeout detection.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS);
 
-    private final OptionSpec<String> cloudProviderSpec = parser.accepts("cloudProvider",
-            "The cloud provider for this Agent.")
-            .withRequiredArg().ofType(String.class);
-
-    private final OptionSpec<String> cloudIdentitySpec = parser.accepts("cloudIdentity",
-            "The cloud identity for this Agent.")
-            .withRequiredArg().ofType(String.class);
-
-    private final OptionSpec<String> cloudCredentialSpec = parser.accepts("cloudCredential",
-            "The cloud credential for this Agent.")
-            .withRequiredArg().ofType(String.class);
-
     private final OptionSet options;
-    private final String cloudProvider;
-    private final String cloudIdentity;
-    private final String cloudCredential;
 
     AgentCli(String[] args) {
         logHeader();
@@ -95,9 +80,6 @@ public final class AgentCli {
         }
         int port = options.valueOf(portSpec);
 
-        this.cloudProvider = options.valueOf(cloudProviderSpec);
-        this.cloudIdentity = options.valueOf(cloudIdentitySpec);
-        this.cloudCredential = options.valueOf(cloudCredentialSpec);
         Integer threadPoolSize = options.valueOf(threadPoolSizeSpec);
         Integer workerLastSeenTimeoutSeconds = options.valueOf(workerLastSeenTimeoutSecondsSpec);
 
@@ -138,15 +120,9 @@ public final class AgentCli {
         LOGGER.info(format("%s=%s", name, System.getProperty(name)));
     }
 
-
     public static void main(String[] args) {
         try {
             AgentCli cli = new AgentCli(args);
-
-            LOGGER.info(format("CloudIdentity: %s", cli.cloudIdentity));
-            LOGGER.info(format("CloudCredential: %s", cli.cloudCredential));
-            LOGGER.info(format("CloudProvider: %s", cli.cloudProvider));
-
             Agent agent = cli.agent;
             agent.start();
         } catch (Exception e) {

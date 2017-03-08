@@ -1,19 +1,6 @@
 #!/bin/bash
 
-if [ -z "${SIMULATOR_HOME}" ] ; then
-    export SIMULATOR_HOME=$(cd $(dirname $(readlink -f $0 2> /dev/null || readlink $0 2> /dev/null || echo $0))/.. && pwd)
-fi
-
-if [ -f "$1" ]
-then
+if [ -f "$1" ] ; then
     PID=$(cat $1);
-else
-    PID=-1
-fi
-
-if [ "${PID}" -ne "-1" ]
-then
     kill ${PID} || true
-else
-    killall -9 java || true
 fi

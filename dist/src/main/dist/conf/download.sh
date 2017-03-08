@@ -13,7 +13,9 @@ set -e
 
 # the directory where the downloaded session(s) are going to be stored.
 root_dir=$1
+# the session id; could be a * om case everything needs to be downloaded
 session_id=$2
+# comma separated list of agent ip addresses
 agents=$3
 
 
@@ -60,24 +62,25 @@ function download_local(){
         fi
     done
 
-    echo "[INFO]Download  on local machine completed"
+    echo "[INFO]Download on local machine completed"
 }
 
 function download(){
-    echo "[INFO]Download started"
 
     if [ "$CLOUD_PROVIDER" = "local" ]; then
         download_local
     else
+        echo "[INFO]Download starting (can take some time), sessionid [$session_id]"
+
         for agent in ${agents//,/ } ; do
             download_remote ${agent} &
         done
 
         # wait for all downloads to complete
         wait
-    fi
 
-    echo "[INFO]Download completed"
+        echo "[INFO]Download completed"
+    fi
 }
 
 function postprocess_hdr(){

@@ -20,6 +20,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.BashCommand;
 import org.apache.log4j.Logger;
 
+import java.util.Collection;
 import java.util.Set;
 
 import static com.hazelcast.simulator.utils.CloudProviderUtils.runMode;
@@ -34,13 +35,13 @@ public class InstallVendorTask {
     private static final Logger LOGGER = Logger.getLogger(InstallVendorTask.class);
 
     private final SimulatorProperties simulatorProperties;
-    private final Set<String> publicIps;
+    private final Collection<String> publicIps;
     private final Set<String> versionSpecs;
 
     private final String sessionId;
 
     public InstallVendorTask(SimulatorProperties simulatorProperties,
-                             Set<String> publicIps,
+                             Collection<String> publicIps,
                              Set<String> versionSpecs,
                              String sessionId) {
         this.simulatorProperties = simulatorProperties;

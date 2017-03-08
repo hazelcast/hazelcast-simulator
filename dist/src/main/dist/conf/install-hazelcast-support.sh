@@ -157,6 +157,8 @@ throttle_concurrent_uploads() {
 upload_to_single_agent() {
     public_ip=$1
 
+    echo "[INFO]Upload to $public_ip started"
+
     remote_hz_lib=${simulator_basename}/hz-lib
     remote_run_dir=${simulator_basename}/workers/${session_id}
     remote_upload_dir=${remote_run_dir}/upload
@@ -177,6 +179,8 @@ upload_to_single_agent() {
         # sync the directory and put the task in the background
          rsync --checksum -avv --delete -L -e "ssh $SSH_OPTIONS" ${local_install_dir}/* ${user}@${public_ip}:${remote_hz_lib}
     done
+
+    echo "[INFO]Upload to $public_ip completed"
 }
 
 # uploads the installation files to all agents
