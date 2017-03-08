@@ -13,7 +13,7 @@ kill_agent_local(){
 
     rm agent.pid || true
 
-    echo "[INFO]Killing local completed"
+    echo "[INFO]Killing local agent completed"
 }
 
 kill_agents_remote(){
