@@ -39,7 +39,6 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTo
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
-import static com.hazelcast.simulator.utils.StringUtil.capitalizeFirst;
 import static java.lang.String.format;
 
 /**
@@ -182,6 +181,10 @@ public class PropertyBinding {
         }
 
         return prefix + capitalizeFirst(name);
+    }
+
+    public static String capitalizeFirst(String s) {
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 
     public void bind(Object object) {
