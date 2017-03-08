@@ -44,6 +44,7 @@ import static org.junit.Assert.fail;
  */
 public class EvictionICacheTest extends AbstractTest {
 
+    private static final double TOLERANCE_FACTOR = 1.5;
     public int partitionCount;
 
     // number of bytes for the value/payload of a key
@@ -79,9 +80,7 @@ public class EvictionICacheTest extends AbstractTest {
             putAllMap.put(random.nextInt(), value);
         }
 
-        int maxEstimatedPartitionSize = com.hazelcast.cache.impl.maxsize.impl.EntryCountCacheMaxSizeChecker
-                .calculateMaxPartitionSize(configuredMaxSize, partitionCount);
-        estimatedMaxSize = maxEstimatedPartitionSize * partitionCount;
+        estimatedMaxSize = (int) (configuredMaxSize * TOLERANCE_FACTOR);
     }
 
     @TimeStep(prob = 0.8)
