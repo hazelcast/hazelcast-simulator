@@ -67,9 +67,8 @@ import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScrip
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.utils.AgentUtils.checkInstallation;
-import static com.hazelcast.simulator.utils.AgentUtils.startAgents;
-import static com.hazelcast.simulator.utils.AgentUtils.stopAgents;
+import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
+import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
@@ -125,9 +124,7 @@ public class Coordinator implements Closeable {
 
         echoLocal("Coordinator starting...");
 
-        checkInstallation(bash, simulatorProperties, componentRegistry);
-
-        startAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+        startAgents(simulatorProperties, componentRegistry);
 
         startCoordinatorConnector();
 
@@ -186,7 +183,7 @@ public class Coordinator implements Closeable {
 
         closeQuietly(client);
         closeQuietly(connector);
-        stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
+        stopAgents(simulatorProperties, componentRegistry);
 
         if (!parameters.skipDownload()) {
             new DownloadTask(componentRegistry.getAgentIps(),

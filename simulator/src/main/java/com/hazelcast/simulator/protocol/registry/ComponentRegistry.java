@@ -27,7 +27,6 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,12 +124,12 @@ public class ComponentRegistry {
         return null;
     }
 
-    public Set<String> getAgentIps() {
-        Set<String> set = new HashSet<String>();
+    public List<String> getAgentIps() {
+        List<String> result = new ArrayList<String>();
         for (AgentData agent : agents) {
-            set.add(agent.getPublicAddress());
+            result.add(agent.getPublicAddress());
         }
-        return set;
+        return result;
     }
 
     public List<AgentData> getAgents(int count) {

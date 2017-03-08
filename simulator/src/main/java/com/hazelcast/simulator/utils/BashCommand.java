@@ -38,6 +38,8 @@ import static java.lang.String.format;
 public class BashCommand {
     private static final Logger LOGGER = Logger.getLogger(BashCommand.class);
     private static final String INFO = "[INFO]";
+    private static final String WARN = "[WARN]";
+    private static final String ERROR = "[ERROR]";
 
     private final List<String> params = new ArrayList<String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
@@ -153,10 +155,15 @@ public class BashCommand {
             try {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.startsWith(INFO)) {
+                    if (line.startsWith(ERROR)) {
+                        LOGGER.error(line.substring(ERROR.length(), line.length()));
+                    } else if (line.startsWith(WARN)) {
+                        LOGGER.warn(line.substring(WARN.length(), line.length()));
+                    } else if (line.startsWith(INFO)) {
                         LOGGER.info(line.substring(INFO.length(), line.length()));
+                    } else {
+                        LOGGER.trace(line);
                     }
-                    LOGGER.trace(line);
                     stringBuilder.append(line).append(NEW_LINE);
                 }
             } catch (IOException ignored) {
