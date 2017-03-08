@@ -36,7 +36,6 @@ public class CoordinatorParameters {
     private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
     private int performanceMonitorIntervalSeconds;
-    private String afterCompletionFile;
     private String licenseKey;
 
     public String getSessionId() {
@@ -99,15 +98,6 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setPerformanceMonitorIntervalSeconds(int performanceMonitorIntervalSeconds) {
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
-        return this;
-    }
-
-    public String getAfterCompletionFile() {
-        return afterCompletionFile;
-    }
-
-    public CoordinatorParameters setAfterCompletionFile(String afterCompletionFile) {
-        this.afterCompletionFile = afterCompletionFile;
         return this;
     }
 

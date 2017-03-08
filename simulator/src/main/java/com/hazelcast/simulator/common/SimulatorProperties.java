@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.utils.CommonUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -57,9 +58,9 @@ public class SimulatorProperties {
 
     private final Map<String, Value> properties = new HashMap<String, Value>();
 
-
     public SimulatorProperties() {
         File defaultPropFile = newFile(getSimulatorHome(), "conf", PROPERTIES_FILE_NAME);
+        properties.put("SIMULATOR_VERSION", new Value(true, CommonUtils.getSimulatorVersion()));
 
         LOGGER.info(format("Loading default %s: %s", PROPERTIES_FILE_NAME, defaultPropFile.getAbsolutePath()));
         check(defaultPropFile);

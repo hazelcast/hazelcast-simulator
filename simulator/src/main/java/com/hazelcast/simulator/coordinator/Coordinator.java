@@ -18,7 +18,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.WorkerType;
-import com.hazelcast.simulator.coordinator.tasks.ArtifactDownloadTask;
+import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
 import com.hazelcast.simulator.coordinator.tasks.InstallVendorTask;
 import com.hazelcast.simulator.coordinator.tasks.KillWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
@@ -189,17 +189,10 @@ public class Coordinator implements Closeable {
         stopAgents(LOGGER, bash, simulatorProperties, componentRegistry);
 
         if (!parameters.skipDownload()) {
-            new ArtifactDownloadTask(
-                    parameters.getSessionId(),
-                    simulatorProperties,
-                    outputDirectory,
-                    componentRegistry).run();
-
-            if (parameters.getAfterCompletionFile() != null) {
-                echoLocal("Executing after-completion script: " + parameters.getAfterCompletionFile());
-                bash.execute(parameters.getAfterCompletionFile() + " " + outputDirectory.getAbsolutePath());
-                echoLocal("Finished after-completion script");
-            }
+            new DownloadTask(componentRegistry.getAgentIps(),
+                    simulatorProperties.asMap(),
+                    outputDirectory.getParentFile(),
+                    parameters.getSessionId()).run();
         }
 
         OperationTypeCounter.printStatistics();
@@ -265,11 +258,10 @@ public class Coordinator implements Closeable {
 
         LOGGER.info("Downloading...");
 
-        new ArtifactDownloadTask(
-                parameters.getSessionId(),
-                simulatorProperties,
-                outputDirectory,
-                componentRegistry).run();
+        new DownloadTask(componentRegistry.getAgentIps(),
+                simulatorProperties.asMap(),
+                outputDirectory.getParentFile(),
+                parameters.getSessionId()).run();
 
         LOGGER.info("Downloading complete!");
     }
