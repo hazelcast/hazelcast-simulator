@@ -48,11 +48,7 @@ JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
 
-if [ "$WORKER_TYPE" = "javaclient" ] ; then
-    MAIN=com.hazelcast.simulator.worker.ClientWorker
-else
-    MAIN=com.hazelcast.simulator.worker.MemberWorker
-fi
+MAIN=com.hazelcast.simulator.worker.Worker
 
 java -classpath "$CLASSPATH" ${JVM_ARGS} ${MAIN}
 

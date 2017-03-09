@@ -29,7 +29,7 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.protocol.registry.AgentData;
 import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.worker.MemberWorker;
+import com.hazelcast.simulator.worker.Worker;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
@@ -51,7 +51,7 @@ public final class HazelcastUtils {
     private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
     private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
 
-    private static final Logger LOGGER = Logger.getLogger(MemberWorker.class);
+    private static final Logger LOGGER = Logger.getLogger(Worker.class);
 
     private HazelcastUtils() {
     }

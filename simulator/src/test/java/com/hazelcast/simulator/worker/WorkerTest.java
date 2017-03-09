@@ -23,7 +23,7 @@ import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static org.junit.Assert.assertEquals;
 
-public class MemberWorkerTest {
+public class WorkerTest {
 
     private File memberConfigFile;
     private File clientConfigFile;
@@ -33,7 +33,7 @@ public class MemberWorkerTest {
     private static final int WORKER_INDEX = 1;
     private static final int WORKER_PORT = 9001;
 
-    private MemberWorker worker;
+    private Worker worker;
 
     @Before
     public void before() {
@@ -69,7 +69,7 @@ public class MemberWorkerTest {
 
     @Test
     public void testConstructor_MemberWorker() throws Exception {
-        worker = new MemberWorker(
+        worker = new Worker(
                 MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, memberConfigFile.getAbsolutePath(), true, 10);
         worker.start();
         assertMemberWorker();
@@ -79,7 +79,7 @@ public class MemberWorkerTest {
     public void testConstructor_ClientWorker() throws Exception {
         Hazelcast.newHazelcastInstance();
 
-        worker = new MemberWorker(
+        worker = new Worker(
                 WorkerType.JAVA_CLIENT, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, clientConfigFile.getAbsolutePath(), true, 10);
         worker.start();
         assertMemberWorker();
@@ -87,14 +87,14 @@ public class MemberWorkerTest {
 
     @Test
     public void testConstructor_noAutoCreateHzInstance() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
+        worker = new Worker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
         worker.start();
         assertMemberWorker();
     }
 
     @Test
     public void testConstructor_noAutoCreateHzInstance_withPerformanceMonitor() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
+        worker = new Worker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 10);
         worker.start();
         assertMemberWorker();
 
@@ -102,14 +102,14 @@ public class MemberWorkerTest {
 
     @Test
     public void testConstructor_noAutoCreateHzInstance_withPerformanceMonitor_invalidInterval() throws Exception {
-        worker = new MemberWorker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 0);
+        worker = new Worker(MEMBER, PUBLIC_ADDRESS, AGENT_INDEX, WORKER_INDEX, WORKER_PORT, "", false, 0);
         worker.start();
         assertMemberWorker();
     }
 
     @Test
     public void testStartWorker() throws Exception {
-        System.setProperty("workerId", "MemberWorkerTest");
+        System.setProperty("workerId", "WorkerTest");
         System.setProperty("workerType", "MEMBER");
         System.setProperty("publicAddress", PUBLIC_ADDRESS);
         System.setProperty("agentIndex", String.valueOf(AGENT_INDEX));
@@ -119,7 +119,7 @@ public class MemberWorkerTest {
         System.setProperty("autoCreateHzInstance", "true");
         System.setProperty("workerPerformanceMonitorIntervalSeconds", "10");
 
-        worker = MemberWorker.startWorker();
+        worker = Worker.startWorker();
         assertMemberWorker();
     }
 

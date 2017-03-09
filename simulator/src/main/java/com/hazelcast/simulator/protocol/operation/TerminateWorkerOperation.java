@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.google.gson.annotations.SerializedName;
+import com.hazelcast.simulator.worker.Worker;
 
 /**
  * Initiates the shutdown process of the Worker.
@@ -23,7 +24,7 @@ import com.google.gson.annotations.SerializedName;
 public class TerminateWorkerOperation implements SimulatorOperation {
 
     /**
-     * Defines a delay for {@link com.hazelcast.simulator.worker.MemberWorker} for the shutdown, to give Hazelcast clients enough
+     * Defines a delay for {@link Worker} for the shutdown, to give Hazelcast clients enough
      * time to disconnect gracefully, before the Hazelcast members are gone.
      *
      * Client Workers can ignore this parameter.
