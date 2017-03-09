@@ -42,12 +42,7 @@ JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS -XX:+PreserveFramePointer"
 
-if [ "$WORKER_TYPE" = "javaclient" ] ; then
-    MAIN=com.hazelcast.simulator.worker.ClientWorker
-else
-    MAIN=com.hazelcast.simulator.worker.MemberWorker
-fi
-
+MAIN=com.hazelcast.simulator.worker.Worker
 
 git clone --depth=1 https://github.com/jrudolph/perf-map-agent
 cd perf-map-agent
