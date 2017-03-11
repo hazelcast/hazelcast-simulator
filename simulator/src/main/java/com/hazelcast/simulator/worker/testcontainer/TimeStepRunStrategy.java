@@ -126,29 +126,6 @@ class TimeStepRunStrategy extends RunStrategy {
         };
     }
 
-    @Override
-    public Callable getWarmupCallable() {
-        return new Callable() {
-            @Override
-            public Object call() throws Exception {
-                try {
-                    LOGGER.info(format("Spawning %d worker threads for warmup %s", totalThreadCount, testContext.getTestId()));
-
-                    if (totalThreadCount <= 0) {
-                        return null;
-                    }
-                    runners = createRunners();
-                    onRunStarted();
-                    ThreadSpawner spawner = spawnThreads(runners, true);
-                    spawner.awaitCompletion();
-                    return null;
-                } finally {
-                    onRunCompleted();
-                }
-            }
-        };
-    }
-
     private ThreadSpawner spawnThreads(TimeStepRunner[] runners, boolean warmup) {
         ThreadSpawner spawner = new ThreadSpawner(testContext.getTestId());
 
