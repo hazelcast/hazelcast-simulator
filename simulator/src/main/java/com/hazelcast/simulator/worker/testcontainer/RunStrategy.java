@@ -32,16 +32,7 @@ abstract class RunStrategy {
 
     public abstract Callable getRunCallable();
 
-    public Callable getWarmupCallable() {
-        return new Callable() {
-            @Override
-            public Object call() throws Exception {
-                return null;
-            }
-        };
-    }
-
-    /**
+     /**
      * Returns the number of iterations of all the executions. Value is 0 if it isn't tracked, or the information is only
      * available through Probes.
      *
