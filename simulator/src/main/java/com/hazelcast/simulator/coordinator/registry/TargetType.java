@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.registry;
+package com.hazelcast.simulator.coordinator.registry;
 
 /**
  * Defines a target type for a Worker to select groups of Workers from the {@link ComponentRegistry}.

@@ -19,7 +19,7 @@ import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.coordinator.registry.TargetType;
 
 import java.util.Collections;
 import java.util.List;

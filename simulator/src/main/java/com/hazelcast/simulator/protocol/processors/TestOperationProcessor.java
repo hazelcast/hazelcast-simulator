@@ -29,7 +29,7 @@ import com.hazelcast.simulator.protocol.operation.PhaseCompletedOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestOperation;
 import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
-import com.hazelcast.simulator.protocol.registry.TargetType;
+import com.hazelcast.simulator.coordinator.registry.TargetType;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.worker.Promise;
 import com.hazelcast.simulator.worker.Worker;

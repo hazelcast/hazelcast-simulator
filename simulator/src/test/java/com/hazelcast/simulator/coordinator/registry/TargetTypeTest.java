@@ -1,11 +1,11 @@
-package com.hazelcast.simulator.protocol.registry;
+package com.hazelcast.simulator.coordinator.registry;
 
 import org.junit.Test;
 
-import static com.hazelcast.simulator.protocol.registry.TargetType.ALL;
-import static com.hazelcast.simulator.protocol.registry.TargetType.CLIENT;
-import static com.hazelcast.simulator.protocol.registry.TargetType.MEMBER;
-import static com.hazelcast.simulator.protocol.registry.TargetType.PREFER_CLIENT;
+import static com.hazelcast.simulator.coordinator.registry.TargetType.ALL;
+import static com.hazelcast.simulator.coordinator.registry.TargetType.CLIENT;
+import static com.hazelcast.simulator.coordinator.registry.TargetType.MEMBER;
+import static com.hazelcast.simulator.coordinator.registry.TargetType.PREFER_CLIENT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

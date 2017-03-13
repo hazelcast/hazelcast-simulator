@@ -27,8 +27,8 @@ import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.worker.Worker;
 import org.apache.log4j.Logger;
 

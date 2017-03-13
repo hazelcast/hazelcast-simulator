@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.BashCommand;
 
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;

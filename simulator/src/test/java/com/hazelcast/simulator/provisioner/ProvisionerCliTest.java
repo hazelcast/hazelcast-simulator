@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

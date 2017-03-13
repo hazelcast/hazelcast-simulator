@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.junit.Before;
 import org.junit.Test;

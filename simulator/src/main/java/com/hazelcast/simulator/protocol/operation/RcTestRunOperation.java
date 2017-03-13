@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.coordinator.TestSuite;
-import com.hazelcast.simulator.protocol.registry.WorkerQuery;
+import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 
 public class RcTestRunOperation implements SimulatorOperation {
 

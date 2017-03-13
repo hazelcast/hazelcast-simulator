@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.protocol.registry;
+package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;

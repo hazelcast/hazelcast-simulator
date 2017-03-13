@@ -17,9 +17,9 @@ package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.protocol.connector.Connector;
 import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
-import com.hazelcast.simulator.protocol.registry.WorkerQuery;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import static com.hazelcast.simulator.protocol.registry.WorkerData.toAddressString;
+import static com.hazelcast.simulator.coordinator.registry.WorkerData.toAddressString;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 

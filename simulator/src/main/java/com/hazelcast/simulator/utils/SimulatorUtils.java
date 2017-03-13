@@ -17,7 +17,7 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 

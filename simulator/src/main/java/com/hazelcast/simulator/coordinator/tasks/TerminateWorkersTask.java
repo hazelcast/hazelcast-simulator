@@ -19,8 +19,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.protocol.operation.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.protocol.operation.TerminateWorkerOperation;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import org.apache.log4j.Logger;
 
 import java.util.List;

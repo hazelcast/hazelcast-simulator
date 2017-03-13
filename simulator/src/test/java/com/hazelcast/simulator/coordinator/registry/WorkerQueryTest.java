@@ -1,4 +1,4 @@
-package com.hazelcast.simulator.protocol.registry;
+package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;

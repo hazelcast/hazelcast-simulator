@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.amazonaws.util.StringInputStream;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.protocol.registry.WorkerQuery;
+import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
