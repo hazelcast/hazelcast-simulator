@@ -5,7 +5,7 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.connector.WorkerConnector;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

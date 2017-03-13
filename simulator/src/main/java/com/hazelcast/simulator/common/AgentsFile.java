@@ -15,8 +15,8 @@
  */
 package com.hazelcast.simulator.common;
 
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TagUtils;
 

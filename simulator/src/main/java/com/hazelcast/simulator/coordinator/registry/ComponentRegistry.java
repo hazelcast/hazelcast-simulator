@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.protocol.registry;
+package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.TestCase;
@@ -21,7 +21,7 @@ import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.registry.AgentData.AgentWorkerMode;
+import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.util.ArrayList;

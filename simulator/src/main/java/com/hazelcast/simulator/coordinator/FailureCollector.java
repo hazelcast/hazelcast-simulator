@@ -17,9 +17,9 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.FailureType;
 import com.hazelcast.simulator.protocol.operation.FailureOperation;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.TestData;
+import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import org.apache.log4j.Logger;
 
 import java.io.File;

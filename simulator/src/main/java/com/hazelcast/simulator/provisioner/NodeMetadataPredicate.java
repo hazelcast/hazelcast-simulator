@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.google.common.base.Predicate;
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.domain.NodeMetadata;
 

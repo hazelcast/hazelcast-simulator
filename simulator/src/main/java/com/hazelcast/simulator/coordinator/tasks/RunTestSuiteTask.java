@@ -25,10 +25,10 @@ import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestCaseRunner;
 import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.TestSuite;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.TestData;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
-import com.hazelcast.simulator.protocol.registry.WorkerQuery;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.TestData;
+import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.protocol.registry.WorkerData.toAddressString;
+import static com.hazelcast.simulator.coordinator.registry.WorkerData.toAddressString;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;

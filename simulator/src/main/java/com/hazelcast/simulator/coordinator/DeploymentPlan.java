@@ -18,9 +18,9 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.registry.WorkerData;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
 

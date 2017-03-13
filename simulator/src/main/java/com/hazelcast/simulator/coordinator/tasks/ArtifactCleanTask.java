@@ -16,8 +16,8 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;

@@ -17,8 +17,8 @@ package com.hazelcast.simulator.wizard;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.protocol.registry.AgentData;
-import com.hazelcast.simulator.protocol.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
