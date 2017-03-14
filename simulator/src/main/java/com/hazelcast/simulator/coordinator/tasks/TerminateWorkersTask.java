@@ -23,12 +23,15 @@ import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import org.apache.log4j.Logger;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
+import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -72,18 +75,31 @@ public class TerminateWorkersTask {
 
         client.invokeAll(componentRegistry.getAgents(), new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
-        int shutdownDelaySeconds = componentRegistry.hasClientWorkers()
-                ? simulatorProperties.getMemberWorkerShutdownDelaySeconds()
-                : 0;
-
         // prevent any failures from being printed due to killing the members.
+        Set<WorkerData> clients = new HashSet<WorkerData>();
+        Set<WorkerData> members = new HashSet<WorkerData>();
         for (WorkerData worker : componentRegistry.getWorkers()) {
             worker.setIgnoreFailures(true);
+            if (worker.getSettings().getWorkerType().isMember()) {
+                members.add(worker);
+            } else {
+                clients.add(worker);
+            }
         }
 
-        // we send a message to terminate the workers and this will happen at some point in the future.
-        for (WorkerData worker : componentRegistry.getWorkers()) {
-            client.send(worker.getAddress(), new TerminateWorkerOperation(shutdownDelaySeconds, true));
+        // first shut down all clients
+        for (WorkerData worker : clients) {
+            client.send(worker.getAddress(), new TerminateWorkerOperation(true));
+        }
+
+        // wait some if there were any clients
+        if (!clients.isEmpty()) {
+            sleepSeconds(simulatorProperties.getMemberWorkerShutdownDelaySeconds());
+        }
+
+        // and then terminate all members
+        for (WorkerData worker : members) {
+            client.send(worker.getAddress(), new TerminateWorkerOperation(true));
         }
 
         // now we wait for the workers to die

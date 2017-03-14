@@ -37,7 +37,6 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
@@ -116,12 +115,8 @@ public class Worker {
 
     public void shutdown(TerminateWorkerOperation op) {
         LOGGER.warn("Terminating worker");
-        if (type == WorkerType.MEMBER) {
-            sleepSeconds(op.getMemberWorkerShutdownDelaySeconds());
-        }
-
         closeQuietly(server);
-        shutdownThread = new WorkerShutdownThread(op.isEnsureProcessShutdown());
+        shutdownThread = new WorkerShutdownThread(op.isRealShutdown());
         shutdownThread.start();
     }
 
@@ -270,10 +265,7 @@ public class Worker {
                 hazelcastInstance.shutdown();
             }
 
-            if (performanceMonitor != null) {
-                echo("Shutting down WorkerPerformanceMonitor");
-                performanceMonitor.shutdown();
-            }
+            closeQuietly(performanceMonitor);
         }
     }
 }

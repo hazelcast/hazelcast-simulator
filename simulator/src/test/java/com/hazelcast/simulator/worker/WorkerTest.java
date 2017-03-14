@@ -78,7 +78,7 @@ public class WorkerTest {
     @After
     public void after() throws Exception {
         if (worker != null) {
-            worker.shutdown(new TerminateWorkerOperation(0, false));
+            worker.shutdown(new TerminateWorkerOperation(false));
             worker.awaitShutdown();
         }
 
