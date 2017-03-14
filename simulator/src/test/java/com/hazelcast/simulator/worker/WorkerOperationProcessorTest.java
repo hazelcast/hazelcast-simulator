@@ -65,7 +65,7 @@ public class WorkerOperationProcessorTest {
 
     @Test
     public void test_TerminateWorkerOperation() throws Exception {
-        TerminateWorkerOperation op = new TerminateWorkerOperation(0, true);
+        TerminateWorkerOperation op = new TerminateWorkerOperation(true);
 
         processor.process(op, sourceAddress, promise);
 

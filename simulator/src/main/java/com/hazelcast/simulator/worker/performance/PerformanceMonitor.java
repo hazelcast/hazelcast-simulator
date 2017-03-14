@@ -21,6 +21,7 @@ import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.log4j.Logger;
 
+import java.io.Closeable;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * Monitors the performance of all running Simulator Tests.
  */
-public class PerformanceMonitor {
+public class PerformanceMonitor implements Closeable {
 
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
     private static final long WAIT_FOR_TEST_CONTAINERS_DELAY_NANOS = MILLISECONDS.toNanos(100);
@@ -70,11 +71,12 @@ public class PerformanceMonitor {
         thread.start();
     }
 
-    public void shutdown() {
+    @Override
+    public void close() {
         if (!shutdown.compareAndSet(false, true)) {
             return;
         }
-
+        LOGGER.info("Shutting down WorkerPerformanceMonitor");
         joinThread(thread, MINUTES.toMillis(SHUTDOWN_TIMEOUT_SECONDS));
     }
 

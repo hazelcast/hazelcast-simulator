@@ -55,24 +55,24 @@ public class PerformanceMonitorTest {
 
     @After
     public void after() {
-        performanceMonitor.shutdown();
+        performanceMonitor.close();
 
         teardownFakeUserDir();
     }
 
     @Test
-    public void test_shutdownTwice() {
+    public void test_closeTwice() {
         performanceMonitor.start();
 
-        performanceMonitor.shutdown();
-        performanceMonitor.shutdown();
+        performanceMonitor.close();
+        performanceMonitor.close();
     }
 
     @Test(expected = IllegalThreadStateException.class)
     public void test_restartAfterStop() {
         performanceMonitor.start();
 
-        performanceMonitor.shutdown();
+        performanceMonitor.close();
 
         performanceMonitor.start();
     }
@@ -116,7 +116,7 @@ public class PerformanceMonitorTest {
         testContext.stop();
         joinThread(runTestThread);
 
-        performanceMonitor.shutdown();
+        performanceMonitor.close();
     }
 
     private TestContext addTest(Object test) {

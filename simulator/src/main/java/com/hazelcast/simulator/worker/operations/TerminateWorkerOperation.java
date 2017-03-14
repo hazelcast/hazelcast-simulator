@@ -17,7 +17,6 @@ package com.hazelcast.simulator.worker.operations;
 
 import com.google.gson.annotations.SerializedName;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.worker.Worker;
 
 /**
  * Initiates the shutdown process of the Worker.
@@ -25,36 +24,18 @@ import com.hazelcast.simulator.worker.Worker;
 public class TerminateWorkerOperation implements SimulatorOperation {
 
     /**
-     * Defines a delay for {@link Worker} for the shutdown, to give Hazelcast clients enough
-     * time to disconnect gracefully, before the Hazelcast members are gone.
+     * If the worker should do a real shutdown or just fake it. This is needed for integration testing the code.
      *
-     * Client Workers can ignore this parameter.
+     * If you are implementing a non java client? Just ignore this property and terminate your client.
      */
-    @SerializedName("memberWorkerShutdownDelaySeconds")
-    private final int memberWorkerShutdownDelaySeconds;
+    @SerializedName("realShutdown")
+    private final boolean realShutdown;
 
-    /**
-     * Defines if Java Workers should shutdown their process (e.g. via {@link System#exit(int)}).
-     *
-     * This is done to ensure that the Worker process is killed, even if some Threads are non-responsive.
-     * In Java Workers this is also used to shutdown log4j, to ensure flushing of the logs.
-     *
-     * This switch should not be set in integration tests, otherwise the logging will be gone in
-     * subsequent tests. This may also kill the JVM of the test itself.
-     */
-    @SerializedName("ensureProcessShutdown")
-    private final boolean ensureProcessShutdown;
-
-    public TerminateWorkerOperation(int memberWorkerShutdownDelaySeconds, boolean ensureProcessShutdown) {
-        this.memberWorkerShutdownDelaySeconds = memberWorkerShutdownDelaySeconds;
-        this.ensureProcessShutdown = ensureProcessShutdown;
+    public TerminateWorkerOperation(boolean realShutdown) {
+        this.realShutdown = realShutdown;
     }
 
-    public int getMemberWorkerShutdownDelaySeconds() {
-        return memberWorkerShutdownDelaySeconds;
-    }
-
-    public boolean isEnsureProcessShutdown() {
-        return ensureProcessShutdown;
+    public boolean isRealShutdown() {
+        return realShutdown;
     }
 }
