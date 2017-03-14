@@ -58,46 +58,9 @@ import static java.util.Collections.singletonList;
  *
  * - workers should be started with session id included. No need for init session
  *
- * - No need for test in simulator address
- *
- * - No need for wildcard in simulator address
- *
  * - active mq security?
  *
  * - http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html vm:// for agent (embedded broker)
- *
- * -----------------------------------------------------------
- *
- * in progress
- * -----------------------------------------------------------
- *
- * done
- *
- * - more control on reconnecting; eventually we should timeout.
- *
- * - test messaging
- *
- * - a future waiting on a response for a closed broker connection, will not be notified.
- *
- * - CoordinatorTest-runScript failing
- *
- * - verify coordinator package
- *
- * - if worker starts to fail, an ugly stacktrace is shown
- *
- * - coordinator failure operation not working: can easily be tested with a broken worker.sh
- *
- * - when agent fails..
- *
- * - cleanup of how worker address is passed to worker.
- *
- * - CoordinatorTest.testRun broken
- *
- * - CoordinatorTest.workerScript broken
- *
- * - LogOperation
- *
- * - on WorkerOperationProcessors exceptions need to be feed back into the ErrorReporter
  */
 public class Broker implements Closeable {
 
