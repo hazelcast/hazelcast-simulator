@@ -75,8 +75,8 @@ public class CoordinatorClient implements Closeable {
     private ResponseHandlerThread responseHandlerThread;
     private OperationProcessor processor;
     private int remoteBrokerPort = DEFAULT_AGENT_PORT;
-    private volatile boolean stop;
     private FailureCollector failureCollector;
+    private volatile boolean stop;
 
     public CoordinatorClient() {
         this.responseHandlerThread = new ResponseHandlerThread();
@@ -124,24 +124,20 @@ public class CoordinatorClient implements Closeable {
     }
 
     public Future<String> submit(SimulatorAddress target, SimulatorOperation op) {
-        try {
-            String messageId = newUnsecureUuidString();
+        String messageId = newUnsecureUuidString();
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("sending " + op + " to " + target);
-            }
-
-            RemoteBroker remoteBroker = getRemoteBroker(target);
-
-            FutureImpl future = new FutureImpl(remoteBroker);
-            futures.put(messageId, future);
-
-            taskQueue.add(new SendTask(target, remoteBroker, op, messageId));
-
-            return future;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("sending " + op + " to " + target);
         }
+
+        RemoteBroker remoteBroker = getRemoteBroker(target);
+
+        FutureImpl future = new FutureImpl(remoteBroker);
+        futures.put(messageId, future);
+
+        taskQueue.add(new SendTask(target, remoteBroker, op, messageId));
+
+        return future;
     }
 
     public List<String> invokeAll(List<AgentData> agents, SimulatorOperation op, long timeoutMillis)
