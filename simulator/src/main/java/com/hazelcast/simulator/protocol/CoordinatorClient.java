@@ -124,8 +124,6 @@ public class CoordinatorClient implements Closeable {
     }
 
     public Future<String> submit(SimulatorAddress target, SimulatorOperation op) {
-        String messageId = newUnsecureUuidString();
-
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("sending " + op + " to " + target);
         }
@@ -133,9 +131,9 @@ public class CoordinatorClient implements Closeable {
         RemoteBroker remoteBroker = getRemoteBroker(target);
 
         FutureImpl future = new FutureImpl(remoteBroker);
-        futures.put(messageId, future);
+        futures.put(future.messageId, future);
 
-        taskQueue.add(new SendTask(target, remoteBroker, op, messageId));
+        taskQueue.add(new SendTask(target, remoteBroker, op, future.messageId));
 
         return future;
     }
@@ -186,8 +184,8 @@ public class CoordinatorClient implements Closeable {
 
     static class FutureImpl implements Future<String> {
         private final RemoteBroker agentBroker;
+        private final String messageId = newUnsecureUuidString();
         private volatile Object result;
-
 
         public FutureImpl(RemoteBroker agentBroker) {
             this.agentBroker = agentBroker;
@@ -294,7 +292,6 @@ public class CoordinatorClient implements Closeable {
                     throw new RuntimeException("unhandled target:" + target);
             }
         }
-
     }
 
     class SendThread extends Thread {
