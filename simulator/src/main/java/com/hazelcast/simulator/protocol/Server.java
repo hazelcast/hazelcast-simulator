@@ -32,6 +32,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import java.io.Closeable;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
@@ -49,36 +50,42 @@ public class Server implements ExceptionListener, Closeable {
     private static final Logger LOGGER = Logger.getLogger(Server.class);
 
     private final String topic;
-    private SimulatorAddress selfAddress;
-    private OperationProcessor operationProcessor;
+    private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private final ServerThread serverThread = new ServerThread();
-    private volatile boolean stop;
-
+    private SimulatorAddress selfAddress;
+    private OperationProcessor processor;
     private MessageConsumer consumer;
     private Session session;
     private Topic destination;
     private Connection connection;
     private String brokerURL;
     private String selfAddressString;
-    private final ConnectionFactory connectionFactory = new ConnectionFactory();
+    private volatile boolean stop;
 
     public Server(String topic) {
-        this.topic = topic;
+        this.topic = checkNotNull(topic);
         setBrokerURL(localIp(), DEFAULT_AGENT_PORT);
     }
 
-    public ConnectionFactory getConnectionFactory() {
-        return connectionFactory;
-    }
-
+    /**
+     * Sets the SimulatorAddress of this server. For example if this server is running on C_A1_W3, then
+     * that is the address that needs to be set. It is used for 2 purposes:
+     * <ol>
+     * <li>for a source addresses on messages being send (e.g. replies)</li>
+     * <li>to listen to messages only meant for this server.</li>
+     * </ol>
+     */
     public Server setSelfAddress(SimulatorAddress selfAddress) {
         this.selfAddress = selfAddress;
         this.selfAddressString = selfAddress.toString();
         return this;
     }
 
-    public Server setOperationProcessor(OperationProcessor operationProcessor) {
-        this.operationProcessor = operationProcessor;
+    /**
+     * Set the {@link OperationProcessor} responsible for handling operations.
+     */
+    public Server setProcessor(OperationProcessor processor) {
+        this.processor = processor;
         return this;
     }
 
@@ -88,13 +95,11 @@ public class Server implements ExceptionListener, Closeable {
     }
 
     public Server setBrokerURL(String ip, int port) {
-        if (ip.equals("localhost")) {
-            ip = localIp();
-        }
-        if (ip.equals("127.0.1.1")) {
-            ip = "127.0.0.1";
-        }
         return setBrokerURL("tcp://" + ip + ":" + port);
+    }
+
+    public ConnectionFactory getConnectionFactory() {
+        return connectionFactory;
     }
 
     public Connection getConnection() {
@@ -106,17 +111,17 @@ public class Server implements ExceptionListener, Closeable {
 
         try {
             this.connection = connectionFactory.newConnection(brokerURL, this);
-
             this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
             this.destination = session.createTopic(topic);
 
             // we need to add the 'target=selfAddress' as a filter to only receive message we should
             // receive. Otherwise we'll process messages meant for others.
-            String messageSelector = "target='" + selfAddress + "'";
-            LOGGER.info(format("Using messageSelector [%s]", messageSelector));
-            this.consumer = session.createConsumer(destination, messageSelector);
+            String selector = "target='" + selfAddress + "'";
+            LOGGER.info(format("Using messageSelector [%s]", selector));
+            this.consumer = session.createConsumer(destination, selector);
             serverThread.start();
+
+            LOGGER.info("Successfully started server for " + selfAddressString);
             return this;
         } catch (RuntimeException e) {
             throw e;
@@ -137,7 +142,9 @@ public class Server implements ExceptionListener, Closeable {
 
     public void sendCoordinator(SimulatorOperation op) {
         try {
-            LOGGER.info("sending [" + op + "]");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("sending [" + op + "]");
+            }
 
             Destination topic = session.createTopic("coordinator");
             MessageProducer producer = session.createProducer(topic);
@@ -166,7 +173,9 @@ public class Server implements ExceptionListener, Closeable {
                 return;
             }
 
-            LOGGER.info(format("Sending reply [%s] for [%s] to %s", o, op, replyTo));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(format("Sending reply [%s] for [%s] to %s", o, op, replyTo));
+            }
 
             try {
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -217,8 +226,9 @@ public class Server implements ExceptionListener, Closeable {
             String operationData = message.getStringProperty("payload");
 
             SimulatorOperation op = OperationCodec.fromJson(operationData, operationType.getClassType());
-            LOGGER.info("Received operation:" + op);
-
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Received operation:" + op);
+            }
             PromiseImpl promise = new PromiseImpl();
             promise.replyTo = message.getJMSReplyTo();
             promise.correlationId = message.getJMSCorrelationID();
@@ -227,7 +237,7 @@ public class Server implements ExceptionListener, Closeable {
             SimulatorAddress source = SimulatorAddress.fromString(message.getStringProperty("source"));
 
             try {
-                operationProcessor.process(op, source, promise);
+                processor.process(op, source, promise);
             } catch (Exception e) {
                 if (!stop) {
                     LOGGER.warn(e.getMessage(), e);

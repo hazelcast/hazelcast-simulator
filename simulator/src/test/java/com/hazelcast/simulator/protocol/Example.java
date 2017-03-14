@@ -40,7 +40,7 @@ public class Example {
                 .start();
 
         Server agentServer = new Server("agents")
-                .setOperationProcessor(new OperationProcessor() {
+                .setProcessor(new OperationProcessor() {
                     @Override
                     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
                     }
@@ -50,7 +50,7 @@ public class Example {
                 .start();
 
         Server workerServer = new Server("workers")
-                .setOperationProcessor(new OperationProcessor() {
+                .setProcessor(new OperationProcessor() {
                     @Override
                     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
                         System.out.println("worker:" + op);

@@ -75,7 +75,7 @@ public class Agent implements Closeable {
                 new WorkerProcessFailureHandler(publicAddress, server),
                 processManager, workerLastSeenTimeoutSeconds);
 
-        server.setOperationProcessor(new AgentOperationProcessor(processManager, workerProcessFailureMonitor));
+        server.setProcessor(new AgentOperationProcessor(processManager, workerProcessFailureMonitor));
     }
 
     private void createPidFile() {

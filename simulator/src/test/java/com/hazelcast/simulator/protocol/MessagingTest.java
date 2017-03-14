@@ -51,7 +51,7 @@ public class MessagingTest {
         agentServer = new Server("agents")
                 .setBrokerURL(broker.getBrokerURL())
                 .setSelfAddress(agentAddress)
-                .setOperationProcessor(new OperationProcessor() {
+                .setProcessor(new OperationProcessor() {
                     @Override
                     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
                         System.out.println(op);
@@ -83,7 +83,7 @@ public class MessagingTest {
         agentServer = new Server("agents")
                 .setBrokerURL(broker.getBrokerURL())
                 .setSelfAddress(agentAddress)
-                .setOperationProcessor(new OperationProcessor() {
+                .setProcessor(new OperationProcessor() {
                     @Override
                     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
                         // we don't do anything to let the future wait
@@ -116,7 +116,7 @@ public class MessagingTest {
         agentServer = new Server("agents")
                 .setBrokerURL(broker.getBrokerURL())
                 .setSelfAddress(agentAddress)
-                .setOperationProcessor(new OperationProcessor() {
+                .setProcessor(new OperationProcessor() {
                     @Override
                     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
                     }

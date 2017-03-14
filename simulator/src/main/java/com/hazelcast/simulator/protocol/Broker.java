@@ -94,13 +94,6 @@ public class Broker implements Closeable {
     }
 
     public Broker setBrokerAddress(String ip, int port) {
-        if (ip.equals("localhost")) {
-            ip = SimulatorUtils.localIp();
-        }
-        if (ip.equals("127.0.1.1")) {
-            ip = "127.0.0.1";
-        }
-
         return setBrokerURL("tcp://" + ip + ":" + port);
     }
 

@@ -96,7 +96,7 @@ public class Worker {
 
         ScriptExecutor scriptExecutor = new ScriptExecutor(hazelcastInstance);
 
-        server.setOperationProcessor(new WorkerOperationProcessor(this, testManager, scriptExecutor));
+        server.setProcessor(new WorkerOperationProcessor(this, testManager, scriptExecutor));
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
