@@ -1,9 +1,8 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -30,7 +29,7 @@ public class TestContainer_TimeStep_StartNanosTest extends TestContainer_Abstrac
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
-                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
+                testCase.getId(), "localhost", mock(Server.class));
         TestContainer container = new TestContainer(testContext, testInstance, testCase);
 
         for (TestPhase phase : TestPhase.values()) {
@@ -55,7 +54,7 @@ public class TestContainer_TimeStep_StartNanosTest extends TestContainer_Abstrac
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
-                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
+                testCase.getId(), "localhost", mock(Server.class));
         TestContainer container = new TestContainer(testContext, testInstance, testCase);
 
         for (TestPhase phase : TestPhase.values()) {

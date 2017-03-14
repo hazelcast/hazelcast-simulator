@@ -15,6 +15,9 @@
  */
 package com.hazelcast.simulator.protocol.core;
 
+import com.hazelcast.simulator.protocol.OperationProcessor;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+
 /**
  * Defines the type for a {@link Response}, e.g. if it was successful or a specific error occurred.
  */
@@ -46,27 +49,16 @@ public enum ResponseType {
     FAILURE_TEST_NOT_FOUND(4),
 
     /**
-     * Is returned when an implementation of {@link com.hazelcast.simulator.protocol.processors.OperationProcessor}
-     * does not implement the transmitted {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}.
+     * Is returned when an implementation of {@link OperationProcessor}
+     * does not implement the transmitted {@link SimulatorOperation}.
      */
     UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR(5),
 
     /**
      * Is returned when an exception occurs during the execution of a
-     * {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation}.
+     * {@link SimulatorOperation}.
      */
-    EXCEPTION_DURING_OPERATION_EXECUTION(6),
-
-    /**
-     * Is returned when a {@link ResponseFuture} was unblocked by a
-     * {@link com.hazelcast.simulator.protocol.operation.FailureOperation}.
-     */
-    UNBLOCKED_BY_FAILURE(7),
-
-    /**
-     * Is returned when a {@link ResponseFuture#get()} was interrupted.
-     */
-    INTERRUPTED(8);
+    EXCEPTION_DURING_OPERATION_EXECUTION(6);
 
     private final int ordinal;
 
@@ -85,4 +77,4 @@ public enum ResponseType {
     public int toInt() {
         return ordinal;
     }
-}
+    }

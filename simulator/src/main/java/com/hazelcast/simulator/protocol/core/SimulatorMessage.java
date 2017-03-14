@@ -16,9 +16,10 @@
 package com.hazelcast.simulator.protocol.core;
 
 import com.hazelcast.simulator.protocol.operation.OperationType;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 /**
- * Message with a JSON serialized {@link com.hazelcast.simulator.protocol.operation.SimulatorOperation} which can be sent
+ * Message with a JSON serialized {@link SimulatorOperation} which can be sent
  * from any Simulator component to another.
  */
 public class SimulatorMessage {

@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -53,46 +52,50 @@ public class WorkerProcessLauncher {
 
     private final AtomicBoolean javaHomePrinted = new AtomicBoolean();
 
-    private final Agent agent;
-    private final WorkerProcessManager workerProcessManager;
-    private final WorkerProcessSettings workerProcessSettings;
+    /// private final Agent agent;
+    private final WorkerProcessManager processManager;
+    private final WorkerProcessSettings settings;
 
     private File sessionDir;
 
-    public WorkerProcessLauncher(Agent agent,
-                                 WorkerProcessManager workerProcessManager,
-                                 WorkerProcessSettings workerProcessSettings) {
-        this.agent = agent;
-        this.workerProcessManager = workerProcessManager;
-        this.workerProcessSettings = workerProcessSettings;
+    public WorkerProcessLauncher(WorkerProcessManager processManager,
+                                 WorkerProcessSettings settings) {
+        this.processManager = processManager;
+        this.settings = settings;
     }
 
-    public void launch() {
+    public void launch() throws Exception {
+        WorkerProcess process = null;
         try {
-            sessionDir = agent.getSessionDirectory();
+            sessionDir = processManager.getSessionDirectory();
             ensureExistingDirectory(sessionDir);
 
-            WorkerType type = workerProcessSettings.getWorkerType();
-            int workerIndex = workerProcessSettings.getWorkerIndex();
+            WorkerType type = settings.getWorkerType();
+            int workerIndex = settings.getWorkerIndex();
             LOGGER.info(format("Starting a Java Virtual Machine for %s Worker #%d", type, workerIndex));
 
-            LOGGER.info("Spawning Worker using settings: " + workerProcessSettings);
-            WorkerProcess worker = startWorker();
+            LOGGER.info("Launching Worker using settings: " + settings);
+            process = startWorker();
             LOGGER.info(format("Finished starting a for %s Worker #%d", type, workerIndex));
 
-            waitForWorkersStartup(worker, workerProcessSettings.getWorkerStartupTimeout());
-        } catch (Exception e) {
-            throw new SpawnWorkerFailedException("Failed to start Worker", e);
+            waitForWorkersStartup(process, settings.getWorkerStartupTimeout());
+            process = null;
+        } finally {
+            if (process != null) {
+                processManager.remove(process);
+            }
         }
     }
 
     private WorkerProcess startWorker() throws IOException {
-        int workerIndex = workerProcessSettings.getWorkerIndex();
-        WorkerType type = workerProcessSettings.getWorkerType();
+        int workerIndex = settings.getWorkerIndex();
+        WorkerType type = settings.getWorkerType();
+
+        SimulatorAddress agentAddress = processManager.getAgentAddress();
 
         SimulatorAddress workerAddress = new SimulatorAddress(
-                AddressLevel.WORKER, agent.getAddressIndex(), workerIndex, 0);
-        String workerId = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + type.name();
+                AddressLevel.WORKER, agentAddress.getAgentIndex(), workerIndex, 0);
+        String workerId = workerAddress.toString() + '-' + processManager.getPublicAddress() + '-' + type.name();
         File workerHome = ensureExistingDirectory(sessionDir, workerId);
 
         copyResourcesToWorkerHome(workerId);
@@ -110,20 +113,19 @@ public class WorkerProcessLauncher {
         environment.putAll(System.getenv());
         environment.put("PATH", path);
         environment.put("JAVA_HOME", javaHome);
-        environment.putAll(workerProcessSettings.getEnvironment());
+        environment.putAll(settings.getEnvironment());
         environment.put("CLASSPATH", getClasspath(workerHome));
         environment.put("SIMULATOR_HOME", getSimulatorHome().getAbsolutePath());
         environment.put("WORKER_ID", workerProcess.getId());
-        environment.put("WORKER_TYPE", workerProcessSettings.getWorkerType().toString());
-        environment.put("PUBLIC_ADDRESS", agent.getPublicAddress());
-        environment.put("AGENT_INDEX", Integer.toString(agent.getAddressIndex()));
-        environment.put("WORKER_INDEX", Integer.toString(workerProcessSettings.getWorkerIndex()));
-        environment.put("WORKER_PORT", Integer.toString(agent.getPort() + workerProcessSettings.getWorkerIndex()));
+        environment.put("WORKER_TYPE", settings.getWorkerType().toString());
+        environment.put("PUBLIC_ADDRESS", processManager.getPublicAddress());
+        environment.put("WORKER_ADDRESS", workerAddress.toString());
+        environment.put("AGENT_PORT", Integer.toString(processManager.getAgentPort()));
 
         Process process = processBuilder.start();
 
         workerProcess.setProcess(process);
-        workerProcessManager.add(workerAddress, workerProcess);
+        processManager.add(workerAddress, workerProcess);
 
         return workerProcess;
     }
@@ -132,9 +134,9 @@ public class WorkerProcessLauncher {
         int loopCount = (int) SECONDS.toMillis(workerTimeoutSec) / WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS;
         for (int i = 0; i < loopCount; i++) {
             if (hasExited(worker)) {
-                throw new SpawnWorkerFailedException(format(
+                throw new CreateWorkerFailedException(format(
                         "Startup of Worker %s on Agent %s failed, check log files in %s for more information!",
-                        worker.getAddress(), agent.getPublicAddress(), worker.getWorkerHome()));
+                        worker.getAddress(), processManager.getPublicAddress(), worker.getWorkerHome()));
             }
 
             String address = readAddress(worker);
@@ -147,9 +149,9 @@ public class WorkerProcessLauncher {
             sleepMillis(WAIT_FOR_WORKER_STARTUP_INTERVAL_MILLIS);
         }
 
-        throw new SpawnWorkerFailedException(format(
+        throw new CreateWorkerFailedException(format(
                 "Worker %s on Agent %s didn't start within %s seconds, check log files in %s for more information!",
-                worker.getAddress(), agent.getPublicAddress(), workerTimeoutSec, worker.getWorkerHome()));
+                worker.getAddress(), processManager.getPublicAddress(), workerTimeoutSec, worker.getWorkerHome()));
     }
 
     private String getJavaHome() {
@@ -167,13 +169,13 @@ public class WorkerProcessLauncher {
 
     private void generateWorkerStartScript(WorkerProcess workerProcess) {
         File startScript = new File(workerProcess.getWorkerHome(), "worker.sh");
-        String script = workerProcessSettings.getWorkerScript();
+        String script = settings.getWorkerScript();
         writeText(script, startScript);
     }
 
     private void copyResourcesToWorkerHome(String workerId) {
         File workersHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
-        String sessionId = agent.getSessionId();
+        String sessionId = processManager.getSessionId();
         File uploadDirectory = new File(workersHome, sessionId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
@@ -212,7 +214,7 @@ public class WorkerProcessLauncher {
 
     private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
-        String hzVersionDirectory = directoryForVersionSpec(workerProcessSettings.getVersionSpec());
+        String hzVersionDirectory = directoryForVersionSpec(settings.getVersionSpec());
         String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
 
@@ -227,7 +229,7 @@ public class WorkerProcessLauncher {
         }
 
         // we have to reverse the classpath to monkey patch version specific classes
-        return new File(agent.getSessionDirectory(), "lib/*").getAbsolutePath()
+        return new File(processManager.getSessionDirectory(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"

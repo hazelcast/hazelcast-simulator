@@ -17,15 +17,6 @@
         </layout>
     </appender>
 
-    <appender name="netty" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="logs/netty.log"/>
-        <param name="Threshold" value="DEBUG"/>
-        <param name="MaxBackupIndex" value="10"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
-        </layout>
-    </appender>
-
     <appender name="ssh" class="org.apache.log4j.RollingFileAppender">
         <param name="File" value="logs/ssh.log"/>
         <param name="Threshold" value="DEBUG"/>
@@ -43,12 +34,6 @@
             <param name="ConversionPattern" value="%-5p %d %m%n"/>
         </layout>
     </appender>
-
-    <!-- if there are Netty problems, put this on info or debug -->
-    <logger name="io.netty">
-        <level value="info"/>
-        <appender-ref ref="netty"/>
-    </logger>
 
     <logger name="com.hazelcast.simulator.utils.BashCommand">
         <level value="debug"/>

@@ -15,24 +15,44 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
+import com.hazelcast.simulator.agent.operations.InitSessionOperation;
+import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
+import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
+import com.hazelcast.simulator.coordinator.operations.FailureOperation;
+import com.hazelcast.simulator.coordinator.operations.RcDownloadOperation;
+import com.hazelcast.simulator.coordinator.operations.RcInstallOperation;
+import com.hazelcast.simulator.coordinator.operations.RcPrintLayoutOperation;
+import com.hazelcast.simulator.coordinator.operations.RcStopCoordinatorOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStatusOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStopOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+import com.hazelcast.simulator.worker.operations.CreateTestOperation;
+import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
+import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
+import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
+import com.hazelcast.simulator.worker.operations.StopRunOperation;
+import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 
 /**
- * Defines the operation type for a {@link com.hazelcast.simulator.protocol.core.SimulatorMessage}.
+ * Defines the operation type for a {@link SimulatorMessage}.
  */
 public enum OperationType {
 
     // OperationProcessor
-    INTEGRATION_TEST(IntegrationTestOperation.class, 0),
-    AUTH(AuthOperation.class, 1),
-    LOG(LogOperation.class, 2),
+    LOG(LogOperation.class, 1),
 
-    // CoordinatorOperationProcessor
+    // Coordinator-Operations
     FAILURE(FailureOperation.class, 1000),
-    PHASE_COMPLETED(PhaseCompletedOperation.class, 1001),
     PERFORMANCE_STATE(PerformanceStatsOperation.class, 1002),
 
     // Coordinator Remote operations
@@ -47,22 +67,18 @@ public enum OperationType {
     RC_PRINT_LAYOUT(RcPrintLayoutOperation.class, 2008),
     RC_DOWNLOAD(RcDownloadOperation.class, 2009),
 
-    // AgentOperationProcessor
+    // Agent-Operations
     INIT_SESSION(InitSessionOperation.class, 3000),
     CREATE_WORKER(CreateWorkerOperation.class, 3001),
     START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3002),
     STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3003),
 
-    // WorkerOperationProcessor
-    PING(PingOperation.class, 4000),
+    // Worker-Operations
     TERMINATE_WORKER(TerminateWorkerOperation.class, 4001),
     CREATE_TEST(CreateTestOperation.class, 4002),
     EXECUTE_SCRIPT(ExecuteScriptOperation.class, 4003),
-
-    // TestOperationProcessor
-    START_TEST_PHASE(StartTestPhaseOperation.class, 5000),
-    START_TEST(StartTestOperation.class, 5001),
-    STOP_TEST(StopTestOperation.class, 5002);
+    START_TEST_PHASE(StartPhaseOperation.class, 4004),
+    STOP_TEST(StopRunOperation.class, 4005);
 
     private final Class<? extends SimulatorOperation> classType;
     private final int classId;

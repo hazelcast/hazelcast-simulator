@@ -1,13 +1,13 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
-import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseType;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collection;
 
+import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -39,7 +39,9 @@ public class WorkerProcessManagerTest {
         secondWorkerProcess = new WorkerProcess(secondWorkerAddress, secondWorkerAddress.toString(), null);
         secondWorkerProcess.setProcess(mock(Process.class));
 
-        workerProcessManager = new WorkerProcessManager();
+        Server server = mock(Server.class);
+        workerProcessManager = new WorkerProcessManager(server,
+                SimulatorAddress.fromString("C_A1"), "127.0.0.1", DEFAULT_AGENT_PORT);
         workerProcessManager.add(firstWorkerAddress, firstWorkerProcess);
         workerProcessManager.add(secondWorkerAddress, secondWorkerProcess);
     }
@@ -51,19 +53,6 @@ public class WorkerProcessManagerTest {
         assertEquals(2, workerProcesses.size());
         assertTrue(workerProcesses.contains(firstWorkerProcess));
         assertTrue(workerProcesses.contains(secondWorkerProcess));
-    }
-
-    @Test
-    public void testUpdateLastSeenTimestamp_whenFromResponse_thenUpdate() {
-        long firstLastSeen = firstWorkerProcess.getLastSeen();
-        long secondLastSeen = secondWorkerProcess.getLastSeen();
-
-        sleepMillis(100);
-        Response response = new Response(1L, COORDINATOR, secondWorkerAddress, ResponseType.SUCCESS);
-        workerProcessManager.updateLastSeenTimestamp(response);
-
-        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
-        assertNotEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test
@@ -112,18 +101,6 @@ public class WorkerProcessManagerTest {
 
         assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
         assertEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
-    }
-
-    @Test
-    public void testUpdateLastSeenTimestamp_whenSimulatorAddressFromTest_thenUpdate() {
-        long firstLastSeen = firstWorkerProcess.getLastSeen();
-        long secondLastSeen = secondWorkerProcess.getLastSeen();
-
-        sleepMillis(100);
-        workerProcessManager.updateLastSeenTimestamp(secondWorkerAddress.getChild(1));
-
-        assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
-        assertNotEquals(secondLastSeen, secondWorkerProcess.getLastSeen());
     }
 
     @Test

@@ -17,10 +17,12 @@ package com.hazelcast.simulator.utils;
 
 import org.apache.log4j.Logger;
 
+import javax.jms.Connection;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -58,6 +60,24 @@ public final class CommonUtils {
     }
 
     public static void closeQuietly(Closeable... closeables) {
+        for (Closeable c : closeables) {
+            closeQuietly(c);
+        }
+    }
+
+    public static void closeQuietly(Connection connection) {
+        if (connection == null) {
+            return;
+        }
+
+        try {
+            connection.close();
+        } catch (Exception ignore) {
+            ignore(ignore);
+        }
+    }
+
+    public static void closeQuietly(Collection<? extends Closeable> closeables) {
         for (Closeable c : closeables) {
             closeQuietly(c);
         }

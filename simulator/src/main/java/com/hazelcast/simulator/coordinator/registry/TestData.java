@@ -107,7 +107,7 @@ public class TestData {
 
     public String getStatusString() {
         TestData.CompletedStatus status = getCompletedStatus();
-        if (status == TestData.CompletedStatus.IN_PROGRESS) {
+        if (status == IN_PROGRESS) {
             return testPhase.desc();
         } else {
             return completedStatus == CompletedStatus.SUCCESS ? "completed" : "failed";

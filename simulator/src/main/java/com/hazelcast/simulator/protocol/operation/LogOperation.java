@@ -48,4 +48,12 @@ public class LogOperation implements SimulatorOperation {
     public Level getLevel() {
         return Level.toLevel(level, Level.INFO);
     }
+
+    @Override
+    public String toString() {
+        return "LogOperation{"
+                + "message='" + message + '\''
+                + ", level='" + level + '\''
+                + '}';
+    }
 }

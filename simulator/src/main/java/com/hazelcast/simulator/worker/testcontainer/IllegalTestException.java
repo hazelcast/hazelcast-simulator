@@ -17,7 +17,7 @@ package com.hazelcast.simulator.worker.testcontainer;
 
 /**
  * Exception thrown when a test is not valid, e.g. it has no method with a {@link com.hazelcast.simulator.test.annotations.Run}
- * or {@link com.hazelcast.simulator.test.annotations.RunWithWorker} annotation.
+ * or {@link com.hazelcast.simulator.test.annotations.TimeStep} annotation.
  */
 public class IllegalTestException extends RuntimeException {
 
@@ -27,9 +27,5 @@ public class IllegalTestException extends RuntimeException {
 
     public IllegalTestException(String message, Throwable cause) {
         super(message, cause);
-    }
-
-    public IllegalTestException(Throwable cause) {
-        super(cause);
     }
 }

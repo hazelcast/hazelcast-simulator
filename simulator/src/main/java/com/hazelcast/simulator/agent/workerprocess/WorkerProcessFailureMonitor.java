@@ -16,6 +16,8 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
+import com.hazelcast.simulator.utils.FileUtils;
+import com.hazelcast.simulator.utils.UncheckedIOException;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -27,9 +29,7 @@ import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.rename;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -136,7 +136,9 @@ public class WorkerProcessFailureMonitor {
             }
 
             detectOomeFailure(workerProcess);
-            detectInactivity(workerProcess);
+
+            //detectInactivity(workerProcess);
+
             detectUnexpectedExit(workerProcess);
         }
 
@@ -158,15 +160,28 @@ public class WorkerProcessFailureMonitor {
                     testId = null;
                 }
 
-                // we delete or rename the exception file so that we don't detect the same exception again
-                boolean send = failureHandler.handle("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess,
+                failureHandler.handle("Worked ran into an unhandled exception", WORKER_EXCEPTION, workerProcess,
                         testId, cause);
 
-                if (send) {
-                    deleteQuiet(exceptionFile);
-                } else {
-                    rename(exceptionFile, new File(exceptionFile.getParentFile(), exceptionFile.getName() + ".sendFailure"));
-                }
+                move(exceptionFile);
+            }
+        }
+
+        // we rename the exception file so that we don't detect the same exception again
+        // moving it to the exception directory also means that we don't loose the exception if there is
+        // some kind of messaging error and it will be easy to find the exceptions thrown by a worker for further analysis.
+        private void move(File exceptionFile) {
+            // we create an exceptions directory
+            File exceptionDir = new File(exceptionFile.getParent(), "exceptions");
+            FileUtils.ensureExistingDirectory(exceptionDir);
+
+            // and then move the file into that directory
+            File newExceptionFile = new File(exceptionDir, exceptionFile.getName());
+            if (!exceptionFile.renameTo(newExceptionFile)) {
+                throw new UncheckedIOException(
+                        format(
+                                "Failed to move exception file [%s] to [%s]",
+                                exceptionFile.getAbsolutePath(), exceptionDir.getAbsolutePath()));
             }
         }
 

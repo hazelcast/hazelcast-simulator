@@ -15,34 +15,25 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.protocol.connector.Connector;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.test.TestContext;
 
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static java.lang.String.format;
 
 public class TestContextImpl implements TestContext {
 
-    private final HazelcastInstance hazelcastInstance;
     private final String testId;
     private final String publicIpAddress;
-    private final Connector connector;
+    private final Server server;
     private volatile boolean stopped;
 
-    public TestContextImpl(HazelcastInstance hazelcastInstance,
-                           String testId,
+    public TestContextImpl(String testId,
                            String publicIpAddress,
-                           Connector connector) {
-        this.hazelcastInstance = hazelcastInstance;
+                           Server server) {
         this.testId = testId;
         this.publicIpAddress = publicIpAddress;
-        this.connector = connector;
-    }
-
-    public HazelcastInstance getTargetInstance() {
-        return hazelcastInstance;
+        this.server = server;
     }
 
     @Override
@@ -68,6 +59,6 @@ public class TestContextImpl implements TestContext {
     @Override
     public void echoCoordinator(String msg, Object... args) {
         String message = format(msg, args);
-        connector.invokeAsync(COORDINATOR, new LogOperation(message));
+        server.sendCoordinator(new LogOperation(message));
     }
 }

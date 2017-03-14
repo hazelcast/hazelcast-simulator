@@ -1,9 +1,8 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -24,14 +23,14 @@ public class TestContainer_TimeStep_MaxIterationsTest extends TestContainer_Abst
     @Test
     public void test() throws Exception {
         MaxIterationTest testInstance = new MaxIterationTest();
-        TestCase testCase = new TestCase("stopTest")
+        TestCase testCase = new TestCase("stopRun")
                 .setProperty("threadCount", 1)
                 .setProperty("iterations", 100)
                 .setProperty("class", testInstance.getClass());
 
         TestContextImpl testContext = new TestContextImpl(
-                mock(HazelcastInstance.class), testCase.getId(), "localhost", mock(WorkerConnector.class));
-        final TestContainer container = new TestContainer(testContext, testInstance, testCase);
+                testCase.getId(), "localhost", mock(Server.class));
+        final TestContainer container = new TestContainer(testContext, testInstance, testCase,null);
         container.invoke(SETUP);
 
         for (TestPhase phase : TestPhase.values()) {

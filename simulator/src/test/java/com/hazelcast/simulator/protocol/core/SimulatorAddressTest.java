@@ -101,11 +101,6 @@ public class SimulatorAddressTest {
     }
 
     @Test
-    public void containsWildcard_withRemote() {
-        assertFalse(SimulatorAddress.REMOTE.containsWildcard());
-    }
-
-    @Test
     public void containsWildcard_withCoordinator() {
         assertFalse(SimulatorAddress.COORDINATOR.containsWildcard());
     }
@@ -202,12 +197,6 @@ public class SimulatorAddressTest {
     @Test
     public void testToString() {
         assertNotNull(address.toString());
-    }
-
-    @Test
-    public void testFromString_RemoteController() {
-        SimulatorAddress expectedAddress = SimulatorAddress.REMOTE;
-        assertToAndFromStringEquals(expectedAddress);
     }
 
     @Test

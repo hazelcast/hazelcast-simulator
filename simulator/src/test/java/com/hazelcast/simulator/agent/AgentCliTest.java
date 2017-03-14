@@ -10,6 +10,7 @@ import java.util.List;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,10 +29,7 @@ public class AgentCliTest {
 
     @After
     public void after() {
-        if (agent != null) {
-            agent.close();
-        }
-
+        closeQuietly(agent);
         tearDownFakeEnvironment();
     }
 
@@ -46,16 +44,17 @@ public class AgentCliTest {
 
         startAgent();
 
-        assertEquals(5, agent.getAddressIndex());
+        assertEquals(5, agent.getProcessManager().getAgentAddress().getAgentIndex());
         assertEquals("127.0.0.1", agent.getPublicAddress());
         try {
-            assertNull(agent.getSessionDirectory());
+            assertNull(agent.getProcessManager().getSessionDirectory());
             fail();
         } catch (IllegalStateException ignore) {
         }
 
-        agent.setSessionId("AgentCliTest");
-        assertNotNull(agent.getSessionDirectory());
+        //todo: this doesn't belong here 
+        agent.getProcessManager().setSessionId("AgentCliTest");
+        assertNotNull(agent.getProcessManager().getSessionDirectory());
     }
 
     @Test(expected = CommandLineExitException.class)

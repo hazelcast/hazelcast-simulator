@@ -15,11 +15,16 @@
  */
 package com.hazelcast.simulator.protocol.operation;
 
+import com.hazelcast.simulator.protocol.OperationProcessor;
+import com.hazelcast.simulator.protocol.core.SimulatorMessage;
+
+import java.io.Serializable;
+
 /**
  * Marker interface for all Simulator operations, which are the serialized payload of a
- * {@link com.hazelcast.simulator.protocol.core.SimulatorMessage}.
+ * {@link SimulatorMessage}.
  *
- * Is processed by {@link OperationCodec} with a given {@link com.hazelcast.simulator.protocol.processors.OperationProcessor}.
+ * Is processed by {@link OperationCodec} with a given {@link OperationProcessor}.
  */
-public interface SimulatorOperation {
+public interface SimulatorOperation extends Serializable {
 }

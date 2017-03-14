@@ -21,14 +21,13 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.CoordinatorParameters;
 import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
-import com.hazelcast.simulator.coordinator.RemoteClient;
 import com.hazelcast.simulator.coordinator.TestCaseRunner;
-import com.hazelcast.simulator.coordinator.TestPhaseListeners;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
+import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
@@ -54,8 +53,7 @@ public class RunTestSuiteTask {
     private final CoordinatorParameters coordinatorParameters;
     private final ComponentRegistry componentRegistry;
     private final FailureCollector failureCollector;
-    private final TestPhaseListeners testPhaseListeners;
-    private final RemoteClient remoteClient;
+    private final CoordinatorClient client;
     private final PerformanceStatsCollector performanceStatsCollector;
     private final List<TestCaseRunner> runners = new ArrayList<TestCaseRunner>();
 
@@ -63,26 +61,20 @@ public class RunTestSuiteTask {
                             CoordinatorParameters coordinatorParameters,
                             ComponentRegistry componentRegistry,
                             FailureCollector failureCollector,
-                            TestPhaseListeners testPhaseListeners,
-                            RemoteClient remoteClient,
+                            CoordinatorClient client,
                             PerformanceStatsCollector performanceStatsCollector) {
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinatorParameters;
         this.componentRegistry = componentRegistry;
         this.failureCollector = failureCollector;
-        this.testPhaseListeners = testPhaseListeners;
-        this.remoteClient = remoteClient;
+        this.client = client;
         this.performanceStatsCollector = performanceStatsCollector;
     }
 
     public boolean run() {
         List<TestData> tests = componentRegistry.addTests(testSuite);
-        try {
-            List<WorkerData> targets = initTargets();
-            return run0(tests, targets);
-        } finally {
-            testPhaseListeners.removeAllListeners(runners);
-        }
+        List<WorkerData> targets = initTargets();
+        return run0(tests, targets);
     }
 
     private List<WorkerData> initTargets() {
@@ -134,14 +126,13 @@ public class RunTestSuiteTask {
             TestCaseRunner runner = new TestCaseRunner(
                     testData,
                     targets,
-                    remoteClient,
+                    client,
                     testPhaseSyncMap,
                     failureCollector,
                     componentRegistry,
                     performanceStatsCollector,
                     coordinatorParameters.getPerformanceMonitorIntervalSeconds());
             runners.add(runner);
-            testPhaseListeners.addListener(testIndex, runner);
         }
 
         echoTestSuiteStart(testCount, parallel);

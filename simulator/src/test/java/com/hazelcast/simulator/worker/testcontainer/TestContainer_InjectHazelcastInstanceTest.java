@@ -7,16 +7,18 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_AbstractTest {
 
     @Test
     public void testInjectHazelcastInstance() {
+        HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
         HazelcastInstanceTest test = new HazelcastInstanceTest();
-        testContainer = createTestContainer(test);
+        testContainer = createTestContainer(test, hazelcastInstance);
 
         assertNotNull(test.hazelcastInstance);
-        assertEquals(testContext.getTargetInstance(), test.hazelcastInstance);
+        assertEquals(hazelcastInstance, test.hazelcastInstance);
     }
 
     @Test

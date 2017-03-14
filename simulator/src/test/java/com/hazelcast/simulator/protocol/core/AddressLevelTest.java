@@ -8,11 +8,6 @@ import static org.junit.Assert.assertEquals;
 public class AddressLevelTest {
 
     @Test
-    public void testFromInt_REMOTE() {
-        assertEquals(AddressLevel.REMOTE, fromInt(AddressLevel.REMOTE.toInt()));
-    }
-
-    @Test
     public void testFromInt_COORDINATOR() {
         assertEquals(AddressLevel.COORDINATOR, fromInt(AddressLevel.COORDINATOR.toInt()));
     }

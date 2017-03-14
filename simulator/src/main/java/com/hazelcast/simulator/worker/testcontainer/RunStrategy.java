@@ -21,7 +21,6 @@ import java.util.concurrent.Callable;
  * A RunStrategy encapsulates the logic for the 3 different types of test running approaches:
  * <ol>
  * <li>{@link com.hazelcast.simulator.test.annotations.Run}</li>
- * <li>{@link com.hazelcast.simulator.test.annotations.RunWithWorker}</li>
  * <li>{@link com.hazelcast.simulator.test.annotations.TimeStep}</li>
  * </ol>
  */
@@ -32,7 +31,7 @@ abstract class RunStrategy {
 
     public abstract Callable getRunCallable();
 
-     /**
+    /**
      * Returns the number of iterations of all the executions. Value is 0 if it isn't tracked, or the information is only
      * available through Probes.
      *

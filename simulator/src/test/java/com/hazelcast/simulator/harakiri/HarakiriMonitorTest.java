@@ -73,6 +73,4 @@ public class HarakiriMonitorTest {
 
         assertEquals(1, countDownLatch.getCount());
     }
-
-
 }

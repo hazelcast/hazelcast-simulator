@@ -15,11 +15,11 @@
  */
 package com.hazelcast.simulator.coordinator.tasks;
 
-import com.hazelcast.simulator.protocol.connector.Connector;
-import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
+import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
+import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -40,18 +40,18 @@ public class KillWorkersTask {
     private static final int WORKER_TERMINATION_CHECK_DELAY = 5;
 
     private final ComponentRegistry componentRegistry;
-    private final Connector connector;
+    private final CoordinatorClient client;
     private final String command;
     private final WorkerQuery workerQuery;
     private final List<WorkerData> result = new ArrayList<WorkerData>();
 
     public KillWorkersTask(
             ComponentRegistry componentRegistry,
-            Connector connector,
+            CoordinatorClient client,
             String command,
             WorkerQuery workerQuery) {
         this.componentRegistry = componentRegistry;
-        this.connector = connector;
+        this.client = client;
         this.command = command;
         this.workerQuery = workerQuery;
     }
@@ -81,7 +81,7 @@ public class KillWorkersTask {
         for (WorkerData victim : victims) {
             victim.setIgnoreFailures(true);
 
-            connector.invokeAsync(victim.getAddress(), new ExecuteScriptOperation(command, true));
+            client.submit(victim.getAddress(), new ExecuteScriptOperation(command, true));
 
             LOGGER.info("Kill send to worker [" + victim.getAddress() + "]");
         }

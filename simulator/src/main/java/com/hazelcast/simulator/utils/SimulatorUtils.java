@@ -22,6 +22,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import java.io.File;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
@@ -29,6 +31,18 @@ import static com.hazelcast.simulator.utils.FileUtils.newFile;
 public final class SimulatorUtils {
 
     private SimulatorUtils() {
+    }
+
+    public static String localIp() {
+        try {
+            String ip = Inet4Address.getLocalHost().getHostAddress();
+            if (ip.equals("127.0.1.1")) {
+                return "127.0.0.1";
+            }
+            return ip;
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static ComponentRegistry loadComponentRegister(File agentsFile) {

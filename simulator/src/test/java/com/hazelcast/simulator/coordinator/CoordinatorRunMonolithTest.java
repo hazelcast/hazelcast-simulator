@@ -4,7 +4,6 @@ import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.WorkerType;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
@@ -19,13 +18,13 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirector
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
+import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -39,7 +38,7 @@ public class CoordinatorRunMonolithTest {
     private Coordinator coordinator;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         setupFakeEnvironment();
 
         File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
@@ -52,9 +51,9 @@ public class CoordinatorRunMonolithTest {
 
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
-        agent.setSessionId(coordinatorParameters.getSessionId());
+        agent.getProcessManager().setSessionId(coordinatorParameters.getSessionId());
         componentRegistry = new ComponentRegistry();
-        componentRegistry.addAgent("127.0.0.1", "127.0.0.1");
+        componentRegistry.addAgent(localIp(), localIp());
 
         String hzConfig = fileAsText(new File(localResourceDirectory(), "hazelcast.xml"));
         initMemberHzConfig(hzConfig, componentRegistry, null, simulatorProperties.asMap(), false);
@@ -101,7 +100,7 @@ public class CoordinatorRunMonolithTest {
                 workerParameters,
                 WorkerType.MEMBER,
                 1,
-                singletonList(new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0)));
+                singletonList(agent.getProcessManager().getAgentAddress()));
 
         run.init(deploymentPlan);
 
@@ -123,7 +122,7 @@ public class CoordinatorRunMonolithTest {
                 workerParameters,
                 WorkerType.MEMBER,
                 1,
-                singletonList(new SimulatorAddress(AGENT, agent.getAddressIndex(), 0, 0)));
+                singletonList(agent.getProcessManager().getAgentAddress()));
 
         run.init(deploymentPlan);
 

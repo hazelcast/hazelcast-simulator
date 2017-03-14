@@ -15,42 +15,41 @@
  */
 package com.hazelcast.simulator.coordinator;
 
+import com.hazelcast.simulator.agent.operations.InitSessionOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStatusOperation;
+import com.hazelcast.simulator.coordinator.operations.RcTestStopOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
+import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.TestData;
+import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
 import com.hazelcast.simulator.coordinator.tasks.InstallVendorTask;
 import com.hazelcast.simulator.coordinator.tasks.KillWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
-import com.hazelcast.simulator.protocol.connector.CoordinatorConnector;
-import com.hazelcast.simulator.protocol.core.Response;
-import com.hazelcast.simulator.protocol.core.ResponseFuture;
+import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.ExecuteScriptOperation;
-import com.hazelcast.simulator.protocol.operation.InitSessionOperation;
-import com.hazelcast.simulator.protocol.operation.OperationTypeCounter;
-import com.hazelcast.simulator.protocol.operation.RcTestRunOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestStatusOperation;
-import com.hazelcast.simulator.protocol.operation.RcTestStopOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerKillOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerScriptOperation;
-import com.hazelcast.simulator.protocol.operation.RcWorkerStartOperation;
-import com.hazelcast.simulator.protocol.processors.CoordinatorOperationProcessor;
-import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
-import com.hazelcast.simulator.coordinator.registry.TestData;
-import com.hazelcast.simulator.coordinator.registry.WorkerData;
-import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
-import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommonUtils;
-import com.hazelcast.simulator.utils.ThreadSpawner;
-import com.hazelcast.simulator.worker.Promise;
+import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,18 +57,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
+import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
+import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadClientHzConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzConfig;
 import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
-import static com.hazelcast.simulator.protocol.core.ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION;
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
-import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -80,7 +77,6 @@ import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public class Coordinator implements Closeable {
@@ -89,7 +85,6 @@ public class Coordinator implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
     private final CountDownLatch initialized = new CountDownLatch(1);
-    private final TestPhaseListeners testPhaseListeners = new TestPhaseListeners();
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
     private final ComponentRegistry componentRegistry;
@@ -97,11 +92,8 @@ public class Coordinator implements Closeable {
     private final File outputDirectory;
     private final FailureCollector failureCollector;
     private final SimulatorProperties simulatorProperties;
-    private final Bash bash;
     private final int testCompletionTimeoutSeconds;
-
-    private CoordinatorConnector connector;
-    private RemoteClient client;
+    private final CoordinatorClient client;
 
     Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
         this.componentRegistry = componentRegistry;
@@ -109,15 +101,21 @@ public class Coordinator implements Closeable {
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
         this.failureCollector = new FailureCollector(outputDirectory, componentRegistry);
         this.simulatorProperties = parameters.getSimulatorProperties();
-        this.bash = new Bash(simulatorProperties);
         this.testCompletionTimeoutSeconds = simulatorProperties.getTestCompletionTimeoutSeconds();
+
+        this.client = new CoordinatorClient()
+                .setAgentBrokerPort(simulatorProperties.getAgentPort())
+                .setOperationProcessor(new CoordinatorOperationProcessor(failureCollector, performanceStatsCollector))
+                .setFailureCollector(failureCollector);
     }
 
     FailureCollector getFailureCollector() {
         return failureCollector;
     }
 
-    void start() {
+    void start() throws Exception {
+        client.start();
+
         registerShutdownHook();
 
         logConfiguration();
@@ -126,7 +124,7 @@ public class Coordinator implements Closeable {
 
         startAgents(simulatorProperties, componentRegistry);
 
-        startCoordinatorConnector();
+        startClient();
 
         new InstallVendorTask(
                 simulatorProperties,
@@ -134,9 +132,23 @@ public class Coordinator implements Closeable {
                 singleton(simulatorProperties.getVersionSpec()),
                 parameters.getSessionId()).run();
 
+        initOptionalRemote();
+
         initialized.countDown();
 
         echoLocal("Coordinator started...");
+    }
+
+    private void initOptionalRemote() throws RemoteException, AlreadyBoundException {
+        int remotePort = simulatorProperties.getCoordinatorPort();
+        if (remotePort != 0) {
+            Registry registry = LocateRegistry.createRegistry(remotePort);
+            CoordinatorRemote r = new CoordinatorRemoteImpl(this);
+            Remote stub = UnicastRemoteObject.exportObject(r, 0);
+
+            // Bind the remote object's stub in the registry
+            registry.bind("CoordinatorRemote", stub);
+        }
     }
 
     private void registerShutdownHook() {
@@ -177,12 +189,10 @@ public class Coordinator implements Closeable {
     public void close() {
         stopTests();
 
-        if (client != null) {
-            new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
-        }
+        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
 
-        closeQuietly(client);
-        closeQuietly(connector);
+        client.close();
+
         stopAgents(simulatorProperties, componentRegistry);
 
         if (!parameters.skipDownload()) {
@@ -191,8 +201,6 @@ public class Coordinator implements Closeable {
                     outputDirectory.getParentFile(),
                     parameters.getSessionId()).run();
         }
-
-        OperationTypeCounter.printStatistics();
 
         failureCollector.logFailureInfo();
     }
@@ -223,31 +231,15 @@ public class Coordinator implements Closeable {
         LOGGER.info("The following tests failed to complete: " + tests);
     }
 
-    private void startCoordinatorConnector() {
-        CoordinatorOperationProcessor processor = new CoordinatorOperationProcessor(
-                this, failureCollector, testPhaseListeners, performanceStatsCollector);
-
-        connector = new CoordinatorConnector(processor, simulatorProperties.getCoordinatorPort());
-        connector.start();
-
-        ThreadSpawner spawner = new ThreadSpawner("startCoordinatorConnector", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
-            final int agentPort = simulatorProperties.getAgentPort();
-            spawner.spawn(new Runnable() {
-                @Override
-                public void run() {
-                    connector.addAgent(agentData.getAddressIndex(), agentData.getPublicAddress(), agentPort);
-                }
-            });
+    private void startClient() throws Exception {
+        // todo: should be async to speed things up
+        for (AgentData agentData : componentRegistry.getAgents()) {
+            client.connectToAgentBroker(agentData.getAddress(), agentData.getPublicAddress());
         }
-        spawner.awaitCompletion();
 
-        LOGGER.info("Remote client starting...");
-        int workerPingIntervalMillis = (int) SECONDS.toMillis(simulatorProperties.getWorkerPingIntervalSeconds());
-
-        client = new RemoteClient(connector, componentRegistry, workerPingIntervalMillis);
-        client.invokeOnAllAgents(new InitSessionOperation(parameters.getSessionId()));
         LOGGER.info("Remote client started successfully!");
+
+        client.invokeAll(componentRegistry.getAgents(), new InitSessionOperation(parameters.getSessionId()), MINUTES.toMillis(1));
     }
 
     public void download() throws Exception {
@@ -301,7 +293,7 @@ public class Coordinator implements Closeable {
         return componentRegistry.printLayout();
     }
 
-    public void testRun(RcTestRunOperation op, Promise promise) throws Exception {
+    public String testRun(RcTestRunOperation op) throws Exception {
         awaitInitialized();
 
         LOGGER.info("Run starting...");
@@ -323,20 +315,14 @@ public class Coordinator implements Closeable {
                 sleepSeconds(1);
                 for (TestData testData : componentRegistry.getTests()) {
                     if (testData.getTestSuite() == op.getTestSuite()) {
-                        promise.answer(SUCCESS, testData.getAddress().toString());
-                        return;
+                        return testData.getAddress().toString();
                     }
                 }
             }
         } else {
             boolean success = runTestSuiteTask.run();
             LOGGER.info("Run complete!");
-
-            if (success) {
-                promise.answer(SUCCESS);
-            } else {
-                promise.answer(EXCEPTION_DURING_OPERATION_EXECUTION, "Run completed with failures!");
-            }
+            return success ? null : "Run completed with failures!";
         }
     }
 
@@ -443,7 +429,7 @@ public class Coordinator implements Closeable {
         LOGGER.info(format("Killing %s...", workerQuery));
 
         List<WorkerData> result = new KillWorkersTask(
-                componentRegistry, connector, op.getCommand(), workerQuery).run();
+                componentRegistry, client, op.getCommand(), workerQuery).run();
 
         LOGGER.info("\n" + componentRegistry.printLayout());
 
@@ -452,42 +438,34 @@ public class Coordinator implements Closeable {
         return WorkerData.toAddressString(result);
     }
 
-    public void workerScript(RcWorkerScriptOperation operation, Promise promise) throws Exception {
+    public String workerScript(RcWorkerScriptOperation operation) throws Exception {
         awaitInitialized();
 
         List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
 
         LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
 
-        List<ResponseFuture> futures = new ArrayList<ResponseFuture>();
+        Map<WorkerData, Future<String>> futures = new HashMap<WorkerData, Future<String>>();
         for (WorkerData worker : workers) {
-            ResponseFuture f = connector.invokeAsync(worker.getAddress(),
+            Future<String> f = client.submit(worker.getAddress(),
                     new ExecuteScriptOperation(operation.getCommand(), operation.isFireAndForget()));
-            futures.add(f);
+            futures.put(worker, f);
             LOGGER.info("Script send to worker [" + worker.getAddress() + "]");
         }
 
         if (operation.isFireAndForget()) {
-            promise.answer(SUCCESS);
-            return;
+            return null;
         }
 
         StringBuilder sb = new StringBuilder();
-        for (ResponseFuture future : futures) {
-            Response response = future.get();
-            Response.Part errorPart = response.getFirstErrorPart();
-            if (errorPart != null) {
-                promise.answer(errorPart.getType(), errorPart.getPayload());
-                return;
-            }
-
-            for (Map.Entry<SimulatorAddress, Response.Part> entry : response.getParts()) {
-                sb.append(entry.getKey()).append("=").append(entry.getValue().getPayload()).append("\n");
-            }
+        for (Map.Entry<WorkerData, Future<String>> entry : futures.entrySet()) {
+            WorkerData worker = entry.getKey();
+            String result = entry.getValue().get();
+            sb.append(worker.getAddress()).append("=").append(result).append("\n");
         }
 
         LOGGER.info(format("Script [%s] on %s workers completed!", operation.getCommand(), workers.size()));
-        promise.answer(SUCCESS, sb.toString());
+        return sb.toString();
     }
 
     StartWorkersTask createStartWorkersTask(Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
@@ -505,7 +483,6 @@ public class Coordinator implements Closeable {
                 parameters,
                 componentRegistry,
                 failureCollector,
-                testPhaseListeners,
                 client,
                 performanceStatsCollector);
     }

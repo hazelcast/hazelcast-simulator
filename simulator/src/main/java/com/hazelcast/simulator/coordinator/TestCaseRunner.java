@@ -17,24 +17,24 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.protocol.operation.CreateTestOperation;
-import com.hazelcast.simulator.protocol.operation.StartTestOperation;
-import com.hazelcast.simulator.protocol.operation.StartTestPhaseOperation;
-import com.hazelcast.simulator.protocol.operation.StopTestOperation;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
-import com.hazelcast.simulator.coordinator.registry.TargetType;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.protocol.CoordinatorClient;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
+import com.hazelcast.simulator.worker.operations.CreateTestOperation;
+import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
+import com.hazelcast.simulator.worker.operations.StopRunOperation;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_PREPARE;
 import static com.hazelcast.simulator.common.TestPhase.GLOBAL_TEARDOWN;
@@ -57,7 +57,6 @@ import static com.hazelcast.simulator.utils.FormatUtils.secondsToHuman;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -66,7 +65,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * <p>
  * Multiple TestCases can be run in parallel, by having multiple TestCaseRunners in parallel.
  */
-public final class TestCaseRunner implements TestPhaseListener {
+public final class TestCaseRunner {
 
     private static final int RUN_PHASE_LOG_INTERVAL_SECONDS = 30;
     private static final int WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS = 30;
@@ -74,17 +73,13 @@ public final class TestCaseRunner implements TestPhaseListener {
 
     private static final Logger LOGGER = Logger.getLogger(TestCaseRunner.class);
 
-    private final ConcurrentMap<TestPhase, List<SimulatorAddress>> phaseCompletedMap
-            = new ConcurrentHashMap<TestPhase, List<SimulatorAddress>>();
-
     private final TestData test;
     private final TestCase testCase;
     private final TestSuite testSuite;
 
-    private final RemoteClient remoteClient;
+    private final CoordinatorClient client;
     private final FailureCollector failureCollector;
     private final PerformanceStatsCollector performanceStatsCollector;
-    private final ComponentRegistry componentRegistry;
 
     private final String prefix;
     private final Map<TestPhase, CountDownLatch> testPhaseSyncMap;
@@ -96,11 +91,12 @@ public final class TestCaseRunner implements TestPhaseListener {
     private final int performanceMonitorIntervalSeconds;
     private final int logRunPhaseIntervalSeconds;
     private final List<WorkerData> targets;
+    private final WorkerData globalTarget;
 
     @SuppressWarnings("checkstyle:parameternumber")
     public TestCaseRunner(TestData test,
                           List<WorkerData> targets,
-                          RemoteClient remoteClient,
+                          CoordinatorClient client,
                           Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                           FailureCollector failureCollector,
                           ComponentRegistry componentRegistry,
@@ -110,10 +106,9 @@ public final class TestCaseRunner implements TestPhaseListener {
         this.testCase = test.getTestCase();
         this.testSuite = test.getTestSuite();
 
-        this.remoteClient = remoteClient;
+        this.client = client;
         this.failureCollector = failureCollector;
         this.performanceStatsCollector = performanceStatsCollector;
-        this.componentRegistry = componentRegistry;
 
         String testAddress = test.getAddress().toString();
         this.prefix = padRight(testAddress + ":" + testCase.getId()
@@ -122,6 +117,7 @@ public final class TestCaseRunner implements TestPhaseListener {
         this.testPhaseSyncMap = testPhaseSyncMap;
 
         this.targets = targets;
+        this.globalTarget = targets.iterator().next();
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
         this.targetType = testSuite.getWorkerQuery().getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
         this.targetCount = targets.size();
@@ -132,18 +128,6 @@ public final class TestCaseRunner implements TestPhaseListener {
         } else {
             this.logRunPhaseIntervalSeconds = RUN_PHASE_LOG_INTERVAL_SECONDS;
         }
-
-        for (TestPhase testPhase : TestPhase.values()) {
-            phaseCompletedMap.put(testPhase, synchronizedList(new ArrayList<SimulatorAddress>()));
-        }
-    }
-
-    @Override
-    public void onCompletion(TestPhase testPhase, SimulatorAddress workerAddress) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Completed: " + testPhase + " from worker: " + workerAddress);
-        }
-        phaseCompletedMap.get(testPhase).add(workerAddress);
     }
 
     public boolean run() {
@@ -153,7 +137,7 @@ public final class TestCaseRunner implements TestPhaseListener {
         try {
             run0();
         } catch (TestCaseAbortedException e) {
-            echo(e.getMessage());
+            log(e.getMessage());
             // unblock other TestCaseRunner threads, if fail fast is not set and they have no failures on their own
             TestPhase testPhase = e.testPhase;
             while (testPhase != null) {
@@ -171,6 +155,10 @@ public final class TestCaseRunner implements TestPhaseListener {
 
     private void run0() {
         createTest();
+
+        LOGGER.info(format("Worker for global test phases will be %s (%s)",
+                globalTarget.getAddress(), globalTarget.getSettings().getWorkerType()));
+
         executePhase(SETUP);
 
         executePhase(LOCAL_PREPARE);
@@ -182,7 +170,7 @@ public final class TestCaseRunner implements TestPhaseListener {
             executePhase(GLOBAL_VERIFY);
             executePhase(LOCAL_VERIFY);
         } else {
-            echo("Skipping Test verification");
+            log("Skipping Test verification");
         }
 
         executePhase(GLOBAL_TEARDOWN);
@@ -195,9 +183,43 @@ public final class TestCaseRunner implements TestPhaseListener {
     }
 
     private void createTest() {
-        echo("Starting Test initialization");
-        remoteClient.invokeOnAllWorkers(new CreateTestOperation(test.getTestIndex(), testCase));
-        echo("Completed Test initialization");
+        log("Starting Test initialization");
+        invokeOnTargets(new CreateTestOperation(testCase));
+        log("Completed Test initialization");
+    }
+
+    private void invokeOnTargets(SimulatorOperation op) {
+        Map<WorkerData, Future> futures = submitToTargets(false, op);
+        awaitCompletion(futures);
+    }
+
+    private Map<WorkerData, Future> submitToTargets(boolean singleTarget, SimulatorOperation op) {
+        Map<WorkerData, Future> futures = new HashMap<WorkerData, Future>();
+
+        if (singleTarget) {
+            Future f = client.submit(globalTarget.getAddress(), op);
+            futures.put(globalTarget, f);
+        } else {
+            for (WorkerData worker : targets) {
+                Future f = client.submit(worker.getAddress(), op);
+                futures.put(worker, f);
+            }
+        }
+
+        return futures;
+    }
+
+    private void awaitCompletion(Map<WorkerData, Future> futures) {
+        for (Map.Entry<WorkerData, Future> entry : futures.entrySet()) {
+            Future f = entry.getValue();
+            try {
+                f.get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException();
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
     }
 
     private void executePhase(TestPhase phase) {
@@ -205,28 +227,26 @@ public final class TestCaseRunner implements TestPhaseListener {
             throw new TestCaseAbortedException("Skipping Test " + phase.desc() + " (critical failure)", phase);
         }
 
-        echo("Starting Test " + phase.desc());
+        log("Starting Test " + phase.desc());
         test.setTestPhase(phase);
-        if (phase.isGlobal()) {
-            remoteClient.invokeOnTestOnFirstWorker(test.getAddress(), new StartTestPhaseOperation(phase));
-        } else {
-            remoteClient.invokeOnTestOnAllWorkers(test.getAddress(), new StartTestPhaseOperation(phase));
-        }
 
-        waitForPhaseCompletion(phase);
-        echo("Completed Test " + phase.desc());
+        Map<WorkerData, Future> futures = submitToTargets(
+                phase.isGlobal(), new StartPhaseOperation(phase, testCase.getId()));
+
+        waitForPhaseCompletion(phase, futures);
+        log("Completed Test " + phase.desc());
         waitForGlobalTestPhaseCompletion(phase);
     }
 
     @SuppressWarnings("checkstyle:npathcomplexity")
     private void executeRun() {
         if (test.isStopRequested()) {
-            echo(format("Skipping %s, test stopped.", RUN));
+            log(format("Skipping %s, test stopped.", RUN));
             return;
         }
 
         test.setTestPhase(RUN);
-        start(RUN);
+        Map<WorkerData, Future> futures = startRun();
 
         long startMs = currentTimeMillis();
 
@@ -234,18 +254,18 @@ public final class TestCaseRunner implements TestPhaseListener {
         long durationMs;
         long timeoutMs;
         if (durationSeconds == 0) {
-            echo(format("Test will %s until it stops", RUN));
+            log("Test will run until it stops");
             timeoutMs = Long.MAX_VALUE;
             durationMs = Long.MAX_VALUE;
         } else {
             durationMs = SECONDS.toMillis(durationSeconds);
             long warmupSeconds = MILLISECONDS.toSeconds(testCase.getWarmupMillis());
             if (warmupSeconds > 0) {
-                echo(format("Test will run for %s with a warmup period of %s",
+                log(format("Test will run for %s with a warmup period of %s",
                         secondsToHuman(durationSeconds),
                         secondsToHuman(warmupSeconds)));
             } else {
-                echo(format("Test will run for %s without warmup", secondsToHuman(durationSeconds)));
+                log(format("Test will run for %s without warmup", secondsToHuman(durationSeconds)));
             }
             timeoutMs = startMs + durationMs;
         }
@@ -257,13 +277,13 @@ public final class TestCaseRunner implements TestPhaseListener {
             sleepUntilMs(nextSleepUntilMs);
 
             if (hasFailure()) {
-                echo(format("Critical failure detected, aborting %s phase", RUN));
+                log("Critical failure detected, aborting RUN phase");
                 break;
             }
 
             long nowMs = currentTimeMillis();
-            if (nowMs > timeoutMs || isPhaseCompleted(RUN) || test.isStopRequested()) {
-                echo(format("Test finished %s", RUN.desc()));
+            if (nowMs > timeoutMs || isAllDone(futures) || test.isStopRequested()) {
+                log("Test finished run");
                 break;
             }
 
@@ -273,11 +293,23 @@ public final class TestCaseRunner implements TestPhaseListener {
             }
         }
 
-        stop(RUN);
+        stopRun();
+
+        waitForPhaseCompletion(RUN, futures);
 
         logFinalPerformanceInfo(startMs);
 
         waitForGlobalTestPhaseCompletion(RUN);
+    }
+
+    private boolean isAllDone(Map<WorkerData, Future> futures) {
+        for (Future f : futures.values()) {
+            if (!f.isDone()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void logFinalPerformanceInfo(long startMs) {
@@ -297,31 +329,28 @@ public final class TestCaseRunner implements TestPhaseListener {
         }
     }
 
-    private void start(TestPhase phase) {
-        echo(format("Starting Test %s start on %s", phase.desc(), targetType.toString(targetCount)));
+    /**
+     * Starts running the test. This call is asynchronous. It will not wait for the running to complete. It will
+     * return a map of futures (one for each target worker) that can be used to sync on completion.
+     */
+    private Map<WorkerData, Future> startRun() {
+        log(format("Starting run on %s workers", targetType.toString(targetCount)));
 
-        List<String> addresses = new LinkedList<String>();
-        for (WorkerData workers : targets) {
-            addresses.add(workers.getAddress().toString());
-        }
+        log(format("Test run using workers %s", WorkerData.toAddressString(targets)));
 
-        echo(format("Test %s using workers %s", phase.desc(), WorkerData.toAddressString(targets)));
-
-        remoteClient.invokeOnTestOnAllWorkers(
-                test.getAddress(),
-                new StartTestOperation(targetType, addresses));
-
-        echo(format("Completed Test %s start", phase.desc()));
+        return submitToTargets(false, new StartPhaseOperation(RUN, testCase.getId()));
     }
 
-    public void stop(TestPhase phase) {
-        echo(format("Executing Test %s stop", phase.desc()));
-        remoteClient.invokeOnTestOnAllWorkers(test.getAddress(), new StopTestOperation());
+    private void stopRun() {
+        log("Stopping test");
+
+        Map<WorkerData, Future> futures = submitToTargets(false, new StopRunOperation(testCase.getId()));
+
         try {
-            waitForPhaseCompletion(phase);
-            echo(format("Completed Test %s stop", phase.desc()));
+            waitForPhaseCompletion(RUN, futures);
+            log("Stopping test completed");
         } catch (TestCaseAbortedException e) {
-            echo(e.getMessage());
+            log(e.getMessage());
         }
     }
 
@@ -342,9 +371,9 @@ public final class TestCaseRunner implements TestPhaseListener {
         LOGGER.info(prefix + msg);
     }
 
-    private void waitForPhaseCompletion(TestPhase testPhase) {
-        int completedWorkers = phaseCompletedMap.get(testPhase).size();
-        int expectedWorkers = getExpectedWorkerCount(testPhase);
+    private void waitForPhaseCompletion(TestPhase testPhase, Map<WorkerData, Future> futures) {
+        int completedWorkers = 0;
+        int expectedWorkers = futures.size();
 
         long started = System.nanoTime();
         while (completedWorkers < expectedWorkers) {
@@ -355,41 +384,38 @@ public final class TestCaseRunner implements TestPhaseListener {
                         format("Waiting for %s completion aborted (critical failure)", testPhase.desc()), testPhase);
             }
 
-            completedWorkers = phaseCompletedMap.get(testPhase).size();
-            expectedWorkers = getExpectedWorkerCount(testPhase);
+            completedWorkers = 0;
+            for (Future f : futures.values()) {
+                if (f.isDone()) {
+                    completedWorkers++;
+                }
+            }
 
-            logMissingWorkers(testPhase, completedWorkers, expectedWorkers, started);
+            logMissingWorkers(testPhase, completedWorkers, expectedWorkers, started, futures);
         }
     }
 
-    private boolean isPhaseCompleted(TestPhase testPhase) {
-        int completedWorkers = phaseCompletedMap.get(testPhase).size();
-        int expectedWorkers = getExpectedWorkerCount(testPhase);
-        return completedWorkers >= expectedWorkers;
-    }
-
-    private void logMissingWorkers(TestPhase testPhase, int completedWorkers, int expectedWorkers, long started) {
+    private void logMissingWorkers(TestPhase testPhase, int completedWorkers, int expectedWorkers,
+                                   long started, Map<WorkerData, Future> futures) {
         long elapsed = getElapsedSeconds(started);
         if (elapsed % WAIT_FOR_PHASE_COMPLETION_LOG_INTERVAL_SECONDS != 0) {
             return;
         }
+
         if (elapsed < WAIT_FOR_PHASE_COMPLETION_LOG_VERBOSE_DELAY_SECONDS || completedWorkers == expectedWorkers) {
-            echo(format("Waiting %s for %s completion (%d/%d workers)", secondsToHuman(elapsed), testPhase.desc(),
+            log(format("Waiting %s for %s completion (%d/%d workers)", secondsToHuman(elapsed), testPhase.desc(),
                     completedWorkers, expectedWorkers));
             return;
         }
+
         // verbose logging of missing workers
-        List<SimulatorAddress> missingWorkers = new ArrayList<SimulatorAddress>(expectedWorkers - completedWorkers);
-        if (expectedWorkers == 1) {
-            missingWorkers.add(componentRegistry.getFirstWorker().getAddress());
-        } else {
-            for (WorkerData worker : componentRegistry.getWorkers()) {
-                if (!phaseCompletedMap.get(testPhase).contains(worker.getAddress())) {
-                    missingWorkers.add(worker.getAddress());
-                }
+        List<SimulatorAddress> missingWorkers = new ArrayList<SimulatorAddress>();
+        for (Map.Entry<WorkerData, Future> entry : futures.entrySet()) {
+            if (!entry.getValue().isDone()) {
+                missingWorkers.add(entry.getKey().getAddress());
             }
         }
-        echo(format("Waiting %s for %s completion (%d/%d workers) (missing workers: %s)", secondsToHuman(elapsed),
+        log(format("Waiting %s for %s completion (%d/%d workers) (missing workers: %s)", secondsToHuman(elapsed),
                 testPhase.desc(), completedWorkers, expectedWorkers, missingWorkers));
     }
 
@@ -406,10 +432,6 @@ public final class TestCaseRunner implements TestPhaseListener {
         LOGGER.info(testCase.getId() + " completed waiting for global TestPhase " + testPhase.desc());
     }
 
-    private int getExpectedWorkerCount(TestPhase testPhase) {
-        return testPhase.isGlobal() ? 1 : componentRegistry.workerCount();
-    }
-
     private CountDownLatch decrementAndGetCountDownLatch(TestPhase testPhase) {
         if (testPhaseSyncMap == null) {
             return new CountDownLatch(0);
@@ -419,8 +441,7 @@ public final class TestCaseRunner implements TestPhaseListener {
         return latch;
     }
 
-    private void echo(String msg) {
-        remoteClient.logOnAllAgents(prefix + msg);
+    private void log(String msg) {
         LOGGER.info(prefix + msg);
     }
 

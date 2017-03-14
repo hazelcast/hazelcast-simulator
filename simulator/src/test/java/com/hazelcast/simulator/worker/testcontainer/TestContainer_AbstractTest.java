@@ -2,7 +2,7 @@ package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.protocol.connector.WorkerConnector;
+import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -18,8 +18,7 @@ import static org.mockito.Mockito.mock;
 
 public abstract class TestContainer_AbstractTest {
 
-    TestContextImpl testContext = new TestContextImpl(
-            mock(HazelcastInstance.class), "TestContainerTest","localhost",mock(WorkerConnector.class));
+    TestContextImpl testContext = new TestContextImpl("TestContainerTest", "localhost", mock(Server.class));
 
     TestContainer testContainer;
 
@@ -37,12 +36,15 @@ public abstract class TestContainer_AbstractTest {
     }
 
     <T> TestContainer createTestContainer(T test) {
-        return new TestContainer(testContext, test, new TestCase("foo"));
+        return new TestContainer(testContext, test, new TestCase("foo"), null);
     }
 
+    <T> TestContainer createTestContainer(T test, HazelcastInstance hz) {
+        return new TestContainer(testContext, test, new TestCase("foo"), hz);
+    }
 
     <T> TestContainer createTestContainer(T test, TestCase testCase) {
-        return new TestContainer(testContext, test, testCase);
+        return new TestContainer(testContext, test, testCase, null);
     }
 
     public static class BaseTest {

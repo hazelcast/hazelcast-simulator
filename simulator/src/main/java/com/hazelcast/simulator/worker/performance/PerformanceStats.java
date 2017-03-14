@@ -23,6 +23,8 @@ import static java.lang.Math.max;
  * Container to transfer performance statistics for some time window.
  * <p>
  * Has methods to combine {@link PerformanceStats} instances by adding or setting maximum values.
+ *
+ * There is a lot of stuff in there, but the thing most important is the operationCount (in a given time window).
  */
 public class PerformanceStats {
 

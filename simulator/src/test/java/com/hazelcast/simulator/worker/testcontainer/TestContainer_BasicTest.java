@@ -22,7 +22,7 @@ public class TestContainer_BasicTest extends TestContainer_AbstractTest {
         TestCase testCase = new TestCase("TestContainerWithTestcaseTest")
                 .setProperty("class", SuccessTest.class.getName());
 
-        testContainer = new TestContainer(testContext, testCase);
+        testContainer = new TestContainer(testContext, testCase, (Object)null);
 
         assertNotNull(testContainer.getTestInstance());
         assertTrue(testContainer.getTestInstance() instanceof SuccessTest);
@@ -42,7 +42,7 @@ public class TestContainer_BasicTest extends TestContainer_AbstractTest {
         TestCase testCase = new TestCase("TestContainerNullContextTest")
                 .setProperty("class", SuccessTest.class);
 
-        new TestContainer(null, testCase);
+        new TestContainer(null, testCase,(Object)null);
     }
 
     @Test
