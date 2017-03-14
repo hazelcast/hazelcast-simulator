@@ -42,6 +42,8 @@ import static javax.jms.DeliveryMode.NON_PERSISTENT;
 
 /**
  * A Server will listen to a topic for requests and will process them.
+ *
+ * A each agent and worker will have a Server instance to listen to requests from the Coordinator.
  */
 public class Server implements ExceptionListener, Closeable {
     private static final Logger LOGGER = Logger.getLogger(Server.class);

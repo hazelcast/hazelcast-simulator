@@ -28,8 +28,10 @@ import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_P
 import static java.util.Collections.singletonList;
 
 /**
- * The idea is that every agent will have a broker. And the connector will connect to these brokers.
- * Unfortunately having a broker on the coordinator is difficult due to being behind routers etc.
+ * A wrapper around the ActiveMQ {@link BrokerService}. Each agent will have an embedded broker instance
+ * and all workers and agents listen for requests from the Coordinator.
+ *
+ * The initial idea of having a Broker on the Coordinator was not suitable due to routers etc.
  *
  * todo:
  *
