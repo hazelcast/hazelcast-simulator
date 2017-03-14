@@ -45,6 +45,9 @@ import static javax.jms.DeliveryMode.NON_PERSISTENT;
  * A Server will listen to a topic for requests and will process them.
  *
  * A each agent and worker will have a Server instance to listen to requests from the Coordinator.
+ *
+ * If you are a client, this is the class you want to study thoroughly. It contains most of the logic needed for understanding
+ * how to integrate your client.
  */
 public class Server implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(Server.class);
@@ -146,9 +149,7 @@ public class Server implements Closeable {
     public void close() {
         stop = true;
         serverThread.interrupt();
-
         closeQuietly(connection);
-
         LOGGER.info("Server Stopped");
     }
 
@@ -236,7 +237,6 @@ public class Server implements Closeable {
 
             OperationType operationType = OperationType.fromInt(message.getIntProperty("operationType"));
             String operationData = message.getStringProperty("payload");
-
             SimulatorOperation op = OperationCodec.fromJson(operationData, operationType.getClassType());
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Received operation:" + op);

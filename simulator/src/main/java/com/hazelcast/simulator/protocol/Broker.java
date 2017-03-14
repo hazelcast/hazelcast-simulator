@@ -31,7 +31,8 @@ import static java.util.Collections.singletonList;
  * A wrapper around the ActiveMQ {@link BrokerService}. Each agent will have an embedded broker instance
  * and all workers and agents listen for requests from the Coordinator.
  *
- * The initial idea of having a Broker on the Coordinator was not suitable due to routers etc.
+ * The initial idea of having a Broker on the Coordinator was not suitable due to routers etc. It will make
+ * it difficult for the agent/workers to connect back to the coordinator machine.
  *
  * todo:
  *
@@ -49,12 +50,10 @@ import static java.util.Collections.singletonList;
  * needed:
  * http://activemq.apache.org/how-do-i-use-jms-efficiently.html
  *
- * - client only needs a single thread; not two.
- *
- * - proper handling of worker with jms connection problems.
- *
  * -----------------------------------------------------------
  * nice to have
+ *
+ * - client only needs a single thread; not two.
  *
  * - activemq resource tuning
  *
