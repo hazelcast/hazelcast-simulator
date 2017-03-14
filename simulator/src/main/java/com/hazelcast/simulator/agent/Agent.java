@@ -22,6 +22,7 @@ import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
+import com.hazelcast.simulator.worker.ExitingExceptionListener;
 import org.apache.log4j.Logger;
 
 import java.io.Closeable;
@@ -65,6 +66,7 @@ public class Agent implements Closeable {
 
         // this server will listen to requests on the 'agents' topic
         this.server = new Server("agents")
+                .setExceptionListener(new ExitingExceptionListener())
                 .setSelfAddress(agentAddress);
 
         this.processManager = new WorkerProcessManager(server, agentAddress, publicAddress, port);

@@ -46,7 +46,7 @@ import static javax.jms.DeliveryMode.NON_PERSISTENT;
  *
  * A each agent and worker will have a Server instance to listen to requests from the Coordinator.
  */
-public class Server implements ExceptionListener, Closeable {
+public class Server implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(Server.class);
 
     private final String topic;
@@ -60,11 +60,23 @@ public class Server implements ExceptionListener, Closeable {
     private Connection connection;
     private String brokerURL;
     private String selfAddressString;
+    private ExceptionListener exceptionListener = new ExceptionListener() {
+        @Override
+        public void onException(JMSException e) {
+            LOGGER.error("JMS Exception occurred", e);
+        }
+    };
+
     private volatile boolean stop;
 
     public Server(String topic) {
         this.topic = checkNotNull(topic);
         setBrokerURL(localIp(), DEFAULT_AGENT_PORT);
+    }
+
+    public Server setExceptionListener(ExceptionListener exceptionListener) {
+        this.exceptionListener = exceptionListener;
+        return this;
     }
 
     /**
@@ -110,7 +122,7 @@ public class Server implements ExceptionListener, Closeable {
         LOGGER.info("Starting server [" + brokerURL + "] on topic [" + topic + "]");
 
         try {
-            this.connection = connectionFactory.newConnection(brokerURL, this);
+            this.connection = connectionFactory.newConnection(brokerURL, exceptionListener);
             this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             this.destination = session.createTopic(topic);
 
@@ -246,10 +258,5 @@ public class Server implements ExceptionListener, Closeable {
                 throw e;
             }
         }
-    }
-
-    @Override
-    public synchronized void onException(JMSException e) {
-        LOGGER.error("JMS Exception occurred.  Shutting down client.", e);
     }
 }
