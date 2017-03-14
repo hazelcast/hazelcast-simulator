@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.hazelcast.simulator.utils.CloudProviderUtils.isTrueCloud;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -74,6 +75,17 @@ public class SimulatorProperties {
             String key = (String) entry.getKey();
             map.put(key, get(key));
         }
+
+        String cloudProvider = getCloudProvider();
+        if (!isTrueCloud(cloudProvider)) {
+            // if isn't a true cloud, we don't for the identity/credentials.
+            return map;
+        }
+
+        // it is a true cloud; so we care for the identity/credentials. They need to be configured correctly or
+        // else an exception is thrown.
+        map.put(CLOUD_IDENTITY, getCloudIdentity());
+        map.put(CLOUD_CREDENTIAL, getCloudCredential());
         return map;
     }
 
