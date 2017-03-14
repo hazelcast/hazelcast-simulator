@@ -28,9 +28,9 @@ public final class AgentUtils {
     }
 
     public static void startAgents(SimulatorProperties properties, ComponentRegistry registry) {
-        String startscript = getConfigurationFile("agent_start.sh").getAbsolutePath();
+        String startScript = getConfigurationFile("agent_start.sh").getAbsolutePath();
 
-        new BashCommand(startscript)
+        new BashCommand(startScript)
                 .addParams(join(registry.getAgentIps(), ","))
                 .addEnvironment(properties.asMap())
                 .execute();
