@@ -73,7 +73,7 @@ public class CoordinatorClient implements Closeable {
     private final SendThread sendThread;
     private final ConnectionFactory connectionFactory = new ConnectionFactory();
     private ResponseHandlerThread responseHandlerThread;
-    private OperationProcessor operationProcessor;
+    private OperationProcessor processor;
     private int remoteBrokerPort = DEFAULT_AGENT_PORT;
     private volatile boolean stop;
     private FailureCollector failureCollector;
@@ -105,8 +105,8 @@ public class CoordinatorClient implements Closeable {
         return this;
     }
 
-    public CoordinatorClient setOperationProcessor(OperationProcessor operationProcessor) {
-        this.operationProcessor = operationProcessor;
+    public CoordinatorClient setProcessor(OperationProcessor processor) {
+        this.processor = processor;
         return this;
     }
 
@@ -117,8 +117,9 @@ public class CoordinatorClient implements Closeable {
     }
 
     public void send(SimulatorAddress target, SimulatorOperation op) {
-        //LOGGER.info("sending " + op + " to " + target);
-
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("sending " + op + " to " + target);
+        }
         taskQueue.add(new SendTask(target, getRemoteBroker(target), op, null));
     }
 
@@ -126,7 +127,9 @@ public class CoordinatorClient implements Closeable {
         try {
             String messageId = newUnsecureUuidString();
 
-            //.info("submit " + op + " on " + target);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("sending " + op + " to " + target);
+            }
 
             RemoteBroker remoteBroker = getRemoteBroker(target);
 
@@ -433,12 +436,13 @@ public class CoordinatorClient implements Closeable {
                 String operationData = message.getStringProperty("payload");
 
                 SimulatorOperation op = OperationCodec.fromJson(operationData, operationType.getClassType());
-
-                //LOGGER.info("Received " + op);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Received " + op);
+                }
 
                 SimulatorAddress source = SimulatorAddress.fromString(message.getStringProperty("source"));
 
-                operationProcessor.process(op, source, EmptyPromise.INSTANCE);
+                processor.process(op, source, EmptyPromise.INSTANCE);
                 return true;
             } catch (Exception e) {
                 //todo: feed into failure collector

@@ -61,7 +61,7 @@ public class MessagingTest {
                 .start();
 
         client = new CoordinatorClient()
-                .setOperationProcessor(mock(OperationProcessor.class))
+                .setProcessor(mock(OperationProcessor.class))
                 .start()
                 .connectToAgentBroker(agentAddress, localIp());
 
@@ -93,7 +93,7 @@ public class MessagingTest {
                 .start();
 
         client = new CoordinatorClient()
-                .setOperationProcessor(mock(OperationProcessor.class));
+                .setProcessor(mock(OperationProcessor.class));
         client.getConnectionFactory().setMaxReconnectAttempts(1);
         client.start().connectToAgentBroker(agentAddress, localIp());
 
@@ -125,7 +125,7 @@ public class MessagingTest {
 
         final OperationProcessor clientOperationProcessor = mock(OperationProcessor.class);
         client = new CoordinatorClient()
-                .setOperationProcessor(clientOperationProcessor);
+                .setProcessor(clientOperationProcessor);
         client.getConnectionFactory().setMaxReconnectAttempts(1);
         client.start().connectToAgentBroker(agentAddress, localIp());
 
