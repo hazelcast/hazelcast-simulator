@@ -46,6 +46,7 @@ import static com.hazelcast.simulator.utils.HazelcastUtils.createServerHazelcast
 import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
 import static com.hazelcast.simulator.utils.HazelcastUtils.warmupPartitions;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
+import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
@@ -88,7 +89,7 @@ public class Worker {
         this.hazelcastInstance = getHazelcastInstance();
 
         this.server = new Server("workers")
-                .setBrokerURL("localhost", agentPort)
+                .setBrokerURL(localIp(), agentPort)
                 .setSelfAddress(workerAddress);
 
         this.testManager = new TestManager(server, hazelcastInstance);
