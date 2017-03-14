@@ -60,15 +60,6 @@ public class TestData {
         this.completedStatus = completedStatus;
     }
 
-    /**
-     * Returns its current status.
-     *
-     * @return current state.
-     */
-    public TestPhase getTestPhase() {
-        return testPhase;
-    }
-
     public void setStopRequested(boolean stopRequested) {
         this.stopRequested = stopRequested;
     }
