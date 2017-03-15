@@ -37,7 +37,7 @@ start_agent_remote(){
     agent=$1
     agent_index=$2
 
-    echo "[INFO]Agent [C_A$agent_index] $agent  starting"
+    echo "[INFO]Agent [C_A$agent_index] $agent starting"
 
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "killall -9 java || true"
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.pid"

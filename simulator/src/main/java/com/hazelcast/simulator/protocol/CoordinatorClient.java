@@ -340,7 +340,7 @@ public class CoordinatorClient implements Closeable {
             replyQueue = session.createQueue(newUnsecureUuidString());
             replyQueueConsumer = session.createConsumer(replyQueue);
 
-            LOGGER.info(format("Successfully connected to broker [%s]", ip + ":" + remoteBrokerPort));
+            LOGGER.info(format("Successfully connected to agent [%s]", agentAddress));
         }
 
         @Override

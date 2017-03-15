@@ -132,14 +132,14 @@ public class Coordinator implements Closeable {
                 singleton(simulatorProperties.getVersionSpec()),
                 parameters.getSessionId()).run();
 
-        initOptionalRemote();
+        initCoordinatorRemote();
 
         initialized.countDown();
 
         echoLocal("Coordinator started...");
     }
 
-    private void initOptionalRemote() throws RemoteException, AlreadyBoundException {
+    private void initCoordinatorRemote() throws RemoteException, AlreadyBoundException {
         int remotePort = simulatorProperties.getCoordinatorPort();
         if (remotePort != 0) {
             Registry registry = LocateRegistry.createRegistry(remotePort);
