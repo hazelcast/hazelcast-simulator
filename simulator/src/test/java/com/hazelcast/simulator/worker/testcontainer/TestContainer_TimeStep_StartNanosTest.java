@@ -3,7 +3,6 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Server;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
@@ -65,7 +64,7 @@ public class TestContainer_TimeStep_StartNanosTest extends TestContainer_Abstrac
         assertEquals(10, startNanosList.size());
     }
 
-    public static class StartNanosTest extends AbstractTest {
+    public static class StartNanosTest  {
         private List<Long> startNanosList = new LinkedList<Long>();
 
         @TimeStep

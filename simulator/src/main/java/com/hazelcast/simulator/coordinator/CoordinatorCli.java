@@ -18,22 +18,19 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.ArtifactCleanTask;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
@@ -43,15 +40,11 @@ import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
-import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
-import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
+import static com.hazelcast.simulator.vendors.VendorDriver.newVendorDriver;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -61,7 +54,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @SuppressWarnings("FieldCanBeLocal")
 final class CoordinatorCli {
     static final int DEFAULT_DURATION_SECONDS = 0;
-    private static final int DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS = 10;
 
     private static final Logger LOGGER = Logger.getLogger(CoordinatorCli.class);
 
@@ -70,9 +62,9 @@ final class CoordinatorCli {
     TestSuite testSuite;
     CoordinatorParameters coordinatorParameters;
     ComponentRegistry componentRegistry;
-    Map<WorkerType, WorkerParameters> workerParametersMap;
     SimulatorProperties simulatorProperties;
     DeploymentPlan deploymentPlan;
+    VendorDriver vendorDriver;
 
     private final OptionParser parser = new OptionParser();
 
@@ -115,15 +107,11 @@ final class CoordinatorCli {
 
     private final OptionSpec<String> clientTypeSpec = parser.accepts("clientType",
             "Defines the type of client e.g javaclient, litemember, etc.")
-            .withRequiredArg().ofType(String.class).defaultsTo(WorkerType.JAVA_CLIENT.name());
+            .withRequiredArg().ofType(String.class).defaultsTo("javaclient");
 
     private final OptionSpec<Integer> targetCountSpec = parser.accepts("targetCount",
             "Defines the number of Workers which execute the RUN phase. The value 0 selects all Workers.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
-    private final OptionSpec<Boolean> autoCreateHzInstanceSpec = parser.accepts("autoCreateHzInstances",
-            "Auto create Hazelcast instances.")
-            .withRequiredArg().ofType(Boolean.class).defaultsTo(true);
 
     private final OptionSpec<String> sessionIdSpec = parser.accepts("sessionId",
             "Defines the ID of the Session. If not set the actual date will be used."
@@ -183,6 +171,12 @@ final class CoordinatorCli {
 
         this.simulatorProperties = loadSimulatorProperties();
         this.componentRegistry = newComponentRegistry(simulatorProperties);
+        this.vendorDriver = newVendorDriver(simulatorProperties.get("VENDOR"))
+                .setAll(simulatorProperties.asPublicMap())
+                .setAgents(componentRegistry.getAgents())
+                .setClientArgs(loadClientArgs())
+                .setMemberArgs(loadMemberArgs())
+                .setLicenseKey(options.valueOf(licenseKeySpec));
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
@@ -197,7 +191,6 @@ final class CoordinatorCli {
                             + "Please add COORDINATOR_PORT=5000 to your simulator.properties or run with a testsuite.");
                 }
             } else {
-                this.workerParametersMap = loadWorkerParameters();
                 this.deploymentPlan = newDeploymentPlan();
                 this.runMonolith = new CoordinatorRunMonolith(coordinator, coordinatorParameters);
             }
@@ -206,10 +199,7 @@ final class CoordinatorCli {
 
     void run() throws Exception {
         if (options.has(downloadSpec)) {
-            new DownloadTask(componentRegistry.getAgentIps(),
-                    simulatorProperties.asMap(),
-                    getUserDir(),
-                    "*").run();
+            new DownloadTask(componentRegistry.getAgentIps(), simulatorProperties.asMap(), getUserDir(), "*").run();
         } else if (options.has(cleanSpec)) {
             new ArtifactCleanTask(componentRegistry, simulatorProperties).run();
         } else {
@@ -230,86 +220,17 @@ final class CoordinatorCli {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
-                .setPerformanceMonitorIntervalSeconds(getPerformanceMonitorInterval())
+                .setLicenseKey(options.valueOf(licenseKeySpec))
                 .setSkipDownload(options.has(skipDownloadSpec))
                 .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
-                .setLicenseKey(options.valueOf(licenseKeySpec));
+                .setPerformanceMonitorIntervalSeconds(
+                        Integer.parseInt(simulatorProperties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS")));
 
         if (options.has(sessionIdSpec)) {
             coordinatorParameters.setSessionId(options.valueOf(sessionIdSpec));
         }
 
         return coordinatorParameters;
-    }
-
-    private Map<WorkerType, WorkerParameters> loadWorkerParameters() {
-        Map<WorkerType, WorkerParameters> result = new HashMap<WorkerType, WorkerParameters>();
-        result.put(WorkerType.MEMBER, loadMemberWorkerParameters());
-        result.put(WorkerType.LITE_MEMBER, loadLiteMemberWorkerParameters());
-        result.put(WorkerType.JAVA_CLIENT, loadJavaClientWorkerParameters());
-        return result;
-    }
-
-    private WorkerParameters loadJavaClientWorkerParameters() {
-        Map<String, String> env = new HashMap<String, String>();
-        env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
-        env.put("LOG4j_CONFIG", loadLog4jConfig());
-        env.put("JVM_OPTIONS", loadClientArgs());
-        env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
-        env.put("HAZELCAST_CONFIG",
-                initClientHzConfig(
-                        loadClientHzConfig(),
-                        componentRegistry,
-                        simulatorProperties.asMap(),
-                        coordinatorParameters.getLicenseKey()));
-
-        return new WorkerParameters()
-                .setVersionSpec(simulatorProperties.getVersionSpec())
-                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
-                .setWorkerScript(loadWorkerScript(WorkerType.JAVA_CLIENT, simulatorProperties.get("VENDOR")))
-                .setEnvironment(env);
-    }
-
-    private WorkerParameters loadLiteMemberWorkerParameters() {
-        Map<String, String> env = new HashMap<String, String>();
-        env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
-        env.put("LOG4j_CONFIG", loadLog4jConfig());
-        env.put("JVM_OPTIONS", loadClientArgs());
-        env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
-        env.put("HAZELCAST_CONFIG",
-                initMemberHzConfig(loadMemberHzConfig(),
-                        componentRegistry,
-                        coordinatorParameters.getLicenseKey(),
-                        simulatorProperties.asMap(), true));
-
-        return new WorkerParameters()
-                .setVersionSpec(simulatorProperties.getVersionSpec())
-                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
-                .setWorkerScript(loadWorkerScript(WorkerType.LITE_MEMBER, simulatorProperties.get("VENDOR")))
-                .setEnvironment(env);
-    }
-
-    private WorkerParameters loadMemberWorkerParameters() {
-        Map<String, String> env = new HashMap<String, String>();
-        env.put("AUTOCREATE_HAZELCAST_INSTANCE", "" + options.valueOf(autoCreateHzInstanceSpec));
-        env.put("LOG4j_CONFIG", loadLog4jConfig());
-        env.put("JVM_OPTIONS", loadMemberArgs());
-        env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                Integer.toString(coordinatorParameters.getPerformanceMonitorIntervalSeconds()));
-        env.put("HAZELCAST_CONFIG",
-                initMemberHzConfig(
-                        loadMemberHzConfig(),
-                        componentRegistry,
-                        coordinatorParameters.getLicenseKey(),
-                        simulatorProperties.asMap(), false));
-
-        return new WorkerParameters()
-                .setVersionSpec(simulatorProperties.getVersionSpec())
-                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
-                .setWorkerScript(loadWorkerScript(WorkerType.MEMBER, simulatorProperties.get("VENDOR")))
-                .setEnvironment(env);
     }
 
     private String loadMemberArgs() {
@@ -332,14 +253,6 @@ final class CoordinatorCli {
             args = options.valueOf(clientArgsSpec);
         }
         return args;
-    }
-
-    private int getPerformanceMonitorInterval() {
-        String intervalSeconds = simulatorProperties.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS");
-        if (intervalSeconds == null || intervalSeconds.isEmpty()) {
-            return DEFAULT_WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS;
-        }
-        return Integer.parseInt(intervalSeconds);
     }
 
     private TestSuite loadTestSuite() {
@@ -453,8 +366,8 @@ final class CoordinatorCli {
     }
 
     private DeploymentPlan newDeploymentPlan() {
-        WorkerType workerType = new WorkerType(options.valueOf(clientTypeSpec));
-        if (workerType.isMember()) {
+        String workerType = options.valueOf(clientTypeSpec);
+        if ("member".equals(workerType)) {
             throw new CommandLineExitException("client workerType can't be [member]");
         }
 
@@ -463,9 +376,8 @@ final class CoordinatorCli {
         if (clients < 0) {
             throw new CommandLineExitException("--client must be a equal or larger than 0");
         }
-        return createDeploymentPlan(componentRegistry, workerParametersMap, workerType, members, clients);
+        return createDeploymentPlan(componentRegistry, vendorDriver, workerType, members, clients);
     }
-
 
     private static File getAgentsFile() {
         File file = new File("agents.txt");
@@ -475,45 +387,6 @@ final class CoordinatorCli {
 
         LOGGER.info("Loading Agents file: " + file.getAbsolutePath());
         return file;
-    }
-
-    public static String loadWorkerScript(WorkerType workerType, String vendor) {
-        List<File> files = new LinkedList<File>();
-        File confDir = new File(getSimulatorHome(), "conf");
-
-        files.add(new File("worker-" + vendor + "-" + workerType.name() + ".sh").getAbsoluteFile());
-        files.add(new File("worker-" + workerType + ".sh").getAbsoluteFile());
-        files.add(new File("worker-" + vendor + ".sh").getAbsoluteFile());
-        files.add(new File("worker.sh").getAbsoluteFile());
-
-        files.add(new File(confDir, "worker-" + vendor + "-" + workerType.name() + ".sh").getAbsoluteFile());
-        files.add(new File(confDir, "worker-" + vendor + ".sh").getAbsoluteFile());
-        files.add(new File(confDir, "worker.sh").getAbsoluteFile());
-
-        for (File file : files) {
-            if (file.exists()) {
-                LOGGER.info("Loading " + vendor + " " + workerType.name() + " worker script: " + file.getAbsolutePath());
-                return fileAsText(file);
-            }
-        }
-
-        throw new CommandLineExitException("Failed to load worker script from the following locations:" + files);
-    }
-
-    public static String loadMemberHzConfig() {
-        File file = getConfigurationFile("hazelcast.xml");
-        LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
-        return fileAsText(file);
-    }
-
-    public static String loadClientHzConfig() {
-        File file = getConfigurationFile("client-hazelcast.xml");
-        LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
-        return fileAsText(file);
-    }
-
-    public static String loadLog4jConfig() {
-        return getFileAsTextFromWorkingDirOrBaseDir(getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
     }
 
     public static void main(String[] args) {

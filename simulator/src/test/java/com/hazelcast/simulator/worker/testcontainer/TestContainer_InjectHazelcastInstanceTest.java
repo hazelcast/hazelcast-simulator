@@ -4,6 +4,8 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -13,6 +15,12 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
 
     @Test
     public void testInjectHazelcastInstance() {
+        Class list = Object.class;
+        Class linkedList = mock(List.class).getClass();
+
+        System.out.println(list.isAssignableFrom(linkedList));
+
+
         HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
         HazelcastInstanceTest test = new HazelcastInstanceTest();
         testContainer = createTestContainer(test, hazelcastInstance);
@@ -22,7 +30,7 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
     }
 
     @Test
-    public void testInjectHazelcastInstance_withoutAnnotation() {
+    public void whenNoAnnotation() {
         HazelcastInstanceTest test = new HazelcastInstanceTest();
         testContainer = createTestContainer(test);
 
@@ -39,14 +47,14 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
     }
 
     @Test(expected = IllegalTestException.class)
-    public void testInjectHazelcastInstance_withIllegalFieldType() {
-        IllegalFieldTypeTest test = new IllegalFieldTypeTest();
+    public void whenWrongFieldType() {
+        WrongFieldTypeTest test = new WrongFieldTypeTest();
         testContainer = createTestContainer(test);
     }
 
-    private static class IllegalFieldTypeTest extends BaseTest {
+    private static class WrongFieldTypeTest extends BaseTest {
 
         @InjectVendor
-        private Object noProbeField;
+        private String noProbeField;
     }
 }

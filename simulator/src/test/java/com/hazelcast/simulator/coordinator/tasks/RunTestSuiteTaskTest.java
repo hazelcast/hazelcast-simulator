@@ -1,35 +1,5 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
-import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.CoordinatorParameters;
-import com.hazelcast.simulator.coordinator.FailureCollector;
-import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
-import com.hazelcast.simulator.coordinator.WorkerParameters;
-import com.hazelcast.simulator.coordinator.operations.FailureOperation;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
-import com.hazelcast.simulator.protocol.CoordinatorClient;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-
-import java.io.File;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static com.hazelcast.simulator.TestEnvironmentUtils.internalDistPath;
-import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
-import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
-import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
-import static com.hazelcast.simulator.utils.TestUtils.createTmpDirectory;
-
 public class RunTestSuiteTaskTest {
 //
 //    private static final AtomicLong ID_GENERATOR = new AtomicLong();
@@ -108,7 +78,7 @@ public class RunTestSuiteTaskTest {
 //                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
 //                .setWorkerScript(fileAsText(scriptFile));
 //
-//        //WorkerProcessSettings settings = new WorkerProcessSettings(1, WorkerType.MEMBER,"maven=3.8",)
+//        //WorkerParameters settings = new WorkerParameters(1, WorkerType.MEMBER,"maven=3.8",)
 //
 //        //client.submit(agentAddress, new CreateWorkerOperation(asList(workerParameters), 0)).get();
 //    }
@@ -303,7 +273,7 @@ public class RunTestSuiteTaskTest {
 //    }
 
 //    private RunTestSuiteTask createRunTestSuiteTask(int targetCount) {
-//        WorkerProcessSettings workerProcessSettings = mock(WorkerProcessSettings.class);
+//        WorkerParameters workerProcessSettings = mock(WorkerParameters.class);
 //        when(workerProcessSettings.getWorkerIndex()).thenReturn(1);
 //        when(workerProcessSettings.getWorkerType()).thenReturn(WorkerType.MEMBER);
 //

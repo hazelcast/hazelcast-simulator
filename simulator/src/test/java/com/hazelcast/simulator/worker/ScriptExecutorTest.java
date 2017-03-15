@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.DummyPromise;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,13 +11,13 @@ import static org.mockito.Mockito.mock;
 
 public class ScriptExecutorTest {
 
-    private HazelcastInstance hazelcastInstance;
+    private VendorDriver vendorDriver;
     private ScriptExecutor scriptExecutor;
 
     @Before
     public void setup() {
-        hazelcastInstance = mock(HazelcastInstance.class);
-        scriptExecutor = new ScriptExecutor(hazelcastInstance);
+        vendorDriver = mock(VendorDriver.class);
+        scriptExecutor = new ScriptExecutor(vendorDriver);
     }
 
     @Test

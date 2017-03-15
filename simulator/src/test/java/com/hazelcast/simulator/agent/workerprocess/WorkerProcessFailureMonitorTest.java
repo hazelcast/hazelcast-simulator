@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.common.FailureType;
-import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.AssertTask;
@@ -69,8 +68,7 @@ public class WorkerProcessFailureMonitorTest {
 
         failureHandler = mock(WorkerProcessFailureHandler.class);
         Server server = mock(Server.class);
-        workerProcessManager = new WorkerProcessManager(server,
-                SimulatorAddress.fromString("C_A1"), "127.0.0.1", SimulatorProperties.DEFAULT_AGENT_PORT);
+        workerProcessManager = new WorkerProcessManager(server, SimulatorAddress.fromString("C_A1"), "127.0.0.1");
 
         workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
                 failureHandler,

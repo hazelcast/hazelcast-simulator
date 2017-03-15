@@ -31,26 +31,26 @@ public abstract class ShutdownThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ShutdownThread.class);
 
     private final AtomicBoolean shutdownStarted;
-    private final boolean ensureProcessShutdown;
+    private final boolean realShutdown;
     private final long waitForShutdownTimeoutMillis;
     private final CountDownLatch shutdownComplete;
 
-    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown) {
-        this(name, shutdownStarted, ensureProcessShutdown, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
+    protected ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean realShutdown) {
+        this(name, shutdownStarted, realShutdown, DEFAULT_WAIT_FOR_SHUTDOWN_TIMEOUT_MILLIS);
     }
 
-    ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
+    ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean realShutdown,
                    long waitForShutdownTimeoutMillis) {
-        this(name, shutdownStarted, ensureProcessShutdown, waitForShutdownTimeoutMillis, new CountDownLatch(1));
+        this(name, shutdownStarted, realShutdown, waitForShutdownTimeoutMillis, new CountDownLatch(1));
     }
 
-    private ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean ensureProcessShutdown,
+    private ShutdownThread(String name, AtomicBoolean shutdownStarted, boolean realShutdown,
                            long waitForShutdownTimeoutMillis, CountDownLatch shutdownComplete) {
         super(name);
         setDaemon(false);
 
         this.shutdownStarted = shutdownStarted;
-        this.ensureProcessShutdown = ensureProcessShutdown;
+        this.realShutdown = realShutdown;
         this.waitForShutdownTimeoutMillis = waitForShutdownTimeoutMillis;
         this.shutdownComplete = shutdownComplete;
     }
@@ -73,7 +73,7 @@ public abstract class ShutdownThread extends Thread {
 
         shutdownComplete.countDown();
 
-        if (ensureProcessShutdown) {
+        if (realShutdown) {
             // ensures that log4j will always flush the log buffers
             LOGGER.info("Stopping log4j...");
             LogManager.shutdown();

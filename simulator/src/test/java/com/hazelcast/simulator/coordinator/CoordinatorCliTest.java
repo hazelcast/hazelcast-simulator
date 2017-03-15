@@ -1,8 +1,7 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -32,8 +31,6 @@ import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
-import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
-import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -42,11 +39,6 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.assertEquals;
 
 public class CoordinatorCliTest {
-
-    private static final String HAZELCAST_XML = "<hazelcast xsi:schemaLocation=\"http://www.hazelcast.com/schema/config"
-            + NEW_LINE + "  http://www.hazelcast.com/schema/config/hazelcast-config-3.8.xsd\""
-            + NEW_LINE + "  xmlns=\"http://www.hazelcast.com/schema/config\""
-            + NEW_LINE + "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />";
 
     private static File testSuiteFile;
     private static File propertiesFile;
@@ -98,7 +90,7 @@ public class CoordinatorCliTest {
 
     @Test(expected = BindException.class)
     public void test_whenEmptyTestSuiteFile() throws IOException {
-        File file = File.createTempFile("foo","bar");
+        File file = File.createTempFile("foo", "bar");
         args.add(file.getAbsolutePath());
         createCoordinatorCli();
     }
@@ -319,16 +311,16 @@ public class CoordinatorCliTest {
         args.add(testSuiteFile.getAbsolutePath());
 
         CoordinatorCli cli = createCoordinatorCli();
-        assertEquals(2, count(cli.deploymentPlan, WorkerType.MEMBER));
-        assertEquals(1, count(cli.deploymentPlan, WorkerType.JAVA_CLIENT));
+        assertEquals(2, count(cli.deploymentPlan, "member"));
+        assertEquals(1, count(cli.deploymentPlan, "javaclient"));
     }
 
-    private int count(DeploymentPlan deploymentPlan, WorkerType type) {
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deployment = deploymentPlan.getWorkerDeployment();
+    private int count(DeploymentPlan deploymentPlan, String workerType) {
+        Map<SimulatorAddress, List<WorkerParameters>> deployment = deploymentPlan.getWorkerDeployment();
         int result = 0;
-        for (List<WorkerProcessSettings> list : deployment.values()) {
-            for (WorkerProcessSettings settings : list) {
-                if (settings.getWorkerType().equals(type)) {
+        for (List<WorkerParameters> list : deployment.values()) {
+            for (WorkerParameters settings : list) {
+                if (settings.getWorkerType().equals(workerType)) {
                     result++;
                 }
             }
@@ -398,34 +390,6 @@ public class CoordinatorCliTest {
         assertEquals(TestPhase.LOCAL_VERIFY, cli.coordinatorParameters.getLastTestPhaseToSync());
     }
 
-    @Test
-    public void testInit_memberConfigFileInWorkDir() {
-        File memberConfigFile = new File("hazelcast.xml").getAbsoluteFile();
-        writeText(HAZELCAST_XML, memberConfigFile);
-
-        args.add(testSuiteFile.getAbsolutePath());
-
-        try {
-            CoordinatorCli cli = createCoordinatorCli();
-            assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.MEMBER).getEnvironment().get("HAZELCAST_CONFIG"));
-        } finally {
-            deleteQuiet(memberConfigFile);
-        }
-    }
-
-    @Test
-    public void testInit_clientConfigFileInWorkDir() {
-        File clientConfigFile = new File("client-hazelcast.xml").getAbsoluteFile();
-        writeText(HAZELCAST_XML, clientConfigFile);
-
-        args.add(testSuiteFile.getAbsolutePath());
-        try {
-            CoordinatorCli cli = createCoordinatorCli();
-            assertEquals(HAZELCAST_XML, cli.workerParametersMap.get(WorkerType.JAVA_CLIENT).getEnvironment().get("HAZELCAST_CONFIG"));
-        } finally {
-            deleteQuiet(clientConfigFile);
-        }
-    }
 
     @Test
     public void testInit_withLocalSetup() {

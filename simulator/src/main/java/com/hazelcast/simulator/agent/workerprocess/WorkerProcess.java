@@ -31,7 +31,7 @@ public class WorkerProcess {
     private volatile boolean oomeDetected;
     private volatile boolean isFinished;
     private volatile Process process;
-    private volatile String hzAddress;
+    private volatile String pid;
 
     public WorkerProcess(SimulatorAddress address, String id, File workerHome) {
         this.address = address;
@@ -87,11 +87,11 @@ public class WorkerProcess {
         this.process = process;
     }
 
-    public String getHazelcastAddress() {
-        return hzAddress;
+    public String getPid() {
+        return pid;
     }
 
-    public void setHzAddress(String memberAddress) {
-        this.hzAddress = memberAddress;
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 }

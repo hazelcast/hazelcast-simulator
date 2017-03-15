@@ -69,7 +69,7 @@ public class Agent implements Closeable {
                 .setExceptionListener(new ExitingExceptionListener())
                 .setSelfAddress(agentAddress);
 
-        this.processManager = new WorkerProcessManager(server, agentAddress, publicAddress, port);
+        this.processManager = new WorkerProcessManager(server, agentAddress, publicAddress);
 
         this.workerSniffer = new WorkerSniffer(processManager);
 

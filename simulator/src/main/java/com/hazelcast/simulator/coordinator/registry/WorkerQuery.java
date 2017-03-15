@@ -15,8 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator.registry;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.TargetType;
 
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ public class WorkerQuery {
     private List<String> workerAddresses;
     private List<String> agentAddresses;
     private Integer maxCount;
-    private WorkerType workerType;
+    private String workerType;
     private boolean random;
     private TargetType targetType = TargetType.ALL;
     private Map<String, String> workerTags;
@@ -100,12 +99,12 @@ public class WorkerQuery {
         return this;
     }
 
-    public WorkerType getWorkerType() {
+    public String getWorkerType() {
         return workerType;
     }
 
     public WorkerQuery setWorkerType(String workerType) {
-        this.workerType = workerType == null ? null : new WorkerType(workerType);
+        this.workerType = workerType;
         return this;
     }
 
@@ -162,10 +161,10 @@ public class WorkerQuery {
     }
 
     private boolean hasWorkerTypeConflict(WorkerData worker) {
-        WorkerProcessSettings workerProcessSettings = worker.getSettings();
+        WorkerParameters workerParameters = worker.getParameters();
 
         if (workerType != null) {
-            if (!workerProcessSettings.getWorkerType().equals(workerType)) {
+            if (!workerParameters.getWorkerType().equals(workerType)) {
                 return true;
             }
         }
@@ -212,10 +211,10 @@ public class WorkerQuery {
     }
 
     private boolean hasVersionSpecConflict(WorkerData worker) {
-        WorkerProcessSettings workerProcessSettings = worker.getSettings();
+        WorkerParameters workerParameters = worker.getParameters();
 
         if (versionSpec != null) {
-            if (!workerProcessSettings.getVersionSpec().equals(versionSpec)) {
+            if (!workerParameters.get("VERSION_SPEC").equals(versionSpec)) {
                 return true;
             }
         }

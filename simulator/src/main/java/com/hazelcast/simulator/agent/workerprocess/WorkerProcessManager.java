@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.Server;
@@ -54,21 +53,15 @@ public class WorkerProcessManager {
     private final SimulatorAddress agentAddress;
     private final String publicAddress;
     private volatile String sessionId;
-    private int agentPort;
 
-    public WorkerProcessManager(Server server, SimulatorAddress agentAddress, String publicAddress, int agentPort) {
+    public WorkerProcessManager(Server server, SimulatorAddress agentAddress, String publicAddress) {
         this.server = server;
         this.agentAddress = agentAddress;
         this.publicAddress = publicAddress;
-        this.agentPort = agentPort;
     }
 
     public String getPublicAddress() {
         return publicAddress;
-    }
-
-    public int getAgentPort() {
-        return agentPort;
     }
 
     public SimulatorAddress getAgentAddress() {
@@ -95,10 +88,10 @@ public class WorkerProcessManager {
 
     // launching is done asynchronous so we don't block the calling thread (messaging thread)
     public void launch(CreateWorkerOperation op, Promise promise) throws Exception {
-        AtomicInteger remaining = new AtomicInteger(op.getSettingsList().size());
-        for (WorkerProcessSettings settings : op.getSettingsList()) {
-            WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, settings);
-            LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, settings, promise, remaining);
+        AtomicInteger remaining = new AtomicInteger(op.getWorkerParametersList().size());
+        for (WorkerParameters workerParameters : op.getWorkerParametersList()) {
+            WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, workerParameters);
+            LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, workerParameters, promise, remaining);
             executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
         }
     }
@@ -161,16 +154,16 @@ public class WorkerProcessManager {
     final class LaunchSingleWorkerTask implements Runnable {
 
         private final WorkerProcessLauncher launcher;
-        private final WorkerProcessSettings settings;
+        private final WorkerParameters parameters;
         private final AtomicInteger remaining;
         private final Promise promise;
 
         private LaunchSingleWorkerTask(WorkerProcessLauncher launcher,
-                                       WorkerProcessSettings settings,
+                                       WorkerParameters parameters,
                                        Promise promise,
                                        AtomicInteger remaining) {
             this.launcher = launcher;
-            this.settings = settings;
+            this.parameters = parameters;
             this.remaining = remaining;
             this.promise = promise;
         }
@@ -188,7 +181,8 @@ public class WorkerProcessManager {
                 LOGGER.error("Failed to start Worker:" + workerProcesses, e);
 
                 SimulatorAddress workerAddress
-                        = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAddressIndex(), settings.getWorkerIndex(), 0);
+                        = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAddressIndex(),
+                        parameters.intGet("WORKER_INDEX"), 0);
 
                 server.sendCoordinator(new FailureOperation("Failed to start worker [" + workerAddress + "]",
                         WORKER_CREATE_ERROR, workerAddress, agentAddress.toString(), e));
@@ -203,9 +197,9 @@ public class WorkerProcessManager {
         private void launch() throws Exception {
             launcher.launch();
 
-            int workerIndex = settings.getWorkerIndex();
+            int workerIndex = parameters.intGet("WORKER_INDEX");
 
-            WorkerType workerType = settings.getWorkerType();
+            String workerType = parameters.getWorkerType();
             SimulatorAddress workerAddress = new SimulatorAddress(
                     AddressLevel.WORKER, agentAddress.getAgentIndex(), workerIndex, 0);
 

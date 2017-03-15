@@ -15,7 +15,6 @@ import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.FileUtils;
-import com.hazelcast.simulator.utils.SimulatorUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -30,6 +29,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironme
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static java.lang.String.format;
@@ -58,7 +58,7 @@ public class CoordinatorTest {
         File simulatorPropertiesFile = new File(getUserDir(), "simulator.properties");
         appendText("CLOUD_PROVIDER=embedded\n", simulatorPropertiesFile);
 
-        SimulatorProperties simulatorProperties = SimulatorUtils.loadSimulatorProperties();
+        SimulatorProperties simulatorProperties = loadSimulatorProperties();
 
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
@@ -70,6 +70,7 @@ public class CoordinatorTest {
 
         componentRegistry = new ComponentRegistry();
         agentData = componentRegistry.addAgent(localIp(), localIp());
+
         coordinator = new Coordinator(componentRegistry, coordinatorParameters);
         coordinator.start();
     }

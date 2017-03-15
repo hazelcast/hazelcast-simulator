@@ -15,8 +15,7 @@
  */
 package com.hazelcast.simulator.coordinator.registry;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.util.Collection;
@@ -31,17 +30,17 @@ import java.util.Map;
 public class WorkerData {
 
     private final SimulatorAddress address;
-    private final WorkerProcessSettings settings;
+    private final WorkerParameters parameters;
     private final Map<String, String> tags;
     private volatile boolean ignoreFailures;
 
-    WorkerData(SimulatorAddress parentAddress, WorkerProcessSettings settings) {
-        this(parentAddress, settings, new HashMap<String, String>());
+    WorkerData(WorkerParameters parameters) {
+        this(parameters, new HashMap<String, String>());
     }
 
-    WorkerData(SimulatorAddress parentAddress, WorkerProcessSettings settings, Map<String, String> tags) {
-        this.address = parentAddress.getChild(settings.getWorkerIndex());
-        this.settings = settings;
+    WorkerData(WorkerParameters parameters, Map<String, String> tags) {
+        this.address = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
+        this.parameters = parameters;
         this.tags = tags;
     }
 
@@ -53,12 +52,12 @@ public class WorkerData {
         return address;
     }
 
-    public WorkerProcessSettings getSettings() {
-        return settings;
+    public WorkerParameters getParameters() {
+        return parameters;
     }
 
     public boolean isMemberWorker() {
-        return settings.getWorkerType().equals(WorkerType.MEMBER);
+        return parameters.getWorkerType().equals("member");
     }
 
     public boolean isIgnoreFailures() {

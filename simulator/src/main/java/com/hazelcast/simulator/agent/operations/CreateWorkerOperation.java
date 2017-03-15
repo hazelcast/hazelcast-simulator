@@ -15,22 +15,22 @@
  */
 package com.hazelcast.simulator.agent.operations;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 import java.util.List;
 
 /**
- * Creates one or more Simulator Workers, based on a list of {@link WorkerProcessSettings}.
+ * Creates one or more Simulator Workers, based on a list of {@link WorkerParameters}.
  */
 public class CreateWorkerOperation implements SimulatorOperation {
 
-    // a list containing WorkerProcessSettings. Each item in the list represent a single worker to be created.
-    private final List<WorkerProcessSettings> settingsList;
+    // a list containing WorkerParameters. Each item in the list represent a single worker to be created.
+    private final List<WorkerParameters> workerParametersList;
     private int delayMs;
 
-    public CreateWorkerOperation(List<WorkerProcessSettings> settingsList, int delayMs) {
-        this.settingsList = settingsList;
+    public CreateWorkerOperation(List<WorkerParameters> workerParametersList, int delayMs) {
+        this.workerParametersList = workerParametersList;
         this.delayMs = delayMs;
     }
 
@@ -38,7 +38,7 @@ public class CreateWorkerOperation implements SimulatorOperation {
         return delayMs;
     }
 
-    public List<WorkerProcessSettings> getSettingsList() {
-        return settingsList;
+    public List<WorkerParameters> getWorkerParametersList() {
+        return workerParametersList;
     }
 }

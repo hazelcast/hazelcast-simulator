@@ -16,9 +16,8 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.operations.InitSessionOperation;
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
 import com.hazelcast.simulator.coordinator.operations.RcTestStatusOperation;
 import com.hazelcast.simulator.coordinator.operations.RcTestStopOperation;
@@ -39,6 +38,7 @@ import com.hazelcast.simulator.coordinator.tasks.TerminateWorkersTask;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommonUtils;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
@@ -56,23 +56,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
-import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadClientHzConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadLog4jConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadMemberHzConfig;
-import static com.hazelcast.simulator.coordinator.CoordinatorCli.loadWorkerScript;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.HazelcastUtils.initClientHzConfig;
-import static com.hazelcast.simulator.utils.HazelcastUtils.initMemberHzConfig;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
+import static com.hazelcast.simulator.vendors.VendorDriver.newVendorDriver;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
@@ -81,10 +74,8 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public class Coordinator implements Closeable {
 
-    private static final int INITIALIZED_TIMEOUT_MINUTES = 5;
     private static final Logger LOGGER = Logger.getLogger(Coordinator.class);
 
-    private final CountDownLatch initialized = new CountDownLatch(1);
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
     private final ComponentRegistry componentRegistry;
@@ -120,7 +111,7 @@ public class Coordinator implements Closeable {
 
         logConfiguration();
 
-        echoLocal("Coordinator starting...");
+        log("Coordinator starting...");
 
         startAgents(simulatorProperties, componentRegistry);
 
@@ -134,9 +125,7 @@ public class Coordinator implements Closeable {
 
         initCoordinatorRemote();
 
-        initialized.countDown();
-
-        echoLocal("Coordinator started...");
+        log("Coordinator started...");
     }
 
     private void initCoordinatorRemote() throws RemoteException, AlreadyBoundException {
@@ -169,19 +158,20 @@ public class Coordinator implements Closeable {
     }
 
     private void logConfiguration() {
-        echoLocal("Total number of agents: %s", componentRegistry.agentCount());
-        echoLocal("Output directory: " + outputDirectory.getAbsolutePath());
+        log("VendorDriver: %s", simulatorProperties.get("VENDOR"));
+        log("Total number of agents: %s", componentRegistry.agentCount());
+        log("Output directory: " + outputDirectory.getAbsolutePath());
 
         int performanceIntervalSeconds = parameters.getPerformanceMonitorIntervalSeconds();
 
         if (performanceIntervalSeconds > 0) {
-            echoLocal("Performance monitor enabled (%d seconds interval)", performanceIntervalSeconds);
+            log("Performance monitor enabled (%d seconds interval)", performanceIntervalSeconds);
         } else {
-            echoLocal("Performance monitor disabled");
+            log("Performance monitor disabled");
         }
 
         if (simulatorProperties.getCoordinatorPort() > 0) {
-            echoLocal("Coordinator remote enabled on port " + simulatorProperties.getCoordinatorPort());
+            log("Coordinator remote enabled on port " + simulatorProperties.getCoordinatorPort());
         }
     }
 
@@ -243,8 +233,6 @@ public class Coordinator implements Closeable {
     }
 
     public void download() throws Exception {
-        awaitInitialized();
-
         LOGGER.info("Downloading...");
 
         new DownloadTask(componentRegistry.getAgentIps(),
@@ -256,8 +244,6 @@ public class Coordinator implements Closeable {
     }
 
     public void exit() throws Exception {
-        awaitInitialized();
-
         LOGGER.info("Shutting down...");
 
         new Thread(new Runnable() {
@@ -276,8 +262,6 @@ public class Coordinator implements Closeable {
     }
 
     public void install(String versionSpec) throws Exception {
-        awaitInitialized();
-
         LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents...");
         new InstallVendorTask(
                 simulatorProperties,
@@ -288,14 +272,10 @@ public class Coordinator implements Closeable {
     }
 
     public String printLayout() throws Exception {
-        awaitInitialized();
-
         return componentRegistry.printLayout();
     }
 
     public String testRun(RcTestRunOperation op) throws Exception {
-        awaitInitialized();
-
         LOGGER.info("Run starting...");
         final RunTestSuiteTask runTestSuiteTask = createRunTestSuiteTask(op.getTestSuite());
 
@@ -327,8 +307,6 @@ public class Coordinator implements Closeable {
     }
 
     public String testStop(RcTestStopOperation op) throws Exception {
-        awaitInitialized();
-
         LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
 
         TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
@@ -351,85 +329,52 @@ public class Coordinator implements Closeable {
     }
 
     public String testStatus(RcTestStatusOperation op) throws Exception {
-        awaitInitialized();
-
         TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
-        if (test == null) {
-            return "null";
-        }
-
-        return test.getStatusString();
+        return test == null ? "null" : test.getStatusString();
     }
 
     public String workerStart(RcWorkerStartOperation op) throws Exception {
-        awaitInitialized();
+        // todo: tags
+        // todo: target agents not respected
 
-        WorkerType workerType = new WorkerType(op.getWorkerType());
+        String workerType = op.getWorkerType();
 
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
 
-        String versionSpec = op.getVersionSpec() == null
-                ? simulatorProperties.getVersionSpec()
-                : op.getVersionSpec();
-
-        String vendor = simulatorProperties.get("VENDOR");
-        WorkerParameters workerParameters = new WorkerParameters()
-                .setVersionSpec(versionSpec)
-                .addEnvironment("WORKER_TYPE", workerType.name())
-                .addEnvironment("VENDOR", vendor)
-                .setWorkerStartupTimeout(simulatorProperties.getWorkerStartupTimeoutSeconds())
-                .setWorkerScript(loadWorkerScript(workerType, vendor));
+        VendorDriver vendorDriver = newVendorDriver(simulatorProperties.get("VENDOR"))
+                .setAgents(componentRegistry.getAgents())
+                .setAll(simulatorProperties.asPublicMap())
+                .setClientArgs(op.getVmOptions())
+                .setMemberArgs(op.getVmOptions())
+                .setLicenseKey(parameters.getLicenseKey())
+                .setIfNotNull("VERSION_SPEC", op.getVersionSpec())
+                .setIfNotNull("CONFIG", op.getHzConfig());
 
         List<SimulatorAddress> agents = findAgents(op);
-        LOGGER.info("Suitable agents: " + agents);
         if (agents.isEmpty()) {
             throw new IllegalStateException("No suitable agents found");
         }
 
-        DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry, workerParameters, workerType, op.getCount(), agents);
+        LOGGER.info("Suitable agents: " + agents);
 
-        Map<SimulatorAddress, List<WorkerProcessSettings>> workerDeployment
-                = deploymentPlan.getWorkerDeployment();
-
-        // we need to fix the environment of the worker so it contains the appropriate tags/configuration
-        // this can only be done after the deployment plan is made.
-        for (Map.Entry<SimulatorAddress, List<WorkerProcessSettings>> entry : workerDeployment.entrySet()) {
-            SimulatorAddress agentAddress = entry.getKey();
-            AgentData agentData = componentRegistry.getAgent(agentAddress);
-
-            for (WorkerProcessSettings workerProcessSettings : entry.getValue()) {
-                Map<String, String> env = workerProcessSettings.getEnvironment();
-                env.putAll(simulatorProperties.asMap());
-                env.put("HAZELCAST_CONFIG", loadConfig(op, workerType, agentData.getTags()));
-                env.put("AUTOCREATE_HAZELCAST_INSTANCE", "true");
-                env.put("LOG4j_CONFIG", loadLog4jConfig());
-                env.put("JVM_OPTIONS", op.getVmOptions());
-                env.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS",
-                        "" + parameters.getPerformanceMonitorIntervalSeconds());
-                // first we add the agent tags, since each worker inherits the tags of the agent
-                env.putAll(agentData.getTags());
-                // and on top we add the specific tags for the worker
-                env.putAll(op.getTags());
-            }
+        DeploymentPlan deploymentPlan;
+        if (op.getWorkerType().equals("member")) {
+            deploymentPlan = createDeploymentPlan(componentRegistry, vendorDriver, workerType, op.getCount(), 0);
+        } else {
+            deploymentPlan = createDeploymentPlan(componentRegistry, vendorDriver, workerType, 0, op.getCount());
         }
 
-        List<WorkerData> workers = createStartWorkersTask(workerDeployment, op.getTags()).run();
-
+        List<WorkerData> workers = createStartWorkersTask(deploymentPlan.getWorkerDeployment(), op.getTags()).run();
         LOGGER.info("Workers started!");
-
         return WorkerData.toAddressString(workers);
     }
 
     public String workerKill(RcWorkerKillOperation op) throws Exception {
-        awaitInitialized();
-
         WorkerQuery workerQuery = op.getWorkerQuery();
 
         LOGGER.info(format("Killing %s...", workerQuery));
 
-        List<WorkerData> result = new KillWorkersTask(
-                componentRegistry, client, op.getCommand(), workerQuery).run();
+        List<WorkerData> result = new KillWorkersTask(componentRegistry, client, op.getCommand(), workerQuery).run();
 
         LOGGER.info("\n" + componentRegistry.printLayout());
 
@@ -439,8 +384,6 @@ public class Coordinator implements Closeable {
     }
 
     public String workerScript(RcWorkerScriptOperation operation) throws Exception {
-        awaitInitialized();
-
         List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
 
         LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
@@ -468,7 +411,7 @@ public class Coordinator implements Closeable {
         return sb.toString();
     }
 
-    StartWorkersTask createStartWorkersTask(Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan,
+    StartWorkersTask createStartWorkersTask(Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan,
                                             Map<String, String> workerTags) {
         return new StartWorkersTask(
                 deploymentPlan,
@@ -511,43 +454,7 @@ public class Coordinator implements Closeable {
         return result;
     }
 
-    private String loadConfig(RcWorkerStartOperation op, WorkerType workerType, Map<String, String> agentTags) {
-        Map<String, String> env = new HashMap<String, String>(simulatorProperties.asMap());
-        env.putAll(agentTags);
-        env.putAll(op.getTags());
-
-        String config;
-        if (WorkerType.MEMBER.equals(workerType)) {
-            config = initMemberHzConfig(
-                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
-                    componentRegistry,
-                    parameters.getLicenseKey(),
-                    env, false);
-        } else if (WorkerType.LITE_MEMBER.equals(workerType)) {
-            config = initMemberHzConfig(
-                    op.getHzConfig() == null ? loadMemberHzConfig() : op.getHzConfig(),
-                    componentRegistry,
-                    parameters.getLicenseKey(),
-                    env, true);
-        } else if (WorkerType.JAVA_CLIENT.equals(workerType)) {
-            config = initClientHzConfig(
-                    op.getHzConfig() == null ? loadClientHzConfig() : op.getHzConfig(),
-                    componentRegistry,
-                    env,
-                    parameters.getLicenseKey());
-        } else {
-            throw new IllegalStateException("Unrecognized workerType [" + workerType + "]");
-        }
-        return config;
-    }
-
-    private void awaitInitialized() throws Exception {
-        if (!initialized.await(INITIALIZED_TIMEOUT_MINUTES, MINUTES)) {
-            throw new TimeoutException("Coordinator remote mode failed to initialize");
-        }
-    }
-
-    private static void echoLocal(String message, Object... args) {
+    private static void log(String message, Object... args) {
         String log = message == null ? "null" : format(message, args);
         LOGGER.info(log);
     }

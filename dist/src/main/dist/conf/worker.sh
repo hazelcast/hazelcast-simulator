@@ -16,7 +16,6 @@ set -e
 exec > worker.out
 exec 2> worker.err
 
-
 # If you want to be sure that you have the right governor installed; uncomment
 # the following 3 lines. They will force the right governor to be used.
 #old_governor=$(sudo cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
@@ -28,21 +27,9 @@ exec 2> worker.err
 #JAVA_HOME=~/java/jdk1.8.0_121
 #PATH=$JAVA_HOME/bin:$PATH
 
-echo ${LOG4j_CONFIG} > log4j.xml
-echo ${HAZELCAST_CONFIG} > hazelcast.xml
-
 JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
           -Dhazelcast.logging.type=log4j \
-          -Dlog4j.configuration=file:log4j.xml \
-          -DSIMULATOR_HOME=$SIMULATOR_HOME \
-          -DpublicAddress=$PUBLIC_ADDRESS \
-          -DworkerType=$WORKER_TYPE \
-          -DworkerId=$WORKER_ID \
-          -DworkerAddress=$WORKER_ADDRESS \
-          -DagentPort=$AGENT_PORT \
-          -DworkerPerformanceMonitorIntervalSeconds=$WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS \
-          -DautoCreateHzInstance=$AUTOCREATE_HAZELCAST_INSTANCE \
-          -DhzConfigFile=hazelcast.xml"
+          -Dlog4j.configuration=file:log4j.xml"
 
 # Include the member/client-worker jvm options
 JVM_ARGS="$JVM_OPTIONS $JVM_ARGS"
