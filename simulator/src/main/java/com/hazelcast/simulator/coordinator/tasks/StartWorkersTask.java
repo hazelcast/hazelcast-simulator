@@ -199,8 +199,6 @@ public class StartWorkersTask {
             LOGGER.info(format("Created %d %s Worker on %s", workersSettings.size(), workerType, agent.getAddress()));
             List<WorkerData> createdWorkers = componentRegistry.addWorkers(agent.getAddress(), workersSettings, finalTags);
             result.addAll(createdWorkers);
-
-            LOGGER.info("Workers:" + componentRegistry.getWorkers());
         }
     }
 }
