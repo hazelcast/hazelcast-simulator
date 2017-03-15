@@ -37,7 +37,7 @@ start_agent_remote(){
     agent=$1
     agent_index=$2
 
-    echo "[INFO]Agent $agent [C_A$agent_index] starting"
+    echo "[INFO]Agent [C_A$agent_index] $agent  starting"
 
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "killall -9 java || true"
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm -f agent.pid"
@@ -51,7 +51,7 @@ start_agent_remote(){
 
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "hazelcast-simulator-$SIMULATOR_VERSION/bin/.await-file-exists agent.pid"
 
-    echo "[INFO]Agent $agent [C_A$agent_index] started successfully"
+    echo "[INFO]Agent [C_A$agent_index] $agent started successfully"
 }
 
 start_agent_local(){
