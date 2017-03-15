@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
+import com.hazelcast.simulator.test.annotations.InjectVendor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -31,7 +31,7 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
 
     private static class HazelcastInstanceTest extends BaseTest {
 
-        @InjectHazelcastInstance
+        @InjectVendor
         private HazelcastInstance hazelcastInstance;
 
         @SuppressWarnings("unused")
@@ -46,7 +46,7 @@ public class TestContainer_InjectHazelcastInstanceTest extends TestContainer_Abs
 
     private static class IllegalFieldTypeTest extends BaseTest {
 
-        @InjectHazelcastInstance
+        @InjectVendor
         private Object noProbeField;
     }
 }
