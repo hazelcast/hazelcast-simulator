@@ -24,6 +24,7 @@ import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectHazelcastInstance;
 import com.hazelcast.simulator.test.annotations.InjectProbe;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
+import com.hazelcast.simulator.test.annotations.InjectVendor;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.PropertyBindingSupport;
 
@@ -46,7 +47,7 @@ import static java.lang.String.format;
  * <ol>
  * <li>values in public fields</li>
  * <li>TestContext in fields annotated with {@link InjectTestContext}</li>
- * <li>HazelcastInstance in fields annotated with @{@link InjectHazelcastInstance}</li>
+ * <li>HazelcastInstance in fields annotated with @{@link InjectVendor}</li>
  * <li>Probe instance in fields annotated with {@link InjectProbe}</li>
  * </ol>
  * <p>
@@ -219,7 +220,10 @@ public class PropertyBinding {
             setFieldValue(object, field, testContext);
         } else if (field.isAnnotationPresent(InjectHazelcastInstance.class)) {
             assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
-            setFieldValue(object, field, (HazelcastInstance) vendorInstance);
+            setFieldValue(object, field, vendorInstance);
+        } else if (field.isAnnotationPresent(InjectVendor.class)) {
+            assertFieldType(fieldType, HazelcastInstance.class, InjectVendor.class);
+            setFieldValue(object, field, vendorInstance);
         } else if (field.isAnnotationPresent(InjectProbe.class)) {
             assertFieldType(fieldType, Probe.class, InjectProbe.class);
             Probe probe = getOrCreateProbe(getProbeName(field), isPartOfTotalThroughput(field));

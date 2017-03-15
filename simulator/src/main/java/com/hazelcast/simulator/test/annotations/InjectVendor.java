@@ -21,11 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates {@link com.hazelcast.core.HazelcastInstance} fields.
- *
- * @deprecated use {@link InjectVendor} instead. Will be removed in Simulator 0.11.
+ * Annotation that should be put on a field where a 'vendor' instance like a HazelcastInstance needs to be injected.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface InjectHazelcastInstance {
+public @interface InjectVendor {
 }
