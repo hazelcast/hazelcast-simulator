@@ -50,15 +50,16 @@ function download_local(){
 
     workers_dir="${SIMULATOR_HOME}/workers"
 
-    for file in $workers_dir/*;
+    for worker_dir in $workers_dir/*;
     do
-        echo "file $file"
-        filename=$(basename "$file")
-        if [ "$session_id" = "*" ] || [ "$session_id" = "$filename" ];
+        worker_dir_name=$(basename "$worker_dir")
+        if [ "$session_id" = "*" ] || [ "$session_id" = "$worker_dir_name" ];
         then
-            mv "$file/" $root_dir || true
-            mv ./agent.err $root_dir/$filename || true
-            mv ./agent.out $root_dir/$filename/ || true
+            target_dir="$root_dir/$worker_dir_name"
+            mkdir -p $target_dir
+            mv "$worker_dir"/* $target_dir
+            mv ./agent.err $target_dir || true
+            mv ./agent.out $target_dir || true
         fi
     done
 
