@@ -248,7 +248,7 @@ class LatencyDistributionGnuplot(Gnuplot):
         for tmp_file in tmp_files:
             tmp_file.close()
 
-        print(self.tmp.name)
+        print(self.gnuplot_file.name)
 
 
 class GoogleCharts:
