@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.amazonaws.util.StringInputStream;
 import com.hazelcast.simulator.common.ShutdownThread;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -29,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -147,7 +147,7 @@ public class Worker {
     @NotNull
     private static Map<String, String> loadParameters() throws IOException {
         Properties p = new Properties();
-        p.load(new StringInputStream(fileAsText(new File(getUserDir(), "parameters"))));
+        p.load(new StringReader(fileAsText(new File(getUserDir(), "parameters"))));
 
         Map<String, String> properties = new HashMap<String, String>();
         for (Map.Entry<Object, Object> entry : p.entrySet()) {
