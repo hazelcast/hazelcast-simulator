@@ -6,21 +6,8 @@ set -e
 # comma separated list of agent ip addresses
 agents=$1
 
-verify_agents(){
+verify_installation(){
     if [ "$CLOUD_PROVIDER" != "local" ]; then
-#        for agent in ${agents//,/ } ; do
-#            status=$(ssh $SSH_OPTIONS -o LogLevel=quiet -o BatchMode=yes -o ConnectTimeout=5 $SIMULATOR_USER@$agent  echo ok 2>&1)
-#
-#            echo [INFO]aaaaaa$status
-#
-#            if [[ $status == ok ]] ; then
-#                echo auth ok
-#            else
-#                echo "[WARN]ssh to $agent failed [$status]"
-#                exit 1
-#            fi
-#        done
-
         for agent in ${agents//,/ } ; do
             status=$(ssh $SSH_OPTIONS $SIMULATOR_USER@$agent \
                 "[[ -f hazelcast-simulator-$SIMULATOR_VERSION/bin/agent ]] && echo OK || echo FAIL")
@@ -33,7 +20,7 @@ verify_agents(){
     fi
 }
 
-start_agent_remote(){
+start_remote(){
     agent=$1
     agent_index=$2
 
@@ -54,7 +41,7 @@ start_agent_remote(){
     echo "[INFO]Agent [C_A$agent_index] $agent started successfully"
 }
 
-start_agent_local(){
+start_local(){
     echo "[INFO]Local agent [C_A1] starting"
 
     if [ -f agent.pid ]; then
@@ -74,14 +61,14 @@ start_agent_local(){
     echo "[INFO]Local agent [C_A1] started"
 }
 
-start_agents(){
+start(){
     if [ "$CLOUD_PROVIDER" = "local" ]; then
-        start_agent_local
+        start_local
     else
         echo "[INFO]Remote agents starting"
         agent_index=1
         for agent in ${agents//,/ } ; do
-            start_agent_remote $agent $agent_index &
+            start_remote $agent $agent_index &
             ((agent_index++))
         done
 
@@ -96,5 +83,5 @@ if [ "$CLOUD_PROVIDER" = "embedded" ]; then
     exit 0
 fi
 
-verify_agents
-start_agents
+verify_installation
+start
