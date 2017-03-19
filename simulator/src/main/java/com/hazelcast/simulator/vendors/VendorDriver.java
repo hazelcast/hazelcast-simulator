@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
+import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
@@ -39,9 +39,10 @@ public abstract class VendorDriver<V> implements Closeable {
     protected String memberArgs = "";
     protected List<AgentData> agents;
     protected Map<String, String> properties = new HashMap<String, String>();
+    private final Map<String, String> configCache = new HashMap<String, String>();
 
-    public static VendorDriver newVendorDriver(String vendorName) {
-        LOGGER.info(format("Loading vendor [%s]", vendorName));
+    public static VendorDriver loadVendorDriver(String vendorName) {
+        LOGGER.info(format("Loading vendor-driver [%s]", vendorName));
 
         if (vendorName.equals("hazelcast") || vendorName.equals("hazelcast-enterprise")) {
             return new HazelcastDriver();
@@ -90,12 +91,22 @@ public abstract class VendorDriver<V> implements Closeable {
 
     public abstract WorkerParameters loadWorkerParameters(String workerType);
 
-    public static String loadLog4jConfig() {
-        return getFileAsTextFromWorkingDirOrBaseDir(
-                getSimulatorHome(), "worker-log4j.xml", "Log4j configuration for Worker");
+    protected String loadConfiguration(String logPrefix, String filename) {
+        File file = getConfigurationFile(filename);
+        String config = configCache.get(filename);
+        if (config == null) {
+            config = fileAsText(file);
+            configCache.put(filename, config);
+            LOGGER.info("Loading " + logPrefix + ":" + file.getAbsolutePath());
+        }
+        return config;
     }
 
-    public static String loadWorkerScript(String workerType, String vendor) {
+    protected String loadLog4jConfig() {
+        return loadConfiguration("Log4J configuration for worker", "worker-log4j.xml");
+    }
+
+    protected String loadWorkerScript(String workerType, String vendor) {
         List<File> files = new LinkedList<File>();
         File confDir = new File(getSimulatorHome(), "conf");
 
@@ -110,8 +121,13 @@ public abstract class VendorDriver<V> implements Closeable {
 
         for (File file : files) {
             if (file.exists()) {
-                LOGGER.info("Loading " + vendor + " " + workerType + " worker script: " + file.getAbsolutePath());
-                return fileAsText(file);
+                String config = configCache.get(file.getName());
+                if (config == null) {
+                    config = fileAsText(file);
+                    configCache.put(file.getName(), config);
+                    LOGGER.info("Loading " + vendor + " " + workerType + " worker script: " + file.getAbsolutePath());
+                }
+                return config;
             }
         }
 

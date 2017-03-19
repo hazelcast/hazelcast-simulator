@@ -33,8 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.HazelcastUtils.warmupPartitions;
 import static java.lang.String.format;
@@ -137,9 +135,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
             return config;
         }
 
-        File file = getConfigurationFile("hazelcast.xml");
-        LOGGER.info("Loading Hazelcast member configuration: " + file.getAbsolutePath());
-        return fileAsText(file);
+        return loadConfiguration("Hazelcast member configuration", "hazelcast.xml");
     }
 
     public String initClientHzConfig() {
@@ -166,11 +162,8 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
             return config;
         }
 
-        File file = getConfigurationFile("client-hazelcast.xml");
-        LOGGER.info("Loading Hazelcast client configuration: " + file.getAbsolutePath());
-        return fileAsText(file);
+        return loadConfiguration("Hazelcast client configuration", "client-hazelcast.xml");
     }
-
 
     public static String createAddressConfig(String tagName, List<AgentData> agents, String port) {
         StringBuilder members = new StringBuilder();

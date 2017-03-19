@@ -45,7 +45,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
-import static com.hazelcast.simulator.vendors.VendorDriver.newVendorDriver;
+import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -174,7 +174,7 @@ final class CoordinatorCli {
 
         sslTestAgents(simulatorProperties, componentRegistry);
 
-        this.vendorDriver = newVendorDriver(simulatorProperties.get("VENDOR"))
+        this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
                 .setAll(simulatorProperties.asPublicMap())
                 .setAgents(componentRegistry.getAgents())
                 .setClientArgs(loadClientArgs())

@@ -46,7 +46,7 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
-import static com.hazelcast.simulator.vendors.VendorDriver.newVendorDriver;
+import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
@@ -70,7 +70,7 @@ public class Worker {
         this.publicAddress = parameters.get("PUBLIC_ADDRESS");
         this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
 
-        this.vendorDriver = newVendorDriver(parameters.get("VENDOR"))
+        this.vendorDriver = loadVendorDriver(parameters.get("VENDOR"))
                 .setAll(parameters);
 
         this.server = new Server("workers")

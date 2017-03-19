@@ -117,6 +117,7 @@ public final class DeploymentPlan {
             AgentWorkerLayout agentWorkerLayout = nextAgent(workerType, targetAgents);
             WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType);
             agentWorkerLayout.registerWorker(workerParameters);
+
             List<WorkerParameters> workerParametersList = workerDeployment.get(agentWorkerLayout.agent.getAddress());
             workerParametersList.add(workerParameters);
         }

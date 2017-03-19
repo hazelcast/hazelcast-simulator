@@ -65,7 +65,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
-import static com.hazelcast.simulator.vendors.VendorDriver.newVendorDriver;
+import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
@@ -341,7 +341,7 @@ public class Coordinator implements Closeable {
 
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
 
-        VendorDriver vendorDriver = newVendorDriver(simulatorProperties.get("VENDOR"))
+        VendorDriver vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
                 .setAgents(componentRegistry.getAgents())
                 .setAll(simulatorProperties.asPublicMap())
                 .setClientArgs(op.getVmOptions())
