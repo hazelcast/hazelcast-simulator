@@ -109,12 +109,12 @@ class Provisioner {
         echoImportant("Installing JAVA on %d machines...", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installJava", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
+        for (final AgentData agent : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Installing JAVA on %s", agentData.getPublicAddress());
-                    uploadJava(agentData.getPublicAddress());
+                    echo("Installing JAVA on %s", agent.getPublicAddress());
+                    uploadJava(agent.getPublicAddress());
                 }
             });
         }
@@ -132,13 +132,13 @@ class Provisioner {
         echoImportant("Installing Simulator on %d machines...", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
+        for (final AgentData agent : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Installing Simulator on %s", agentData.getPublicAddress());
-                    uploadJARs(agentData.getPublicAddress());
-                    echo("Finished installing Simulator on %s", agentData.getPublicAddress());
+                    echo("Installing Simulator on %s", agent.getPublicAddress());
+                    uploadJARs(agent.getPublicAddress());
+                    echo("Finished installing Simulator on %s", agent.getPublicAddress());
                 }
             });
         }
@@ -156,12 +156,12 @@ class Provisioner {
         echoImportant("Killing %s Java processes...", componentRegistry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
+        for (final AgentData agent : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Killing Java processes on %s", agentData.getPublicAddress());
-                    bash.killAllJavaProcesses(agentData.getPublicAddress(), sudo);
+                    echo("Killing Java processes on %s", agent.getPublicAddress());
+                    bash.killAllJavaProcesses(agent.getPublicAddress(), sudo);
                 }
             });
         }
@@ -280,8 +280,8 @@ class Provisioner {
         int destroyedCount = 0;
         for (int batchSize : calcBatches(properties, count)) {
             Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
-            for (AgentData agentData : componentRegistry.getAgents(batchSize)) {
-                terminateMap.put(agentData.getPublicAddress(), agentData);
+            for (AgentData agent : componentRegistry.getAgents(batchSize)) {
+                terminateMap.put(agent.getPublicAddress(), agent);
             }
             Set destroyedSet = computeService.destroyNodesMatching(new NodeMetadataPredicate(componentRegistry, terminateMap));
             destroyedCount += destroyedSet.size();

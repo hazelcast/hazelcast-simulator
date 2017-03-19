@@ -158,8 +158,8 @@ class Wizard {
 
         ensureExistingFile(SSH_COPY_ID_FILE);
         writeText("#!/bin/bash" + NEW_LINE + NEW_LINE, SSH_COPY_ID_FILE);
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            String publicAddress = agentData.getPublicAddress();
+        for (AgentData agent : componentRegistry.getAgents()) {
+            String publicAddress = agent.getPublicAddress();
             appendText(format("ssh-copy-id -i ~/.ssh/id_rsa.pub %s@%s%n", userName, publicAddress), SSH_COPY_ID_FILE);
         }
         execute(format("chmod u+x %s", SSH_COPY_ID_FILE.getAbsoluteFile()));
@@ -175,8 +175,8 @@ class Wizard {
         ComponentRegistry componentRegistry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            String publicAddress = agentData.getPublicAddress();
+        for (AgentData agent : componentRegistry.getAgents()) {
+            String publicAddress = agent.getPublicAddress();
             echo("Connecting to %s@%s...", userName, publicAddress);
             bash.ssh(publicAddress, "echo ok 2>&1");
         }

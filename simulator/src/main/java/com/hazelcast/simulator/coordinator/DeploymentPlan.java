@@ -44,119 +44,49 @@ public final class DeploymentPlan {
 
     private final Map<SimulatorAddress, List<WorkerParameters>> workerDeployment
             = new HashMap<SimulatorAddress, List<WorkerParameters>>();
-    private final List<AgentWorkerLayout> agentWorkerLayouts = new ArrayList<AgentWorkerLayout>();
+    private final List<WorkersPerAgent> workersPerAgentList = new ArrayList<WorkersPerAgent>();
 
-    public static DeploymentPlan createDeploymentPlan(
-            ComponentRegistry componentRegistry,
-            VendorDriver vendorDriver,
-            String workerType,
-            int memberCount,
-            int clientCount) {
+    private final VendorDriver vendorDriver;
 
-        int dedicatedMemberMachineCount = componentRegistry.getDedicatedMemberMachines();
-
-        checkParameters(componentRegistry.agentCount(), dedicatedMemberMachineCount, memberCount, clientCount);
-
-        // if the memberCount has not been specified; we need to calculate it on the fly.
-        if (memberCount == -1) {
-            memberCount = dedicatedMemberMachineCount == 0
-                    ? componentRegistry.agentCount()
-                    : dedicatedMemberMachineCount;
-        }
-
-        DeploymentPlan plan = new DeploymentPlan();
-
-        plan.initAgentWorkerLayouts(componentRegistry);
-
-        List<SimulatorAddress> agents = allAgents(componentRegistry);
-
-        plan.assignToAgents(memberCount, "member", vendorDriver, agents);
-
-        plan.assignToAgents(clientCount, workerType, vendorDriver, agents);
-
-        plan.printLayout();
-
-        return plan;
+    public DeploymentPlan(VendorDriver vendorDriver, ComponentRegistry componentRegistry) {
+        this(vendorDriver, componentRegistry.getAgents());
     }
 
-    private static List<SimulatorAddress> allAgents(ComponentRegistry componentRegistry) {
-        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            result.add(agentData.getAddress());
-        }
-        return result;
-    }
+    public DeploymentPlan(VendorDriver vendorDriver, List<AgentData> agents) {
+        this.vendorDriver = vendorDriver;
 
-    public static DeploymentPlan createDeploymentPlan(
-            ComponentRegistry componentRegistry,
-            VendorDriver vendorDriver,
-            String workerType,
-            int workerCount,
-            List<SimulatorAddress> targetAgents) {
-
-        if (workerCount < 0) {
-            throw new IllegalArgumentException("workerCount can't be smaller than 0");
-        }
-
-        DeploymentPlan plan = new DeploymentPlan();
-
-        plan.initAgentWorkerLayouts(componentRegistry);
-
-        plan.assignToAgents(workerCount, workerType, vendorDriver, targetAgents);
-
-        plan.printLayout();
-
-        return plan;
-    }
-
-    private void assignToAgents(int workerCount,
-                                String workerType,
-                                VendorDriver vendorDriver,
-                                List<SimulatorAddress> targetAgents) {
-        for (int i = 0; i < workerCount; i++) {
-            AgentWorkerLayout agentWorkerLayout = nextAgent(workerType, targetAgents);
-            WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType);
-            agentWorkerLayout.registerWorker(workerParameters);
-
-            List<WorkerParameters> workerParametersList = workerDeployment.get(agentWorkerLayout.agent.getAddress());
-            workerParametersList.add(workerParameters);
-        }
-    }
-
-    private static void checkParameters(int agentCount, int dedicatedMemberMachineCount,
-                                        int memberWorkerCount, int clientWorkerCount) {
-        if (agentCount == 0) {
+        if (agents.isEmpty()) {
             throw new CommandLineExitException("You need at least one agent in your cluster!"
                     + " Please configure your agents.txt or run Provisioner.");
         }
 
-        if (clientWorkerCount > 0 && agentCount - dedicatedMemberMachineCount < 1) {
-            throw new CommandLineExitException(
-                    "there are no machines left for clients!");
-        }
-
-        if (memberWorkerCount == 0 && clientWorkerCount == 0) {
-            throw new CommandLineExitException("No workers have been defined!");
-        }
-    }
-
-    private void initAgentWorkerLayouts(ComponentRegistry componentRegistry) {
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            AgentWorkerLayout layout = new AgentWorkerLayout(agentData);
-            for (WorkerData workerData : agentData.getWorkers()) {
-                layout.workers.add(workerData.getParameters());
+        for (AgentData agent : agents) {
+            WorkersPerAgent workersPerAgent = new WorkersPerAgent(agent);
+            for (WorkerData worker : agent.getWorkers()) {
+                workersPerAgent.workers.add(worker.getParameters());
             }
-            agentWorkerLayouts.add(layout);
-
-            workerDeployment.put(agentData.getAddress(), new ArrayList<WorkerParameters>());
+            workersPerAgentList.add(workersPerAgent);
+            workerDeployment.put(agent.getAddress(), new ArrayList<WorkerParameters>());
         }
     }
 
-    private AgentWorkerLayout nextAgent(String workerType, List<SimulatorAddress> allowedAgents) {
-        AgentWorkerLayout smallest = null;
-        for (AgentWorkerLayout agent : agentWorkerLayouts) {
+    public DeploymentPlan addToPlan(int workerCount, String workerType) {
+        for (int i = 0; i < workerCount; i++) {
+            WorkersPerAgent workersPerAgent = nextAgent(workerType);
+            WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType);
+            workersPerAgent.registerWorker(workerParameters);
 
-            if (!agent.allowed(workerType) || !allowedAgents.contains(agent.agent.getAddress())) {
+            List<WorkerParameters> workerParametersList = workerDeployment.get(workersPerAgent.agent.getAddress());
+            workerParametersList.add(workerParameters);
+        }
+
+        return this;
+    }
+
+    private WorkersPerAgent nextAgent(String workerType) {
+        WorkersPerAgent smallest = null;
+        for (WorkersPerAgent agent : workersPerAgentList) {
+            if (!agent.allowed(workerType)) {
                 continue;
             }
 
@@ -171,21 +101,21 @@ public final class DeploymentPlan {
         }
 
         if (smallest == null) {
-            throw new IllegalStateException(format("No agent found for workerType [%s]", workerType));
+            throw new CommandLineExitException(format("No suitable agent found for workerType [%s]", workerType));
         }
 
         return smallest;
     }
 
-    private void printLayout() {
+    public void printLayout() {
         LOGGER.info(HORIZONTAL_RULER);
         LOGGER.info("Cluster layout");
         LOGGER.info(HORIZONTAL_RULER);
 
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            Set<String> agentVersionSpecs = agentWorkerLayout.getVersionSpecs();
-            int agentMemberWorkerCount = agentWorkerLayout.count("member");
-            int agentClientWorkerCount = agentWorkerLayout.workers.size() - agentMemberWorkerCount;
+        for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
+            Set<String> agentVersionSpecs = workersPerAgent.getVersionSpecs();
+            int agentMemberWorkerCount = workersPerAgent.count("member");
+            int agentClientWorkerCount = workersPerAgent.workers.size() - agentMemberWorkerCount;
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
 
             String message = "    Agent %s (%s) members: %s, clients: %s";
@@ -195,11 +125,11 @@ public final class DeploymentPlan {
                 message += " (no workers)";
             }
             LOGGER.info(format(message,
-                    agentWorkerLayout.agent.formatIpAddresses(),
-                    agentWorkerLayout.agent.getAddress(),
+                    workersPerAgent.agent.formatIpAddresses(),
+                    workersPerAgent.agent.getAddress(),
                     formatLong(agentMemberWorkerCount, 2),
                     formatLong(agentClientWorkerCount, 2),
-                    padLeft(agentWorkerLayout.agent.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
+                    padLeft(workersPerAgent.agent.getAgentWorkerMode().toString(), WORKER_MODE_LENGTH),
                     agentVersionSpecs
             ));
         }
@@ -207,8 +137,8 @@ public final class DeploymentPlan {
 
     public Set<String> getVersionSpecs() {
         Set<String> result = new HashSet<String>();
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            result.addAll(agentWorkerLayout.getVersionSpecs());
+        for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
+            result.addAll(workersPerAgent.getVersionSpecs());
         }
 
         return result;
@@ -220,8 +150,8 @@ public final class DeploymentPlan {
 
     public int getMemberWorkerCount() {
         int result = 0;
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            for (WorkerParameters workerParameters : agentWorkerLayout.workers) {
+        for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
+            for (WorkerParameters workerParameters : workersPerAgent.workers) {
                 if (workerParameters.getWorkerType().equals("member")) {
                     result++;
                 }
@@ -233,8 +163,8 @@ public final class DeploymentPlan {
 
     public int getClientWorkerCount() {
         int result = 0;
-        for (AgentWorkerLayout agentWorkerLayout : agentWorkerLayouts) {
-            for (WorkerParameters workerParameters : agentWorkerLayout.workers) {
+        for (WorkersPerAgent workersPerAgent : workersPerAgentList) {
+            for (WorkerParameters workerParameters : workersPerAgent.workers) {
                 if (!workerParameters.getWorkerType().equals("member")) {
                     result++;
                 }
@@ -247,12 +177,12 @@ public final class DeploymentPlan {
     /**
      * The layout of Simulator Workers for a given Simulator Agent.
      */
-    static final class AgentWorkerLayout {
+    static final class WorkersPerAgent {
 
         final List<WorkerParameters> workers = new ArrayList<WorkerParameters>();
         final AgentData agent;
 
-        AgentWorkerLayout(AgentData agent) {
+        WorkersPerAgent(AgentData agent) {
             this.agent = agent;
         }
 

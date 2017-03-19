@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -97,9 +96,10 @@ public class StartWorkersTaskTest {
         StubVendorDriver vendorDriver = new StubVendorDriver();
         componentRegistry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
 
-        DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry, vendorDriver,
-                "javaclient", memberWorkerCount, clientWorkerCount);
+        DeploymentPlan deploymentPlan = new DeploymentPlan(vendorDriver,componentRegistry.getAgents())
+                .addToPlan(memberWorkerCount,"member")
+                .addToPlan(clientWorkerCount,"javaclient");
+
 
         return deploymentPlan.getWorkerDeployment();
     }

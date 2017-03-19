@@ -167,8 +167,8 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
     public static String createAddressConfig(String tagName, List<AgentData> agents, String port) {
         StringBuilder members = new StringBuilder();
-        for (AgentData agentData : agents) {
-            String hostAddress = agentData.getPrivateAddress();
+        for (AgentData agent : agents) {
+            String hostAddress = agent.getPrivateAddress();
             members.append(format("<%s>%s:%s</%s>%n", tagName, hostAddress, port, tagName));
         }
         return members.toString();

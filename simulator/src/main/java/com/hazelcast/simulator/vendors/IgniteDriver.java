@@ -70,8 +70,8 @@ public class IgniteDriver extends VendorDriver<Ignite> {
                 .withAgents(agents);
 
         StringBuilder sb = new StringBuilder();
-        for (AgentData agentData : agents) {
-            sb.append("<value>").append(agentData.getPrivateAddress()).append("</value>");
+        for (AgentData agent : agents) {
+            sb.append("<value>").append(agent.getPrivateAddress()).append("</value>");
         }
 
         template.addReplacement("<!--ADDRESSES-->", sb.toString());

@@ -60,7 +60,6 @@ import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
-import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -197,8 +196,8 @@ public class Coordinator implements Closeable {
 
     private void stopTests() {
         Collection<TestData> tests = componentRegistry.getTests();
-        for (TestData testData : tests) {
-            testData.setStopRequested(true);
+        for (TestData test : tests) {
+            test.setStopRequested(true);
         }
 
         for (int i = 0; i < testCompletionTimeoutSeconds; i++) {
@@ -223,8 +222,8 @@ public class Coordinator implements Closeable {
 
     private void startClient() throws Exception {
         // todo: should be async to speed things up
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            client.connectToAgentBroker(agentData.getAddress(), agentData.getPublicAddress());
+        for (AgentData agent : componentRegistry.getAgents()) {
+            client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
         }
 
         LOGGER.info("Remote client started successfully!");
@@ -293,9 +292,9 @@ public class Coordinator implements Closeable {
 
             for (; ; ) {
                 sleepSeconds(1);
-                for (TestData testData : componentRegistry.getTests()) {
-                    if (testData.getTestSuite() == op.getTestSuite()) {
-                        return testData.getAddress().toString();
+                for (TestData test : componentRegistry.getTests()) {
+                    if (test.getTestSuite() == op.getTestSuite()) {
+                        return test.getAddress().toString();
                     }
                 }
             }
@@ -335,8 +334,6 @@ public class Coordinator implements Closeable {
 
     public String workerStart(RcWorkerStartOperation op) throws Exception {
         // todo: tags
-        // todo: target agents not respected
-
         String workerType = op.getWorkerType();
 
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
@@ -350,23 +347,43 @@ public class Coordinator implements Closeable {
                 .setIfNotNull("VERSION_SPEC", op.getVersionSpec())
                 .setIfNotNull("CONFIG", op.getHzConfig());
 
-        List<SimulatorAddress> agents = findAgents(op);
+        List<AgentData> agents = findAgents(op);
         if (agents.isEmpty()) {
             throw new IllegalStateException("No suitable agents found");
         }
 
         LOGGER.info("Suitable agents: " + agents);
 
-        DeploymentPlan deploymentPlan;
-        if (op.getWorkerType().equals("member")) {
-            deploymentPlan = createDeploymentPlan(componentRegistry, vendorDriver, workerType, op.getCount(), 0);
-        } else {
-            deploymentPlan = createDeploymentPlan(componentRegistry, vendorDriver, workerType, 0, op.getCount());
-        }
+        DeploymentPlan deploymentPlan = new DeploymentPlan(vendorDriver, agents)
+                .addToPlan(op.getCount(), workerType);
 
         List<WorkerData> workers = createStartWorkersTask(deploymentPlan.getWorkerDeployment(), op.getTags()).run();
         LOGGER.info("Workers started!");
         return WorkerData.toAddressString(workers);
+    }
+
+    private List<AgentData> findAgents(RcWorkerStartOperation op) {
+        List<AgentData> agents = new ArrayList<AgentData>(componentRegistry.getAgents());
+        List<AgentData> result = new ArrayList<AgentData>();
+        for (AgentData agent : agents) {
+            List<String> expectedAgentAddresses = op.getAgentAddresses();
+
+            if (expectedAgentAddresses != null) {
+                if (!expectedAgentAddresses.contains(agent.getAddress().toString())) {
+                    continue;
+                }
+            }
+
+            Map<String, String> expectedAgentTags = op.getAgentTags();
+            if (expectedAgentTags != null) {
+                if (!matches(op.getAgentTags(), agent.getTags())) {
+                    continue;
+                }
+            }
+
+            result.add(agent);
+        }
+        return result;
     }
 
     public String workerKill(RcWorkerKillOperation op) throws Exception {
@@ -430,29 +447,6 @@ public class Coordinator implements Closeable {
                 performanceStatsCollector);
     }
 
-    private List<SimulatorAddress> findAgents(RcWorkerStartOperation op) {
-        List<AgentData> agents = new ArrayList<AgentData>(componentRegistry.getAgents());
-        List<SimulatorAddress> result = new ArrayList<SimulatorAddress>();
-        for (AgentData agent : agents) {
-            List<String> expectedAgentAddresses = op.getAgentAddresses();
-
-            if (expectedAgentAddresses != null) {
-                if (!expectedAgentAddresses.contains(agent.getAddress().toString())) {
-                    continue;
-                }
-            }
-
-            Map<String, String> expectedAgentTags = op.getAgentTags();
-            if (expectedAgentTags != null) {
-                if (!matches(op.getAgentTags(), agent.getTags())) {
-                    continue;
-                }
-            }
-
-            result.add(agent.getAddress());
-        }
-        return result;
-    }
 
     private static void log(String message, Object... args) {
         String log = message == null ? "null" : format(message, args);

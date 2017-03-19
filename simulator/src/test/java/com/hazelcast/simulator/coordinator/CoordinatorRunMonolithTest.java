@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.Agent;
-import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
@@ -18,7 +17,6 @@ import java.io.File;
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
-import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.copy;
@@ -84,13 +82,8 @@ public class CoordinatorRunMonolithTest {
                         .setProperty("threadCount", 1)
                         .setProperty("class", SuccessTest.class));
 
-        DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry,
-                hazelcastDriver,
-                "member",
-                1,
-                singletonList(agent.getProcessManager().getAgentAddress()));
-
+        DeploymentPlan deploymentPlan = new DeploymentPlan(hazelcastDriver, componentRegistry.getAgents())
+                .addToPlan(1, "member");
         run.init(deploymentPlan);
 
         boolean success = run.run(suite);
@@ -106,12 +99,8 @@ public class CoordinatorRunMonolithTest {
                         .setProperty("threadCount", 1)
                         .setProperty("class", FailingTest.class));
 
-        DeploymentPlan deploymentPlan = createDeploymentPlan(
-                componentRegistry,
-                hazelcastDriver,
-                "member",
-                1,
-                singletonList(agent.getProcessManager().getAgentAddress()));
+        DeploymentPlan deploymentPlan = new DeploymentPlan(hazelcastDriver, componentRegistry.getAgents())
+                .addToPlan(1, "member");
 
         run.init(deploymentPlan);
 

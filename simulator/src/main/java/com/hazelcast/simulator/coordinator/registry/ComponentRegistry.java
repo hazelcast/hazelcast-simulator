@@ -27,6 +27,7 @@ import com.hazelcast.simulator.utils.CommandLineExitException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode.CLIENTS_ONLY;
+import static com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode.MEMBERS_ONLY;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static java.lang.Math.ceil;
@@ -61,23 +64,13 @@ public class ComponentRegistry {
     }
 
     public AgentData addAgent(String publicAddress, String privateAddress, Map<String, String> tags) {
-        AgentData agentData = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress, tags);
-        agents.add(agentData);
-        return agentData;
+        AgentData agent = new AgentData(agentIndex.incrementAndGet(), publicAddress, privateAddress, tags);
+        agents.add(agent);
+        return agent;
     }
 
     public int getInitialTestIndex() {
         return testIndexGenerator.get();
-    }
-
-    public int getDedicatedMemberMachines() {
-        int result = 0;
-        for (AgentData agentData : agents) {
-            if (agentData.getAgentWorkerMode().equals(AgentWorkerMode.MEMBERS_ONLY)) {
-                result++;
-            }
-        }
-        return result;
     }
 
     public void assignDedicatedMemberMachines(int dedicatedMemberMachineCount) {
@@ -90,8 +83,8 @@ public class ComponentRegistry {
         }
 
         if (dedicatedMemberMachineCount > 0) {
-            assignAgentWorkerMode(0, dedicatedMemberMachineCount, AgentWorkerMode.MEMBERS_ONLY);
-            assignAgentWorkerMode(dedicatedMemberMachineCount, agentCount(), AgentWorkerMode.CLIENTS_ONLY);
+            assignAgentWorkerMode(0, dedicatedMemberMachineCount, MEMBERS_ONLY);
+            assignAgentWorkerMode(dedicatedMemberMachineCount, agentCount(), CLIENTS_ONLY);
         }
     }
 
@@ -102,8 +95,8 @@ public class ComponentRegistry {
         }
     }
 
-    public void removeAgent(AgentData agentData) {
-        agents.remove(agentData);
+    public void removeAgent(AgentData agent) {
+        agents.remove(agent);
     }
 
     public int agentCount() {
@@ -111,7 +104,7 @@ public class ComponentRegistry {
     }
 
     public List<AgentData> getAgents() {
-        return unmodifiableList(agents);
+        return unmodifiableList(new LinkedList<AgentData>(agents));
     }
 
     public AgentData getAgent(SimulatorAddress simulatorAddress) {
@@ -145,9 +138,9 @@ public class ComponentRegistry {
     }
 
     public WorkerData getWorker(SimulatorAddress workerAddress) {
-        for (WorkerData workerData : workers) {
-            if (workerData.getAddress().equals(workerAddress)) {
-                return workerData;
+        for (WorkerData worker : workers) {
+            if (worker.getAddress().equals(workerAddress)) {
+                return worker;
             }
         }
         return null;
@@ -161,41 +154,41 @@ public class ComponentRegistry {
             List<WorkerParameters> workerParametersList,
             Map<String, String> tags) {
         List<WorkerData> result = new ArrayList<WorkerData>(workerParametersList.size());
-        for (WorkerParameters settings : workerParametersList) {
-            WorkerData workerData = new WorkerData(settings, tags);
+        for (WorkerParameters workerParameters : workerParametersList) {
+            WorkerData worker = new WorkerData(workerParameters, tags);
 
-            AgentData agentData = agents.get(workerData.getAddress().getAgentIndex() - 1);
-            agentData.addWorker(workerData);
-            agentData.updateWorkerIndex(workerData.getAddress().getAddressIndex());
+            AgentData agent = agents.get(worker.getAddress().getAgentIndex() - 1);
+            agent.addWorker(worker);
+            agent.updateWorkerIndex(worker.getAddress().getAddressIndex());
 
-            workers.add(workerData);
-            result.add(workerData);
+            workers.add(worker);
+            result.add(worker);
         }
         return result;
     }
 
     public synchronized void removeWorker(SimulatorAddress workerAddress) {
-        for (WorkerData workerData : workers) {
-            if (workerData.getAddress().equals(workerAddress)) {
-                removeWorker(workerData);
+        for (WorkerData worker : workers) {
+            if (worker.getAddress().equals(workerAddress)) {
+                removeWorker(worker);
                 break;
             }
         }
     }
 
     public synchronized WorkerData findWorker(SimulatorAddress workerAddress) {
-        for (WorkerData workerData : workers) {
-            if (workerData.getAddress().equals(workerAddress)) {
-                return workerData;
+        for (WorkerData worker : workers) {
+            if (worker.getAddress().equals(workerAddress)) {
+                return worker;
             }
         }
 
         return null;
     }
 
-    public synchronized void removeWorker(WorkerData workerData) {
-        agents.get(workerData.getAddress().getAgentIndex() - 1).removeWorker(workerData);
-        workers.remove(workerData);
+    public synchronized void removeWorker(WorkerData worker) {
+        agents.get(worker.getAddress().getAgentIndex() - 1).removeWorker(worker);
+        workers.remove(worker);
     }
 
     public int workerCount() {
@@ -203,8 +196,8 @@ public class ComponentRegistry {
     }
 
     public boolean hasClientWorkers() {
-        for (WorkerData workerData : workers) {
-            if (!workerData.isMemberWorker()) {
+        for (WorkerData worker : workers) {
+            if (!worker.isMemberWorker()) {
                 return true;
             }
         }
@@ -243,17 +236,17 @@ public class ComponentRegistry {
         }
 
         int workersPerAgent = (int) ceil(targetCount / (double) agents.size());
-        for (AgentData agentData : agents) {
+        for (AgentData agent : agents) {
             int count = 0;
-            for (WorkerData workerData : agentData.getWorkers()) {
-                if (!targetType.matches(workerData.isMemberWorker())) {
+            for (WorkerData worker : agent.getWorkers()) {
+                if (!targetType.matches(worker.isMemberWorker())) {
                     continue;
                 }
                 if (count++ < workersPerAgent && workerList.size() < targetCount) {
                     if (addWorkerData) {
-                        workerList.add(workerData);
+                        workerList.add(worker);
                     } else {
-                        workerList.add(workerData.getAddress().toString());
+                        workerList.add(worker.getAddress().toString());
                     }
                 }
             }
@@ -305,14 +298,13 @@ public class ComponentRegistry {
 
         List<TestData> tests = new ArrayList<TestData>(this.tests.values());
         sb.append(format("    Tests %s", tests.size())).append('\n');
-        for (TestData testData : tests) {
-
+        for (TestData test : tests) {
             sb.append("        ")
-                    .append(testData.getAddress())
+                    .append(test.getAddress())
                     .append(" ")
-                    .append(testData.getTestCase().getId())
+                    .append(test.getTestCase().getId())
                     .append(" ")
-                    .append(testData.getStatusString())
+                    .append(test.getStatusString())
                     .append('\n');
         }
 
@@ -333,9 +325,9 @@ public class ComponentRegistry {
             SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, testIndex);
             testCase.setId(id);
 
-            TestData testData = new TestData(testIndex, testAddress, testCase, testSuite);
-            result.add(testData);
-            tests.put(id, testData);
+            TestData test = new TestData(testIndex, testAddress, testCase, testSuite);
+            result.add(test);
+            tests.put(id, test);
         }
         return result;
     }
