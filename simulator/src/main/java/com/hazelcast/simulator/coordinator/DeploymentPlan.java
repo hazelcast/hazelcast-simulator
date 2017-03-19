@@ -70,9 +70,9 @@ public final class DeploymentPlan {
 
         List<SimulatorAddress> agents = allAgents(componentRegistry);
 
-        plan.assignToAgents(memberCount, "member", vendorDriver.loadWorkerParameters("member"), agents);
+        plan.assignToAgents(memberCount, "member", vendorDriver, agents);
 
-        plan.assignToAgents(clientCount, workerType, vendorDriver.loadWorkerParameters(workerType), agents);
+        plan.assignToAgents(clientCount, workerType, vendorDriver, agents);
 
         plan.printLayout();
 
@@ -89,7 +89,7 @@ public final class DeploymentPlan {
 
     public static DeploymentPlan createDeploymentPlan(
             ComponentRegistry componentRegistry,
-            WorkerParameters workerParameters,
+            VendorDriver vendorDriver,
             String workerType,
             int workerCount,
             List<SimulatorAddress> targetAgents) {
@@ -102,7 +102,7 @@ public final class DeploymentPlan {
 
         plan.initAgentWorkerLayouts(componentRegistry);
 
-        plan.assignToAgents(workerCount, workerType, workerParameters, targetAgents);
+        plan.assignToAgents(workerCount, workerType, vendorDriver, targetAgents);
 
         plan.printLayout();
 
@@ -111,15 +111,16 @@ public final class DeploymentPlan {
 
     private void assignToAgents(int workerCount,
                                 String workerType,
-                                WorkerParameters parameters,
+                                VendorDriver vendorDriver,
                                 List<SimulatorAddress> targetAgents) {
         for (int i = 0; i < workerCount; i++) {
             AgentWorkerLayout agentWorkerLayout = nextAgent(workerType, targetAgents);
-
-            agentWorkerLayout.registerWorker(parameters);
+            WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType);
+            agentWorkerLayout.registerWorker(workerParameters);
+            System.out.println("Created worker: " + workerParameters.get("WORKER_ADDRESS"));
 
             List<WorkerParameters> workerParametersList = workerDeployment.get(agentWorkerLayout.agent.getAddress());
-            workerParametersList.add(parameters);
+            workerParametersList.add(workerParameters);
         }
     }
 

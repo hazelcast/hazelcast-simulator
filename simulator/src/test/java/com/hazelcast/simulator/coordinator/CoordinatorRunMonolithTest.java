@@ -34,7 +34,6 @@ public class CoordinatorRunMonolithTest {
     private ComponentRegistry componentRegistry;
     private Agent agent;
     private CoordinatorRunMonolith run;
-    private WorkerParameters workerParameters;
     private Coordinator coordinator;
     private VendorDriver hazelcastDriver;
 
@@ -64,11 +63,6 @@ public class CoordinatorRunMonolithTest {
                 .setAgents(componentRegistry.getAgents())
                 .setAll(simulatorProperties.asPublicMap());
 
-        workerParameters = hazelcastDriver.loadWorkerParameters("member")
-                .set("WORKER_ADDRESS", "C_A1_W1")
-                .set("WORKER_INDEX", 1)
-                .set("WORKER_TYPE", "member");
-
         coordinator = new Coordinator(componentRegistry, coordinatorParameters);
         coordinator.start();
 
@@ -92,7 +86,7 @@ public class CoordinatorRunMonolithTest {
 
         DeploymentPlan deploymentPlan = createDeploymentPlan(
                 componentRegistry,
-                workerParameters,
+                hazelcastDriver,
                 "member",
                 1,
                 singletonList(agent.getProcessManager().getAgentAddress()));
@@ -114,7 +108,7 @@ public class CoordinatorRunMonolithTest {
 
         DeploymentPlan deploymentPlan = createDeploymentPlan(
                 componentRegistry,
-                workerParameters,
+                hazelcastDriver,
                 "member",
                 1,
                 singletonList(agent.getProcessManager().getAgentAddress()));
