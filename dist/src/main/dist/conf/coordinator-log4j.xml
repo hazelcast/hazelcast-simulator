@@ -40,14 +40,15 @@
         <appender-ref ref="bash"/>
     </logger>
 
-    <logger name="org.apache.activemq.transport.failover.FailoverTransport">
-        <level value="warn"/>
-    </logger>
-
     <!-- if there are SSH problems, put this on info or debug -->
     <logger name="net.schmizz">
         <level value="warn"/>
         <appender-ref ref="ssh"/>
+    </logger>
+
+    <logger name="org.apache.activemq">
+        <level value="error"/>
+        <appender-ref ref="console" />
     </logger>
 
     <root>
