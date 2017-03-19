@@ -468,7 +468,7 @@ class Worker:
                                  self.__load_dstat, args=[21]))
 
         refs.append(SeriesHandle("gc", "pause_time", "Pause time", "seconds",
-                                 self.__load_gc, args=[1, True]))
+                                 self.__load_gc, args=[1, True], is_points=True))
 
         refs.append(SeriesHandle("gc", "young_size_before_gc", "Young size before gc", "Size",
                                  self.__load_gc, args=[5, True], is_bytes=True))
