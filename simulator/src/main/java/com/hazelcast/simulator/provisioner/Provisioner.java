@@ -400,8 +400,9 @@ class Provisioner {
         String initScript = fileAsText(initScriptFile);
 
         initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
-        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
-        initScript = initScript.replaceAll(Pattern.quote("${cloudprovider}"), properties.getCloudProvider());
+        for (Map.Entry<String, String> entry : properties.asMap().entrySet()) {
+            initScript = initScript.replaceAll(Pattern.quote("${" +  entry.getKey() + "}"), entry.getValue());
+        }
 
         return initScript;
     }

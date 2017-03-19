@@ -247,31 +247,11 @@ public class SimulatorProperties {
     }
 
     public String getCloudIdentity() {
-        return loadDirectOrFile(CLOUD_IDENTITY);
+        return get(CLOUD_IDENTITY);
     }
 
     public String getCloudCredential() {
-        return loadDirectOrFile(CLOUD_CREDENTIAL);
-    }
-
-    private String loadDirectOrFile(String property) {
-        String value = get(property);
-        if (value == null) {
-            throw new IllegalArgumentException(format("Simulator property '%s' is not found", property));
-        }
-
-        File file = newFile(value);
-        if (file.exists()) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(format("Loading simulator property value for %s from file: %s", property, file.getAbsolutePath()));
-            }
-
-            return fileAsText(file).trim();
-        } else if (value.endsWith(".identity") || value.endsWith(".credential") || value.endsWith(".txt")) {
-            throw new CommandLineExitException("file [" + value + "] is not found");
-        } else {
-            return value.trim();
-        }
+        return get(CLOUD_CREDENTIAL);
     }
 
     public String get(String name) {
@@ -334,20 +314,41 @@ public class SimulatorProperties {
             return null;
         }
 
-        if ("GROUP_NAME".equals(name)) {
-            String username = System.getProperty("user.name").toLowerCase();
-
-            StringBuilder fixedUserName = new StringBuilder();
-            for (char character : username.toCharArray()) {
-                if (Character.isLetter(character) || Character.isDigit(character)) {
-                    fixedUserName.append(character);
-                }
-            }
-
-            return value.replace("${username}", fixedUserName.toString());
+        if (name.equals(CLOUD_IDENTITY) || name.equals(CLOUD_CREDENTIAL)) {
+            value = fixIdentityOrCredential(name, value);
+        } else if ("GROUP_NAME".equals(name)) {
+            value = fixGroupName(value);
         }
 
         value = value.trim();
+        return value;
+    }
+
+    private String fixGroupName(String value) {
+        String username = System.getProperty("user.name").toLowerCase();
+
+        StringBuilder fixedUserName = new StringBuilder();
+        for (char character : username.toCharArray()) {
+            if (Character.isLetter(character) || Character.isDigit(character)) {
+                fixedUserName.append(character);
+            }
+        }
+
+        value = value.replace("${username}", fixedUserName.toString());
+        return value;
+    }
+
+    private String fixIdentityOrCredential(String name, String value) {
+        File file = newFile(value);
+        if (file.exists()) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(format("Loading simulator property value for %s from file: %s", name, file.getAbsolutePath()));
+            }
+
+            value = fileAsText(file).trim();
+        } else if (value.endsWith(".identity") || value.endsWith(".credential") || value.endsWith(".txt")) {
+            throw new CommandLineExitException("file [" + value + "] is not found");
+        }
         return value;
     }
 

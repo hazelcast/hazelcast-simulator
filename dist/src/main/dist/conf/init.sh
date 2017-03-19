@@ -6,13 +6,11 @@
 #
 # NOTE: The following variables will be replaced with its proper values:
 # + ${version} -> the Simulator version
-# * ${user} -> the user name
-# * ${cloudprovider} -> the used cloud provider
+# + all simulator properties
 
 set -e
 #set -x
 
-# Install dstat.
 function installPackage {
     PACKAGE=$1
 
@@ -35,8 +33,17 @@ function installPackage {
 
 installPackage dstat
 
-# Fix for a bug in an old Kernel on EC2 instances.
-if [[ "${cloudprovider}" == "aws-ec2" ]]; then
+
+if [[ "${CLOUD_PROVIDER}" == "aws-ec2" ]]; then
+
+    # we modify the behavior of the instance so it terminates on shutdown (normally it stops)
+    EC2_INSTANCE_ID="`wget -q -O - http://instance-data/latest/meta-data/instance-id || die \"wget instance-id has failed: $?\"`"
+    ec2-modify-instance-attribute --aws-access-key ${CLOUD_IDENTITY} \
+                                  --aws-secret-key ${CLOUD_CREDENTIAL} \
+        --instance-initiated-shutdown-behavior terminate \
+        $EC2_INSTANCE_ID
+
+    # Fix for a bug in an old Kernel on EC2 instances.
     ver=$(awk -F. '{printf("%d%02d",$1,$2)}' <<< $(uname -r))
     if [ ${ver} -lt 319 ]; then
         echo 'Use Linux kernel 3.19+ when running Hazelcast on AWS'
@@ -57,7 +64,7 @@ if [ -d /mnt/ephemeral ] ; then
         echo "[/mnt/ephemeral/] exists, creating [/mnt/ephemeral/workers]"
         rm -fr hazelcast-simulator-${version}/workers
         sudo mkdir /mnt/ephemeral/workers
-        sudo chown -R ${user} /mnt/ephemeral/workers/
+        sudo chown -R ${SIMULATOR_USER} /mnt/ephemeral/workers/
         ln -s /mnt/ephemeral/workers/ hazelcast-simulator-${version}/workers
     fi
 else
