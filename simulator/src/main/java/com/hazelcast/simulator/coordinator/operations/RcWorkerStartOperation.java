@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator.operations;
 
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
 import java.util.HashMap;
@@ -26,7 +25,7 @@ public class RcWorkerStartOperation implements SimulatorOperation {
     private int count = 1;
     private String versionSpec;
     private String vmOptions = "";
-    private String workerType = WorkerType.MEMBER.name();
+    private String workerType = "member";
     private String hzConfig;
     private List<String> agentAddresses;
     private Map<String, String> tags = new HashMap<String, String>();

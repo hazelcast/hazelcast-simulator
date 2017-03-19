@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator.registry;
 
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
@@ -133,10 +132,10 @@ public class AgentData {
         workers.remove(workerData);
     }
 
-    public int getCount(WorkerType workerType) {
+    public int getCount(String workerType) {
         int result = 0;
         for (WorkerData workerData : workers) {
-            if (workerData.getSettings().getWorkerType().equals(workerType)) {
+            if (workerData.getParameters().getWorkerType().equals(workerType)) {
                 result++;
             }
         }
@@ -146,7 +145,7 @@ public class AgentData {
     public Set<String> getVersionSpecs() {
         Set<String> result = new HashSet<String>();
         for (WorkerData workerData : workers) {
-            result.add(workerData.getSettings().getVersionSpec());
+            result.add(workerData.getParameters().get("VERSION_SPEC"));
         }
         return result;
     }

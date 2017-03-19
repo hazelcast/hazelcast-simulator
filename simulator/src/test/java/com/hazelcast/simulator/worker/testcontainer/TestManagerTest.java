@@ -12,6 +12,7 @@ import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.tests.TestWithSlowSetup;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
@@ -33,21 +34,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestManagerTest {
 
     private TestManager manager;
     private Server server;
-    private HazelcastInstance hzInstance;
+    private VendorDriver vendorDriver;
     private File userDir;
 
     @Before
-    public void before() {
+    public void before() throws Exception {
         ExceptionReporter.reset();
         userDir = setupFakeUserDir();
         server = mock(Server.class);
-        hzInstance = mock(HazelcastInstance.class);
-        manager = new TestManager(server, hzInstance);
+        vendorDriver = mock(VendorDriver.class);
+        when(vendorDriver.getInstance()).thenReturn(mock(HazelcastInstance.class));
+        manager = new TestManager(server, vendorDriver);
     }
 
     @After

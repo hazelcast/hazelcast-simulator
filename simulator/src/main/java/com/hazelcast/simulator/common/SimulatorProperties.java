@@ -89,6 +89,24 @@ public class SimulatorProperties {
         return map;
     }
 
+    public Map<String, String> asPublicMap() {
+        Map<String, String> map = asMap();
+        for (Map.Entry entry : properties.entrySet()) {
+            String key = (String) entry.getKey();
+            map.put(key, get(key));
+        }
+
+        String cloudProvider = getCloudProvider();
+        if (!isTrueCloud(cloudProvider)) {
+            // if isn't a true cloud, we don't for the identity/credentials.
+            return map;
+        }
+
+        map.remove(CLOUD_IDENTITY);
+        map.remove(CLOUD_CREDENTIAL);
+        return map;
+    }
+
     /**
      * Initializes the SimulatorProperties with additional properties.
      *
@@ -294,8 +312,9 @@ public class SimulatorProperties {
         return fixValue(name, result);
     }
 
-    public void set(String name, String value) {
+    public SimulatorProperties set(String name, String value) {
         properties.put(name, new Value(false, value));
+        return this;
     }
 
     public Float getAsFloat(String property) {
@@ -331,6 +350,7 @@ public class SimulatorProperties {
         value = value.trim();
         return value;
     }
+
 
     private static final class Value {
         final boolean isDefault;

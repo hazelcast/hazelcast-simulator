@@ -3,14 +3,13 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Server;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
 
-public class TestContainer_TimeStep_ThrottlingLoggerTest extends TestContainer_AbstractTest{
+public class TestContainer_TimeStep_ThrottlingLoggerTest extends TestContainer_AbstractTest {
 
     @Test
     public void test() throws Exception {
@@ -29,7 +28,7 @@ public class TestContainer_TimeStep_ThrottlingLoggerTest extends TestContainer_A
         }
     }
 
-    public static class ThrottlingLoggerTest extends AbstractTest {
+    public static class ThrottlingLoggerTest {
         @TimeStep
         public void timeStep() {
             throw new StopException();

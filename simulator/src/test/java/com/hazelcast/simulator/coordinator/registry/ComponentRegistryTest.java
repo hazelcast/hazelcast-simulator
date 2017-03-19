@@ -1,22 +1,20 @@
 package com.hazelcast.simulator.coordinator.registry;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.coordinator.TestSuite;
+import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 public class ComponentRegistryTest {
 
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
-
 
     @Test(expected = CommandLineExitException.class)
     public void test_assignDedicatedMemberMachines_whenDedicatedMemberCountNegative() {
@@ -103,33 +100,33 @@ public class ComponentRegistryTest {
 
     @Test
     public void testAddWorkers() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(10);
+        SimulatorAddress agentAddress = addAgent();
+        List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 10);
 
         assertEquals(0, componentRegistry.workerCount());
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        componentRegistry.addWorkers(parametersList);
 
         assertEquals(10, componentRegistry.workerCount());
     }
 
     @Test
     public void testRemoveWorker_viaSimulatorAddress() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(5);
+        SimulatorAddress agentAddress = addAgent();
+        List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 5);
 
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        componentRegistry.addWorkers(parametersList);
         assertEquals(5, componentRegistry.workerCount());
 
-        componentRegistry.removeWorker(new SimulatorAddress(AddressLevel.WORKER, 1, 3, 0));
+        componentRegistry.removeWorker(new SimulatorAddress(WORKER, 1, 3, 0));
         assertEquals(4, componentRegistry.workerCount());
     }
 
     @Test
     public void testRemoveWorker_viaWorkerData() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(5);
+        SimulatorAddress agentAddress = addAgent();
+        List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 5);
 
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        componentRegistry.addWorkers(parametersList);
         assertEquals(5, componentRegistry.workerCount());
 
         componentRegistry.removeWorker(componentRegistry.getWorkers().get(0));
@@ -138,41 +135,41 @@ public class ComponentRegistryTest {
 
     @Test
     public void testHasClientWorkers_withoutClientWorkers() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(2);
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        SimulatorAddress agentAddress = addAgent();
+        List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 2);
+        componentRegistry.addWorkers(parametersList);
 
         assertFalse(componentRegistry.hasClientWorkers());
     }
 
     @Test
     public void testHasClientWorkers_withClientWorkers() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(2);
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        SimulatorAddress agentAddress = addAgent();
+        List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 2);
+        componentRegistry.addWorkers(parametersList);
 
-        settingsList = getWorkerProcessSettingsList(2, WorkerType.JAVA_CLIENT);
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        parametersList = newWorkerParametersList(agentAddress, 2, "javaclient");
+        componentRegistry.addWorkers(parametersList);
 
         assertTrue(componentRegistry.hasClientWorkers());
     }
 
     @Test
     public void testGetWorkers() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        List<WorkerProcessSettings> settingsList = getWorkerProcessSettingsList(10);
+        SimulatorAddress agentAddress = addAgent();
+        List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 10);
 
-        componentRegistry.addWorkers(parentAddress, settingsList);
+        componentRegistry.addWorkers(parametersList);
         assertEquals(10, componentRegistry.workerCount());
 
         List<WorkerData> workers = componentRegistry.getWorkers();
         for (int i = 0; i < 10; i++) {
             WorkerData workerData = workers.get(i);
             assertEquals(i + 1, workerData.getAddress().getWorkerIndex());
-            assertEquals(AddressLevel.WORKER, workerData.getAddress().getAddressLevel());
+            assertEquals(WORKER, workerData.getAddress().getAddressLevel());
 
-            assertEquals(i + 1, workerData.getSettings().getWorkerIndex());
-            assertEquals(WorkerType.MEMBER, workerData.getSettings().getWorkerType());
+            //assertEquals(i + 1, workerData.getParameters().getWorkerIndex());
+            assertEquals("member", workerData.getParameters().getWorkerType());
         }
     }
 
@@ -183,15 +180,15 @@ public class ComponentRegistryTest {
         componentRegistry.addAgent("172.16.16.3", "127.0.0.1");
 
         for (AgentData agentData : componentRegistry.getAgents()) {
-            List<WorkerProcessSettings> memberSettings = getWorkerProcessSettingsList(1, WorkerType.MEMBER);
-            List<WorkerProcessSettings> clientSettings = getWorkerProcessSettingsList(1, WorkerType.JAVA_CLIENT);
+            List<WorkerParameters> memberSettings = newWorkerParametersList(agentData.getAddress(), 1, "member");
+            List<WorkerParameters> clientSettings = newWorkerParametersList(agentData.getAddress(), 1, "javaclient");
 
-            componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
-            componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
-            componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
-            componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
-            componentRegistry.addWorkers(agentData.getAddress(), memberSettings);
-            componentRegistry.addWorkers(agentData.getAddress(), clientSettings);
+            componentRegistry.addWorkers(memberSettings);
+            componentRegistry.addWorkers(clientSettings);
+            componentRegistry.addWorkers(memberSettings);
+            componentRegistry.addWorkers(clientSettings);
+            componentRegistry.addWorkers(memberSettings);
+            componentRegistry.addWorkers(clientSettings);
         }
         assertEquals(18, componentRegistry.workerCount());
 
@@ -225,9 +222,9 @@ public class ComponentRegistryTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetWorkers_withHigherWorkerCountThanRegisteredWorkers() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        componentRegistry.addWorkers(parentAddress, getWorkerProcessSettingsList(2, WorkerType.MEMBER));
-        componentRegistry.addWorkers(parentAddress, getWorkerProcessSettingsList(2, WorkerType.JAVA_CLIENT));
+        SimulatorAddress agentAddress = addAgent();
+        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
+        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
         assertEquals(4, componentRegistry.workerCount());
 
         componentRegistry.getWorkerAddresses(TargetType.ALL, 5);
@@ -235,9 +232,9 @@ public class ComponentRegistryTest {
 
     @Test(expected = IllegalStateException.class)
     public void testGetWorkers_getClientWorkers_notEnoughWorkersFound() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        componentRegistry.addWorkers(parentAddress, getWorkerProcessSettingsList(2, WorkerType.MEMBER));
-        componentRegistry.addWorkers(parentAddress, getWorkerProcessSettingsList(2, WorkerType.JAVA_CLIENT));
+        SimulatorAddress agentAddress = addAgent();
+        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
+        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
         assertEquals(4, componentRegistry.workerCount());
 
         componentRegistry.getWorkerAddresses(TargetType.CLIENT, 3);
@@ -245,9 +242,9 @@ public class ComponentRegistryTest {
 
     @Test(expected = IllegalStateException.class)
     public void testGetWorkers_getMemberWorkers_notEnoughWorkersFound() {
-        SimulatorAddress parentAddress = getSingleAgent();
-        componentRegistry.addWorkers(parentAddress, getWorkerProcessSettingsList(2, WorkerType.MEMBER));
-        componentRegistry.addWorkers(parentAddress, getWorkerProcessSettingsList(2, WorkerType.JAVA_CLIENT));
+        SimulatorAddress agentAddress = addAgent();
+        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
+        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
         assertEquals(4, componentRegistry.workerCount());
 
         componentRegistry.getWorkerAddresses(TargetType.MEMBER, 3);
@@ -333,22 +330,23 @@ public class ComponentRegistryTest {
         assertEquals("Test2", testData.getTestCase().getId());
     }
 
-    private SimulatorAddress getSingleAgent() {
+    private SimulatorAddress addAgent() {
         componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
         return componentRegistry.getFirstAgent().getAddress();
     }
 
-    private List<WorkerProcessSettings> getWorkerProcessSettingsList(int workerCount) {
-        return getWorkerProcessSettingsList(workerCount, WorkerType.MEMBER);
+    private List<WorkerParameters> newWorkerParametersList(SimulatorAddress agent, int workerCount) {
+        return newWorkerParametersList(agent, workerCount, "member");
     }
 
-    private List<WorkerProcessSettings> getWorkerProcessSettingsList(int workerCount, WorkerType workerType) {
-        List<WorkerProcessSettings> settingsList = new ArrayList<WorkerProcessSettings>();
-        Map<String, String> env = new HashMap<String, String>();
-        for (int i = 1; i <= workerCount; i++) {
-            WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(i, workerType, "", "exit 0", 0, env);
-            settingsList.add(workerProcessSettings);
+    private List<WorkerParameters> newWorkerParametersList(SimulatorAddress agent, int workerCount, String workerType) {
+        List<WorkerParameters> result = new ArrayList<WorkerParameters>();
+        for (int k = 1; k <= workerCount; k++) {
+            result.add(new WorkerParameters()
+                    .set("WORKER_TYPE", workerType)
+                    .set("WORKER_INDEX", k )
+                    .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), k , 0)));
         }
-        return settingsList;
+        return result;
     }
 }

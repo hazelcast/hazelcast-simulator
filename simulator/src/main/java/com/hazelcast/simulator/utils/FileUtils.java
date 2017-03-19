@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -320,6 +321,21 @@ public final class FileUtils {
         }
     }
 
+    public static void copy(File from, File to) {
+        FileOutputStream out;
+        try {
+            out = new FileOutputStream(to);
+        } catch (FileNotFoundException e) {
+            throw new UncheckedIOException(e);
+        }
+        try {
+            copy(from, out);
+        } finally {
+            closeQuietly(out);
+        }
+
+    }
+
     public static File getUserDir() {
         String userDirTest = System.getProperty("user.dir.test");
         if (userDirTest != null) {
@@ -448,7 +464,7 @@ public final class FileUtils {
     }
 
     public static File getConfigurationFile(String filename) {
-        File file = new File(filename).getAbsoluteFile();
+        File file = new File(getUserDir(), filename).getAbsoluteFile();
         if (file.exists()) {
             return file;
         } else {

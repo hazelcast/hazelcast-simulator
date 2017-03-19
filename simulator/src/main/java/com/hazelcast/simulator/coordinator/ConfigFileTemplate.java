@@ -56,13 +56,13 @@ public class ConfigFileTemplate {
         return this;
     }
 
-    public ConfigFileTemplate addReplacement(String key, String value) {
-        this.hardReplacements.put(key, value);
+    public ConfigFileTemplate addReplacement(String key, Object value) {
+        this.hardReplacements.put(key, "" + value);
         return this;
     }
 
-    public ConfigFileTemplate withComponentRegistry(ComponentRegistry componentRegistry) {
-        this.componentRegistry = componentRegistry;
+    public ConfigFileTemplate withAgents(List<AgentData> agents) {
+      //  this.agents = agents;
         return this;
     }
 

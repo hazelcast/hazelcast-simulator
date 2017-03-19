@@ -15,26 +15,15 @@
  */
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.client.config.XmlClientConfigBuilder;
-import com.hazelcast.config.Config;
-import com.hazelcast.config.XmlConfigBuilder;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.core.Partition;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.simulator.common.WorkerType;
-import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
-import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.worker.Worker;
 import org.apache.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -43,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
-import static java.lang.String.format;
 
 public final class HazelcastUtils {
 
@@ -54,20 +42,6 @@ public final class HazelcastUtils {
     private static final Logger LOGGER = Logger.getLogger(Worker.class);
 
     private HazelcastUtils() {
-    }
-
-    public static HazelcastInstance createServerHazelcastInstance(String hzConfigFile) throws Exception {
-        XmlConfigBuilder configBuilder = new XmlConfigBuilder(hzConfigFile);
-        Config config = configBuilder.build();
-
-        return Hazelcast.newHazelcastInstance(config);
-    }
-
-    public static HazelcastInstance createClientHazelcastInstance(String hzConfigFile) throws Exception {
-        XmlClientConfigBuilder configBuilder = new XmlClientConfigBuilder(hzConfigFile);
-        ClientConfig clientConfig = configBuilder.build();
-
-        return HazelcastClient.newHazelcastClient(clientConfig);
     }
 
     public static void warmupPartitions(HazelcastInstance hazelcastInstance) {
@@ -117,14 +91,14 @@ public final class HazelcastUtils {
         return memberIterator.hasNext() && memberIterator.next().equals(hazelcastInstance.getLocalEndpoint());
     }
 
-    public static String getHazelcastAddress(WorkerType workerType, String publicAddress, HazelcastInstance hazelcastInstance) {
+    public static String getHazelcastAddress(String workerType, String publicAddress, HazelcastInstance hazelcastInstance) {
         if (hazelcastInstance != null) {
             InetSocketAddress socketAddress = getInetSocketAddress(hazelcastInstance);
             if (socketAddress != null) {
                 return socketAddress.getAddress().getHostAddress() + ':' + socketAddress.getPort();
             }
         }
-        return (workerType == WorkerType.MEMBER ? "server:" : "client:") + publicAddress;
+        return (workerType.equals("member") ? "server:" : "client:") + publicAddress;
     }
 
     private static InetSocketAddress getInetSocketAddress(HazelcastInstance hazelcastInstance) {
@@ -137,66 +111,5 @@ public final class HazelcastUtils {
                 return null;
             }
         }
-    }
-
-    public static String initMemberHzConfig(String memberHzConfig,
-                                            ComponentRegistry componentRegistry,
-                                            String licenseKey,
-                                            Map<String, String> env,
-                                            boolean liteMember) {
-
-        ConfigFileTemplate template = new ConfigFileTemplate(memberHzConfig);
-        template.addEnvironment("licenseKey", licenseKey);
-        template.addEnvironment(env);
-        template.withComponentRegistry(componentRegistry);
-
-        template.addReplacement("<!--MEMBERS-->",
-                createAddressConfig("member", componentRegistry, env.get("HAZELCAST_PORT")));
-
-        if (licenseKey != null) {
-            template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
-        }
-
-        String manCenterURL = env.get("MANAGEMENT_CENTER_URL");
-        if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
-            String updateInterval = env.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
-            String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
-            template.addReplacement("<!--MANAGEMENT_CENTER_CONFIG-->",
-                    format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
-                            updateIntervalAttr, manCenterURL));
-        }
-
-        if (liteMember) {
-            template.addReplacement("<!--LITE_MEMBER_CONFIG-->", "<lite-member enabled=\"true\"/>");
-        }
-
-        return template.render();
-    }
-
-    public static String initClientHzConfig(String clientHzConfig,
-                                            ComponentRegistry componentRegistry,
-                                            Map<String, String> env,
-                                            String licenseKey) {
-        ConfigFileTemplate template = new ConfigFileTemplate(clientHzConfig);
-        template.withComponentRegistry(componentRegistry);
-        template.addEnvironment("licenseKey", licenseKey);
-        template.addEnvironment(env);
-
-        template.addReplacement("<!--MEMBERS-->",
-                createAddressConfig("address", componentRegistry, env.get("HAZELCAST_PORT")));
-        if (licenseKey != null) {
-            template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
-        }
-
-        return template.render();
-    }
-
-    static String createAddressConfig(String tagName, ComponentRegistry componentRegistry, String port) {
-        StringBuilder members = new StringBuilder();
-        for (AgentData agentData : componentRegistry.getAgents()) {
-            String hostAddress = agentData.getPrivateAddress();
-            members.append(format("<%s>%s:%s</%s>%n", tagName, hostAddress, port, tagName));
-        }
-        return members.toString();
     }
 }

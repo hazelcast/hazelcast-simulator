@@ -222,7 +222,12 @@ public class PropertyBinding {
             assertFieldType(fieldType, HazelcastInstance.class, InjectHazelcastInstance.class);
             setFieldValue(object, field, vendorInstance);
         } else if (field.isAnnotationPresent(InjectVendor.class)) {
-            assertFieldType(fieldType, HazelcastInstance.class, InjectVendor.class);
+            if (vendorInstance == null) {
+                throw new IllegalTestException("No vendor found");
+            }
+
+            Class vendorType = vendorInstance.getClass();
+            assertFieldType(vendorType, fieldType, InjectVendor.class);
             setFieldValue(object, field, vendorInstance);
         } else if (field.isAnnotationPresent(InjectProbe.class)) {
             assertFieldType(fieldType, Probe.class, InjectProbe.class);
@@ -231,10 +236,11 @@ public class PropertyBinding {
         }
     }
 
-    private static void assertFieldType(Class fieldType, Class expectedFieldType, Class<? extends Annotation> annotation) {
-        if (!expectedFieldType.equals(fieldType)) {
-            throw new IllegalTestException(format("Found %s annotation on field of type %s, but %s is required!",
-                    annotation.getName(), fieldType.getName(), expectedFieldType.getName()));
+    private static void assertFieldType(Class actualType, Class requiredType, Class<? extends Annotation> annotation) {
+        if (!requiredType.isAssignableFrom(actualType)) {
+            throw new IllegalTestException(format("Wrong type. "
+                            + "Found %s annotation on field of type %s, but %s is required!",
+                    annotation.getName(), actualType.getName(), requiredType.getName()));
         }
     }
 

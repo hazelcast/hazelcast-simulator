@@ -1,13 +1,11 @@
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.WorkerType;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
+import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.TestUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -15,12 +13,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.File;
-import java.util.HashMap;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -50,18 +48,14 @@ public class FailureCollectorTest {
         failureCollector = new FailureCollector(outputDirectory, componentRegistry);
 
         agentAddress = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
-        WorkerProcessSettings workerSettings = new WorkerProcessSettings(
-                1,
-                WorkerType.MEMBER,
-                "any version",
-                "any script",
-                0,
-                new HashMap<String, String>());
 
-        workerAddress = new SimulatorAddress(
-                AddressLevel.WORKER, agentAddress.getAgentIndex(), workerSettings.getWorkerIndex(), 0);
 
-        componentRegistry.addWorkers(agentAddress, singletonList(workerSettings));
+        workerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 1, 0);
+
+        WorkerParameters workerParameters = new WorkerParameters()
+                .set("WORKER_ADDRESS", workerAddress);
+
+        componentRegistry.addWorkers(singletonList(workerParameters));
 
         exceptionFailure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", "testId", null);
@@ -83,7 +77,7 @@ public class FailureCollectorTest {
 
     @Test
     public void notify_whenNonExistingWorker_thenIgnore() {
-        SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAgentIndex(), 100, 0);
+        SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 100, 0);
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", "testId", null);
 

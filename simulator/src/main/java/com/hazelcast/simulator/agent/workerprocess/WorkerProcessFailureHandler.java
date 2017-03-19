@@ -46,7 +46,7 @@ public class WorkerProcessFailureHandler {
                 type,
                 workerAddress,
                 agentAddress,
-                workerProcess.getHazelcastAddress(),
+                workerProcess.getPid(),
                 workerId,
                 testId,
                 cause);

@@ -1,5 +1,6 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
+import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Server;
@@ -22,7 +23,7 @@ public class TestContainer_TimeStep_LogFrequencyTest extends TestContainer_Abstr
 
         TestContextImpl testContext = new TestContextImpl(
                 testCase.getId(), "localhost", mock(Server.class));
-        TestContainer container = new TestContainer(testContext, testInstance, testCase);
+        TestContainer container = new TestContainer(testContext, testInstance, testCase, mock(HazelcastInstance.class));
 
         for (TestPhase phase : TestPhase.values()) {
             container.invoke(phase);

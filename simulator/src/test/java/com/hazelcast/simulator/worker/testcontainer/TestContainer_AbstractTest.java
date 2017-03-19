@@ -36,7 +36,7 @@ public abstract class TestContainer_AbstractTest {
     }
 
     <T> TestContainer createTestContainer(T test) {
-        return new TestContainer(testContext, test, new TestCase("foo"), null);
+        return new TestContainer(testContext, test, new TestCase("foo"), mock(HazelcastInstance.class));
     }
 
     <T> TestContainer createTestContainer(T test, HazelcastInstance hz) {
@@ -44,7 +44,7 @@ public abstract class TestContainer_AbstractTest {
     }
 
     <T> TestContainer createTestContainer(T test, TestCase testCase) {
-        return new TestContainer(testContext, test, testCase, null);
+        return new TestContainer(testContext, test, testCase, mock(HazelcastInstance.class));
     }
 
     public static class BaseTest {

@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import java.util.Collection;
 
-import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
@@ -40,8 +39,7 @@ public class WorkerProcessManagerTest {
         secondWorkerProcess.setProcess(mock(Process.class));
 
         Server server = mock(Server.class);
-        workerProcessManager = new WorkerProcessManager(server,
-                SimulatorAddress.fromString("C_A1"), "127.0.0.1", DEFAULT_AGENT_PORT);
+        workerProcessManager = new WorkerProcessManager(server, SimulatorAddress.fromString("C_A1"), "127.0.0.1");
         workerProcessManager.add(firstWorkerAddress, firstWorkerProcess);
         workerProcessManager.add(secondWorkerAddress, secondWorkerProcess);
     }

@@ -80,7 +80,7 @@ public class TerminateWorkersTask {
         Set<WorkerData> members = new HashSet<WorkerData>();
         for (WorkerData worker : componentRegistry.getWorkers()) {
             worker.setIgnoreFailures(true);
-            if (worker.getSettings().getWorkerType().isMember()) {
+            if (worker.getParameters().getWorkerType().equals("member")) {
                 members.add(worker);
             } else {
                 clients.add(worker);

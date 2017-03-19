@@ -15,29 +15,28 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.simulator.protocol.Promise;
-import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.EmbeddedScriptCommand;
+import com.hazelcast.simulator.utils.NativeUtils;
+import com.hazelcast.simulator.vendors.VendorDriver;
+import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
 public class ScriptExecutor {
     private static final Logger LOGGER = Logger.getLogger(ScriptExecutor.class);
 
-    private final HazelcastInstance hazelcastInstance;
+    private final VendorDriver vendorDriver;
 
-    public ScriptExecutor(HazelcastInstance hazelcastInstance) {
-        this.hazelcastInstance = hazelcastInstance;
+    public ScriptExecutor(VendorDriver vendorDriver) {
+        this.vendorDriver = vendorDriver;
     }
 
     public void execute(final ExecuteScriptOperation operation, final Promise promise) {
@@ -76,10 +75,7 @@ public class ScriptExecutor {
             @Override
             public String call() throws Exception {
                 Map<String, Object> environment = new HashMap<String, Object>();
-                File pidFile = new File(getUserDir(), "worker.pid");
-                if (pidFile.exists()) {
-                    environment.put("PID", fileAsText(pidFile));
-                }
+                environment.put("PID", NativeUtils.getPID());
 
                 return new BashCommand(command)
                         .setDirectory(getUserDir())
@@ -97,7 +93,7 @@ public class ScriptExecutor {
             @Override
             public String call() throws Exception {
                 Object result = new EmbeddedScriptCommand(command)
-                        .addEnvironment("hazelcastInstance", hazelcastInstance)
+                        .addEnvironment("vendor", vendorDriver.getInstance())
                         .setEngineName(extension)
                         .execute();
                 LOGGER.info(format("Script [%s] with [%s]", command, result));

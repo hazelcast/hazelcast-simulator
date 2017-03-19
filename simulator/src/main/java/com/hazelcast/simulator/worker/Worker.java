@@ -15,21 +15,23 @@
  */
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.core.HazelcastInstance;
+import com.amazonaws.util.StringInputStream;
 import com.hazelcast.simulator.common.ShutdownThread;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.ExceptionReporter;
-import com.hazelcast.simulator.utils.NativeUtils;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import com.hazelcast.simulator.worker.performance.PerformanceMonitor;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.util.List;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
@@ -37,81 +39,75 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
+import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
-import static com.hazelcast.simulator.utils.HazelcastUtils.createClientHazelcastInstance;
-import static com.hazelcast.simulator.utils.HazelcastUtils.createServerHazelcastInstance;
-import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
-import static com.hazelcast.simulator.utils.HazelcastUtils.warmupPartitions;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
-import static java.lang.Boolean.parseBoolean;
+import static com.hazelcast.simulator.vendors.VendorDriver.newVendorDriver;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
 public class Worker {
 
     private static final String DASHES = "---------------------------";
-
     private static final Logger LOGGER = Logger.getLogger(Worker.class);
 
-    private final AtomicBoolean shutdown = new AtomicBoolean();
-
-    private final WorkerType type;
+    private final AtomicBoolean shutdownStarted = new AtomicBoolean();
     private final String publicAddress;
-
-    private final boolean autoCreateHzInstance;
-    private final String hzConfigFile;
-
-    private final HazelcastInstance hazelcastInstance;
-
     private final PerformanceMonitor performanceMonitor;
     private final Server server;
     private final TestManager testManager;
-
+    private final VendorDriver vendorDriver;
+    private final Map<String, String> parameters;
+    private final SimulatorAddress workerAddress;
     private ShutdownThread shutdownThread;
 
-    public Worker(WorkerType type,
-                  String publicAddress,
-                  SimulatorAddress workerAddress,
-                  int agentPort,
-                  String hzConfigFile,
-                  boolean autoCreateHzInstance,
-                  int workerPerformanceMonitorIntervalSeconds) throws Exception {
-        this.type = type;
-        this.publicAddress = publicAddress;
+    public Worker(Map<String, String> parameters) throws Exception {
+        this.parameters = parameters;
+        this.publicAddress = parameters.get("PUBLIC_ADDRESS");
+        this.workerAddress = SimulatorAddress.fromString(parameters.get("WORKER_ADDRESS"));
 
-        this.autoCreateHzInstance = autoCreateHzInstance;
-        this.hzConfigFile = hzConfigFile;
-
-        this.hazelcastInstance = getHazelcastInstance();
+        this.vendorDriver = newVendorDriver(parameters.get("VENDOR"))
+                .setAll(parameters);
 
         this.server = new Server("workers")
-                .setBrokerURL(localIp(), agentPort)
+                .setBrokerURL(localIp(), parseInt(parameters.get("AGENT_PORT")))
                 .setSelfAddress(workerAddress);
 
-        this.testManager = new TestManager(server, hazelcastInstance);
+        this.testManager = new TestManager(server, vendorDriver);
 
-        ScriptExecutor scriptExecutor = new ScriptExecutor(hazelcastInstance);
+        ScriptExecutor scriptExecutor = new ScriptExecutor(vendorDriver);
 
         server.setProcessor(new WorkerOperationProcessor(this, testManager, scriptExecutor));
 
         Runtime.getRuntime().addShutdownHook(new WorkerShutdownThread(true));
 
-        this.performanceMonitor = initWorkerPerformanceMonitor(workerPerformanceMonitorIntervalSeconds);
+        int interval = Integer.parseInt(parameters.get("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS"));
+        this.performanceMonitor = new PerformanceMonitor(server, testManager, interval);
     }
 
-    public void start() {
+    public void start() throws Exception {
+        String type = parameters.get("WORKER_TYPE");
+
+        logHeader("Hazelcast Worker #" + workerAddress + " (" + type + ')');
+        logInterestingSystemProperties();
+        log("process ID: " + getPID());
+        log("Public address: " + publicAddress);
+
         server.start();
 
-        if (performanceMonitor != null) {
-            performanceMonitor.start();
-        }
+        performanceMonitor.start();
+
+        vendorDriver.createVendorInstance();
+
         // we need to signal start after everything has completed. Otherwise messages could be send on the agent topic
         // without the agent being subscribed.
-        signalStartToAgent();
+        writeText("" + getPID(), new File(getUserDir(), "worker.pid"));
+
+        logHeader("Successfully started Worker #" + workerAddress);
     }
 
     public void shutdown(TerminateWorkerOperation op) {
@@ -132,90 +128,32 @@ public class Worker {
         return publicAddress;
     }
 
-    private HazelcastInstance getHazelcastInstance() throws Exception {
-        HazelcastInstance instance = null;
-        if (autoCreateHzInstance) {
-            logHeader("Creating " + type + " HazelcastInstance");
-            if (type.equals(WorkerType.JAVA_CLIENT)) {
-                instance = createClientHazelcastInstance(hzConfigFile);
-            } else {
-                instance = createServerHazelcastInstance(hzConfigFile);
-            }
-            logHeader("Successfully created " + type + " HazelcastInstance");
-
-            warmupPartitions(instance);
-        }
-        return instance;
-    }
-
-    private PerformanceMonitor initWorkerPerformanceMonitor(int intervalSeconds) {
-        if (intervalSeconds < 1) {
-            return null;
-        }
-        return new PerformanceMonitor(server, testManager, intervalSeconds);
-    }
-
-    private void signalStartToAgent() {
-        String address = getHazelcastAddress(type, publicAddress, hazelcastInstance);
-        File file = new File(getUserDir(), "worker.address");
-        writeText(address, file);
-    }
-
     public static void main(String[] args) {
-        int pid = NativeUtils.getPID();
-        LOGGER.info("PID: " + pid);
-        writeText("" + pid, new File(getUserDir(), "worker.pid"));
-
         try {
-            startWorker();
+            log("Hazelcast Simulator Worker");
+            log("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
+            log("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
+
+            Map<String, String> properties = loadParameters();
+
+            Worker worker = new Worker(properties);
+            worker.start();
         } catch (Exception e) {
             ExceptionReporter.report(null, e);
             exitWithError(LOGGER, "Could not start Hazelcast Simulator Worker!", e);
         }
     }
 
-    static Worker startWorker() throws Exception {
-        echo("Hazelcast Simulator Worker");
-        echo("Version: %s, Commit: %s, Build Time: %s", getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime());
-        echo("SIMULATOR_HOME: %s%n", getSimulatorHome().getAbsolutePath());
+    @NotNull
+    private static Map<String, String> loadParameters() throws IOException {
+        Properties p = new Properties();
+        p.load(new StringInputStream(fileAsText(new File(getUserDir(), "parameters"))));
 
-        String workerId = System.getProperty("workerId");
-        WorkerType type = new WorkerType(System.getProperty("workerType"));
-
-        String publicAddress = System.getProperty("publicAddress");
-        SimulatorAddress workerAddress = SimulatorAddress.fromString(System.getProperty("workerAddress"));
-        int agentPort = parseInt(System.getProperty("agentPort"));
-        String hzConfigFile = System.getProperty("hzConfigFile");
-
-        boolean autoCreateHzInstance = parseBoolean(System.getProperty("autoCreateHzInstance", "true"));
-        int workerPerformanceMonitorIntervalSeconds = parseInt(System.getProperty("workerPerformanceMonitorIntervalSeconds"));
-
-        logHeader("Hazelcast Worker #" + workerAddress + " (" + type + ')');
-        logInputArguments();
-        logInterestingSystemProperties();
-        echo("process ID: " + getPID());
-
-        echo("Worker id: " + workerId);
-        echo("Worker type: " + type);
-
-        echo("Public address: " + publicAddress);
-        echo("Agent port: " + agentPort);
-
-        echo("autoCreateHzInstance: " + autoCreateHzInstance);
-        echo("workerPerformanceMonitorIntervalSeconds: " + workerPerformanceMonitorIntervalSeconds);
-
-        Worker worker = new Worker(type, publicAddress, workerAddress, agentPort, hzConfigFile,
-                autoCreateHzInstance, workerPerformanceMonitorIntervalSeconds);
-        worker.start();
-
-        logHeader("Successfully started Hazelcast Worker #" + workerAddress);
-
-        return worker;
-    }
-
-    private static void logInputArguments() {
-        List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        echo("JVM input arguments: " + inputArguments);
+        Map<String, String> properties = new HashMap<String, String>();
+        for (Map.Entry<Object, Object> entry : p.entrySet()) {
+            properties.put("" + entry.getKey(), "" + entry.getValue());
+        }
+        return properties;
     }
 
     private static void logInterestingSystemProperties() {
@@ -236,7 +174,7 @@ public class Worker {
     }
 
     private static void logSystemProperty(String name) {
-        echo("%s=%s", name, System.getProperty(name));
+        log("%s=%s", name, System.getProperty(name));
     }
 
     private static void logHeader(String header) {
@@ -244,28 +182,24 @@ public class Worker {
         builder.append(DASHES).append(' ').append(header).append(' ').append(DASHES);
 
         String dashes = fillString(builder.length(), '-');
-        echo(dashes);
-        echo(builder.toString());
-        echo(dashes);
+        log(dashes);
+        log(builder.toString());
+        log(dashes);
     }
 
-    private static void echo(String message, Object... args) {
+    private static void log(String message, Object... args) {
         LOGGER.info(message == null ? "null" : format(message, args));
     }
 
     private final class WorkerShutdownThread extends ShutdownThread {
 
-        private WorkerShutdownThread(boolean ensureProcessShutdown) {
-            super("WorkerShutdownThread", shutdown, ensureProcessShutdown);
+        private WorkerShutdownThread(boolean realShutdown) {
+            super("WorkerShutdownThread", shutdownStarted, realShutdown);
         }
 
         @Override
         public void doRun() {
-            if (hazelcastInstance != null) {
-                echo("Stopping HazelcastInstance...");
-                hazelcastInstance.shutdown();
-            }
-
+            closeQuietly(vendorDriver);
             closeQuietly(performanceMonitor);
         }
     }

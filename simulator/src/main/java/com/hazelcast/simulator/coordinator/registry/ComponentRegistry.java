@@ -15,14 +15,13 @@
  */
 package com.hazelcast.simulator.coordinator.registry;
 
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.common.WorkerType;
 import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.coordinator.TestSuite;
+import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 
 import java.util.ArrayList;
@@ -154,17 +153,16 @@ public class ComponentRegistry {
         return null;
     }
 
-    public List<WorkerData> addWorkers(SimulatorAddress parentAddress, List<WorkerProcessSettings> settingsList) {
-        return addWorkers(parentAddress, settingsList, new HashMap<String, String>());
+    public List<WorkerData> addWorkers(List<WorkerParameters> settingsList) {
+        return addWorkers(settingsList, new HashMap<String, String>());
     }
 
     public synchronized List<WorkerData> addWorkers(
-            SimulatorAddress parentAddress,
-            List<WorkerProcessSettings> settingsList,
+            List<WorkerParameters> workerParametersList,
             Map<String, String> tags) {
-        List<WorkerData> result = new ArrayList<WorkerData>(settingsList.size());
-        for (WorkerProcessSettings settings : settingsList) {
-            WorkerData workerData = new WorkerData(parentAddress, settings, tags);
+        List<WorkerData> result = new ArrayList<WorkerData>(workerParametersList.size());
+        for (WorkerParameters settings : workerParametersList) {
+            WorkerData workerData = new WorkerData(settings, tags);
 
             AgentData agentData = agents.get(workerData.getAddress().getAgentIndex() - 1);
             agentData.addWorker(workerData);
@@ -277,7 +275,7 @@ public class ComponentRegistry {
         for (AgentData agent : agents) {
 
             Set<String> agentVersionSpecs = agent.getVersionSpecs();
-            int agentMemberWorkerCount = agent.getCount(WorkerType.MEMBER);
+            int agentMemberWorkerCount = agent.getCount("member");
             int agentClientWorkerCount = agent.getWorkers().size() - agentMemberWorkerCount;
             int totalWorkerCount = agentMemberWorkerCount + agentClientWorkerCount;
 
@@ -296,10 +294,11 @@ public class ComponentRegistry {
                     agentVersionSpecs)).append('\n');
 
             for (WorkerData worker : agent.getWorkers()) {
+                WorkerParameters parameters = worker.getParameters();
                 sb.append("        Worker ")
                         .append(worker.getAddress())
-                        .append(" ").append(worker.getSettings().getWorkerType())
-                        .append(" [").append(worker.getSettings().getVersionSpec()).append("]")
+                        .append(" ").append(parameters.getWorkerType())
+                        .append(" [").append(parameters.get("VERSION_SPEC")).append("]")
                         .append('\n');
             }
         }

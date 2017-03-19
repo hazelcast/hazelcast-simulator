@@ -4,9 +4,9 @@ import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
 import com.hazelcast.simulator.agent.operations.InitSessionOperation;
 import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessManager;
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
@@ -38,7 +38,7 @@ public class AgentOperationProcessorTest {
 
     @Test
     public void testCreateWorkerOperation() throws Exception {
-        CreateWorkerOperation op = new CreateWorkerOperation(new ArrayList<WorkerProcessSettings>(),1);
+        CreateWorkerOperation op = new CreateWorkerOperation(new ArrayList<WorkerParameters>(),1);
 
         processor.process(op, source, promise);
 

@@ -157,7 +157,7 @@ public final class TestCaseRunner {
         createTest();
 
         LOGGER.info(format("Worker for global test phases will be %s (%s)",
-                globalTarget.getAddress(), globalTarget.getSettings().getWorkerType()));
+                globalTarget.getAddress(), globalTarget.getParameters().getWorkerType()));
 
         executePhase(SETUP);
 

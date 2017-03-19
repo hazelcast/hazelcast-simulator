@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.hazelcast.simulator.utils.CommonUtils.joinThread;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepNanos;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.nanoTime;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -52,13 +53,15 @@ public class PerformanceMonitor implements Closeable {
     private final AtomicBoolean shutdown = new AtomicBoolean();
     private final TestManager testManager;
     private final Server server;
+    private final int updateIntervalSeconds;
 
     public PerformanceMonitor(Server server,
                               TestManager testManager,
                               int updateIntervalSeconds) {
         this.testManager = testManager;
         this.server = server;
-        this.thread = new PerformanceMonitorThread(updateIntervalSeconds);
+        this.updateIntervalSeconds = updateIntervalSeconds;
+        this.thread = new PerformanceMonitorThread();
         thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
@@ -68,6 +71,11 @@ public class PerformanceMonitor implements Closeable {
     }
 
     public void start() {
+        if (updateIntervalSeconds < 1) {
+            LOGGER.info("PerformanceMonitor disabled");
+            return;
+        }
+        LOGGER.info(format("PerformanceMonitor enabled with interval: %d seconds", updateIntervalSeconds));
         thread.start();
     }
 
@@ -91,7 +99,7 @@ public class PerformanceMonitor implements Closeable {
         private final long updateIntervalMillis;
         private final List<TestContainer> dirtyContainers = new ArrayList<TestContainer>();
 
-        private PerformanceMonitorThread(long updateIntervalSeconds) {
+        private PerformanceMonitorThread() {
             super("WorkerPerformanceMonitor");
             setDaemon(true);
             this.updateIntervalMillis = SECONDS.toMillis(updateIntervalSeconds);

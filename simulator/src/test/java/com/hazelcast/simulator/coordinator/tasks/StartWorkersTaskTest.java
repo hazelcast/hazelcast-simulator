@@ -1,22 +1,20 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.agent.workerprocess.WorkerProcessSettings;
-import com.hazelcast.simulator.common.WorkerType;
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.DeploymentPlan;
-import com.hazelcast.simulator.coordinator.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
+import com.hazelcast.simulator.vendors.StubVendorDriver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -33,7 +31,6 @@ import static org.mockito.Mockito.when;
 public class StartWorkersTaskTest {
 
     private final ComponentRegistry componentRegistry = new ComponentRegistry();
-    private final Map<WorkerType, WorkerParameters> workerParametersMap = new HashMap<WorkerType, WorkerParameters>();
     private CoordinatorClient client;
     private AgentData agent1;
     private AgentData agent2;
@@ -41,9 +38,6 @@ public class StartWorkersTaskTest {
 
     @Before
     public void before() {
-        workerParametersMap.put(WorkerType.MEMBER, new WorkerParameters());
-        workerParametersMap.put(WorkerType.JAVA_CLIENT, new WorkerParameters());
-
         client = mock(CoordinatorClient.class);
 
         agent1 = componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
@@ -58,7 +52,7 @@ public class StartWorkersTaskTest {
 
     @Test
     public void testCreateWorkers_withClients() throws Exception {
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 6, 3);
+        Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan = getDeployment(0, 6, 3);
 
         Future f = mock(Future.class);
         when(f.get()).thenReturn("SUCCESS");
@@ -73,7 +67,7 @@ public class StartWorkersTaskTest {
 
     @Test
     public void testCreateWorkers_noClients() throws Exception {
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 6, 0);
+        Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan = getDeployment(0, 6, 0);
 
         Future f = mock(Future.class);
         when(f.get()).thenReturn("SUCCESS");
@@ -88,7 +82,7 @@ public class StartWorkersTaskTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testCreateWorkers_withErrorResponse() throws Exception {
-        Map<SimulatorAddress, List<WorkerProcessSettings>> deploymentPlan = getDeployment(0, 1, 0);
+        Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan = getDeployment(0, 1, 0);
 
         Future f = mock(Future.class);
         when(f.get()).thenThrow(new ExecutionException(null));
@@ -97,12 +91,15 @@ public class StartWorkersTaskTest {
         new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, componentRegistry, 0).run();
     }
 
-    private Map<SimulatorAddress, List<WorkerProcessSettings>> getDeployment(int dedicatedMemberMachineCount,
-                                                                             int memberWorkerCount,
-                                                                             int clientWorkerCount) {
+    private Map<SimulatorAddress, List<WorkerParameters>> getDeployment(int dedicatedMemberMachineCount,
+                                                                        int memberWorkerCount,
+                                                                        int clientWorkerCount) {
+        StubVendorDriver vendorDriver = new StubVendorDriver();
         componentRegistry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
-        DeploymentPlan deploymentPlan = createDeploymentPlan(componentRegistry, workerParametersMap,
-                WorkerType.JAVA_CLIENT, memberWorkerCount, clientWorkerCount);
+
+        DeploymentPlan deploymentPlan = createDeploymentPlan(
+                componentRegistry, vendorDriver,
+                "javaclient", memberWorkerCount, clientWorkerCount);
 
         return deploymentPlan.getWorkerDeployment();
     }

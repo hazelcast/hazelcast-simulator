@@ -3,7 +3,6 @@ package com.hazelcast.simulator.worker.testcontainer;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Server;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import org.junit.Test;
@@ -30,7 +29,7 @@ public class TestContainer_TimeStep_MaxIterationsTest extends TestContainer_Abst
 
         TestContextImpl testContext = new TestContextImpl(
                 testCase.getId(), "localhost", mock(Server.class));
-        final TestContainer container = new TestContainer(testContext, testInstance, testCase,null);
+        final TestContainer container = new TestContainer(testContext, testInstance, testCase);
         container.invoke(SETUP);
 
         for (TestPhase phase : TestPhase.values()) {
@@ -41,7 +40,7 @@ public class TestContainer_TimeStep_MaxIterationsTest extends TestContainer_Abst
         assertEquals(100, testInstance.runCount.get());
     }
 
-    public static class MaxIterationTest extends AbstractTest {
+    public static class MaxIterationTest {
         private final AtomicLong runCount = new AtomicLong(0);
 
         @TimeStep

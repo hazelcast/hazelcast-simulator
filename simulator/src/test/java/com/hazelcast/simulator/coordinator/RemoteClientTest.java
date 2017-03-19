@@ -17,7 +17,7 @@ public class RemoteClientTest {
 //        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
 //        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
 //
-//        WorkerProcessSettings workerProcessSettings = new WorkerProcessSettings(
+//        WorkerParameters workerProcessSettings = new WorkerParameters(
 //                1, WorkerType.MEMBER, "", "", 0, new HashMap<String, String>());
 //
 //        SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();

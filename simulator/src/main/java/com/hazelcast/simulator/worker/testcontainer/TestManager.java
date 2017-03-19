@@ -20,6 +20,7 @@ import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.Server;
 import com.hazelcast.simulator.utils.ExceptionReporter;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
@@ -45,11 +46,11 @@ public class TestManager {
 
     private final ConcurrentMap<String, TestContainer> tests = new ConcurrentHashMap<String, TestContainer>();
     private final Server server;
-    private final Object vendorInstance;
+    private final VendorDriver vendorDriver;
 
-    public TestManager(Server server, Object vendorInstance) {
+    public TestManager(Server server, VendorDriver vendorDriver) {
         this.server = server;
-        this.vendorInstance = vendorInstance;
+        this.vendorDriver = vendorDriver;
     }
 
     public Collection<TestContainer> getContainers() {
@@ -72,7 +73,7 @@ public class TestManager {
 
         TestContextImpl testContext = new TestContextImpl(testId, null, server);
 
-        testContainer = new TestContainer(testContext, testCase, vendorInstance);
+        testContainer = new TestContainer(testContext, testCase, vendorDriver.getInstance());
 
         tests.put(testId, testContainer);
     }
