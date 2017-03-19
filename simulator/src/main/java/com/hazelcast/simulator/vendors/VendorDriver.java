@@ -106,9 +106,11 @@ public abstract class VendorDriver<V> implements Closeable {
         return loadConfiguration("Log4J configuration for worker", "worker-log4j.xml");
     }
 
-    protected String loadWorkerScript(String workerType, String vendor) {
+    protected String loadWorkerScript(String workerType) {
         List<File> files = new LinkedList<File>();
         File confDir = new File(getSimulatorHome(), "conf");
+
+        String vendor = properties.get("VENDOR");
 
         files.add(new File("worker-" + vendor + "-" + workerType + ".sh").getAbsoluteFile());
         files.add(new File("worker-" + workerType + ".sh").getAbsoluteFile());
@@ -121,10 +123,11 @@ public abstract class VendorDriver<V> implements Closeable {
 
         for (File file : files) {
             if (file.exists()) {
-                String config = configCache.get(file.getName());
+                String key = workerType + "#" + file.getName();
+                String config = configCache.get(key);
                 if (config == null) {
                     config = fileAsText(file);
-                    configCache.put(file.getName(), config);
+                    configCache.put(key, config);
                     LOGGER.info("Loading " + vendor + " " + workerType + " worker script: " + file.getAbsolutePath());
                 }
                 return config;
