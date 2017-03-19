@@ -72,9 +72,9 @@ class Gnuplot:
     filepath = None
     ylabel = None
     is_bytes = None
+    gnuplot_file = None
 
     def __init__(self, directory, title, basefilename=None):
-        self.tmp = tempfile.NamedTemporaryFile(delete=False)
         self.title = title
         self.directory = directory
         self.ts_list = []
@@ -82,12 +82,12 @@ class Gnuplot:
         self.basefilename = basefilename
 
     def _complete(self):
-        self.tmp.flush()
+        self.gnuplot_file.close()
         from os import system
-        system('gnuplot ' + self.tmp.name)
+        system('gnuplot ' + self.gnuplot_file.name)
 
     def _write(self, line):
-        self.tmp.write(line + '\n')
+        self.gnuplot_file.write(line + '\n')
 
     def add(self, ts, title=None):
         self.ts_list.append(ts)
@@ -129,6 +129,8 @@ class Gnuplot:
         if empty:
             # print("Skipping plot of " + self.title + "; timeseries are empty")
             return
+
+        self.gnuplot_file = tempfile.NamedTemporaryFile(delete=False)
 
         ts_first = self.ts_list[0]
         self.ylabel = ts_first.ylabel
