@@ -25,8 +25,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
@@ -66,9 +64,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     }
 
     private String loadServerOrNativeClientConfig(boolean client) {
-        File file = getConfigurationFile("ignite.xml");
-        LOGGER.info("Loading Ignite Server configuration: " + file.getAbsolutePath());
-        String config = fileAsText(file);
+        String config = loadConfiguration("Ignite configuration", "ignite.xml");
 
         ConfigFileTemplate template = new ConfigFileTemplate(config)
                 .withAgents(agents);
