@@ -48,11 +48,17 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         Map<String, String> s = new HashMap<String, String>(properties);
         s.remove("CONFIG");
 
+        if ("hazelcast-enterprise".equals(properties.get("VENDOR"))) {
+            String licenceKey = properties.get("LICENCE_KEY");
+            if (licenceKey == null) {
+                throw new IllegalStateException("licenceKey needs to be set with 'hazelcast-enterprise' as vendor");
+            }
+        }
+
         WorkerParameters params = new WorkerParameters()
                 .setAll(s)
                 .set("WORKER_TYPE", workerType)
                 .set("file:log4j.xml", loadLog4jConfig());
-
 
         if ("member".equals(workerType)) {
             loadMemberWorkerParameters(params);
@@ -96,6 +102,8 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     public String initMemberHzConfig(boolean liteMember) {
         String config = loadMemberConfig();
         ConfigFileTemplate template = new ConfigFileTemplate(config);
+
+        String licenseKey = properties.get("LICENCE_KEY");
         template.addEnvironment("licenseKey", licenseKey);
         template.addEnvironment(properties);
         //template.withAgents(componentRegistry);
@@ -139,6 +147,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
         ConfigFileTemplate template = new ConfigFileTemplate(config);
         //template.withAgents(componentRegistry);
+        String licenseKey = properties.get("LICENCE_KEY");
         template.addEnvironment("licenseKey", licenseKey);
         template.addEnvironment(properties);
 

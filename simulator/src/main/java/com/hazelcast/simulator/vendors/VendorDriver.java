@@ -37,8 +37,6 @@ public abstract class VendorDriver<V> implements Closeable {
 
     protected String clientArgs = "";
     protected String memberArgs = "";
-    protected String licenseKey;
-    // protected int performance
     protected List<AgentData> agents;
     protected Map<String, String> properties = new HashMap<String, String>();
 
@@ -56,11 +54,6 @@ public abstract class VendorDriver<V> implements Closeable {
 
     public VendorDriver<V> setAgents(List<AgentData> agents) {
         this.agents = agents;
-        return this;
-    }
-
-    public VendorDriver<V> setLicenseKey(String licenseKey) {
-        this.licenseKey = licenseKey;
         return this;
     }
 
