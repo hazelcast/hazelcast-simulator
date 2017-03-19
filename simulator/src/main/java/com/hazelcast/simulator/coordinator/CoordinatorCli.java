@@ -176,7 +176,7 @@ final class CoordinatorCli {
                 .setAgents(componentRegistry.getAgents())
                 .setClientArgs(loadClientArgs())
                 .setMemberArgs(loadMemberArgs())
-                .setLicenseKey(options.valueOf(licenseKeySpec));
+                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();

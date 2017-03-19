@@ -346,7 +346,7 @@ public class Coordinator implements Closeable {
                 .setAll(simulatorProperties.asPublicMap())
                 .setClientArgs(op.getVmOptions())
                 .setMemberArgs(op.getVmOptions())
-                .setLicenseKey(parameters.getLicenseKey())
+                .setIfNotNull("LICENCE_KEY", parameters.getLicenseKey())
                 .setIfNotNull("VERSION_SPEC", op.getVersionSpec())
                 .setIfNotNull("CONFIG", op.getHzConfig());
 
