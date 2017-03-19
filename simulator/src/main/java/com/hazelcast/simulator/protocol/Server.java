@@ -227,7 +227,6 @@ public class Server implements Closeable {
                 if (!stop) {
                     LOGGER.error(e.getMessage(), e);
                 }
-                LOGGER.error(e.getMessage(), e);
             }
 
             LOGGER.info("ServerThread finished");
