@@ -45,6 +45,7 @@ public class BashCommand {
     private final Map<String, Object> environment = new HashMap<String, Object>();
     private boolean throwException;
     private File directory;
+    private boolean dumpOutputOnError = true;
 
     public BashCommand(String command) {
         params.add(command);
@@ -80,6 +81,11 @@ public class BashCommand {
 
     public BashCommand setDirectory(File directory) {
         this.directory = checkNotNull(directory, "directory can't be null");
+        return this;
+    }
+
+    public BashCommand dumpOutputOnError(boolean dumpOutputOnError) {
+        this.dumpOutputOnError = dumpOutputOnError;
         return this;
     }
 
@@ -123,8 +129,10 @@ public class BashCommand {
                 if (throwException) {
                     throw new ScriptException(format("Failed to execute [%s]", command));
                 }
-                LOGGER.error(format("Failed to execute [%s]", command));
-                LOGGER.error(sb.toString());
+                if (dumpOutputOnError) {
+                    LOGGER.error(format("Failed to execute [%s]", command));
+                    LOGGER.error(sb.toString());
+                }
                 exitWithError();
             } else {
                 if (LOGGER.isDebugEnabled()) {

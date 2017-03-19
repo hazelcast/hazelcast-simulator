@@ -27,6 +27,14 @@ public final class AgentUtils {
     private AgentUtils() {
     }
 
+    public static void sslTestAgents(SimulatorProperties properties, ComponentRegistry registry) {
+        new BashCommand(getConfigurationFile("agent_ssh_check.sh").getAbsolutePath())
+                .addParams(join(registry.getAgentIps(), ","))
+                .addEnvironment(properties.asMap())
+                .dumpOutputOnError(false)
+                .execute();
+    }
+
     public static void startAgents(SimulatorProperties properties, ComponentRegistry registry) {
         String startScript = getConfigurationFile("agent_start.sh").getAbsolutePath();
 

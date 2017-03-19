@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import static com.hazelcast.simulator.coordinator.AgentUtils.sslTestAgents;
 import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
@@ -89,9 +90,7 @@ class Provisioner {
         this.properties = properties;
         this.computeService = computeService;
         this.bash = bash;
-
         this.machineWarmupSeconds = machineWarmupSeconds;
-
         this.componentRegistry = loadComponentRegister(agentsFile, false);
         this.initScriptFile = getInitScriptFile(simulatorPath);
     }
@@ -101,23 +100,9 @@ class Provisioner {
         return componentRegistry;
     }
 
-    void scale(int size, Map<String, String> tags) {
-        ensureIsCloudProviderSetup(properties, "scale");
-
-        int agentSize = componentRegistry.agentCount();
-        int delta = size - agentSize;
-        if (delta == 0) {
-            echo("Current number of machines: " + agentSize);
-            echo("Desired number of machines: " + (agentSize + delta));
-            echo("Ignoring spawn machines, desired number of machines already exists.");
-        } else if (delta > 0) {
-            scaleUp(delta, tags);
-        } else {
-            scaleDown(-delta);
-        }
-    }
 
     void installJava() {
+        sslTestAgents(properties, componentRegistry);
         ensureIsRemoteSetup(properties, "installJava");
 
         long started = System.nanoTime();
@@ -140,6 +125,7 @@ class Provisioner {
     }
 
     void installSimulator() {
+        sslTestAgents(properties, componentRegistry);
         ensureIsRemoteSetup(properties, "install");
 
         long started = System.nanoTime();
@@ -163,6 +149,7 @@ class Provisioner {
     }
 
     void killJavaProcesses(final boolean sudo) {
+        sslTestAgents(properties, componentRegistry);
         ensureIsRemoteSetup(properties, "kill");
 
         long started = System.nanoTime();
@@ -188,6 +175,22 @@ class Provisioner {
         ensureIsCloudProviderSetup(properties, "terminate");
 
         scaleDown(Integer.MAX_VALUE);
+    }
+
+    void scale(int size, Map<String, String> tags) {
+        ensureIsCloudProviderSetup(properties, "scale");
+
+        int agentSize = componentRegistry.agentCount();
+        int delta = size - agentSize;
+        if (delta == 0) {
+            echo("Current number of machines: " + agentSize);
+            echo("Desired number of machines: " + (agentSize + delta));
+            echo("Ignoring spawn machines, desired number of machines already exists.");
+        } else if (delta > 0) {
+            scaleUp(delta, tags);
+        } else {
+            scaleDown(-delta);
+        }
     }
 
     void shutdown() {

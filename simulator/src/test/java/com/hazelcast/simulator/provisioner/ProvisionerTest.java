@@ -2,7 +2,6 @@ package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.utils.Bash;
-import com.hazelcast.simulator.utils.CloudProviderUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
@@ -19,6 +18,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.deleteAgentsFile;
 import static com.hazelcast.simulator.TestEnvironmentUtils.deleteCloudCredentialFiles;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static java.util.Collections.singleton;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -43,7 +43,7 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
         createCloudCredentialFiles();
 
         SimulatorProperties properties = new SimulatorProperties();
-        properties.setCloudProvider(CloudProviderUtils.PROVIDER_EC2);
+        properties.setCloudProvider(PROVIDER_EC2);
         initComputeServiceMock();
         bash = mock(Bash.class);
 
@@ -79,7 +79,6 @@ public class ProvisionerTest extends AbstractComputeServiceTest {
     public void testScale_toOne() {
         provisioner.scale(1, new HashMap<String, String>());
     }
-
 
     // test is useless since it doesn't test anything
     @Test
