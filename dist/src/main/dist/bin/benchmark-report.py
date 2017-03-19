@@ -72,6 +72,7 @@ class Gnuplot:
     filepath = None
     ylabel = None
     is_bytes = None
+    is_points = None
     gnuplot_file = None
 
     def __init__(self, directory, title, basefilename=None):
@@ -141,7 +142,7 @@ class Gnuplot:
             self.filepath = os.path.join(self.directory, ts_first.name + ".png")
 
         self.is_bytes = ts_first.is_bytes
-
+        self.is_points = ts_first.is_points
         ensure_dir(self.directory)
         self._plot()
 
@@ -195,11 +196,18 @@ class TimeseriesGnuplot(Gnuplot):
                 title_str = "title \"\""
 
             color = self._color(ts)
-            lt = ""
-            if color:
-                lt = "lt rgb \"" + color + "\""
 
-            self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
+            if self.is_points:
+                lc = ""
+                if color:
+                    lc = "lc rgb \"" + color + "\""
+                self._write(
+                    "   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " with points " + lc + ", \\")
+            else:
+                lt = ""
+                if color:
+                    lt = "lt rgb \"" + color + "\""
+                self._write("   \'" + ts_file.name + "\' using (t0(timecolumn(1))):2 " + title_str + " " + lt + ", \\")
         self._complete()
 
         for tmp_file in tmp_files:
@@ -292,10 +300,11 @@ class GoogleCharts:
 class Series:
     name = None
 
-    def __init__(self, name, ylabel, is_bytes, ts_list=None, items=None, ):
+    def __init__(self, name, ylabel, is_bytes, is_points, ts_list=None, items=None, ):
         if ts_list is None:
             ts_list = []
 
+        self.is_points = is_points
         self.is_bytes = is_bytes
         self.name = name
         self.ylabel = ylabel
@@ -374,7 +383,7 @@ class KeyValue:
 # A handle to a series. With a handle you can refer to a series, without needing to pull it into memory. Since we could have
 # a lot of measured data, we want to prevent getting it all in memory.
 class SeriesHandle:
-    def __init__(self, src, name, title, ylabel, load_method, args=None, is_bytes=False):
+    def __init__(self, src, name, title, ylabel, load_method, args=None, is_bytes=False, is_points=False):
         if not args:
             args = []
 
@@ -385,10 +394,11 @@ class SeriesHandle:
         self.load_method = load_method
         self.args = args
         self.is_bytes = is_bytes
+        self.is_points = is_points
 
     def load(self):
         items = self.load_method(*self.args)
-        return Series(self.name, self.ylabel, self.is_bytes, items=items)
+        return Series(self.name, self.ylabel, self.is_bytes, self.is_points, items=items)
 
 
 class Worker:
@@ -467,11 +477,11 @@ class Worker:
         refs.append(SeriesHandle("gc", "young_size_max", "Young size max", "Size",
                                  self.__load_gc, args=[7, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "young_collected", "Young collected", "Collected",
-                                 self.__load_gc, args=[8, True], is_bytes=True))
+                                 self.__load_gc, args=[8, True], is_bytes=True, is_points=True))
         refs.append(SeriesHandle("gc", "young_collected_rate", "Young collection rate", "Collected/second",
                                  self.__load_gc, args=[9, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "young_allocated", "Young allocated", "Allocation",
-                                 self.__load_gc, args=[10, True], is_bytes=True))
+                                 self.__load_gc, args=[10, True], is_bytes=True, is_points=True))
         refs.append(SeriesHandle("gc", "allocation_rate", "Allocation rate", "Allocated/second",
                                  self.__load_gc, args=[11, True], is_bytes=True))
 
@@ -482,11 +492,11 @@ class Worker:
         refs.append(SeriesHandle("gc", "heap_size_max", "Heap size max", "Size",
                                  self.__load_gc, args=[14, False], is_bytes=True))
         refs.append(SeriesHandle("gc", "heap_collected", "Heap collected", "Size",
-                                 self.__load_gc, args=[15, False], is_bytes=True))
+                                 self.__load_gc, args=[15, False], is_bytes=True, is_points=True))
         refs.append(SeriesHandle("gc", "heap_collected_rate", "Heap collected rate", "Collected/second",
                                  self.__load_gc, args=[16, False], is_bytes=True))
         refs.append(SeriesHandle("gc", "promotion", "Promoted", "Size",
-                                 self.__load_gc, args=[17, False], is_bytes=True))
+                                 self.__load_gc, args=[17, False], is_bytes=True, is_points=True))
         refs.append(SeriesHandle("gc", "promotion_rate", "Promotion rate", "Promoted/second",
                                  self.__load_gc, args=[18, True], is_bytes=True))
 
@@ -670,7 +680,7 @@ class Benchmark:
                 if ref.src == "throughput":
                     list.append(ref.load())
 
-        return Series("", "", False, ts_list=list).items
+        return Series("", "", False, False, ts_list=list).items
 
     def load_latency_ts(self, path, column):
         result = []
