@@ -65,9 +65,9 @@ public class WorkerOperationProcessor implements OperationProcessor {
                 throw new ProcessException("Unknown operation:" + op, UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
             }
         } catch (Exception e) {
-            // any uncaught exception we'll feed back into the ExceptionReporter.
+            // any uncaught exception we'll feed into the ExceptionReporter.
             ExceptionReporter.report(null, e);
-            throw e;
+            promise.answer(e);
         }
     }
 }

@@ -1,10 +1,10 @@
 package com.hazelcast.simulator.worker;
 
 
+import com.hazelcast.simulator.StubPromise;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
-import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.utils.ExceptionReporter;
@@ -18,9 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
-import org.mockito.Mockito;
 
-import javax.jms.IllegalStateException;
 import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
@@ -28,6 +26,7 @@ import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -41,8 +40,8 @@ public class WorkerOperationProcessorTest {
     private WorkerOperationProcessor processor;
     private TestManager testManager;
     private Worker worker;
-    private SimulatorAddress sourceAddress;
-    private Promise promise;
+    private SimulatorAddress sourceAddress = COORDINATOR;
+    private StubPromise promise;
     private ScriptExecutor scriptExecutor;
 
     @Before
@@ -53,8 +52,7 @@ public class WorkerOperationProcessorTest {
         worker = mock(Worker.class);
         scriptExecutor = mock(ScriptExecutor.class);
         processor = new WorkerOperationProcessor(worker, testManager, scriptExecutor);
-        sourceAddress = COORDINATOR;
-        promise = mock(Promise.class);
+        promise = new StubPromise();
     }
 
     @After
@@ -70,7 +68,7 @@ public class WorkerOperationProcessorTest {
         processor.process(op, sourceAddress, promise);
 
         verify(worker).shutdown(op);
-        verify(promise).answer(Matchers.anyObject());
+        assertTrue(promise.hasAnswer());
     }
 
     @Test
@@ -80,7 +78,7 @@ public class WorkerOperationProcessorTest {
         processor.process(op, sourceAddress, promise);
 
         verify(testManager).createTest(op);
-        verify(promise).answer(Matchers.anyObject());
+        assertTrue(promise.hasAnswer());
     }
 
     @Test
@@ -108,7 +106,7 @@ public class WorkerOperationProcessorTest {
         processor.process(op, sourceAddress, promise);
 
         verify(testManager).stopRun(op);
-        verify(promise).answer(Matchers.anyObject());
+        assertTrue(promise.hasAnswer());
     }
 
     // make sure that unhandled exceptions are trapped.
@@ -118,20 +116,18 @@ public class WorkerOperationProcessorTest {
         Exception e = new IndexOutOfBoundsException("");
         doThrow(e).when(testManager).stopRun(op);
 
-        try {
-            processor.process(op, sourceAddress, promise);
-            fail();
-        } catch (IndexOutOfBoundsException found) {
-        }
+        processor.process(op, sourceAddress, promise);
 
+        assertTrue(promise.getAnswer() instanceof IndexOutOfBoundsException);
         File exceptionFile = new File(getUserDir(), "1.exception");
         assertTrue(exceptionFile.exists());
         assertFalse(new File(getUserDir(), "1.exception.tmp").exists());
         assertNotNull(fileAsText(exceptionFile));
     }
 
-    @Test(expected = ProcessException.class)
+    @Test
     public void testUnhandledOperation() throws Exception {
         processor.process(mock(FailureOperation.class), sourceAddress, promise);
+        assertTrue(promise.getAnswer() instanceof ProcessException);
     }
 }

@@ -33,6 +33,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -111,9 +112,9 @@ public class TerminateWorkersTask {
 
         long started = System.nanoTime();
         LOGGER.info(format("Waiting up to %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedWorkerCount));
-        long expirationTimeMillis = System.currentTimeMillis() + SECONDS.toMillis(timeoutSeconds);
+        long expirationTimeMillis = currentTimeMillis() + SECONDS.toMillis(timeoutSeconds);
 
-        while (componentRegistry.workerCount() > 0 && System.currentTimeMillis() < expirationTimeMillis) {
+        while (componentRegistry.workerCount() > 0 && currentTimeMillis() < expirationTimeMillis) {
             sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
         }
 

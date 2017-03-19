@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.DummyPromise;
+import com.hazelcast.simulator.StubPromise;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.junit.Before;
@@ -23,7 +23,7 @@ public class ScriptExecutorTest {
     @Test
     public void bash() {
         ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("bash:ls", false);
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
         scriptExecutor.execute(scriptOperation, promise);
 
         promise.assertCompletesEventually();
@@ -33,7 +33,7 @@ public class ScriptExecutorTest {
     @Test
     public void javascript() {
         ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("js:java.lang.System.out.println();", false);
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
 
         scriptExecutor.execute(scriptOperation, promise);
 
@@ -45,7 +45,7 @@ public class ScriptExecutorTest {
     public void whenFireSndForget_thenErrorNotNoticed() {
         ExecuteScriptOperation scriptOperation = new ExecuteScriptOperation("bash:foobar", true);
 
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
 
         scriptExecutor.execute(scriptOperation, promise);
         promise.assertCompletesEventually();

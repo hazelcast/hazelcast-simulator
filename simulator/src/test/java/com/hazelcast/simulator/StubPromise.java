@@ -6,7 +6,7 @@ import com.hazelcast.simulator.utils.AssertTask;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertNotNull;
 
-public class DummyPromise implements Promise {
+public class StubPromise implements Promise {
 
     private volatile Object answer;
 

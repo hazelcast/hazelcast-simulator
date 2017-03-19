@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.DummyPromise;
+import com.hazelcast.simulator.StubPromise;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Promise;
@@ -90,7 +90,7 @@ public class TestManagerTest {
 
         manager.createTest(new CreateTestOperation(testCase));
 
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), promise);
 
         promise.assertCompletesEventually();
@@ -106,7 +106,7 @@ public class TestManagerTest {
         final TestContainer container = manager.getContainers().iterator().next();
 
         // do the setup first (needed)
-        DummyPromise setupPromise = new DummyPromise();
+        StubPromise setupPromise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), setupPromise);
         setupPromise.assertCompletesEventually();
 
@@ -115,7 +115,7 @@ public class TestManagerTest {
         awaitRunning(container);
 
         // and while the run phase is running, we'll try to do a tear down
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(LOCAL_TEARDOWN, "foo"), promise);
         promise.assertCompletesEventually();
         assertTrue(promise.getAnswer() instanceof IllegalStateException);
@@ -141,12 +141,12 @@ public class TestManagerTest {
         final TestContainer container = manager.getContainers().iterator().next();
 
         // we need to call setup so the test is initialized correctly
-        DummyPromise setupPromise = new DummyPromise();
+        StubPromise setupPromise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), setupPromise);
         setupPromise.assertCompletesEventually();
 
         // then we call start; this call will not block
-        DummyPromise runPromise = new DummyPromise();
+        StubPromise runPromise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), runPromise);
 
         awaitRunning(container);
@@ -172,7 +172,7 @@ public class TestManagerTest {
         manager.createTest(new CreateTestOperation(testCase));
 
         // then we call start; this call will not block
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), promise);
 
         // give the test some time to enter the setup phase
@@ -192,11 +192,11 @@ public class TestManagerTest {
 
         manager.createTest(new CreateTestOperation(testCase));
 
-        DummyPromise setupPromise = new DummyPromise();
+        StubPromise setupPromise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(SETUP, "foo"), setupPromise);
         setupPromise.assertCompletesEventually();
 
-        DummyPromise runPromise = new DummyPromise();
+        StubPromise runPromise = new StubPromise();
         manager.startTestPhase(new StartPhaseOperation(RUN, "foo"), runPromise);
 
         runPromise.assertCompletesEventually();
@@ -213,7 +213,7 @@ public class TestManagerTest {
         manager.createTest(new CreateTestOperation(testCase));
 
         // then we call start; this call will not block
-        DummyPromise promise = new DummyPromise();
+        StubPromise promise = new StubPromise();
 
         manager.startTestPhase(new StartPhaseOperation(TestPhase.LOCAL_TEARDOWN, "foo"), promise);
         // but eventually the promise will complete.
