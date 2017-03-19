@@ -39,6 +39,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     public WorkerParameters loadWorkerParameters(String workerType) {
         WorkerParameters params = new WorkerParameters()
                 .setAll(properties)
+                .set("WORKER_TYPE", workerType)
                 .set("file:log4j.xml", loadLog4jConfig());
 
         if ("member".equals(workerType)) {
