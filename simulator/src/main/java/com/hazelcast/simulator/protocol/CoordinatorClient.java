@@ -454,7 +454,7 @@ public class CoordinatorClient implements Closeable {
                 String correlationId = replyMessage.getJMSCorrelationID();
                 FutureImpl future = futures.remove(correlationId);
                 if (future == null) {
-                    LOGGER.info("No future for " + correlationId + "\n" + replyMessage);
+                    LOGGER.debug("No future for " + correlationId + "\n" + replyMessage);
                 } else {
                     boolean error = replyMessage.getBooleanProperty("error");
                     if (error) {
