@@ -223,13 +223,14 @@ public class Server implements Closeable {
                 while (!stop) {
                     handle();
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 if (!stop) {
                     LOGGER.error(e.getMessage(), e);
                 }
-            } catch (Throwable e) {
                 LOGGER.error(e.getMessage(), e);
             }
+
+            LOGGER.info("ServerThread finished");
         }
 
         private void handle() throws Exception {
@@ -251,11 +252,12 @@ public class Server implements Closeable {
             try {
                 processor.process(op, source, promise);
             } catch (Exception e) {
-                if (!stop) {
+                if (stop) {
+                    throw e;
+                } else {
                     LOGGER.warn(e.getMessage(), e);
                     promise.answer(e);
                 }
-                throw e;
             }
         }
     }
