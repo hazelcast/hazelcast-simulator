@@ -58,10 +58,15 @@ import static java.lang.String.format;
 public class PropertyBinding {
 
     static final int DEFAULT_THREAD_COUNT = 10;
+    static final int DEFAULT_RECORD_JITTER_THRESHOLD_NS = 1000;
 
     // if we want to measure latency. Normally this is always true; but in its current setting, hdr can cause contention
     // and I want a switch that turns of hdr recording. Perhaps that with some tuning this isn't needed.
     public boolean measureLatency = true;
+    // flag to enable jitter recording
+    public boolean recordJitter;
+    // configures the minimum value for the jitter sample to be recorded.
+    public int recordJitterThresholdNs = DEFAULT_RECORD_JITTER_THRESHOLD_NS;
 
     // this can be removed as soon as the @InjectMetronome/worker functionality is dropped
     private MetronomeConstructor workerMetronomeConstructor;
@@ -79,6 +84,10 @@ public class PropertyBinding {
         unusedProperties.remove("warmupMillis");
 
         bind(this);
+
+        if (recordJitterThresholdNs < 0) {
+            throw new IllegalTestException("recordJitterThresholdNs can't be smaller than 0");
+        }
 
         this.workerMetronomeConstructor = new MetronomeConstructor(
                 "", this, loadAsInt("threadCount", DEFAULT_THREAD_COUNT));

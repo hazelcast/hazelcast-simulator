@@ -1756,6 +1756,32 @@ ratePerSecond=100
 metronomeClass=com.hazelcast.simulator.worker.metronome.ConstantCombinedRateMetronome
 ```
 
+### Jitter
+To measure jitter caused by the OS/JVM it is possible to active a Jitter thread using:
+```
+class=example.MyTest
+threadCount=10
+ratePerSecond=100
+recordJitter=true
+```
+This thread will do nothing else than measuring time and recording it in a probe. The content of this probe results in hdr files
+and can be visualized using the benchmark report generator.
+
+By default jitter greater or equal 1000ns is recorded, but can b configured using the `recordJitterThresholdNs` property:
+```
+class=example.MyTest
+threadCount=10
+ratePerSecond=100
+recordJitter=true
+recordJitterThresholdNs=2_000
+```
+To disable the threshold, set `recordJitterThresholdNs` to 0. Warning: if the `recordJitterThresholdNs` is set to a value higher
+than zero, the latency distribution looks distorted because only the outliers are recorded and not the samples below the threshold.
+
+Measuring jitter is only recommended when doing a latency test because you will loose 1 core. Each test instance will create its 
+own jitter thread (if the test is configured to use a jitter thread). So it extremely unlike that you want to run tests in 
+parallel with this feature enabled.
+
 ## Logging
 
 In some cases, especially when debugging, logging is required. One easy way to add logging is to add the logging into the timestep 
