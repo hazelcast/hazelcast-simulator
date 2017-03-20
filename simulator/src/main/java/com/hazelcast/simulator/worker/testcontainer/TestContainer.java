@@ -203,7 +203,16 @@ public class TestContainer {
             registerPrepareTasks(false);
             registerPrepareTasks(true);
 
-            taskPerPhaseMap.put(RUN, runStrategy.getRunCallable());
+            taskPerPhaseMap.put(RUN, new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    if (propertyBinding.recordJitter) {
+                        Probe probe = propertyBinding.getOrCreateProbe("jitter", false);
+                        new JitterThread(testContext, probe, propertyBinding.recordJitterThresholdNs).start();
+                    }
+                    return runStrategy.getRunCallable().call();
+                }
+            });
 
             registerTask(Verify.class, new VerifyFilter(false), LOCAL_VERIFY);
             registerTask(Verify.class, new VerifyFilter(true), GLOBAL_VERIFY);
@@ -290,7 +299,6 @@ public class TestContainer {
                     testClass.getName(), e.getClass().getSimpleName(), e.getMessage()), e);
         }
     }
-
 
     private void registerTask(Class<? extends Annotation> annotationClass, AnnotationFilter filter, TestPhase testPhase) {
         List<Method> methods = new AnnotatedMethodRetriever(testClass, annotationClass)
