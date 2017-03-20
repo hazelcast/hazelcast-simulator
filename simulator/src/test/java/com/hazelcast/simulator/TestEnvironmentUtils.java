@@ -3,13 +3,20 @@ package com.hazelcast.simulator;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.TestUtils;
+import com.hazelcast.simulator.utils.UncheckedIOException;
 import com.hazelcast.simulator.utils.helper.ExitExceptionSecurityManager;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
@@ -44,16 +51,44 @@ public class TestEnvironmentUtils {
     public static File setupFakeEnvironment() {
         File dist = internalDistDirectory();
         File simulatorHome = TestUtils.createTmpDirectory();
-        FileUtils.copyDirectory(dist, simulatorHome);
+
+        try {
+            copyDirectory(dist, simulatorHome);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
         System.setProperty("user.dir.test", simulatorHome.getAbsolutePath());
 
-        LOGGER.info("Fake SIMULATOR_HOME:"+simulatorHome.getAbsolutePath());
+        LOGGER.info("Fake SIMULATOR_HOME:" + simulatorHome.getAbsolutePath());
 
         originalSimulatorHome = System.getProperty("SIMULATOR_HOME");
         System.setProperty("SIMULATOR_HOME", simulatorHome.getAbsolutePath());
 
         return simulatorHome;
+    }
+
+
+    private static void copyDirectory(File source, File destination) throws IOException {
+        if (source.isDirectory()) {
+            if (!destination.exists()) {
+                destination.mkdirs();
+            }
+
+            String fileNames[] = source.list();
+
+            for (String fileName : fileNames) {
+                File srcFile = new File(source, fileName);
+                File destFile = new File(destination, fileName);
+                copyDirectory(srcFile, destFile);
+            }
+        } else {
+            FileUtils.copy(source,destination);
+
+            if (source.canExecute()) {
+                destination.setExecutable(true);
+            }
+        }
     }
 
     public static File setupFakeUserDir() {

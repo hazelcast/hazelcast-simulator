@@ -1,47 +1,5 @@
 package com.hazelcast.simulator.utils;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.List;
-
-import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
-import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
-import static com.hazelcast.simulator.utils.FileUtils.USER_HOME;
-import static com.hazelcast.simulator.utils.FileUtils.appendText;
-import static com.hazelcast.simulator.utils.FileUtils.copy;
-import static com.hazelcast.simulator.utils.FileUtils.copyFilesToDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
-import static com.hazelcast.simulator.utils.FileUtils.getFileAsTextFromWorkingDirOrBaseDir;
-import static com.hazelcast.simulator.utils.FileUtils.getFileOrExit;
-import static com.hazelcast.simulator.utils.FileUtils.getFilesFromClassPath;
-import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
-import static com.hazelcast.simulator.utils.FileUtils.isValidFileName;
-import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static com.hazelcast.simulator.utils.FileUtils.rename;
-import static com.hazelcast.simulator.utils.FileUtils.writeText;
-import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class FileUtilsTest {
 //
 //    private static final File FILE_NOT_FOUND = new File("notFound");

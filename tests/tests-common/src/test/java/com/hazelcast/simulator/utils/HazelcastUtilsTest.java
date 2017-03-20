@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.internalDistDirectory;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createScheduledThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isMaster;
@@ -46,7 +46,7 @@ public class HazelcastUtilsTest {
     private static final int DELAY_SECONDS = 1;
     private static final InetSocketAddress SOCKET_ADDRESS = new InetSocketAddress("127.0.0.1", 5701);
 
-    private static final ScheduledExecutorService executor = createScheduledThreadPool(1, HazelcastUtilsTest.class.getName());
+    private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     private HazelcastInstance hazelcastInstance;
 

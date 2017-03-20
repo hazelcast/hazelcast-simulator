@@ -22,8 +22,6 @@ import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
-import org.jclouds.providers.ProviderMetadata;
-import org.jclouds.providers.Providers;
 
 import java.io.File;
 import java.util.Properties;
@@ -32,6 +30,7 @@ import java.util.TreeSet;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIAL;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
+import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
@@ -147,9 +146,7 @@ class Wizard {
         echo("Supported cloud providers:");
         echo(" • %s: Local Setup", PROVIDER_LOCAL);
         echo(" • %s: Static Setup", PROVIDER_STATIC);
-        for (ProviderMetadata providerMetadata : Providers.all()) {
-            echo(" • %s: %s", providerMetadata.getId(), providerMetadata.getName());
-        }
+        echo(" • %s: EC2 Setup", PROVIDER_EC2);
     }
 
     void createSshCopyIdScript(SimulatorProperties simulatorProperties) {

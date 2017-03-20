@@ -249,41 +249,4 @@ public class CommonUtils_MiscTest {
         assertTrue(isInterrupted.get());
         assertFalse(isSuccess.get());
     }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testAwaitTermination() {
-        ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "CommonUtilsTest");
-        executorService.shutdown();
-
-        awaitTermination(executorService, 5, SECONDS);
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testAwaitTermination_whenInterrupted_thenRestoreInterruptedFlag() {
-        final ExecutorService executorService = ExecutorFactory.createFixedThreadPool(1, "CommonUtilsTest");
-        final AtomicBoolean isInterrupted = new AtomicBoolean();
-
-        executorService.submit(new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-                TimeUnit.DAYS.sleep(1);
-                return true;
-            }
-        });
-        executorService.shutdown();
-
-        Thread waiter = new Thread() {
-            @Override
-            public void run() {
-                awaitTermination(executorService, 5, SECONDS);
-                isInterrupted.set(Thread.currentThread().isInterrupted());
-            }
-        };
-        waiter.start();
-
-        waiter.interrupt();
-        joinThread(waiter);
-
-        assertTrue(isInterrupted.get());
-    }
 }

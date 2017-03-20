@@ -15,16 +15,15 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.amazonaws.util.StringInputStream;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
-import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.BindException;
+import com.hazelcast.simulator.utils.CommandLineExitException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -81,8 +80,7 @@ public class TestSuite {
     private void load(String testContent) {
         Properties properties = new Properties();
         try {
-            InputStream in = new StringInputStream(testContent);
-            properties.load(in);
+            properties.load(new StringReader(testContent));
         } catch (UnsupportedEncodingException e) {
             throw rethrow(e);
         } catch (IOException e) {

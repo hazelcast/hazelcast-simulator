@@ -21,7 +21,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.log4j.Logger;
-import org.jclouds.compute.ComputeService;
 
 import java.util.Map;
 
@@ -29,7 +28,6 @@ import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CliUtils.printHelpAndExit;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isCloudProvider;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
@@ -76,11 +74,10 @@ final class ProvisionerCli {
         this.options = initOptionsWithHelp(parser, args);
 
         SimulatorProperties properties = loadSimulatorProperties();
-        ComputeService computeService = isCloudProvider(properties) ? new ComputeServiceBuilder(properties).build() : null;
         Bash bash = new Bash(properties);
 
         this.tags = loadTags(options, tagsSpec);
-        this.provisioner = new Provisioner(properties, computeService, bash);
+        this.provisioner = new Provisioner(properties, bash);
     }
 
     void run() {
