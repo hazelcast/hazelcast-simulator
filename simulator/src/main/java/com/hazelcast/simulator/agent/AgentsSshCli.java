@@ -78,7 +78,7 @@ public final class AgentsSshCli {
 
             for (AgentData agent : registry.getAgents()) {
                 System.out.println("[" + agent.getPublicAddress() + "]");
-                new BashCommand("ssh -o LogLevel=quiet " + sshOptions + " " + simulatorUser
+                new BashCommand("ssh -n -o LogLevel=quiet " + sshOptions + " " + simulatorUser
                         + "@" + agent.getPublicAddress() + " '" + command + "'")
                         .setSystemOut(true)
                         .addEnvironment(properties.asMap())
