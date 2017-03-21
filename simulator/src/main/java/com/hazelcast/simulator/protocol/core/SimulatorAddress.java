@@ -29,11 +29,6 @@ import static java.lang.Integer.parseInt;
  *
  * <pre>
  *                                               +---+
- * REMOTE                                        + R +
- *                                               +---+
- *                                                 |
- *                                                 v
- *                                               +---+
  * COORDINATOR           +-----------------------+ C +----------------------+
  *                       |                       +---+                      |
  *                       |                                                  |
@@ -56,7 +51,6 @@ import static java.lang.Integer.parseInt;
 @SuppressWarnings("checkstyle:magicnumber")
 public class SimulatorAddress {
 
-    public static final SimulatorAddress REMOTE = new SimulatorAddress(AddressLevel.REMOTE, 0, 0, 0);
     public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0, 0);
     public static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AddressLevel.AGENT, 0, 0, 0);
     public static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(AddressLevel.WORKER, 0, 0, 0);
@@ -227,11 +221,7 @@ public class SimulatorAddress {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (AddressLevel.REMOTE == addressLevel) {
-            sb.append(REMOTE_STRING);
-        } else {
-            sb.append(COORDINATOR_STRING);
-        }
+        sb.append(COORDINATOR_STRING);
         appendAddressLevelString(sb, AddressLevel.COORDINATOR, "_A", agentIndex);
         appendAddressLevelString(sb, AddressLevel.AGENT, "_W", workerIndex);
         appendAddressLevelString(sb, AddressLevel.WORKER, "_T", testIndex);
@@ -248,7 +238,7 @@ public class SimulatorAddress {
         String[] sections = sourceString.split("_");
         AddressLevel addressLevel = AddressLevel.fromInt(sections.length - 1);
         if (addressLevel == AddressLevel.COORDINATOR) {
-            return REMOTE_STRING.equals(sourceString) ? REMOTE : COORDINATOR;
+            return COORDINATOR;
         }
 
         int agentIndex = getAddressIndex(AddressLevel.COORDINATOR, addressLevel, "A*", sections);
