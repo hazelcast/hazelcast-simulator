@@ -124,18 +124,18 @@ public class AgentData {
         return workers;
     }
 
-    void addWorker(WorkerData workerData) {
-        workers.add(workerData);
+    void addWorker(WorkerData worker) {
+        workers.add(worker);
     }
 
-    void removeWorker(WorkerData workerData) {
-        workers.remove(workerData);
+    void removeWorker(WorkerData worker) {
+        workers.remove(worker);
     }
 
     public int getCount(String workerType) {
         int result = 0;
-        for (WorkerData workerData : workers) {
-            if (workerData.getParameters().getWorkerType().equals(workerType)) {
+        for (WorkerData worker : workers) {
+            if (worker.getParameters().getWorkerType().equals(workerType)) {
                 result++;
             }
         }
@@ -144,8 +144,8 @@ public class AgentData {
 
     public Set<String> getVersionSpecs() {
         Set<String> result = new HashSet<String>();
-        for (WorkerData workerData : workers) {
-            result.add(workerData.getParameters().get("VERSION_SPEC"));
+        for (WorkerData worker : workers) {
+            result.add(worker.getParameters().get("VERSION_SPEC"));
         }
         return result;
     }

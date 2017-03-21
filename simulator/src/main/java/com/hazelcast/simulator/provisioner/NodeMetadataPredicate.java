@@ -40,10 +40,10 @@ class NodeMetadataPredicate implements Predicate<NodeMetadata> {
     @Override
     public boolean apply(NodeMetadata nodeMetadata) {
         for (String publicAddress : nodeMetadata.getPublicAddresses()) {
-            AgentData agentData = terminateMap.remove(publicAddress);
-            if (agentData != null) {
+            AgentData agent = terminateMap.remove(publicAddress);
+            if (agent != null) {
                 LOGGER.info(format("    Terminating instance %s", publicAddress));
-                componentRegistry.removeAgent(agentData);
+                componentRegistry.removeAgent(agent);
                 return true;
             }
         }

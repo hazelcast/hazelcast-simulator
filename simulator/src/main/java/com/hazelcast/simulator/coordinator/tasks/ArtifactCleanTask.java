@@ -72,12 +72,12 @@ public class ArtifactCleanTask {
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
         ThreadSpawner spawner = new ThreadSpawner("clean", true);
-        for (final AgentData agentData : componentRegistry.getAgents()) {
+        for (final AgentData agent : componentRegistry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    LOGGER.info(format("Cleaning %s", agentData.getPublicAddress()));
-                    bash.ssh(agentData.getPublicAddress(), cleanCommand);
+                    LOGGER.info(format("Cleaning %s", agent.getPublicAddress()));
+                    bash.ssh(agent.getPublicAddress(), cleanCommand);
                 }
             });
         }

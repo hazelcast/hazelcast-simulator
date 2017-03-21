@@ -17,7 +17,9 @@ public class StubVendorDriver extends VendorDriver {
 
     @Override
     public WorkerParameters loadWorkerParameters(String workerType) {
-        return new WorkerParameters().set("WORKER_TYPE",workerType);
+        return new WorkerParameters()
+                .setAll(properties)
+                .set("WORKER_TYPE", workerType);
     }
 
     @Override

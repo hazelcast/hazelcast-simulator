@@ -103,10 +103,10 @@ public class FailureCollector {
     private FailureOperation enrich(FailureOperation failure) {
         String testId = failure.getTestId();
         if (testId != null) {
-            TestData testData = componentRegistry.getTest(testId);
-            if (testData != null) {
-                failure.setTestCase(testData.getTestCase());
-                failure.setDuration(System.currentTimeMillis() - testData.getStartTimeMillis());
+            TestData test = componentRegistry.getTest(testId);
+            if (test != null) {
+                failure.setTestCase(test.getTestCase());
+                failure.setDuration(System.currentTimeMillis() - test.getStartTimeMillis());
             }
         }
         return failure;

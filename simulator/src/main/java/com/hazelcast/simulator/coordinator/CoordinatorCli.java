@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.AgentUtils.sslTestAgents;
-import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -375,11 +374,26 @@ final class CoordinatorCli {
         }
 
         int members = options.valueOf(membersSpec);
+        if (members == -1) {
+            members = componentRegistry.agentCount();
+        } else if (members < -1) {
+            throw new CommandLineExitException("--member must be a equal or larger than -1");
+        }
+
         int clients = options.valueOf(clientsSpec);
         if (clients < 0) {
             throw new CommandLineExitException("--client must be a equal or larger than 0");
         }
-        return createDeploymentPlan(componentRegistry, vendorDriver, workerType, members, clients);
+
+        if (members == 0 && clients == 0) {
+            throw new CommandLineExitException("No workers have been defined!");
+        }
+
+        DeploymentPlan plan = new DeploymentPlan(vendorDriver, componentRegistry.getAgents())
+                .addToPlan(members, "member")
+                .addToPlan(clients, options.valueOf(clientTypeSpec));
+        plan.printLayout();
+        return plan;
     }
 
     private static File getAgentsFile() {

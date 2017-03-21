@@ -118,13 +118,13 @@ public class RunTestSuiteTask {
         LOGGER.info("Starting TestSuite");
         echoTestSuiteDuration(parallel);
 
-        for (TestData testData : tests) {
-            int testIndex = testData.getTestIndex();
-            TestCase testCase = testData.getTestCase();
+        for (TestData test : tests) {
+            int testIndex = test.getTestIndex();
+            TestCase testCase = test.getTestCase();
             LOGGER.info(format("Configuration for %s (T%d):%n%s", testCase.getId(), testIndex, testCase));
 
             TestCaseRunner runner = new TestCaseRunner(
-                    testData,
+                    test,
                     targets,
                     client,
                     testPhaseSyncMap,
