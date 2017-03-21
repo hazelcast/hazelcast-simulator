@@ -160,7 +160,7 @@ public class WorkerProcessManager {
 
                 SimulatorAddress workerAddress
                         = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAddressIndex(),
-                        parameters.intGet("WORKER_INDEX"), 0);
+                        parameters.intGet("WORKER_INDEX"));
 
                 server.sendCoordinator(new FailureOperation("Failed to start worker [" + workerAddress + "]",
                         WORKER_CREATE_ERROR, workerAddress, agentAddress.toString(), e));
@@ -179,7 +179,7 @@ public class WorkerProcessManager {
 
             String workerType = parameters.getWorkerType();
             SimulatorAddress workerAddress = new SimulatorAddress(
-                    AddressLevel.WORKER, agentAddress.getAgentIndex(), workerIndex, 0);
+                    AddressLevel.WORKER, agentAddress.getAgentIndex(), workerIndex);
 
             LogOperation logOperation = new LogOperation(
                     format("Created %s Worker %s", workerType, workerAddress), DEBUG);

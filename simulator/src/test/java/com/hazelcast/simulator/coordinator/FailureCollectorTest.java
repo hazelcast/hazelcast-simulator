@@ -50,7 +50,7 @@ public class FailureCollectorTest {
         agentAddress = registry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
 
 
-        workerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 1, 0);
+        workerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 1);
 
         WorkerParameters workerParameters = new WorkerParameters()
                 .set("WORKER_ADDRESS", workerAddress);
@@ -77,7 +77,7 @@ public class FailureCollectorTest {
 
     @Test
     public void notify_whenNonExistingWorker_thenIgnore() {
-        SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 100, 0);
+        SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 100);
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
                 "workerId", "testId", null);
 

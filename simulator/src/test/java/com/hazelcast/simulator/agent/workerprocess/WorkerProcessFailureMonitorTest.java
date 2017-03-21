@@ -281,7 +281,7 @@ public class WorkerProcessFailureMonitorTest {
     }
 
     private SimulatorAddress createWorkerAddress() {
-        return new SimulatorAddress(WORKER, 1, ++addressIndex, 0);
+        return new SimulatorAddress(WORKER, 1, ++addressIndex);
     }
 
     private WorkerProcess addRunningWorkerProcess() {

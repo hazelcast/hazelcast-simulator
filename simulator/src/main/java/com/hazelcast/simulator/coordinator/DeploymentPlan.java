@@ -209,7 +209,7 @@ public final class DeploymentPlan {
 
         void registerWorker(WorkerParameters parameters) {
             int workerIndex = agent.getNextWorkerIndex();
-            SimulatorAddress workerAddress = new SimulatorAddress(WORKER, agent.getAddressIndex(), workerIndex, 0);
+            SimulatorAddress workerAddress = new SimulatorAddress(WORKER, agent.getAddressIndex(), workerIndex);
 
             String workerDirName = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + parameters.getWorkerType();
             parameters.set("WORKER_ADDRESS", workerAddress)

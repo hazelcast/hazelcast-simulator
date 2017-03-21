@@ -29,8 +29,8 @@ public class WorkerProcessManagerTest {
 
     @Before
     public void before() {
-        firstWorkerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
-        secondWorkerAddress = new SimulatorAddress(WORKER, 1, 2, 0);
+        firstWorkerAddress = new SimulatorAddress(WORKER, 1, 1);
+        secondWorkerAddress = new SimulatorAddress(WORKER, 1, 2);
 
         firstWorkerProcess = new WorkerProcess(firstWorkerAddress, firstWorkerAddress.toString(), null);
         firstWorkerProcess.setProcess(mock(Process.class));
@@ -95,7 +95,7 @@ public class WorkerProcessManagerTest {
         long secondLastSeen = secondWorkerProcess.getLastSeen();
 
         sleepMillis(100);
-        workerProcessManager.updateLastSeenTimestamp(new SimulatorAddress(WORKER, 2, 1, 0));
+        workerProcessManager.updateLastSeenTimestamp(new SimulatorAddress(WORKER, 2, 1));
 
         assertEquals(firstLastSeen, firstWorkerProcess.getLastSeen());
         assertEquals(secondLastSeen, secondWorkerProcess.getLastSeen());

@@ -39,10 +39,10 @@ public class PerformanceStatsCollectorTest {
         emptyPerformanceStatsCollector = new PerformanceStatsCollector();
         performanceStatsCollector = new PerformanceStatsCollector();
 
-        a1w1 = new SimulatorAddress(WORKER, 1, 1, 0);
-        a1w2 = new SimulatorAddress(WORKER, 1, 2, 0);
-        a2w1 = new SimulatorAddress(WORKER, 2, 1, 0);
-        a2w2 = new SimulatorAddress(WORKER, 2, 2, 0);
+        a1w1 = new SimulatorAddress(WORKER, 1, 1);
+        a1w2 = new SimulatorAddress(WORKER, 1, 2);
+        a2w1 = new SimulatorAddress(WORKER, 2, 1);
+        a2w2 = new SimulatorAddress(WORKER, 2, 2);
 
         a1 = a1w1.getParent();
         a2 = a2w1.getParent();
@@ -70,7 +70,7 @@ public class PerformanceStatsCollectorTest {
 
     @Test
     public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
-        SimulatorAddress worker = new SimulatorAddress(WORKER, 3, 1, 0);
+        SimulatorAddress worker = new SimulatorAddress(WORKER, 3, 1);
 
         Map<String, PerformanceStats> performanceStats = new HashMap<String, PerformanceStats>();
         performanceStats.put(TEST_CASE_ID_1, new PerformanceStats(

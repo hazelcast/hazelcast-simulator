@@ -36,32 +36,25 @@ import static java.lang.Integer.parseInt;
  *                    +--+---+                                           +---+--+
  * AGENT              | C_A1 |                              +------------+ C_A2 +------------+
  *                    +--+---+                              |            +------+            |
- *                       |                                 |                                 |
- *                       v                                 v                                 v
- *                  +----+----+                       +----+----+                       +----+----+
- * WORKER       +---+ C_A1_W1 +---+               +---+ C_A2_W1 +---+               +---+ C_A2_W2 +---+
- *              |   +---------+   |               |   +---------+   |               |   +---------+   |
- *              |                 |               |                 |               |                 |
- *              v                 v               v                 v               v                 v
- *        +-----+------+   +------+-----+   +-----+------+   +------+-----+   +-----+------+   +------+-----+
- * TEST   | C_A1_W1_T1 |   | C_A1_W1_T2 |   | C_A2_W1_T1 |   | C_A2_W1_T2 |   | C_A2_W2_T1 |   | C_A2_W2_T2 |
- *        +------------+   +------------+   +------------+   +------------+   +------------+   +------------+
+ *                       |                                  |                                |
+ *                       v                                  v                                v
+ *                  +----+----+                        +----+----+                      +----+----+
+ * WORKER           + C_A1_W1 +                        + C_A2_W1 +                      + C_A2_W2 +
+ *                  +---------+                        +---------+                      +---------+
  * </pre>
  */
 @SuppressWarnings("checkstyle:magicnumber")
 public class SimulatorAddress {
 
-    public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0, 0);
-    public static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AddressLevel.AGENT, 0, 0, 0);
-    public static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(AddressLevel.WORKER, 0, 0, 0);
+    public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0);
+    public static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AddressLevel.AGENT, 0, 0);
+    public static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(AddressLevel.WORKER, 0, 0);
 
-    private static final String REMOTE_STRING = "R";
     private static final String COORDINATOR_STRING = "C";
 
     private final AddressLevel addressLevel;
     private final int agentIndex;
     private final int workerIndex;
-    private final int testIndex;
 
     /**
      * Creates a new {@link SimulatorAddress} instance.
@@ -69,13 +62,11 @@ public class SimulatorAddress {
      * @param addressLevel the {@link AddressLevel} of the Simulator component
      * @param agentIndex   the index of the addressed Agent or <tt>0</tt> for all Agents
      * @param workerIndex  the index of the addressed Worker or <tt>0</tt> for all Workers
-     * @param testIndex    the index of the addressed Test or <tt>0</tt> for all Tests
      */
-    public SimulatorAddress(AddressLevel addressLevel, int agentIndex, int workerIndex, int testIndex) {
+    public SimulatorAddress(AddressLevel addressLevel, int agentIndex, int workerIndex) {
         this.addressLevel = addressLevel;
         this.agentIndex = agentIndex;
         this.workerIndex = workerIndex;
-        this.testIndex = testIndex;
     }
 
     /**
@@ -106,15 +97,6 @@ public class SimulatorAddress {
     }
 
     /**
-     * Returns the Test index of this {@link SimulatorAddress}.
-     *
-     * @return the index of the addressed Test or <tt>0</tt> if all Tests are addressed
-     */
-    public int getTestIndex() {
-        return testIndex;
-    }
-
-    /**
      * Returns the address index of the defined {@link AddressLevel} of this {@link SimulatorAddress}.
      *
      * @return the index of the {@link AddressLevel}
@@ -125,8 +107,6 @@ public class SimulatorAddress {
                 return agentIndex;
             case WORKER:
                 return workerIndex;
-            case TEST:
-                return testIndex;
             default:
                 throw new IllegalArgumentException("Coordinator has no addressIndex!");
         }
@@ -139,10 +119,8 @@ public class SimulatorAddress {
      */
     public SimulatorAddress getParent() {
         switch (addressLevel) {
-            case TEST:
-                return new SimulatorAddress(AddressLevel.WORKER, agentIndex, workerIndex, 0);
             case WORKER:
-                return new SimulatorAddress(AddressLevel.AGENT, agentIndex, 0, 0);
+                return new SimulatorAddress(AddressLevel.AGENT, agentIndex, 0);
             case AGENT:
                 return SimulatorAddress.COORDINATOR;
             default:
@@ -159,11 +137,9 @@ public class SimulatorAddress {
     public SimulatorAddress getChild(int childIndex) {
         switch (addressLevel) {
             case COORDINATOR:
-                return new SimulatorAddress(AddressLevel.AGENT, childIndex, 0, 0);
+                return new SimulatorAddress(AddressLevel.AGENT, childIndex, 0);
             case AGENT:
-                return new SimulatorAddress(AddressLevel.WORKER, agentIndex, childIndex, 0);
-            case WORKER:
-                return new SimulatorAddress(AddressLevel.TEST, agentIndex, workerIndex, childIndex);
+                return new SimulatorAddress(AddressLevel.WORKER, agentIndex, childIndex);
             default:
                 throw new IllegalArgumentException("Test has no child!");
         }
@@ -180,8 +156,6 @@ public class SimulatorAddress {
                 return agentIndex == 0;
             case WORKER:
                 return agentIndex == 0 || workerIndex == 0;
-            case TEST:
-                return agentIndex == 0 || workerIndex == 0 || testIndex == 0;
             default:
                 return false;
         }
@@ -203,9 +177,6 @@ public class SimulatorAddress {
         if (workerIndex != that.workerIndex) {
             return false;
         }
-        if (testIndex != that.testIndex) {
-            return false;
-        }
         return (addressLevel == that.addressLevel);
     }
 
@@ -214,7 +185,6 @@ public class SimulatorAddress {
         int result = addressLevel.hashCode();
         result = 31 * result + agentIndex;
         result = 31 * result + workerIndex;
-        result = 31 * result + testIndex;
         return result;
     }
 
@@ -224,7 +194,6 @@ public class SimulatorAddress {
         sb.append(COORDINATOR_STRING);
         appendAddressLevelString(sb, AddressLevel.COORDINATOR, "_A", agentIndex);
         appendAddressLevelString(sb, AddressLevel.AGENT, "_W", workerIndex);
-        appendAddressLevelString(sb, AddressLevel.WORKER, "_T", testIndex);
         return sb.toString();
     }
 
@@ -243,9 +212,8 @@ public class SimulatorAddress {
 
         int agentIndex = getAddressIndex(AddressLevel.COORDINATOR, addressLevel, "A*", sections);
         int workerIndex = getAddressIndex(AddressLevel.AGENT, addressLevel, "W*", sections);
-        int testIndex = getAddressIndex(AddressLevel.WORKER, addressLevel, "T*", sections);
 
-        return new SimulatorAddress(addressLevel, agentIndex, workerIndex, testIndex);
+        return new SimulatorAddress(addressLevel, agentIndex, workerIndex);
     }
 
     public static List<SimulatorAddress> fromString(List<String> list) {

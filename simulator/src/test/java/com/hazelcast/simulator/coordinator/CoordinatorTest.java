@@ -168,7 +168,7 @@ public class CoordinatorTest {
                 .setDurationSeconds(10);
 
         String testId = coordinator.testRun(new RcTestRunOperation(suite).setAsync(true));
-        assertEquals("C_A*_W*_T" + (initialTestIndex + 1), testId);
+        assertEquals(suite.getTestCaseList().get(0).getId(), testId);
 
         assertTestCompletesEventually(testId);
     }

@@ -25,8 +25,8 @@ public class WorkerQueryTest {
     @Before
     public void before() {
         list = new LinkedList<WorkerData>();
-        agent1 = new SimulatorAddress(AddressLevel.AGENT, 1, 0, 0);
-        agent2 = new SimulatorAddress(AddressLevel.AGENT, 2, 0, 0);
+        agent1 = new SimulatorAddress(AddressLevel.AGENT, 1, 0);
+        agent2 = new SimulatorAddress(AddressLevel.AGENT, 2, 0);
     }
 
     @Test
@@ -160,7 +160,7 @@ public class WorkerQueryTest {
 
     private WorkerParameters newParameters(SimulatorAddress agent, int workerIndex, String workerType, String versionSpec) {
         return new WorkerParameters()
-                .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), workerIndex, 0))
+                .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), workerIndex))
                 .set("WORKER_TYPE", workerType)
                 .set("VERSION_SPEC", versionSpec);
     }

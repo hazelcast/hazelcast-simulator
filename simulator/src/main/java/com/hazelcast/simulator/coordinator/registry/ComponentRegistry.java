@@ -20,7 +20,6 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 
@@ -300,8 +299,6 @@ public class ComponentRegistry {
         sb.append(format("    Tests %s", tests.size())).append('\n');
         for (TestData test : tests) {
             sb.append("        ")
-                    .append(test.getAddress())
-                    .append(" ")
                     .append(test.getTestCase().getId())
                     .append(" ")
                     .append(test.getStatusString())
@@ -322,10 +319,9 @@ public class ComponentRegistry {
                 id = id + "__" + count.getAndIncrement();
             }
             int testIndex = testIndexGenerator.incrementAndGet();
-            SimulatorAddress testAddress = new SimulatorAddress(AddressLevel.TEST, 0, 0, testIndex);
             testCase.setId(id);
 
-            TestData test = new TestData(testIndex, testAddress, testCase, testSuite);
+            TestData test = new TestData(testIndex, testCase, testSuite);
             result.add(test);
             tests.put(id, test);
         }
@@ -342,14 +338,5 @@ public class ComponentRegistry {
 
     public TestData getTest(String testId) {
         return tests.get(testId);
-    }
-
-    public TestData getTestByAddress(SimulatorAddress address) {
-        for (TestData test : getTests()) {
-            if (test.getAddress().equals(address)) {
-                return test;
-            }
-        }
-        return null;
     }
 }

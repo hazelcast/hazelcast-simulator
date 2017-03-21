@@ -17,7 +17,7 @@ public class AgentDataTest {
     public void testConstructor() {
         AgentData agentData = new AgentData(DEFAULT_ADDRESS_INDEX, DEFAULT_PUBLIC_ADDRESS, DEFAULT_PRIVATE_ADDRESS);
 
-        assertEquals(new SimulatorAddress(AddressLevel.AGENT, DEFAULT_ADDRESS_INDEX, 0, 0), agentData.getAddress());
+        assertEquals(new SimulatorAddress(AddressLevel.AGENT, DEFAULT_ADDRESS_INDEX, 0), agentData.getAddress());
         assertEquals(DEFAULT_ADDRESS_INDEX, agentData.getAddressIndex());
         assertEquals(DEFAULT_PUBLIC_ADDRESS, agentData.getPublicAddress());
         assertEquals(DEFAULT_PRIVATE_ADDRESS, agentData.getPrivateAddress());
