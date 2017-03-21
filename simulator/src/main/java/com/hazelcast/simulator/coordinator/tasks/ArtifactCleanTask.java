@@ -36,12 +36,12 @@ import static java.lang.String.format;
 public class ArtifactCleanTask {
     private static final Logger LOGGER = Logger.getLogger(ArtifactCleanTask.class);
 
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
 
-    public ArtifactCleanTask(ComponentRegistry componentRegistry, SimulatorProperties simulatorProperties) {
-        this.componentRegistry = componentRegistry;
+    public ArtifactCleanTask(ComponentRegistry registry, SimulatorProperties simulatorProperties) {
+        this.registry = registry;
         this.simulatorProperties = simulatorProperties;
         this.bash = new Bash(simulatorProperties);
     }
@@ -67,12 +67,12 @@ public class ArtifactCleanTask {
     private void cleanRemote() {
         long started = System.nanoTime();
 
-        LOGGER.info(format("Cleaning Worker homes of %s machines...", componentRegistry.agentCount()));
+        LOGGER.info(format("Cleaning Worker homes of %s machines...", registry.agentCount()));
 
         final String cleanCommand = format("rm -fr hazelcast-simulator-%s/workers/*", getSimulatorVersion());
 
         ThreadSpawner spawner = new ThreadSpawner("clean", true);
-        for (final AgentData agent : componentRegistry.getAgents()) {
+        for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -85,6 +85,6 @@ public class ArtifactCleanTask {
 
         long elapsed = getElapsedSeconds(started);
         LOGGER.info(format("Finished cleaning Worker homes of %s machines (%s seconds)",
-                componentRegistry.agentCount(), elapsed));
+                registry.agentCount(), elapsed));
     }
 }

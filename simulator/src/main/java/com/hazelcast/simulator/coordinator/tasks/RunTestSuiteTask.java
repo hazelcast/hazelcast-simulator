@@ -51,7 +51,7 @@ public class RunTestSuiteTask {
 
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final FailureCollector failureCollector;
     private final CoordinatorClient client;
     private final PerformanceStatsCollector performanceStatsCollector;
@@ -59,27 +59,27 @@ public class RunTestSuiteTask {
 
     public RunTestSuiteTask(TestSuite testSuite,
                             CoordinatorParameters coordinatorParameters,
-                            ComponentRegistry componentRegistry,
+                            ComponentRegistry registry,
                             FailureCollector failureCollector,
                             CoordinatorClient client,
                             PerformanceStatsCollector performanceStatsCollector) {
         this.testSuite = testSuite;
         this.coordinatorParameters = coordinatorParameters;
-        this.componentRegistry = componentRegistry;
+        this.registry = registry;
         this.failureCollector = failureCollector;
         this.client = client;
         this.performanceStatsCollector = performanceStatsCollector;
     }
 
     public boolean run() {
-        List<TestData> tests = componentRegistry.addTests(testSuite);
+        List<TestData> tests = registry.addTests(testSuite);
         List<WorkerData> targets = initTargets();
         return run0(tests, targets);
     }
 
     private List<WorkerData> initTargets() {
         WorkerQuery workerQuery = testSuite.getWorkerQuery();
-        List<WorkerData> targets = workerQuery.execute(componentRegistry.getWorkers());
+        List<WorkerData> targets = workerQuery.execute(registry.getWorkers());
         if (targets.isEmpty()) {
             throw new IllegalStateException("No workers found for query: " + workerQuery);
         }
@@ -129,7 +129,7 @@ public class RunTestSuiteTask {
                     client,
                     testPhaseSyncMap,
                     failureCollector,
-                    componentRegistry,
+                    registry,
                     performanceStatsCollector,
                     coordinatorParameters.getPerformanceMonitorIntervalSeconds());
             runners.add(runner);

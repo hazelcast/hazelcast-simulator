@@ -153,12 +153,12 @@ class Wizard {
     }
 
     void createSshCopyIdScript(SimulatorProperties simulatorProperties) {
-        ComponentRegistry componentRegistry = loadComponentRegister(agentFile, true);
+        ComponentRegistry registry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
         ensureExistingFile(SSH_COPY_ID_FILE);
         writeText("#!/bin/bash" + NEW_LINE + NEW_LINE, SSH_COPY_ID_FILE);
-        for (AgentData agent : componentRegistry.getAgents()) {
+        for (AgentData agent : registry.getAgents()) {
             String publicAddress = agent.getPublicAddress();
             appendText(format("ssh-copy-id -i ~/.ssh/id_rsa.pub %s@%s%n", userName, publicAddress), SSH_COPY_ID_FILE);
         }
@@ -172,10 +172,10 @@ class Wizard {
             throw new CommandLineExitException("SSH is not supported for local setups.");
         }
 
-        ComponentRegistry componentRegistry = loadComponentRegister(agentFile, true);
+        ComponentRegistry registry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
-        for (AgentData agent : componentRegistry.getAgents()) {
+        for (AgentData agent : registry.getAgents()) {
             String publicAddress = agent.getPublicAddress();
             echo("Connecting to %s@%s...", userName, publicAddress);
             bash.ssh(publicAddress, "echo ok 2>&1");

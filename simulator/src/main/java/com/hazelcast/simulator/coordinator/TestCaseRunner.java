@@ -99,7 +99,7 @@ public final class TestCaseRunner {
                           CoordinatorClient client,
                           Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                           FailureCollector failureCollector,
-                          ComponentRegistry componentRegistry,
+                          ComponentRegistry registry,
                           PerformanceStatsCollector performanceStatsCollector,
                           int performanceMonitorIntervalSeconds) {
         this.test = test;
@@ -119,7 +119,7 @@ public final class TestCaseRunner {
         this.targets = targets;
         this.globalTarget = targets.iterator().next();
         this.isVerifyEnabled = testSuite.isVerifyEnabled();
-        this.targetType = testSuite.getWorkerQuery().getTargetType().resolvePreferClient(componentRegistry.hasClientWorkers());
+        this.targetType = testSuite.getWorkerQuery().getTargetType().resolvePreferClient(registry.hasClientWorkers());
         this.targetCount = targets.size();
 
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;

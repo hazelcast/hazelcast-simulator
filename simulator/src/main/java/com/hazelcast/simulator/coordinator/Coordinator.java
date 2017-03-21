@@ -75,7 +75,7 @@ public class Coordinator implements Closeable {
 
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final CoordinatorParameters parameters;
     private final File outputDirectory;
     private final FailureCollector failureCollector;
@@ -83,11 +83,11 @@ public class Coordinator implements Closeable {
     private final int testCompletionTimeoutSeconds;
     private final CoordinatorClient client;
 
-    Coordinator(ComponentRegistry componentRegistry, CoordinatorParameters parameters) {
-        this.componentRegistry = componentRegistry;
+    Coordinator(ComponentRegistry registry, CoordinatorParameters parameters) {
+        this.registry = registry;
         this.parameters = parameters;
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
-        this.failureCollector = new FailureCollector(outputDirectory, componentRegistry);
+        this.failureCollector = new FailureCollector(outputDirectory, registry);
         this.simulatorProperties = parameters.getSimulatorProperties();
         this.testCompletionTimeoutSeconds = simulatorProperties.getTestCompletionTimeoutSeconds();
 
@@ -110,13 +110,13 @@ public class Coordinator implements Closeable {
 
         log("Coordinator starting...");
 
-        startAgents(simulatorProperties, componentRegistry);
+        startAgents(simulatorProperties, registry);
 
         startClient();
 
         new InstallVendorTask(
                 simulatorProperties,
-                componentRegistry.getAgentIps(),
+                registry.getAgentIps(),
                 singleton(simulatorProperties.getVersionSpec()),
                 parameters.getSessionId()).run();
 
@@ -156,7 +156,7 @@ public class Coordinator implements Closeable {
 
     private void logConfiguration() {
         log("VendorDriver: %s", simulatorProperties.get("VENDOR"));
-        log("Total number of agents: %s", componentRegistry.agentCount());
+        log("Total number of agents: %s", registry.agentCount());
         log("Output directory: " + outputDirectory.getAbsolutePath());
 
         int performanceIntervalSeconds = parameters.getPerformanceMonitorIntervalSeconds();
@@ -176,14 +176,14 @@ public class Coordinator implements Closeable {
     public void close() {
         stopTests();
 
-        new TerminateWorkersTask(simulatorProperties, componentRegistry, client).run();
+        new TerminateWorkersTask(simulatorProperties, registry, client).run();
 
         client.close();
 
-        stopAgents(simulatorProperties, componentRegistry);
+        stopAgents(simulatorProperties, registry);
 
         if (!parameters.skipDownload()) {
-            new DownloadTask(componentRegistry.getAgentIps(),
+            new DownloadTask(registry.getAgentIps(),
                     simulatorProperties.asMap(),
                     outputDirectory.getParentFile(),
                     parameters.getSessionId()).run();
@@ -193,7 +193,7 @@ public class Coordinator implements Closeable {
     }
 
     private void stopTests() {
-        Collection<TestData> tests = componentRegistry.getTests();
+        Collection<TestData> tests = registry.getTests();
         for (TestData test : tests) {
             test.setStopRequested(true);
         }
@@ -220,7 +220,7 @@ public class Coordinator implements Closeable {
 
     private void startClient() throws Exception {
         // todo: should be async to speed things up
-        for (AgentData agent : componentRegistry.getAgents()) {
+        for (AgentData agent : registry.getAgents()) {
             client.connectToAgentBroker(agent.getAddress(), agent.getPublicAddress());
         }
 
@@ -230,7 +230,7 @@ public class Coordinator implements Closeable {
     public void download() throws Exception {
         LOGGER.info("Downloading...");
 
-        new DownloadTask(componentRegistry.getAgentIps(),
+        new DownloadTask(registry.getAgentIps(),
                 simulatorProperties.asMap(),
                 outputDirectory.getParentFile(),
                 parameters.getSessionId()).run();
@@ -257,17 +257,17 @@ public class Coordinator implements Closeable {
     }
 
     public void install(String versionSpec) throws Exception {
-        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + componentRegistry.getAgents().size() + " agents...");
+        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + registry.getAgents().size() + " agents...");
         new InstallVendorTask(
                 simulatorProperties,
-                componentRegistry.getAgentIps(),
+                registry.getAgentIps(),
                 singleton(versionSpec),
                 parameters.getSessionId()).run();
         LOGGER.info("Install successful!");
     }
 
     public String printLayout() throws Exception {
-        return componentRegistry.printLayout();
+        return registry.printLayout();
     }
 
     public String testRun(RcTestRunOperation op) throws Exception {
@@ -288,7 +288,7 @@ public class Coordinator implements Closeable {
 
             for (; ; ) {
                 sleepSeconds(1);
-                for (TestData test : componentRegistry.getTests()) {
+                for (TestData test : registry.getTests()) {
                     if (test.getTestSuite() == op.getTestSuite()) {
                         return test.getAddress().toString();
                     }
@@ -304,7 +304,7 @@ public class Coordinator implements Closeable {
     public String testStop(RcTestStopOperation op) throws Exception {
         LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
 
-        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        TestData test = registry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
         if (test == null) {
             throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
         }
@@ -324,7 +324,7 @@ public class Coordinator implements Closeable {
     }
 
     public String testStatus(RcTestStatusOperation op) throws Exception {
-        TestData test = componentRegistry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        TestData test = registry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
         return test == null ? "null" : test.getStatusString();
     }
 
@@ -335,7 +335,7 @@ public class Coordinator implements Closeable {
         LOGGER.info("Starting " + op.getCount() + " [" + workerType + "] workers...");
 
         VendorDriver vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
-                .setAgents(componentRegistry.getAgents())
+                .setAgents(registry.getAgents())
                 .setAll(simulatorProperties.asPublicMap())
                 .set("CLIENT_ARGS", op.getVmOptions())
                 .set("MEMBER_ARGS", op.getVmOptions())
@@ -360,7 +360,7 @@ public class Coordinator implements Closeable {
     }
 
     private List<AgentData> findAgents(RcWorkerStartOperation op) {
-        List<AgentData> agents = new ArrayList<AgentData>(componentRegistry.getAgents());
+        List<AgentData> agents = new ArrayList<AgentData>(registry.getAgents());
         List<AgentData> result = new ArrayList<AgentData>();
         for (AgentData agent : agents) {
             List<String> expectedAgentAddresses = op.getAgentAddresses();
@@ -388,9 +388,9 @@ public class Coordinator implements Closeable {
 
         LOGGER.info(format("Killing %s...", workerQuery));
 
-        List<WorkerData> result = new KillWorkersTask(componentRegistry, client, op.getCommand(), workerQuery).run();
+        List<WorkerData> result = new KillWorkersTask(registry, client, op.getCommand(), workerQuery).run();
 
-        LOGGER.info("\n" + componentRegistry.printLayout());
+        LOGGER.info("\n" + registry.printLayout());
 
         LOGGER.info(format("Killing %s complete", workerQuery));
 
@@ -398,7 +398,7 @@ public class Coordinator implements Closeable {
     }
 
     public String workerScript(RcWorkerScriptOperation operation) throws Exception {
-        List<WorkerData> workers = operation.getWorkerQuery().execute(componentRegistry.getWorkers());
+        List<WorkerData> workers = operation.getWorkerQuery().execute(registry.getWorkers());
 
         LOGGER.info(format("Script [%s] on %s workers ...", operation.getCommand(), workers.size()));
 
@@ -431,14 +431,14 @@ public class Coordinator implements Closeable {
                 deploymentPlan,
                 workerTags,
                 client,
-                componentRegistry,
+                registry,
                 parameters.getWorkerVmStartupDelayMs());
     }
 
     RunTestSuiteTask createRunTestSuiteTask(TestSuite testSuite) {
         return new RunTestSuiteTask(testSuite,
                 parameters,
-                componentRegistry,
+                registry,
                 failureCollector,
                 client,
                 performanceStatsCollector);

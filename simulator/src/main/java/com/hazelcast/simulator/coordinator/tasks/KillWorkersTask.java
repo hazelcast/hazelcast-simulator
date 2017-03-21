@@ -39,25 +39,25 @@ public class KillWorkersTask {
     private static final int WORKER_TERMINATION_TIMEOUT_SECONDS = 300;
     private static final int WORKER_TERMINATION_CHECK_DELAY = 5;
 
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final CoordinatorClient client;
     private final String command;
     private final WorkerQuery workerQuery;
     private final List<WorkerData> result = new ArrayList<WorkerData>();
 
     public KillWorkersTask(
-            ComponentRegistry componentRegistry,
+            ComponentRegistry registry,
             CoordinatorClient client,
             String command,
             WorkerQuery workerQuery) {
-        this.componentRegistry = componentRegistry;
+        this.registry = registry;
         this.client = client;
         this.command = command;
         this.workerQuery = workerQuery;
     }
 
     public List<WorkerData> run() throws Exception {
-        List<WorkerData> victims = workerQuery.execute(componentRegistry.getWorkers());
+        List<WorkerData> victims = workerQuery.execute(registry.getWorkers());
 
         if (victims.isEmpty()) {
             LOGGER.info("No victims found");
@@ -94,7 +94,7 @@ public class KillWorkersTask {
             Iterator<WorkerData> it = aliveVictims.iterator();
             while (it.hasNext()) {
                 WorkerData victim = it.next();
-                if (componentRegistry.findWorker(victim.getAddress()) == null) {
+                if (registry.findWorker(victim.getAddress()) == null) {
                     result.add(victim);
                     it.remove();
                 }

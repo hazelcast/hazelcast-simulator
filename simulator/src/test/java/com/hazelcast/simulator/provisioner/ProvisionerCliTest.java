@@ -52,9 +52,9 @@ public class ProvisionerCliTest {
     public void testInit() {
         ProvisionerCli cli = new ProvisionerCli(getArgs());
 
-        ComponentRegistry componentRegistry = cli.getProvisioner().getComponentRegistry();
-        assertEquals(1, componentRegistry.agentCount());
-        assertEquals("127.0.0.1", componentRegistry.getFirstAgent().getPublicAddress());
+        ComponentRegistry registry = cli.getProvisioner().getRegistry();
+        assertEquals(1, registry.agentCount());
+        assertEquals("127.0.0.1", registry.getFirstAgent().getPublicAddress());
     }
 
     @Test(expected = ExitStatusZeroException.class)

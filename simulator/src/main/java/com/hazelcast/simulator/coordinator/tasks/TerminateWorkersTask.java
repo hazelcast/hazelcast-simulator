@@ -45,16 +45,16 @@ public class TerminateWorkersTask {
     private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(TerminateWorkersTask.class);
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final SimulatorProperties simulatorProperties;
     private final CoordinatorClient client;
 
     public TerminateWorkersTask(
             SimulatorProperties simulatorProperties,
-            ComponentRegistry componentRegistry,
+            ComponentRegistry registry,
             CoordinatorClient client) {
         this.simulatorProperties = simulatorProperties;
-        this.componentRegistry = componentRegistry;
+        this.registry = registry;
         this.client = client;
     }
 
@@ -67,19 +67,19 @@ public class TerminateWorkersTask {
     }
 
     private void run0() throws TimeoutException, InterruptedException, ExecutionException {
-        int currentWorkerCount = componentRegistry.workerCount();
+        int currentWorkerCount = registry.workerCount();
         if (currentWorkerCount == 0) {
             return;
         }
 
         LOGGER.info(format("Terminating %d Workers...", currentWorkerCount));
 
-        client.invokeAll(componentRegistry.getAgents(), new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
+        client.invokeAll(registry.getAgents(), new StopTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         // prevent any failures from being printed due to killing the members.
         Set<WorkerData> clients = new HashSet<WorkerData>();
         Set<WorkerData> members = new HashSet<WorkerData>();
-        for (WorkerData worker : componentRegistry.getWorkers()) {
+        for (WorkerData worker : registry.getWorkers()) {
             worker.setIgnoreFailures(true);
             if (worker.getParameters().getWorkerType().equals("member")) {
                 members.add(worker);
@@ -114,11 +114,11 @@ public class TerminateWorkersTask {
         LOGGER.info(format("Waiting up to %d seconds for shutdown of %d Workers...", timeoutSeconds, expectedWorkerCount));
         long expirationTimeMillis = currentTimeMillis() + SECONDS.toMillis(timeoutSeconds);
 
-        while (componentRegistry.workerCount() > 0 && currentTimeMillis() < expirationTimeMillis) {
+        while (registry.workerCount() > 0 && currentTimeMillis() < expirationTimeMillis) {
             sleepMillis(FINISHED_WORKERS_SLEEP_MILLIS);
         }
 
-        List<WorkerData> remainingWorkers = componentRegistry.getWorkers();
+        List<WorkerData> remainingWorkers = registry.getWorkers();
         if (remainingWorkers.isEmpty()) {
             LOGGER.info(format("Finished shutdown of all Workers (%d seconds)", getElapsedSeconds(started)));
         } else {

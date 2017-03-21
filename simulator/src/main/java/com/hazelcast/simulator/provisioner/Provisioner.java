@@ -79,7 +79,7 @@ class Provisioner {
 
     private final int machineWarmupSeconds;
 
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final File initScriptFile;
 
     public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash) {
@@ -91,25 +91,25 @@ class Provisioner {
         this.computeService = computeService;
         this.bash = bash;
         this.machineWarmupSeconds = machineWarmupSeconds;
-        this.componentRegistry = loadComponentRegister(agentsFile, false);
+        this.registry = loadComponentRegister(agentsFile, false);
         this.initScriptFile = getInitScriptFile(simulatorPath);
     }
 
     // just for testing
-    ComponentRegistry getComponentRegistry() {
-        return componentRegistry;
+    ComponentRegistry getRegistry() {
+        return registry;
     }
 
 
     void installJava() {
-        sslTestAgents(properties, componentRegistry);
+        sslTestAgents(properties, registry);
         ensureIsRemoteSetup(properties, "installJava");
 
         long started = System.nanoTime();
-        echoImportant("Installing JAVA on %d machines...", componentRegistry.agentCount());
+        echoImportant("Installing JAVA on %d machines...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installJava", true);
-        for (final AgentData agent : componentRegistry.getAgents()) {
+        for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -121,18 +121,18 @@ class Provisioner {
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished installing JAVA on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
+        echoImportant("Finished installing JAVA on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void installSimulator() {
-        sslTestAgents(properties, componentRegistry);
+        sslTestAgents(properties, registry);
         ensureIsRemoteSetup(properties, "install");
 
         long started = System.nanoTime();
-        echoImportant("Installing Simulator on %d machines...", componentRegistry.agentCount());
+        echoImportant("Installing Simulator on %d machines...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
-        for (final AgentData agent : componentRegistry.getAgents()) {
+        for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -145,18 +145,18 @@ class Provisioner {
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished installing Simulator on %d machines (%s seconds)", componentRegistry.agentCount(), elapsed);
+        echoImportant("Finished installing Simulator on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void killJavaProcesses(final boolean sudo) {
-        sslTestAgents(properties, componentRegistry);
+        sslTestAgents(properties, registry);
         ensureIsRemoteSetup(properties, "kill");
 
         long started = System.nanoTime();
-        echoImportant("Killing %s Java processes...", componentRegistry.agentCount());
+        echoImportant("Killing %s Java processes...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
-        for (final AgentData agent : componentRegistry.getAgents()) {
+        for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
@@ -168,7 +168,7 @@ class Provisioner {
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Successfully killed %s Java processes (%s seconds)", componentRegistry.agentCount(), elapsed);
+        echoImportant("Successfully killed %s Java processes (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void terminate() {
@@ -180,7 +180,7 @@ class Provisioner {
     void scale(int size, Map<String, String> tags) {
         ensureIsCloudProviderSetup(properties, "scale");
 
-        int agentSize = componentRegistry.agentCount();
+        int agentSize = registry.agentCount();
         int delta = size - agentSize;
         if (delta == 0) {
             echo("Current number of machines: " + agentSize);
@@ -211,8 +211,8 @@ class Provisioner {
     @SuppressWarnings("PMD.PreserveStackTrace")
     private void scaleUp(int delta, Map<String, String> tags) {
         echoImportant("Provisioning %s %s machines", delta, properties.getCloudProvider());
-        echo("Current number of machines: " + componentRegistry.agentCount());
-        echo("Desired number of machines: " + (componentRegistry.agentCount() + delta));
+        echo("Current number of machines: " + registry.agentCount());
+        echo("Desired number of machines: " + (registry.agentCount() + delta));
 
         String groupName = properties.get("GROUP_NAME", "simulator-agent");
         echo("GroupName: " + groupName);
@@ -241,8 +241,8 @@ class Provisioner {
                     String publicIpAddress = node.getPublicAddresses().iterator().next();
 
                     echo(INDENTATION + publicIpAddress + " LAUNCHED");
-                    componentRegistry.addAgent(publicIpAddress, privateIpAddress, tags);
-                    AgentsFile.save(agentsFile, componentRegistry);
+                    registry.addAgent(publicIpAddress, privateIpAddress, tags);
+                    AgentsFile.save(agentsFile, registry);
                 }
 
                 for (NodeMetadata node : nodes) {
@@ -267,32 +267,32 @@ class Provisioner {
     }
 
     private void scaleDown(int count) {
-        if (count > componentRegistry.agentCount()) {
-            count = componentRegistry.agentCount();
+        if (count > registry.agentCount()) {
+            count = registry.agentCount();
         }
 
         echoImportant("Terminating %s %s machines (can take some time)", count, properties.getCloudProvider());
-        echo("Current number of machines: " + componentRegistry.agentCount());
-        echo("Desired number of machines: " + (componentRegistry.agentCount() - count));
+        echo("Current number of machines: " + registry.agentCount());
+        echo("Desired number of machines: " + (registry.agentCount() - count));
 
         long started = System.nanoTime();
 
         int destroyedCount = 0;
         for (int batchSize : calcBatches(properties, count)) {
             Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
-            for (AgentData agent : componentRegistry.getAgents(batchSize)) {
+            for (AgentData agent : registry.getAgents(batchSize)) {
                 terminateMap.put(agent.getPublicAddress(), agent);
             }
-            Set destroyedSet = computeService.destroyNodesMatching(new NodeMetadataPredicate(componentRegistry, terminateMap));
+            Set destroyedSet = computeService.destroyNodesMatching(new NodeMetadataPredicate(registry, terminateMap));
             destroyedCount += destroyedSet.size();
         }
 
         echo("Updating " + agentsFile.getAbsolutePath());
-        AgentsFile.save(agentsFile, componentRegistry);
+        AgentsFile.save(agentsFile, registry);
 
         long elapsed = getElapsedSeconds(started);
         echoImportant("Terminated %s of %s machines (%s remaining) (%s seconds)", destroyedCount, count,
-                componentRegistry.agentCount(), elapsed);
+                registry.agentCount(), elapsed);
 
         if (destroyedCount != count) {
             throw new IllegalStateException("Terminated " + destroyedCount + " of " + count

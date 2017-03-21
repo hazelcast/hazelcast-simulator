@@ -51,11 +51,11 @@ public final class SimulatorUtils {
 
     public static ComponentRegistry loadComponentRegister(File agentsFile, boolean sizeCheck) {
         ensureExistingFile(agentsFile);
-        ComponentRegistry componentRegistry = AgentsFile.load(agentsFile);
-        if (sizeCheck && componentRegistry.agentCount() == 0) {
+        ComponentRegistry registry = AgentsFile.load(agentsFile);
+        if (sizeCheck && registry.agentCount() == 0) {
             throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
         }
-        return componentRegistry;
+        return registry;
     }
 
     public static SimulatorProperties loadSimulatorProperties() {

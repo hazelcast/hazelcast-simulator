@@ -5,7 +5,7 @@ public class RemoteClientTest {
 //    private static final IntegrationTestOperation DEFAULT_OPERATION = new IntegrationTestOperation();
 //    private static final String DEFAULT_TEST_ID = "RemoteClientTest";
 //
-//    private final ComponentRegistry componentRegistry = new ComponentRegistry();
+//    private final ComponentRegistry registry = new ComponentRegistry();
 //
 //    private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
 //    private RemoteClient remoteClient;
@@ -13,22 +13,22 @@ public class RemoteClientTest {
 //
 //    @Before
 //    public void before() {
-//        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-//        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
-//        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+//        registry.addAgent("192.168.0.1", "192.168.0.1");
+//        registry.addAgent("192.168.0.2", "192.168.0.2");
+//        registry.addAgent("192.168.0.3", "192.168.0.3");
 //
 //        WorkerParameters workerProcessSettings = new WorkerParameters(
 //                1, WorkerType.MEMBER, "", "", 0, new HashMap<String, String>());
 //
-//        SimulatorAddress agentAddress = componentRegistry.getFirstAgent().getAddress();
-//        componentRegistry.addWorkers(agentAddress, Collections.singletonList(workerProcessSettings));
+//        SimulatorAddress agentAddress = registry.getFirstAgent().getAddress();
+//        registry.addWorkers(agentAddress, Collections.singletonList(workerProcessSettings));
 //
 //        TestCase testCase = new TestCase(DEFAULT_TEST_ID);
 //
 //        TestSuite testSuite = new TestSuite();
 //        testSuite.addTest(testCase);
 //
-//        testAddress = componentRegistry.addTests(testSuite).get(0).getAddress();
+//        testAddress = registry.addTests(testSuite).get(0).getAddress();
 //    }
 //
 //    @After
@@ -38,7 +38,7 @@ public class RemoteClientTest {
 //
 //    @Test
 //    public void testLogOnAllAgents() {
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //        remoteClient.logOnAllAgents("test");
 //
 //        verify(coordinatorConnector).invoke(eq(ALL_AGENTS), any(LogOperation.class));
@@ -47,7 +47,7 @@ public class RemoteClientTest {
 //
 //    @Test
 //    public void testLogOnAllWorkers() {
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //        remoteClient.logOnAllWorkers("test");
 //
 //        verify(coordinatorConnector).invoke(eq(ALL_WORKERS), any(LogOperation.class));
@@ -57,7 +57,7 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToAllAgents() {
 //        initMock(ResponseType.SUCCESS);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        remoteClient.invokeOnAllAgents(DEFAULT_OPERATION);
 //
@@ -68,7 +68,7 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToAllAgents_withFailureResponse() {
 //        initMock(ResponseType.UNBLOCKED_BY_FAILURE);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        remoteClient.invokeOnAllAgents(DEFAULT_OPERATION);
 //
@@ -79,7 +79,7 @@ public class RemoteClientTest {
 //    @Test(expected = CommandLineExitException.class)
 //    public void testSendToAllAgents_withErrorResponse() {
 //        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        try {
 //            remoteClient.invokeOnAllAgents(DEFAULT_OPERATION);
@@ -92,7 +92,7 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToAllWorkers() {
 //        initMock(ResponseType.SUCCESS);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        remoteClient.invokeOnAllWorkers(DEFAULT_OPERATION);
 //
@@ -103,7 +103,7 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToAllWorkers_withFailureResponse() {
 //        initMock(ResponseType.UNBLOCKED_BY_FAILURE);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        remoteClient.invokeOnAllWorkers(DEFAULT_OPERATION);
 //
@@ -114,7 +114,7 @@ public class RemoteClientTest {
 //    @Test(expected = CommandLineExitException.class)
 //    public void testSendToAllWorkers_withErrorResponse() {
 //        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        try {
 //            remoteClient.invokeOnAllWorkers(DEFAULT_OPERATION);
@@ -127,8 +127,8 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToFirstWorker() {
 //        initMock(ResponseType.SUCCESS);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
-//        SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
+//        SimulatorAddress firstWorkerAddress = registry.getFirstWorker().getAddress();
 //
 //        remoteClient.invokeOnFirstWorker(DEFAULT_OPERATION);
 //
@@ -139,8 +139,8 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToFirstWorker_withFailureResponse() {
 //        initMock(ResponseType.UNBLOCKED_BY_FAILURE);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
-//        SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
+//        SimulatorAddress firstWorkerAddress = registry.getFirstWorker().getAddress();
 //
 //        remoteClient.invokeOnFirstWorker(DEFAULT_OPERATION);
 //
@@ -151,8 +151,8 @@ public class RemoteClientTest {
 //    @Test(expected = CommandLineExitException.class)
 //    public void testSendToFirstWorker_withErrorResponse() {
 //        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
-//        SimulatorAddress firstWorkerAddress = componentRegistry.getFirstWorker().getAddress();
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
+//        SimulatorAddress firstWorkerAddress = registry.getFirstWorker().getAddress();
 //
 //        try {
 //            remoteClient.invokeOnFirstWorker(DEFAULT_OPERATION);
@@ -165,7 +165,7 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToTestOnAllWorkers() {
 //        initMock(ResponseType.SUCCESS);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        remoteClient.invokeOnTestOnAllWorkers(testAddress,DEFAULT_OPERATION);
 //
@@ -176,7 +176,7 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToTestOnAllWorkers_withFailureResponse() {
 //        initMock(ResponseType.UNBLOCKED_BY_FAILURE);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        remoteClient.invokeOnTestOnAllWorkers(testAddress,DEFAULT_OPERATION);
 //
@@ -187,7 +187,7 @@ public class RemoteClientTest {
 //    @Test(expected = CommandLineExitException.class)
 //    public void testSendToTestOnAllWorkers_withErrorResponse() {
 //        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
 //
 //        try {
 //            remoteClient.invokeOnTestOnAllWorkers(testAddress,DEFAULT_OPERATION);
@@ -200,8 +200,8 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToTestOnFirstWorker() {
 //        initMock(ResponseType.SUCCESS);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
-//        SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
+//        SimulatorAddress testOnFirstWorkerAddress = registry.getFirstWorker().getAddress().getChild(1);
 //
 //        remoteClient.invokeOnTestOnFirstWorker(testAddress, DEFAULT_OPERATION);
 //
@@ -212,8 +212,8 @@ public class RemoteClientTest {
 //    @Test
 //    public void testSendToTestOnFirstWorker_withFailureResponse() {
 //        initMock(ResponseType.UNBLOCKED_BY_FAILURE);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
-//        SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
+//        SimulatorAddress testOnFirstWorkerAddress = registry.getFirstWorker().getAddress().getChild(1);
 //
 //        remoteClient.invokeOnTestOnFirstWorker(testAddress, DEFAULT_OPERATION);
 //
@@ -224,8 +224,8 @@ public class RemoteClientTest {
 //    @Test(expected = CommandLineExitException.class)
 //    public void testSendToTestOnFirstWorker_withErrorResponse() {
 //        initMock(ResponseType.EXCEPTION_DURING_OPERATION_EXECUTION);
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 0);
-//        SimulatorAddress testOnFirstWorkerAddress = componentRegistry.getFirstWorker().getAddress().getChild(1);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 0);
+//        SimulatorAddress testOnFirstWorkerAddress = registry.getFirstWorker().getAddress().getChild(1);
 //
 //        try {
 //            remoteClient.invokeOnTestOnFirstWorker(testAddress, DEFAULT_OPERATION);
@@ -244,7 +244,7 @@ public class RemoteClientTest {
 //                .thenThrow(new SimulatorProtocolException("expected exception", new InterruptedException()))
 //                .thenReturn(response);
 //
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 50);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 50);
 //
 //        sleepMillis(300);
 //
@@ -263,7 +263,7 @@ public class RemoteClientTest {
 //                .thenThrow(new SimulatorProtocolException("expected exception", new TimeoutException()))
 //                .thenReturn(response);
 //
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, 50);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, 50);
 //
 //        sleepMillis(300);
 //
@@ -275,7 +275,7 @@ public class RemoteClientTest {
 //
 //    @Test
 //    public void testPingWorkerThread_shouldDoNothingIfDisabled() {
-//        remoteClient = new RemoteClient(coordinatorConnector, componentRegistry, -1);
+//        remoteClient = new RemoteClient(coordinatorConnector, registry, -1);
 //
 //        sleepMillis(300);
 //

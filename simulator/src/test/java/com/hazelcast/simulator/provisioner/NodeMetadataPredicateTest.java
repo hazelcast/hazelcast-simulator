@@ -18,13 +18,13 @@ import static org.mockito.Mockito.when;
 public class NodeMetadataPredicateTest {
 
     private Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
-    private ComponentRegistry componentRegistry = new ComponentRegistry();
+    private ComponentRegistry registry = new ComponentRegistry();
 
     private NodeMetadata nodeMetadata;
 
     @Before
     public void before() {
-        componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
+        registry.addAgent("172.16.16.1", "127.0.0.1");
 
         nodeMetadata = mock(NodeMetadata.class);
         when(nodeMetadata.getPublicAddresses()).thenReturn(singleton("172.16.16.1"));
@@ -32,18 +32,18 @@ public class NodeMetadataPredicateTest {
 
     @Test
     public void testApply_true() {
-        terminateMap.put("172.16.16.1", componentRegistry.getFirstAgent());
+        terminateMap.put("172.16.16.1", registry.getFirstAgent());
 
-        NodeMetadataPredicate nodeMetadataPredicate = new NodeMetadataPredicate(componentRegistry, terminateMap);
+        NodeMetadataPredicate nodeMetadataPredicate = new NodeMetadataPredicate(registry, terminateMap);
 
         assertTrue(nodeMetadataPredicate.apply(nodeMetadata));
     }
 
     @Test
     public void testApply_false() {
-        terminateMap.put("172.16.16.2", componentRegistry.getFirstAgent());
+        terminateMap.put("172.16.16.2", registry.getFirstAgent());
 
-        NodeMetadataPredicate nodeMetadataPredicate = new NodeMetadataPredicate(componentRegistry, terminateMap);
+        NodeMetadataPredicate nodeMetadataPredicate = new NodeMetadataPredicate(registry, terminateMap);
 
         assertFalse(nodeMetadataPredicate.apply(nodeMetadata));
     }

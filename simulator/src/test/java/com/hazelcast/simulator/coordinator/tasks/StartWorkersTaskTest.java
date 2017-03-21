@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 public class StartWorkersTaskTest {
 
-    private final ComponentRegistry componentRegistry = new ComponentRegistry();
+    private final ComponentRegistry registry = new ComponentRegistry();
     private CoordinatorClient client;
     private AgentData agent1;
     private AgentData agent2;
@@ -39,9 +39,9 @@ public class StartWorkersTaskTest {
     public void before() {
         client = mock(CoordinatorClient.class);
 
-        agent1 = componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        agent2 = componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
-        agent3 = componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+        agent1 = registry.addAgent("192.168.0.1", "192.168.0.1");
+        agent2 = registry.addAgent("192.168.0.2", "192.168.0.2");
+        agent3 = registry.addAgent("192.168.0.3", "192.168.0.3");
     }
 
     @After
@@ -59,9 +59,9 @@ public class StartWorkersTaskTest {
         when(client.submit(eq(agent2.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
         when(client.submit(eq(agent3.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
 
-        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, registry, 0).run();
 
-        assertComponentRegistry(componentRegistry, 6, 3);
+        assertComponentRegistry(registry, 6, 3);
     }
 
     @Test
@@ -74,9 +74,9 @@ public class StartWorkersTaskTest {
         when(client.submit(eq(agent2.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
         when(client.submit(eq(agent3.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
 
-        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, registry, 0).run();
 
-        assertComponentRegistry(componentRegistry, 6, 0);
+        assertComponentRegistry(registry, 6, 0);
     }
 
     @Test(expected = CommandLineExitException.class)
@@ -87,16 +87,16 @@ public class StartWorkersTaskTest {
         when(f.get()).thenThrow(new ExecutionException(null));
         when(client.submit(eq(agent1.getAddress()), any(CreateWorkerOperation.class))).thenReturn(f);
 
-        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, componentRegistry, 0).run();
+        new StartWorkersTask(deploymentPlan, Collections.<String, String>emptyMap(), client, registry, 0).run();
     }
 
     private Map<SimulatorAddress, List<WorkerParameters>> getDeployment(int dedicatedMemberMachineCount,
                                                                         int memberWorkerCount,
                                                                         int clientWorkerCount) {
         StubVendorDriver vendorDriver = new StubVendorDriver();
-        componentRegistry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
+        registry.assignDedicatedMemberMachines(dedicatedMemberMachineCount);
 
-        DeploymentPlan deploymentPlan = new DeploymentPlan(vendorDriver,componentRegistry.getAgents())
+        DeploymentPlan deploymentPlan = new DeploymentPlan(vendorDriver, registry.getAgents())
                 .addToPlan(memberWorkerCount,"member")
                 .addToPlan(clientWorkerCount,"javaclient");
 
@@ -104,12 +104,12 @@ public class StartWorkersTaskTest {
         return deploymentPlan.getWorkerDeployment();
     }
 
-    private static void assertComponentRegistry(ComponentRegistry componentRegistry,
+    private static void assertComponentRegistry(ComponentRegistry registry,
                                                 int expectedMemberCount,
                                                 int expectedClientCount) {
         int actualMemberCount = 0;
         int actualClientCount = 0;
-        for (WorkerData workerData : componentRegistry.getWorkers()) {
+        for (WorkerData workerData : registry.getWorkers()) {
             if (workerData.isMemberWorker()) {
                 actualMemberCount++;
             } else {

@@ -47,7 +47,7 @@ public final class AgentsFile {
     }
 
     public static ComponentRegistry load(File agentFile) {
-        ComponentRegistry componentRegistry = new ComponentRegistry();
+        ComponentRegistry registry = new ComponentRegistry();
 
         String content = fileAsText(agentFile);
         String[] lines = content.split(NEW_LINE);
@@ -83,10 +83,10 @@ public final class AgentsFile {
                             + " but it contains %s", lineNumber, agentFile, addresses.length));
             }
             Map<String, String> tags = TagUtils.parseTags(tagsString);
-            componentRegistry.addAgent(publicIpAddress, privateIpAddress, tags);
+            registry.addAgent(publicIpAddress, privateIpAddress, tags);
         }
 
-        return componentRegistry;
+        return registry;
     }
 
     private static String cleanLine(String line) {

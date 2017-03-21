@@ -40,7 +40,7 @@ public class ConfigFileTemplate {
     private final String rawTemplate;
     private final Map<String, String> hardReplacements = new HashMap<String, String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
-    private ComponentRegistry componentRegistry;
+    private ComponentRegistry registry;
 
     public ConfigFileTemplate(String rawTemplate) {
         this.rawTemplate = checkNotNull(rawTemplate, "rawTemplate can't be null");
@@ -76,7 +76,7 @@ public class ConfigFileTemplate {
             Map<String, Object> root = new HashMap<String, Object>();
             root.putAll(environment);
 
-            if (componentRegistry != null) {
+            if (registry != null) {
                 root.put("agents", new Agents());
             }
             String templateStr = loadTemplateString();
@@ -104,7 +104,7 @@ public class ConfigFileTemplate {
         @Override
         public Object exec(List list) throws TemplateModelException {
             if (list.size() == 0) {
-                return componentRegistry.getAgents();
+                return registry.getAgents();
             } else if (list.size() == 1) {
                 Object arg = list.get(0);
                 if (!(arg instanceof SimpleScalar)) {
@@ -114,7 +114,7 @@ public class ConfigFileTemplate {
 
                 Map<String, String> tags = TagUtils.parseTags(((SimpleScalar) arg).getAsString());
                 List<AgentData> result = new ArrayList<AgentData>();
-                for (AgentData agent : componentRegistry.getAgents()) {
+                for (AgentData agent : registry.getAgents()) {
                     if (TagUtils.matches(tags, agent.getTags())) {
                         result.add(agent);
                     }

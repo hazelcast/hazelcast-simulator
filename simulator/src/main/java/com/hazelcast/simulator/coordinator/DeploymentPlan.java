@@ -48,8 +48,8 @@ public final class DeploymentPlan {
 
     private final VendorDriver vendorDriver;
 
-    public DeploymentPlan(VendorDriver vendorDriver, ComponentRegistry componentRegistry) {
-        this(vendorDriver, componentRegistry.getAgents());
+    public DeploymentPlan(VendorDriver vendorDriver, ComponentRegistry registry) {
+        this(vendorDriver, registry.getAgents());
     }
 
     public DeploymentPlan(VendorDriver vendorDriver, List<AgentData> agents) {

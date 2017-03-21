@@ -52,7 +52,7 @@ public class StartWorkersTask {
     private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
     private final CoordinatorClient client;
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final int startupDelayMs;
     private final Map<SimulatorAddress, List<WorkerParameters>> memberDeploymentPlan;
     private final Map<SimulatorAddress, List<WorkerParameters>> clientDeploymentPlan;
@@ -64,10 +64,10 @@ public class StartWorkersTask {
             Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan,
             Map<String, String> workerTags,
             CoordinatorClient client,
-            ComponentRegistry componentRegistry,
+            ComponentRegistry registry,
             int startupDelayMs) {
         this.client = client;
-        this.componentRegistry = componentRegistry;
+        this.registry = registry;
         this.startupDelayMs = startupDelayMs;
         this.tags = workerTags;
         this.memberDeploymentPlan = filterByWorkerType(true, deploymentPlan);
@@ -83,7 +83,7 @@ public class StartWorkersTask {
         // then create all clients
         startWorkers(false, clientDeploymentPlan);
 
-        client.invokeAll(componentRegistry.getAgents(), new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
+        client.invokeAll(registry.getAgents(), new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
         echoStartComplete();
         return result;
@@ -115,7 +115,7 @@ public class StartWorkersTask {
 
         for (Map.Entry<SimulatorAddress, List<WorkerParameters>> entry : deploymentPlan.entrySet()) {
             SimulatorAddress agentAddress = entry.getKey();
-            AgentData agent = componentRegistry.getAgent(agentAddress);
+            AgentData agent = registry.getAgent(agentAddress);
             List<WorkerParameters> workersSettings = entry.getValue();
 
             spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agent, workerType));
@@ -197,7 +197,7 @@ public class StartWorkersTask {
             finalTags.putAll(tags);
 
             LOGGER.info(format("Created %d %s Worker on %s", workerParametersList.size(), workerType, agent.getAddress()));
-            List<WorkerData> createdWorkers = componentRegistry.addWorkers(workerParametersList, finalTags);
+            List<WorkerData> createdWorkers = registry.addWorkers(workerParametersList, finalTags);
             result.addAll(createdWorkers);
         }
     }

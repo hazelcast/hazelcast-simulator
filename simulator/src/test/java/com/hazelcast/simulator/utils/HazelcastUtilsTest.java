@@ -51,7 +51,7 @@ public class HazelcastUtilsTest {
     private HazelcastInstance hazelcastInstance;
 
     private Map<String, String> properties = new HashMap<String, String>();
-    private ComponentRegistry componentRegistry;
+    private ComponentRegistry registry;
 
     private String memberConfig;
     private String clientConfig;
@@ -62,7 +62,7 @@ public class HazelcastUtilsTest {
         properties.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "1234");
         properties.put("JAVA_CMD", "java");
 
-        componentRegistry = getComponentRegistryMock();
+        registry = getComponentRegistryMock();
 
         memberConfig = fileAsText(new File(internalDistDirectory(), "conf/hazelcast.xml"));
         clientConfig = fileAsText(new File(internalDistDirectory(), "conf/client-hazelcast.xml"));
@@ -75,7 +75,7 @@ public class HazelcastUtilsTest {
 
     @Test
     public void testCreateAddressConfig() {
-        String addressConfig = createAddressConfig("members", componentRegistry.getAgents(), "6666");
+        String addressConfig = createAddressConfig("members", registry.getAgents(), "6666");
         for (int i = 1; i <= 5; i++) {
             assertTrue(addressConfig.contains("192.168.0." + i + ":6666"));
         }
@@ -90,7 +90,7 @@ public class HazelcastUtilsTest {
 //        assertTrue(memberConfig.contains("<!--LICENSE-KEY-->"));
 //        assertTrue(memberConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
 //
-//        String memberHzConfig = initMemberHzConfig(memberConfig, componentRegistry, "licenseKey2342", properties, false);
+//        String memberHzConfig = initMemberHzConfig(memberConfig, registry, "licenseKey2342", properties, false);
 //
 //        assertNotNull(memberHzConfig);
 //        assertTrue(memberHzConfig.contains("licenseKey2342"));
@@ -106,7 +106,7 @@ public class HazelcastUtilsTest {
 //        assertTrue(clientConfig.contains("<!--MEMBERS-->"));
 //        assertTrue(clientConfig.contains("<!--LICENSE-KEY-->"));
 //
-//        String clientHzConfig = initClientHzConfig(clientConfig, componentRegistry, properties, "licenseKey2342");
+//        String clientHzConfig = initClientHzConfig(clientConfig, registry, properties, "licenseKey2342");
 //
 //        assertNotNull(clientHzConfig);
 //        assertTrue(clientHzConfig.contains("licenseKey2342"));
@@ -118,14 +118,14 @@ public class HazelcastUtilsTest {
     private ComponentRegistry getComponentRegistryMock() {
         List<AgentData> agents = new ArrayList<AgentData>();
         for (int i = 1; i <= 5; i++) {
-            AgentData agentData = mock(AgentData.class);
-            when(agentData.getPrivateAddress()).thenReturn("192.168.0." + i);
-            agents.add(agentData);
+            AgentData agent = mock(AgentData.class);
+            when(agent.getPrivateAddress()).thenReturn("192.168.0." + i);
+            agents.add(agent);
         }
 
-        ComponentRegistry componentRegistry = mock(ComponentRegistry.class);
-        when(componentRegistry.getAgents()).thenReturn(agents);
-        return componentRegistry;
+        ComponentRegistry registry = mock(ComponentRegistry.class);
+        when(registry.getAgents()).thenReturn(agents);
+        return registry;
     }
 
     @Test

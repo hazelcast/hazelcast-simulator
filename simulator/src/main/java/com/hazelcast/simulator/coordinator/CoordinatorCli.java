@@ -61,7 +61,7 @@ final class CoordinatorCli {
     Coordinator coordinator;
     TestSuite testSuite;
     CoordinatorParameters coordinatorParameters;
-    ComponentRegistry componentRegistry;
+    ComponentRegistry registry;
     SimulatorProperties simulatorProperties;
     DeploymentPlan deploymentPlan;
     VendorDriver vendorDriver;
@@ -169,17 +169,17 @@ final class CoordinatorCli {
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
         this.simulatorProperties = loadSimulatorProperties();
-        this.componentRegistry = newComponentRegistry(simulatorProperties);
+        this.registry = newComponentRegistry(simulatorProperties);
 
-        sslTestAgents(simulatorProperties, componentRegistry);
+        sslTestAgents(simulatorProperties, registry);
 
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
-            this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+            this.coordinator = new Coordinator(registry, coordinatorParameters);
             this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
                     .setAll(simulatorProperties.asPublicMap())
-                    .setAgents(componentRegistry.getAgents())
+                    .setAgents(registry.getAgents())
                     .set("CLIENT_ARGS", loadClientArgs())
                     .set("MEMBER_ARGS", loadMemberArgs())
                     .set("SESSION_ID", coordinatorParameters.getSessionId())
@@ -202,9 +202,9 @@ final class CoordinatorCli {
 
     void run() throws Exception {
         if (options.has(downloadSpec)) {
-            new DownloadTask(componentRegistry.getAgentIps(), simulatorProperties.asMap(), getUserDir(), "*").run();
+            new DownloadTask(registry.getAgentIps(), simulatorProperties.asMap(), getUserDir(), "*").run();
         } else if (options.has(cleanSpec)) {
-            new ArtifactCleanTask(componentRegistry, simulatorProperties).run();
+            new ArtifactCleanTask(registry, simulatorProperties).run();
         } else {
             coordinator.start();
             if (testSuite == null) {
@@ -353,19 +353,19 @@ final class CoordinatorCli {
     }
 
     private ComponentRegistry newComponentRegistry(SimulatorProperties simulatorProperties) {
-        ComponentRegistry componentRegistry;
+        ComponentRegistry registry;
         if (isLocal(simulatorProperties)) {
-            componentRegistry = new ComponentRegistry();
-            componentRegistry.addAgent("localhost", "localhost");
+            registry = new ComponentRegistry();
+            registry.addAgent("localhost", "localhost");
         } else {
-            componentRegistry = loadComponentRegister(getAgentsFile());
+            registry = loadComponentRegister(getAgentsFile());
         }
 
         if (options.has(dedicatedMemberMachinesSpec)) {
-            componentRegistry.assignDedicatedMemberMachines(options.valueOf(dedicatedMemberMachinesSpec));
+            registry.assignDedicatedMemberMachines(options.valueOf(dedicatedMemberMachinesSpec));
         }
 
-        return componentRegistry;
+        return registry;
     }
 
     private DeploymentPlan newDeploymentPlan() {
@@ -376,7 +376,7 @@ final class CoordinatorCli {
 
         int members = options.valueOf(membersSpec);
         if (members == -1) {
-            members = componentRegistry.agentCount();
+            members = registry.agentCount();
         } else if (members < -1) {
             throw new CommandLineExitException("--member must be a equal or larger than -1");
         }
@@ -390,7 +390,7 @@ final class CoordinatorCli {
             throw new CommandLineExitException("No workers have been defined!");
         }
 
-        DeploymentPlan plan = new DeploymentPlan(vendorDriver, componentRegistry.getAgents())
+        DeploymentPlan plan = new DeploymentPlan(vendorDriver, registry.getAgents())
                 .addToPlan(members, "member")
                 .addToPlan(clients, options.valueOf(clientTypeSpec));
         plan.printLayout();

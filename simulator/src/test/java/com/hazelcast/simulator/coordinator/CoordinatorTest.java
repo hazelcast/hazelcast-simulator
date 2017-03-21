@@ -40,7 +40,7 @@ public class CoordinatorTest {
 
     private static Coordinator coordinator;
     private static String hzConfig;
-    private static ComponentRegistry componentRegistry;
+    private static ComponentRegistry registry;
     private static String hzClientConfig;
     private static AgentData agentData;
     private static Agent agent;
@@ -67,17 +67,17 @@ public class CoordinatorTest {
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
 
-        componentRegistry = new ComponentRegistry();
-        agentData = componentRegistry.addAgent(localIp(), localIp());
+        registry = new ComponentRegistry();
+        agentData = registry.addAgent(localIp(), localIp());
 
-        coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+        coordinator = new Coordinator(registry, coordinatorParameters);
         coordinator.start();
     }
 
     @Before
     public void before() {
         initialWorkerIndex = agentData.getCurrentWorkerIndex();
-        initialTestIndex = componentRegistry.getInitialTestIndex();
+        initialTestIndex = registry.getInitialTestIndex();
     }
 
     @After

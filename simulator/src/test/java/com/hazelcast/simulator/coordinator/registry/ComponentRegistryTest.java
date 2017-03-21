@@ -21,71 +21,71 @@ import static org.junit.Assert.assertTrue;
 
 public class ComponentRegistryTest {
 
-    private final ComponentRegistry componentRegistry = new ComponentRegistry();
+    private final ComponentRegistry registry = new ComponentRegistry();
 
     @Test(expected = CommandLineExitException.class)
     public void test_assignDedicatedMemberMachines_whenDedicatedMemberCountNegative() {
-        componentRegistry.assignDedicatedMemberMachines(-1);
+        registry.assignDedicatedMemberMachines(-1);
     }
 
     @Test(expected = CommandLineExitException.class)
     public void test_assignDedicatedMemberMachines_whenDedicatedMemberCountHigherThanAgentCount() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
+        registry.addAgent("192.168.0.1", "192.168.0.1");
 
-        componentRegistry.assignDedicatedMemberMachines(2);
+        registry.assignDedicatedMemberMachines(2);
     }
 
     @Test
     public void test_assignDedicatedMemberMachines() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
-        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
+        registry.addAgent("192.168.0.1", "192.168.0.1");
+        registry.addAgent("192.168.0.2", "192.168.0.2");
+        registry.addAgent("192.168.0.3", "192.168.0.3");
 
-        componentRegistry.assignDedicatedMemberMachines(2);
+        registry.assignDedicatedMemberMachines(2);
 
-        assertEquals(AgentWorkerMode.MEMBERS_ONLY, componentRegistry.getAgents().get(0).getAgentWorkerMode());
-        assertEquals(AgentWorkerMode.MEMBERS_ONLY, componentRegistry.getAgents().get(1).getAgentWorkerMode());
-        assertEquals(AgentWorkerMode.CLIENTS_ONLY, componentRegistry.getAgents().get(2).getAgentWorkerMode());
+        assertEquals(AgentWorkerMode.MEMBERS_ONLY, registry.getAgents().get(0).getAgentWorkerMode());
+        assertEquals(AgentWorkerMode.MEMBERS_ONLY, registry.getAgents().get(1).getAgentWorkerMode());
+        assertEquals(AgentWorkerMode.CLIENTS_ONLY, registry.getAgents().get(2).getAgentWorkerMode());
     }
 
     @Test
     public void testAddAgent() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        assertEquals(1, componentRegistry.agentCount());
+        registry.addAgent("192.168.0.1", "192.168.0.1");
+        assertEquals(1, registry.agentCount());
     }
 
     @Test
     public void testRemoveAgent() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        assertEquals(1, componentRegistry.agentCount());
+        registry.addAgent("192.168.0.1", "192.168.0.1");
+        assertEquals(1, registry.agentCount());
 
-        AgentData agentData = componentRegistry.getFirstAgent();
-        componentRegistry.removeAgent(agentData);
-        assertEquals(0, componentRegistry.agentCount());
+        AgentData agentData = registry.getFirstAgent();
+        registry.removeAgent(agentData);
+        assertEquals(0, registry.agentCount());
     }
 
     @Test
     public void testGetAgents() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
+        registry.addAgent("192.168.0.1", "192.168.0.1");
+        registry.addAgent("192.168.0.2", "192.168.0.2");
 
-        assertEquals(2, componentRegistry.agentCount());
-        assertEquals(2, componentRegistry.getAgents().size());
+        assertEquals(2, registry.agentCount());
+        assertEquals(2, registry.getAgents().size());
     }
 
     @Test
     public void testGetAgents_withCount() {
-        componentRegistry.addAgent("192.168.0.1", "192.168.0.1");
-        componentRegistry.addAgent("192.168.0.2", "192.168.0.2");
-        componentRegistry.addAgent("192.168.0.3", "192.168.0.3");
-        assertEquals(3, componentRegistry.agentCount());
+        registry.addAgent("192.168.0.1", "192.168.0.1");
+        registry.addAgent("192.168.0.2", "192.168.0.2");
+        registry.addAgent("192.168.0.3", "192.168.0.3");
+        assertEquals(3, registry.agentCount());
 
-        List<AgentData> agents = componentRegistry.getAgents(1);
+        List<AgentData> agents = registry.getAgents(1);
         assertEquals(1, agents.size());
         assertEquals("192.168.0.3", agents.get(0).getPublicAddress());
         assertEquals("192.168.0.3", agents.get(0).getPrivateAddress());
 
-        agents = componentRegistry.getAgents(2);
+        agents = registry.getAgents(2);
         assertEquals(2, agents.size());
         assertEquals("192.168.0.2", agents.get(0).getPublicAddress());
         assertEquals("192.168.0.2", agents.get(0).getPrivateAddress());
@@ -95,7 +95,7 @@ public class ComponentRegistryTest {
 
     @Test(expected = CommandLineExitException.class)
     public void testGetFirstAgent_noAgents() {
-        componentRegistry.getFirstAgent();
+        registry.getFirstAgent();
     }
 
     @Test
@@ -103,10 +103,10 @@ public class ComponentRegistryTest {
         SimulatorAddress agentAddress = addAgent();
         List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 10);
 
-        assertEquals(0, componentRegistry.workerCount());
-        componentRegistry.addWorkers(parametersList);
+        assertEquals(0, registry.workerCount());
+        registry.addWorkers(parametersList);
 
-        assertEquals(10, componentRegistry.workerCount());
+        assertEquals(10, registry.workerCount());
     }
 
     @Test
@@ -114,11 +114,11 @@ public class ComponentRegistryTest {
         SimulatorAddress agentAddress = addAgent();
         List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 5);
 
-        componentRegistry.addWorkers(parametersList);
-        assertEquals(5, componentRegistry.workerCount());
+        registry.addWorkers(parametersList);
+        assertEquals(5, registry.workerCount());
 
-        componentRegistry.removeWorker(new SimulatorAddress(WORKER, 1, 3, 0));
-        assertEquals(4, componentRegistry.workerCount());
+        registry.removeWorker(new SimulatorAddress(WORKER, 1, 3, 0));
+        assertEquals(4, registry.workerCount());
     }
 
     @Test
@@ -126,32 +126,32 @@ public class ComponentRegistryTest {
         SimulatorAddress agentAddress = addAgent();
         List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 5);
 
-        componentRegistry.addWorkers(parametersList);
-        assertEquals(5, componentRegistry.workerCount());
+        registry.addWorkers(parametersList);
+        assertEquals(5, registry.workerCount());
 
-        componentRegistry.removeWorker(componentRegistry.getWorkers().get(0));
-        assertEquals(4, componentRegistry.workerCount());
+        registry.removeWorker(registry.getWorkers().get(0));
+        assertEquals(4, registry.workerCount());
     }
 
     @Test
     public void testHasClientWorkers_withoutClientWorkers() {
         SimulatorAddress agentAddress = addAgent();
         List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 2);
-        componentRegistry.addWorkers(parametersList);
+        registry.addWorkers(parametersList);
 
-        assertFalse(componentRegistry.hasClientWorkers());
+        assertFalse(registry.hasClientWorkers());
     }
 
     @Test
     public void testHasClientWorkers_withClientWorkers() {
         SimulatorAddress agentAddress = addAgent();
         List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 2);
-        componentRegistry.addWorkers(parametersList);
+        registry.addWorkers(parametersList);
 
         parametersList = newWorkerParametersList(agentAddress, 2, "javaclient");
-        componentRegistry.addWorkers(parametersList);
+        registry.addWorkers(parametersList);
 
-        assertTrue(componentRegistry.hasClientWorkers());
+        assertTrue(registry.hasClientWorkers());
     }
 
     @Test
@@ -159,10 +159,10 @@ public class ComponentRegistryTest {
         SimulatorAddress agentAddress = addAgent();
         List<WorkerParameters> parametersList = newWorkerParametersList(agentAddress, 10);
 
-        componentRegistry.addWorkers(parametersList);
-        assertEquals(10, componentRegistry.workerCount());
+        registry.addWorkers(parametersList);
+        assertEquals(10, registry.workerCount());
 
-        List<WorkerData> workers = componentRegistry.getWorkers();
+        List<WorkerData> workers = registry.getWorkers();
         for (int i = 0; i < 10; i++) {
             WorkerData workerData = workers.get(i);
             assertEquals(i + 1, workerData.getAddress().getWorkerIndex());
@@ -175,45 +175,45 @@ public class ComponentRegistryTest {
 
     @Test
     public void testGetWorkers_withTargetType() {
-        componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
-        componentRegistry.addAgent("172.16.16.2", "127.0.0.1");
-        componentRegistry.addAgent("172.16.16.3", "127.0.0.1");
+        registry.addAgent("172.16.16.1", "127.0.0.1");
+        registry.addAgent("172.16.16.2", "127.0.0.1");
+        registry.addAgent("172.16.16.3", "127.0.0.1");
 
-        for (AgentData agentData : componentRegistry.getAgents()) {
+        for (AgentData agentData : registry.getAgents()) {
             List<WorkerParameters> memberSettings = newWorkerParametersList(agentData.getAddress(), 1, "member");
             List<WorkerParameters> clientSettings = newWorkerParametersList(agentData.getAddress(), 1, "javaclient");
 
-            componentRegistry.addWorkers(memberSettings);
-            componentRegistry.addWorkers(clientSettings);
-            componentRegistry.addWorkers(memberSettings);
-            componentRegistry.addWorkers(clientSettings);
-            componentRegistry.addWorkers(memberSettings);
-            componentRegistry.addWorkers(clientSettings);
+            registry.addWorkers(memberSettings);
+            registry.addWorkers(clientSettings);
+            registry.addWorkers(memberSettings);
+            registry.addWorkers(clientSettings);
+            registry.addWorkers(memberSettings);
+            registry.addWorkers(clientSettings);
         }
-        assertEquals(18, componentRegistry.workerCount());
+        assertEquals(18, registry.workerCount());
 
-        List<String> workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 0);
+        List<String> workers = registry.getWorkerAddresses(TargetType.ALL, 0);
         assertEquals(0, workers.size());
 
-        workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 12);
+        workers = registry.getWorkerAddresses(TargetType.ALL, 12);
         assertEquals(12, workers.size());
 
-        workers = componentRegistry.getWorkerAddresses(TargetType.ALL, 8);
+        workers = registry.getWorkerAddresses(TargetType.ALL, 8);
         assertEquals(8, workers.size());
 
-        List<WorkerData> workerDataList = componentRegistry.getWorkers(TargetType.MEMBER, 0);
+        List<WorkerData> workerDataList = registry.getWorkers(TargetType.MEMBER, 0);
         assertEquals(0, workerDataList.size());
 
-        workerDataList = componentRegistry.getWorkers(TargetType.MEMBER, 7);
+        workerDataList = registry.getWorkers(TargetType.MEMBER, 7);
         assertEquals(7, workerDataList.size());
         for (WorkerData workerData : workerDataList) {
             assertTrue(workerData.isMemberWorker());
         }
 
-        workerDataList = componentRegistry.getWorkers(TargetType.CLIENT, 0);
+        workerDataList = registry.getWorkers(TargetType.CLIENT, 0);
         assertEquals(0, workerDataList.size());
 
-        workerDataList = componentRegistry.getWorkers(TargetType.CLIENT, 7);
+        workerDataList = registry.getWorkers(TargetType.CLIENT, 7);
         assertEquals(7, workerDataList.size());
         for (WorkerData workerData : workerDataList) {
             assertFalse(workerData.isMemberWorker());
@@ -223,31 +223,31 @@ public class ComponentRegistryTest {
     @Test(expected = IllegalArgumentException.class)
     public void testGetWorkers_withHigherWorkerCountThanRegisteredWorkers() {
         SimulatorAddress agentAddress = addAgent();
-        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
-        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
-        assertEquals(4, componentRegistry.workerCount());
+        registry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
+        registry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
+        assertEquals(4, registry.workerCount());
 
-        componentRegistry.getWorkerAddresses(TargetType.ALL, 5);
+        registry.getWorkerAddresses(TargetType.ALL, 5);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testGetWorkers_getClientWorkers_notEnoughWorkersFound() {
         SimulatorAddress agentAddress = addAgent();
-        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
-        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
-        assertEquals(4, componentRegistry.workerCount());
+        registry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
+        registry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
+        assertEquals(4, registry.workerCount());
 
-        componentRegistry.getWorkerAddresses(TargetType.CLIENT, 3);
+        registry.getWorkerAddresses(TargetType.CLIENT, 3);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testGetWorkers_getMemberWorkers_notEnoughWorkersFound() {
         SimulatorAddress agentAddress = addAgent();
-        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
-        componentRegistry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
-        assertEquals(4, componentRegistry.workerCount());
+        registry.addWorkers(newWorkerParametersList(agentAddress, 2, "member"));
+        registry.addWorkers(newWorkerParametersList(agentAddress, 2, "javaclient"));
+        assertEquals(4, registry.workerCount());
 
-        componentRegistry.getWorkerAddresses(TargetType.MEMBER, 3);
+        registry.getWorkerAddresses(TargetType.MEMBER, 3);
     }
 
     @Test
@@ -257,10 +257,10 @@ public class ComponentRegistryTest {
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));
 
-        List<TestData> tests = componentRegistry.addTests(testSuite);
+        List<TestData> tests = registry.addTests(testSuite);
 
         assertEquals(3, tests.size());
-        assertEquals(3, componentRegistry.testCount());
+        assertEquals(3, registry.testCount());
     }
 
     @Test
@@ -269,9 +269,9 @@ public class ComponentRegistryTest {
         TestCase test2 = new TestCase("foo");
         TestCase test3 = new TestCase("foo");
 
-        componentRegistry.addTests(new TestSuite().addTest(test1));
-        componentRegistry.addTests(new TestSuite().addTest(test2));
-        componentRegistry.addTests(new TestSuite().addTest(test3));
+        registry.addTests(new TestSuite().addTest(test1));
+        registry.addTests(new TestSuite().addTest(test2));
+        registry.addTests(new TestSuite().addTest(test3));
 
         assertEquals("foo", test1.getId());
         assertEquals("foo__1", test2.getId());
@@ -283,17 +283,17 @@ public class ComponentRegistryTest {
 //        TestSuite testSuite1 = new TestSuite()
 //                .addTest(new TestCase("Test1a"))
 //                .addTest(new TestCase("Test1b"));
-//        componentRegistry.addTests(testSuite1);
+//        registry.addTests(testSuite1);
 //
 //        TestSuite testSuite2 = new TestSuite()
 //                .addTest(new TestCase("Test2a"))
 //                .addTest(new TestCase("Test2b"));
-//        componentRegistry.addTests(testSuite2);
+//        registry.addTests(testSuite2);
 //
-//        componentRegistry.removeTests(testSuite1);
+//        registry.removeTests(testSuite1);
 //
-//        assertEquals(2, componentRegistry.testCount());
-//        for (TestData testData : componentRegistry.getTests()) {
+//        assertEquals(2, registry.testCount());
+//        for (TestData testData : registry.getTests()) {
 //            assertSame(testSuite2, testData.getTestSuite());
 //        }
 //    }
@@ -304,9 +304,9 @@ public class ComponentRegistryTest {
         testSuite.addTest(new TestCase("Test1"));
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));
-        componentRegistry.addTests(testSuite);
+        registry.addTests(testSuite);
 
-        Collection<TestData> tests = componentRegistry.getTests();
+        Collection<TestData> tests = registry.getTests();
 
         assertEquals(3, tests.size());
         for (TestData testData : tests) {
@@ -321,9 +321,9 @@ public class ComponentRegistryTest {
         testSuite.addTest(new TestCase("Test1"));
         testSuite.addTest(new TestCase("Test2"));
         testSuite.addTest(new TestCase("Test3"));
-        componentRegistry.addTests(testSuite);
+        registry.addTests(testSuite);
 
-        TestData testData = componentRegistry.getTest("Test2");
+        TestData testData = registry.getTest("Test2");
 
         assertEquals(2, testData.getTestIndex());
         assertEquals(AddressLevel.TEST, testData.getAddress().getAddressLevel());
@@ -331,8 +331,8 @@ public class ComponentRegistryTest {
     }
 
     private SimulatorAddress addAgent() {
-        componentRegistry.addAgent("172.16.16.1", "127.0.0.1");
-        return componentRegistry.getFirstAgent().getAddress();
+        registry.addAgent("172.16.16.1", "127.0.0.1");
+        return registry.getFirstAgent().getAddress();
     }
 
     private List<WorkerParameters> newWorkerParametersList(SimulatorAddress agent, int workerCount) {

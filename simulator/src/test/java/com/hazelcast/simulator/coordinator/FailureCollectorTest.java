@@ -37,17 +37,17 @@ public class FailureCollectorTest {
     private FailureOperation normalExitFailure;
     private FailureOperation abnormalExitFailure;
     private File outputDirectory;
-    private ComponentRegistry componentRegistry;
+    private ComponentRegistry registry;
     private SimulatorAddress agentAddress;
     private SimulatorAddress workerAddress;
 
     @Before
     public void before() {
         outputDirectory = TestUtils.createTmpDirectory();
-        componentRegistry = new ComponentRegistry();
-        failureCollector = new FailureCollector(outputDirectory, componentRegistry);
+        registry = new ComponentRegistry();
+        failureCollector = new FailureCollector(outputDirectory, registry);
 
-        agentAddress = componentRegistry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
+        agentAddress = registry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
 
 
         workerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 1, 0);
@@ -55,7 +55,7 @@ public class FailureCollectorTest {
         WorkerParameters workerParameters = new WorkerParameters()
                 .set("WORKER_ADDRESS", workerAddress);
 
-        componentRegistry.addWorkers(singletonList(workerParameters));
+        registry.addWorkers(singletonList(workerParameters));
 
         exceptionFailure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", "testId", null);
@@ -107,13 +107,13 @@ public class FailureCollectorTest {
     }
 
     private void notify_whenWorkerIgnoresFailure(FailureOperation failure, boolean workerDeleted) {
-        WorkerData worker = componentRegistry.getWorker(workerAddress);
+        WorkerData worker = registry.getWorker(workerAddress);
         worker.setIgnoreFailures(true);
 
         failureCollector.notify(failure);
 
         assertEquals(0, failureCollector.getFailureCount());
-        assertEquals(workerDeleted ? null : worker, componentRegistry.getWorker(workerAddress));
+        assertEquals(workerDeleted ? null : worker, registry.getWorker(workerAddress));
     }
 
     @Test
@@ -122,8 +122,8 @@ public class FailureCollectorTest {
         TestSuite suite1 = new TestSuite().addTest(testCase);
         TestSuite suite2 = new TestSuite().addTest(new TestCase("test2"));
 
-        componentRegistry.addTests(suite1);
-        componentRegistry.addTests(suite2);
+        registry.addTests(suite1);
+        registry.addTests(suite2);
 
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
                 "127.0.0.1:5701", "workerId", testCase.getId(), null);

@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 public class SimulatorUtilsTest {
 
     private File agentsFile;
-    private ComponentRegistry componentRegistry;
+    private ComponentRegistry registry;
 
     @Before
     public void before() throws IOException {
@@ -48,19 +48,19 @@ public class SimulatorUtilsTest {
     public void testLoadComponentRegister() {
         writeText("192.168.1.1,10.10.10.10", agentsFile);
 
-        componentRegistry = loadComponentRegister(agentsFile);
-        assertEquals(1, componentRegistry.agentCount());
+        registry = loadComponentRegister(agentsFile);
+        assertEquals(1, registry.agentCount());
     }
 
     @Test(expected = CommandLineExitException.class)
     public void testLoadComponentRegister_emptyFile_withSizeCheck() {
-        componentRegistry = loadComponentRegister(agentsFile, true);
+        registry = loadComponentRegister(agentsFile, true);
     }
 
     @Test
     public void testLoadComponentRegister_emptyFile_withoutSizeCheck() {
-        componentRegistry = loadComponentRegister(agentsFile, false);
-        assertEquals(0, componentRegistry.agentCount());
+        registry = loadComponentRegister(agentsFile, false);
+        assertEquals(0, registry.agentCount());
     }
 
     @Test

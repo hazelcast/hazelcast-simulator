@@ -29,11 +29,11 @@ class NodeMetadataPredicate implements Predicate<NodeMetadata> {
 
     private static final Logger LOGGER = Logger.getLogger(NodeMetadataPredicate.class);
 
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
     private final Map<String, AgentData> terminateMap;
 
-    NodeMetadataPredicate(ComponentRegistry componentRegistry, Map<String, AgentData> terminateMap) {
-        this.componentRegistry = componentRegistry;
+    NodeMetadataPredicate(ComponentRegistry registry, Map<String, AgentData> terminateMap) {
+        this.registry = registry;
         this.terminateMap = terminateMap;
     }
 
@@ -43,7 +43,7 @@ class NodeMetadataPredicate implements Predicate<NodeMetadata> {
             AgentData agent = terminateMap.remove(publicAddress);
             if (agent != null) {
                 LOGGER.info(format("    Terminating instance %s", publicAddress));
-                componentRegistry.removeAgent(agent);
+                registry.removeAgent(agent);
                 return true;
             }
         }

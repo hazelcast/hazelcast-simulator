@@ -399,10 +399,10 @@ public class CoordinatorCliTest {
         try {
             CoordinatorCli cli = createCoordinatorCli();
 
-            ComponentRegistry componentRegistry = cli.componentRegistry;
-            assertEquals(1, componentRegistry.agentCount());
+            ComponentRegistry registry = cli.registry;
+            assertEquals(1, registry.agentCount());
 
-            AgentData firstAgent = componentRegistry.getFirstAgent();
+            AgentData firstAgent = registry.getFirstAgent();
             assertEquals("localhost", firstAgent.getPublicAddress());
             assertEquals("localhost", firstAgent.getPrivateAddress());
         } finally {

@@ -50,11 +50,11 @@ public class FailureCollector {
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
-    private final ComponentRegistry componentRegistry;
+    private final ComponentRegistry registry;
 
-    public FailureCollector(File outputDirectory, ComponentRegistry componentRegistry) {
+    public FailureCollector(File outputDirectory, ComponentRegistry registry) {
         this.file = new File(outputDirectory, "failures.txt");
-        this.componentRegistry = componentRegistry;
+        this.registry = registry;
     }
 
     public void addListener(FailureListener listener) {
@@ -66,7 +66,7 @@ public class FailureCollector {
 
         SimulatorAddress workerAddress = failure.getWorkerAddress();
         if (workerAddress != null && failure.getType() != WORKER_CREATE_ERROR) {
-            WorkerData worker = componentRegistry.findWorker(workerAddress);
+            WorkerData worker = registry.findWorker(workerAddress);
             if (worker == null) {
                 // we are not interested in failures of workers that aren't registered any longer.
                 return;
@@ -75,8 +75,8 @@ public class FailureCollector {
             // if the failure is the terminal for that workers, we need to remove it from the component registry
             if (failure.getType().isTerminal()) {
                 LOGGER.info("Removing worker " + worker.getAddress()
-                        + " from componentRegistry due to [" + failure.getType() + "]");
-                componentRegistry.removeWorker(worker.getAddress());
+                        + " from registry due to [" + failure.getType() + "]");
+                registry.removeWorker(worker.getAddress());
             }
 
             // if we don't care for the failure, we are done; no need to log anything.
@@ -103,7 +103,7 @@ public class FailureCollector {
     private FailureOperation enrich(FailureOperation failure) {
         String testId = failure.getTestId();
         if (testId != null) {
-            TestData test = componentRegistry.getTest(testId);
+            TestData test = registry.getTest(testId);
             if (test != null) {
                 failure.setTestCase(test.getTestCase());
                 failure.setDuration(System.currentTimeMillis() - test.getStartTimeMillis());

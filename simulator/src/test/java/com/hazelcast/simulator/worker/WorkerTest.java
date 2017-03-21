@@ -44,14 +44,14 @@ public class WorkerTest {
     public void before() {
         setupFakeEnvironment();
 
-        ComponentRegistry componentRegistry = new ComponentRegistry();
-        componentRegistry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
+        ComponentRegistry registry = new ComponentRegistry();
+        registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = new SimulatorProperties()
                 .set("MANAGEMENT_CENTER_URL", "none");
 
         VendorDriver driver = new HazelcastDriver()
-                .setAgents(componentRegistry.getAgents())
+                .setAgents(registry.getAgents())
                 .setAll(properties.asPublicMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
         workerAddress = new SimulatorAddress(AddressLevel.WORKER, AGENT_INDEX, WORKER_INDEX, 0);
