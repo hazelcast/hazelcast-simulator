@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.agent.operations.InitSessionOperation;
 import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerProcessFailureMonitor;
@@ -45,10 +44,6 @@ class AgentOperationProcessor implements OperationProcessor {
     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
         if (op instanceof CreateWorkerOperation) {
             processManager.launch((CreateWorkerOperation) op, promise);
-        } else if (op instanceof InitSessionOperation) {
-            String sessionId = ((InitSessionOperation) op).getSessionId();
-            processManager.setSessionId(sessionId);
-            promise.answer(SUCCESS);
         } else if (op instanceof StartTimeoutDetectionOperation) {
             failureMonitor.startTimeoutDetection();
             promise.answer(SUCCESS);

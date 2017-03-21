@@ -25,7 +25,6 @@ import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,8 +34,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_CREATE_ERROR;
-import static com.hazelcast.simulator.utils.FileUtils.ensureExistingDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.log4j.Level.DEBUG;
@@ -52,7 +49,6 @@ public class WorkerProcessManager {
     private final Server server;
     private final SimulatorAddress agentAddress;
     private final String publicAddress;
-    private volatile String sessionId;
 
     public WorkerProcessManager(Server server, SimulatorAddress agentAddress, String publicAddress) {
         this.server = server;
@@ -66,24 +62,6 @@ public class WorkerProcessManager {
 
     public SimulatorAddress getAgentAddress() {
         return agentAddress;
-    }
-
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
-
-    public File getSessionDirectory() {
-        String sessionId = this.sessionId;
-        if (sessionId == null) {
-            throw new IllegalStateException("no session active");
-        }
-
-        File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
-        return ensureExistingDirectory(workersDir, sessionId);
     }
 
     // launching is done asynchronous so we don't block the calling thread (messaging thread)

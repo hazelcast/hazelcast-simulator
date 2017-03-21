@@ -23,7 +23,6 @@ import static com.hazelcast.simulator.utils.FileUtils.copy;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
-import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 
@@ -50,7 +49,6 @@ public class CoordinatorRunMonolithTest {
 
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
-        agent.getProcessManager().setSessionId(coordinatorParameters.getSessionId());
 
         componentRegistry = new ComponentRegistry();
         componentRegistry.addAgent(localIp(), localIp());
@@ -59,7 +57,8 @@ public class CoordinatorRunMonolithTest {
 
         hazelcastDriver = new HazelcastDriver()
                 .setAgents(componentRegistry.getAgents())
-                .setAll(simulatorProperties.asPublicMap());
+                .setAll(simulatorProperties.asPublicMap())
+                .set("SESSION_ID", coordinatorParameters.getSessionId());
 
         coordinator = new Coordinator(componentRegistry, coordinatorParameters);
         coordinator.start();

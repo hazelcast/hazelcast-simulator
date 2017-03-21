@@ -173,16 +173,17 @@ final class CoordinatorCli {
 
         sslTestAgents(simulatorProperties, componentRegistry);
 
-        this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
-                .setAll(simulatorProperties.asPublicMap())
-                .setAgents(componentRegistry.getAgents())
-                .setClientArgs(loadClientArgs())
-                .setMemberArgs(loadMemberArgs())
-                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
             this.coordinator = new Coordinator(componentRegistry, coordinatorParameters);
+            this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
+                    .setAll(simulatorProperties.asPublicMap())
+                    .setAgents(componentRegistry.getAgents())
+                    .set("CLIENT_ARGS", loadClientArgs())
+                    .set("MEMBER_ARGS", loadMemberArgs())
+                    .set("SESSION_ID", coordinatorParameters.getSessionId())
+                    .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
 
             this.testSuite = loadTestSuite();
 

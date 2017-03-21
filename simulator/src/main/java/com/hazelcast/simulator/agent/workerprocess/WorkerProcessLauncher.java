@@ -66,7 +66,7 @@ public class WorkerProcessLauncher {
     public void launch() throws Exception {
         WorkerProcess process = null;
         try {
-            sessionDir = processManager.getSessionDirectory();
+            sessionDir = getSessionDirectory();
             ensureExistingDirectory(sessionDir);
 
             String type = parameters.getWorkerType();
@@ -85,14 +85,20 @@ public class WorkerProcessLauncher {
         }
     }
 
+    public File getSessionDirectory() {
+        String sessionId = parameters.get("SESSION_ID");
+        File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
+        return ensureExistingDirectory(workersDir, sessionId);
+    }
+
+
     private WorkerProcess startWorker() throws IOException {
-        String workerType = parameters.getWorkerType();
-        String workerId = workerAddress.toString() + '-' + processManager.getPublicAddress() + '-' + workerType;
-        File workerHome = ensureExistingDirectory(sessionDir, workerId);
+        String workerDirName = parameters.get("WORKER_DIR_NAME");
+        File workerHome = ensureExistingDirectory(sessionDir, workerDirName);
 
-        copyResourcesToWorkerHome(workerId);
+        copyResourcesToWorkerHome(workerDirName);
 
-        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerId, workerHome);
+        WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerDirName, workerHome);
 
         ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash", "worker.sh"})
                 .directory(workerHome);
@@ -172,7 +178,7 @@ public class WorkerProcessLauncher {
 
     private void copyResourcesToWorkerHome(String workerId) {
         File workersHome = new File(getSimulatorHome(), WORKERS_HOME_NAME);
-        String sessionId = processManager.getSessionId();
+        String sessionId = parameters.get("SESSION_ID");
         File uploadDirectory = new File(workersHome, sessionId + "/upload/").getAbsoluteFile();
         if (!uploadDirectory.exists() || !uploadDirectory.isDirectory()) {
             LOGGER.debug("Skip copying upload directory to workers since no upload directory was found");
@@ -224,7 +230,7 @@ public class WorkerProcessLauncher {
         }
 
         // we have to reverse the classpath to monkey patch version specific classes
-        return new File(processManager.getSessionDirectory(), "lib/*").getAbsolutePath()
+        return new File(getSessionDirectory(), "lib/*").getAbsolutePath()
                 + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"

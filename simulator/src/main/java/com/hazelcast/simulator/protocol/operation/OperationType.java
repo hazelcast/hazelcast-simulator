@@ -16,7 +16,6 @@
 package com.hazelcast.simulator.protocol.operation;
 
 import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.agent.operations.InitSessionOperation;
 import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
@@ -68,10 +67,9 @@ public enum OperationType {
     RC_DOWNLOAD(RcDownloadOperation.class, 2009),
 
     // Agent-Operations
-    INIT_SESSION(InitSessionOperation.class, 3000),
-    CREATE_WORKER(CreateWorkerOperation.class, 3001),
-    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3002),
-    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3003),
+    CREATE_WORKER(CreateWorkerOperation.class, 3000),
+    START_TIMEOUT_DETECTION(StartTimeoutDetectionOperation.class, 3001),
+    STOP_TIMEOUT_DETECTION(StopTimeoutDetectionOperation.class, 3002),
 
     // Worker-Operations
     TERMINATE_WORKER(TerminateWorkerOperation.class, 4001),

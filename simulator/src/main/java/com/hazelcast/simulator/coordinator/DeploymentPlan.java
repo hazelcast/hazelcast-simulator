@@ -211,9 +211,11 @@ public final class DeploymentPlan {
             int workerIndex = agent.getNextWorkerIndex();
             SimulatorAddress workerAddress = new SimulatorAddress(WORKER, agent.getAddressIndex(), workerIndex, 0);
 
+            String workerDirName = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + parameters.getWorkerType();
             parameters.set("WORKER_ADDRESS", workerAddress)
                     .set("WORKER_INDEX", workerIndex)
-                    .set("PUBLIC_IP", agent.getPublicAddress());
+                    .set("PUBLIC_IP", agent.getPublicAddress())
+                    .set("WORKER_DIR_NAME", workerDirName);
             workers.add(parameters);
         }
 

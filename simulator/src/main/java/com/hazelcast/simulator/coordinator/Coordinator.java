@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.agent.operations.InitSessionOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.operations.RcTestRunOperation;
@@ -68,7 +67,6 @@ import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public class Coordinator implements Closeable {
@@ -227,8 +225,6 @@ public class Coordinator implements Closeable {
         }
 
         LOGGER.info("Remote client started successfully!");
-
-        client.invokeAll(componentRegistry.getAgents(), new InitSessionOperation(parameters.getSessionId()), MINUTES.toMillis(1));
     }
 
     public void download() throws Exception {
@@ -341,11 +337,12 @@ public class Coordinator implements Closeable {
         VendorDriver vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
                 .setAgents(componentRegistry.getAgents())
                 .setAll(simulatorProperties.asPublicMap())
-                .setClientArgs(op.getVmOptions())
-                .setMemberArgs(op.getVmOptions())
+                .set("CLIENT_ARGS", op.getVmOptions())
+                .set("MEMBER_ARGS", op.getVmOptions())
+                .set("SESSION_ID", parameters.getSessionId())
                 .setIfNotNull("LICENCE_KEY", parameters.getLicenseKey())
                 .setIfNotNull("VERSION_SPEC", op.getVersionSpec())
-                .setIfNotNull("CONFIG", op.getHzConfig());
+                .setIfNotNull("CONFIG", op.getConfig());
 
         List<AgentData> agents = findAgents(op);
         if (agents.isEmpty()) {

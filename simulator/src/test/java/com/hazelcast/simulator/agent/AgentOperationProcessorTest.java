@@ -1,7 +1,6 @@
 package com.hazelcast.simulator.agent;
 
 import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
-import com.hazelcast.simulator.agent.operations.InitSessionOperation;
 import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
@@ -38,20 +37,11 @@ public class AgentOperationProcessorTest {
 
     @Test
     public void testCreateWorkerOperation() throws Exception {
-        CreateWorkerOperation op = new CreateWorkerOperation(new ArrayList<WorkerParameters>(),1);
+        CreateWorkerOperation op = new CreateWorkerOperation(new ArrayList<WorkerParameters>(), 1);
 
         processor.process(op, source, promise);
 
         verify(processManager).launch(op, promise);
-    }
-
-    @Test
-    public void testInitSessionOperation() throws Exception {
-        String someid = "someid";
-        InitSessionOperation op = new InitSessionOperation(someid);
-        processor.process(op, source, promise);
-
-        verify(processManager).setSessionId(someid);
     }
 
     @Test

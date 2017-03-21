@@ -66,7 +66,6 @@ public class CoordinatorTest {
 
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
-        agent.getProcessManager().setSessionId(coordinatorParameters.getSessionId());
 
         componentRegistry = new ComponentRegistry();
         agentData = componentRegistry.addAgent(localIp(), localIp());

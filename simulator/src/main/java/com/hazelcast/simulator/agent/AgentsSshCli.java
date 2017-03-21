@@ -88,7 +88,7 @@ public final class AgentsSshCli {
     }
 
     public static void main(String[] args) {
-        LOGGER.info("Hazelcast Simulator Agent-SSH");
+        LOGGER.info("Hazelcast Simulator agent-ssh");
         LOGGER.info(format("Version: %s, Commit: %s, Build Time: %s",
                 getSimulatorVersion(), getCommitIdAbbrev(), getBuildTime()));
         LOGGER.info(format("SIMULATOR_HOME: %s", getSimulatorHome().getAbsolutePath()));
@@ -96,7 +96,7 @@ public final class AgentsSshCli {
         try {
             new AgentsSshCli(args);
         } catch (Exception e) {
-            exitWithError(LOGGER, "Could not start Agent!", e);
+            exitWithError(LOGGER, "Could not start agent-ssh!", e);
         }
     }
 }

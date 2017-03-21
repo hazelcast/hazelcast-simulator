@@ -35,8 +35,6 @@ import static java.lang.String.format;
 public abstract class VendorDriver<V> implements Closeable {
     private static final Logger LOGGER = Logger.getLogger(HazelcastDriver.class);
 
-    protected String clientArgs = "";
-    protected String memberArgs = "";
     protected List<AgentData> agents;
     protected Map<String, String> properties = new HashMap<String, String>();
     private final Map<String, String> configCache = new HashMap<String, String>();
@@ -53,18 +51,13 @@ public abstract class VendorDriver<V> implements Closeable {
         }
     }
 
+    protected String get(String name, String defaultValue) {
+        String value = properties.get(name);
+        return value == null ? defaultValue : value;
+    }
+
     public VendorDriver<V> setAgents(List<AgentData> agents) {
         this.agents = agents;
-        return this;
-    }
-
-    public VendorDriver<V> setClientArgs(String clientArgs) {
-        this.clientArgs = clientArgs;
-        return this;
-    }
-
-    public VendorDriver<V> setMemberArgs(String memberArgs) {
-        this.memberArgs = memberArgs;
         return this;
     }
 
