@@ -19,6 +19,8 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import java.io.File;
 
+import static java.lang.System.currentTimeMillis;
+
 /**
  * Represents a worker process. So the process that does the actual work.
  */
@@ -27,11 +29,10 @@ public class WorkerProcess {
     private final SimulatorAddress address;
     private final String id;
     private final File workerHome;
-    private volatile long lastSeen = System.currentTimeMillis();
+    private volatile long lastSeen = currentTimeMillis();
     private volatile boolean oomeDetected;
     private volatile boolean isFinished;
     private volatile Process process;
-    private volatile String pid;
 
     public WorkerProcess(SimulatorAddress address, String id, File workerHome) {
         this.address = address;
@@ -56,7 +57,7 @@ public class WorkerProcess {
     }
 
     public void updateLastSeen() {
-        this.lastSeen = System.currentTimeMillis();
+        this.lastSeen = currentTimeMillis();
     }
 
     public void setLastSeen(long timeStamp) {
@@ -85,13 +86,5 @@ public class WorkerProcess {
 
     public void setProcess(Process process) {
         this.process = process;
-    }
-
-    public String getPid() {
-        return pid;
-    }
-
-    public void setPid(String pid) {
-        this.pid = pid;
     }
 }

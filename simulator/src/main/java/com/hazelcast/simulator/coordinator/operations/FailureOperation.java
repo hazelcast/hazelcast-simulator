@@ -34,7 +34,6 @@ public class FailureOperation implements SimulatorOperation {
     private final String type;
     private final String workerAddress;
     private final String agentAddress;
-    private final String hzAddress;
     private final String workerId;
     private final String testId;
     private TestCase testCase;
@@ -43,16 +42,15 @@ public class FailureOperation implements SimulatorOperation {
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             Throwable cause) {
-        this(message, type, workerAddress, agentAddress, null, null, null, cause == null ? "" : throwableToString(cause));
+        this(message, type, workerAddress, agentAddress, null, null, cause == null ? "" : throwableToString(cause));
     }
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
-                            String hzAddress, String workerId, String testId, String cause) {
+                           String workerId, String testId, String cause) {
         this.message = message;
         this.type = type.name();
         this.workerAddress = workerAddress == null ? null : workerAddress.toString();
         this.agentAddress = agentAddress;
-        this.hzAddress = hzAddress;
         this.workerId = workerId;
         this.testId = testId;
         this.cause = cause;
@@ -133,7 +131,6 @@ public class FailureOperation implements SimulatorOperation {
         sb.append("   duration=").append(durationMs).append(" ms").append(NEW_LINE);
         sb.append("   workerAddress=").append(workerAddress).append(NEW_LINE);
         sb.append("   agentAddress=").append(agentAddress).append(NEW_LINE);
-        sb.append("   hzAddress=").append(hzAddress).append(NEW_LINE);
         sb.append("   workerId=").append(workerId).append(NEW_LINE);
 
         if (testCase != null) {

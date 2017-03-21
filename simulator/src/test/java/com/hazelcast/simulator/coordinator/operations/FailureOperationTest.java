@@ -32,7 +32,7 @@ public class FailureOperationTest {
         testCase = new TestCase(TEST_ID);
         cause = new TestException("expected exception");
         operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, cause);
-        fullOperation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, "127.0.0.1:5701",
+        fullOperation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, 
                 "C_A1_W1-member", TEST_ID, null).setTestCase(testCase);
     }
 

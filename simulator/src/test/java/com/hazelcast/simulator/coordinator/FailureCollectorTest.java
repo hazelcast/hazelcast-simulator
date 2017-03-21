@@ -58,16 +58,16 @@ public class FailureCollectorTest {
         registry.addWorkers(singletonList(workerParameters));
 
         exceptionFailure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", "testId", null);
+                "workerId", "testId", null);
 
         abnormalExitFailure = new FailureOperation("exception", WORKER_ABNORMAL_EXIT, workerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", "testId", null);
+                "workerId", "testId", null);
 
         oomeFailure = new FailureOperation("oom", WORKER_OOME, workerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", "testId", null);
+               "workerId", "testId", null);
 
         normalExitFailure = new FailureOperation("finished", WORKER_NORMAL_EXIT, workerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", "testId", null);
+               "workerId", "testId", null);
     }
 
     @After
@@ -79,7 +79,7 @@ public class FailureCollectorTest {
     public void notify_whenNonExistingWorker_thenIgnore() {
         SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 100, 0);
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", "testId", null);
+                "workerId", "testId", null);
 
         failureCollector.notify(failure);
 
@@ -126,7 +126,7 @@ public class FailureCollectorTest {
         registry.addTests(suite2);
 
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, workerAddress, agentAddress.toString(),
-                "127.0.0.1:5701", "workerId", testCase.getId(), null);
+                "workerId", testCase.getId(), null);
 
         FailureListener listener = mock(FailureListener.class);
         failureCollector.addListener(listener);

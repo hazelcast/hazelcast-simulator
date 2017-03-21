@@ -150,7 +150,6 @@ public class WorkerProcessLauncher {
 
             String pid = readPid(worker);
             if (pid != null) {
-                worker.setPid(pid);
                 LOGGER.info(format("Worker %s started", worker.getId()));
                 return;
             }

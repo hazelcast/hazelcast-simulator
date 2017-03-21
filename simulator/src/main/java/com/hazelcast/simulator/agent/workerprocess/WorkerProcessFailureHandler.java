@@ -46,7 +46,6 @@ public class WorkerProcessFailureHandler {
                 type,
                 workerAddress,
                 agentAddress,
-                workerProcess.getPid(),
                 workerId,
                 testId,
                 cause);
