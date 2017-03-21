@@ -27,10 +27,13 @@ ssh_test(){
     if [ "$status" -ne "0" ]; then
          ((ssh_test_errors+=1))
          echo [ERROR]Failed to connect to agent $agent
+    else
+        echo "[INFO]Agent $agent is reachable"
     fi
 }
 
 if [ "$CLOUD_PROVIDER" = "local" ]; then
+    echo "[INFO]All agents are reachable."
     exit 0
 fi
 
@@ -38,9 +41,9 @@ for agent in ${agents//,/ } ; do
     ssh_test $agent
 done
 
-echo errors $ssh_test_errors
 if [ "$ssh_test_errors" -ne 0 ] ; then
-    echo "[ERROR]Not all agents are reachable"
+    echo "[ERROR]Not all agents are reachable!"
     exit 1
 fi
 
+echo "[INFO]All agents are reachable."

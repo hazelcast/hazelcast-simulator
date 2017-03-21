@@ -46,6 +46,7 @@ public class BashCommand {
     private boolean throwException;
     private File directory;
     private boolean dumpOutputOnError = true;
+    private boolean systemOut;
 
     public BashCommand(String command) {
         params.add(command);
@@ -61,6 +62,11 @@ public class BashCommand {
                 this.params.add('"' + param.toString() + '"');
             }
         }
+        return this;
+    }
+
+    public BashCommand setSystemOut(boolean systemOut) {
+        this.systemOut = systemOut;
         return this;
     }
 
@@ -146,7 +152,7 @@ public class BashCommand {
         }
     }
 
-    private static class BashStreamGobbler extends Thread {
+    private class BashStreamGobbler extends Thread {
         private final InputStreamReader inputStreamReader;
         private final BufferedReader reader;
         private final StringBuilder stringBuilder;
@@ -164,15 +170,33 @@ public class BashCommand {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.startsWith(ERROR)) {
-                        LOGGER.error(line.substring(ERROR.length(), line.length()));
+                        String s = line.substring(ERROR.length(), line.length());
+                        if (systemOut) {
+                            System.out.println(s);
+                        }
+                        LOGGER.error(s);
+
                     } else if (line.startsWith(WARN)) {
-                        LOGGER.warn(line.substring(WARN.length(), line.length()));
+                        String s = line.substring(WARN.length(), line.length());
+                        if (systemOut) {
+                            System.out.println(s);
+                        }
+                        LOGGER.warn(s);
                     } else if (line.startsWith(INFO)) {
-                        LOGGER.info(line.substring(INFO.length(), line.length()));
+                        String s = line.substring(INFO.length(), line.length());
+                        if (systemOut) {
+                            System.out.println(s);
+                        }
+                        LOGGER.info(s);
                     } else {
+                        if (systemOut) {
+                            System.out.println(line);
+                        }
                         LOGGER.trace(line);
                     }
-                    stringBuilder.append(line).append(NEW_LINE);
+                    if (!systemOut) {
+                        stringBuilder.append(line).append(NEW_LINE);
+                    }
                 }
             } catch (IOException ignored) {
                 EmptyStatement.ignore(ignored);
