@@ -56,7 +56,7 @@ public class Agent implements Closeable {
                  int port,
                  int threadPoolSize,
                  int workerLastSeenTimeoutSeconds) {
-        SimulatorAddress agentAddress = new SimulatorAddress(AGENT, addressIndex, 0, 0);
+        SimulatorAddress agentAddress = new SimulatorAddress(AGENT, addressIndex, 0);
 
         this.publicAddress = publicAddress;
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));

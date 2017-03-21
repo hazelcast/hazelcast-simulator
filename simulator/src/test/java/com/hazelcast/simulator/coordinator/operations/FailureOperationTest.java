@@ -18,8 +18,8 @@ public class FailureOperationTest {
 
     private static final String TEST_ID = "ExceptionOperationTest";
 
-    private SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1, 0);
-    private SimulatorAddress agentAddress = new SimulatorAddress(AGENT, 2, 0, 0);
+    private SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1);
+    private SimulatorAddress agentAddress = new SimulatorAddress(AGENT, 2, 0);
 
     private TestException cause;
     private TestCase testCase;

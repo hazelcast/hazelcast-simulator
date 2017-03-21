@@ -23,10 +23,9 @@ public enum AddressLevel {
 
     COORDINATOR(0),
     AGENT(1),
-    WORKER(2),
-    TEST(3);
+    WORKER(2);
 
-    private static final AddressLevel[] ADDRESS_LEVELS = new AddressLevel[]{COORDINATOR, AGENT, WORKER, TEST};
+    private static final AddressLevel[] ADDRESS_LEVELS = new AddressLevel[]{COORDINATOR, AGENT, WORKER};
 
     private final int intValue;
 
@@ -39,7 +38,7 @@ public enum AddressLevel {
     }
 
     public static int getMaxLevel() {
-        return TEST.intValue;
+        return WORKER.intValue;
     }
 
     public static AddressLevel fromInt(int intValue) {

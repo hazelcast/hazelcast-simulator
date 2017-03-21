@@ -67,7 +67,7 @@ public class AgentData {
             throw new IllegalArgumentException("addressIndex must be a positive number");
         }
         this.addressIndex = addressIndex;
-        this.address = new SimulatorAddress(AddressLevel.AGENT, addressIndex, 0, 0);
+        this.address = new SimulatorAddress(AddressLevel.AGENT, addressIndex, 0);
         this.publicAddress = checkNotNull(publicAddress, "publicAddress can't be null");
         this.privateAddress = checkNotNull(privateAddress, "privateAddress can't be null");
         this.tags = checkNotNull(tags, "tags can't be null");

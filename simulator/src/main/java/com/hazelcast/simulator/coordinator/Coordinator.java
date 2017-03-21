@@ -290,7 +290,7 @@ public class Coordinator implements Closeable {
                 sleepSeconds(1);
                 for (TestData test : registry.getTests()) {
                     if (test.getTestSuite() == op.getTestSuite()) {
-                        return test.getAddress().toString();
+                        return test.getTestCase().getId();
                     }
                 }
             }
@@ -304,7 +304,7 @@ public class Coordinator implements Closeable {
     public String testStop(RcTestStopOperation op) throws Exception {
         LOGGER.info(format("Test [%s] stopping...", op.getTestId()));
 
-        TestData test = registry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        TestData test = registry.getTest(op.getTestId());
         if (test == null) {
             throw new IllegalStateException(format("no test with id [%s] found", op.getTestId()));
         }
@@ -324,7 +324,7 @@ public class Coordinator implements Closeable {
     }
 
     public String testStatus(RcTestStatusOperation op) throws Exception {
-        TestData test = registry.getTestByAddress(SimulatorAddress.fromString(op.getTestId()));
+        TestData test = registry.getTest(op.getTestId());
         return test == null ? "null" : test.getStatusString();
     }
 

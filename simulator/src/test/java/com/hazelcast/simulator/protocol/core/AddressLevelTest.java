@@ -22,11 +22,6 @@ public class AddressLevelTest {
         assertEquals(AddressLevel.WORKER, fromInt(AddressLevel.WORKER.toInt()));
     }
 
-    @Test
-    public void testFromInt_TEST() {
-        assertEquals(AddressLevel.TEST, fromInt(AddressLevel.TEST.toInt()));
-    }
-
     @Test(expected = IllegalArgumentException.class)
     public void testFromInt_tooLow() {
         fromInt(AddressLevel.getMinLevel() - 1);

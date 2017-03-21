@@ -110,9 +110,7 @@ public final class TestCaseRunner {
         this.failureCollector = failureCollector;
         this.performanceStatsCollector = performanceStatsCollector;
 
-        String testAddress = test.getAddress().toString();
-        this.prefix = padRight(testAddress + ":" + testCase.getId()
-                , testSuite.getMaxTestCaseIdLength() + 2 + testAddress.length());
+        this.prefix = padRight(testCase.getId(), testSuite.getMaxTestCaseIdLength() + 2);
 
         this.testPhaseSyncMap = testPhaseSyncMap;
 

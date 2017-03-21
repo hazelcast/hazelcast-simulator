@@ -18,7 +18,6 @@ package com.hazelcast.simulator.coordinator.registry;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.TestSuite;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 
 import static com.hazelcast.simulator.coordinator.registry.TestData.CompletedStatus.FAILED;
 import static com.hazelcast.simulator.coordinator.registry.TestData.CompletedStatus.IN_PROGRESS;
@@ -33,7 +32,6 @@ public class TestData {
     }
 
     private final int testIndex;
-    private final SimulatorAddress address;
     private final TestCase testCase;
     private final TestSuite testSuite;
     private volatile long startTimeMillis;
@@ -41,9 +39,8 @@ public class TestData {
     private volatile boolean stopRequested;
     private volatile CompletedStatus completedStatus = IN_PROGRESS;
 
-    TestData(int testIndex, SimulatorAddress address, TestCase testCase, TestSuite testSuite) {
+    TestData(int testIndex,  TestCase testCase, TestSuite testSuite) {
         this.testIndex = testIndex;
-        this.address = address;
         this.testCase = testCase;
         this.testSuite = testSuite;
     }
@@ -74,10 +71,6 @@ public class TestData {
 
     public int getTestIndex() {
         return testIndex;
-    }
-
-    public SimulatorAddress getAddress() {
-        return address;
     }
 
     public TestCase getTestCase() {

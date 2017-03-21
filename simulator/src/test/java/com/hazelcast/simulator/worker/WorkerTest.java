@@ -18,7 +18,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
@@ -54,7 +53,7 @@ public class WorkerTest {
                 .setAgents(registry.getAgents())
                 .setAll(properties.asPublicMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
-        workerAddress = new SimulatorAddress(AddressLevel.WORKER, AGENT_INDEX, WORKER_INDEX, 0);
+        workerAddress = new SimulatorAddress(AddressLevel.WORKER, AGENT_INDEX, WORKER_INDEX);
 
         parameters = driver.loadWorkerParameters("member")
                 .set("WORKER_ADDRESS", workerAddress)

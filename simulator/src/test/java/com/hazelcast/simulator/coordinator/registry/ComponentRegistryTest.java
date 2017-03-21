@@ -5,7 +5,6 @@ import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.TargetType;
 import com.hazelcast.simulator.coordinator.TestSuite;
 import com.hazelcast.simulator.coordinator.registry.AgentData.AgentWorkerMode;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.Test;
@@ -117,7 +116,7 @@ public class ComponentRegistryTest {
         registry.addWorkers(parametersList);
         assertEquals(5, registry.workerCount());
 
-        registry.removeWorker(new SimulatorAddress(WORKER, 1, 3, 0));
+        registry.removeWorker(new SimulatorAddress(WORKER, 1, 3));
         assertEquals(4, registry.workerCount());
     }
 
@@ -311,7 +310,6 @@ public class ComponentRegistryTest {
         assertEquals(3, tests.size());
         for (TestData testData : tests) {
             assertTrue(testData.getTestCase().getId().startsWith("Test"));
-            assertEquals(AddressLevel.TEST, testData.getAddress().getAddressLevel());
         }
     }
 
@@ -326,7 +324,6 @@ public class ComponentRegistryTest {
         TestData testData = registry.getTest("Test2");
 
         assertEquals(2, testData.getTestIndex());
-        assertEquals(AddressLevel.TEST, testData.getAddress().getAddressLevel());
         assertEquals("Test2", testData.getTestCase().getId());
     }
 
@@ -345,7 +342,7 @@ public class ComponentRegistryTest {
             result.add(new WorkerParameters()
                     .set("WORKER_TYPE", workerType)
                     .set("WORKER_INDEX", k )
-                    .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), k , 0)));
+                    .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), k )));
         }
         return result;
     }
