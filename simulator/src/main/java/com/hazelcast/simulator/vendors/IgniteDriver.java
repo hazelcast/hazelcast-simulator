@@ -52,13 +52,13 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     }
 
     private void loadServerParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", memberArgs)
+        params.set("JVM_OPTIONS", get("MEMBER_ARGS", ""))
                 .set("file:ignite.xml", loadServerOrNativeClientConfig(false))
                 .set("file:worker.sh", loadWorkerScript("member"));
     }
 
     private void loadClientParameters(WorkerParameters params) {
-        params.set("JVM_OPTIONS", clientArgs)
+        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
                 .set("file:ignite.xml", loadServerOrNativeClientConfig(true))
                 .set("file:worker.sh", loadWorkerScript("javaclient"));
     }

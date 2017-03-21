@@ -71,25 +71,25 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         return params;
     }
 
-    private void loadJavaClientWorkerParameters(WorkerParameters params) {
-        params
-                .set("JVM_OPTIONS", clientArgs)
-                .set("file:client-hazelcast.xml", initClientHzConfig())
-                .set("file:worker.sh", loadWorkerScript("javaclient"));
-    }
-
     private void loadMemberWorkerParameters(WorkerParameters params) {
         params
-                .set("JVM_OPTIONS", memberArgs)
+                .set("JVM_OPTIONS", get("MEMBER_ARGS", ""))
                 .set("file:hazelcast.xml", initMemberHzConfig(false))
                 .set("file:worker.sh", loadWorkerScript("member"));
     }
 
     private void loadLiteMemberWorkerParameters(WorkerParameters params) {
         params
-                .set("JVM_OPTIONS", clientArgs)
+                .set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
                 .set("file:hazelcast.xml", initMemberHzConfig(true))
                 .set("file:worker.sh", loadWorkerScript("litemember"));
+    }
+
+    private void loadJavaClientWorkerParameters(WorkerParameters params) {
+        params
+                .set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+                .set("file:client-hazelcast.xml", initClientHzConfig())
+                .set("file:worker.sh", loadWorkerScript("javaclient"));
     }
 
     @Override

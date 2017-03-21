@@ -58,7 +58,7 @@ public class RcWorkerStartOperation implements SimulatorOperation {
         return this;
     }
 
-    public String getHzConfig() {
+    public String getConfig() {
         return hzConfig;
     }
 

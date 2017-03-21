@@ -46,15 +46,6 @@ public class AgentCliTest {
 
         assertEquals(5, agent.getProcessManager().getAgentAddress().getAgentIndex());
         assertEquals("127.0.0.1", agent.getPublicAddress());
-        try {
-            assertNull(agent.getProcessManager().getSessionDirectory());
-            fail();
-        } catch (IllegalStateException ignore) {
-        }
-
-        //todo: this doesn't belong here 
-        agent.getProcessManager().setSessionId("AgentCliTest");
-        assertNotNull(agent.getProcessManager().getSessionDirectory());
     }
 
     @Test(expected = CommandLineExitException.class)
