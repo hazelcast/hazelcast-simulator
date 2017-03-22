@@ -257,7 +257,7 @@ public final class CoordinatorRemoteCli implements Closeable {
                         + "\n"
                         + "Examples\n"
                         + "# Checks the status of some test.\n"
-                        + "coordinator-remote test-status C_A*_W*_T1\n";
+                        + "coordinator-remote test-status mytest\n";
 
         private final NonOptionArgumentSpec<String> argumentSpec = parser
                 .nonOptions("test address").ofType(String.class);
@@ -289,7 +289,7 @@ public final class CoordinatorRemoteCli implements Closeable {
                         + "\n"
                         + "Examples\n"
                         + "# Stops a test.\n"
-                        + "coordinator-remote test-stop C_A*_W*_T1\n";
+                        + "coordinator-remote test-stop mytest\n";
 
         private final NonOptionArgumentSpec<String> argumentSpec = parser
                 .nonOptions("test address").ofType(String.class);
@@ -413,10 +413,10 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote worker-script  --workerType member --command 'bash:jstack $PID''\n\n"
                 + "# takes a threadump on all workers with a specific version\n"
                 + "coordinator-remote worker-script  --versionSpec maven=3.7 --command 'bash:jstack $PID''\n\n"
-                + "# takes a threaddump on all member on agent C_A1\n"
-                + "coordinator-remote worker-script --workerType member --agents C_A1 --command 'bash:jstack $PID'\n\n"
-                + "# takes a threaddump on C_A1_W1\n"
-                + "coordinator-remote worker-script --workers C_A1_W1 --command 'bash:jstack $PID'\n\n"
+                + "# takes a threaddump on all member on agent A1\n"
+                + "coordinator-remote worker-script --workerType member --agents A1 --command 'bash:jstack $PID'\n\n"
+                + "# takes a threaddump on A1_W1\n"
+                + "coordinator-remote worker-script --workers A1_W1 --command 'bash:jstack $PID'\n\n"
                 + "# executes a javascript on all workers\n"
                 + "coordinator-remote worker-script --command 'js:java.lang.System.out.println(\"hello\")'";
 
@@ -470,10 +470,10 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote worker-kill --maxCount 2 --workerType javaclient\n\n"
                 + "# kills 3 litemembers using version spec git=master clients\n"
                 + "coordinator-remote worker-kill --maxCount 3 --workerType litemember --versionSpec git=master\n\n"
-                + "# kills all workers on agent C_A1\n"
-                + "coordinator-remote worker-kill --agent C_A1 \n\n"
-                + "# kills worker C_A1_W1\n"
-                + "coordinator-remote worker-kill --worker C_A1_W1 \n\n"
+                + "# kills all workers on agent A1\n"
+                + "coordinator-remote worker-kill --agent A1 \n\n"
+                + "# kills worker A1_W1\n"
+                + "coordinator-remote worker-kill --worker A1_W1 \n\n"
                 + "# kill one member using OOME\n"
                 + "coordinator-remote worker-kill --maxCount 1 --command OOME \n\n"
                 + "# kill one member using bash command kill -9\n"
@@ -566,7 +566,7 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "inherit the tags of the agent it runs on and its own tags are added.\n"
                 + " \n"
                 + "A worker can assigned to a particular agent by making use of the --agent option where a list of\n"
-                + "agent simulator adresses is passed, e.g. --agent C_A1. Or by making use of the --agentTags. For\n"
+                + "agent simulator adresses is passed, e.g. --agent A1. Or by making use of the --agentTags. For\n"
                 + "example --agentTags cluster=wan1.\n"
                 + "\n"
                 + "Examples\n"
@@ -576,11 +576,11 @@ public final class CoordinatorRemoteCli implements Closeable {
                 + "coordinator-remote worker-start --count 2 --workerType javaclient\n\n"
                 + "# starts 3 litemembers using version spec git=master clients\n"
                 + "coordinator-remote worker-start --count --workerType litemember --versionSpec git=master\n\n"
-                + "# starts 1 member on agent C_A1\n"
-                + "coordinator-remote worker-start --agents C_A1 \n\n"
+                + "# starts 1 member on agent A1\n"
+                + "coordinator-remote worker-start --agents A1 \n\n"
                 + "# starts 1 member on agent with tag cluster=wan1\n"
                 + "coordinator-remote worker-start --agentTags cluster=wan1 \n\n"
-                + "# starts 1 member on agent C_A1 with tags cluster and password=123\n"
+                + "# starts 1 member on agent A1 with tags cluster and password=123\n"
                 + "coordinator-remote worker-start --tags cluster,password=123 \n\n"
                 + "# starts 1 client with a custom client-hazelcast.xml file\n"
                 + "coordinator-remote worker-start --config client-hazelcast.xml\n\n";

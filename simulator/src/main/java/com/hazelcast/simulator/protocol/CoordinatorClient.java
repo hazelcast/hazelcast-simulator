@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static com.hazelcast.simulator.common.SimulatorProperties.DEFAULT_AGENT_PORT;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.coordinatorAddress;
 import static com.hazelcast.simulator.protocol.operation.OperationType.getOperationType;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
@@ -276,7 +276,7 @@ public class CoordinatorClient implements Closeable {
                 message.setJMSCorrelationID(requestId);
             }
 
-            message.setStringProperty("source", COORDINATOR.toString());
+            message.setStringProperty("source", coordinatorAddress().toString());
             message.setStringProperty("target", target.toString());
             message.setStringProperty("payload", OperationCodec.toJson(op));
             message.setIntProperty("operationType", getOperationType(op).toInt());

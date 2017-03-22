@@ -8,7 +8,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static com.hazelcast.simulator.worker.performance.PerformanceStats.aggregateAll;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,10 +39,10 @@ public class PerformanceStatsCollectorTest {
         emptyPerformanceStatsCollector = new PerformanceStatsCollector();
         performanceStatsCollector = new PerformanceStatsCollector();
 
-        a1w1 = new SimulatorAddress(WORKER, 1, 1);
-        a1w2 = new SimulatorAddress(WORKER, 1, 2);
-        a2w1 = new SimulatorAddress(WORKER, 2, 1);
-        a2w2 = new SimulatorAddress(WORKER, 2, 2);
+        a1w1 = workerAddress(1, 1);
+        a1w2 = workerAddress(1, 2);
+        a2w1 = workerAddress(2, 1);
+        a2w2 = workerAddress(2, 2);
 
         a1 = a1w1.getParent();
         a2 = a2w1.getParent();
@@ -70,7 +70,7 @@ public class PerformanceStatsCollectorTest {
 
     @Test
     public void testFormatPerformanceNumbers_avgLatencyOverMicrosThreshold() throws Exception {
-        SimulatorAddress worker = new SimulatorAddress(WORKER, 3, 1);
+        SimulatorAddress worker = workerAddress(3, 1);
 
         Map<String, PerformanceStats> performanceStats = new HashMap<String, PerformanceStats>();
         performanceStats.put(TEST_CASE_ID_1, new PerformanceStats(

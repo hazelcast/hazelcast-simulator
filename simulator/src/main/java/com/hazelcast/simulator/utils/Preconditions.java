@@ -15,6 +15,8 @@
  */
 package com.hazelcast.simulator.utils;
 
+import static java.lang.String.format;
+
 public final class Preconditions {
 
     private Preconditions() {
@@ -32,6 +34,13 @@ public final class Preconditions {
     public static <T> T checkNotNull(T argument, String errorMessage) {
         if (argument == null) {
             throw new NullPointerException(errorMessage);
+        }
+        return argument;
+    }
+
+    public static int checkPositive(int argument, String variable) {
+        if (argument <= 0) {
+            throw new IllegalArgumentException(format("'%s' must be larger than zero", variable));
         }
         return argument;
     }

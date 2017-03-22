@@ -23,7 +23,7 @@ public class WorkerProcessManager_LaunchTest {
         workersHome = new File(simulatorHome, "workers");
 
         server = mock(Server.class);
-        workerProcessManager = new WorkerProcessManager(server, SimulatorAddress.fromString("C_A1"), "127.0.0.1");
+        workerProcessManager = new WorkerProcessManager(server, SimulatorAddress.fromString("A1"), "127.0.0.1");
     }
 
     @After

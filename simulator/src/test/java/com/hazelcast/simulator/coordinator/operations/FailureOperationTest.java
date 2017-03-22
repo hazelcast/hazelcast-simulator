@@ -7,8 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.agentAddress;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -18,8 +18,8 @@ public class FailureOperationTest {
 
     private static final String TEST_ID = "ExceptionOperationTest";
 
-    private SimulatorAddress workerAddress = new SimulatorAddress(WORKER, 1, 1);
-    private SimulatorAddress agentAddress = new SimulatorAddress(AGENT, 2, 0);
+    private SimulatorAddress workerAddress = workerAddress(1, 1);
+    private SimulatorAddress agentAddress = agentAddress(2);
 
     private TestException cause;
     private TestCase testCase;
@@ -32,8 +32,8 @@ public class FailureOperationTest {
         testCase = new TestCase(TEST_ID);
         cause = new TestException("expected exception");
         operation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, cause);
-        fullOperation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null, 
-                "C_A1_W1-member", TEST_ID, null).setTestCase(testCase);
+        fullOperation = new FailureOperation("FailureOperationTest", WORKER_EXCEPTION, workerAddress, null,
+                "A1_W1-member", TEST_ID, null).setTestCase(testCase);
     }
 
     @Test

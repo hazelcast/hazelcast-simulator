@@ -29,7 +29,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.agentAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -56,7 +56,7 @@ public class Agent implements Closeable {
                  int port,
                  int threadPoolSize,
                  int workerLastSeenTimeoutSeconds) {
-        SimulatorAddress agentAddress = new SimulatorAddress(AGENT, addressIndex, 0);
+        SimulatorAddress agentAddress = agentAddress(addressIndex);
 
         this.publicAddress = publicAddress;
         Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));

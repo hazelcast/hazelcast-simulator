@@ -18,7 +18,7 @@ public class WorkerProcessFailureHandlerTest {
 
     @Before
     public void before() {
-        agentAddress = "C_A1";
+        agentAddress = "A1";
         server = mock(Server.class);
         handler = new WorkerProcessFailureHandler(agentAddress, server);
     }
