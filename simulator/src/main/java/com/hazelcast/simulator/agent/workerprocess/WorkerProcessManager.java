@@ -19,7 +19,6 @@ import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.protocol.Server;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -34,6 +33,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_CREATE_ERROR;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.log4j.Level.DEBUG;
@@ -159,8 +159,7 @@ public class WorkerProcessManager {
                 LOGGER.error("Failed to start Worker:" + workerProcesses, e);
 
                 SimulatorAddress workerAddress
-                        = new SimulatorAddress(AddressLevel.WORKER, agentAddress.getAddressIndex(),
-                        parameters.intGet("WORKER_INDEX"));
+                        = workerAddress(agentAddress.getAddressIndex(), parameters.intGet("WORKER_INDEX"));
 
                 server.sendCoordinator(new FailureOperation("Failed to start worker [" + workerAddress + "]",
                         WORKER_CREATE_ERROR, workerAddress, agentAddress.toString(), e));
@@ -178,8 +177,7 @@ public class WorkerProcessManager {
             int workerIndex = parameters.intGet("WORKER_INDEX");
 
             String workerType = parameters.getWorkerType();
-            SimulatorAddress workerAddress = new SimulatorAddress(
-                    AddressLevel.WORKER, agentAddress.getAgentIndex(), workerIndex);
+            SimulatorAddress workerAddress = workerAddress(agentAddress.getAgentIndex(), workerIndex);
 
             LogOperation logOperation = new LogOperation(
                     format("Created %s Worker %s", workerType, workerAddress), DEBUG);

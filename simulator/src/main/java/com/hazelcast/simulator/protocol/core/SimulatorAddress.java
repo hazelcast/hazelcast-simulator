@@ -19,13 +19,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static com.hazelcast.simulator.protocol.core.AddressLevel.AGENT;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.COORDINATOR;
+import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.utils.Preconditions.checkPositive;
 import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
 
 /**
  * Address object which (uniquely) identifies one or more Simulator components.
- *
- * Supports wildcards on each {@link AddressLevel} to target all components on that address level.
- * For example a {@link SimulatorMessage} to <tt>C_A2_W*_T1</tt> will be sent to <tt>C_A2_W1_T1</tt> and <tt>C_A2_W2_T1</tt>.
  *
  * <pre>
  *                                               +---+
@@ -34,39 +36,41 @@ import static java.lang.Integer.parseInt;
  *                       |                                                  |
  *                       v                                                  v
  *                    +--+---+                                           +---+--+
- * AGENT              | C_A1 |                              +------------+ C_A2 +------------+
+ * AGENT              |  A1  |                              +------------+  A2  +------------+
  *                    +--+---+                              |            +------+            |
  *                       |                                  |                                |
  *                       v                                  v                                v
  *                  +----+----+                        +----+----+                      +----+----+
- * WORKER           + C_A1_W1 +                        + C_A2_W1 +                      + C_A2_W2 +
+ * WORKER           +  A1_W1  +                        +  A2_W1  +                      +  A2_W2  +
  *                  +---------+                        +---------+                      +---------+
  * </pre>
  */
 @SuppressWarnings("checkstyle:magicnumber")
-public class SimulatorAddress {
+public final class SimulatorAddress {
 
-    public static final SimulatorAddress COORDINATOR = new SimulatorAddress(AddressLevel.COORDINATOR, 0, 0);
-    public static final SimulatorAddress ALL_AGENTS = new SimulatorAddress(AddressLevel.AGENT, 0, 0);
-    public static final SimulatorAddress ALL_WORKERS = new SimulatorAddress(AddressLevel.WORKER, 0, 0);
-
+    private static final SimulatorAddress COORDINATOR_ADDRESS = new SimulatorAddress(COORDINATOR, 0, 0);
     private static final String COORDINATOR_STRING = "C";
 
     private final AddressLevel addressLevel;
     private final int agentIndex;
     private final int workerIndex;
 
-    /**
-     * Creates a new {@link SimulatorAddress} instance.
-     *
-     * @param addressLevel the {@link AddressLevel} of the Simulator component
-     * @param agentIndex   the index of the addressed Agent or <tt>0</tt> for all Agents
-     * @param workerIndex  the index of the addressed Worker or <tt>0</tt> for all Workers
-     */
-    public SimulatorAddress(AddressLevel addressLevel, int agentIndex, int workerIndex) {
+    private SimulatorAddress(AddressLevel addressLevel, int agentIndex, int workerIndex) {
         this.addressLevel = addressLevel;
         this.agentIndex = agentIndex;
         this.workerIndex = workerIndex;
+    }
+
+    public static SimulatorAddress coordinatorAddress() {
+        return COORDINATOR_ADDRESS;
+    }
+
+    public static SimulatorAddress agentAddress(int agentIndex) {
+        return new SimulatorAddress(AGENT, checkPositive(agentIndex, "agentIndex"), 0);
+    }
+
+    public static SimulatorAddress workerAddress(int agentIndex, int workerIndex) {
+        return new SimulatorAddress(WORKER, checkPositive(agentIndex, "agentIndex"), checkPositive(workerIndex, "workerIndex"));
     }
 
     /**
@@ -120,44 +124,11 @@ public class SimulatorAddress {
     public SimulatorAddress getParent() {
         switch (addressLevel) {
             case WORKER:
-                return new SimulatorAddress(AddressLevel.AGENT, agentIndex, 0);
+                return agentAddress(agentIndex);
             case AGENT:
-                return SimulatorAddress.COORDINATOR;
+                return coordinatorAddress();
             default:
                 throw new IllegalArgumentException("Coordinator has no parent!");
-        }
-    }
-
-    /**
-     * Returns the {@link SimulatorAddress} of the addressed child of this Simulator component.
-     *
-     * @param childIndex the addressIndex of the child
-     * @return the {@link SimulatorAddress} of the addressed child of this Simulator component
-     */
-    public SimulatorAddress getChild(int childIndex) {
-        switch (addressLevel) {
-            case COORDINATOR:
-                return new SimulatorAddress(AddressLevel.AGENT, childIndex, 0);
-            case AGENT:
-                return new SimulatorAddress(AddressLevel.WORKER, agentIndex, childIndex);
-            default:
-                throw new IllegalArgumentException("Test has no child!");
-        }
-    }
-
-    /**
-     * Checks if the {@link SimulatorAddress} contains a wildcard.
-     *
-     * @return {@code true} if the {@link SimulatorAddress} contains a wildcard, {@code false} otherwise.
-     */
-    public boolean containsWildcard() {
-        switch (addressLevel) {
-            case AGENT:
-                return agentIndex == 0;
-            case WORKER:
-                return agentIndex == 0 || workerIndex == 0;
-            default:
-                return false;
         }
     }
 
@@ -190,30 +161,33 @@ public class SimulatorAddress {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(COORDINATOR_STRING);
-        appendAddressLevelString(sb, AddressLevel.COORDINATOR, "_A", agentIndex);
-        appendAddressLevelString(sb, AddressLevel.AGENT, "_W", workerIndex);
-        return sb.toString();
-    }
-
-    private void appendAddressLevelString(StringBuilder sb, AddressLevel parent, String name, int index) {
-        if (parent.isParentAddressLevel(addressLevel)) {
-            sb.append(name).append(index == 0 ? "*" : index);
+        if (addressLevel == COORDINATOR) {
+            return COORDINATOR_STRING;
+        } else if (addressLevel == AGENT) {
+            return "A" + agentIndex;
+        } else {
+            return "A" + agentIndex + "_W" + workerIndex;
         }
     }
 
     public static SimulatorAddress fromString(String sourceString) {
-        String[] sections = sourceString.split("_");
-        AddressLevel addressLevel = AddressLevel.fromInt(sections.length - 1);
-        if (addressLevel == AddressLevel.COORDINATOR) {
-            return COORDINATOR;
+        if (COORDINATOR_STRING.equals(sourceString)) {
+            return coordinatorAddress();
         }
 
-        int agentIndex = getAddressIndex(AddressLevel.COORDINATOR, addressLevel, "A*", sections);
-        int workerIndex = getAddressIndex(AddressLevel.AGENT, addressLevel, "W*", sections);
+        if (!sourceString.startsWith("A")) {
+            throw new IllegalArgumentException(format("'%s' is not a valid address", sourceString));
+        }
 
-        return new SimulatorAddress(addressLevel, agentIndex, workerIndex);
+        int indexOfSplit = sourceString.indexOf("_W");
+        if (indexOfSplit == -1) {
+            int agentIndex = parseInt(sourceString.substring(1, sourceString.length()));
+            return agentAddress(agentIndex);
+        } else {
+            int agentIndex = parseInt(sourceString.substring(1, indexOfSplit));
+            int workerIndex = parseInt(sourceString.substring(indexOfSplit + 2, sourceString.length()));
+            return workerAddress(agentIndex, workerIndex);
+        }
     }
 
     public static List<SimulatorAddress> fromString(List<String> list) {
@@ -238,13 +212,5 @@ public class SimulatorAddress {
         }
 
         return sb.toString();
-    }
-
-    private static int getAddressIndex(AddressLevel parentLevel, AddressLevel level, String wildcard, String[] sections) {
-        if (!parentLevel.isParentAddressLevel(level)) {
-            return 0;
-        }
-        int sectionsIndex = parentLevel.toInt() + 1;
-        return wildcard.equals(sections[sectionsIndex]) ? 0 : parseInt(sections[sectionsIndex].substring(1));
     }
 }

@@ -517,8 +517,13 @@ class Worker:
 
     # Returns the name of the agent this worker belongs to
     def agent(self):
-        index = self.name.index("_", 3)
-        return self.name[0:index]
+        if self.name.startswith("C_"):
+            # for compatibility with old benchmarks
+            index = self.name.index("_", 3)
+            return self.name[0:index]
+        else:
+            index = self.name.index("_")
+            return self.name[0:index]
 
     def is_driver(self):
         return os.path.exists(self.performance_csv)
@@ -601,7 +606,7 @@ class Benchmark:
             subdir = os.path.join(src_dir, subdir_name)
             if not os.path.isdir(subdir):
                 continue
-            if not subdir_name.startswith("C_A"):
+            if not subdir_name.startswith("A") and not subdir_name.startswith("C_A"):  # C_A is for compatibility
                 continue
             self.workers.append(Worker(subdir_name, subdir))
 

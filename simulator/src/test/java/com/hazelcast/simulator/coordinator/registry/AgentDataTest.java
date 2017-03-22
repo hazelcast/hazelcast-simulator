@@ -1,9 +1,8 @@
 package com.hazelcast.simulator.coordinator.registry;
 
-import com.hazelcast.simulator.protocol.core.AddressLevel;
-import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.junit.Test;
 
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.agentAddress;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -17,7 +16,7 @@ public class AgentDataTest {
     public void testConstructor() {
         AgentData agentData = new AgentData(DEFAULT_ADDRESS_INDEX, DEFAULT_PUBLIC_ADDRESS, DEFAULT_PRIVATE_ADDRESS);
 
-        assertEquals(new SimulatorAddress(AddressLevel.AGENT, DEFAULT_ADDRESS_INDEX, 0), agentData.getAddress());
+        assertEquals(agentAddress(DEFAULT_ADDRESS_INDEX), agentData.getAddress());
         assertEquals(DEFAULT_ADDRESS_INDEX, agentData.getAddressIndex());
         assertEquals(DEFAULT_PUBLIC_ADDRESS, agentData.getPublicAddress());
         assertEquals(DEFAULT_PRIVATE_ADDRESS, agentData.getPrivateAddress());

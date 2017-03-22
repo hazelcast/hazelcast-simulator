@@ -18,7 +18,7 @@ import static com.hazelcast.simulator.common.FailureType.WORKER_ABNORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -49,8 +49,7 @@ public class FailureCollectorTest {
 
         agentAddress = registry.addAgent("192.168.0.1", "192.168.0.1").getAddress();
 
-
-        workerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 1);
+        workerAddress = workerAddress(agentAddress.getAgentIndex(), 1);
 
         WorkerParameters workerParameters = new WorkerParameters()
                 .set("WORKER_ADDRESS", workerAddress);
@@ -77,7 +76,7 @@ public class FailureCollectorTest {
 
     @Test
     public void notify_whenNonExistingWorker_thenIgnore() {
-        SimulatorAddress nonExistingWorkerAddress = new SimulatorAddress(WORKER, agentAddress.getAgentIndex(), 100);
+        SimulatorAddress nonExistingWorkerAddress = workerAddress(agentAddress.getAgentIndex(), 100);
         FailureOperation failure = new FailureOperation("exception", WORKER_EXCEPTION, nonExistingWorkerAddress, agentAddress.toString(),
                 "workerId", "testId", null);
 

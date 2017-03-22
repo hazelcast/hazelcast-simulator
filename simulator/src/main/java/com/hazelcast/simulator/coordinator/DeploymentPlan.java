@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.formatLong;
 import static com.hazelcast.simulator.utils.FormatUtils.padLeft;
@@ -209,7 +209,7 @@ public final class DeploymentPlan {
 
         void registerWorker(WorkerParameters parameters) {
             int workerIndex = agent.getNextWorkerIndex();
-            SimulatorAddress workerAddress = new SimulatorAddress(WORKER, agent.getAddressIndex(), workerIndex);
+            SimulatorAddress workerAddress = workerAddress(agent.getAddressIndex(), workerIndex);
 
             String workerDirName = workerAddress.toString() + '-' + agent.getPublicAddress() + '-' + parameters.getWorkerType();
             parameters.set("WORKER_ADDRESS", workerAddress)

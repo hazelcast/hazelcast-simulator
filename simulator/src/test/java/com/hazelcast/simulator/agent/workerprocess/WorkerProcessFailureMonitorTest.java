@@ -18,7 +18,7 @@ import static com.hazelcast.simulator.common.FailureType.WORKER_EXCEPTION;
 import static com.hazelcast.simulator.common.FailureType.WORKER_NORMAL_EXIT;
 import static com.hazelcast.simulator.common.FailureType.WORKER_OOME;
 import static com.hazelcast.simulator.common.FailureType.WORKER_TIMEOUT;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.throwableToString;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -68,7 +68,7 @@ public class WorkerProcessFailureMonitorTest {
 
         failureHandler = mock(WorkerProcessFailureHandler.class);
         Server server = mock(Server.class);
-        workerProcessManager = new WorkerProcessManager(server, SimulatorAddress.fromString("C_A1"), "127.0.0.1");
+        workerProcessManager = new WorkerProcessManager(server, SimulatorAddress.fromString("A1"), "127.0.0.1");
 
         workerProcessFailureMonitor = new WorkerProcessFailureMonitor(
                 failureHandler,
@@ -281,7 +281,7 @@ public class WorkerProcessFailureMonitorTest {
     }
 
     private SimulatorAddress createWorkerAddress() {
-        return new SimulatorAddress(WORKER, 1, ++addressIndex);
+        return workerAddress(1, ++addressIndex);
     }
 
     private WorkerProcess addRunningWorkerProcess() {

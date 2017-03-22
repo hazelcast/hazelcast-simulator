@@ -2,7 +2,6 @@ package com.hazelcast.simulator.coordinator.registry;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.TargetType;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,7 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static com.hazelcast.simulator.TestSupport.toMap;
-import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.agentAddress;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -25,8 +25,8 @@ public class WorkerQueryTest {
     @Before
     public void before() {
         list = new LinkedList<WorkerData>();
-        agent1 = new SimulatorAddress(AddressLevel.AGENT, 1, 0);
-        agent2 = new SimulatorAddress(AddressLevel.AGENT, 2, 0);
+        agent1 = agentAddress(1);
+        agent2 = agentAddress(2);
     }
 
     @Test
@@ -160,7 +160,7 @@ public class WorkerQueryTest {
 
     private WorkerParameters newParameters(SimulatorAddress agent, int workerIndex, String workerType, String versionSpec) {
         return new WorkerParameters()
-                .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), workerIndex))
+                .set("WORKER_ADDRESS", workerAddress(agent.getAgentIndex(), workerIndex))
                 .set("WORKER_TYPE", workerType)
                 .set("VERSION_SPEC", versionSpec);
     }

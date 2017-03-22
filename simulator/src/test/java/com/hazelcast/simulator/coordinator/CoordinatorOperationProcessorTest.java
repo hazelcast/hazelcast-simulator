@@ -29,7 +29,7 @@ public class CoordinatorOperationProcessorTest {
         failureCollector = mock(FailureCollector.class);
         performanceStatsCollector = mock(PerformanceStatsCollector.class);
         processor = new CoordinatorOperationProcessor(failureCollector, performanceStatsCollector);
-        address = SimulatorAddress.fromString("C_A1");
+        address = SimulatorAddress.fromString("A1");
         promise = mock(Promise.class);
     }
 

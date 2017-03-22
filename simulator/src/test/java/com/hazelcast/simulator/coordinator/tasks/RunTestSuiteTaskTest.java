@@ -31,7 +31,7 @@ public class RunTestSuiteTaskTest {
 //        componentRegistry = new ComponentRegistry();
 //        componentRegistry.addAgent(localIp(), localIp());
 //
-//        agentAddress = SimulatorAddress.fromString("C_A1");
+//        agentAddress = SimulatorAddress.fromString("A1");
 //
 //        client = new CoordinatorClient().start();
 //

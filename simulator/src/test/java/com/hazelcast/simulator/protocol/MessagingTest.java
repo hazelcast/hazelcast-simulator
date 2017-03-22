@@ -31,7 +31,7 @@ public class MessagingTest {
     private Broker broker;
     private Server agentServer;
     private CoordinatorClient client;
-    private SimulatorAddress agentAddress = SimulatorAddress.fromString("C_A1");
+    private SimulatorAddress agentAddress = SimulatorAddress.fromString("A1");
 
     @Before
     public void before() {

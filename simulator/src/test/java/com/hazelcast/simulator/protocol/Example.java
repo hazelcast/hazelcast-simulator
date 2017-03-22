@@ -36,7 +36,7 @@ public class Example {
                 .start();
 
         CoordinatorClient coordinatorClient = new CoordinatorClient()
-                .connectToAgentBroker(SimulatorAddress.fromString("C_A1"), Inet4Address.getLocalHost().getHostAddress())
+                .connectToAgentBroker(SimulatorAddress.fromString("A1"), Inet4Address.getLocalHost().getHostAddress())
                 .start();
 
         Server agentServer = new Server("agents")
@@ -45,7 +45,7 @@ public class Example {
                     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
                     }
                 })
-                .setSelfAddress(SimulatorAddress.fromString("C_A1"))
+                .setSelfAddress(SimulatorAddress.fromString("A1"))
                 .setBrokerURL(broker.getBrokerURL())
                 .start();
 
@@ -56,12 +56,12 @@ public class Example {
                         System.out.println("worker:" + op);
                     }
                 })
-                .setSelfAddress(SimulatorAddress.fromString("C_A1_W1"))
+                .setSelfAddress(SimulatorAddress.fromString("A1_W1"))
                 .setBrokerURL(broker.getBrokerURL())
                 .start();
 
 
-        SimulatorAddress address = SimulatorAddress.fromString("C_A1_W1");
+        SimulatorAddress address = SimulatorAddress.fromString("A1_W1");
 
         Future f = coordinatorClient.submit(address, new LogOperation("foo"));
         System.out.println(f.get());

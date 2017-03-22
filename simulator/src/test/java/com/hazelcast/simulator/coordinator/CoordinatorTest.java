@@ -117,26 +117,26 @@ public class CoordinatorTest {
 
     @Test
     public void workersStart_multipleWorkers() throws Exception {
-        assertEquals("C_A1_W" + (initialWorkerIndex + 1),
+        assertEquals("A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
-        assertEquals("C_A1_W" + (initialWorkerIndex + 2),
+        assertEquals("A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
-        assertEquals("C_A1_W" + (initialWorkerIndex + 3),
+        assertEquals("A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
     }
 
     @Test
     public void workerStart_multipleClients() throws Exception {
-        assertEquals("C_A1_W" + (initialWorkerIndex + 1),
+        assertEquals("A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
-        assertEquals("C_A1_W" + (initialWorkerIndex + 2),
+        assertEquals("A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("javaclient").setHzConfig(hzClientConfig)));
-        assertEquals("C_A1_W" + (initialWorkerIndex + 3),
+        assertEquals("A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("javaclient").setHzConfig(hzClientConfig)));
     }
@@ -144,17 +144,17 @@ public class CoordinatorTest {
     @Test
     public void workerStart_multipleLiteMembers() throws Exception {
         // start regular member
-        assertEquals("C_A1_W" + (initialWorkerIndex + 1),
+        assertEquals("A1_W" + (initialWorkerIndex + 1),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("member").setHzConfig(hzConfig)));
 
         // start lite member
-        assertEquals("C_A1_W" + (initialWorkerIndex + 2),
+        assertEquals("A1_W" + (initialWorkerIndex + 2),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
 
         // start another lite member
-        assertEquals("C_A1_W" + (initialWorkerIndex + 3),
+        assertEquals("A1_W" + (initialWorkerIndex + 3),
                 coordinator.workerStart(new RcWorkerStartOperation()
                         .setWorkerType("litemember").setHzConfig(hzConfig)));
     }
@@ -208,6 +208,6 @@ public class CoordinatorTest {
 
         String result = coordinator.workerScript(new RcWorkerScriptOperation("js:'a'"));
 
-        assertEquals(format("C_A1_W%s=a", (initialWorkerIndex + 1)), result.replace("\n", ""));
+        assertEquals(format("A1_W%s=a", (initialWorkerIndex + 1)), result.replace("\n", ""));
     }
 }

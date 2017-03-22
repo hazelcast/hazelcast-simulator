@@ -83,7 +83,7 @@ public class Server implements Closeable {
     }
 
     /**
-     * Sets the SimulatorAddress of this server. For example if this server is running on C_A1_W3, then
+     * Sets the SimulatorAddress of this server. For example if this server is running on A1_W3, then
      * that is the address that needs to be set. It is used for 2 purposes:
      * <ol>
      * <li>for a source addresses on messages being send (e.g. replies)</li>

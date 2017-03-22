@@ -17,20 +17,16 @@ import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 
 import java.io.File;
 
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeUserDir;
 import static com.hazelcast.simulator.TestEnvironmentUtils.teardownFakeUserDir;
-import static com.hazelcast.simulator.protocol.core.SimulatorAddress.COORDINATOR;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -40,7 +36,7 @@ public class WorkerOperationProcessorTest {
     private WorkerOperationProcessor processor;
     private TestManager testManager;
     private Worker worker;
-    private SimulatorAddress sourceAddress = COORDINATOR;
+    private SimulatorAddress sourceAddress = SimulatorAddress.coordinatorAddress();
     private StubPromise promise;
     private ScriptExecutor scriptExecutor;
 

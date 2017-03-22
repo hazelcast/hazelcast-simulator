@@ -32,7 +32,7 @@ public class AgentOperationProcessorTest {
         failureMonitor = mock(WorkerProcessFailureMonitor.class);
         processor = new AgentOperationProcessor(processManager, failureMonitor);
         promise = mock(Promise.class);
-        source = SimulatorAddress.COORDINATOR;
+        source = SimulatorAddress.coordinatorAddress();
     }
 
     @Test

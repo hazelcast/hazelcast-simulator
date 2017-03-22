@@ -5,7 +5,6 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
 import com.hazelcast.simulator.protocol.Broker;
-import com.hazelcast.simulator.protocol.core.AddressLevel;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.vendors.HazelcastDriver;
@@ -23,6 +22,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.TestEnvironmentUtils.localResourceDirectory;
 import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
 import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -53,7 +53,7 @@ public class WorkerTest {
                 .setAgents(registry.getAgents())
                 .setAll(properties.asPublicMap())
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
-        workerAddress = new SimulatorAddress(AddressLevel.WORKER, AGENT_INDEX, WORKER_INDEX);
+        workerAddress = workerAddress(AGENT_INDEX,WORKER_INDEX);
 
         parameters = driver.loadWorkerParameters("member")
                 .set("WORKER_ADDRESS", workerAddress)

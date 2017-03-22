@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.hazelcast.simulator.protocol.core.AddressLevel.WORKER;
+import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -116,7 +117,7 @@ public class ComponentRegistryTest {
         registry.addWorkers(parametersList);
         assertEquals(5, registry.workerCount());
 
-        registry.removeWorker(new SimulatorAddress(WORKER, 1, 3));
+        registry.removeWorker(workerAddress(1, 3));
         assertEquals(4, registry.workerCount());
     }
 
@@ -341,8 +342,8 @@ public class ComponentRegistryTest {
         for (int k = 1; k <= workerCount; k++) {
             result.add(new WorkerParameters()
                     .set("WORKER_TYPE", workerType)
-                    .set("WORKER_INDEX", k )
-                    .set("WORKER_ADDRESS", new SimulatorAddress(WORKER, agent.getAgentIndex(), k )));
+                    .set("WORKER_INDEX", k)
+                    .set("WORKER_ADDRESS", workerAddress(agent.getAgentIndex(), k)));
         }
         return result;
     }
