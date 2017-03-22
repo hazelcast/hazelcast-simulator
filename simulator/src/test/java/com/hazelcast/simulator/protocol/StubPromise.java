@@ -1,4 +1,4 @@
-package com.hazelcast.simulator;
+package com.hazelcast.simulator.protocol;
 
 import com.hazelcast.simulator.protocol.Promise;
 import com.hazelcast.simulator.utils.AssertTask;

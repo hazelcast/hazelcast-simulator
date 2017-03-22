@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker;
 
 
-import com.hazelcast.simulator.StubPromise;
+import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;

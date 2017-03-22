@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.worker;
 
-import com.hazelcast.simulator.StubPromise;
+import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import org.junit.Before;

@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.worker.testcontainer;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.simulator.StubPromise;
+import com.hazelcast.simulator.protocol.StubPromise;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.protocol.Promise;
