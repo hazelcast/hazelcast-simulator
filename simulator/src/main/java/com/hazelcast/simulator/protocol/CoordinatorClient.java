@@ -300,12 +300,10 @@ public class CoordinatorClient implements Closeable {
             while (!stop) {
                 try {
                     taskQueue.take().run();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     if (!stop) {
                         LOGGER.error(e.getMessage(), e);
                     }
-                } catch (Throwable e) {
-                    LOGGER.error(e.getMessage(), e);
                 }
             }
         }
