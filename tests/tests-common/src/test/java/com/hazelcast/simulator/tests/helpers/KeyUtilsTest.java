@@ -29,13 +29,14 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.hazelcast.core.Hazelcast.newHazelcastInstance;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntegerKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKey;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.isLocalKey;
-import static com.hazelcast.simulator.utils.HazelcastUtils.warmupPartitions;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
+import static com.hazelcast.simulator.vendors.HazelcastDriver.warmupPartitions;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -56,8 +57,8 @@ public class KeyUtilsTest {
         Config config = new Config();
         config.setProperty("hazelcast.partition.count", "" + PARTITION_COUNT);
 
-        hz = Hazelcast.newHazelcastInstance(config);
-        HazelcastInstance remoteInstance = Hazelcast.newHazelcastInstance(config);
+        hz = newHazelcastInstance(config);
+        HazelcastInstance remoteInstance = newHazelcastInstance(config);
         warmupPartitions(hz);
         warmupPartitions(remoteInstance);
 

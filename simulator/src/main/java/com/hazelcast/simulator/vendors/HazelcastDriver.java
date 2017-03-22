@@ -22,6 +22,8 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.Partition;
+import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
@@ -32,12 +34,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.HazelcastUtils.warmupPartitions;
 import static java.lang.String.format;
 
 public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
+    private static final long PARTITION_WARMUP_TIMEOUT_NANOS = TimeUnit.MINUTES.toNanos(5);
+    private static final int PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS = 500;
     private static final Logger LOGGER = Logger.getLogger(HazelcastDriver.class);
     private HazelcastInstance hazelcastInstance;
 
@@ -202,5 +207,24 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         if (hazelcastInstance != null) {
             hazelcastInstance.shutdown();
         }
+    }
+
+    public static void warmupPartitions(HazelcastInstance hazelcastInstance) {
+        LOGGER.info("Waiting for partition warmup");
+
+        PartitionService partitionService = hazelcastInstance.getPartitionService();
+        long started = System.nanoTime();
+        for (Partition partition : partitionService.getPartitions()) {
+            if (System.nanoTime() - started > PARTITION_WARMUP_TIMEOUT_NANOS) {
+                throw new IllegalStateException("Partition warmup timeout. Partitions didn't get an owner in time");
+            }
+
+            while (partition.getOwner() == null) {
+                LOGGER.debug("Partition owner is not yet set for partitionId: " + partition.getPartitionId());
+                sleepMillisThrowException(PARTITION_WARMUP_SLEEP_INTERVAL_MILLIS);
+            }
+        }
+
+        LOGGER.info("Partitions are warmed up successfully");
     }
 }
