@@ -399,12 +399,10 @@ public class CoordinatorClient implements Closeable {
 
                     Thread.sleep(DELAY_MILLIS);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 if (!stop) {
                     LOGGER.fatal(e.getMessage(), e);
                 }
-            } catch (Throwable e) {
-                LOGGER.fatal(e, e);
             }
         }
 
