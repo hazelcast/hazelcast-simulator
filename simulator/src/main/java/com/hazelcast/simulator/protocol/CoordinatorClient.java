@@ -434,8 +434,10 @@ public class CoordinatorClient implements Closeable {
                 processor.process(op, source, EmptyPromise.INSTANCE);
                 return true;
             } catch (Exception e) {
-                //todo: feed into failure collector
-                LOGGER.fatal(e.getMessage(), e);
+                if (!stop) {
+                    //todo: feed into failure collector
+                    LOGGER.fatal(e.getMessage(), e);
+                }
                 return false;
             }
         }
@@ -462,8 +464,10 @@ public class CoordinatorClient implements Closeable {
                 }
                 return true;
             } catch (Exception e) {
-                //todo: feed into failure collector
-                LOGGER.fatal(e);
+                if (!stop) {
+                    //todo: feed into failure collector
+                    LOGGER.fatal(e);
+                }
                 return false;
             }
         }
