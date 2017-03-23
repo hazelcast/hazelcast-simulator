@@ -220,7 +220,7 @@ public final class PropertyBindingSupport {
         return true;
     }
 
-    private static String removeUnderscores(String s) {
+    public static String removeUnderscores(String s) {
         return s.replaceAll("_", "");
     }
 

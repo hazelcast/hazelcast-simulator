@@ -39,6 +39,7 @@ import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.getProbeNa
 import static com.hazelcast.simulator.utils.AnnotationReflectionUtils.isPartOfTotalThroughput;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static com.hazelcast.simulator.utils.PropertyBindingSupport.bindAll;
+import static com.hazelcast.simulator.utils.PropertyBindingSupport.removeUnderscores;
 import static com.hazelcast.simulator.utils.ReflectionUtils.setFieldValue;
 import static java.lang.String.format;
 
@@ -132,7 +133,7 @@ public class PropertyBinding {
         }
 
         try {
-            return Integer.parseInt(value);
+            return Integer.parseInt(removeUnderscores(value));
         } catch (NumberFormatException e) {
             throw new IllegalTestException(format("Property [%s] with value [%s] is not an int", property, value));
         }
@@ -145,7 +146,7 @@ public class PropertyBinding {
         }
 
         try {
-            return Long.parseLong(value);
+            return Long.parseLong(removeUnderscores(value));
         } catch (NumberFormatException e) {
             throw new IllegalTestException(format("Property [%s] with value [%s] is not an long", property, value));
         }
@@ -158,7 +159,7 @@ public class PropertyBinding {
         }
 
         try {
-            return Double.parseDouble(value);
+            return Double.parseDouble(removeUnderscores(value));
         } catch (NumberFormatException e) {
             throw new IllegalTestException(format("Property [%s] with value [%s] is not a double", property, value));
         }
