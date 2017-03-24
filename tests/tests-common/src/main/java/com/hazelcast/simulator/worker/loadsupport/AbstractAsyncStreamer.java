@@ -21,7 +21,9 @@ import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
+import com.hazelcast.spi.exception.TargetDisconnectedException;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,6 +46,7 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private final ThrottlingLogger throttlingLogger;
     private final AtomicReference<Throwable> storedException = new AtomicReference<Throwable>();
     private final AtomicBoolean rejectedExecutionExceptionReported = new AtomicBoolean();
+    private final AtomicBoolean targetDisconnectExceptionReported = new AtomicBoolean();
     private final AtomicLong counter = new AtomicLong();
 
     AbstractAsyncStreamer(int concurrencyLevel) {
@@ -62,6 +65,11 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     @Override
     @SuppressWarnings("unchecked")
     public void pushEntry(K key, V value) {
+        if (storedException.get() != null) {
+            throw new RuntimeException("Aborting pushEntry; problems are detected. Please check the cause",
+                    storedException.get());
+        }
+
         acquirePermit(1);
         try {
             ICompletableFuture<V> future = storeAsync(key, value);
@@ -122,8 +130,17 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
                 // we only want to report the RejectedExecutionException once. With 1000 inflight operations, you will
                 // get 1000 of these reports otherwise.
                 if (rejectedExecutionExceptionReported.compareAndSet(false, true)) {
-                    RejectedExecutionException cause = new RejectedExecutionException("The Streamer ran into a"
+                    Exception cause = new Exception("The Streamer ran into a"
                             + " RejectedExecutionException; see the causes for the real cause. Only 1 entry if this"
+                            + " exception is reported to prevent exception noise.", t);
+                    ExceptionReporter.report(null, cause);
+                }
+            } else if (t instanceof ExecutionException && t.getCause() instanceof TargetDisconnectedException) {
+                // we only want to report the TargetDisconnectedException once. With 1000 inflight operations, you will
+                // get 1000 of these reports otherwise.
+                if (targetDisconnectExceptionReported.compareAndSet(false, true)) {
+                    Exception cause = new Exception("The Streamer ran into a"
+                            + " TargetDisconnectedException; see the causes for the real cause. Only 1 entry if this"
                             + " exception is reported to prevent exception noise.", t);
                     ExceptionReporter.report(null, cause);
                 }
