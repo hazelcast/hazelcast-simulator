@@ -44,24 +44,25 @@ import static org.junit.Assert.fail;
  */
 public class EvictionICacheTest extends AbstractTest {
 
-    private static final double TOLERANCE_FACTOR = 1.5;
-    public int partitionCount;
+    private static final double TOLERANCE_FACTOR_SMALL = 6.5;
+    private static final double TOLERANCE_FACTOR_MEDIUM = 4.0;
+    private static final double TOLERANCE_FACTOR_LARGE = 1.5;
 
     // number of bytes for the value/payload of a key
     public int valueSize = 2;
 
+    private Map<Integer, Object> putAllMap = new HashMap<Integer, Object>();
+
     private byte[] value;
     private ICache<Object, Object> cache;
     private int configuredMaxSize;
-    private Map<Integer, Object> putAllMap = new HashMap<Integer, Object>();
+    private double toleranceFactor;
 
     // find estimated max size (entry count) that cache can reach at max
     private int estimatedMaxSize;
 
     @Setup
     public void setup() {
-        partitionCount = targetInstance.getPartitionService().getPartitions().size();
-
         value = new byte[valueSize];
         Random random = new Random();
         random.nextBytes(value);
@@ -69,8 +70,8 @@ public class EvictionICacheTest extends AbstractTest {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cache = (ICache<Object, Object>) cacheManager.getCache(name);
 
-        CacheConfig config = cache.getConfiguration(CacheConfig.class);
-        logger.info(name + ": " + cache.getName() + " config=" + config);
+        CacheConfig<Object, Object> config = cache.getConfiguration(CacheConfig.class);
+        logger.info(name + ": " + cache.getName() + " config: " + config);
 
         configuredMaxSize = config.getEvictionConfig().getSize();
 
@@ -80,7 +81,14 @@ public class EvictionICacheTest extends AbstractTest {
             putAllMap.put(random.nextInt(), value);
         }
 
-        estimatedMaxSize = (int) (configuredMaxSize * TOLERANCE_FACTOR);
+        if (configuredMaxSize < 1000) {
+            toleranceFactor = TOLERANCE_FACTOR_SMALL;
+        } else if (configuredMaxSize < 10000) {
+            toleranceFactor = TOLERANCE_FACTOR_MEDIUM;
+        } else {
+            toleranceFactor = TOLERANCE_FACTOR_LARGE;
+        }
+        estimatedMaxSize = (int) (configuredMaxSize * toleranceFactor);
     }
 
     @TimeStep(prob = 0.8)
@@ -123,8 +131,12 @@ public class EvictionICacheTest extends AbstractTest {
             }
 
             if (size > estimatedMaxSize) {
-                fail(name + ": cache " + cache.getName() + " size=" + cache.size()
-                        + " configuredMaxSize=" + configuredMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
+                fail(name + ": cache " + cache.getName()
+                        + " toleranceFactor=" + toleranceFactor
+                        + " configuredMaxSize=" + configuredMaxSize
+                        + " estimatedMaxSize=" + estimatedMaxSize
+                        + " size=" + cache.size()
+                );
             }
         }
     }
@@ -138,8 +150,13 @@ public class EvictionICacheTest extends AbstractTest {
                 observedMaxSize = m;
             }
         }
-        logger.info(name + ": cache " + cache.getName() + " size=" + cache.size() + " configuredMaxSize=" + configuredMaxSize
-                + " observedMaxSize=" + observedMaxSize + " estimatedMaxSize=" + estimatedMaxSize);
+        logger.info(name + ": cache " + cache.getName()
+                + " toleranceFactor=" + toleranceFactor
+                + " configuredMaxSize=" + configuredMaxSize
+                + " estimatedMaxSize=" + estimatedMaxSize
+                + " observedMaxSize=" + observedMaxSize
+                + " size=" + cache.size()
+        );
 
         IList<Counter> counters = targetInstance.getList(name + "counter");
         Counter total = new Counter();
@@ -151,6 +168,7 @@ public class EvictionICacheTest extends AbstractTest {
     }
 
     private static class Counter implements Serializable {
+
         int put = 0;
         int putAsync = 0;
         int putAll = 0;
