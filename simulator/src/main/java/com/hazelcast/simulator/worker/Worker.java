@@ -44,6 +44,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.fillString;
+import static com.hazelcast.simulator.utils.NativeUtils.getInputArgs;
 import static com.hazelcast.simulator.utils.NativeUtils.getPID;
 import static com.hazelcast.simulator.utils.SimulatorUtils.localIp;
 import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
@@ -90,12 +91,7 @@ public class Worker {
     }
 
     public void start() throws Exception {
-        String type = parameters.get("WORKER_TYPE");
-
-        logHeader("Hazelcast Worker #" + workerAddress + " (" + type + ')');
-        logInterestingSystemProperties();
-        log("process ID: " + getPID());
-        log("Public address: " + publicAddress);
+        logInterestingJvmSettings();
 
         server.start();
 
@@ -156,7 +152,9 @@ public class Worker {
         return properties;
     }
 
-    private static void logInterestingSystemProperties() {
+    private void logInterestingJvmSettings() {
+        String type = parameters.get("WORKER_TYPE");
+        logHeader("Hazelcast Worker #" + workerAddress + " (" + type + ')');
         logSystemProperty("java.class.path");
         logSystemProperty("java.home");
         logSystemProperty("java.vendor");
@@ -171,6 +169,9 @@ public class Worker {
         logSystemProperty("user.name");
         logSystemProperty("SIMULATOR_HOME");
         logSystemProperty("hazelcast.logging.type");
+        log("jvm.args=%s", getInputArgs());
+        log("process ID: " + getPID());
+        log("Public address: " + publicAddress);
     }
 
     private static void logSystemProperty(String name) {

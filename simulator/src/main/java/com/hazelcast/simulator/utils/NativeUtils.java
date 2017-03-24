@@ -19,6 +19,8 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.List;
 
 public final class NativeUtils {
 
@@ -61,6 +63,18 @@ public final class NativeUtils {
             return pid;
         }
         return -1;
+    }
+
+    public static String getInputArgs() {
+        RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+        List<String> arguments = runtimeMxBean.getInputArguments();
+
+        StringBuilder sb = new StringBuilder();
+        for (String argument : arguments) {
+            sb.append(argument);
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 
     static Integer getPidFromManagementBean() {
