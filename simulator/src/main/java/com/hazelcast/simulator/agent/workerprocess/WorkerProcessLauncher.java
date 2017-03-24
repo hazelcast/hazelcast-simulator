@@ -16,11 +16,13 @@
 package com.hazelcast.simulator.agent.workerprocess;
 
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
-import com.hazelcast.simulator.utils.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -106,9 +108,10 @@ public class WorkerProcessLauncher {
         Map<String, String> environment = processBuilder.environment();
 
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
+        List<String> keys = new ArrayList<String>(parameters.asMap().keySet());
+        Collections.sort(keys);
+        for (String key : keys) {
+            String value = parameters.get(key);
             if (key.startsWith(FILE_PREFIX)) {
                 String fileName = key.substring(FILE_PREFIX.length(), key.length());
                 writeText(value, new File(workerHome, fileName));
@@ -117,9 +120,9 @@ public class WorkerProcessLauncher {
                 sb.append(key).append("=").append(value).append("\n");
             }
         }
-        sb.append("CLASSPATH=" + getClasspath(workerHome) + "\n");
+        sb.append("CLASSPATH=").append(getClasspath(workerHome)).append("\n");
 
-        FileUtils.writeText(sb.toString(), new File(workerHome, "parameters"));
+        writeText(sb.toString(), new File(workerHome, "parameters"));
 
         environment.putAll(System.getenv());
         String javaHome = getJavaHome();
