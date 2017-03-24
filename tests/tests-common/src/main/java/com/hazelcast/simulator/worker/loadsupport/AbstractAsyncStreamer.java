@@ -22,8 +22,11 @@ import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -39,9 +42,8 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     private final Semaphore semaphore;
     private final ExecutionCallback callback;
     private final ThrottlingLogger throttlingLogger;
-
-    private volatile Throwable storedException;
-
+    private final AtomicReference<Throwable> storedException = new AtomicReference<Throwable>();
+    private final AtomicBoolean rejectedExecutionExceptionReported = new AtomicBoolean();
     private final AtomicLong counter = new AtomicLong();
 
     AbstractAsyncStreamer(int concurrencyLevel) {
@@ -83,8 +85,8 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
     }
 
     private void rethrowExceptionIfAny() {
-        if (storedException != null) {
-            throw rethrow(storedException);
+        if (storedException.get() != null) {
+            throw rethrow(storedException.get());
         }
     }
 
@@ -114,11 +116,22 @@ abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
         @Override
         public void onFailure(Throwable t) {
-            ExceptionReporter.report(null, t);
-            storedException = t;
+            storedException.compareAndSet(null, t);
 
-            releasePermit(1);
-            counter.incrementAndGet();
+            if (t instanceof RejectedExecutionException) {
+                // we only want to report the RejectedExecutionException once. With 1000 inflight operations, you will
+                // get 1000 of these reports otherwise.
+                if (rejectedExecutionExceptionReported.compareAndSet(false, true)) {
+                    RejectedExecutionException cause = new RejectedExecutionException("The Streamer ran into a"
+                            + " RejectedExecutionException; see the causes for the real cause. Only 1 entry if this"
+                            + " exception is reported to prevent exception noise.", t);
+                    ExceptionReporter.report(null, cause);
+                }
+            } else {
+                ExceptionReporter.report(null, t);
+            }
+
+            onResponse(null);
         }
     }
 }
