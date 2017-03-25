@@ -18,7 +18,7 @@ package com.hazelcast.simulator.provisioner;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
@@ -79,7 +79,7 @@ class Provisioner {
 
     private final int machineWarmupSeconds;
 
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final File initScriptFile;
 
     public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash) {
@@ -96,7 +96,7 @@ class Provisioner {
     }
 
     // just for testing
-    ComponentRegistry getRegistry() {
+    Registry getRegistry() {
         return registry;
     }
 

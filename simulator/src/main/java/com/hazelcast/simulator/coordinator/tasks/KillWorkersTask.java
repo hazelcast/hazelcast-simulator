@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.protocol.CoordinatorClient;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
@@ -39,14 +39,14 @@ public class KillWorkersTask {
     private static final int WORKER_TERMINATION_TIMEOUT_SECONDS = 300;
     private static final int WORKER_TERMINATION_CHECK_DELAY = 5;
 
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final CoordinatorClient client;
     private final String command;
     private final WorkerQuery workerQuery;
     private final List<WorkerData> result = new ArrayList<WorkerData>();
 
     public KillWorkersTask(
-            ComponentRegistry registry,
+            Registry registry,
             CoordinatorClient client,
             String command,
             WorkerQuery workerQuery) {

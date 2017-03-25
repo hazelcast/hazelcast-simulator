@@ -3,7 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestPhase;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.BindException;
 import com.hazelcast.simulator.utils.CloudProviderUtils;
@@ -399,7 +399,7 @@ public class CoordinatorCliTest {
         try {
             CoordinatorCli cli = createCoordinatorCli();
 
-            ComponentRegistry registry = cli.registry;
+            Registry registry = cli.registry;
             assertEquals(1, registry.agentCount());
 
             AgentData firstAgent = registry.getFirstAgent();

@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
@@ -36,11 +36,11 @@ import static java.lang.String.format;
 public class ArtifactCleanTask {
     private static final Logger LOGGER = Logger.getLogger(ArtifactCleanTask.class);
 
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final SimulatorProperties simulatorProperties;
     private final Bash bash;
 
-    public ArtifactCleanTask(ComponentRegistry registry, SimulatorProperties simulatorProperties) {
+    public ArtifactCleanTask(Registry registry, SimulatorProperties simulatorProperties) {
         this.registry = registry;
         this.simulatorProperties = simulatorProperties;
         this.bash = new Bash(simulatorProperties);

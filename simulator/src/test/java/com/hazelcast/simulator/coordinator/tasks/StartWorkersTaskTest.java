@@ -4,7 +4,7 @@ import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.DeploymentPlan;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 public class StartWorkersTaskTest {
 
-    private final ComponentRegistry registry = new ComponentRegistry();
+    private final Registry registry = new Registry();
     private CoordinatorClient client;
     private AgentData agent1;
     private AgentData agent2;
@@ -104,7 +104,7 @@ public class StartWorkersTaskTest {
         return deploymentPlan.getWorkerDeployment();
     }
 
-    private static void assertComponentRegistry(ComponentRegistry registry,
+    private static void assertComponentRegistry(Registry registry,
                                                 int expectedMemberCount,
                                                 int expectedClientCount) {
         int actualMemberCount = 0;

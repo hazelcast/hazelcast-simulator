@@ -18,7 +18,7 @@ package com.hazelcast.simulator.agent;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CliUtils;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -54,7 +54,7 @@ public final class AgentsSshCli {
 
     private final OptionSet options;
     private final SimulatorProperties properties;
-    private final ComponentRegistry registry;
+    private final Registry registry;
 
     private AgentsSshCli(String[] args) {
         options = CliUtils.initOptionsWithHelp(parser, args);

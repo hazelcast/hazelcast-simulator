@@ -24,7 +24,7 @@ import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
@@ -47,7 +47,6 @@ import java.rmi.AlreadyBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -75,7 +74,7 @@ public class Coordinator implements Closeable {
 
     private final PerformanceStatsCollector performanceStatsCollector = new PerformanceStatsCollector();
 
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final CoordinatorParameters parameters;
     private final File outputDirectory;
     private final FailureCollector failureCollector;
@@ -83,7 +82,7 @@ public class Coordinator implements Closeable {
     private final int testCompletionTimeoutSeconds;
     private final CoordinatorClient client;
 
-    Coordinator(ComponentRegistry registry, CoordinatorParameters parameters) {
+    Coordinator(Registry registry, CoordinatorParameters parameters) {
         this.registry = registry;
         this.parameters = parameters;
         this.outputDirectory = ensureNewDirectory(new File(getUserDir(), parameters.getSessionId()));
@@ -128,7 +127,7 @@ public class Coordinator implements Closeable {
     private void initCoordinatorRemote() throws RemoteException, AlreadyBoundException {
         int remotePort = simulatorProperties.getCoordinatorPort();
         if (remotePort != 0) {
-            Registry registry = LocateRegistry.createRegistry(remotePort);
+            java.rmi.registry.Registry registry = LocateRegistry.createRegistry(remotePort);
             CoordinatorRemote r = new CoordinatorRemoteImpl(this);
             Remote stub = UnicastRemoteObject.exportObject(r, 0);
 

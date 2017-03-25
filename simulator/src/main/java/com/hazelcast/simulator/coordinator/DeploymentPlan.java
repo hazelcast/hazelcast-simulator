@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
@@ -48,7 +48,7 @@ public final class DeploymentPlan {
 
     private final VendorDriver vendorDriver;
 
-    public DeploymentPlan(VendorDriver vendorDriver, ComponentRegistry registry) {
+    public DeploymentPlan(VendorDriver vendorDriver, Registry registry) {
         this(vendorDriver, registry.getAgents());
     }
 

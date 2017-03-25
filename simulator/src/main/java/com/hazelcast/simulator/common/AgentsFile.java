@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.TagUtils;
 
@@ -46,8 +46,8 @@ public final class AgentsFile {
     private AgentsFile() {
     }
 
-    public static ComponentRegistry load(File agentFile) {
-        ComponentRegistry registry = new ComponentRegistry();
+    public static Registry load(File agentFile) {
+        Registry registry = new Registry();
 
         String content = fileAsText(agentFile);
         String[] lines = content.split(NEW_LINE);
@@ -99,7 +99,7 @@ public final class AgentsFile {
         return line;
     }
 
-    public static void save(File agentsFile, ComponentRegistry registry) {
+    public static void save(File agentsFile, Registry registry) {
         StringBuilder sb = new StringBuilder();
         for (AgentData agent : registry.getAgents()) {
             String publicAddress = agent.getPublicAddress();

@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
@@ -99,7 +99,7 @@ public final class TestCaseRunner {
                           CoordinatorClient client,
                           Map<TestPhase, CountDownLatch> testPhaseSyncMap,
                           FailureCollector failureCollector,
-                          ComponentRegistry registry,
+                          Registry registry,
                           PerformanceStatsCollector performanceStatsCollector,
                           int performanceMonitorIntervalSeconds) {
         this.test = test;

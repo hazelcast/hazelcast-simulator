@@ -18,7 +18,7 @@ package com.hazelcast.simulator.wizard;
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.apache.log4j.Logger;
@@ -153,7 +153,7 @@ class Wizard {
     }
 
     void createSshCopyIdScript(SimulatorProperties simulatorProperties) {
-        ComponentRegistry registry = loadComponentRegister(agentFile, true);
+        Registry registry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
         ensureExistingFile(SSH_COPY_ID_FILE);
@@ -172,7 +172,7 @@ class Wizard {
             throw new CommandLineExitException("SSH is not supported for local setups.");
         }
 
-        ComponentRegistry registry = loadComponentRegister(agentFile, true);
+        Registry registry = loadComponentRegister(agentFile, true);
         String userName = simulatorProperties.getUser();
 
         for (AgentData agent : registry.getAgents()) {

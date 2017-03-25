@@ -17,7 +17,7 @@ package com.hazelcast.simulator.utils;
 
 import com.hazelcast.simulator.common.AgentsFile;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
@@ -45,13 +45,13 @@ public final class SimulatorUtils {
         }
     }
 
-    public static ComponentRegistry loadComponentRegister(File agentsFile) {
+    public static Registry loadComponentRegister(File agentsFile) {
         return loadComponentRegister(agentsFile, false);
     }
 
-    public static ComponentRegistry loadComponentRegister(File agentsFile, boolean sizeCheck) {
+    public static Registry loadComponentRegister(File agentsFile, boolean sizeCheck) {
         ensureExistingFile(agentsFile);
-        ComponentRegistry registry = AgentsFile.load(agentsFile);
+        Registry registry = AgentsFile.load(agentsFile);
         if (sizeCheck && registry.agentCount() == 0) {
             throw new CommandLineExitException("Agents file " + agentsFile + " is empty.");
         }

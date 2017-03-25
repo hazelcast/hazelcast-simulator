@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.BashCommand;
 
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
@@ -27,7 +27,7 @@ public final class AgentUtils {
     private AgentUtils() {
     }
 
-    public static void sslTestAgents(SimulatorProperties properties, ComponentRegistry registry) {
+    public static void sslTestAgents(SimulatorProperties properties, Registry registry) {
         new BashCommand(getConfigurationFile("agent_ssh_check.sh").getAbsolutePath())
                 .addParams(join(registry.getAgentIps(), ","))
                 .addEnvironment(properties.asMap())
@@ -35,7 +35,7 @@ public final class AgentUtils {
                 .execute();
     }
 
-    public static void startAgents(SimulatorProperties properties, ComponentRegistry registry) {
+    public static void startAgents(SimulatorProperties properties, Registry registry) {
         String startScript = getConfigurationFile("agent_start.sh").getAbsolutePath();
 
         new BashCommand(startScript)
@@ -44,7 +44,7 @@ public final class AgentUtils {
                 .execute();
     }
 
-    public static void stopAgents(SimulatorProperties properties, ComponentRegistry registry) {
+    public static void stopAgents(SimulatorProperties properties, Registry registry) {
         String shutdownScript = getConfigurationFile("agent_shutdown.sh").getAbsolutePath();
 
         new BashCommand(shutdownScript)

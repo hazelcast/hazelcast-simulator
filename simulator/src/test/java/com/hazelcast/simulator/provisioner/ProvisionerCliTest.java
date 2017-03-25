@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.provisioner;
 
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.helper.ExitStatusZeroException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -52,7 +52,7 @@ public class ProvisionerCliTest {
     public void testInit() {
         ProvisionerCli cli = new ProvisionerCli(getArgs());
 
-        ComponentRegistry registry = cli.getProvisioner().getRegistry();
+        Registry registry = cli.getProvisioner().getRegistry();
         assertEquals(1, registry.agentCount());
         assertEquals("127.0.0.1", registry.getFirstAgent().getPublicAddress());
     }

@@ -18,7 +18,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.ArtifactCleanTask;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
@@ -61,7 +61,7 @@ final class CoordinatorCli {
     Coordinator coordinator;
     TestSuite testSuite;
     CoordinatorParameters coordinatorParameters;
-    ComponentRegistry registry;
+    Registry registry;
     SimulatorProperties simulatorProperties;
     DeploymentPlan deploymentPlan;
     VendorDriver vendorDriver;
@@ -352,10 +352,10 @@ final class CoordinatorCli {
         return (int) timeUnit.toSeconds(Integer.parseInt(sub));
     }
 
-    private ComponentRegistry newComponentRegistry(SimulatorProperties simulatorProperties) {
-        ComponentRegistry registry;
+    private Registry newComponentRegistry(SimulatorProperties simulatorProperties) {
+        Registry registry;
         if (isLocal(simulatorProperties)) {
-            registry = new ComponentRegistry();
+            registry = new Registry();
             registry.addAgent("localhost", "localhost");
         } else {
             registry = loadComponentRegister(getAgentsFile());

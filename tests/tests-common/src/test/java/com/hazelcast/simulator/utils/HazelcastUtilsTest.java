@@ -4,7 +4,7 @@ import com.hazelcast.core.Cluster;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class HazelcastUtilsTest {
     private HazelcastInstance hazelcastInstance;
 
     private Map<String, String> properties = new HashMap<String, String>();
-    private ComponentRegistry registry;
+    private Registry registry;
 
     private String memberConfig;
     private String clientConfig;
@@ -115,7 +115,7 @@ public class HazelcastUtilsTest {
 //        assertFalse(clientHzConfig.contains("<!--LICENSE-KEY-->"));
 //    }
 
-    private ComponentRegistry getComponentRegistryMock() {
+    private Registry getComponentRegistryMock() {
         List<AgentData> agents = new ArrayList<AgentData>();
         for (int i = 1; i <= 5; i++) {
             AgentData agent = mock(AgentData.class);
@@ -123,7 +123,7 @@ public class HazelcastUtilsTest {
             agents.add(agent);
         }
 
-        ComponentRegistry registry = mock(ComponentRegistry.class);
+        Registry registry = mock(Registry.class);
         when(registry.getAgents()).thenReturn(agents);
         return registry;
     }

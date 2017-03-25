@@ -23,7 +23,7 @@ import com.hazelcast.simulator.coordinator.FailureCollector;
 import com.hazelcast.simulator.coordinator.PerformanceStatsCollector;
 import com.hazelcast.simulator.coordinator.TestCaseRunner;
 import com.hazelcast.simulator.coordinator.TestSuite;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
@@ -51,7 +51,7 @@ public class RunTestSuiteTask {
 
     private final TestSuite testSuite;
     private final CoordinatorParameters coordinatorParameters;
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final FailureCollector failureCollector;
     private final CoordinatorClient client;
     private final PerformanceStatsCollector performanceStatsCollector;
@@ -59,7 +59,7 @@ public class RunTestSuiteTask {
 
     public RunTestSuiteTask(TestSuite testSuite,
                             CoordinatorParameters coordinatorParameters,
-                            ComponentRegistry registry,
+                            Registry registry,
                             FailureCollector failureCollector,
                             CoordinatorClient client,
                             PerformanceStatsCollector performanceStatsCollector) {

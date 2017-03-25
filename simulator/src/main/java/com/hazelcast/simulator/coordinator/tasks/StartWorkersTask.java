@@ -19,7 +19,7 @@ import com.hazelcast.simulator.agent.operations.CreateWorkerOperation;
 import com.hazelcast.simulator.agent.operations.StartTimeoutDetectionOperation;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -52,7 +52,7 @@ public class StartWorkersTask {
     private static final Logger LOGGER = Logger.getLogger(StartWorkersTask.class);
 
     private final CoordinatorClient client;
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final int startupDelayMs;
     private final Map<SimulatorAddress, List<WorkerParameters>> memberDeploymentPlan;
     private final Map<SimulatorAddress, List<WorkerParameters>> clientDeploymentPlan;
@@ -64,7 +64,7 @@ public class StartWorkersTask {
             Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan,
             Map<String, String> workerTags,
             CoordinatorClient client,
-            ComponentRegistry registry,
+            Registry registry,
             int startupDelayMs) {
         this.client = client;
         this.registry = registry;

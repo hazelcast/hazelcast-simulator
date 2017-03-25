@@ -10,7 +10,7 @@ import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.utils.AssertTask;
@@ -40,7 +40,7 @@ public class CoordinatorTest {
 
     private static Coordinator coordinator;
     private static String hzConfig;
-    private static ComponentRegistry registry;
+    private static Registry registry;
     private static String hzClientConfig;
     private static AgentData agentData;
     private static Agent agent;
@@ -67,7 +67,7 @@ public class CoordinatorTest {
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
 
-        registry = new ComponentRegistry();
+        registry = new Registry();
         agentData = registry.addAgent(localIp(), localIp());
 
         coordinator = new Coordinator(registry, coordinatorParameters);

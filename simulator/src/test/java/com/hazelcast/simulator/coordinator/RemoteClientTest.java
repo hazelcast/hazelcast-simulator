@@ -5,7 +5,7 @@ public class RemoteClientTest {
 //    private static final IntegrationTestOperation DEFAULT_OPERATION = new IntegrationTestOperation();
 //    private static final String DEFAULT_TEST_ID = "RemoteClientTest";
 //
-//    private final ComponentRegistry registry = new ComponentRegistry();
+//    private final Registry registry = new Registry();
 //
 //    private final CoordinatorConnector coordinatorConnector = mock(CoordinatorConnector.class);
 //    private RemoteClient remoteClient;

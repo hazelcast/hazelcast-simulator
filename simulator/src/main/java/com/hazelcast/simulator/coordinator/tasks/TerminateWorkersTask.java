@@ -17,7 +17,7 @@ package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.agent.operations.StopTimeoutDetectionOperation;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.CoordinatorClient;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
@@ -45,13 +45,13 @@ public class TerminateWorkersTask {
     private static final int FINISHED_WORKERS_SLEEP_MILLIS = 500;
 
     private static final Logger LOGGER = Logger.getLogger(TerminateWorkersTask.class);
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final SimulatorProperties simulatorProperties;
     private final CoordinatorClient client;
 
     public TerminateWorkersTask(
             SimulatorProperties simulatorProperties,
-            ComponentRegistry registry,
+            Registry registry,
             CoordinatorClient client) {
         this.simulatorProperties = simulatorProperties;
         this.registry = registry;

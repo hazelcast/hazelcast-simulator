@@ -3,7 +3,7 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.FileUtils;
@@ -43,7 +43,7 @@ public class WorkerTest {
     public void before() {
         setupFakeEnvironment();
 
-        ComponentRegistry registry = new ComponentRegistry();
+        Registry registry = new Registry();
         registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = new SimulatorProperties()

@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.provisioner;
 
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 public class NodeMetadataPredicateTest {
 
     private Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
-    private ComponentRegistry registry = new ComponentRegistry();
+    private Registry registry = new Registry();
 
     private NodeMetadata nodeMetadata;
 

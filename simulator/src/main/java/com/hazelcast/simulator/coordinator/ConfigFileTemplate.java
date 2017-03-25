@@ -17,7 +17,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.TagUtils;
 import freemarker.template.Configuration;
 import freemarker.template.SimpleScalar;
@@ -40,7 +40,7 @@ public class ConfigFileTemplate {
     private final String rawTemplate;
     private final Map<String, String> hardReplacements = new HashMap<String, String>();
     private final Map<String, Object> environment = new HashMap<String, Object>();
-    private ComponentRegistry registry;
+    private Registry registry;
 
     public ConfigFileTemplate(String rawTemplate) {
         this.rawTemplate = checkNotNull(rawTemplate, "rawTemplate can't be null");

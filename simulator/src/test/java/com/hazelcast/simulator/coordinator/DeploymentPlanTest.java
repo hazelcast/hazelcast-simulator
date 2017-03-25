@@ -2,7 +2,7 @@ package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.vendors.StubVendorDriver;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class DeploymentPlanTest {
-    private final ComponentRegistry registry = new ComponentRegistry();
+    private final Registry registry = new Registry();
     private SimulatorAddress agent1;
     private SimulatorAddress agent2;
     private SimulatorAddress agent3;
@@ -48,7 +48,7 @@ public class DeploymentPlanTest {
 
     @Test(expected = CommandLineExitException.class)
     public void whenNoAgents() {
-        new DeploymentPlan(vendorDriver, new ComponentRegistry());
+        new DeploymentPlan(vendorDriver, new Registry());
     }
 
     @Test
@@ -221,7 +221,7 @@ public class DeploymentPlanTest {
     }
 
     private void testGetVersionSpecs(List<AgentData> agents, int memberCount, int clientCount) {
-        ComponentRegistry registry = new ComponentRegistry();
+        Registry registry = new Registry();
         for (AgentData agent : agents) {
             registry.addAgent(agent.getPublicAddress(), agent.getPrivateAddress());
         }

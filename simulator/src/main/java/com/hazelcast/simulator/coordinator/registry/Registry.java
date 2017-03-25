@@ -49,7 +49,7 @@ import static java.util.Collections.unmodifiableList;
  * Keeps track of all Simulator components which are running.
  */
 @SuppressWarnings("checkstyle:methodcount")
-public class ComponentRegistry {
+public class Registry {
     private final AtomicInteger agentIndex = new AtomicInteger();
     private final AtomicInteger testIndexGenerator = new AtomicInteger();
     // a map with all id's and its count. This is used to make sure each id is unique.

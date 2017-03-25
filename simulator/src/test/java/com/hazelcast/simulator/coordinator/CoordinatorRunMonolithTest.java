@@ -3,7 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.Agent;
 import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.common.TestCase;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.tests.FailingTest;
 import com.hazelcast.simulator.tests.SuccessTest;
 import com.hazelcast.simulator.vendors.HazelcastDriver;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertFalse;
 
 public class CoordinatorRunMonolithTest {
 
-    private ComponentRegistry registry;
+    private Registry registry;
     private Agent agent;
     private CoordinatorRunMonolith run;
     private Coordinator coordinator;
@@ -50,7 +50,7 @@ public class CoordinatorRunMonolithTest {
         agent = new Agent(1, "127.0.0.1", simulatorProperties.getAgentPort(), 10, 60);
         agent.start();
 
-        registry = new ComponentRegistry();
+        registry = new Registry();
         registry.addAgent(localIp(), localIp());
 
         copy(new File(localResourceDirectory(), "hazelcast.xml"), new File(getUserDir(), "hazelcast.xml"));

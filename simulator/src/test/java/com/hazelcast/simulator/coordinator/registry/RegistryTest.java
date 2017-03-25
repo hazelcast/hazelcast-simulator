@@ -19,9 +19,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class ComponentRegistryTest {
+public class RegistryTest {
 
-    private final ComponentRegistry registry = new ComponentRegistry();
+    private final Registry registry = new Registry();
 
     @Test(expected = CommandLineExitException.class)
     public void test_assignDedicatedMemberMachines_whenDedicatedMemberCountNegative() {

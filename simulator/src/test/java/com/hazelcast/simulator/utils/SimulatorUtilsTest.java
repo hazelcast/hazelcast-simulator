@@ -1,6 +1,6 @@
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.junit.After;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 public class SimulatorUtilsTest {
 
     private File agentsFile;
-    private ComponentRegistry registry;
+    private Registry registry;
 
     @Before
     public void before() throws IOException {

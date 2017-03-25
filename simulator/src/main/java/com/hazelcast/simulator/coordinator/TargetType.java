@@ -15,10 +15,10 @@
  */
 package com.hazelcast.simulator.coordinator;
 
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 
 /**
- * Defines a target type for a Worker to select groups of Workers from the {@link ComponentRegistry}.
+ * Defines a target type for a Worker to select groups of Workers from the {@link Registry}.
  *
  * The type {@link #PREFER_CLIENT} equates to the old passive member mode.
  * The type {@link #CLIENT} selects all kinds of client Workers (Java, C#, C++, Python etc.).

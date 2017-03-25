@@ -3,7 +3,7 @@ package com.hazelcast.simulator.coordinator;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.TestCase;
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.utils.TestUtils;
@@ -37,14 +37,14 @@ public class FailureCollectorTest {
     private FailureOperation normalExitFailure;
     private FailureOperation abnormalExitFailure;
     private File outputDirectory;
-    private ComponentRegistry registry;
+    private Registry registry;
     private SimulatorAddress agentAddress;
     private SimulatorAddress workerAddress;
 
     @Before
     public void before() {
         outputDirectory = TestUtils.createTmpDirectory();
-        registry = new ComponentRegistry();
+        registry = new Registry();
         failureCollector = new FailureCollector(outputDirectory, registry);
 
         agentAddress = registry.addAgent("192.168.0.1", "192.168.0.1").getAddress();

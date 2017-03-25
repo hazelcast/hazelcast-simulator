@@ -1,7 +1,7 @@
 package com.hazelcast.simulator.common;
 
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import org.junit.After;
 import org.junit.Before;
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 public class AgentsFileTest {
 
     private File agentsFile;
-    private ComponentRegistry registry;
+    private Registry registry;
 
     @Before
     public void before() throws IOException {
@@ -132,7 +132,7 @@ public class AgentsFileTest {
 
         save(agentsFile, registry);
 
-        ComponentRegistry actualRegistry = load(agentsFile);
+        Registry actualRegistry = load(agentsFile);
         assertEquals(2, actualRegistry.agentCount());
 
         List<AgentData> agents = actualRegistry.getAgents();

@@ -17,7 +17,7 @@ package com.hazelcast.simulator.provisioner;
 
 import com.google.common.base.Predicate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import org.apache.log4j.Logger;
 import org.jclouds.compute.domain.NodeMetadata;
 
@@ -29,10 +29,10 @@ class NodeMetadataPredicate implements Predicate<NodeMetadata> {
 
     private static final Logger LOGGER = Logger.getLogger(NodeMetadataPredicate.class);
 
-    private final ComponentRegistry registry;
+    private final Registry registry;
     private final Map<String, AgentData> terminateMap;
 
-    NodeMetadataPredicate(ComponentRegistry registry, Map<String, AgentData> terminateMap) {
+    NodeMetadataPredicate(Registry registry, Map<String, AgentData> terminateMap) {
         this.registry = registry;
         this.terminateMap = terminateMap;
     }

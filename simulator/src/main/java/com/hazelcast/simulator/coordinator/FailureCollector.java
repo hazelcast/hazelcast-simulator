@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.coordinator;
 
 import com.hazelcast.simulator.coordinator.operations.FailureOperation;
-import com.hazelcast.simulator.coordinator.registry.ComponentRegistry;
+import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -50,9 +50,9 @@ public class FailureCollector {
     private final ConcurrentMap<String, Boolean> hasCriticalFailuresMap = new ConcurrentHashMap<String, Boolean>();
 
     private final File file;
-    private final ComponentRegistry registry;
+    private final Registry registry;
 
-    public FailureCollector(File outputDirectory, ComponentRegistry registry) {
+    public FailureCollector(File outputDirectory, Registry registry) {
         this.file = new File(outputDirectory, "failures.txt");
         this.registry = registry;
     }
