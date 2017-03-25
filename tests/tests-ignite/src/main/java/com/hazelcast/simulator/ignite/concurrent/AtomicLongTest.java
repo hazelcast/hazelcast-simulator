@@ -28,12 +28,10 @@ public class AtomicLongTest extends IgniteTest {
     // public KeyLocality keyLocality = SHARED;
     public int countersLength = 1000;
 
-    private IgniteAtomicLong totalCounter;
     private IgniteAtomicLong[] counters;
 
     @Setup
     public void setup() {
-        totalCounter = ignite.atomicLong(name + ":TotalCounter", 0, true);
         counters = new IgniteAtomicLong[countersLength];
 
         //String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
@@ -69,7 +67,5 @@ public class AtomicLongTest extends IgniteTest {
         for (IgniteAtomicLong counter : counters) {
             counter.close();
         }
-        totalCounter.close();
     }
-
 }
