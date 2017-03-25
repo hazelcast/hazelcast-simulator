@@ -30,15 +30,19 @@ public class FailureOperation implements SimulatorOperation {
 
     private final long timestamp = System.currentTimeMillis();
 
-    private final String message;
-    private final String type;
-    private final String workerAddress;
-    private final String agentAddress;
-    private final String workerId;
-    private final String testId;
+    private String message;
+    private String type;
+    private String workerAddress;
+    private String agentAddress;
+    private String workerId;
+    private String testId;
     private TestCase testCase;
-    private final String cause;
+    private String cause;
     private long durationMs;
+
+    public FailureOperation(String message) {
+        this.message = message;
+    }
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
                             Throwable cause) {
@@ -46,7 +50,7 @@ public class FailureOperation implements SimulatorOperation {
     }
 
     public FailureOperation(String message, FailureType type, SimulatorAddress workerAddress, String agentAddress,
-                           String workerId, String testId, String cause) {
+                            String workerId, String testId, String cause) {
         this.message = message;
         this.type = type.name();
         this.workerAddress = workerAddress == null ? null : workerAddress.toString();
@@ -54,6 +58,41 @@ public class FailureOperation implements SimulatorOperation {
         this.workerId = workerId;
         this.testId = testId;
         this.cause = cause;
+    }
+
+    public FailureOperation setType(FailureType type) {
+        this.type = type.name();
+        return this;
+    }
+
+    public FailureOperation setWorkerAddress(SimulatorAddress workerAddress) {
+        this.workerAddress = workerAddress.toString();
+        return this;
+    }
+
+    public FailureOperation setAgentAddress(SimulatorAddress agentAddress) {
+        this.agentAddress = agentAddress.toString();
+        return this;
+    }
+
+    public FailureOperation setWorkerId(String workerId) {
+        this.workerId = workerId;
+        return this;
+    }
+
+    public FailureOperation setTestId(String testId) {
+        this.testId = testId;
+        return this;
+    }
+
+    public FailureOperation setCause(Throwable cause) {
+        this.cause = throwableToString(cause);
+        return this;
+    }
+
+    public FailureOperation setDurationMs(long durationMs) {
+        this.durationMs = durationMs;
+        return this;
     }
 
     public void setDuration(long durationMs) {
