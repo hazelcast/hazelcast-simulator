@@ -32,7 +32,7 @@ import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
-import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
+import com.hazelcast.simulator.worker.operations.IntervalStatsOperation;
 import com.hazelcast.simulator.worker.operations.StartPhaseOperation;
 import com.hazelcast.simulator.worker.operations.StopRunOperation;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
@@ -52,7 +52,7 @@ public enum OperationType {
 
     // Coordinator-Operations
     FAILURE(FailureOperation.class, 1000),
-    PERFORMANCE_STATE(PerformanceStatsOperation.class, 1002),
+    PERFORMANCE_STATE(IntervalStatsOperation.class, 1002),
 
     // Coordinator Remote operations
     RC_INSTALL(RcInstallOperation.class, 2000),

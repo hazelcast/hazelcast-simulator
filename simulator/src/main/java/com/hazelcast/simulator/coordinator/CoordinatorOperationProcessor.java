@@ -22,7 +22,7 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.LogOperation;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
-import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
+import com.hazelcast.simulator.worker.operations.IntervalStatsOperation;
 import org.apache.log4j.Logger;
 
 import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
@@ -44,8 +44,8 @@ public class CoordinatorOperationProcessor implements OperationProcessor {
     public void process(SimulatorOperation op, SimulatorAddress source, Promise promise) throws Exception {
         if (op instanceof FailureOperation) {
             failureCollector.notify((FailureOperation) op);
-        } else if (op instanceof PerformanceStatsOperation) {
-            performanceStatsCollector.update(source, ((PerformanceStatsOperation) op).getPerformanceStats());
+        } else if (op instanceof IntervalStatsOperation) {
+            performanceStatsCollector.update(source, ((IntervalStatsOperation) op).getStatsMap());
         } else if (op instanceof LogOperation) {
             LogOperation logOperation = (LogOperation) op;
             LOGGER.log(logOperation.getLevel(), logOperation.getMessage());

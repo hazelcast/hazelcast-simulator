@@ -20,13 +20,13 @@ import com.hazelcast.simulator.common.TestPhase;
 import static java.lang.Math.max;
 
 /**
- * Container to transfer performance statistics for some time window.
+ * Contains performance statistics for an interval.
  * <p>
- * Has methods to combine {@link PerformanceStats} instances by adding or setting maximum values.
+ * Has methods to combine {@link IntervalStats} instances by adding or setting maximum values.
  *
  * There is a lot of stuff in there, but the thing most important is the operationCount (in a given time window).
  */
-public class PerformanceStats {
+public class IntervalStats {
 
     public static final double INTERVAL_LATENCY_PERCENTILE = 99.9;
 
@@ -36,67 +36,70 @@ public class PerformanceStats {
     private long operationCount;
     private double intervalThroughput;
     private double totalThroughput;
-    private double intervalLatencyAvgNanos;
-    private long intervalLatencyMaxNanos;
-    private long intervalLatency999PercentileNanos;
+    // average latency in nanos
+    private double latencyAvg;
+    // max latency in nanos
+    private long latencyMax;
+    // 99.9 percentile in nanos
+    private long latency999Percentile;
 
     /**
-     * Creates an empty {@link PerformanceStats} instance.
+     * Creates an empty {@link IntervalStats} instance.
      */
-    public PerformanceStats() {
+    public IntervalStats() {
         this.operationCount = EMPTY_OPERATION_COUNT;
         this.intervalThroughput = EMPTY_THROUGHPUT;
     }
 
 
     /**
-     * Creates a {@link PerformanceStats} instance with values.
+     * Creates a {@link IntervalStats} instance with values.
      *
      * @param operationCount                    Operation count value.
      * @param intervalThroughput                Throughput value for an interval.
      * @param totalThroughput                   Total throughput value.
-     * @param intervalLatencyAvgNanos           Average latency for an interval.
-     * @param intervalLatency999PercentileNanos 99.9 Percentile latency for an interval
-     *                                          ({@link PerformanceStats#INTERVAL_LATENCY_PERCENTILE}).
-     * @param intervalLatencyMaxNanos           Maximum latency for an interval.
+     * @param latencyAvg           Average latency for an interval.
+     * @param latency999Percentile 99.9 Percentile latency for an interval
+     *                                          ({@link IntervalStats#INTERVAL_LATENCY_PERCENTILE}).
+     * @param latencyMax           Maximum latency for an interval.
      */
-    public PerformanceStats(long operationCount,
-                            double intervalThroughput,
-                            double totalThroughput,
-                            double intervalLatencyAvgNanos,
-                            long intervalLatency999PercentileNanos,
-                            long intervalLatencyMaxNanos) {
+    public IntervalStats(long operationCount,
+                         double intervalThroughput,
+                         double totalThroughput,
+                         double latencyAvg,
+                         long latency999Percentile,
+                         long latencyMax) {
         this.operationCount = operationCount;
         this.intervalThroughput = intervalThroughput;
         this.totalThroughput = totalThroughput;
-        this.intervalLatencyAvgNanos = intervalLatencyAvgNanos;
-        this.intervalLatency999PercentileNanos = intervalLatency999PercentileNanos;
-        this.intervalLatencyMaxNanos = intervalLatencyMaxNanos;
+        this.latencyAvg = latencyAvg;
+        this.latency999Percentile = latency999Percentile;
+        this.latencyMax = latencyMax;
     }
 
-    public PerformanceStats(PerformanceStats original) {
+    public IntervalStats(IntervalStats original) {
         this.operationCount = original.operationCount;
         this.intervalThroughput = original.intervalThroughput;
         this.totalThroughput = original.totalThroughput;
-        this.intervalLatencyAvgNanos = original.intervalLatencyAvgNanos;
-        this.intervalLatency999PercentileNanos = original.intervalLatency999PercentileNanos;
-        this.intervalLatencyMaxNanos = original.intervalLatencyMaxNanos;
+        this.latencyAvg = original.latencyAvg;
+        this.latency999Percentile = original.latency999Percentile;
+        this.latencyMax = original.latencyMax;
     }
 
     /**
-     * Combines two {@link PerformanceStats} instances, e.g. from different Simulator Workers.
+     * Combines two {@link IntervalStats} instances, e.g. from different Simulator Workers.
      *
-     * @param other {@link PerformanceStats} which should be added to this instance
+     * @param other {@link IntervalStats} which should be added to this instance
      */
-    public void add(PerformanceStats other) {
+    public void add(IntervalStats other) {
         add(other, true);
     }
 
     /**
-     * Combines {@link PerformanceStats} instances, e.g. from different Simulator Workers.
+     * Combines {@link IntervalStats} instances, e.g. from different Simulator Workers.
      * <p>
      * For the real-time performance monitor during the {@link TestPhase#RUN} the
-     * maximum value should be set, so we get the maximum operation count and throughput values of all {@link PerformanceStats}
+     * maximum value should be set, so we get the maximum operation count and throughput values of all {@link IntervalStats}
      * instances of the last interval.
      * <p>
      * For the total performance number and the performance per Simulator Agent, the added values should be set, so we get the
@@ -104,11 +107,11 @@ public class PerformanceStats {
      * <p>
      * The method always sets the maximum values for latency.
      *
-     * @param other                          {@link PerformanceStats} which should be added to this instance
+     * @param other                          {@link IntervalStats} which should be added to this instance
      * @param addOperationCountAndThroughput {@code true} if operation count and throughput should be added,
      *                                       {@code false} if the maximum value should be set
      */
-    public void add(PerformanceStats other, boolean addOperationCountAndThroughput) {
+    public void add(IntervalStats other, boolean addOperationCountAndThroughput) {
         if (other.isEmpty()) {
             return;
         }
@@ -118,9 +121,9 @@ public class PerformanceStats {
             intervalThroughput = other.intervalThroughput;
             totalThroughput = other.totalThroughput;
 
-            intervalLatencyAvgNanos = other.intervalLatencyAvgNanos;
-            intervalLatency999PercentileNanos = other.intervalLatency999PercentileNanos;
-            intervalLatencyMaxNanos = other.intervalLatencyMaxNanos;
+            latencyAvg = other.latencyAvg;
+            latency999Percentile = other.latency999Percentile;
+            latencyMax = other.latencyMax;
         } else {
             if (addOperationCountAndThroughput) {
                 operationCount += other.operationCount;
@@ -132,16 +135,16 @@ public class PerformanceStats {
                 totalThroughput = max(totalThroughput, other.totalThroughput);
             }
 
-            intervalLatencyAvgNanos = max(intervalLatencyAvgNanos, other.intervalLatencyAvgNanos);
-            intervalLatency999PercentileNanos = max(intervalLatency999PercentileNanos, other.intervalLatency999PercentileNanos);
-            intervalLatencyMaxNanos = max(intervalLatencyMaxNanos, other.intervalLatencyMaxNanos);
+            latencyAvg = max(latencyAvg, other.latencyAvg);
+            latency999Percentile = max(latency999Percentile, other.latency999Percentile);
+            latencyMax = max(latencyMax, other.latencyMax);
         }
     }
 
     /**
-     * Returns if the {@link PerformanceStats} instance is still empty.
+     * Returns if the {@link IntervalStats} instance is still empty.
      *
-     * @return {@code true} if the {@link PerformanceStats} instance is empty, {@code false} otherwise
+     * @return {@code true} if the {@link IntervalStats} instance is empty, {@code false} otherwise
      */
     public boolean isEmpty() {
         return (operationCount == EMPTY_OPERATION_COUNT && intervalThroughput == EMPTY_THROUGHPUT);
@@ -159,34 +162,34 @@ public class PerformanceStats {
         return intervalThroughput;
     }
 
-    public double getIntervalLatencyAvgNanos() {
-        return intervalLatencyAvgNanos;
+    public double getLatencyAvg() {
+        return latencyAvg;
     }
 
-    public long getIntervalLatency999PercentileNanos() {
-        return intervalLatency999PercentileNanos;
+    public long getLatency999Percentile() {
+        return latency999Percentile;
     }
 
-    public long getIntervalLatencyMaxNanos() {
-        return intervalLatencyMaxNanos;
+    public long getLatencyMax() {
+        return latencyMax;
     }
 
     @Override
     public String toString() {
-        return "PerformanceStats{"
+        return "IntervalStats{"
                 + "operationCount=" + operationCount
                 + ", intervalThroughput=" + intervalThroughput
                 + ", totalThroughput=" + totalThroughput
-                + ", intervalAvgLatencyNanos=" + intervalLatencyAvgNanos
-                + ", intervalLatency999PercentileNanos=" + intervalLatency999PercentileNanos
-                + ", intervalMaxLatencyNanos=" + intervalLatencyMaxNanos
+                + ", intervalAvgLatencyNanos=" + latencyAvg
+                + ", latency999Percentile=" + latency999Percentile
+                + ", intervalMaxLatencyNanos=" + latencyMax
                 + '}';
     }
 
 
-    public static PerformanceStats aggregateAll(PerformanceStats... stats) {
-        PerformanceStats result = new PerformanceStats();
-        for (PerformanceStats s : stats) {
+    public static IntervalStats aggregateAll(IntervalStats... stats) {
+        IntervalStats result = new IntervalStats();
+        for (IntervalStats s : stats) {
             result.add(s);
         }
         return result;

@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.worker.performance.PerformanceStats.INTERVAL_LATENCY_PERCENTILE;
+import static com.hazelcast.simulator.worker.performance.IntervalStats.INTERVAL_LATENCY_PERCENTILE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -216,8 +216,8 @@ public final class TestPerformanceTracker {
         }
     }
 
-    PerformanceStats createPerformanceStats() {
-        return new PerformanceStats(
+    IntervalStats createPerformanceStats() {
+        return new IntervalStats(
                 totalOperationCount,
                 intervalThroughput,
                 totalThroughput,

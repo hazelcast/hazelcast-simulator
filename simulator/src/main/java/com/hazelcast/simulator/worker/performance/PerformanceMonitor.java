@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.worker.performance;
 
 import com.hazelcast.simulator.protocol.Server;
-import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
+import com.hazelcast.simulator.worker.operations.IntervalStatsOperation;
 import com.hazelcast.simulator.worker.testcontainer.TestContainer;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.log4j.Logger;
@@ -145,14 +145,14 @@ public class PerformanceMonitor implements Closeable {
         }
 
         private void coordinatorUpdate() {
-            PerformanceStatsOperation operation = new PerformanceStatsOperation();
+            IntervalStatsOperation operation = new IntervalStatsOperation();
 
             for (TestContainer container : dirtyContainers) {
                 TestPerformanceTracker tracker = container.getTestPerformanceTracker();
-                operation.addPerformanceStats(container.getTestCase().getId(), tracker.createPerformanceStats());
+                operation.addStats(container.getTestCase().getId(), tracker.createPerformanceStats());
             }
 
-            if (operation.getPerformanceStats().size() > 0) {
+            if (operation.getStatsMap().size() > 0) {
                 server.sendCoordinator(operation);
             }
         }
