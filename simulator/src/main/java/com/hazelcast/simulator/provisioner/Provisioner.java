@@ -359,7 +359,6 @@ class Provisioner {
         uploadLibraryJar(ip, "commons-lang3*");
         uploadLibraryJar(ip, "freemarker*");
         uploadLibraryJar(ip, "gson-*");
-        uploadLibraryJar(ip, "guava-*");
         uploadLibraryJar(ip, "HdrHistogram-*");
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");
