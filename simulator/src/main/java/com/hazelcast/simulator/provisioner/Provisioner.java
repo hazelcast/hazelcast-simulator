@@ -20,25 +20,21 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.Bash;
+import com.hazelcast.simulator.utils.BashCommand;
 import com.hazelcast.simulator.utils.CommandLineExitException;
 import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
-import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.domain.Template;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.sslTestAgents;
 import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
-import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
@@ -46,15 +42,16 @@ import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
-import static com.hazelcast.simulator.utils.ExecutorFactory.createFixedThreadPool;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
+import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
+import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
@@ -71,10 +68,9 @@ class Provisioner {
     private final String simulatorPath = getSimulatorHome().getAbsolutePath();
 
     private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
-    private final ExecutorService executor = createFixedThreadPool(10, Provisioner.class);
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     private final SimulatorProperties properties;
-    private final ComputeService computeService;
     private final Bash bash;
 
     private final int machineWarmupSeconds;
@@ -82,13 +78,12 @@ class Provisioner {
     private final Registry registry;
     private final File initScriptFile;
 
-    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash) {
-        this(properties, computeService, bash, MACHINE_WARMUP_WAIT_SECONDS);
+    public Provisioner(SimulatorProperties properties, Bash bash) {
+        this(properties, bash, MACHINE_WARMUP_WAIT_SECONDS);
     }
 
-    public Provisioner(SimulatorProperties properties, ComputeService computeService, Bash bash, int machineWarmupSeconds) {
+    public Provisioner(SimulatorProperties properties, Bash bash, int machineWarmupSeconds) {
         this.properties = properties;
-        this.computeService = computeService;
         this.bash = bash;
         this.machineWarmupSeconds = machineWarmupSeconds;
         this.registry = loadComponentRegister(agentsFile, false);
@@ -200,11 +195,6 @@ class Provisioner {
         executor.shutdown();
         awaitTermination(executor, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, SECONDS);
 
-        // shutdown compute service (which holds another thread pool)
-        if (computeService != null) {
-            computeService.getContext().close();
-        }
-
         echo("Done!");
     }
 
@@ -228,33 +218,39 @@ class Provisioner {
         }
 
         long started = System.nanoTime();
-        Template template = new TemplateBuilder(computeService, properties).build();
+        //Template template = new TemplateBuilder(computeService, properties).build();
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
-
         try {
             echo("Creating machines (can take a few minutes)...");
-            Set<Future> futures = new HashSet<Future>();
-            for (int batch : calcBatches(properties, delta)) {
-                Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupName, batch, template);
-                for (NodeMetadata node : nodes) {
-                    String privateIpAddress = node.getPrivateAddresses().iterator().next();
-                    String publicIpAddress = node.getPublicAddresses().iterator().next();
+//            Set<Future> futures = new HashSet<Future>();
+//            for (int batch : calcBatches(properties, delta)) {
+//
+//
+//                Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupName, batch, template);
+//                for (NodeMetadata node : nodes) {
+//                    String privateIpAddress = node.getPrivateAddresses().iterator().next();
+//                    String publicIpAddress = node.getPublicAddresses().iterator().next();
+//
+//                    echo(INDENTATION + publicIpAddress + " LAUNCHED");
+//                    componentRegistry.addAgent(publicIpAddress, privateIpAddress, tags);
+//                    AgentsFile.save(agentsFile, componentRegistry);
+//                }
+//
+//                for (NodeMetadata node : nodes) {
+//                    String publicIpAddress = node.getPublicAddresses().iterator().next();
+//                    Future future = executor.submit(new InstallNodeTask(publicIpAddress, startHarakiriMonitorCommand));
+//                    futures.add(future);
+//                }
+//            }
+//
+//            for (Future future : futures) {
+//                future.get();
+//            }
 
-                    echo(INDENTATION + publicIpAddress + " LAUNCHED");
-                    registry.addAgent(publicIpAddress, privateIpAddress, tags);
-                    AgentsFile.save(agentsFile, registry);
-                }
-
-                for (NodeMetadata node : nodes) {
-                    String publicIpAddress = node.getPublicAddresses().iterator().next();
-                    Future future = executor.submit(new InstallNodeTask(publicIpAddress, startHarakiriMonitorCommand));
-                    futures.add(future);
-                }
-            }
-
-            for (Future future : futures) {
-                future.get();
-            }
+            new BashCommand(getConfigurationFile("aws-ec2_provision.sh").getAbsolutePath())
+                    .addEnvironment(properties.asMap())
+                    .addParams(delta)
+                    .execute();
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
@@ -278,13 +274,20 @@ class Provisioner {
         long started = System.nanoTime();
 
         int destroyedCount = 0;
-        for (int batchSize : calcBatches(properties, count)) {
-            Map<String, AgentData> terminateMap = new HashMap<String, AgentData>();
-            for (AgentData agent : registry.getAgents(batchSize)) {
-                terminateMap.put(agent.getPublicAddress(), agent);
-            }
-            Set destroyedSet = computeService.destroyNodesMatching(new NodeMetadataPredicate(registry, terminateMap));
-            destroyedCount += destroyedSet.size();
+        List<String> privateIps = new LinkedList<String>();
+        List<AgentData> agents = registry.getAgents();
+        for (int k = 0; k < count; k++) {
+            privateIps.add(agents.get(k).getPrivateAddress());
+            destroyedCount++;
+        }
+
+        new BashCommand(getConfigurationFile("aws-ec2_terminate.sh").getAbsolutePath())
+                .addEnvironment(properties.asMap())
+                .addParams(join(privateIps, ","))
+                .execute();
+
+        for (int k = 0; k < count; k++) {
+            registry.removeAgent(agents.get(k));
         }
 
         echo("Updating " + agentsFile.getAbsolutePath());
@@ -359,7 +362,6 @@ class Provisioner {
         uploadLibraryJar(ip, "commons-lang3*");
         uploadLibraryJar(ip, "freemarker*");
         uploadLibraryJar(ip, "gson-*");
-        uploadLibraryJar(ip, "guava-*");
         uploadLibraryJar(ip, "HdrHistogram-*");
         uploadLibraryJar(ip, "jopt*");
         uploadLibraryJar(ip, "junit*");

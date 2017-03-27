@@ -15,9 +15,7 @@
  */
 package com.hazelcast.simulator.utils;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -35,7 +33,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -144,12 +141,8 @@ public final class FileUtils {
     }
 
     public static String getResourceFile(String fileName) {
-        try {
-            URL url = Resources.getResource(fileName);
-            return Resources.toString(url, Charsets.UTF_8);
-        } catch (Exception e) {
-            throw new UncheckedIOException(e);
-        }
+        ClassLoader classLoader = FileUtils.class.getClassLoader();
+        return new File(classLoader.getResource(fileName).getFile()).getAbsolutePath();
     }
 
     public static String fileAsText(String fileName) {
@@ -425,43 +418,43 @@ public final class FileUtils {
 
         return files;
     }
-
-    /**
-     * Copies a directory recursively.
-     *
-     * @param source the source directory
-     * @param target the target directory
-     */
-    public static void copyDirectory(File source, File target) {
-        for (File srcFile : source.listFiles()) {
-            if (srcFile.isDirectory()) {
-                File targetChild = new File(target, srcFile.getName());
-                ensureExistingDirectory(targetChild);
-                copyDirectory(srcFile, targetChild);
-            } else {
-                copyFileToDirectory(srcFile, target);
-            }
-        }
-    }
-
-    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
-        for (File sourceFile : sourceFiles) {
-            copyFileToDirectory(sourceFile, targetDirectory);
-        }
-    }
-
-    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
-        File targetFile = newFile(targetDirectory, sourceFile.getName());
-        try {
-            Files.copy(sourceFile, targetFile);
-            if (sourceFile.canExecute()) {
-                targetFile.setExecutable(true);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
-                    targetFile.getAbsolutePath()), e);
-        }
-    }
+//
+//    /**
+//     * Copies a directory recursively.
+//     *
+//     * @param source the source directory
+//     * @param target the target directory
+//     */
+//    public static void copyDirectory(File source, File target) {
+//        for (File srcFile : source.listFiles()) {
+//            if (srcFile.isDirectory()) {
+//                File targetChild = new File(target, srcFile.getName());
+//                ensureExistingDirectory(targetChild);
+//                copyDirectory(srcFile, targetChild);
+//            } else {
+//                copyFileToDirectory(srcFile, target);
+//            }
+//        }
+//    }
+//
+//    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
+//        for (File sourceFile : sourceFiles) {
+//            copyFileToDirectory(sourceFile, targetDirectory);
+//        }
+//    }
+//
+//    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
+//        File targetFile = newFile(targetDirectory, sourceFile.getName());
+//        try {
+//            Files.copy(sourceFile, targetFile);
+//            if (sourceFile.canExecute()) {
+//                targetFile.setExecutable(true);
+//            }
+//        } catch (IOException e) {
+//            throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
+//                    targetFile.getAbsolutePath()), e);
+//        }
+//    }
 
     public static File getConfigurationFile(String filename) {
         File file = new File(getUserDir(), filename).getAbsoluteFile();

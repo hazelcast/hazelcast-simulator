@@ -46,7 +46,6 @@ public class CoordinatorTest {
     private static Agent agent;
 
     private int initialWorkerIndex;
-    private int initialTestIndex;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -77,7 +76,6 @@ public class CoordinatorTest {
     @Before
     public void before() {
         initialWorkerIndex = agentData.getCurrentWorkerIndex();
-        initialTestIndex = registry.getInitialTestIndex();
     }
 
     @After

@@ -8,7 +8,6 @@ import org.junit.Test;
 import java.io.File;
 
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.INIT_SH_SCRIPT_NAME;
-import static com.hazelcast.simulator.provisioner.ProvisionerUtils.calcBatches;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScriptFile;
@@ -104,17 +103,5 @@ public class ProvisionerUtilsTest {
         when(properties.getCloudProvider()).thenReturn(CloudProviderUtils.PROVIDER_STATIC);
 
         ensureIsCloudProviderSetup(properties, "terminate");
-    }
-
-    @Test
-    public void testCalcBatches() {
-        SimulatorProperties properties = mock(SimulatorProperties.class);
-        when(properties.get("CLOUD_BATCH_SIZE")).thenReturn("5");
-
-        int[] batches = calcBatches(properties, 12);
-        assertEquals(3, batches.length);
-        assertEquals(5, batches[0]);
-        assertEquals(5, batches[1]);
-        assertEquals(2, batches[2]);
     }
 }
