@@ -372,6 +372,7 @@ class Provisioner {
         if (properties.get("VENDOR").equals("ignite")) {
             uploadLibraryJar(ip, "ignite-*");
             uploadLibraryJar(ip, "spring-*");
+            uploadLibraryJar(ip, "commons-logging-*");
         }
 
         // upload remaining files

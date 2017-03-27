@@ -62,6 +62,8 @@
 
         <commons-codec.version>1.10</commons-codec.version>
         <commons-lang.version>3.4</commons-lang.version>
+        <commons-logging.version>1.1.1</commons-logging.version>
+
         <freemarker.version>2.3.25-incubating</freemarker.version>
         <!-- cannot update due to some test failures, need to check this -->
         <gson.version>2.6.2</gson.version>

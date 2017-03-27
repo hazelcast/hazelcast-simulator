@@ -68,7 +68,6 @@ public class TestEnvironmentUtils {
         return simulatorHome;
     }
 
-
     private static void copyDirectory(File source, File destination) throws IOException {
         if (source.isDirectory()) {
             if (!destination.exists()) {
