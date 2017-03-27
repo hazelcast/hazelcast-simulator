@@ -303,8 +303,6 @@ to that directory.
 - If you stored your AWS credentials in a different location please update the paths of `CLOUD_IDENTITY` and `CLOUD_CREDENTIALS` 
 in your `simulator.properties` file.
 
-- You can also change the `MACHINE_SPEC` to change the instance type, EC2 region and operating system (AMI) of the created AWS instances.
-
 - Execute the created `prepare` script to create the EC2 instances and install Simulator on them.
 
   ```
@@ -330,79 +328,6 @@ Congratulations, you successfully ran Simulator on Amazon EC2! Please refer to t
 access key ID and secret access key in the `simulator.properties` file is for security reasons. It is too easy to share your
  credentials with the outside world. Now you can safely add the `simulator.properties` file in your source repository or 
  share it with other people.*
-
-
-# Setting up for Google Compute Engine
-
-Having installed Simulator, this section describes how to prepare Simulator for testing a Hazelcast cluster deployed at Google 
-Compute Engine (GCE).
-
-Simulator provides support to create and terminate GCE instances via the [Provisioner](#provisioner). If you want to create and
- setup the GCE instances by yourself, please use the configuration as described in [Setting up for Static Setup](#setting-up-for-static-setup).
-
-The `Provisioner` uses a private PKCS12 key for authentication
- (see [Service account credentials](https://cloud.google.com/storage/docs/authentication#service_accounts)). Please create a 
- Service account for your project. Please see
-  [Generating a service account credential](https://cloud.google.com/storage/docs/authentication#generating-a-private-key) to 
-  generate and download your PKCS12 key.
-
-You will need your email address as cloud identity. Usually this email address is in this form: 
-`<your account ID>@developer.gserviceaccount.com`. You also have to convert the PKCS12 key into the PKCS1 (PEM) format, 
-before you can use it with Simulator.
-
-- Execute the following command to create the GCE credentials in the correct format in the default location.
-
-  ```
-  gce-setup <your account ID>@developer.gserviceaccount.com /path/to/your/google.p12
-  ```
-
-For security reasons we store the cloud credentials outside of the working directory (e.g. to prevent an accidental commit 
-into your project files). The default locations for the credentials are
-
-- `~/gce.id` for your email address
-- `~/gce.pem` for the converted PEM key
-
-You can store the credentials in a different location, but then you need to configure the `simulator.properties` later.
-
-- Create a working directory for your Simulator TestSuite. Use the Simulator Wizard to create an example setup for you and 
-change to that directory.
-
-  ```
-  simulator-wizard --createWorkDir tests --cloudProvider google-compute-engine
-  cd tests
-  ```
-
-- If you stored your GCE credentials in a different location please update the paths of `CLOUD_IDENTITY` and `CLOUD_CREDENTIALS` 
-in your `simulator.properties` file.
-
-- You can also change the `MACHINE_SPEC` to change the instance type and operating system of the created GCE instances.
-
-- Execute the created `prepare` script to create the GCE instances and install Simulator on them.
-
-  ```
-  ./prepare
-  ```
-
-- Execute the created `run` script to run the TestSuite.
-
-  ```
-  ./run
-  ```
-
-- Execute the following command to destroy the created GCE instances.
-
-  ```
-  provisioner --terminate
-  ```
-
-Congratulations, you successfully ran Simulator on Google Compute Engine! Please refer to the 
-[Customizing your Simulator Setup section](#customizing-your-simulator-setup) to learn how to configure your test setup.
-
-![image](images/NoteSmall.jpg) ***NOTE***: *Creating the credential files in your home directory instead of directly setting the 
-access key ID and secret access key in the `simulator.properties` file is for security reasons. It is too easy to share your 
-credentials with the outside world. Now you can safely add the `simulator.properties` file in your source repository or share
- it with other people.*
-
 
 # Customizing your Simulator Setup
 
@@ -448,7 +373,7 @@ You can configure Simulator itself using the file `simulator.properties` in your
 simulator-wizard --compareSimulatorProperties
 ```
 
-Often changed properties are the `MACHINE_SPEC` to specify the instance type for cloud setups or the `VERSION_SPEC` to run Simulator
+Often changed properties are the `INSTANCE_TYPE` to specify the instance type for cloud setups or the `VERSION_SPEC` to run Simulator
  with a different Hazelcast version.
 
 Please refer to the [Simulator.Properties File Description section](#simulator-properties-file-description) for detailed 
