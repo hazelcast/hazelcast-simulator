@@ -17,17 +17,17 @@ package com.hazelcast.simulator.tests.icache.helpers;
 
 import com.hazelcast.cache.HazelcastCacheManager;
 import com.hazelcast.cache.ICache;
-import com.hazelcast.cache.impl.HazelcastServerCacheManager;
-import com.hazelcast.cache.impl.HazelcastServerCachingProvider;
-import com.hazelcast.client.cache.impl.HazelcastClientCacheManager;
-import com.hazelcast.client.cache.impl.HazelcastClientCachingProvider;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.logging.ILogger;
 
+import javax.cache.Caching;
 import javax.cache.expiry.Duration;
 import javax.cache.spi.CachingProvider;
+import java.net.URI;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import static com.hazelcast.cache.HazelcastCachingProvider.propertiesByInstanceItself;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberNode;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepTimeUnit;
 import static java.lang.String.format;
@@ -57,33 +57,30 @@ public final class CacheUtils {
         return cacheManager.getCache(cacheName).unwrap(ICache.class);
     }
 
+    /**
+     * Obtain the default CacheManager
+     * @param hazelcastInstance
+     * @return a CacheManager for the default URI & ClassLoader running on the provided HazelcastInstance
+     */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance) {
+        return createCacheManager(hazelcastInstance, null);
+    }
+
+    /**
+     * @param hazelcastInstance
+     * @param uri
+     * @return the CacheManager for given URI and default ClassLoader.
+     */
+    public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, URI uri) {
+        Properties properties = propertiesByInstanceItself(hazelcastInstance);
+        return (HazelcastCacheManager) getCachingProvider(hazelcastInstance).getCacheManager(uri, null, properties);
+    }
+
+    public static CachingProvider getCachingProvider(HazelcastInstance hazelcastInstance) {
         if (isMemberNode(hazelcastInstance)) {
-            return createCacheManager(hazelcastInstance, new HazelcastServerCachingProvider());
+            return Caching.getCachingProvider("com.hazelcast.cache.impl.HazelcastServerCachingProvider");
         } else {
-            return createCacheManager(hazelcastInstance, new HazelcastClientCachingProvider());
+            return Caching.getCachingProvider("com.hazelcast.client.cache.impl.HazelcastClientCachingProvider");
         }
-    }
-
-    public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, CachingProvider cachingProvider) {
-        if (isMemberNode(hazelcastInstance)) {
-            return createCacheManager(hazelcastInstance, (HazelcastServerCachingProvider) cachingProvider);
-        } else {
-            return createCacheManager(hazelcastInstance, (HazelcastClientCachingProvider) cachingProvider);
-        }
-    }
-
-    static HazelcastServerCacheManager createCacheManager(HazelcastInstance instance, HazelcastServerCachingProvider hcp) {
-        if (hcp == null) {
-            hcp = new HazelcastServerCachingProvider();
-        }
-        return new HazelcastServerCacheManager(hcp, instance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
-    }
-
-    static HazelcastClientCacheManager createCacheManager(HazelcastInstance instance, HazelcastClientCachingProvider hcp) {
-        if (hcp == null) {
-            hcp = new HazelcastClientCachingProvider();
-        }
-        return new HazelcastClientCacheManager(hcp, instance, hcp.getDefaultURI(), hcp.getDefaultClassLoader(), null);
     }
 }

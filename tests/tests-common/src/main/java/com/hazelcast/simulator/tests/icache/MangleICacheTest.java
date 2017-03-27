@@ -30,6 +30,10 @@ import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.spi.CachingProvider;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
 
 /**
  * In this tests we are intentionally creating, destroying, closing and using cache managers and their caches.
@@ -42,6 +46,8 @@ public class MangleICacheTest extends AbstractTest {
     // properties
     public int maxCaches = 100;
     public int keyCount = 100000;
+    // used to randomize cache manager names
+    public int cacheManagerMaxSuffix = 1000;
 
     private IList<ICacheOperationCounter> results;
 
@@ -157,12 +163,15 @@ public class MangleICacheTest extends AbstractTest {
         private CacheManager cacheManager;
 
         private void createNewCacheManager() {
-            CachingProvider currentCachingProvider = null;
             if (cacheManager != null) {
-                currentCachingProvider = cacheManager.getCachingProvider();
                 cacheManager.close();
             }
-            cacheManager = CacheUtils.createCacheManager(targetInstance, currentCachingProvider);
+            try {
+                URI uri = new URI(name + randomInt(cacheManagerMaxSuffix));
+                cacheManager = CacheUtils.createCacheManager(targetInstance, uri);
+            } catch (URISyntaxException e) {
+                throw rethrow(e);
+            }
         }
 
         private Cache<Integer, Integer> getCacheIfExists(int cacheNumber) {
