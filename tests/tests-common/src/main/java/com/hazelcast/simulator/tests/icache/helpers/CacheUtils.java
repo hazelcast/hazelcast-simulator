@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.icache.helpers;
 import com.hazelcast.cache.HazelcastCacheManager;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
+import org.apache.log4j.Logger;
 
 import javax.cache.Caching;
 import javax.cache.expiry.Duration;
@@ -37,7 +37,7 @@ public final class CacheUtils {
     private CacheUtils() {
     }
 
-    public static void sleepDurationTwice(ILogger logger, Duration duration) {
+    public static void sleepDurationTwice(Logger logger, Duration duration) {
         if (duration.isEternal() || duration.isZero()) {
             return;
         }

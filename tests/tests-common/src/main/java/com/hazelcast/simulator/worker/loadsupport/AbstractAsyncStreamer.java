@@ -17,11 +17,10 @@ package com.hazelcast.simulator.worker.loadsupport;
 
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.utils.ExceptionReporter;
 import com.hazelcast.simulator.utils.ThrottlingLogger;
 import com.hazelcast.spi.exception.TargetDisconnectedException;
+import org.apache.log4j.Logger;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
@@ -35,7 +34,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 abstract class AbstractAsyncStreamer<K, V> implements Streamer<K, V> {
 
-    private static final ILogger LOGGER = Logger.getLogger(AbstractAsyncStreamer.class);
+    private static final Logger LOGGER = Logger.getLogger(AbstractAsyncStreamer.class);
 
     private static final long DEFAULT_TIMEOUT_MINUTES = 2;
     private static final int MAXIMUM_LOGGING_RATE_MILLIS = 5000;

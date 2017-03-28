@@ -6,8 +6,9 @@ import com.hazelcast.simulator.worker.metronome.*;
 import com.hazelcast.simulator.probes.*;
 import com.hazelcast.simulator.utils.*;
 
+import org.apache.log4j.*;
+
 import java.util.*;
-import java.util.logging.*;
 import java.util.concurrent.atomic.*;
 
 public class ${className} extends TimeStepRunner {

@@ -51,7 +51,7 @@ public class ConcurrentCreateICacheTest extends AbstractTest {
             cacheManager.createCache(name, config);
             counter.create++;
         } catch (CacheException e) {
-            logger.severe(name + ": createCache exception " + e, e);
+            logger.fatal(name + ": createCache exception " + e, e);
             counter.createException++;
         }
         counterList.add(counter);

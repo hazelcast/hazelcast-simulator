@@ -95,7 +95,7 @@ public class MapTransactionTest extends AbstractTest {
             if (reThrowTransactionException) {
                 throw rethrow(e);
             }
-            logger.warning(name + ": caught TransactionException ", e);
+            logger.warn(name + ": caught TransactionException ", e);
         }
     }
 

@@ -15,12 +15,12 @@
  */
 package com.hazelcast.simulator.worker.testcontainer;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+
 import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.worker.metronome.Metronome;
+import org.apache.log4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -37,7 +37,7 @@ public abstract class TimeStepRunner implements Runnable {
     protected TestContext testContext;
     protected Metronome metronome;
 
-    protected final ILogger logger = Logger.getLogger(getClass());
+    protected final Logger logger = Logger.getLogger(getClass());
     protected final String executionGroup;
     protected final Object threadState;
     protected final Object testInstance;
@@ -91,7 +91,7 @@ public abstract class TimeStepRunner implements Runnable {
 
             logger.info(threadName + " completed normally" + (explicitStop ? " with StopException" : ""));
         } catch (Throwable e) {
-            logger.warning(threadName + " completed with exception " + e.getClass().getName()
+            logger.warn(threadName + " completed with exception " + e.getClass().getName()
                     + " message: " + e.getMessage());
             throw rethrow(e);
         }

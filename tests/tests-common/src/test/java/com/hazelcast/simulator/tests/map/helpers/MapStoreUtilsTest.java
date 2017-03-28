@@ -1,9 +1,8 @@
 package com.hazelcast.simulator.tests.map.helpers;
 
-import com.hazelcast.logging.ILogger;
+import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import static com.hazelcast.logging.Logger.getLogger;
 import static com.hazelcast.simulator.tests.map.helpers.MapStoreUtils.assertMapStoreConfiguration;
 import static com.hazelcast.simulator.utils.ReflectionUtils.invokePrivateConstructor;
 
@@ -11,7 +10,7 @@ public class MapStoreUtilsTest {
 
     private static final String MAP_NAME = "mapName";
 
-    private static final ILogger LOGGER = getLogger(MapStoreUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(MapStoreUtils.class);
 
     @Test
     public void testConstructor() throws Exception {

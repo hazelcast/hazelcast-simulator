@@ -15,10 +15,10 @@
  */
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.logging.ILogger;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -29,10 +29,10 @@ public final class ThrottlingLogger {
 
     private final AtomicLong nextMessageNotBefore = new AtomicLong();
 
-    private final ILogger delegate;
+    private final Logger delegate;
     private final long maximumRateNanos;
 
-    public ThrottlingLogger(ILogger delegate, long maximumRateMs) {
+    public ThrottlingLogger(Logger delegate, long maximumRateMs) {
         if (delegate == null) {
             throw new IllegalArgumentException("Logger cannot be null");
         }
@@ -45,20 +45,20 @@ public final class ThrottlingLogger {
         this.maximumRateNanos = MILLISECONDS.toNanos(maximumRateMs);
     }
 
-    public static ThrottlingLogger newLogger(ILogger delegate, long maximumRateMs) {
+    public static ThrottlingLogger newLogger(Logger delegate, long maximumRateMs) {
         return new ThrottlingLogger(delegate, maximumRateMs);
     }
 
     public void finest(String message) {
-        log(Level.FINEST, message);
+        log(Level.TRACE, message);
     }
 
     public void finer(String message) {
-        log(Level.FINER, message);
+        log(Level.TRACE, message);
     }
 
     public void fine(String message) {
-        log(Level.FINE, message);
+        log(Level.DEBUG, message);
     }
 
     public void info(String message) {
@@ -66,15 +66,15 @@ public final class ThrottlingLogger {
     }
 
     public void warn(String message) {
-        log(Level.WARNING, message);
+        log(Level.WARN, message);
     }
 
     public void severe(String message) {
-        log(Level.SEVERE, message);
+        log(Level.FATAL, message);
     }
 
     public void log(Level level, String message) {
-        if (!delegate.isLoggable(level)) {
+        if (!delegate.isEnabledFor(level)) {
             return;
         }
 
@@ -98,7 +98,7 @@ public final class ThrottlingLogger {
     }
 
     public void logInSlot(Level level, String message) {
-        if (!delegate.isLoggable(level)) {
+        if (!delegate.isEnabledFor(level)) {
             return;
         }
 
