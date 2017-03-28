@@ -29,7 +29,6 @@ import com.hazelcast.simulator.tests.icache.helpers.ICacheOperationCounter;
 import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
-import javax.cache.spi.CachingProvider;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -59,19 +58,6 @@ public class MangleICacheTest extends AbstractTest {
     @BeforeRun
     public void beforeRun(ThreadState state) {
         state.createNewCacheManager();
-    }
-
-    @TimeStep(prob = 0.1)
-    public void cachingProviderClose(ThreadState state) {
-        try {
-            CachingProvider provider = state.cacheManager.getCachingProvider();
-            if (provider != null) {
-                provider.close();
-                state.counter.cachingProviderClose++;
-            }
-        } catch (CacheException e) {
-            state.counter.cachingProviderCloseException++;
-        }
     }
 
     @TimeStep(prob = 0.1)
@@ -136,7 +122,7 @@ public class MangleICacheTest extends AbstractTest {
         }
     }
 
-    @TimeStep(prob = 0.3)
+    @TimeStep(prob = 0.4)
     public void putCache(ThreadState state) {
         int cacheNumber = state.randomInt(maxCaches);
         Cache<Integer, Integer> cache = state.getCacheIfExists(cacheNumber);
