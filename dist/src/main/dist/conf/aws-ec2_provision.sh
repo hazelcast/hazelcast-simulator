@@ -216,7 +216,7 @@ post_init(){
             set -e
 
             if [ "$status" -eq "0" ]; then
-                echo "[INFO]Agent machine $public_ip is online"
+                echo "[INFO]Agent machine $public_ip online"
                 ok=1
                 break
             fi
