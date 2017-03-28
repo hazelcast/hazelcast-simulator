@@ -25,8 +25,8 @@ ssh_test(){
     set -e
 
     if [ "$status" -ne "0" ]; then
-         ((ssh_test_errors+=1))
-         echo [ERROR]Failed to connect to agent $agent
+        ((ssh_test_errors+=1))
+        echo "[ERROR]  Agent $agent is offline!"
     else
         echo "[INFO]    Agent $agent is online"
     fi
