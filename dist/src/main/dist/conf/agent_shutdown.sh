@@ -19,7 +19,7 @@ kill_agent_local(){
 kill_agents_remote(){
     agent=$1
 
-    echo "[INFO]Killing agent ${agent}"
+    echo "[INFO]    Killing agent ${agent}"
 
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "hazelcast-simulator-$SIMULATOR_VERSION/bin/.kill-from-pid-file agent.pid"
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "rm agent.pid || true"
