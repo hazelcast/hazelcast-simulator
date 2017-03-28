@@ -15,7 +15,6 @@
  */
 package com.hazelcast.simulator.utils;
 
-import com.hazelcast.simulator.common.RunMode;
 import com.hazelcast.simulator.common.SimulatorProperties;
 
 public final class CloudProviderUtils {
@@ -34,17 +33,6 @@ public final class CloudProviderUtils {
 
     public static boolean isLocal(SimulatorProperties properties) {
         return isLocal(properties.getCloudProvider());
-    }
-
-    public static RunMode runMode(SimulatorProperties properties) {
-        String provider = properties.getCloudProvider();
-        if (provider.equals("embedded")) {
-            return RunMode.Embedded;
-        } else if (provider.equals("local")) {
-            return RunMode.Local;
-        } else {
-            return RunMode.Remote;
-        }
     }
 
     public static boolean isTrueCloud(String cloudProvider) {

@@ -29,7 +29,6 @@ import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
-import com.hazelcast.simulator.coordinator.tasks.InstallVendorTask;
 import com.hazelcast.simulator.coordinator.tasks.KillWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
@@ -58,6 +57,7 @@ import java.util.concurrent.Future;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.startAgents;
 import static com.hazelcast.simulator.coordinator.AgentUtils.stopAgents;
+import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.ensureNewDirectory;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
@@ -65,7 +65,6 @@ import static com.hazelcast.simulator.utils.TagUtils.matches;
 import static com.hazelcast.simulator.vendors.VendorDriver.loadVendorDriver;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
-import static java.util.Collections.singleton;
 
 @SuppressWarnings({"checkstyle:classdataabstractioncoupling", "checkstyle:classfanoutcomplexity"})
 public class Coordinator implements Closeable {
@@ -113,11 +112,7 @@ public class Coordinator implements Closeable {
 
         startClient();
 
-        new InstallVendorTask(
-                simulatorProperties,
-                registry.getAgentIps(),
-                singleton(simulatorProperties.getVersionSpec()),
-                parameters.getSessionId()).run();
+        install(simulatorProperties.getVersionSpec());
 
         initCoordinatorRemote();
 
@@ -181,7 +176,7 @@ public class Coordinator implements Closeable {
         stopAgents(simulatorProperties, registry);
 
         if (!parameters.skipDownload()) {
-            new DownloadTask(registry.getAgentIps(),
+            new DownloadTask(publicAddresses(registry.getAgents()),
                     simulatorProperties.asMap(),
                     outputDirectory.getParentFile(),
                     parameters.getSessionId()).run();
@@ -226,14 +221,11 @@ public class Coordinator implements Closeable {
     }
 
     public void download() throws Exception {
-        LOGGER.info("Downloading...");
-
-        new DownloadTask(registry.getAgentIps(),
+        new DownloadTask(publicAddresses(registry.getAgents()),
                 simulatorProperties.asMap(),
                 outputDirectory.getParentFile(),
                 parameters.getSessionId()).run();
 
-        LOGGER.info("Downloading complete!");
     }
 
     public void exit() throws Exception {
@@ -255,13 +247,11 @@ public class Coordinator implements Closeable {
     }
 
     public void install(String versionSpec) throws Exception {
-        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + registry.getAgents().size() + " agents...");
-        new InstallVendorTask(
-                simulatorProperties,
-                registry.getAgentIps(),
-                singleton(versionSpec),
-                parameters.getSessionId()).run();
-        LOGGER.info("Install successful!");
+        loadVendorDriver(simulatorProperties.get("VENDOR"))
+                .setAll(simulatorProperties.asPublicMap())
+                .set("VERSION_SPEC", versionSpec)
+                .setAgents(registry.getAgents())
+                .install();
     }
 
     public String printLayout() throws Exception {

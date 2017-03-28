@@ -19,8 +19,8 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.utils.BashCommand;
 
+import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddressesString;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
-import static com.hazelcast.simulator.utils.FormatUtils.join;
 
 public final class AgentUtils {
 
@@ -29,7 +29,7 @@ public final class AgentUtils {
 
     public static void onlineCheckAgents(SimulatorProperties properties, Registry registry) {
         new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
-                .addParams(join(registry.getAgentIps(), ","))
+                .addParams(publicAddressesString(registry))
                 .addEnvironment(properties.asMap())
                 .dumpOutputOnError(false)
                 .execute();
@@ -39,7 +39,7 @@ public final class AgentUtils {
         String startScript = getConfigurationFile("agent_start.sh").getAbsolutePath();
 
         new BashCommand(startScript)
-                .addParams(join(registry.getAgentIps(), ","))
+                .addParams(publicAddressesString(registry))
                 .addEnvironment(properties.asMap())
                 .execute();
     }
@@ -48,7 +48,7 @@ public final class AgentUtils {
         String shutdownScript = getConfigurationFile("agent_shutdown.sh").getAbsolutePath();
 
         new BashCommand(shutdownScript)
-                .addParams(join(registry.getAgentIps(), ","))
+                .addParams(publicAddressesString(registry))
                 .addEnvironment(properties.asMap())
                 .execute();
     }

@@ -51,6 +51,9 @@ public abstract class VendorDriver<V> implements Closeable {
         }
     }
 
+    public void install() {
+    }
+
     protected String get(String name, String defaultValue) {
         String value = properties.get(name);
         return value == null ? defaultValue : value;

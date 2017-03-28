@@ -16,6 +16,7 @@
 package com.hazelcast.simulator.coordinator.tasks;
 
 import com.hazelcast.simulator.utils.BashCommand;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -30,6 +31,8 @@ import static com.hazelcast.simulator.utils.FormatUtils.join;
  * The real work is done by the 'download.sh' script.
  */
 public class DownloadTask {
+    private static final Logger LOGGER = Logger.getLogger(DownloadTask.class);
+
     private final List<String> agents;
     private final Map<String, String> simulatorProperties;
     private final File rootDir;
@@ -46,11 +49,15 @@ public class DownloadTask {
     }
 
     public void run() {
+        LOGGER.info("Downloading...");
+
         String installFile = getConfigurationFile("download.sh").getAbsolutePath();
         String agentIps = join(agents, ",");
         new BashCommand(installFile)
                 .addEnvironment(simulatorProperties)
                 .addParams(rootDir.getAbsolutePath(), sessionId, agentIps)
                 .execute();
+
+        LOGGER.info("Downloading complete!");
     }
 }

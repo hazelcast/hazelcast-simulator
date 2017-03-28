@@ -68,10 +68,6 @@ public class Registry {
         return agent;
     }
 
-    public int getInitialTestIndex() {
-        return testIndexGenerator.get();
-    }
-
     public void assignDedicatedMemberMachines(int dedicatedMemberMachineCount) {
         if (dedicatedMemberMachineCount < 0) {
             throw new CommandLineExitException("dedicatedMemberMachines can't be smaller than 0");
@@ -114,14 +110,6 @@ public class Registry {
         }
 
         return null;
-    }
-
-    public List<String> getAgentIps() {
-        List<String> result = new ArrayList<String>();
-        for (AgentData agent : agents) {
-            result.add(agent.getPublicAddress());
-        }
-        return result;
     }
 
     public List<AgentData> getAgents(int count) {
