@@ -101,14 +101,14 @@ class Provisioner {
         ensureIsRemoteSetup(properties, "installJava");
 
         long started = System.nanoTime();
-        echoImportant("Installing JAVA on %d machines...", registry.agentCount());
+        echoImportant("Installing Java on %d machines...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installJava", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Installing JAVA on %s", agent.getPublicAddress());
+                    echo("Installing Java on %s", agent.getPublicAddress());
                     uploadJava(agent.getPublicAddress());
                 }
             });
@@ -116,7 +116,7 @@ class Provisioner {
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished installing JAVA on %d machines (%s seconds)", registry.agentCount(), elapsed);
+        echoImportant("Finished installing Java on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void installSimulator() {
@@ -435,13 +435,13 @@ class Provisioner {
         @Override
         public void run() {
             if (!"outofthebox".equals(properties.getJdkFlavor())) {
-                echo(INDENTATION + ip + " JAVA INSTALLATION STARTED...");
+                echo(INDENTATION + ip + " Java installation started...");
                 uploadJava(ip);
-                echo(INDENTATION + ip + " JAVA INSTALLED");
+                echo(INDENTATION + ip + " Java Installed");
             }
-            echo(INDENTATION + ip + " SIMULATOR INSTALLATION STARTED...");
+            echo(INDENTATION + ip + " Simulator installation started...");
             uploadJARs(ip);
-            echo(INDENTATION + ip + " SIMULATOR INSTALLED");
+            echo(INDENTATION + ip + " Simulator installed");
 
             if (startHarakiriMonitorCommand != null) {
                 bash.ssh(ip, startHarakiriMonitorCommand);
