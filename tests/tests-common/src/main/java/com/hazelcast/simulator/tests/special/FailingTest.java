@@ -170,7 +170,7 @@ public class FailingTest extends AbstractTest {
                 break;
             }
         }
-        logger.severe("We should never reach this code! List size: " + list.size());
+        logger.fatal("We should never reach this code! List size: " + list.size());
     }
 
     private boolean matchingType(Type type) {

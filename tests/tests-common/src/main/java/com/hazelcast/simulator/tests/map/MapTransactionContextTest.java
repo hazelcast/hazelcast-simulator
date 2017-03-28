@@ -59,7 +59,7 @@ public class MapTransactionContextTest extends AbstractTest {
 
             transactionContext.commitTransaction();
         } catch (Exception e) {
-            logger.severe("----------------------tx exception -------------------------", e);
+            logger.fatal("----------------------tx exception -------------------------", e);
 
             if (failOnException) {
                 throw rethrow(e);

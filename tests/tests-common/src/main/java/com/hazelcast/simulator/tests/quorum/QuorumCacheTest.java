@@ -82,9 +82,9 @@ public class QuorumCacheTest extends AbstractTest {
     private void doProtectedOperation(Long key, long value) {
         try {
             cache.put(key, value);
-            logger.warning("Detected Grace Period. Ignoring Operation succeeded behaviour.");
+            logger.warn("Detected Grace Period. Ignoring Operation succeeded behaviour.");
         } catch (QuorumException qe) {
-            logger.warning("Detected Grace Period. Ignoring Quorum Exception.");
+            logger.warn("Detected Grace Period. Ignoring Quorum Exception.");
         }
     }
 
@@ -96,7 +96,7 @@ public class QuorumCacheTest extends AbstractTest {
         }
         int memberCount = getMemberCount();
         if (lastChange.clusterSize != memberCount) {
-            logger.warning("Detected cluster change from "
+            logger.warn("Detected cluster change from "
                     + lastChange.clusterSize + " to " + memberCount);
             lastChange = new LastClusterSizeChange(
                     System.currentTimeMillis(), memberCount);

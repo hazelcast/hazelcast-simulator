@@ -18,8 +18,8 @@ package com.hazelcast.simulator.tests.map.helpers;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MapStore;
-import com.hazelcast.logging.ILogger;
 import com.hazelcast.simulator.test.TestException;
+import org.apache.log4j.Logger;
 
 import static com.hazelcast.config.MapStoreConfig.InitialLoadMode.LAZY;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isClient;
@@ -30,7 +30,7 @@ public final class MapStoreUtils {
     private MapStoreUtils() {
     }
 
-    public static void assertMapStoreConfiguration(ILogger logger, HazelcastInstance instance, String mapName,
+    public static void assertMapStoreConfiguration(Logger logger, HazelcastInstance instance, String mapName,
                                                    Class<? extends MapStore> mapStoreImplementation) {
         if (isClient(instance)) {
             return;
@@ -43,7 +43,7 @@ public final class MapStoreUtils {
     }
 
     private static void assertMapStoreConfig(String expectedMapStoreName, String mapName, MapStoreConfig mapStoreConfig,
-                                             ILogger logger) {
+                                             Logger logger) {
         if (mapStoreConfig == null) {
             throw new TestException("MapStore for map %s needs to be configured with class %s, but was not configured at all",
                     mapName, expectedMapStoreName);

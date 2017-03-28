@@ -16,10 +16,9 @@
 package com.hazelcast.simulator.test;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
+import org.apache.log4j.Logger;
 
 /**
  * An Abstract Test that provides basic behavior so it doesn't need to be repeated for every test.
@@ -37,7 +36,7 @@ public abstract class AbstractTest {
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public String name = getClass().getSimpleName();
 
-    protected final ILogger logger = Logger.getLogger(getClass());
+    protected final Logger logger = Logger.getLogger(getClass());
 
     @InjectVendor
     protected HazelcastInstance targetInstance;

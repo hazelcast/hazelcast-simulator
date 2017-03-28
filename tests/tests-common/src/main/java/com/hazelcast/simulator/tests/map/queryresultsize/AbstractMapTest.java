@@ -61,7 +61,7 @@ abstract class AbstractMapTest extends AbstractTest {
             minResultSizeLimit = getStaticFieldValue(queryResultSizeLimiterClazz, "MINIMUM_MAX_RESULT_LIMIT", int.class);
             resultLimitFactor = getStaticFieldValue(queryResultSizeLimiterClazz, "MAX_RESULT_LIMIT_FACTOR", float.class);
         } catch (Exception e) {
-            logger.warning(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", name));
+            logger.warn(format("%s: QueryResultSizeLimiter is not implemented in this Hazelcast version", name));
         }
 
         int clusterSize = targetInstance.getCluster().getMembers().size();

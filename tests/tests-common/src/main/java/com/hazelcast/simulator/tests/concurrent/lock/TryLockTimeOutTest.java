@@ -81,7 +81,7 @@ public class TryLockTimeOutTest extends AbstractTest {
                             }
                         }
                     } catch (InterruptedException e) {
-                        logger.severe("innerLock " + e.getMessage(), e);
+                        logger.fatal("innerLock " + e.getMessage(), e);
                         state.counter.interruptedException++;
                     }
                 } finally {
@@ -89,7 +89,7 @@ public class TryLockTimeOutTest extends AbstractTest {
                 }
             }
         } catch (InterruptedException e) {
-            logger.severe("outerLock " + e.getMessage(), e);
+            logger.fatal("outerLock " + e.getMessage(), e);
             state.counter.interruptedException++;
         }
     }

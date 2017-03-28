@@ -100,13 +100,13 @@ public class LockConflictTest extends AbstractTest {
                             localCounter.locked++;
                         }
                     } catch (Exception e) {
-                        logger.severe(name + ": trying lock=" + keyIncrementPair.key, e);
+                        logger.fatal(name + ": trying lock=" + keyIncrementPair.key, e);
                         if (throwException) {
                             throw rethrow(e);
                         }
                     }
                 } catch (Exception e) {
-                    logger.severe(name + ": getting lock for locking=" + keyIncrementPair.key, e);
+                    logger.fatal(name + ": getting lock for locking=" + keyIncrementPair.key, e);
                     if (throwException) {
                         throw rethrow(e);
                     }
@@ -124,7 +124,7 @@ public class LockConflictTest extends AbstractTest {
                     localIncrements[keyIncrementPair.key] += keyIncrementPair.increment;
                     localCounter.increased++;
                 } catch (Exception e) {
-                    logger.severe(name + ": updating account=" + keyIncrementPair, e);
+                    logger.fatal(name + ": updating account=" + keyIncrementPair, e);
                     if (throwException) {
                         throw rethrow(e);
                     }
@@ -145,13 +145,13 @@ public class LockConflictTest extends AbstractTest {
                             localCounter.unlocked++;
                             iterator.remove();
                         } catch (Exception e) {
-                            logger.severe(name + ": unlocking lock =" + keyIncrementPair.key, e);
+                            logger.fatal(name + ": unlocking lock =" + keyIncrementPair.key, e);
                             if (throwException) {
                                 throw rethrow(e);
                             }
                         }
                     } catch (Exception e) {
-                        logger.severe(name + ": getting lock for unlocking=" + keyIncrementPair.key, e);
+                        logger.fatal(name + ": getting lock for unlocking=" + keyIncrementPair.key, e);
                         if (throwException) {
                             throw rethrow(e);
                         }

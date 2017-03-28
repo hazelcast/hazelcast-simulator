@@ -123,7 +123,7 @@ public class ExecutorTest extends AbstractTest {
         for (IExecutorService executor : executors) {
             executor.shutdownNow();
             if (!executor.awaitTermination(120, TimeUnit.SECONDS)) {
-                logger.severe("Time out while waiting for shutdown of executor: " + executor.getName());
+                logger.fatal("Time out while waiting for shutdown of executor: " + executor.getName());
             }
             executor.destroy();
         }

@@ -53,7 +53,6 @@ public class ProducerConsumerTest extends AbstractTest {
 
     @AfterRun(executionGroup = "producer")
     public void afterRun(ProducerState state) {
-        logger.severe("AfterRun(ProducerState) caller with state: " + state.produced);
         produced.addAndGet(state.produced);
         workQueue.add(-1L);
     }
@@ -76,7 +75,6 @@ public class ProducerConsumerTest extends AbstractTest {
 
     @AfterRun(executionGroup = "consumer")
     public void afterRun(ConsumerState state) {
-        logger.severe("AfterRun(ConsumerState) caller with state: " + state.consumed);
         consumed.addAndGet(state.consumed);
     }
 

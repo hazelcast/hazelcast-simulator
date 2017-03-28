@@ -27,14 +27,13 @@ import com.hazelcast.instance.BuildInfoProvider;
 import com.hazelcast.instance.HazelcastInstanceImpl;
 import com.hazelcast.instance.HazelcastInstanceProxy;
 import com.hazelcast.instance.Node;
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
 import com.hazelcast.map.impl.MapService;
 import com.hazelcast.map.impl.MapServiceContext;
 import com.hazelcast.map.impl.proxy.MapProxyImpl;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.operationservice.InternalOperationService;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -55,7 +54,7 @@ import static org.junit.Assert.fail;
 
 public final class HazelcastTestUtils {
 
-    private static final ILogger LOGGER = Logger.getLogger(HazelcastTestUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(HazelcastTestUtils.class);
 
     private HazelcastTestUtils() {
     }
@@ -142,7 +141,7 @@ public final class HazelcastTestUtils {
         return result;
     }
 
-    public static void logPartitionStatistics(ILogger log, String name, IMap<Object, Integer> map, boolean printSizes) {
+    public static void logPartitionStatistics(Logger log, String name, IMap<Object, Integer> map, boolean printSizes) {
         MapProxyImpl mapProxy = (MapProxyImpl) map;
         MapService mapService = (MapService) mapProxy.getService();
         MapServiceContext mapServiceContext = mapService.getMapServiceContext();
@@ -175,7 +174,7 @@ public final class HazelcastTestUtils {
                 InternalOperationService operationService = HazelcastTestUtils.getOperationService(hz);
                 return operationService.getExecutedOperationCount();
             } catch (NoSuchMethodError e) {
-                LOGGER.warning(e);
+                LOGGER.warn(e);
                 return -1L;
             }
         }
@@ -186,7 +185,7 @@ public final class HazelcastTestUtils {
         }
     }
 
-    public static void waitClusterSize(ILogger logger, HazelcastInstance hz, int clusterSize) {
+    public static void waitClusterSize(org.apache.log4j.Logger logger, HazelcastInstance hz, int clusterSize) {
         for (; ; ) {
             if (hz.getCluster().getMembers().size() >= clusterSize) {
                 return;

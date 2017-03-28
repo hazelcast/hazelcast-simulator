@@ -107,7 +107,7 @@ public class MapTransactionContextConflictTest extends AbstractTest {
                         localIncrements[p.key] += p.increment;
                     }
                 } catch (TransactionException commitException) {
-                    logger.warning(name + ": commit failed. tried key increments=" + putIncrements, commitException);
+                    logger.warn(name + ": commit failed. tried key increments=" + putIncrements, commitException);
                     if (throwCommitException) {
                         throw rethrow(commitException);
                     }
@@ -116,7 +116,7 @@ public class MapTransactionContextConflictTest extends AbstractTest {
                         context.rollbackTransaction();
                         count.rolled++;
                     } catch (TransactionException rollBackException) {
-                        logger.warning(name + ": rollback failed " + rollBackException.getMessage(), rollBackException);
+                        logger.warn(name + ": rollback failed " + rollBackException.getMessage(), rollBackException);
                         count.failedRollbacks++;
 
                         if (throwRollBackException) {

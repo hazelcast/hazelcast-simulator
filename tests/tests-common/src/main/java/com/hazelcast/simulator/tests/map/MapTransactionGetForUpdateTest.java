@@ -101,7 +101,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
                 } catch (Exception commitFailedException) {
                     if (context != null) {
                         try {
-                            logger.warning(name + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
+                            logger.warn(name + ": commit failed key=" + key + " inc=" + increment, commitFailedException);
                             if (rethrowAllException) {
                                 throw rethrow(commitFailedException);
                             }
@@ -109,7 +109,7 @@ public class MapTransactionGetForUpdateTest extends AbstractTest {
                             context.rollbackTransaction();
                             count.rolled++;
                         } catch (Exception rollBackFailedException) {
-                            logger.warning(name + ": rollback failed key=" + key + " inc=" + increment,
+                            logger.warn(name + ": rollback failed key=" + key + " inc=" + increment,
                                     rollBackFailedException);
                             count.failedRollbacks++;
 

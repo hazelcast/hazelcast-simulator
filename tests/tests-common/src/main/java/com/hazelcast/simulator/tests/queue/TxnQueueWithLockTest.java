@@ -67,14 +67,14 @@ public class TxnQueueWithLockTest extends AbstractTest {
                     ctx.rollbackTransaction();
                     state.counter.rolled++;
 
-                    logger.severe(name + ": Exception in txn " + state.counter, txnException);
+                    logger.fatal(name + ": Exception in txn " + state.counter, txnException);
                 } catch (Exception rollException) {
                     state.counter.failedRollbacks++;
-                    logger.severe(name + ": Exception in roll " + state.counter, rollException);
+                    logger.fatal(name + ": Exception in roll " + state.counter, rollException);
                 }
             }
         } catch (Exception e) {
-            logger.severe(name + ": outer Exception" + state.counter, e);
+            logger.fatal(name + ": outer Exception" + state.counter, e);
         } finally {
             firstLock.unlock();
         }

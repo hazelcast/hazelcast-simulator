@@ -68,7 +68,7 @@ public class LeaseLockTest extends AbstractTest {
             if (isLocked) {
                 String message = format("%s is locked with remainingLeaseTime: %d ms", lock, remainingLeaseTime);
                 if (allowZeroMillisRemainingLeaseLockTime && remainingLeaseTime == 0) {
-                    logger.warning(message);
+                    logger.warn(message);
                 } else {
                     fail(message);
                 }

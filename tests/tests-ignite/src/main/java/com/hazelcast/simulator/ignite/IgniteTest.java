@@ -15,13 +15,14 @@
  */
 package com.hazelcast.simulator.ignite;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 import org.apache.ignite.Ignite;
+import org.apache.log4j.Logger;
+
 
 public class IgniteTest {
     /**
@@ -32,7 +33,7 @@ public class IgniteTest {
     @SuppressWarnings("checkstyle:visibilitymodifier")
     public String name = getClass().getSimpleName();
 
-    protected final ILogger logger = Logger.getLogger(getClass());
+    protected final Logger logger = Logger.getLogger(getClass());
 
     @InjectVendor
     protected Ignite ignite;

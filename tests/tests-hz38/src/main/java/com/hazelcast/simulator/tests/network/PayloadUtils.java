@@ -15,15 +15,14 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.logging.ILogger;
-import com.hazelcast.logging.Logger;
+import org.apache.log4j.Logger;
 
 import static java.lang.String.format;
 
 public final class PayloadUtils {
 
     public static final boolean COMPRESS_HEX_OUTPUT = true;
-    private static final ILogger LOGGER = Logger.getLogger(PayloadUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(PayloadUtils.class);
 
     private PayloadUtils() {
     }
