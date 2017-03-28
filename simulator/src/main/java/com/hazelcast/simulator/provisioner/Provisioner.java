@@ -101,14 +101,14 @@ class Provisioner {
         ensureIsRemoteSetup(properties, "installJava");
 
         long started = System.nanoTime();
-        echoImportant("Installing Java on %d machines...", registry.agentCount());
+        logWithRuler("Installing Java on %d machines...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installJava", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Installing Java on %s", agent.getPublicAddress());
+                    log("Installing Java on %s", agent.getPublicAddress());
                     uploadJava(agent.getPublicAddress());
                 }
             });
@@ -116,7 +116,7 @@ class Provisioner {
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished installing Java on %d machines (%s seconds)", registry.agentCount(), elapsed);
+        logWithRuler("Finished installing Java on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void installSimulator() {
@@ -124,23 +124,23 @@ class Provisioner {
         ensureIsRemoteSetup(properties, "install");
 
         long started = System.nanoTime();
-        echoImportant("Installing Simulator on %d machines...", registry.agentCount());
+        logWithRuler("Installing Simulator on %d machines...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("installSimulator", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Installing Simulator on %s", agent.getPublicAddress());
+                    log("    Installing Simulator on %s", agent.getPublicAddress());
                     uploadJARs(agent.getPublicAddress());
-                    echo("Finished installing Simulator on %s", agent.getPublicAddress());
+                    log("    Finished installing Simulator on %s", agent.getPublicAddress());
                 }
             });
         }
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Finished installing Simulator on %d machines (%s seconds)", registry.agentCount(), elapsed);
+        logWithRuler("Finished installing Simulator on %d machines (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void killJavaProcesses(final boolean sudo) {
@@ -148,14 +148,14 @@ class Provisioner {
         ensureIsRemoteSetup(properties, "kill");
 
         long started = System.nanoTime();
-        echoImportant("Killing %s Java processes...", registry.agentCount());
+        logWithRuler("Killing %s Java processes...", registry.agentCount());
 
         ThreadSpawner spawner = new ThreadSpawner("killJavaProcesses", true);
         for (final AgentData agent : registry.getAgents()) {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    echo("Killing Java processes on %s", agent.getPublicAddress());
+                    log("Killing Java processes on %s", agent.getPublicAddress());
                     bash.killAllJavaProcesses(agent.getPublicAddress(), sudo);
                 }
             });
@@ -163,7 +163,7 @@ class Provisioner {
         spawner.awaitCompletion();
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Successfully killed %s Java processes (%s seconds)", registry.agentCount(), elapsed);
+        logWithRuler("Successfully killed %s Java processes (%s seconds)", registry.agentCount(), elapsed);
     }
 
     void terminate() {
@@ -178,9 +178,9 @@ class Provisioner {
         int agentSize = registry.agentCount();
         int delta = size - agentSize;
         if (delta == 0) {
-            echo("Current number of machines: " + agentSize);
-            echo("Desired number of machines: " + (agentSize + delta));
-            echo("Ignoring spawn machines, desired number of machines already exists.");
+            log("Current number of machines: " + agentSize);
+            log("Desired number of machines: " + (agentSize + delta));
+            log("Ignoring spawn machines, desired number of machines already exists.");
         } else if (delta > 0) {
             scaleUp(delta, tags);
         } else {
@@ -189,39 +189,38 @@ class Provisioner {
     }
 
     void shutdown() {
-        echo("Shutting down Provisioner...");
+        log("Shutting down Provisioner...");
 
         // shutdown thread pool
         executor.shutdown();
         awaitTermination(executor, EXECUTOR_TERMINATION_TIMEOUT_SECONDS, SECONDS);
 
-        echo("Done!");
+        log("Done!");
     }
 
     @SuppressWarnings("PMD.PreserveStackTrace")
     private void scaleUp(int delta, Map<String, String> tags) {
-        echoImportant("Provisioning %s %s machines", delta, properties.getCloudProvider());
-        echo("Current number of machines: " + registry.agentCount());
-        echo("Desired number of machines: " + (registry.agentCount() + delta));
+        logWithRuler("Provisioning %s %s machines", delta, properties.getCloudProvider());
+        log("Current number of machines: " + registry.agentCount());
+        log("Desired number of machines: " + (registry.agentCount() + delta));
 
         String groupName = properties.get("GROUP_NAME", "simulator-agent");
-        echo("GroupName: " + groupName);
-        echo("Username: " + properties.getUser());
-        echo("Using init script: " + initScriptFile.getAbsolutePath());
+        log("GroupName: " + groupName);
+        log("Username: " + properties.getUser());
+        log("Using init script: " + initScriptFile.getAbsolutePath());
 
         String jdkFlavor = properties.getJdkFlavor();
         if ("outofthebox".equals(jdkFlavor)) {
-            echo("JDK spec: outofthebox");
+            log("JDK spec: outofthebox");
         } else {
             String jdkVersion = properties.getJdkVersion();
-            echo("JDK spec: %s %s", jdkFlavor, jdkVersion);
+            log("JDK spec: %s %s", jdkFlavor, jdkVersion);
         }
 
         long started = System.nanoTime();
-        //Template template = new TemplateBuilder(computeService, properties).build();
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
         try {
-            echo("Creating machines (can take a few minutes)...");
+            log("Creating machines (can take a few minutes)...");
 //            Set<Future> futures = new HashSet<Future>();
 //            for (int batch : calcBatches(properties, delta)) {
 //
@@ -255,11 +254,11 @@ class Provisioner {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
-        echo("Pausing for machine warmup... (%d sec)", machineWarmupSeconds);
+        log("Pausing for machine warmup... (%d sec)", machineWarmupSeconds);
         sleepSeconds(machineWarmupSeconds);
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Successfully provisioned %s %s machines (%s seconds)", delta, properties.getCloudProvider(), elapsed);
+        logWithRuler("Successfully provisioned %s %s machines (%s seconds)", delta, properties.getCloudProvider(), elapsed);
     }
 
     private void scaleDown(int count) {
@@ -267,9 +266,9 @@ class Provisioner {
             count = registry.agentCount();
         }
 
-        echoImportant("Terminating %s %s machines (can take some time)", count, properties.getCloudProvider());
-        echo("Current number of machines: " + registry.agentCount());
-        echo("Desired number of machines: " + (registry.agentCount() - count));
+        logWithRuler("Terminating %s %s machines (can take some time)", count, properties.getCloudProvider());
+        log("Current number of machines: " + registry.agentCount());
+        log("Desired number of machines: " + (registry.agentCount() - count));
 
         long started = System.nanoTime();
 
@@ -290,11 +289,11 @@ class Provisioner {
             registry.removeAgent(agents.get(k));
         }
 
-        echo("Updating " + agentsFile.getAbsolutePath());
+        log("Updating " + agentsFile.getAbsolutePath());
         AgentsFile.save(agentsFile, registry);
 
         long elapsed = getElapsedSeconds(started);
-        echoImportant("Terminated %s of %s machines (%s remaining) (%s seconds)", destroyedCount, count,
+        logWithRuler("Terminated %s of %s machines (%s remaining) (%s seconds)", destroyedCount, count,
                 registry.agentCount(), elapsed);
 
         if (destroyedCount != count) {
@@ -412,14 +411,14 @@ class Provisioner {
         return initScript;
     }
 
-    private static void echo(String message, Object... args) {
+    private static void log(String message, Object... args) {
         LOGGER.info(message == null ? "null" : format(message, args));
     }
 
-    private static void echoImportant(String message, Object... args) {
-        echo(HORIZONTAL_RULER);
-        echo(message, args);
-        echo(HORIZONTAL_RULER);
+    private static void logWithRuler(String message, Object... args) {
+        log(HORIZONTAL_RULER);
+        log(message, args);
+        log(HORIZONTAL_RULER);
     }
 
     private final class InstallNodeTask implements Runnable {
@@ -435,17 +434,17 @@ class Provisioner {
         @Override
         public void run() {
             if (!"outofthebox".equals(properties.getJdkFlavor())) {
-                echo(INDENTATION + ip + " Java installation started...");
+                log(INDENTATION + ip + " Java installation started...");
                 uploadJava(ip);
-                echo(INDENTATION + ip + " Java Installed");
+                log(INDENTATION + ip + " Java Installed");
             }
-            echo(INDENTATION + ip + " Simulator installation started...");
+            log(INDENTATION + ip + " Simulator installation started...");
             uploadJARs(ip);
-            echo(INDENTATION + ip + " Simulator installed");
+            log(INDENTATION + ip + " Simulator installed");
 
             if (startHarakiriMonitorCommand != null) {
                 bash.ssh(ip, startHarakiriMonitorCommand);
-                echo(INDENTATION + ip + " HARAKIRI MONITOR STARTED");
+                log(INDENTATION + ip + " Harakiri monitor started");
             }
         }
     }
