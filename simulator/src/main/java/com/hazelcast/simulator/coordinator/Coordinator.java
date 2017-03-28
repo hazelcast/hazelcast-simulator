@@ -328,7 +328,6 @@ public class Coordinator implements Closeable {
                 .set("CLIENT_ARGS", op.getVmOptions())
                 .set("MEMBER_ARGS", op.getVmOptions())
                 .set("SESSION_ID", parameters.getSessionId())
-                .setIfNotNull("LICENCE_KEY", parameters.getLicenseKey())
                 .setIfNotNull("VERSION_SPEC", op.getVersionSpec())
                 .setIfNotNull("CONFIG", op.getConfig());
 

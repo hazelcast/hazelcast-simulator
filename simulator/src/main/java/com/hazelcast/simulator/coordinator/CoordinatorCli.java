@@ -169,7 +169,8 @@ final class CoordinatorCli {
 
     CoordinatorCli(String[] args) {
         this.options = initOptionsWithHelp(parser, args);
-        this.simulatorProperties = loadSimulatorProperties();
+        this.simulatorProperties = loadSimulatorProperties()
+                .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
         this.registry = newComponentRegistry(simulatorProperties);
 
         onlineCheckAgents(simulatorProperties, registry);
@@ -182,8 +183,7 @@ final class CoordinatorCli {
                     .setAll(simulatorProperties.asPublicMap())
                     .setAgents(registry.getAgents())
                     .set("CLIENT_ARGS", loadClientArgs())
-                    .set("MEMBER_ARGS", loadMemberArgs())
-                    .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
+                    .set("MEMBER_ARGS", loadMemberArgs());
 
             this.testSuite = loadTestSuite();
 
@@ -223,7 +223,6 @@ final class CoordinatorCli {
         CoordinatorParameters coordinatorParameters = new CoordinatorParameters()
                 .setSimulatorProperties(simulatorProperties)
                 .setLastTestPhaseToSync(options.valueOf(syncToTestPhaseSpec))
-                .setLicenseKey(options.valueOf(licenseKeySpec))
                 .setSkipDownload(options.has(skipDownloadSpec))
                 .setWorkerVmStartupDelayMs(options.valueOf(workerVmStartupDelayMsSpec))
                 .setPerformanceMonitorIntervalSeconds(

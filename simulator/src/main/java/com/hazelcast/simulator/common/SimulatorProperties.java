@@ -33,7 +33,6 @@ import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.newFile;
-import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 
@@ -309,12 +308,11 @@ public class SimulatorProperties {
         return this;
     }
 
-    public Float getAsFloat(String property) {
-        String value = get(property);
-        if (value == null) {
-            return null;
+    public SimulatorProperties setIfNotNull(String name, String value) {
+        if (value != null) {
+            set(name, value);
         }
-        return parseFloat(value);
+        return this;
     }
 
     public String getDefaultsAsString() {
