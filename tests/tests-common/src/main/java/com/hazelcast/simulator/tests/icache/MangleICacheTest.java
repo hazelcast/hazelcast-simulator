@@ -109,7 +109,7 @@ public class MangleICacheTest extends AbstractTest {
         }
     }
 
-    @TimeStep(prob = 0.2)
+    @TimeStep(prob = 0.1)
     public void destroyCache(ThreadState state) {
         try {
             int cacheNumber = state.randomInt(maxCaches);
@@ -122,7 +122,7 @@ public class MangleICacheTest extends AbstractTest {
         }
     }
 
-    @TimeStep(prob = 0.4)
+    @TimeStep(prob = 0.5)
     public void putCache(ThreadState state) {
         int cacheNumber = state.randomInt(maxCaches);
         Cache<Integer, Integer> cache = state.getCacheIfExists(cacheNumber);
