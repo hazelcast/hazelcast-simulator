@@ -32,7 +32,7 @@ ssh_test(){
     fi
 }
 
-echo "[INFO]Checking agents online status"
+echo "[INFO]Checking agents online status..."
 
 if [ "$CLOUD_PROVIDER" = "local" ]; then
     echo "[INFO]All agents are reachable."

@@ -29,7 +29,7 @@ kill_agents(){
     if [ "$CLOUD_PROVIDER" = "local" ]; then
         kill_agent_local
     else
-        echo "[INFO]Killing remote agents"
+        echo "[INFO]Killing remote agents..."
 
         for agent in ${agents//,/ } ; do
             kill_agents_remote $agent &

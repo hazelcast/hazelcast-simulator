@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>ignite</artifactId>
+            <artifactId>tests-ignite</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

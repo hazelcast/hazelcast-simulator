@@ -24,7 +24,7 @@ import org.apache.ignite.Ignite;
 import org.apache.log4j.Logger;
 
 
-public class IgniteTest {
+public abstract class IgniteTest {
     /**
      * Returns the name of the configured data-structure. Normally your tests will contain a 'name'
      * property so you can define e.g. 'offheapMap' or 'onheapMap' etc. This way you can change the

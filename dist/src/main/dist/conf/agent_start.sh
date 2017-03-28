@@ -42,7 +42,7 @@ start_remote(){
 }
 
 start_local(){
-    echo "[INFO]Local agent [A1] starting"
+    echo "[INFO]Local agent [A1] starting..."
 
     if [ -f agent.pid ]; then
         $SIMULATOR_HOME/bin/.kill-from-pid-file agent.pid
