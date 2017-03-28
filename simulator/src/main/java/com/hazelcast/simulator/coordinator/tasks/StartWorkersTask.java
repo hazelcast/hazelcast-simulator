@@ -196,7 +196,7 @@ public class StartWorkersTask {
             finalTags.putAll(agent.getTags());
             finalTags.putAll(tags);
 
-            LOGGER.info(format("Created %d %s Worker on %s", workerParametersList.size(), workerType, agent.getAddress()));
+            LOGGER.info(format("    Created %d %s Worker on %s", workerParametersList.size(), workerType, agent.getAddress()));
             List<WorkerData> createdWorkers = registry.addWorkers(workerParametersList, finalTags);
             result.addAll(createdWorkers);
         }

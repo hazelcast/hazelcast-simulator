@@ -46,7 +46,7 @@ function download_remote(){
 
 # 'Downloads' the files from the local simulator/workers
 function download_local(){
-    echo "[INFO]Download on local machine started"
+    echo "[INFO]Downloading from local machine...."
 
     workers_dir="${SIMULATOR_HOME}/workers"
 
@@ -71,7 +71,7 @@ function download(){
     if [ "$CLOUD_PROVIDER" = "local" ]; then
         download_local
     else
-        echo "[INFO]Download starting (can take some time), sessionid [$session_id]"
+        echo "[INFO]Download from remote machines (can take some time), sessionid [$session_id]..."
 
         for agent in ${agents//,/ } ; do
             download_remote ${agent} &
