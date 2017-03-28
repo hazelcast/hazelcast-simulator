@@ -36,7 +36,6 @@ public class CoordinatorParameters {
     private boolean skipShutdownHook;
     private int workerVmStartupDelayMs;
     private int performanceMonitorIntervalSeconds;
-    private String licenseKey;
 
     public String getSessionId() {
         return sessionId;
@@ -98,15 +97,6 @@ public class CoordinatorParameters {
 
     public CoordinatorParameters setPerformanceMonitorIntervalSeconds(int performanceMonitorIntervalSeconds) {
         this.performanceMonitorIntervalSeconds = performanceMonitorIntervalSeconds;
-        return this;
-    }
-
-    public String getLicenseKey() {
-        return licenseKey;
-    }
-
-    public CoordinatorParameters setLicenseKey(String licenseKey) {
-        this.licenseKey = licenseKey;
         return this;
     }
 }
