@@ -237,6 +237,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/ignite/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
                 + uploadClassPath
                 + CLASSPATH_SEPARATOR + CLASSPATH;

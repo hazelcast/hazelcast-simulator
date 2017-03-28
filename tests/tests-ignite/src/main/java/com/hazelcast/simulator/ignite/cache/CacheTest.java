@@ -21,8 +21,6 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
-import com.hazelcast.simulator.worker.loadsupport.Streamer;
-import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
 
 import javax.cache.Cache;
 
@@ -40,11 +38,9 @@ public class CacheTest extends IgniteTest {
 
     @Prepare(global = true)
     public void prepare() {
-        Streamer<Object, Object> streamer = StreamerFactory.getInstance(cache);
-        for (int i = 0; i < keyCount; i++) {
-            streamer.pushEntry(i, 0);
+        for (int k = 0; k < keyCount; k++) {
+            cache.put(k, 0);
         }
-        streamer.await();
     }
 
     @TimeStep(prob = 0.1)

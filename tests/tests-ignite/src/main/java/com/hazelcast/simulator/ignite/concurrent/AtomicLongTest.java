@@ -36,7 +36,6 @@ public class AtomicLongTest extends IgniteTest {
 
         //String[] names = generateStringKeys(name, countersLength, keyLocality, targetInstance);
         for (int i = 0; i < countersLength; i++) {
-
             counters[i] = ignite.atomicLong("" + i, 0, true);
         }
     }

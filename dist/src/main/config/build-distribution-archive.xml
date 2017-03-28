@@ -58,5 +58,12 @@
                 <include>com.hazelcast.simulator:tests-hz39</include>
             </includes>
         </dependencySet>
+        <dependencySet>
+            <outputDirectory>test-lib/ignite</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-ignite</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>
