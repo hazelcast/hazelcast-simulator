@@ -32,12 +32,12 @@ import java.util.List;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
+import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddressesString;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
-import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadSimulatorProperties;
 import static java.lang.String.format;
@@ -63,7 +63,7 @@ public final class AgentsSshCli {
 
         if (options.has(testSpec)) {
             new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
-                    .addParams(join(registry.getAgentIps(), ","))
+                    .addParams(publicAddressesString(registry))
                     .addEnvironment(properties.asMap())
                     .setSystemOut(true)
                     .execute();

@@ -21,11 +21,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.utils.FormatUtils.formatIpAddress;
+import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 
 /**
@@ -161,5 +163,21 @@ public class AgentData {
     @Override
     public String toString() {
         return "AgentData{address=" + address + '}';
+    }
+
+    public static List<String> publicAddresses(List<AgentData> agents) {
+        List<String> result = new ArrayList<String>();
+        for (AgentData agent : agents) {
+            result.add(agent.getPublicAddress());
+        }
+        return result;
+    }
+
+    public static String publicAddressesString(List<AgentData> agents) {
+        return join(publicAddresses(agents), ",");
+    }
+
+    public static String publicAddressesString(Registry registry) {
+        return publicAddressesString(registry.getAgents());
     }
 }

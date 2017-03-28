@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
+import static com.hazelcast.simulator.coordinator.registry.AgentData.publicAddresses;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -173,16 +174,15 @@ final class CoordinatorCli {
 
         onlineCheckAgents(simulatorProperties, registry);
 
-
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {
             this.coordinatorParameters = loadCoordinatorParameters();
+            this.simulatorProperties.set("SESSION_ID", coordinatorParameters.getSessionId());
             this.coordinator = new Coordinator(registry, coordinatorParameters);
             this.vendorDriver = loadVendorDriver(simulatorProperties.get("VENDOR"))
                     .setAll(simulatorProperties.asPublicMap())
                     .setAgents(registry.getAgents())
                     .set("CLIENT_ARGS", loadClientArgs())
                     .set("MEMBER_ARGS", loadMemberArgs())
-                    .set("SESSION_ID", coordinatorParameters.getSessionId())
                     .setIfNotNull("LICENCE_KEY", options.valueOf(licenseKeySpec));
 
             this.testSuite = loadTestSuite();
@@ -202,7 +202,7 @@ final class CoordinatorCli {
 
     void run() throws Exception {
         if (options.has(downloadSpec)) {
-            new DownloadTask(registry.getAgentIps(), simulatorProperties.asMap(), getUserDir(), "*").run();
+            new DownloadTask(publicAddresses(registry.getAgents()), simulatorProperties.asMap(), getUserDir(), "*").run();
         } else if (options.has(cleanSpec)) {
             new ArtifactCleanTask(registry, simulatorProperties).run();
         } else {

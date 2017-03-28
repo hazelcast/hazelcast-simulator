@@ -27,6 +27,7 @@ import com.hazelcast.core.PartitionService;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.utils.BashCommand;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillisThrowException;
+import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static java.lang.String.format;
 
@@ -178,6 +180,37 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
             members.append(format("<%s>%s:%s</%s>%n", tagName, hostAddress, port, tagName));
         }
         return members.toString();
+    }
+
+    @Override
+    public void install() {
+        String versionSpec = properties.get("VERSION_SPEC");
+
+        String cloud = properties.get("CLOUD_PROVIDER");
+        if ("embedded".equals(cloud)) {
+            return;
+        }
+
+        LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + agents.size() + " agents...");
+
+        String publicIps = "";
+        if (!"local".equals(cloud)) {
+            publicIps = AgentData.publicAddressesString(agents);
+        }
+
+        String vendor = properties.get("VENDOR");
+        String installFile = getConfigurationFile("install-" + vendor + ".sh").getPath();
+
+        LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
+
+        new BashCommand(installFile)
+                .addParams(properties.get("SESSION_ID"), versionSpec, publicIps)
+                .addEnvironment(properties)
+                .execute();
+
+        LOGGER.info("Successfully installed '" + vendor + "'");
+
+        LOGGER.info("Install successful!");
     }
 
     @Override
