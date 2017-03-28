@@ -28,7 +28,6 @@ exec 2> worker.err
 #PATH=$JAVA_HOME/bin:$PATH
 
 JVM_ARGS="-XX:OnOutOfMemoryError=\"touch;-9;worker.oome\" \
-          -Dhazelcast.logging.type=log4j \
           -Dlog4j.configuration=file:log4j.xml"
 
 # Include the member/client-worker jvm options
