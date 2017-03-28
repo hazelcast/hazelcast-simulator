@@ -23,7 +23,7 @@ agents=$3
 function download_remote(){
     agent=$1
 
-    echo "[INFO]Download from $agent started"
+    echo "[INFO]    Download from $agent started"
 
     if [ "$session_id" = "*" ] ; then
          download_path="hazelcast-simulator-$SIMULATOR_VERSION/workers/"
@@ -41,7 +41,7 @@ function download_remote(){
         ssh ${SSH_OPTIONS} $SIMULATOR_USER@$agent "rm -fr $download_path"
     fi
 
-    echo "[INFO]Download from $agent completed"
+    echo "[INFO]    Download from $agent completed"
 }
 
 # 'Downloads' the files from the local simulator/workers
