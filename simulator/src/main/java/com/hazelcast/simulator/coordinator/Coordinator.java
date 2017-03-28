@@ -154,7 +154,6 @@ public class Coordinator implements Closeable {
     }
 
     private void logConfiguration() {
-        log("VendorDriver: %s", simulatorProperties.get("VENDOR"));
         log("Total number of agents: %s", registry.agentCount());
         log("Output directory: " + outputDirectory.getAbsolutePath());
 
