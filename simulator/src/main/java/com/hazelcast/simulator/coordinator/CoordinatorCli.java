@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.hazelcast.simulator.common.GitInfo.getBuildTime;
 import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
-import static com.hazelcast.simulator.coordinator.AgentUtils.sslTestAgents;
+import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
@@ -171,7 +171,7 @@ final class CoordinatorCli {
         this.simulatorProperties = loadSimulatorProperties();
         this.registry = newComponentRegistry(simulatorProperties);
 
-        sslTestAgents(simulatorProperties, registry);
+        onlineCheckAgents(simulatorProperties, registry);
 
 
         if (!(options.has(downloadSpec) || options.has(cleanSpec))) {

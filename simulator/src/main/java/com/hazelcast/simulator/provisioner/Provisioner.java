@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
-import static com.hazelcast.simulator.coordinator.AgentUtils.sslTestAgents;
+import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
 import static com.hazelcast.simulator.harakiri.HarakiriMonitorUtils.getStartHarakiriMonitorCommandOrNull;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsCloudProviderSetup;
 import static com.hazelcast.simulator.provisioner.ProvisionerUtils.ensureIsRemoteSetup;
@@ -97,7 +97,7 @@ class Provisioner {
 
 
     void installJava() {
-        sslTestAgents(properties, registry);
+        onlineCheckAgents(properties, registry);
         ensureIsRemoteSetup(properties, "installJava");
 
         long started = System.nanoTime();
@@ -120,7 +120,7 @@ class Provisioner {
     }
 
     void installSimulator() {
-        sslTestAgents(properties, registry);
+        onlineCheckAgents(properties, registry);
         ensureIsRemoteSetup(properties, "install");
 
         long started = System.nanoTime();
@@ -144,7 +144,7 @@ class Provisioner {
     }
 
     void killJavaProcesses(final boolean sudo) {
-        sslTestAgents(properties, registry);
+        onlineCheckAgents(properties, registry);
         ensureIsRemoteSetup(properties, "kill");
 
         long started = System.nanoTime();

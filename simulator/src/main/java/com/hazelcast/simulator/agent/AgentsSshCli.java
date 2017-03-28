@@ -62,7 +62,7 @@ public final class AgentsSshCli {
         this.registry = loadComponentRegister(agentsFile, false);
 
         if (options.has(testSpec)) {
-            new BashCommand(getConfigurationFile("agent_ssh_check.sh").getAbsolutePath())
+            new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
                     .addParams(join(registry.getAgentIps(), ","))
                     .addEnvironment(properties.asMap())
                     .setSystemOut(true)

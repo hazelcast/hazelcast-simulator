@@ -27,8 +27,8 @@ public final class AgentUtils {
     private AgentUtils() {
     }
 
-    public static void sslTestAgents(SimulatorProperties properties, Registry registry) {
-        new BashCommand(getConfigurationFile("agent_ssh_check.sh").getAbsolutePath())
+    public static void onlineCheckAgents(SimulatorProperties properties, Registry registry) {
+        new BashCommand(getConfigurationFile("agent_online_check.sh").getAbsolutePath())
                 .addParams(join(registry.getAgentIps(), ","))
                 .addEnvironment(properties.asMap())
                 .dumpOutputOnError(false)
