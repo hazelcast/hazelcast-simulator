@@ -155,7 +155,7 @@ class Provisioner {
             spawner.spawn(new Runnable() {
                 @Override
                 public void run() {
-                    log("Killing Java processes on %s", agent.getPublicAddress());
+                    log("    Killing Java processes on %s", agent.getPublicAddress());
                     bash.killAllJavaProcesses(agent.getPublicAddress(), sudo);
                 }
             });
