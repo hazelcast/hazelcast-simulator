@@ -38,7 +38,7 @@ start_remote(){
 
     ssh $SSH_OPTIONS $SIMULATOR_USER@$agent "hazelcast-simulator-$SIMULATOR_VERSION/bin/.await-file-exists agent.pid"
 
-    echo "[INFO]   Agent [A$agent_index] $agent started successfully"
+    echo "[INFO]    Agent [A$agent_index] $agent started successfully"
 }
 
 start_local(){
