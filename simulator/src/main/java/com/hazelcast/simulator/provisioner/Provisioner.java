@@ -393,7 +393,7 @@ class Provisioner {
         bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/user-lib/", "user-lib/");
 
         // purge Hazelcast JARs
-        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/hz-lib", simulatorVersion));
+        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/vendor-lib", simulatorVersion));
 
         // execute the init.sh script
         executeInitScript(ip);

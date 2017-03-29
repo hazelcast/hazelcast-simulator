@@ -159,7 +159,7 @@ upload_to_single_agent() {
 
     echo "[INFO]    Upload to $public_ip started"
 
-    remote_hz_lib=${simulator_basename}/hz-lib
+    remote_hz_lib=${simulator_basename}/vendor-lib
     remote_run_dir=${simulator_basename}/workers/${session_id}
     remote_upload_dir=${remote_run_dir}/upload
 

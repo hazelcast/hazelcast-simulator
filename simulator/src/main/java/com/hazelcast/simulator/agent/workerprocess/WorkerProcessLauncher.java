@@ -217,7 +217,7 @@ public class WorkerProcessLauncher {
     private String getClasspath(File workerHome) {
         String simulatorHome = getSimulatorHome().getAbsolutePath();
         String hzVersionDirectory = directoryForVersionSpec(parameters.get("VERSION_SPEC"));
-        String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*");
+        String testJarVersion = getHazelcastVersionFromJAR(simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*");
         LOGGER.info(format("Adding Hazelcast %s and test JARs %s to classpath", hzVersionDirectory, testJarVersion));
 
         String uploadClassPath = "";
@@ -238,7 +238,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/ignite/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/infinispan/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/hz-lib/" + hzVersionDirectory + "/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*"
                 + uploadClassPath
                 + CLASSPATH_SEPARATOR + CLASSPATH;
     }

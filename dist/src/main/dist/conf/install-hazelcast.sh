@@ -7,7 +7,7 @@
 #
 # TODO
 # - use rsync instead of scp for upload
-# - hz-lib git: enterprise
+# - vendor-lib git: enterprise
 #
 # IDEAS
 # - instead of download artifacts to local machine and then uploading; download them on the target machine
