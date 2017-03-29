@@ -69,36 +69,21 @@ public class SimulatorProperties {
     }
 
     public Map<String, String> asMap() {
-        Map<String, String> map = new HashMap<String, String>();
-        for (Map.Entry entry : properties.entrySet()) {
-            String key = (String) entry.getKey();
-            map.put(key, get(key));
+        Map<String, String> map = asPublicMap();
+
+        if (isTrueCloud(getCloudProvider())) {
+            map.put(CLOUD_IDENTITY, getCloudIdentity());
+            map.put(CLOUD_CREDENTIAL, getCloudCredential());
         }
 
-        String cloudProvider = getCloudProvider();
-        if (!isTrueCloud(cloudProvider)) {
-            // if isn't a true cloud, we don't for the identity/credentials.
-            return map;
-        }
-
-        // it is a true cloud; so we care for the identity/credentials. They need to be configured correctly or
-        // else an exception is thrown.
-        map.put(CLOUD_IDENTITY, getCloudIdentity());
-        map.put(CLOUD_CREDENTIAL, getCloudCredential());
         return map;
     }
 
     public Map<String, String> asPublicMap() {
-        Map<String, String> map = asMap();
+        Map<String, String> map = new HashMap<String, String>();
         for (Map.Entry entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             map.put(key, get(key));
-        }
-
-        String cloudProvider = getCloudProvider();
-        if (!isTrueCloud(cloudProvider)) {
-            // if isn't a true cloud, we don't for the identity/credentials.
-            return map;
         }
 
         map.remove(CLOUD_IDENTITY);
