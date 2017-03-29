@@ -87,12 +87,11 @@ public class WorkerProcessLauncher {
         }
     }
 
-    public File getSessionDirectory() {
+    private File getSessionDirectory() {
         String sessionId = parameters.get("SESSION_ID");
         File workersDir = ensureExistingDirectory(getSimulatorHome(), "workers");
         return ensureExistingDirectory(workersDir, sessionId);
     }
-
 
     private WorkerProcess startWorker() throws IOException {
         String workerDirName = parameters.get("WORKER_DIR_NAME");
@@ -102,7 +101,7 @@ public class WorkerProcessLauncher {
 
         WorkerProcess workerProcess = new WorkerProcess(workerAddress, workerDirName, workerHome);
 
-        ProcessBuilder processBuilder = new ProcessBuilder(new String[]{"bash", "worker.sh"})
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "worker.sh")
                 .directory(workerHome);
 
         Map<String, String> environment = processBuilder.environment();

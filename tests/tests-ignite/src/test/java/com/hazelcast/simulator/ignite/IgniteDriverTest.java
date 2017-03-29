@@ -1,9 +1,10 @@
-package com.hazelcast.simulator.vendors;
+package com.hazelcast.simulator.ignite;
 
+import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
-import com.hazelcast.simulator.utils.FileUtils;
 import com.hazelcast.simulator.utils.SimulatorUtils;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import org.apache.ignite.Ignite;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -26,13 +27,13 @@ public class IgniteDriverTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        setupFakeEnvironment();
-        createAgentsFileWithLocalhost();
+        TestEnvironmentUtils.setupFakeEnvironment();
+        TestEnvironmentUtils.createAgentsFileWithLocalhost();
     }
 
     @AfterClass
     public static void afterClass() {
-        tearDownFakeEnvironment();
+        TestEnvironmentUtils.tearDownFakeEnvironment();
     }
 
     @Before

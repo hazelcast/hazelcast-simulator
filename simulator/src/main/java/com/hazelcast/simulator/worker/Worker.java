@@ -24,7 +24,6 @@ import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import com.hazelcast.simulator.worker.performance.PerformanceMonitor;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +139,6 @@ public class Worker {
         }
     }
 
-    @NotNull
     private static Map<String, String> loadParameters() throws IOException {
         Properties p = new Properties();
         p.load(new StringReader(fileAsText(new File(getUserDir(), "parameters"))));
