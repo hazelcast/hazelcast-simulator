@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,7 @@ import static com.hazelcast.simulator.utils.FileUtils.getSimulatorHome;
 import static java.lang.String.format;
 
 public abstract class VendorDriver<V> implements Closeable {
-    private static final Logger LOGGER = Logger.getLogger(HazelcastDriver.class);
+    private static final Logger LOGGER = Logger.getLogger(VendorDriver.class);
 
     protected List<AgentData> agents;
     protected Map<String, String> properties = new HashMap<String, String>();
@@ -62,7 +63,17 @@ public abstract class VendorDriver<V> implements Closeable {
         }
     }
 
+    /**
+     * Installs the software on the agent machines. Method is called on the coordinator-side.
+     */
     public void install() {
+    }
+
+    /**
+     * This method closes any active vendor instance. Method is called on the worker-side.
+     */
+    @Override
+    public void close() throws IOException {
     }
 
     protected String get(String name, String defaultValue) {
@@ -92,11 +103,20 @@ public abstract class VendorDriver<V> implements Closeable {
         return set(key, value);
     }
 
-    public abstract V getInstance();
+    /**
+     * Gets the created Vendor instance. Method is called on the worker-side
+     */
+    public abstract V getVendorInstance();
 
+    /**
+     * Creates a Vendor instance. Method is called on the worker-side
+     */
     public abstract void createVendorInstance() throws Exception;
 
-    public abstract WorkerParameters loadWorkerParameters(String workerType);
+    /**
+     * Loads the parameters to create a worker. Method is called on the coordinator-side
+     */
+    public abstract WorkerParameters loadWorkerParameters(String workerType, int agentIndex);
 
     protected String loadConfiguration(String logPrefix, String filename) {
         File file = getConfigurationFile(filename);

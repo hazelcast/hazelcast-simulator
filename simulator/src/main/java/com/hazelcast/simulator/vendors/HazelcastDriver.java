@@ -49,7 +49,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     private HazelcastInstance hazelcastInstance;
 
     @Override
-    public WorkerParameters loadWorkerParameters(String workerType) {
+    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
         Map<String, String> s = new HashMap<String, String>(properties);
         s.remove("CONFIG");
 
@@ -101,7 +101,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     }
 
     @Override
-    public HazelcastInstance getInstance() {
+    public HazelcastInstance getVendorInstance() {
         return hazelcastInstance;
     }
 

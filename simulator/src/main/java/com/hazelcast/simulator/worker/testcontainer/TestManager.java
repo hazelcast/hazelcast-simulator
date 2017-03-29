@@ -73,7 +73,7 @@ public class TestManager {
 
         TestContextImpl testContext = new TestContextImpl(testId, null, server);
 
-        testContainer = new TestContainer(testContext, testCase, vendorDriver.getInstance());
+        testContainer = new TestContainer(testContext, testCase, vendorDriver.getVendorInstance());
 
         tests.put(testId, testContainer);
     }
@@ -126,9 +126,9 @@ public class TestManager {
                 LOGGER.info(format("%s %s of %s SUCCEEDED %s ", DASHES, testPhase.desc(), testId, DASHES));
                 promise.answer("ok");
             } catch (Throwable t) {
-                promise.answer(t);
                 LOGGER.error(format("%s %s of %s FAILED %s ", DASHES, testPhase.desc(), testId, DASHES), t);
                 ExceptionReporter.report(testId, t);
+                promise.answer(t);
             } finally {
                 if (testPhase == getLastTestPhase()) {
                     tests.remove(testId);

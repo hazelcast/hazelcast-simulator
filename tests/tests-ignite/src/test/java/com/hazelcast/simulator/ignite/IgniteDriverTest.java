@@ -14,9 +14,6 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Map;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
-import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
-import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static java.util.Arrays.asList;
@@ -46,7 +43,7 @@ public class IgniteDriverTest {
          VendorDriver<Ignite> driverAtCoordinator = new IgniteDriver()
                 .setAgents(asList(agent));
 
-        WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member");
+        WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member",agent.getAddressIndex());
         for(Map.Entry<String,String> entry: workerParameters.entrySet()){
             String key = entry.getKey();
             if (key.startsWith("file:")) {
@@ -58,7 +55,7 @@ public class IgniteDriverTest {
                 .setAll(workerParameters.asMap());
 
         driverAtWorker.createVendorInstance();
-        Ignite ignite = driverAtWorker.getInstance();
+        Ignite ignite = driverAtWorker.getVendorInstance();
         assertNotNull(ignite);
         driverAtWorker.close();
     }

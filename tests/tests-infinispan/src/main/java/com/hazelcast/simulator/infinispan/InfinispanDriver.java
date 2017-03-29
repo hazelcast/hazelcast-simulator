@@ -1,0 +1,139 @@
+/*
+ * Copyright (c) 2008-2016, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.hazelcast.simulator.infinispan;
+
+import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.vendors.VendorDriver;
+import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.commons.api.BasicCacheContainer;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.server.core.configuration.ProtocolServerConfiguration;
+import org.infinispan.server.hotrod.HotRodServer;
+import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
+
+import java.io.IOException;
+import java.util.Properties;
+
+import static java.lang.String.format;
+
+/**
+ * todo
+ * - client connection terminates
+ * - logging in case of jgroups error
+ * - fix the 'ping' port
+ * - hotrod configuration
+ *
+ * done
+ * - client support
+ * - cluster support
+ * - some sensible configuration for the cache
+ * - right ports
+ */
+public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
+
+    private BasicCacheContainer cacheContainer;
+
+    @Override
+    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
+        WorkerParameters params = new WorkerParameters()
+                .setAll(properties)
+                .set("WORKER_TYPE", workerType)
+                .set("file:log4j.xml", loadLog4jConfig());
+
+        if ("member".equals(workerType)) {
+            loadServerParameters(params, agents.get(agentIndex - 1));
+        } else if ("javaclient".equals(workerType)) {
+            loadClientParameters(params);
+        } else {
+            throw new IllegalArgumentException(format("Unknown workerType [%s]", workerType));
+        }
+
+        return params;
+    }
+
+    private void loadServerParameters(WorkerParameters params, AgentData agent) {
+        String memberArgs = get("MEMBER_ARGS", "")
+                + " -Djava.net.preferIPv4Stack=true"
+                + " -Djgroups.bind_address=" + agent.getPrivateAddress()
+                + " -Djgroups.tcp.address=" + agent.getPrivateAddress()
+                + " -Djgroups.tcp.port=" + properties.get("HAZELCAST_PORT")
+                + " -Djgroups.tcpping.initial_hosts=" + initialHosts(false);
+
+        params.set("JVM_OPTIONS", memberArgs)
+                .set("file:infinispan.xml", loadConfiguration("Infinispan configuration", "infinispan.xml"))
+                .set("file:worker.sh", loadWorkerScript("member"));
+    }
+
+    private void loadClientParameters(WorkerParameters params) {
+        params.set("JVM_OPTIONS", get("CLIENT_ARGS", ""))
+                .set("file:worker.sh", loadWorkerScript("javaclient"))
+                .set("server_list", initialHosts(true));
+    }
+
+    private String initialHosts(boolean clientMode) {
+        String port = clientMode ? "11222" : properties.get("HAZELCAST_PORT");
+
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (AgentData agent : agents) {
+            if (first) {
+                first = false;
+            } else if (clientMode) {
+                sb.append(';');
+            } else {
+                sb.append(',');
+            }
+
+            if (clientMode) {
+                sb.append(agent.getPrivateAddress()).append(":").append(port);
+            } else {
+                sb.append(agent.getPrivateAddress()).append("[").append(port).append("]");
+            }
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public BasicCacheContainer getVendorInstance() {
+        return cacheContainer;
+    }
+
+    @Override
+    public void createVendorInstance() throws Exception {
+        String workerType = properties.get("WORKER_TYPE");
+        if ("javaclient".equals(workerType)) {
+            Properties hotrodProperties = new Properties();
+            hotrodProperties.setProperty("infinispan.client.hotrod.server_list", properties.get("server_list"));
+            this.cacheContainer = new RemoteCacheManager(hotrodProperties);
+        } else {
+//            EmbeddedCacheManager manager = new DefaultCacheManager(new ConfigurationBuilder().compatibility().enable()
+//                    .marshaller(new org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller()).build());
+
+            DefaultCacheManager defaultCacheManager = new DefaultCacheManager("infinispan.xml");
+            ProtocolServerConfiguration conf = new HotRodServerConfigurationBuilder().build();
+            new HotRodServer().start(conf, defaultCacheManager);
+            this.cacheContainer = defaultCacheManager;
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (cacheContainer != null) {
+            cacheContainer.stop();
+        }
+    }
+}

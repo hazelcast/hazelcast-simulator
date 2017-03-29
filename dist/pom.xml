@@ -51,6 +51,11 @@
             <artifactId>tests-ignite</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>tests-infinispan</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

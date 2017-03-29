@@ -73,10 +73,11 @@ public final class DeploymentPlan {
     public DeploymentPlan addToPlan(int workerCount, String workerType) {
         for (int i = 0; i < workerCount; i++) {
             WorkersPerAgent workersPerAgent = nextAgent(workerType);
-            WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType);
+            AgentData agent = workersPerAgent.agent;
+            WorkerParameters workerParameters = vendorDriver.loadWorkerParameters(workerType, agent.getAddressIndex());
             workersPerAgent.registerWorker(workerParameters);
 
-            List<WorkerParameters> workerParametersList = workerDeployment.get(workersPerAgent.agent.getAddress());
+            List<WorkerParameters> workerParametersList = workerDeployment.get(agent.getAddress());
             workerParametersList.add(workerParameters);
         }
 

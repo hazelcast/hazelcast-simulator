@@ -24,7 +24,6 @@ import org.HdrHistogram.HistogramLogWriter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -137,7 +136,6 @@ public final class TestPerformanceTracker {
 
             HdrProbe hdrProbe = (HdrProbe) probe;
             Histogram intervalHistogram = hdrProbe.getRecorder().getIntervalHistogram();
-            System.out.println(new Date(lastUpdateMillis) + "-" + new Date(currentTimeMillis));
             intervalHistogram.setStartTimeStamp(lastUpdateMillis);
             intervalHistogram.setEndTimeStamp(currentTimeMillis);
             intervalHistograms.put(probeName, intervalHistogram);
