@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.vendors;
+package com.hazelcast.simulator.ignite;
 
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.ConfigFileTemplate;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
+import com.hazelcast.simulator.vendors.VendorDriver;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.log4j.Logger;
