@@ -131,7 +131,7 @@ function postprocess_hdr(){
 function postprocess_gclog(){
     session_dir=$1
 
-    echo "[INFO]     Postprocessing GC logs started..."
+    echo "[INFO]     Postprocessing GC-logs started..."
 
     # Conversion of gc.log to gc.csv
     gc_logs=($(find ${session_dir} -name gc.log))
@@ -143,7 +143,7 @@ function postprocess_gclog(){
         java -jar "${SIMULATOR_HOME}/lib//gcviewer-1.35-SNAPSHOT.jar"  $gc_log $gc_csv -t CSV_FULL
     done
 
-    echo "[INFO]     Postprocessing GC logs completed"
+    echo "[INFO]     Postprocessing GC-logs completed"
 }
 
 function postprocess(){
