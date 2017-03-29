@@ -3,6 +3,7 @@ package com.hazelcast.simulator.worker;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.common.SimulatorProperties;
+import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.coordinator.registry.Registry;
 import com.hazelcast.simulator.protocol.Broker;
 import com.hazelcast.simulator.protocol.core.SimulatorAddress;
@@ -44,7 +45,7 @@ public class WorkerTest {
         setupFakeEnvironment();
 
         Registry registry = new Registry();
-        registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
+        AgentData agent = registry.addAgent(PUBLIC_ADDRESS, PUBLIC_ADDRESS);
 
         SimulatorProperties properties = new SimulatorProperties()
                 .set("MANAGEMENT_CENTER_URL", "none");
@@ -55,7 +56,7 @@ public class WorkerTest {
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
         workerAddress = workerAddress(AGENT_INDEX,WORKER_INDEX);
 
-        parameters = driver.loadWorkerParameters("member")
+        parameters = driver.loadWorkerParameters("member", agent.getAddressIndex())
                 .set("WORKER_ADDRESS", workerAddress)
                 .set("PUBLIC_ADDRESS", PUBLIC_ADDRESS);
 

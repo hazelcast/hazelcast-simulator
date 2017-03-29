@@ -53,7 +53,7 @@ public class HazelcastDriverTest {
                 .setAgents(singletonList(agent))
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
 
-        driver.loadWorkerParameters("member");
+        driver.loadWorkerParameters("member", agent.getAddressIndex());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class HazelcastDriverTest {
                 .setAgents(singletonList(agent))
                 .set("CONFIG", fileAsText(localResourceDirectory() + "/hazelcast.xml"));
 
-        WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member");
+        WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member", agent.getAddressIndex());
         for (Map.Entry<String, String> entry : workerParameters.entrySet()) {
             String key = entry.getKey();
             if (key.startsWith("file:")) {
@@ -75,7 +75,7 @@ public class HazelcastDriverTest {
                 .setAll(workerParameters.asMap());
 
         driverAtWorker.createVendorInstance();
-        HazelcastInstance hz = driverAtWorker.getInstance();
+        HazelcastInstance hz = driverAtWorker.getVendorInstance();
         assertNotNull(hz);
         driverAtWorker.close();
     }

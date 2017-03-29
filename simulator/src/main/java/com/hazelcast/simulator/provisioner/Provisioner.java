@@ -334,7 +334,7 @@ class Provisioner {
         String simulatorVersion = getSimulatorVersion();
 
         // first we wipe out the directory if it exists. This way we can start with a clean slate.
-        bash.ssh(ip, format("rm -fr hazelcast-simulator-%s", simulatorVersion));
+        //bash.ssh(ip, format("rm -fr hazelcast-simulator-%s", simulatorVersion));
 
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", simulatorVersion));
         bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/user-lib/", simulatorVersion));
@@ -372,6 +372,16 @@ class Provisioner {
             uploadLibraryJar(ip, "ignite-*");
             uploadLibraryJar(ip, "spring-*");
             uploadLibraryJar(ip, "commons-logging-*");
+        }
+
+        // hack to get infinispan working
+        if (properties.get("VENDOR").equals("infinispan")) {
+            uploadLibraryJar(ip, "infinispan-*");
+            uploadLibraryJar(ip, "jboss*");
+            uploadLibraryJar(ip, "jgroups*");
+            uploadLibraryJar(ip, "netty*");
+            uploadLibraryJar(ip, "scala*");
+            uploadLibraryJar(ip, "commons-pool*");
         }
 
         // upload remaining files

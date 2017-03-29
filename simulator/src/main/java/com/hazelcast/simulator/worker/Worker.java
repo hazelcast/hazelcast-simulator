@@ -133,9 +133,9 @@ public class Worker {
 
             Worker worker = new Worker(properties);
             worker.start();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             ExceptionReporter.report(null, e);
-            exitWithError(LOGGER, "Could not start Hazelcast Simulator Worker!", e);
+            exitWithError(LOGGER, "Failed to start Hazelcast Simulator Worker!", e);
         }
     }
 

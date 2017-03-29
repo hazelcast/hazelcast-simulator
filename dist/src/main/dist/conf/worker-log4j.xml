@@ -13,7 +13,7 @@
         <param name="File" value="worker.log"/>
         <param name="MaxFileSize" value="1gb"/>
         <param name="MaxBackupIndex" value="5"/>
-        <param name="Threshold" value="INFO"/>
+        <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
         </layout>
@@ -22,12 +22,22 @@
     <!--
     <appender name="file" class="org.apache.log4j.FileAppender">
         <param name="File" value="worker.log"/>
-        <param name="Threshold" value="INFO"/>
+        <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p %d [%t] %c: %m%n"/>
         </layout>
     </appender>
     -->
+
+    <logger name="org.jgroups">
+        <level value="debug"/>
+        <appender-ref ref="file"/>
+    </logger>
+
+    <logger name="org.infinispan.remoting.transport.jgroups">
+        <level value="debug"/>
+        <appender-ref ref="file"/>
+    </logger>
 
     <root>
         <priority value="debug"/>

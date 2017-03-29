@@ -177,6 +177,14 @@ public class AgentData {
         return join(publicAddresses(agents), ",");
     }
 
+    public static String privateAddressesString(List<AgentData> agents) {
+        List<String> addressList = new ArrayList<String>();
+        for (AgentData agent : agents) {
+            addressList.add(agent.getPrivateAddress());
+        }
+        return join(addressList, ",");
+    }
+
     public static String publicAddressesString(Registry registry) {
         return publicAddressesString(registry.getAgents());
     }

@@ -30,6 +30,7 @@
                 <exclude>com.hazelcast.simulator:tests-*</exclude>
             </excludes>
         </dependencySet>
+
         <dependencySet>
             <outputDirectory>test-lib/common</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
@@ -37,6 +38,7 @@
                 <include>com.hazelcast.simulator:tests-common</include>
             </includes>
         </dependencySet>
+
         <dependencySet>
             <outputDirectory>test-lib/37</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
@@ -44,6 +46,7 @@
                 <include>com.hazelcast.simulator:tests-hz37</include>
             </includes>
         </dependencySet>
+
         <dependencySet>
             <outputDirectory>test-lib/38</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
@@ -51,6 +54,7 @@
                 <include>com.hazelcast.simulator:tests-hz38</include>
             </includes>
         </dependencySet>
+
         <dependencySet>
             <outputDirectory>test-lib/39</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
@@ -58,11 +62,20 @@
                 <include>com.hazelcast.simulator:tests-hz39</include>
             </includes>
         </dependencySet>
+
         <dependencySet>
             <outputDirectory>test-lib/ignite</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
                 <include>com.hazelcast.simulator:tests-ignite</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
+            <outputDirectory>test-lib/infinispan</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-infinispan</include>
             </includes>
         </dependencySet>
     </dependencySets>

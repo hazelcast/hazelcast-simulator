@@ -35,7 +35,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     private Ignite ignite;
 
     @Override
-    public WorkerParameters loadWorkerParameters(String workerType) {
+    public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
         WorkerParameters params = new WorkerParameters()
                 .setAll(properties)
                 .set("WORKER_TYPE", workerType)
@@ -81,7 +81,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     }
 
     @Override
-    public Ignite getInstance() {
+    public Ignite getVendorInstance() {
         return ignite;
     }
 

@@ -93,7 +93,7 @@ public class ScriptExecutor {
             @Override
             public String call() throws Exception {
                 Object result = new EmbeddedScriptCommand(command)
-                        .addEnvironment("vendor", vendorDriver.getInstance())
+                        .addEnvironment("vendor", vendorDriver.getVendorInstance())
                         .setEngineName(extension)
                         .execute();
                 LOGGER.info(format("Script [%s] with [%s]", command, result));

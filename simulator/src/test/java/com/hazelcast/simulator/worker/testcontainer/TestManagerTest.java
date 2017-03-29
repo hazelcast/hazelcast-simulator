@@ -49,7 +49,7 @@ public class TestManagerTest {
         userDir = setupFakeUserDir();
         server = mock(Server.class);
         vendorDriver = mock(VendorDriver.class);
-        when(vendorDriver.getInstance()).thenReturn(mock(HazelcastInstance.class));
+        when(vendorDriver.getVendorInstance()).thenReturn(mock(HazelcastInstance.class));
         manager = new TestManager(server, vendorDriver);
     }
 

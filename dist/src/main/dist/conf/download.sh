@@ -87,7 +87,7 @@ function download(){
 function postprocess_hdr(){
     session_dir=$1
 
-    echo "Postprocessing HDR-histogram started"
+    echo "[INFO]     Postprocessing HDR-histogram started..."
 
     # merge all hdr files of each member into a hdr file which gets stored in the target_directory
     probes=($(ls -R ${session_dir} | grep .hdr | sort | uniq))
@@ -125,13 +125,13 @@ function postprocess_hdr(){
         mv "${file_name}.hgrm.bak" "${file_name}.hgrm"
     done
 
-    echo "Postprocessing HDR-histogram completed"
+    echo "[INFO]     Postprocessing HDR-histogram completed"
 }
 
 function postprocess_gclog(){
     session_dir=$1
 
-    echo "Postprocessing gc logs started"
+    echo "[INFO]     Postprocessing GC logs started..."
 
     # Conversion of gc.log to gc.csv
     gc_logs=($(find ${session_dir} -name gc.log))
@@ -143,11 +143,11 @@ function postprocess_gclog(){
         java -jar "${SIMULATOR_HOME}/lib//gcviewer-1.35-SNAPSHOT.jar"  $gc_log $gc_csv -t CSV_FULL
     done
 
-    echo "Postprocessing gc logs completed"
+    echo "[INFO]     Postprocessing GC logs completed"
 }
 
 function postprocess(){
-    echo "[INFO]Postprocessing started"
+    echo "[INFO]Postprocessing started..."
 
     for file in .* *;
     do
