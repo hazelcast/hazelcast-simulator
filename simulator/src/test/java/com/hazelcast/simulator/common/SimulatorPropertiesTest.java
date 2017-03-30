@@ -247,6 +247,14 @@ public class SimulatorPropertiesTest {
         simulatorProperties.load(workingDirProperties);
     }
 
+    @Test(expected = CommandLineExitException.class)
+    public void test_MACHINE_SPEC() {
+        File workingDirProperties = new File(simulatorHome, "simulator.properties");
+        appendText("MACHINE_SPEC=foobar", workingDirProperties);
+
+        simulatorProperties.load(workingDirProperties);
+    }
+
     private void initProperty(File file, String key, String value) {
         System.out.println("writing value: " + value);
         appendText(format("%s=%s", key, value), file);
