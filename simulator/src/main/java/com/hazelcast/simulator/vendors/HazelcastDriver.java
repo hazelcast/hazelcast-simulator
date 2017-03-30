@@ -53,8 +53,8 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         Map<String, String> s = new HashMap<String, String>(properties);
         s.remove("CONFIG");
 
-        if ("hazelcast-enterprise".equals(properties.get("VENDOR"))) {
-            String licenceKey = properties.get("LICENCE_KEY");
+        if ("hazelcast-enterprise".equals(get("VENDOR"))) {
+            String licenceKey = get("LICENCE_KEY");
             if (licenceKey == null) {
                 throw new IllegalStateException("licenceKey needs to be set with 'hazelcast-enterprise' as vendor");
             }
@@ -109,21 +109,21 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         String config = loadMemberConfig();
         ConfigFileTemplate template = new ConfigFileTemplate(config);
 
-        String licenseKey = properties.get("LICENCE_KEY");
+        String licenseKey = get("LICENCE_KEY");
         template.addEnvironment("licenseKey", licenseKey);
         template.addEnvironment(properties);
         //template.withAgents(componentRegistry);
 
         template.addReplacement("<!--MEMBERS-->",
-                createAddressConfig("member", agents, properties.get("HAZELCAST_PORT")));
+                createAddressConfig("member", agents, get("HAZELCAST_PORT")));
 
         if (licenseKey != null) {
             template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
         }
 
-        String manCenterURL = properties.get("MANAGEMENT_CENTER_URL");
+        String manCenterURL = get("MANAGEMENT_CENTER_URL");
         if (!"none".equals(manCenterURL) && (manCenterURL.startsWith("http://") || manCenterURL.startsWith("https://"))) {
-            String updateInterval = properties.get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
+            String updateInterval = get("MANAGEMENT_CENTER_UPDATE_INTERVAL");
             String updateIntervalAttr = (updateInterval.isEmpty()) ? "" : " update-interval=\"" + updateInterval + '"';
             template.addReplacement("<!--MANAGEMENT_CENTER_CONFIG-->",
                     format("<management-center enabled=\"true\"%s>%n        %s%n" + "    </management-center>%n",
@@ -138,7 +138,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     }
 
     private String loadMemberConfig() {
-        String config = properties.get("CONFIG");
+        String config = get("CONFIG");
         if (config != null) {
             return config;
         }
@@ -151,12 +151,12 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
         ConfigFileTemplate template = new ConfigFileTemplate(config);
         //template.withAgents(componentRegistry);
-        String licenseKey = properties.get("LICENCE_KEY");
+        String licenseKey = get("LICENCE_KEY");
         template.addEnvironment("licenseKey", licenseKey);
         template.addEnvironment(properties);
 
         template.addReplacement("<!--MEMBERS-->",
-                createAddressConfig("address", agents, properties.get("HAZELCAST_PORT")));
+                createAddressConfig("address", agents, get("HAZELCAST_PORT")));
         if (licenseKey != null) {
             template.addReplacement("<!--LICENSE-KEY-->", format("<license-key>%s</license-key>", licenseKey));
         }
@@ -165,7 +165,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     }
 
     private String loadClientConfig() {
-        String config = properties.get("CONFIG");
+        String config = get("CONFIG");
         if (config != null) {
             return config;
         }
@@ -184,13 +184,13 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
     @Override
     public void install() {
-        String versionSpec = properties.get("VERSION_SPEC");
 
-        String cloud = properties.get("CLOUD_PROVIDER");
+        String cloud = get("CLOUD_PROVIDER");
         if ("embedded".equals(cloud)) {
             return;
         }
 
+        String versionSpec = get("VERSION_SPEC");
         LOGGER.info("Installing versionSpec [" + versionSpec + "] on " + agents.size() + " agents...");
 
         String publicIps = "";
@@ -198,13 +198,13 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
             publicIps = AgentData.publicAddressesString(agents);
         }
 
-        String vendor = properties.get("VENDOR");
+        String vendor = get("VENDOR");
         String installFile = getConfigurationFile("install-" + vendor + ".sh").getPath();
 
         LOGGER.info("Installing '" + vendor + "' version '" + versionSpec + "' on Agents using " + installFile);
 
         new BashCommand(installFile)
-                .addParams(properties.get("SESSION_ID"), versionSpec, publicIps)
+                .addParams(get("SESSION_ID"), versionSpec, publicIps)
                 .addEnvironment(properties)
                 .execute();
 
@@ -215,7 +215,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
 
     @Override
     public void createVendorInstance() throws Exception {
-        String workerType = properties.get("WORKER_TYPE");
+        String workerType = get("WORKER_TYPE");
 
         LOGGER.info(format("%s HazelcastInstance starting", workerType));
         if ("javaclient".equals(workerType)) {

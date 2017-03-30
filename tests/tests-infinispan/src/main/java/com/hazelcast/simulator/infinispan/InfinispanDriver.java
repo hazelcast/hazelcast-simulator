@@ -21,8 +21,8 @@ import com.hazelcast.simulator.vendors.VendorDriver;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.api.BasicCacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.server.core.configuration.ProtocolServerConfiguration;
 import org.infinispan.server.hotrod.HotRodServer;
+import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 
 import java.io.IOException;
@@ -46,6 +46,7 @@ import static java.lang.String.format;
 public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
 
     private BasicCacheContainer cacheContainer;
+    private HotRodServer hotRodServer;
 
     @Override
     public WorkerParameters loadWorkerParameters(String workerType, int agentIndex) {
@@ -70,7 +71,7 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
                 + " -Djava.net.preferIPv4Stack=true"
                 + " -Djgroups.bind_address=" + agent.getPrivateAddress()
                 + " -Djgroups.tcp.address=" + agent.getPrivateAddress()
-                + " -Djgroups.tcp.port=" + properties.get("HAZELCAST_PORT")
+                + " -Djgroups.tcp.port=" + get("HAZELCAST_PORT")
                 + " -Djgroups.tcpping.initial_hosts=" + initialHosts(false);
 
         params.set("JVM_OPTIONS", memberArgs)
@@ -85,7 +86,7 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
     }
 
     private String initialHosts(boolean clientMode) {
-        String port = clientMode ? "11222" : properties.get("HAZELCAST_PORT");
+        String port = clientMode ? "11222" : get("HAZELCAST_PORT");
 
         StringBuilder sb = new StringBuilder();
         boolean first = true;
@@ -114,24 +115,27 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
 
     @Override
     public void createVendorInstance() throws Exception {
-        String workerType = properties.get("WORKER_TYPE");
+        String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
             Properties hotrodProperties = new Properties();
-            hotrodProperties.setProperty("infinispan.client.hotrod.server_list", properties.get("server_list"));
+            hotrodProperties.setProperty("infinispan.client.hotrod.server_list", get("server_list"));
             this.cacheContainer = new RemoteCacheManager(hotrodProperties);
         } else {
-//            EmbeddedCacheManager manager = new DefaultCacheManager(new ConfigurationBuilder().compatibility().enable()
-//                    .marshaller(new org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller()).build());
-
             DefaultCacheManager defaultCacheManager = new DefaultCacheManager("infinispan.xml");
-            ProtocolServerConfiguration conf = new HotRodServerConfigurationBuilder().build();
-            new HotRodServer().start(conf, defaultCacheManager);
+            HotRodServerConfiguration hotRodServerConfiguration = new HotRodServerConfigurationBuilder()
+                    .host(get("PRIVATE_ADDRESS")).port(11222).build();
+            this.hotRodServer = new HotRodServer();
+            hotRodServer.start(hotRodServerConfiguration, defaultCacheManager);
             this.cacheContainer = defaultCacheManager;
         }
     }
 
     @Override
     public void close() throws IOException {
+        if (hotRodServer != null) {
+            hotRodServer.stop();
+        }
+
         if (cacheContainer != null) {
             cacheContainer.stop();
         }

@@ -205,7 +205,7 @@ list_ips(){
 }
 
 post_init(){
-    echo "[INFO]Waiting for agent-machines to come online"
+    echo "[INFO]Waiting for agent-machines to come online..."
     for public_ip in ${public_ips//,/ } ; do
         ok=0
         for i in `seq 1 60`;

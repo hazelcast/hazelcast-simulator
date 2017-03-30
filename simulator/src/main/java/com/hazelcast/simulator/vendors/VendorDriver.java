@@ -81,6 +81,13 @@ public abstract class VendorDriver<V> implements Closeable {
         return value == null ? defaultValue : value;
     }
 
+    protected String get(String name) {
+        return properties.get(name);
+    }
+
+    /**
+     * Sets the agents to be used by the VendorDriver. Method is called on the coordinator-side.
+     */
     public VendorDriver<V> setAgents(List<AgentData> agents) {
         this.agents = agents;
         return this;
