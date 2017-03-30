@@ -30,7 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
@@ -55,11 +54,12 @@ import static com.hazelcast.simulator.utils.FormatUtils.join;
 import static com.hazelcast.simulator.utils.SimulatorUtils.loadComponentRegister;
 import static com.hazelcast.simulator.utils.UuidUtil.newUnsecureUuidString;
 import static java.lang.String.format;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 class Provisioner {
 
-    private static final int MACHINE_WARMUP_WAIT_SECONDS = 10;
+    private static final int MACHINE_WARMUP_SECONDS = 10;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
 
     private static final String INDENTATION = "    ";
@@ -68,24 +68,17 @@ class Provisioner {
     private final String simulatorPath = getSimulatorHome().getAbsolutePath();
 
     private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final ExecutorService executor = newFixedThreadPool(10);
 
     private final SimulatorProperties properties;
     private final Bash bash;
-
-    private final int machineWarmupSeconds;
 
     private final Registry registry;
     private final File initScriptFile;
 
     public Provisioner(SimulatorProperties properties, Bash bash) {
-        this(properties, bash, MACHINE_WARMUP_WAIT_SECONDS);
-    }
-
-    public Provisioner(SimulatorProperties properties, Bash bash, int machineWarmupSeconds) {
         this.properties = properties;
         this.bash = bash;
-        this.machineWarmupSeconds = machineWarmupSeconds;
         this.registry = loadComponentRegister(agentsFile, false);
         this.initScriptFile = getInitScriptFile(simulatorPath);
     }
@@ -277,8 +270,8 @@ class Provisioner {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
 
-        log("Pausing for machine warmup... (%d sec)", machineWarmupSeconds);
-        sleepSeconds(machineWarmupSeconds);
+        log("Pausing for machine warmup... (%d sec)", MACHINE_WARMUP_SECONDS);
+        sleepSeconds(MACHINE_WARMUP_SECONDS);
 
         long elapsed = getElapsedSeconds(started);
         logWithRuler("Successfully provisioned %s %s machines (%s seconds)", delta, properties.getCloudProvider(), elapsed);
