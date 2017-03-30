@@ -9,5 +9,6 @@ export JAVA_OPTS="-server -Xmx1g -Xms256m ${JAVA_EXTRA_OPTS}"
 java -cp "${SIMULATOR_HOME}/lib/*:${SIMULATOR_HOME}/test-lib/ignite/*:${SIMULATOR_HOME}/test-lib/infinispan/*" ${JAVA_OPTS} \
     -DSIMULATOR_HOME=${SIMULATOR_HOME} \
     -Dhazelcast.logging.type=log4j \
+    -Dfile.encoding=UTF8 \
     -Dlog4j.configuration=file:${SIMULATOR_HOME}/conf/coordinator-log4j.xml \
     com.hazelcast.simulator.coordinator.CoordinatorCli "$@"
