@@ -129,6 +129,8 @@ EOL
         --output text \
         --query 'Instances[*].InstanceId')
 
+    rm -fr $temp_file
+
     for instance_id in $output
     do
         instance_ids="$instance_id,$instance_ids"
@@ -137,11 +139,10 @@ EOL
     # in some rare cases the created instance is not seen immediately.
     # so lets give them instances some time to start.
     # We would be waiting for instance_completion anyway.
-    sleep 10
+    sleep 20
 }
 
 set_instances_name(){
-
     for instance_id in ${instance_ids//,/ } ; do
         dt=$(date '+%d_%m_%Y__%H_%M_%S')
         name="$GROUP_NAME-$dt"
