@@ -330,10 +330,6 @@ class Provisioner {
                 .execute();
 
         // execute the init.sh script
-        executeInitScript(ip);
-    }
-
-    private void executeInitScript(String ip) {
         File initFile = newFile("init-" + newUnsecureUuidString() + ".sh");
         writeText(loadInitScript(), initFile);
         bash.scpToRemote(ip, initFile, "init.sh");
@@ -342,13 +338,10 @@ class Provisioner {
     }
 
     private String loadInitScript() {
-        String initScript = fileAsText(initScriptFile);
-
-        initScript = initScript.replaceAll(Pattern.quote("${version}"), getSimulatorVersion());
-        initScript = initScript.replaceAll(Pattern.quote("${user}"), properties.getUser());
-        initScript = initScript.replaceAll(Pattern.quote("${cloudprovider}"), properties.getCloudProvider());
-
-        return initScript;
+        return fileAsText(initScriptFile)
+                .replaceAll(Pattern.quote("${version}"), getSimulatorVersion())
+                .replaceAll(Pattern.quote("${user}"), properties.getUser())
+                .replaceAll(Pattern.quote("${cloudprovider}"), properties.getCloudProvider());
     }
 
     private static void log(String message, Object... args) {
