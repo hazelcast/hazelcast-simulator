@@ -12,7 +12,6 @@
 set -e
 #set -x
 
-# Install dstat.
 function installPackage {
     PACKAGE=$1
 
@@ -74,11 +73,10 @@ function mount_ephemeral(){
         echo "No ephemeral disk detected. exiting"
         return
     fi
-
-
-
 }
+
 installPackage dstat
+installPackage curl
 
 # Fix for a bug in an old Kernel on EC2 instances.
 if [[ "${CLOUD_PROVIDER}" == "aws-ec2" ]]; then
