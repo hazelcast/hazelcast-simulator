@@ -322,7 +322,6 @@ public class SimulatorProperties {
         return value;
     }
 
-
     private static final class Value {
         final boolean isDefault;
         final String text;
