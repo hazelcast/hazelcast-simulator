@@ -133,13 +133,14 @@ EOL
     do
         instance_ids="$instance_id,$instance_ids"
     done
-}
 
-set_instances_name(){
     # in some rare cases the created instance is not seen immediately.
     # so lets give them instances some time to start.
     # We would be waiting for instance_completion anyway.
     sleep 10
+}
+
+set_instances_name(){
 
     for instance_id in ${instance_ids//,/ } ; do
         dt=$(date '+%d_%m_%Y__%H_%M_%S')
