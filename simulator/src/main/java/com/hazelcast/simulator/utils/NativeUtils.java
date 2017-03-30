@@ -17,7 +17,6 @@ package com.hazelcast.simulator.utils;
 
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.List;
@@ -37,15 +36,6 @@ public final class NativeUtils {
         return new BashCommand(command)
                 .setThrowsException(throwException)
                 .execute();
-    }
-
-    public static void kill(int pid) {
-        LOGGER.info("Sending -9 signal to PID " + pid);
-        try {
-            Runtime.getRuntime().exec("/bin/kill -9 " + pid + " >/dev/null");
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     /**

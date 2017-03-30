@@ -87,14 +87,6 @@ public class TestCase {
         return properties;
     }
 
-    public void override(Map<String, String> propertiesOverride) {
-        for (String key : properties.keySet()) {
-            if (propertiesOverride.containsKey(key)) {
-                setProperty(key, propertiesOverride.get(key));
-            }
-        }
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("TestCase{");

@@ -81,10 +81,6 @@ public class TimeStepModel {
         return executionGroups.get(executionGroup).afterRunMethods;
     }
 
-    public final List<Method> getTimeStepMethods(String executionGroup) {
-        return executionGroups.get(executionGroup).timeStepMethods;
-    }
-
     public final List<Method> getActiveTimeStepMethods(String group) {
         List<Method> result = new ArrayList<Method>();
         ExecutionGroup executionGroup = executionGroups.get(group);

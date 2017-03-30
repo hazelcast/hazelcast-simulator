@@ -75,11 +75,6 @@ public class BashCommand {
         return this;
     }
 
-    public BashCommand addEnvironment(String variable, Object value) {
-        this.environment.put(variable, value);
-        return this;
-    }
-
     public BashCommand setThrowsException(boolean throwException) {
         this.throwException = throwException;
         return this;

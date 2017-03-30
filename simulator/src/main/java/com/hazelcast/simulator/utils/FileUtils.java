@@ -17,8 +17,6 @@ package com.hazelcast.simulator.utils;
 
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.log4j.Logger;
 
@@ -353,36 +351,6 @@ public final class FileUtils {
 
         home = System.getenv("SIMULATOR_HOME");
         return home != null ? new File(home) : getUserDir();
-    }
-
-    /**
-     * Gets a {@link File} from a defined {@link OptionSpec}.
-     *
-     * @param spec    The {@link OptionSpec} which contains the filename.
-     * @param options The {@link OptionSet} which contains the actual options.
-     * @param desc    The description of the file.
-     * @return the {@link File} from the defined {@link OptionSpec}
-     * @throws CommandLineExitException if the file cannot be found.
-     */
-    public static File getFileOrExit(OptionSpec<String> spec, OptionSet options, String desc) {
-        File file = newFile(options.valueOf(spec));
-        if (!file.exists()) {
-            throw new CommandLineExitException(format("%s [%s] does not exist", desc, file));
-        }
-        return file;
-    }
-
-    public static String getFileAsTextFromWorkingDirOrBaseDir(File baseDir, String fileName, String desc) {
-        File file = newFile(fileName);
-        if (!file.exists()) {
-            file = newFile(baseDir + File.separator + "conf" + File.separator + fileName);
-        }
-        if (!file.exists()) {
-            throw new UncheckedIOException(format("%s [%s] does not exist", desc, file.getAbsolutePath()));
-        }
-        LOGGER.info("Loading " + desc + ": " + file.getAbsolutePath());
-
-        return fileAsText(file);
     }
 
     public static List<File> getFilesFromClassPath(String classpath) {
