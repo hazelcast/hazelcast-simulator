@@ -20,39 +20,7 @@ package com.hazelcast.simulator.protocol.core;
  */
 @SuppressWarnings("checkstyle:magicnumber")
 public enum AddressLevel {
-
-    COORDINATOR(0),
-    AGENT(1),
-    WORKER(2);
-
-    private static final AddressLevel[] ADDRESS_LEVELS = new AddressLevel[]{COORDINATOR, AGENT, WORKER};
-
-    private final int intValue;
-
-    AddressLevel(int intValue) {
-        this.intValue = intValue;
-    }
-
-    public static int getMinLevel() {
-        return COORDINATOR.intValue;
-    }
-
-    public static int getMaxLevel() {
-        return WORKER.intValue;
-    }
-
-    public static AddressLevel fromInt(int intValue) {
-        if (intValue < getMinLevel() || intValue > getMaxLevel()) {
-            throw new IllegalArgumentException("Unknown address level: " + intValue);
-        }
-        return ADDRESS_LEVELS[intValue];
-    }
-
-    public int toInt() {
-        return intValue;
-    }
-
-    public boolean isParentAddressLevel(AddressLevel addressLevel) {
-        return (this.intValue < addressLevel.intValue);
-    }
+    COORDINATOR,
+    AGENT,
+    WORKER
 }
