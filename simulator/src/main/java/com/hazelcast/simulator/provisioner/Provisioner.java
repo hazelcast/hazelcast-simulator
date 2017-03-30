@@ -132,7 +132,7 @@ class Provisioner {
                 @Override
                 public void run() {
                     log("    Installing Simulator on %s", agent.getPublicAddress());
-                    uploadJARs(agent.getPublicAddress());
+                    installSimulator(agent.getPublicAddress());
                     log("    Finished installing Simulator on %s", agent.getPublicAddress());
                 }
             });
@@ -330,78 +330,14 @@ class Provisioner {
         return new File(scriptDir, "jdk-support.sh");
     }
 
-    private void uploadJARs(String ip) {
-        String simulatorVersion = getSimulatorVersion();
-
-        // first we wipe out the directory if it exists. This way we can start with a clean slate.
-        //bash.ssh(ip, format("rm -fr hazelcast-simulator-%s", simulatorVersion));
-
-        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/lib/", simulatorVersion));
-        bash.ssh(ip, format("mkdir -p hazelcast-simulator-%s/user-lib/", simulatorVersion));
-
-        // delete the old lib folder to prevent different versions of the same JAR to bite us
-        bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/lib/*", simulatorVersion));
-
-        // delete the old user-lib folder to prevent interference with older setups
-        bash.sshQuiet(ip, format("rm -f hazelcast-simulator-%s/user-lib/*", simulatorVersion));
-
-        // upload Simulator JARs
-        uploadLibraryJar(ip, "simulator-*");
-
-        // we don't copy all JARs to the agent to increase upload speed, e.g. YourKit is uploaded on demand by the Coordinator
-
-        // activemq libraries
-        uploadLibraryJar(ip, "activemq-core*");
-        uploadLibraryJar(ip, "geronimo-jms*");
-        uploadLibraryJar(ip, "geronimo-j2ee*");
-        uploadLibraryJar(ip, "slf4j-api*");
-
-        uploadLibraryJar(ip, "cache-api*");
-        uploadLibraryJar(ip, "commons-codec*");
-        uploadLibraryJar(ip, "commons-lang3*");
-        uploadLibraryJar(ip, "freemarker*");
-        uploadLibraryJar(ip, "gson-*");
-        uploadLibraryJar(ip, "HdrHistogram-*");
-        uploadLibraryJar(ip, "jopt*");
-        uploadLibraryJar(ip, "junit*");
-        uploadLibraryJar(ip, "log4j*");
-        uploadLibraryJar(ip, "slf4j-log4j12-*");
-
-        // hack to get ignite working
-        if (properties.get("VENDOR").equals("ignite")) {
-            uploadLibraryJar(ip, "ignite-*");
-            uploadLibraryJar(ip, "spring-*");
-            uploadLibraryJar(ip, "commons-logging-*");
-        }
-
-        // hack to get infinispan working
-        if (properties.get("VENDOR").equals("infinispan")) {
-            uploadLibraryJar(ip, "infinispan-*");
-            uploadLibraryJar(ip, "jboss*");
-            uploadLibraryJar(ip, "jgroups*");
-            uploadLibraryJar(ip, "netty*");
-            uploadLibraryJar(ip, "scala*");
-            uploadLibraryJar(ip, "commons-pool*");
-            uploadLibraryJar(ip, "javassist*");
-        }
-
-        // upload remaining files
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/bin/", "bin");
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/conf/", "conf");
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/jdk-install/", "jdk-install");
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/tests/", "tests");
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/test-lib/", "test-lib/");
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/user-lib/", "user-lib/");
-
-        // purge Hazelcast JARs
-        bash.sshQuiet(ip, format("rm -rf hazelcast-simulator-%s/vendor-lib", simulatorVersion));
+    private void installSimulator(String ip) {
+        new BashCommand(getConfigurationFile("install-simulator.sh").getAbsolutePath())
+                .addEnvironment(properties.asMap())
+                .addParams(ip)
+                .execute();
 
         // execute the init.sh script
         executeInitScript(ip);
-    }
-
-    private void uploadLibraryJar(String ip, String jarName) {
-        bash.uploadToRemoteSimulatorDir(ip, simulatorPath + "/lib/" + jarName, "lib");
     }
 
     private void executeInitScript(String ip) {
@@ -450,7 +386,7 @@ class Provisioner {
                 log(INDENTATION + ip + " Java Installed");
             }
             log(INDENTATION + ip + " Simulator installation started...");
-            uploadJARs(ip);
+            installSimulator(ip);
             log(INDENTATION + ip + " Simulator installed");
 
             if (startHarakiriMonitorCommand != null) {
