@@ -18,7 +18,6 @@ package com.hazelcast.simulator.protocol.core;
 /**
  * Defines the address level of a Simulator component.
  */
-@SuppressWarnings("checkstyle:magicnumber")
 public enum AddressLevel {
     COORDINATOR,
     AGENT,
