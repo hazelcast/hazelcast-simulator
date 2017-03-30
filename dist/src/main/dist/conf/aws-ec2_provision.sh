@@ -18,7 +18,6 @@ fi
 # - INSTANCE_STORAGE_MKFS_OPTIONS
 # - INSTANCE_STORAGE_MOUNT_OPTIONS
 # - EC2_SPOT_PRICE
-# - software installation
 
 count=$1
 
