@@ -86,7 +86,7 @@ public class IgniteDriver extends VendorDriver<Ignite> {
     }
 
     @Override
-    public void createVendorInstance() {
+    public void startVendorInstance() {
         String workerType = get("WORKER_TYPE");
         LOGGER.info(format("%s Ignite instance starting", workerType));
         ignite = Ignition.start(new File(getUserDir(), "ignite.xml").getAbsolutePath());

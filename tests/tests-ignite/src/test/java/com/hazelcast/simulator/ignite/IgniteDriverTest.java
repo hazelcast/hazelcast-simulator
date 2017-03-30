@@ -54,7 +54,7 @@ public class IgniteDriverTest {
         VendorDriver<Ignite> driverAtWorker = new IgniteDriver()
                 .setAll(workerParameters.asMap());
 
-        driverAtWorker.createVendorInstance();
+        driverAtWorker.startVendorInstance();
         Ignite ignite = driverAtWorker.getVendorInstance();
         assertNotNull(ignite);
         driverAtWorker.close();

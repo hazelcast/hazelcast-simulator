@@ -214,7 +214,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
     }
 
     @Override
-    public void createVendorInstance() throws Exception {
+    public void startVendorInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
 
         LOGGER.info(format("%s HazelcastInstance starting", workerType));

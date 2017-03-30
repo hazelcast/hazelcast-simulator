@@ -116,9 +116,9 @@ public abstract class VendorDriver<V> implements Closeable {
     public abstract V getVendorInstance();
 
     /**
-     * Creates a Vendor instance. Method is called on the worker-side
+     * Starts a Vendor instance. Method is called on the worker-side
      */
-    public abstract void createVendorInstance() throws Exception;
+    public abstract void startVendorInstance() throws Exception;
 
     /**
      * Loads the parameters to create a worker. Method is called on the coordinator-side

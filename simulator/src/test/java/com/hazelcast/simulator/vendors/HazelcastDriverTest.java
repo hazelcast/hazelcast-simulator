@@ -74,7 +74,7 @@ public class HazelcastDriverTest {
         VendorDriver<HazelcastInstance> driverAtWorker = new HazelcastDriver()
                 .setAll(workerParameters.asMap());
 
-        driverAtWorker.createVendorInstance();
+        driverAtWorker.startVendorInstance();
         HazelcastInstance hz = driverAtWorker.getVendorInstance();
         assertNotNull(hz);
         driverAtWorker.close();

@@ -32,12 +32,13 @@ import static java.lang.String.format;
 
 /**
  * todo
- * - client connection terminates
  * - logging in case of jgroups error
  * - fix the 'ping' port
  * - hotrod configuration
  *
  * done
+ * - java assist for netty
+ * - client connection terminates
  * - client support
  * - cluster support
  * - some sensible configuration for the cache
@@ -114,19 +115,23 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
     }
 
     @Override
-    public void createVendorInstance() throws Exception {
+    public void startVendorInstance() throws Exception {
         String workerType = get("WORKER_TYPE");
         if ("javaclient".equals(workerType)) {
             Properties hotrodProperties = new Properties();
             hotrodProperties.setProperty("infinispan.client.hotrod.server_list", get("server_list"));
-            this.cacheContainer = new RemoteCacheManager(hotrodProperties);
+            RemoteCacheManager remoteCacheManager = new RemoteCacheManager(hotrodProperties);
+            this.cacheContainer = remoteCacheManager;
+            remoteCacheManager.start();
         } else {
             DefaultCacheManager defaultCacheManager = new DefaultCacheManager("infinispan.xml");
+            this.cacheContainer = defaultCacheManager;
+            defaultCacheManager.start();
+
             HotRodServerConfiguration hotRodServerConfiguration = new HotRodServerConfigurationBuilder()
                     .host(get("PRIVATE_ADDRESS")).port(11222).build();
             this.hotRodServer = new HotRodServer();
             hotRodServer.start(hotRodServerConfiguration, defaultCacheManager);
-            this.cacheContainer = defaultCacheManager;
         }
     }
 

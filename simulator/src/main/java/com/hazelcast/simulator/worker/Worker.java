@@ -96,7 +96,7 @@ public class Worker {
 
         performanceMonitor.start();
 
-        vendorDriver.createVendorInstance();
+        vendorDriver.startVendorInstance();
 
         // we need to signal start after everything has completed. Otherwise messages could be send on the agent topic
         // without the agent being subscribed.

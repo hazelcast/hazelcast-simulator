@@ -382,6 +382,7 @@ class Provisioner {
             uploadLibraryJar(ip, "netty*");
             uploadLibraryJar(ip, "scala*");
             uploadLibraryJar(ip, "commons-pool*");
+            uploadLibraryJar(ip, "javassist*");
         }
 
         // upload remaining files

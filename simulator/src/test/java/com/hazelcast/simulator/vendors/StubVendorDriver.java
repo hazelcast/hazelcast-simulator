@@ -12,7 +12,7 @@ public class StubVendorDriver extends VendorDriver {
     }
 
     @Override
-    public void createVendorInstance() throws Exception {
+    public void startVendorInstance() throws Exception {
 
     }
 
