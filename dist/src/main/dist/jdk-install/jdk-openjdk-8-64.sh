@@ -4,8 +4,8 @@ set -e
 
 source jdk-support.sh
 
-install wget
-install unzip
+installPackage wget
+installPackage unzip
 
 cd ~
 wget --no-verbose http://ec2-54-87-52-100.compute-1.amazonaws.com/java-1.8.0-openjdk-1.8.0.121-0.b13.el6_8.x86_64.zip
