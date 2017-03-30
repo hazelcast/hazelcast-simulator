@@ -158,19 +158,15 @@ public final class TestCaseRunner {
                 globalTarget.getAddress(), globalTarget.getParameters().getWorkerType()));
 
         executePhase(SETUP);
-
         executePhase(LOCAL_PREPARE);
         executePhase(GLOBAL_PREPARE);
-
         executeRun();
-
         if (isVerifyEnabled) {
             executePhase(GLOBAL_VERIFY);
             executePhase(LOCAL_VERIFY);
         } else {
             log("Skipping Test verification");
         }
-
         executePhase(GLOBAL_TEARDOWN);
         executePhase(LOCAL_TEARDOWN);
     }
@@ -333,9 +329,7 @@ public final class TestCaseRunner {
      */
     private Map<WorkerData, Future> startRun() {
         log(format("Starting run on %s workers", targetType.toString(targetCount)));
-
         log(format("Test run using workers %s", WorkerData.toAddressString(targets)));
-
         return submitToTargets(false, new StartPhaseOperation(RUN, testCase.getId()));
     }
 
