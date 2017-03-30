@@ -29,7 +29,6 @@ import com.hazelcast.simulator.coordinator.operations.RcTestStopOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerKillOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerScriptOperation;
 import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
-import com.hazelcast.simulator.protocol.core.SimulatorMessage;
 import com.hazelcast.simulator.worker.operations.CreateTestOperation;
 import com.hazelcast.simulator.worker.operations.ExecuteScriptOperation;
 import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
@@ -43,7 +42,7 @@ import java.util.concurrent.ConcurrentMap;
 import static java.lang.String.format;
 
 /**
- * Defines the operation type for a {@link SimulatorMessage}.
+ * Defines the operation type.
  */
 public enum OperationType {
 
