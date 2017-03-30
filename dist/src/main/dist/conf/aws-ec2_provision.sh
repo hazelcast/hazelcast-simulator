@@ -14,17 +14,11 @@ fi
 
 # todo:
 # - security-group: automatic create
-# - init script
 # --ebs-optimized
 # - INSTANCE_STORAGE_MKFS_OPTIONS
 # - INSTANCE_STORAGE_MOUNT_OPTIONS
 # - EC2_SPOT_PRICE
 # - software installation
-# - correctly handling killing non existing agents
-#   'An error occurred (InvalidParameterCombination) when calling the TerminateInstances operation: No instances specified
-#
-# done
-# - await for machine 'startup' doesn't timeout
 
 count=$1
 
