@@ -26,10 +26,13 @@ import com.hazelcast.simulator.utils.ThreadSpawner;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import static com.hazelcast.simulator.coordinator.AgentUtils.onlineCheckAgents;
@@ -40,7 +43,6 @@ import static com.hazelcast.simulator.provisioner.ProvisionerUtils.getInitScript
 import static com.hazelcast.simulator.utils.CommonUtils.awaitTermination;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
-import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.FileUtils.deleteQuiet;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.FileUtils.getConfigurationFile;
@@ -59,20 +61,15 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 class Provisioner {
 
-    private static final int MACHINE_WARMUP_SECONDS = 10;
     private static final int EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 10;
-
     private static final String INDENTATION = "    ";
-
     private static final Logger LOGGER = Logger.getLogger(Provisioner.class);
-    private final String simulatorPath = getSimulatorHome().getAbsolutePath();
 
+    private final String simulatorPath = getSimulatorHome().getAbsolutePath();
     private final File agentsFile = new File(getUserDir(), AgentsFile.NAME);
     private final ExecutorService executor = newFixedThreadPool(10);
-
     private final SimulatorProperties properties;
     private final Bash bash;
-
     private final Registry registry;
     private final File initScriptFile;
 
@@ -87,7 +84,6 @@ class Provisioner {
     Registry getRegistry() {
         return registry;
     }
-
 
     void installJava() {
         onlineCheckAgents(properties, registry);
@@ -237,41 +233,24 @@ class Provisioner {
         String startHarakiriMonitorCommand = getStartHarakiriMonitorCommandOrNull(properties);
         try {
             log("Creating machines (can take a few minutes)...");
-//            Set<Future> futures = new HashSet<Future>();
-//            for (int batch : calcBatches(properties, delta)) {
-//
-//
-//                Set<? extends NodeMetadata> nodes = computeService.createNodesInGroup(groupName, batch, template);
-//                for (NodeMetadata node : nodes) {
-//                    String privateIpAddress = node.getPrivateAddresses().iterator().next();
-//                    String publicIpAddress = node.getPublicAddresses().iterator().next();
-//
-//                    echo(INDENTATION + publicIpAddress + " LAUNCHED");
-//                    componentRegistry.addAgent(publicIpAddress, privateIpAddress, tags);
-//                    AgentsFile.save(agentsFile, componentRegistry);
-//                }
-//
-//                for (NodeMetadata node : nodes) {
-//                    String publicIpAddress = node.getPublicAddresses().iterator().next();
-//                    Future future = executor.submit(new InstallNodeTask(publicIpAddress, startHarakiriMonitorCommand));
-//                    futures.add(future);
-//                }
-//            }
-//
-//            for (Future future : futures) {
-//                future.get();
-//            }
-
             new BashCommand(getConfigurationFile("aws-ec2_provision.sh").getAbsolutePath())
                     .addEnvironment(properties.asMap())
                     .addParams(delta)
                     .execute();
+            String[] agentLines = fileAsText(agentsFile).split("\n");
+            Set<Future> futures = new HashSet<Future>();
+            for (int k = 0; k < delta; k++) {
+                String agentLine = agentLines[k + registry.agentCount()];
+                String publicIpAddress = agentLine.split(",")[0];
+                Future future = executor.submit(new InstallNodeTask(publicIpAddress, startHarakiriMonitorCommand));
+                futures.add(future);
+            }
+            for (Future future : futures) {
+                future.get();
+            }
         } catch (Exception e) {
             throw new CommandLineExitException("Failed to provision machines: " + e.getMessage());
         }
-
-        log("Pausing for machine warmup... (%d sec)", MACHINE_WARMUP_SECONDS);
-        sleepSeconds(MACHINE_WARMUP_SECONDS);
 
         long elapsed = getElapsedSeconds(started);
         logWithRuler("Successfully provisioned %s %s machines (%s seconds)", delta, properties.getCloudProvider(), elapsed);
