@@ -19,7 +19,6 @@ import com.hazelcast.simulator.common.SimulatorProperties;
 
 import java.io.File;
 
-import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static java.lang.String.format;
 
 public class Bash {
@@ -36,10 +35,6 @@ public class Bash {
 
     public String execute(String command) {
         return new BashCommand(command).execute();
-    }
-
-    public String executeQuiet(String command) {
-        return execute(command + " || true");
     }
 
     public String sshTTY(String ip, String command) {
@@ -66,12 +61,6 @@ public class Bash {
         } else {
             sshQuiet(ip, "killall -9 java");
         }
-    }
-
-    public void uploadToRemoteSimulatorDir(String ip, String src, String target) {
-        String command = format("rsync --checksum -avv -L -e \"ssh %s\" %s %s@%s:hazelcast-simulator-%s/%s",
-                scpOptions, src, user, ip, getSimulatorVersion(), target);
-        execute(command);
     }
 
     public void scpToRemote(String ip, File src, String target) {
