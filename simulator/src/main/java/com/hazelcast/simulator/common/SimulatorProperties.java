@@ -190,10 +190,6 @@ public class SimulatorProperties {
         return parseInt(get("MEMBER_WORKER_SHUTDOWN_DELAY_SECONDS", "5"));
     }
 
-    public int getWorkerStartupTimeoutSeconds() {
-        return parseInt(get("WORKER_STARTUP_TIMEOUT_SECONDS", "60"));
-    }
-
     public int getWaitForWorkerShutdownTimeoutSeconds() {
         return parseInt(get("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS", "120"));
     }
