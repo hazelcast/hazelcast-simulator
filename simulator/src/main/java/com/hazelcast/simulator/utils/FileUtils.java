@@ -18,7 +18,6 @@ package com.hazelcast.simulator.utils;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -50,7 +49,6 @@ public final class FileUtils {
     private static final int READ_BUFFER_SIZE = 8192;
     private static final int COPY_BUFFER_SIZE = 1024;
 
-    private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-_]+$");
 
     private FileUtils() {

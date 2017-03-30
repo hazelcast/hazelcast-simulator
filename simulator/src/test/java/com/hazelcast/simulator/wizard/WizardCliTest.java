@@ -108,13 +108,13 @@ public class WizardCliTest {
         args.add("--createWorkDir");
         args.add("tests");
         args.add("--cloudProvider");
-        args.add(CloudProviderUtils.PROVIDER_GCE);
+        args.add(CloudProviderUtils.PROVIDER_EC2);
 
         WizardCli cli = new WizardCli(getArgs());
         cli.wizard = wizard;
         cli.run();
 
-        verify(wizard).createWorkDir(any(SimulatorProperties.class), eq("tests"), eq(CloudProviderUtils.PROVIDER_GCE));
+        verify(wizard).createWorkDir(any(SimulatorProperties.class), eq("tests"), eq(CloudProviderUtils.PROVIDER_EC2));
         verifyNoMoreInteractions(wizard);
     }
 

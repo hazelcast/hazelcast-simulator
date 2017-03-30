@@ -34,7 +34,6 @@ import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isEC2;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.isGCE;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isStatic;
 import static com.hazelcast.simulator.utils.FileUtils.appendText;
@@ -55,9 +54,6 @@ import static java.lang.String.format;
 class Wizard {
 
     static final File SSH_COPY_ID_FILE = new File("ssh-copy-id-script").getAbsoluteFile();
-
-    private static final String GCE_DEFAULT_MACHINE_SPEC = "osFamily=CENTOS,os64Bit=true";
-    private static final String GCE_DEFAULT_SSH_OPTIONS = "-o CheckHostIP=no";
 
     private static final Logger LOGGER = Logger.getLogger(Wizard.class);
 
@@ -116,23 +112,6 @@ class Wizard {
             appendText(format(
                     "%n# Machine specification used for AWS (change if needed)%n#MACHINE_SPEC=%s%n",
                     simulatorProperties.get("MACHINE_SPEC")), simulatorPropertiesFile);
-        } else if (isGCE(cloudProvider)) {
-            String currentUser = execute("whoami").trim();
-
-            appendText(format(
-                    "%n# These files contain your GCE credentials (change if needed)%n%s=%s%n%s=%s%n",
-                    CLOUD_IDENTITY, "~/gce.id",
-                    CLOUD_CREDENTIAL, "~/gce.pem"),
-                    simulatorPropertiesFile);
-            appendText(format(
-                    "%nGROUP_NAME=simulator-agent%nSIMULATOR_USER=%s%n",
-                    currentUser), simulatorPropertiesFile);
-            appendText(format(
-                    "%n# Machine specification used for GCE (change if needed)%nMACHINE_SPEC=%s%n",
-                    GCE_DEFAULT_MACHINE_SPEC), simulatorPropertiesFile);
-            appendText(format(
-                    "%n# SSH options used for GCE (change if needed)%nSSH_OPTIONS=%s %s%n",
-                    simulatorProperties.getSshOptions(), GCE_DEFAULT_SSH_OPTIONS), simulatorPropertiesFile);
         }
 
         if (isStatic(cloudProvider)) {

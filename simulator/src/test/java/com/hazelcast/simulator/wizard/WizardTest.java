@@ -20,7 +20,6 @@ import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_CREDENTIA
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_IDENTITY;
 import static com.hazelcast.simulator.common.SimulatorProperties.CLOUD_PROVIDER;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_EC2;
-import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_GCE;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_LOCAL;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.PROVIDER_STATIC;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
@@ -138,13 +137,6 @@ public class WizardTest {
         wizard.createWorkDir(simulatorProperties, workDir.getName(), PROVIDER_EC2);
 
         assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_EC2);
-    }
-
-    @Test
-    public void testCreateWorkDir_withCloudProviderGCE() {
-        wizard.createWorkDir(simulatorProperties, workDir.getName(), PROVIDER_GCE);
-
-        assertThatWorkingDirFilesHaveBeenCreated(PROVIDER_GCE);
     }
 
     @Test(expected = CommandLineExitException.class)
