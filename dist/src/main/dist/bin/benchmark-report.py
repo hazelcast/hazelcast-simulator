@@ -3,19 +3,15 @@
 
 # todo:
 # - writing html
-# - pruning of dstats to match running time
-# - when comparing benchmarks; use 1 color for all plots from 1 benchmark
 # - if no latency info is found; print warning
 # - when not a lot of data points, them time issues in gnuplot (use WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS=default)
 # - timeseries: avg
 # - gnuplot y axis formatting; long numbers are unreadable because not dots or comma's
-# - throughput per member in main output directory
-# - latency distribution doesn't show the percentiles; doesn't load xlabels.csv
 #
 # done:
-# - better commandline help
-# - throughput per worker in a single plot
-# - default gnuplot colors stink; often they are not distinguishable
+# - when comparing benchmarks; use 1 color for all plots from 1 benchmark
+# - throughput per member in main output directory
+# - latency distribution doesn't show the percentiles; doesn't load xlabels.csv
 #
 # backlog
 # - google chart option
@@ -29,9 +25,10 @@
 
 import argparse
 import csv
-import os
 import re
 import tempfile
+
+import os
 
 parser = argparse.ArgumentParser(description='Creating a benchmark report from one or more benchmarks.')
 parser.add_argument('benchmarks', metavar='B', nargs='+',
@@ -39,18 +36,20 @@ parser.add_argument('benchmarks', metavar='B', nargs='+',
 # parser.add_argument('-r', '--realtime', default='report', help='print the real time of the datapoints.')
 parser.add_argument('-o', '--output', nargs=1,
                     help='The output directory for the report. By default a report directory in the working directory is created.')
+parser.add_argument('-w', '--workerDiagrams', help='Enable worker level diagrams.', action="store_true")
 
-x = parser.parse_args()
-args = x.benchmarks
+args = parser.parse_args()
+benchmark_args = args.benchmarks
 
 simulator_home = os.environ['SIMULATOR_HOME']
 
-if not x.output:
+if not args.output:
     report_dir = "report"
 else:
-    report_dir = x.output[0]
+    report_dir = args.output[0]
 
 print("output directory '" + report_dir + "'")
+
 
 # ================ utils ========================
 
@@ -230,7 +229,7 @@ class LatencyDistributionGnuplot(Gnuplot):
         self._write("set style line 1 lt 1 lw 3 pt 3 linecolor rgb \"red\"")
         self._write("set output '" + self.filepath + "'")
 
-        self._write("plot '"+simulator_home+"/bin/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
+        self._write("plot '" + simulator_home + "/bin/xlabels.csv' notitle with labels center offset 0, 1.5 point,\\")
         tmp_files = []
         for ts in self.ts_list:
             ts_file = ts.to_tmp_file()
@@ -401,6 +400,80 @@ class SeriesHandle:
         return Series(self.name, self.ylabel, self.is_bytes, self.is_points, items=items)
 
 
+class LatencyLoader:
+    def __init__(self, directory, refs):
+        for file_name in os.listdir(directory):
+            if not file_name.endswith(".hgrm"):
+                continue
+
+            file_name = os.path.splitext(file_name)[0]
+            file_path = os.path.join(directory, file_name)
+
+            name = file_name.split('-')[1]
+
+            refs.append(SeriesHandle("latency", "latency_interval_25_" + name, "Interval 25%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 3]))
+            refs.append(SeriesHandle("latency", "latency_interval_50_" + name, "Interval 50%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 4]))
+            refs.append(SeriesHandle("latency", "latency_interval_75_" + name, "Interval 75%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 5]))
+            refs.append(SeriesHandle("latency", "latency_interval_90_" + name, "Interval 90%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 6]))
+            refs.append(SeriesHandle("latency", "latency_interval_99_" + name, "Interval 99%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 7]))
+            refs.append(SeriesHandle("latency", "latency_interval_999_" + name, "Interval 99.9%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 8]))
+            refs.append(SeriesHandle("latency", "latency_interval_9999_" + name, "Interval 99.99%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 9]))
+            refs.append(SeriesHandle("latency", "latency_interval_99999_" + name, "Interval 99.999%", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 10]))
+
+            refs.append(SeriesHandle("latency", "latency_interval_min_" + name, "Interval Min", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 11]))
+            refs.append(SeriesHandle("latency", "latency_interval_max_" + name, "Interval Max", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 12]))
+            refs.append(SeriesHandle("latency", "latency_interval_mean_" + name, "Interval Mean", "Latency (μs)",
+                                     self.load_latency_ts, args=[file_path, 13]))
+            refs.append(
+                SeriesHandle("latency", "latency_interval_std_deviation_" + name, "Interval Standard Deviation", "Latency (μs)",
+                             self.load_latency_ts, args=[file_path, 14]))
+
+            hgrm_path = os.path.join(directory, file_name + ".hgrm")
+            refs.append(
+                SeriesHandle("latency-distribution", "latency_distribution_" + name, "Latency distribution", "Latency (μs)",
+                             self.load_latency_distribution_ts, args=[hgrm_path]))
+
+    def load_latency_ts(self, path, column):
+        result = []
+        with open(path, 'rb') as csvfile:
+            csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            # we need to skip the first 7 lines
+            for x in range(0, 3):
+                next(csvreader)
+            for row in csvreader:
+                result.append(KeyValue(row[0], row[column]))
+        return result
+
+    def load_latency_distribution_ts(self, path):
+        result = []
+
+        line_index = 0
+        with open(path) as f:
+            for line in f:
+                line = line.rstrip()
+                line_index += 1
+
+                if line_index < 4 or line.startswith("#"):
+                    continue
+
+                row = re.split(" +", line)
+                if len(row) < 5:
+                    continue
+
+                result.append(KeyValue(row[4], row[1]))
+        return result
+
+
 class Worker:
     name = ""
     directory = ""
@@ -514,47 +587,7 @@ class Worker:
         refs.append(SeriesHandle("gc", "meta_total", "Meta/Perm size total", "Size",
                                  self.__load_gc, args=[24, True], is_bytes=True))
 
-        for file_name in os.listdir(self.directory):
-            if not file_name.endswith(".hgrm"):
-                continue
-
-            file_name = os.path.splitext(file_name)[0]
-            file_path = os.path.join(self.directory, file_name)
-            print(file_path)
-
-            name = file_name.split('-')[1]
-
-            refs.append(SeriesHandle("latency", "latency_interval_25_" + name, "Interval 25%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 3]))
-            refs.append(SeriesHandle("latency", "latency_interval_50_" + name, "Interval 50%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 4]))
-            refs.append(SeriesHandle("latency", "latency_interval_75_" + name, "Interval 75%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 5]))
-            refs.append(SeriesHandle("latency", "latency_interval_90_" + name, "Interval 90%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 6]))
-            refs.append(SeriesHandle("latency", "latency_interval_99_" + name, "Interval 99%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 7]))
-            refs.append(SeriesHandle("latency", "latency_interval_999_" + name, "Interval 99.9%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 8]))
-            refs.append(SeriesHandle("latency", "latency_interval_9999_" + name, "Interval 99.99%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 9]))
-            refs.append(SeriesHandle("latency", "latency_interval_99999_" + name, "Interval 99.999%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 10]))
-
-            refs.append(SeriesHandle("latency", "latency_interval_min_" + name, "Interval Min", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 11]))
-            refs.append(SeriesHandle("latency", "latency_interval_max_" + name, "Interval Max", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 12]))
-            refs.append(SeriesHandle("latency", "latency_interval_mean_" + name, "Interval Mean", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 13]))
-            refs.append(
-                SeriesHandle("latency", "latency_interval_std_deviation_" + name, "Interval Standard Deviation", "Latency (μs)",
-                             self.load_latency_ts, args=[file_path, 14]))
-
-            hgrm_path = os.path.join(directory, file_name + ".hgrm")
-            refs.append(
-                SeriesHandle("latency-distribution", "latency_distribution_" + name, "Latency distribution", "Latency (μs)",
-                             self.load_latency_distribution_ts, args=[hgrm_path]))
+        LatencyLoader(self.directory, refs)
 
     # Returns the name of the agent this worker belongs to
     def agent(self):
@@ -630,36 +663,6 @@ class Worker:
                         result.append(KeyValue(row[0], float(row[5]) + float(row[6])))
         return result
 
-    def load_latency_ts(self, path, column):
-        result = []
-        with open(path, 'rb') as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-            # we need to skip the first 7 lines
-            for x in range(0, 3):
-                next(csvreader)
-            for row in csvreader:
-                result.append(KeyValue(row[0], row[column]))
-        return result
-
-    def load_latency_distribution_ts(self, path):
-        result = []
-
-        line_index = 0
-        with open(path) as f:
-            for line in f:
-                line = line.rstrip()
-                line_index += 1
-
-                if line_index < 4 or line.startswith("#"):
-                    continue
-
-                row = re.split(" +", line)
-                if len(row) < 5:
-                    continue
-
-                result.append(KeyValue(row[4], row[1]))
-        print path
-        return result
 
 class Benchmark:
     # the directory where the original files can be found
@@ -692,47 +695,7 @@ class Benchmark:
 
         refs.append(SeriesHandle("throughput", "throughput", "Throughput", "Operations/sec", self.aggregated_throughput))
 
-        for file_name in os.listdir(self.src_dir):
-            if not file_name.endswith(".hgrm"):
-                continue
-
-            file_name = os.path.splitext(file_name)[0]
-            file_path = os.path.join(self.src_dir, file_name)
-            print(file_path)
-
-            name = file_name.split('-')[1]
-
-            refs.append(SeriesHandle("latency", "latency_interval_25_" + name, "Interval 25%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 3]))
-            refs.append(SeriesHandle("latency", "latency_interval_50_" + name, "Interval 50%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 4]))
-            refs.append(SeriesHandle("latency", "latency_interval_75_" + name, "Interval 75%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 5]))
-            refs.append(SeriesHandle("latency", "latency_interval_90_" + name, "Interval 90%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 6]))
-            refs.append(SeriesHandle("latency", "latency_interval_99_" + name, "Interval 99%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 7]))
-            refs.append(SeriesHandle("latency", "latency_interval_999_" + name, "Interval 99.9%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 8]))
-            refs.append(SeriesHandle("latency", "latency_interval_9999_" + name, "Interval 99.99%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 9]))
-            refs.append(SeriesHandle("latency", "latency_interval_99999_" + name, "Interval 99.999%", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 10]))
-
-            refs.append(SeriesHandle("latency", "latency_interval_min_" + name, "Interval Min", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 11]))
-            refs.append(SeriesHandle("latency", "latency_interval_max_" + name, "Interval Max", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 12]))
-            refs.append(SeriesHandle("latency", "latency_interval_mean_" + name, "Interval Mean", "Latency (μs)",
-                                     self.load_latency_ts, args=[file_path, 13]))
-            refs.append(
-                SeriesHandle("latency", "latency_interval_std_deviation_" + name, "Interval Standard Deviation", "Latency (μs)",
-                             self.load_latency_ts, args=[file_path, 14]))
-
-            hgrm_path = os.path.join(src_dir, file_name + ".hgrm")
-            refs.append(
-                SeriesHandle("latency-distribution", "latency_distribution_" + name, "Latency distribution", "Latency (μs)",
-                             self.load_latency_distribution_ts, args=[hgrm_path]))
+        LatencyLoader(src_dir, refs)
 
         agents = {}
         for worker in self.workers:
@@ -758,36 +721,6 @@ class Benchmark:
 
         return Series("", "", False, False, ts_list=list).items
 
-    def load_latency_ts(self, path, column):
-        result = []
-        with open(path, 'rb') as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
-            # we need to skip the first 7 lines
-            for x in range(0, 3):
-                next(csvreader)
-            for row in csvreader:
-                result.append(KeyValue(row[0], row[column]))
-        return result
-
-    def load_latency_distribution_ts(self, path):
-        result = []
-
-        line_index = 0
-        with open(path) as f:
-            for line in f:
-                line = line.rstrip()
-                line_index += 1
-
-                if line_index < 4 or line.startswith("#"):
-                    continue
-
-                row = re.split(" +", line)
-                if len(row) < 5:
-                    continue
-
-                result.append(KeyValue(row[4], row[1]))
-        print path
-        return result
 
 class Comparison:
     def __init__(self):
@@ -798,19 +731,19 @@ class Comparison:
         print("Loading benchmarks")
 
         # collect all benchmark directories and the names for the benchmarks
-        for arg in args:
-            if arg.startswith("[") and arg.endswith("]"):
+        for benchmark_arg in benchmark_args:
+            if benchmark_arg.startswith("[") and benchmark_arg.endswith("]"):
                 if not last_benchmark:
-                    print("Benchmark name " + arg + " must be preceded with a benchmark directory.")
+                    print("Benchmark name " + benchmark_arg + " must be preceded with a benchmark directory.")
                     exit()
-                benchmark_names[last_benchmark] = arg[1:len(arg) - 1]
+                benchmark_names[last_benchmark] = benchmark_arg[1:len(benchmark_arg) - 1]
                 last_benchmark = None
             else:
-                benchmark_dir = arg
+                benchmark_dir = benchmark_arg
                 if not os.path.exists(benchmark_dir):
                     print("benchmark directory '" + benchmark_dir + "' does not exist!")
                     exit(1)
-                last_benchmark = arg
+                last_benchmark = benchmark_arg
                 benchmark_dirs.append(benchmark_dir)
                 name = os.path.basename(os.path.normpath(benchmark_dir))
                 benchmark_names[benchmark_dir] = name
@@ -828,6 +761,7 @@ class Comparison:
     def compare(self):
         plots = {}
 
+        # plot benchmark/machine level metrics
         for benchmark in self.benchmarks:
             if len(benchmark.ts_references) == 0:
                 print(" benchmark [" + benchmark.name + "] benchmark.dir [" + benchmark.src_dir + "] has no data")
@@ -845,39 +779,37 @@ class Comparison:
 
                 plot.add(ref.load(), title=benchmark.name)
 
-        for benchmark in self.benchmarks:
-            for worker in benchmark.workers:
-                for ref in worker.ts_references:
-                    if ref.src == "throughput":
-                        plot = plots.get("throughput_per_worker")
-                        if not plot:
-                            plot = TimeseriesGnuplot(self.output_dir(ref.src),
-                                                     "Throughput per member",
-                                                     basefilename="throughput_per_worker")
-                            plots["throughput_per_worker"] = plot
+        # plot worker level metrics
+        if args.workerDiagrams:
+            for benchmark in self.benchmarks:
+                for worker in benchmark.workers:
+                    for ref in worker.ts_references:
+                        if ref.src == "throughput":
+                            plot = plots.get("throughput_per_worker")
+                            if not plot:
+                                plot = TimeseriesGnuplot(self.output_dir(ref.src),
+                                                         "Throughput per worker",
+                                                         basefilename="throughput_per_worker")
+                                plots["throughput_per_worker"] = plot
 
-                        if len(self.benchmarks) > 1:
-                            plot.add(ref.load(), benchmark.name + "_" + worker.name)
+                            if len(self.benchmarks) > 1:
+                                plot.add(ref.load(), benchmark.name + "_" + worker.name)
+                            else:
+                                plot.add(ref.load(), worker.name)
+                        elif ref.src == "dstat":
+                            continue  # dstat is already plotted
                         else:
-                            plot.add(ref.load(), worker.name)
+                            name = ref.name + "_" + worker.name
+                            plot = plots.get(name)
+                            title = worker.name + " " + ref.title
+                            if not plot:
+                                if ref.src == "latency-distribution":
+                                    plot = LatencyDistributionGnuplot(self.output_dir("latency"), title, basefilename=name)
+                                else:
+                                    plot = TimeseriesGnuplot(self.output_dir(ref.src), title, basefilename=name)
+                                plots[name] = plot
 
-        # make all plots for each individual worker
-        for benchmark in self.benchmarks:
-            for worker in benchmark.workers:
-                for ref in worker.ts_references:
-                    if ref.src == "dstat":
-                        continue # dstat is already plotted
-
-                    name = ref.name+"_"+worker.name
-                    plot = plots.get(name)
-                    if not plot:
-                        if ref.src == "latency-distribution":
-                            plot = LatencyDistributionGnuplot(self.output_dir("latency"),  worker.name + " " + ref.title, basefilename=name)
-                        else:
-                            plot = TimeseriesGnuplot(self.output_dir(ref.src), worker.name + " " + ref.title, basefilename=name)
-                        plots[name] = plot
-
-                    plot.add(ref.load(), benchmark.name)
+                            plot.add(ref.load(), benchmark.name)
 
         for plot in plots.values():
             plot.plot()
