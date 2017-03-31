@@ -26,9 +26,6 @@ import com.hazelcast.simulator.protocol.core.SimulatorAddress;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-
 class AgentOperationProcessor implements OperationProcessor {
 
     private final WorkerProcessManager processManager;
@@ -46,12 +43,12 @@ class AgentOperationProcessor implements OperationProcessor {
             processManager.launch((CreateWorkerOperation) op, promise);
         } else if (op instanceof StartTimeoutDetectionOperation) {
             failureMonitor.startTimeoutDetection();
-            promise.answer(SUCCESS);
+            promise.answer("ok");
         } else if (op instanceof StopTimeoutDetectionOperation) {
             failureMonitor.stopTimeoutDetection();
-            promise.answer(SUCCESS);
+            promise.answer("ok");
         } else {
-            throw new ProcessException("Unknown operation:" + op, UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
+            throw new ProcessException("Unknown operation:" + op);
         }
     }
 }

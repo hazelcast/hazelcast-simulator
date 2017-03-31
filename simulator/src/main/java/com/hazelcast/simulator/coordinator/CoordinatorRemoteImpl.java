@@ -29,8 +29,6 @@ import com.hazelcast.simulator.coordinator.operations.RcWorkerStartOperation;
 import com.hazelcast.simulator.protocol.exception.ProcessException;
 import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-
 /**
  * Serverside implementation of the CoordinatorRemote.
  */
@@ -66,7 +64,7 @@ public class CoordinatorRemoteImpl implements CoordinatorRemote {
         } else if (op instanceof RcWorkerStartOperation) {
             return coordinator.workerStart((RcWorkerStartOperation) op);
         } else {
-            throw new ProcessException("Unknown operation:" + op, UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
+            throw new ProcessException("Unknown operation:" + op);
         }
         return null;
     }
