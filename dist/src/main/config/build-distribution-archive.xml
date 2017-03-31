@@ -78,5 +78,14 @@
                 <include>com.hazelcast.simulator:tests-infinispan</include>
             </includes>
         </dependencySet>
+
+
+        <dependencySet>
+            <outputDirectory>test-lib/couchbase</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <includes>
+                <include>com.hazelcast.simulator:tests-couchbase</include>
+            </includes>
+        </dependencySet>
     </dependencySets>
 </assembly>

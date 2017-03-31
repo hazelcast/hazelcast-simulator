@@ -28,5 +28,6 @@
         <module>tests-hz39</module>
         <module>tests-ignite</module>
         <module>tests-infinispan</module>
+        <module>tests-couchbase</module>
     </modules>
 </project>

@@ -61,7 +61,7 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
         } else if ("javaclient".equals(workerType)) {
             loadClientParameters(params);
         } else {
-            throw new IllegalArgumentException(format("Unknown workerType [%s]", workerType));
+            throw new IllegalArgumentException(format("Unsupported workerType [%s]", workerType));
         }
 
         return params;

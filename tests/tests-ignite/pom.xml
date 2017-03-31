@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>tests-ignite</artifactId>
-    <name>Ignite testing support</name>
+    <name>Hazelcast Simulator Tests (Ignite)</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>

@@ -63,6 +63,13 @@ if [ "$VENDOR" = "infinispan" ]; then
     uploadLibraryJar "javassist*"
 fi
 
+#hack to get couchbase working
+if [ "$VENDOR" = "couchbase" ]; then
+    uploadLibraryJar "java-client-*"
+    uploadLibraryJar "core-io-*"
+    uploadLibraryJar "rxjava-*"
+fi
+
 # upload remaining files
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/bin/" "bin"
 uploadToRemoteSimulatorDir "$SIMULATOR_HOME/conf/" "conf"

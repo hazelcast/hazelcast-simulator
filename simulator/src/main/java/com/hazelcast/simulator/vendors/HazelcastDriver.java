@@ -72,7 +72,7 @@ public class HazelcastDriver extends VendorDriver<HazelcastInstance> {
         } else if ("litemember".equals(workerType)) {
             loadLiteMemberWorkerParameters(params);
         } else {
-            throw new IllegalArgumentException(String.format("Unknown workerType [%s]", workerType));
+            throw new IllegalArgumentException(String.format("Unsupported workerType [%s]", workerType));
         }
 
         return params;
