@@ -110,7 +110,6 @@ public final class FileUtils {
     public static File appendText(String text, String fileName) {
         File file = new File(fileName);
         appendText(text, file);
-
         return file;
     }
 
@@ -164,14 +163,8 @@ public final class FileUtils {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {
-            closeQuietly(reader);
-            closeQuietly(streamReader);
-            closeQuietly(stream);
+            closeQuietly(reader, streamReader, stream);
         }
-    }
-
-    public static void deleteQuiet(String fileName) {
-        deleteQuiet(new File(fileName));
     }
 
     public static void deleteQuiet(File file) {
@@ -205,20 +198,16 @@ public final class FileUtils {
     }
 
     public static File ensureExistingFile(String fileName) {
-        File file = new File(fileName);
-        ensureExistingFile(file);
-        return file;
+        return ensureExistingFile(new File(fileName));
     }
 
     public static File ensureExistingFile(File parent, String fileName) {
-        File file = new File(parent, fileName);
-        ensureExistingFile(file);
-        return file;
+        return ensureExistingFile(new File(parent, fileName));
     }
 
-    public static void ensureExistingFile(File file) {
+    public static File ensureExistingFile(File file) {
         if (file.isFile()) {
-            return;
+            return file;
         }
 
         if (file.isDirectory()) {
@@ -234,18 +223,16 @@ public final class FileUtils {
                 throw new UncheckedIOException(e);
             }
         }
+
+        return file;
     }
 
     public static File ensureExistingDirectory(String dirName) {
-        File dir = new File(dirName);
-        ensureExistingDirectory(dir);
-        return dir;
+        return ensureExistingDirectory(new File(dirName));
     }
 
     public static File ensureExistingDirectory(File parent, String dirName) {
-        File dir = new File(parent, dirName);
-        ensureExistingDirectory(dir);
-        return dir;
+        return ensureExistingDirectory(new File(parent, dirName));
     }
 
     public static File ensureExistingDirectory(File dir) {
@@ -327,18 +314,12 @@ public final class FileUtils {
 
     public static File getUserDir() {
         String userDirTest = System.getProperty("user.dir.test");
-        if (userDirTest != null) {
-            return new File(userDirTest);
-        }
-        return new File(System.getProperty("user.dir"));
+        return userDirTest == null ? new File(System.getProperty("user.dir")) : new File(userDirTest);
     }
 
     public static String getUserHomePath() {
         String userDirTest = System.getProperty("user.dir.test");
-        if (userDirTest != null) {
-            return new File(userDirTest).getAbsolutePath();
-        }
-        return System.getProperty("user.home");
+        return userDirTest == null ? System.getProperty("user.home") : new File(userDirTest).getAbsolutePath();
     }
 
     public static File getSimulatorHome() {
@@ -384,50 +365,9 @@ public final class FileUtils {
 
         return files;
     }
-//
-//    /**
-//     * Copies a directory recursively.
-//     *
-//     * @param source the source directory
-//     * @param target the target directory
-//     */
-//    public static void copyDirectory(File source, File target) {
-//        for (File srcFile : source.listFiles()) {
-//            if (srcFile.isDirectory()) {
-//                File targetChild = new File(target, srcFile.getName());
-//                ensureExistingDirectory(targetChild);
-//                copyDirectory(srcFile, targetChild);
-//            } else {
-//                copyFileToDirectory(srcFile, target);
-//            }
-//        }
-//    }
-//
-//    public static void copyFilesToDirectory(File[] sourceFiles, File targetDirectory) {
-//        for (File sourceFile : sourceFiles) {
-//            copyFileToDirectory(sourceFile, targetDirectory);
-//        }
-//    }
-//
-//    public static void copyFileToDirectory(File sourceFile, File targetDirectory) {
-//        File targetFile = newFile(targetDirectory, sourceFile.getName());
-//        try {
-//            Files.copy(sourceFile, targetFile);
-//            if (sourceFile.canExecute()) {
-//                targetFile.setExecutable(true);
-//            }
-//        } catch (IOException e) {
-//            throw new UncheckedIOException(format("Error while copying file from %s to %s", sourceFile.getAbsolutePath(),
-//                    targetFile.getAbsolutePath()), e);
-//        }
-//    }
 
     public static File getConfigurationFile(String filename) {
         File file = new File(getUserDir(), filename).getAbsoluteFile();
-        if (file.exists()) {
-            return file;
-        } else {
-            return newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
-        }
+        return file.exists() ? file : newFile(getSimulatorHome(), "conf", filename).getAbsoluteFile();
     }
 }
