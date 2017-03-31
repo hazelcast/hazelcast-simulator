@@ -9,13 +9,9 @@
 # - gnuplot y axis formatting; long numbers are unreadable because not dots or comma's
 #
 # done:
-# - when comparing benchmarks; use 1 color for all plots from 1 benchmark
-# - throughput per member in main output directory
-# - latency distribution doesn't show the percentiles; doesn't load xlabels.csv
 #
 # backlog
 # - google chart option
-# - svg option
 # - latency per worker
 # - option to plot with real time.
 # - dstats merging for members?
@@ -37,6 +33,7 @@ parser.add_argument('benchmarks', metavar='B', nargs='+',
 parser.add_argument('-o', '--output', nargs=1,
                     help='The output directory for the report. By default a report directory in the working directory is created.')
 parser.add_argument('-w', '--workerDiagrams', help='Enable worker level diagrams.', action="store_true")
+parser.add_argument('--svg', help='SVG instead of PNG graphics.', action="store_true")
 
 args = parser.parse_args()
 benchmark_args = args.benchmarks
@@ -135,10 +132,15 @@ class Gnuplot:
         ts_first = self.ts_list[0]
         self.ylabel = ts_first.ylabel
 
-        if self.basefilename:
-            self.filepath = os.path.join(self.directory, self.basefilename + ".png")
+        if args.svg:
+            ext = "svg"
         else:
-            self.filepath = os.path.join(self.directory, ts_first.name + ".png")
+            ext = "png"
+
+        if self.basefilename:
+            self.filepath = os.path.join(self.directory, self.basefilename + "." + ext)
+        else:
+            self.filepath = os.path.join(self.directory, ts_first.name + "." + ext)
 
         self.is_bytes = ts_first.is_bytes
         self.is_points = ts_first.is_points
@@ -160,7 +162,12 @@ class TimeseriesGnuplot(Gnuplot):
         self._write("set title '" + self.title + "' noenhanced")
         self._write("set style data lines")
         self._write('set datafile separator ","')
-        self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
+
+        if args.svg:
+            self._write("set term svg enhanced mouse size " + str(self.image_width) + "," + str(self.image_height))
+        else:
+            self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
+
         self._write("set grid")
         self._write("set key below")
 
@@ -220,7 +227,12 @@ class LatencyDistributionGnuplot(Gnuplot):
     def _plot(self):
         self._write("set datafile separator \",\"")
         self._write("set title '" + self.title + "' noenhanced")
-        self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
+
+        if args.svg:
+            self._write("set term svg enhanced mouse size " + str(self.image_width) + "," + str(self.image_height))
+        else:
+            self._write("set terminal png size " + str(self.image_width) + "," + str(self.image_height))
+
         self._write("set grid")
         self._write("unset xtics")
         self._write("set ylabel 'Latency (μs)'")
@@ -254,9 +266,6 @@ class LatencyDistributionGnuplot(Gnuplot):
 
         for tmp_file in tmp_files:
             tmp_file.close()
-
-        print(self.gnuplot_file.name)
-
 
 class GoogleCharts:
     def __init__(self, ts, directory, title):
