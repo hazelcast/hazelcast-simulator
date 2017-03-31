@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tests-infinispan</artifactId>
-    <name>Hazelcast Simulator Tests (Infinispan)</name>
+    <artifactId>tests-couchbase</artifactId>
+    <name>Hazelcast Simulator Tests (Couchbase)</name>
 
     <parent>
         <groupId>com.hazelcast.simulator</groupId>
@@ -19,7 +19,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <infinispan.version>8.2.6.Final</infinispan.version>
+        <couchbase-javaclient.version>2.4.3</couchbase-javaclient.version>
         <javassist.version>3.12.1.GA</javassist.version>
     </properties>
 
@@ -45,36 +45,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-client-hotrod</artifactId>
-            <version>${infinispan.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>${javassist.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-server-hotrod</artifactId>
-            <version>${infinispan.version}</version>
-
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-slf4j-impl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-core</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>java-client</artifactId>
+            <version>${couchbase-javaclient.version}</version>
         </dependency>
     </dependencies>
 </project>

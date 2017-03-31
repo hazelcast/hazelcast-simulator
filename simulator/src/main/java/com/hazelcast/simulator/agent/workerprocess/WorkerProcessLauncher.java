@@ -238,6 +238,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/ignite/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/infinispan/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/couchbase/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/vendor-lib/" + hzVersionDirectory + "/*"
                 + uploadClassPath
                 + CLASSPATH_SEPARATOR + CLASSPATH;

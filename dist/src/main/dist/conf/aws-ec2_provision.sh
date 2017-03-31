@@ -208,7 +208,7 @@ post_init(){
     echo "[INFO]Waiting for agent-machines to come online..."
     for public_ip in ${public_ips//,/ } ; do
         ok=0
-        for i in `seq 1 60`;
+        for i in `seq 1 300`;
         do
             set +e
             ssh $SSH_OPTIONS -o ConnectTimeout=1 -q $SIMULATOR_USER@$public_ip exit
@@ -220,6 +220,11 @@ post_init(){
                 ok=1
                 break
             fi
+
+            if [ "$i" -ge "15" ]; then
+                echo "[INFO]    Agent machine $public_ip still offline"
+            fi
+
             sleep 2
         done
 
