@@ -15,21 +15,9 @@
  */
 package com.hazelcast.simulator.protocol.exception;
 
-import com.hazelcast.simulator.protocol.core.ResponseType;
-
 public class ProcessException extends RuntimeException {
-    private final ResponseType responseType;
 
-    public ProcessException(ResponseType responseType) {
-        this(null, responseType);
-    }
-
-    public ProcessException(String msg, ResponseType responseType) {
+    public ProcessException(String msg) {
         super(msg);
-        this.responseType = responseType;
-    }
-
-    public ResponseType getResponseType() {
-        return responseType;
     }
 }

@@ -28,9 +28,6 @@ import com.hazelcast.simulator.worker.operations.StopRunOperation;
 import com.hazelcast.simulator.worker.operations.TerminateWorkerOperation;
 import com.hazelcast.simulator.worker.testcontainer.TestManager;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-
 public class WorkerOperationProcessor implements OperationProcessor {
 
     private final TestManager testManager;
@@ -50,19 +47,19 @@ public class WorkerOperationProcessor implements OperationProcessor {
         try {
             if (op instanceof TerminateWorkerOperation) {
                 worker.shutdown(((TerminateWorkerOperation) op));
-                promise.answer(SUCCESS);
+                promise.answer("ok");
             } else if (op instanceof CreateTestOperation) {
                 testManager.createTest((CreateTestOperation) op);
-                promise.answer(SUCCESS);
+                promise.answer("ok");
             } else if (op instanceof ExecuteScriptOperation) {
                 scriptExecutor.execute((ExecuteScriptOperation) op, promise);
             } else if (op instanceof StartPhaseOperation) {
                 testManager.startTestPhase((StartPhaseOperation) op, promise);
             } else if (op instanceof StopRunOperation) {
                 testManager.stopRun((StopRunOperation) op);
-                promise.answer(SUCCESS);
+                promise.answer("ok");
             } else {
-                throw new ProcessException("Unknown operation:" + op, UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
+                throw new ProcessException("Unknown operation:" + op);
             }
         } catch (Throwable e) {
             // any uncaught exception we'll feed into the ExceptionReporter.

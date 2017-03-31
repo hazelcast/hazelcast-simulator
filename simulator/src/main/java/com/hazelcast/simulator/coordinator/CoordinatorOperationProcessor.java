@@ -25,9 +25,6 @@ import com.hazelcast.simulator.protocol.operation.SimulatorOperation;
 import com.hazelcast.simulator.worker.operations.PerformanceStatsOperation;
 import org.apache.log4j.Logger;
 
-import static com.hazelcast.simulator.protocol.core.ResponseType.SUCCESS;
-import static com.hazelcast.simulator.protocol.core.ResponseType.UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR;
-
 public class CoordinatorOperationProcessor implements OperationProcessor {
     private static final Logger LOGGER = Logger.getLogger(CoordinatorOperationProcessor.class);
 
@@ -50,8 +47,8 @@ public class CoordinatorOperationProcessor implements OperationProcessor {
             LogOperation logOperation = (LogOperation) op;
             LOGGER.log(logOperation.getLevel(), logOperation.getMessage());
         } else {
-            throw new ProcessException("Unknown operation:" + op, UNSUPPORTED_OPERATION_ON_THIS_PROCESSOR);
+            throw new ProcessException("Unknown operation:" + op);
         }
-        promise.answer(SUCCESS);
+        promise.answer("ok");
     }
 }
