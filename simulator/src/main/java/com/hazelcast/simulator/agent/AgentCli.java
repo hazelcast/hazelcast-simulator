@@ -50,10 +50,6 @@ public final class AgentCli {
             "Port of this Agent.")
             .withRequiredArg().ofType(Integer.class);
 
-    private final OptionSpec<Integer> threadPoolSizeSpec = parser.accepts("threadPoolSize",
-            "Size of the thread pool to connect to Worker instances.")
-            .withRequiredArg().ofType(Integer.class).defaultsTo(0);
-
     private final OptionSpec<Integer> workerLastSeenTimeoutSecondsSpec = parser.accepts("workerLastSeenTimeoutSeconds",
             "Timeout value for worker timeout detection.")
             .withRequiredArg().ofType(Integer.class).defaultsTo(DEFAULT_WORKER_LAST_SEEN_TIMEOUT_SECONDS);
@@ -79,16 +75,8 @@ public final class AgentCli {
             throw new CommandLineExitException("Missing parameter: --port");
         }
         int port = options.valueOf(portSpec);
-
-        Integer threadPoolSize = options.valueOf(threadPoolSizeSpec);
-        Integer workerLastSeenTimeoutSeconds = options.valueOf(workerLastSeenTimeoutSecondsSpec);
-
-        this.agent = new Agent(
-                addressIndex,
-                publicAddress,
-                port,
-                threadPoolSize,
-                workerLastSeenTimeoutSeconds);
+        int workerLastSeenTimeoutSeconds = options.valueOf(workerLastSeenTimeoutSecondsSpec);
+        this.agent = new Agent(addressIndex, publicAddress, port, workerLastSeenTimeoutSeconds);
     }
 
     private static void logHeader() {

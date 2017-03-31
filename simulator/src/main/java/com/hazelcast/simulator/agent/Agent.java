@@ -54,7 +54,6 @@ public class Agent implements Closeable {
     public Agent(int addressIndex,
                  String publicAddress,
                  int port,
-                 int threadPoolSize,
                  int workerLastSeenTimeoutSeconds) {
         SimulatorAddress agentAddress = agentAddress(addressIndex);
 
