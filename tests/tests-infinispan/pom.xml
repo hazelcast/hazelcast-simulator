@@ -19,7 +19,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <infinispan.version>8.2.6.Final</infinispan.version>
+        <infinispan.version>9.0.0.CR3</infinispan.version>
         <javassist.version>3.12.1.GA</javassist.version>
     </properties>
 

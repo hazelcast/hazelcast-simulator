@@ -106,7 +106,7 @@ class Gnuplot:
         elif ts == self.ts_list[2]:
             return "forest-green"
         elif ts == self.ts_list[3]:
-            return "gold"
+            return "orchid"
         elif ts == self.ts_list[4]:
             return "grey"
         elif ts == self.ts_list[5]:
@@ -114,7 +114,7 @@ class Gnuplot:
         elif ts == self.ts_list[6]:
             return "violet"
         else:
-            return "orchid"
+            return "dark-goldenrod"
 
     def plot(self):
         empty = True

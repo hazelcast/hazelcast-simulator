@@ -19,6 +19,8 @@ import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.vendors.VendorDriver;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.Configuration;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.commons.api.BasicCacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.server.hotrod.HotRodServer;
@@ -120,7 +122,8 @@ public class InfinispanDriver extends VendorDriver<BasicCacheContainer> {
         if ("javaclient".equals(workerType)) {
             Properties hotrodProperties = new Properties();
             hotrodProperties.setProperty("infinispan.client.hotrod.server_list", get("server_list"));
-            RemoteCacheManager remoteCacheManager = new RemoteCacheManager(hotrodProperties);
+            Configuration configuration = new ConfigurationBuilder().withProperties(hotrodProperties).build();
+            RemoteCacheManager remoteCacheManager = new RemoteCacheManager(configuration);
             this.cacheContainer = remoteCacheManager;
             remoteCacheManager.start();
         } else {
