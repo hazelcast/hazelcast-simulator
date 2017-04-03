@@ -38,9 +38,12 @@ public class StringICacheTest extends AbstractTest {
 
     // properties
     public int keyLength = 10;
-    public int valueLength = 10;
     public int keyCount = 10000;
     public int valueCount = 10000;
+    public int valueLength = -1;
+    public int minValueLength = 10;
+    public int maxValueLength = 10;
+
     // if we use the putAndGet (so returning a value) or the put (which returns void)
     public boolean useGetAndPut = true;
     public KeyLocality keyLocality = KeyLocality.SHARED;
@@ -61,7 +64,13 @@ public class StringICacheTest extends AbstractTest {
         waitClusterSize(logger, targetInstance, minNumberOfMembers);
 
         keys = generateStringKeys(keyCount, keyLength, keyLocality, targetInstance);
-        values = generateStrings(valueCount, valueLength);
+
+        if (valueLength > -1) {
+            minValueLength = valueLength;
+            maxValueLength = valueLength;
+        }
+
+        values = generateStrings(valueCount, minValueLength, maxValueLength);
 
         Random random = new Random();
         Streamer<String, String> streamer = StreamerFactory.getInstance(cache);

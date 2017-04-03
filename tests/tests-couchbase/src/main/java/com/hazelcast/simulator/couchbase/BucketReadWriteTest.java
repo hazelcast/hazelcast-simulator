@@ -26,10 +26,18 @@ import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
+import java.util.Random;
+
+import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
+
 public class BucketReadWriteTest extends CouchbaseTest {
     public int keyDomain = 100000;
+    public int valueCount = 10000;
+    public int minValueLength = 10;
+    public int maxValueLength = 10;
 
     private Bucket bucket;
+    private String[] values;
 
     @Setup
     public void setup() {
@@ -42,6 +50,10 @@ public class BucketReadWriteTest extends CouchbaseTest {
 //                .build();
 //
 //        clusterManager.insertBucket(bucketSettings);
+
+        values = generateStrings(valueCount, minValueLength, maxValueLength);
+
+
         ClusterManager clusterManager = cluster.clusterManager("Administrator", "password");
         for (BucketSettings b : clusterManager.getBuckets()) {
             logger.info(b);
@@ -51,23 +63,24 @@ public class BucketReadWriteTest extends CouchbaseTest {
 
     @Prepare(global = true)
     public void prepare() {
+        Random random = new Random();
         for (int k = 0; k < keyDomain; k++) {
-            JsonObject content = JsonObject.create().put("x", "y");
+            JsonObject content = JsonObject.create().put("x", values[random.nextInt(valueCount)]);
             bucket.upsert(JsonDocument.create("" + k, content));
         }
     }
 
     @TimeStep(prob = 0.1)
-    public void put(ThreadState state) {
+    public JsonDocument put(ThreadState state) {
         int key = state.randomInt(keyDomain);
-        JsonObject content = JsonObject.create().put("x", "y");
-        bucket.upsert(JsonDocument.create("" + key, content));
+        JsonObject content = JsonObject.create().put("x", values[state.randomInt(valueCount)]);
+        return bucket.upsert(JsonDocument.create("" + key, content));
     }
 
     @TimeStep(prob = -1)
-    public void get(ThreadState state) {
+    public JsonDocument get(ThreadState state) {
         int key = state.randomInt(keyDomain);
-        bucket.get("" + key);
+        return bucket.get("" + key);
     }
 
     public class ThreadState extends BaseThreadState {

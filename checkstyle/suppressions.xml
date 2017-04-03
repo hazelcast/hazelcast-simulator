@@ -23,6 +23,10 @@
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/tests/"/>
     <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
               files="/com/hazelcast/simulator/tests/.*Test\.java$"/>
+    <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/hz/"/>
+    <suppress checks="JUnitTestCase|MethodName|TypeName|ExplicitInitialization"
+              files="/com/hazelcast/simulator/hz/.*Test\.java$"/>
+
 
     <!-- Ignite Tests -->
     <suppress checks="MagicNumber|VisibilityModifier" files="/com/hazelcast/simulator/ignite/"/>

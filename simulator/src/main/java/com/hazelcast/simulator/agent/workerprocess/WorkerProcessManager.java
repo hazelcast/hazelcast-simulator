@@ -42,7 +42,8 @@ public class WorkerProcessManager {
 
     private static final Logger LOGGER = Logger.getLogger(WorkerProcessManager.class);
 
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    // we need a high number of threads so we can do things in parallel like starting up members.
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
     private final ConcurrentMap<SimulatorAddress, WorkerProcess> workerProcesses
             = new ConcurrentHashMap<SimulatorAddress, WorkerProcess>();
