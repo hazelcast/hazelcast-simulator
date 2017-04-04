@@ -32,10 +32,10 @@
         </dependencySet>
 
         <dependencySet>
-            <outputDirectory>test-lib/common</outputDirectory>
+            <outputDirectory>test-lib/hz</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
             <includes>
-                <include>com.hazelcast.simulator:tests-common</include>
+                <include>com.hazelcast.simulator:tests-hz</include>
             </includes>
         </dependencySet>
 

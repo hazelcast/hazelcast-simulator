@@ -235,7 +235,7 @@ public class WorkerProcessLauncher {
                 + CLASSPATH_SEPARATOR + workerHome.getAbsolutePath() + "/upload/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/user-lib/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/" + testJarVersion + "/*"
-                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/common/*"
+                + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/hz/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/ignite/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/infinispan/*"
                 + CLASSPATH_SEPARATOR + simulatorHome + "/test-lib/couchbase/*"
