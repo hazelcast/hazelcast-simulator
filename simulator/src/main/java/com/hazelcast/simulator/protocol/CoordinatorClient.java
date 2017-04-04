@@ -364,7 +364,9 @@ public class CoordinatorClient implements Closeable {
         public void close() {
             closed = true;
             try {
-                connection.close();
+                if (connection != null) {
+                    connection.close();
+                }
             } catch (JMSException e) {
                 LOGGER.trace("Failed to close connection " + connection, e);
             }
