@@ -30,12 +30,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-hz</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-core</artifactId>
             <version>${ignite.version}</version>
