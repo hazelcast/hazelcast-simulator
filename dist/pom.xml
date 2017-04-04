@@ -28,7 +28,7 @@
         </dependency>
         <dependency>
             <groupId>com.hazelcast.simulator</groupId>
-            <artifactId>tests-common</artifactId>
+            <artifactId>tests-hz</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
