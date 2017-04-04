@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.icache;
 
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -32,7 +32,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 /**
  * A performance test for the cache. The key is integer and value is a integer
  */
-public class PerformanceICacheTest extends AbstractTest {
+public class PerformanceICacheTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000000;

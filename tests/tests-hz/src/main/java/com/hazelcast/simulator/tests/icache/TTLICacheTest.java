@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertFalse;
  * The expiryDuration can be configured.
  * We verify that the cache is empty and items have expired.
  */
-public class TTLICacheTest extends AbstractTest {
+public class TTLICacheTest extends HazelcastTest {
 
     public int expiryDuration = 500;
     public int keyCount = 1000;

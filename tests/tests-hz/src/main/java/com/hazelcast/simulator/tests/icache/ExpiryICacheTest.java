@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -32,7 +32,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
-public class ExpiryICacheTest extends AbstractTest {
+public class ExpiryICacheTest extends HazelcastTest {
 
     // default keyCount entries of int, is upper bound to approx 8MB possible max, if all put inside expiryPolicy time
     public int keyCount = 1000000;

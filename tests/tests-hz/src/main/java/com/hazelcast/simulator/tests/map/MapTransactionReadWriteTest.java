@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClust
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
-public class MapTransactionReadWriteTest extends AbstractTest {
+public class MapTransactionReadWriteTest extends HazelcastTest {
 
     // properties
     public int keyCount = 10000;

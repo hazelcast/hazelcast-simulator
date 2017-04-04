@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.config.MaxSizeConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  * With some probability distribution we are doing put, putAsync, get and verification operations on the map.
  * We verify during the test and at the end that the map has not exceeded its max configured size.
  */
-public class MapMaxSizeTest extends AbstractTest {
+public class MapMaxSizeTest extends HazelcastTest {
 
     // properties
     public int keyCount = Integer.MAX_VALUE;

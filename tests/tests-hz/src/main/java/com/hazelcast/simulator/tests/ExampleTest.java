@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -26,7 +26,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 
 import static org.junit.Assert.assertEquals;
 
-public class ExampleTest extends AbstractTest {
+public class ExampleTest extends HazelcastTest {
 
     // properties
     public int maxKeys = 1000;

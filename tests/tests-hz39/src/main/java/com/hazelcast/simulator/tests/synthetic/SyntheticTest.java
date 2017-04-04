@@ -18,8 +18,8 @@ package com.hazelcast.simulator.tests.synthetic;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.Partition;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.StartNanos;
@@ -62,7 +62,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
  * the system can be flooded with too many request. Normal sync operations don't cause that many problems because there is a
  * natural balance between the number of threads and the number of pending invocations.
  */
-public class SyntheticTest extends AbstractTest {
+public class SyntheticTest extends HazelcastTest {
 
     // properties
     public byte syncBackupCount = 0;

@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  * We put keys at random into the map using sync and async methods with some probability distribution.
  * In the end we verify that the map is empty and all key value pairs have expired out of the map.
  */
-public class MapTTLTest extends AbstractTest {
+public class MapTTLTest extends HazelcastTest {
 
     // properties
     public int keyCount = 10;

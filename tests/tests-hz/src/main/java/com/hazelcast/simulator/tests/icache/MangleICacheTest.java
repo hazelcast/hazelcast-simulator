@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -40,7 +40,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.rethrow;
  * This type of cache usage is well outside normal usage, however we found several bugs with this test. It could highlight memory
  * leaks when repeatedly creating and destroying caches and/or managers, something that regular test would not find.
  */
-public class MangleICacheTest extends AbstractTest {
+public class MangleICacheTest extends HazelcastTest {
 
     // properties
     public int maxCaches = 100;

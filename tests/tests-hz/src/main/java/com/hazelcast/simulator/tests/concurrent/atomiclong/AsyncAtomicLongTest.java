@@ -20,8 +20,8 @@ import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -47,7 +47,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
-public class AsyncAtomicLongTest extends AbstractTest {
+public class AsyncAtomicLongTest extends HazelcastTest {
 
     // properties
     public KeyLocality keyLocality = KeyLocality.SHARED;

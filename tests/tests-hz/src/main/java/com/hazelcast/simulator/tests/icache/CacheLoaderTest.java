@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
  *
  * We verify that the cache contains all keys and that the keys have been loaded through a the cache instance.
  */
-public class CacheLoaderTest extends AbstractTest {
+public class CacheLoaderTest extends HazelcastTest {
 
     public int keyCount = 10;
     public int loadAllDelayMs = 0;

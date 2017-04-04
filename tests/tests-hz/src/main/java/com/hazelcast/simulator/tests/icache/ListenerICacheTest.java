@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.cache.ICache;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertEquals;
  * We compare those to the number of events we have generated using different cache operations.
  * We verify that no unexpected events have been received.
  */
-public class ListenerICacheTest extends AbstractTest {
+public class ListenerICacheTest extends HazelcastTest {
 
     private static final int PAUSE_FOR_LAST_EVENTS_SECONDS = 10;
 

@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -27,7 +27,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.fail;
 
-public class LeaseLockTest extends AbstractTest {
+public class LeaseLockTest extends HazelcastTest {
 
     public int lockCount = 500;
     public int maxLeaseTimeMillis = 100;

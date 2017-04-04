@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  *
  * This test is expected to fail.
  */
-public class MapRaceTest extends AbstractTest {
+public class MapRaceTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000;

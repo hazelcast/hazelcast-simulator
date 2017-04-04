@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IQueue;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -28,7 +28,7 @@ import com.hazelcast.simulator.test.annotations.Verify;
 
 import static org.junit.Assert.assertEquals;
 
-public class ProducerConsumerTest extends AbstractTest {
+public class ProducerConsumerTest extends HazelcastTest {
 
     // properties
     public int maxIntervalMillis = 2;

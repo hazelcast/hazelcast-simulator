@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertNotNull;
  * A large delay and high concurrent calls to loadAll could overflow some internal queues.
  * We verify that the cache contains all keys and that the keys have been loaded through a loader instance.
  */
-public class ReadWriteICacheTest extends AbstractTest {
+public class ReadWriteICacheTest extends HazelcastTest {
 
     public int keyCount = 10;
     public int putDelayMs = 0;

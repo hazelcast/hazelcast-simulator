@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.jmx;
 
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -28,7 +28,7 @@ import java.lang.management.ManagementFactory;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 
-public class PartitionServiceMBeanTest extends AbstractTest {
+public class PartitionServiceMBeanTest extends HazelcastTest {
 
     // properties
     public int minNumberOfMembers = 0;
@@ -41,7 +41,7 @@ public class PartitionServiceMBeanTest extends AbstractTest {
         this.mBeanServer = ManagementFactory.getPlatformMBeanServer();
         this.objectName = new ObjectName("com.hazelcast:instance=" + targetInstance.getName()
                 + ",name=" + targetInstance.getName() + ",type=HazelcastInstance.PartitionServiceMBean");
-   }
+    }
 
     @Prepare(global = false)
     public void prepare() {

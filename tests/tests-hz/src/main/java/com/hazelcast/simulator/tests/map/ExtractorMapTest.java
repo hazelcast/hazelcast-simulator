@@ -28,8 +28,8 @@ import com.hazelcast.query.Predicates;
 import com.hazelcast.query.extractor.ValueCollector;
 import com.hazelcast.query.extractor.ValueExtractor;
 import com.hazelcast.query.extractor.ValueReader;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.probes.Probe;
-import com.hazelcast.simulator.test.AbstractTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -50,7 +50,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class ExtractorMapTest extends AbstractTest {
+public class ExtractorMapTest extends HazelcastTest {
 
     public int keyCount = 100000;
     public int nestedValuesCount = 100;

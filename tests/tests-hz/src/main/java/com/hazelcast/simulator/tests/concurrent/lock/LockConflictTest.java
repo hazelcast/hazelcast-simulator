@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -36,7 +36,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
 // TODO: We need to deal with exception logging; they are logged but not visible to Simulator
-public class LockConflictTest extends AbstractTest {
+public class LockConflictTest extends HazelcastTest {
 
     // properties
     public int keyCount = 50;

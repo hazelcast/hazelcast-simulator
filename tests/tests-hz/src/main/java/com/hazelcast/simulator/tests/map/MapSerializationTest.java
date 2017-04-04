@@ -19,7 +19,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -40,7 +40,7 @@ import java.io.Serializable;
  * - kryo
  * - fast-serialization
  */
-public class MapSerializationTest extends AbstractTest {
+public class MapSerializationTest extends HazelcastTest {
 
     private enum Serializer {
         SERIALIZABLE,

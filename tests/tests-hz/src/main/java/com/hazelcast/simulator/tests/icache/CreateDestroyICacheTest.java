@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -34,7 +34,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  *
  * This test is a subset of {@link MangleICacheTest}, so could be deleted.
  */
-public class CreateDestroyICacheTest extends AbstractTest {
+public class CreateDestroyICacheTest extends HazelcastTest {
 
     public int keyCount = 100000;
 

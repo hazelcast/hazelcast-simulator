@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.syntheticmap;
 
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -30,7 +30,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClust
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
-public class StringStringSyntheticMapTest extends AbstractTest {
+public class StringStringSyntheticMapTest extends HazelcastTest {
 
     // properties
     public int keyLength = 10;

@@ -19,7 +19,7 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * This test checks for duplicate store entries when eviction happens and MapStore is slow (see Hazelcast issue #4448).
  */
-public class MapEvictAndStoreTest extends AbstractTest {
+public class MapEvictAndStoreTest extends HazelcastTest {
 
     private IMap<Long, String> map;
     private IAtomicLong keyCounter;

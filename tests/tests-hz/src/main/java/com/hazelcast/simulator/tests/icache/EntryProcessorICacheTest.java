@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -40,7 +40,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static org.junit.Assert.assertEquals;
 
-public class EntryProcessorICacheTest extends AbstractTest {
+public class EntryProcessorICacheTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000;

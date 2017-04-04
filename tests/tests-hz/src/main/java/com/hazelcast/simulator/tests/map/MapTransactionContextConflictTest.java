@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
  * proportion of keyCount, more conflict will occur between the transactions, less transactions will be committed successfully and
  * more transactions are rolled back.
  */
-public class MapTransactionContextConflictTest extends AbstractTest {
+public class MapTransactionContextConflictTest extends HazelcastTest {
 
     private static final int MAX_INCREMENT = 999;
 

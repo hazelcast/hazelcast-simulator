@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.concurrent.atomicreference;
 
 import com.hazelcast.core.IAtomicReference;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -31,7 +31,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateByteArray;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateString;
 
-public class AtomicReferenceTest extends AbstractTest {
+public class AtomicReferenceTest extends HazelcastTest {
 
     // properties
     public int countersLength = 1000;

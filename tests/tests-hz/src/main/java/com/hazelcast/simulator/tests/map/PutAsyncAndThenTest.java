@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.ExecutionCallback;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 
-public class PutAsyncAndThenTest extends AbstractTest {
+public class PutAsyncAndThenTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000;

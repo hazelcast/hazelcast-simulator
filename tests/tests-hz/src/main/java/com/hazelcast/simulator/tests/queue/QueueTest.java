@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.queue;
 
 import com.hazelcast.core.IQueue;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -31,7 +31,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.RANDOM;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
-public class QueueTest extends AbstractTest {
+public class QueueTest extends HazelcastTest {
 
     // properties
     public int queueLength = 100;
