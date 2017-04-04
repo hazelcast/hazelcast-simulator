@@ -527,9 +527,9 @@ class Worker:
         refs.append(SeriesHandle("dstat", "disk_write", "Disk Writes", "Disk writes/sec",
                                  self.__load_dstat, args=[12], is_bytes=True))
 
-        refs.append(SeriesHandle("dstat", "net_receive", "Net Receive", "Receiving/second",
+        refs.append(SeriesHandle("dstat", "net_receive", "Net Receive", "Receiving/sec",
                                  self.__load_dstat, args=[13], is_bytes=True))
-        refs.append(SeriesHandle("dstat", "net_send", "Net Send", "Sending/second",
+        refs.append(SeriesHandle("dstat", "net_send", "Net Send", "Sending/sec",
                                  self.__load_dstat, args=[14], is_bytes=True))
 
         refs.append(SeriesHandle("dstat", "page_in", "Page in", "todo",
