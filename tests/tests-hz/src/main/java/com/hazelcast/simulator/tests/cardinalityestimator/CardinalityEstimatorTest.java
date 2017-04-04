@@ -20,7 +20,7 @@ import com.hazelcast.cardinality.CardinalityEstimator;
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.AbstractEntryProcessor;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -55,7 +55,7 @@ import static org.junit.Assert.assertTrue;
  * To determine the total number of unique items, each thread tracks how many items it has inserted and in the
  * afterRun this will be written to an IAtomicLong per cardinality estimator.
  */
-public class CardinalityEstimatorTest extends AbstractTest {
+public class CardinalityEstimatorTest extends HazelcastTest {
 
     // properties‚
     public double tolerancePercentage = 0.1;

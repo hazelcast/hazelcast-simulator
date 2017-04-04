@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -30,7 +30,7 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 
-public class IntIntMapTest extends AbstractTest {
+public class IntIntMapTest extends HazelcastTest {
 
     // properties
     public int keyCount = 10000;

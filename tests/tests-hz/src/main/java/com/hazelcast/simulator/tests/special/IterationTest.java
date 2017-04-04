@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.special;
 
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.StopException;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
@@ -26,7 +26,7 @@ import com.hazelcast.simulator.test.annotations.TimeStep;
  *
  * Each timestep thread will run for the number of iterations.
  */
-public class IterationTest extends AbstractTest {
+public class IterationTest extends HazelcastTest {
 
     public int iterationCount = 1000000;
     public boolean exceptionOnExit;

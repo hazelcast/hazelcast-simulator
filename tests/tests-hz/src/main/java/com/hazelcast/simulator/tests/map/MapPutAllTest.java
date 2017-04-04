@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -39,7 +39,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
  *
  * You can configure the {@link #keyType} and {@link #valueType} for the used maps.
  */
-public class MapPutAllTest extends AbstractTest {
+public class MapPutAllTest extends HazelcastTest {
 
     // properties
     public KeyLocality keyLocality = SHARED;

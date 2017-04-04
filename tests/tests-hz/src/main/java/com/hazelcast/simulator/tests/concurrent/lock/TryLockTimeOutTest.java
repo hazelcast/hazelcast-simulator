@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertFalse;
  * We are using tryLock() with a configurable time out: tryLockTimeOutMs.
  * We verify that the total value of accounts is the same at the end of the test.
  */
-public class TryLockTimeOutTest extends AbstractTest {
+public class TryLockTimeOutTest extends HazelcastTest {
 
     public int threadCount = 3;
     public int maxAccounts = 100;

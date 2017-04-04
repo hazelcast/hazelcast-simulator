@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.replicatedmap;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ReplicatedMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
 import static org.junit.Assert.assertEquals;
 
-public class ReplicatedTTL extends AbstractTest {
+public class ReplicatedTTL extends HazelcastTest {
 
     // properties
     public int keyCount = 100000;

@@ -23,7 +23,7 @@ import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
 import com.hazelcast.query.Predicates;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -53,7 +53,7 @@ import static org.junit.Assert.assertTrue;
  * test may also destroy the map while while predicate are executing. We verify the result of every query to ensure that the
  * objects returned fit the requirements of the query.
  */
-public class MapPredicateTest extends AbstractTest {
+public class MapPredicateTest extends HazelcastTest {
 
     public int keyCount = 100;
     public int pageSize = 5;

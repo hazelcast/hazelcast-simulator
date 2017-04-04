@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.test;
+package com.hazelcast.simulator.hz;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.annotations.InjectTestContext;
 import com.hazelcast.simulator.test.annotations.InjectVendor;
 import org.apache.log4j.Logger;
 
 /**
- * An Abstract Test that provides basic behavior so it doesn't need to be repeated for every test.
+ * An Abstract Hazelcast Test that provides basic behavior so it doesn't need to be repeated for every test.
  *
- * Coordinator doesn't not impose the AbstractTest to be the part of any test class. So if you want
+ * Simulator doesn't not impose your test to be to be the part of any test class hierarchy. So if you want
  * to use it, use it; otherwise you can define your own hierarchy.
- *
- * @deprecated since 0.10. Use {@link com.hazelcast.simulator.hz.HazelcastTest} instead.
  */
-public abstract class AbstractTest {
-
+public abstract class HazelcastTest {
     /**
      * Returns the name of the configured data-structure. Normally your tests will contain a 'name'
      * property so you can define e.g. 'offheapMap' or 'onheapMap' etc. This way you can change the

@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.config.MapStoreConfig;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNull;
  * {@link com.hazelcast.core.MapStore} methods. We verify that the the key/value pairs in the map are also "persisted"
  * into the {@link com.hazelcast.core.MapStore}.
  */
-public class MapStoreTest extends AbstractTest {
+public class MapStoreTest extends HazelcastTest {
 
     public int keyCount = 10;
 

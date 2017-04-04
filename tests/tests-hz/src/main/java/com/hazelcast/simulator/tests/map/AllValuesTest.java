@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.TruePredicate;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * A test that verifies the IMap.values() or IMap.values(true-predicate) behavior.
  */
-public class AllValuesTest extends AbstractTest {
+public class AllValuesTest extends HazelcastTest {
 
     // properties
     // the number of map entries

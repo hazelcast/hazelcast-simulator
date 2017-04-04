@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.common.TestPhase;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.TestContext;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
 /**
  * A test that causes a failure. This is useful for testing the simulator framework and for demonstration purposes.
  */
-public class FailingTest extends AbstractTest {
+public class FailingTest extends HazelcastTest {
 
     public enum Failure {
         EXCEPTION,

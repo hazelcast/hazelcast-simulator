@@ -19,7 +19,7 @@ import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
  * This test is inherently unreliable because the {@link ITopic} relies on the event system which is unreliable.
  * When messages are published with a too high rate, eventually the event system will ignore incoming events.
  */
-public class ITopicTest extends AbstractTest {
+public class ITopicTest extends HazelcastTest {
 
     // properties
     public int topicCount = 1000;

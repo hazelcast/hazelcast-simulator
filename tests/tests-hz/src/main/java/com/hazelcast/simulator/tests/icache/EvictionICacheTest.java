@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.icache;
 import com.hazelcast.cache.ICache;
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
  * of the cache size. The test also logs the global max size of the ICache observed from all test
  * participants, providing no assertion errors were throw.
  */
-public class EvictionICacheTest extends AbstractTest {
+public class EvictionICacheTest extends HazelcastTest {
 
     private static final double TOLERANCE_FACTOR_SMALL = 6.5;
     private static final double TOLERANCE_FACTOR_MEDIUM = 4.0;

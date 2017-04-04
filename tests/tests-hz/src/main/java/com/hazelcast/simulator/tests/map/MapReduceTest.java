@@ -28,7 +28,7 @@ import com.hazelcast.mapreduce.KeyValueSource;
 import com.hazelcast.mapreduce.Mapper;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -45,7 +45,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 
-public class MapReduceTest extends AbstractTest {
+public class MapReduceTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000;

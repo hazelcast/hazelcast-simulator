@@ -19,7 +19,7 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.IQueue;
 import com.hazelcast.core.TransactionalQueue;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * This simulator test simulates the issue #2287
  */
-public class TxnQueueWithLockTest extends AbstractTest {
+public class TxnQueueWithLockTest extends HazelcastTest {
 
     private ILock firstLock;
     private ILock secondLock;

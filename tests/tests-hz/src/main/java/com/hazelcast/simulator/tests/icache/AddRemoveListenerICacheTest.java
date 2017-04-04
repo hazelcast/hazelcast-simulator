@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -41,7 +41,7 @@ import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCach
  * This type of test could uncover memory leaks in the process of adding and removing listeners.
  * The max size of the cache used in this test is keyCount int key/value pairs.
  */
-public class AddRemoveListenerICacheTest extends AbstractTest {
+public class AddRemoveListenerICacheTest extends HazelcastTest {
 
     public int keyCount = 1000;
     public boolean syncEvents = true;

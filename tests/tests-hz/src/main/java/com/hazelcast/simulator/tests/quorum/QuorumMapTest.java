@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.quorum;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.quorum.QuorumException;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -29,10 +29,10 @@ import org.junit.Assert;
  * a continuous tests will assert the
  * 1. Adding member
  * 2. Removing member
- *    and the tests will pass or fail accordingly.
- * */
+ * and the tests will pass or fail accordingly.
+ */
 
-public class QuorumMapTest extends AbstractTest {
+public class QuorumMapTest extends HazelcastTest {
 
     // properties
     public int keyCount = 100;
@@ -84,7 +84,7 @@ public class QuorumMapTest extends AbstractTest {
     }
 
     private void checkGracePeriod(LastClusterSizeChange lastChange,
-            boolean operationPassed) {
+                                  boolean operationPassed) {
         boolean hadQuorum = lastChange.clusterSize >= quorumCount;
         if (operationPassed == hadQuorum) {
             return;

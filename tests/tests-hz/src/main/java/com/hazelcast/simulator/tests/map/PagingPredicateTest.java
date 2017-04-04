@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.PagingPredicate;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -40,7 +40,7 @@ import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
  * Implementation note: There is a small code duplication in worker implementations - it could be eliminated by
  * introducing a common superclass, but I believe it would just make things more complicated.
  */
-public final class PagingPredicateTest extends AbstractTest {
+public final class PagingPredicateTest extends HazelcastTest {
 
     // this is rather high number, make sure you have enough heap space, e.g. with JVM option -Xmx20g
     public int keyCount = 10000000;

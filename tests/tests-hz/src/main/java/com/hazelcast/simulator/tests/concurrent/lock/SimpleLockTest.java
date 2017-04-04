@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.concurrent.lock;
 
 import com.hazelcast.core.IAtomicLong;
 import com.hazelcast.core.ILock;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class SimpleLockTest extends AbstractTest {
+public class SimpleLockTest extends HazelcastTest {
 
     private static final int INITIAL_VALUE = 1000;
 

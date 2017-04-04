@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertEquals;
  * generated events will not equal the number of events received. In the future the Hazelcast event system
  * could change. For now we can say the number of events received can not be greater than the number of events generated.
  */
-public class MapEntryListenerTest extends AbstractTest {
+public class MapEntryListenerTest extends HazelcastTest {
 
     private static final int SLEEP_CATCH_EVENTS_MILLIS = 8000;
 

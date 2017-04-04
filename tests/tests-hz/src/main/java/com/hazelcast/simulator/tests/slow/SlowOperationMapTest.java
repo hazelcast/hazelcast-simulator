@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.slow;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.map.MapInterceptor;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -50,7 +50,7 @@ import static org.junit.Assert.fail;
  *
  * @since Hazelcast 3.5
  */
-public class SlowOperationMapTest extends AbstractTest {
+public class SlowOperationMapTest extends HazelcastTest {
 
     // properties
     public int keyCount = 100;

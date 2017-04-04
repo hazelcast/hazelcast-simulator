@@ -27,7 +27,7 @@ import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.TcpIpConnectionManager;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -53,7 +53,7 @@ import static com.hazelcast.simulator.tests.network.PayloadUtils.readLong;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 
 @SuppressWarnings("checkstyle:npathcomplexity")
-public class NetworkTest extends AbstractTest {
+public class NetworkTest extends HazelcastTest {
 
     private static final int PORT_OFFSET = 1000;
 

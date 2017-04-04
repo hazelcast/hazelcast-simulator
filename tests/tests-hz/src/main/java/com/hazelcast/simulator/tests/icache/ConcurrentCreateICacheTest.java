@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.config.CacheConfig;
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
  * in the setup phase of this test. We count the number of {@link CacheException} thrown when creating the cache
  * from multi members and clients, and at verification we assert that no exceptions where thrown.
  */
-public class ConcurrentCreateICacheTest extends AbstractTest {
+public class ConcurrentCreateICacheTest extends HazelcastTest {
 
     private IList<Counter> counterList;
 

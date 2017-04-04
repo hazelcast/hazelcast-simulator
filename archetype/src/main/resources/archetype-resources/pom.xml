@@ -34,6 +34,13 @@
         </dependency>
 
         <dependency>
+            <groupId>com.hazelcast.simulator</groupId>
+            <artifactId>tests-hz</artifactId>
+            <version>${hazelcast-simulator.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast-client</artifactId>
             <version>\${hazelcast.version}</version>

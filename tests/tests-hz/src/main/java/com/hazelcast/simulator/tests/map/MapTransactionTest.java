@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  * we concurrently increment the value of a random key.  We keep track of all increments to each key and verify
  * the value in the map for each key is equal to the total increments done on each key.
  */
-public class MapTransactionTest extends AbstractTest {
+public class MapTransactionTest extends HazelcastTest {
 
     // properties
     public int keyCount = 1000;

@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -27,7 +27,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.sleepMillis;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 import static org.junit.Assert.assertEquals;
 
-public class SplitClusterDataTest extends AbstractTest {
+public class SplitClusterDataTest extends HazelcastTest {
 
     public int maxItems = 10000;
     public int clusterSize = -1;

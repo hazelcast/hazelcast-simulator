@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.special;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.PartitionService;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.TimeStep;
@@ -26,7 +26,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.logPartitionStatistics;
 import static com.hazelcast.simulator.utils.CommonUtils.sleepSeconds;
 
-public class ClusterStatisticsTest extends AbstractTest {
+public class ClusterStatisticsTest extends HazelcastTest {
 
     // properties
     public int isClusterSafeRetries = 10;

@@ -23,7 +23,7 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializableFactory;
 import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.simulator.test.annotations.AfterRun;
@@ -48,7 +48,7 @@ import static com.hazelcast.simulator.utils.UuidUtil.newSecureUuidString;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
-public class ReliableTopicTest extends AbstractTest {
+public class ReliableTopicTest extends HazelcastTest {
 
     // properties
     public int topicCount = 10;

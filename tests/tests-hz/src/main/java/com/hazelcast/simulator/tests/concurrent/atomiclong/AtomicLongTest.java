@@ -17,7 +17,7 @@ package com.hazelcast.simulator.tests.concurrent.atomiclong;
 
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IAtomicLong;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -30,7 +30,7 @@ import static com.hazelcast.simulator.tests.helpers.KeyLocality.SHARED;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateStringKeys;
 import static org.junit.Assert.assertEquals;
 
-public class AtomicLongTest extends AbstractTest {
+public class AtomicLongTest extends HazelcastTest {
 
     // properties
     public KeyLocality keyLocality = SHARED;
@@ -50,7 +50,7 @@ public class AtomicLongTest extends AbstractTest {
         }
     }
 
-     @TimeStep(prob = -1)
+    @TimeStep(prob = -1)
     public void get(ThreadState state) {
         state.randomCounter().get();
     }

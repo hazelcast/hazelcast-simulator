@@ -23,7 +23,7 @@ import com.hazelcast.query.EntryObject;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.PredicateBuilder;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -36,7 +36,7 @@ import java.io.IOException;
 /**
  * A very basic test that benchmarks different forms of getting data, through a get or query etc
  */
-public class MapGetVsQueryTest extends AbstractTest {
+public class MapGetVsQueryTest extends HazelcastTest {
 
     public int itemCount = 100000;
 

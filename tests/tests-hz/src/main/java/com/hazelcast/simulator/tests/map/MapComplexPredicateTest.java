@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IMap;
 import com.hazelcast.query.Predicate;
 import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.BeforeRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -37,7 +37,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.apache.log4j.Level.INFO;
 
 @SuppressWarnings({"checkstyle:linelength", "checkstyle:trailingcomment"})
-public class MapComplexPredicateTest extends AbstractTest {
+public class MapComplexPredicateTest extends HazelcastTest {
 
     public enum QUERY_TYPE {
 

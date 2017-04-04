@@ -18,7 +18,7 @@ package com.hazelcast.simulator.tests.map;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Run;
 import com.hazelcast.simulator.test.annotations.Verify;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
  * increments to each key.  In the end we verify that for each key value pair the a value in the map matches the increments
  * done on that key,
  */
-public class MapTransactionGetForUpdateTest extends AbstractTest {
+public class MapTransactionGetForUpdateTest extends HazelcastTest {
 
     // properties
     public int threadCount = 40;

@@ -16,7 +16,7 @@
 package com.hazelcast.simulator.tests.icache;
 
 import com.hazelcast.core.IList;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.AfterRun;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  *
  * Locally we keep track of all increments. We verify if the sum of these local increments matches the global increment.
  */
-public class CasICacheTest extends AbstractTest {
+public class CasICacheTest extends HazelcastTest {
 
     public int keyCount = 1000;
 
