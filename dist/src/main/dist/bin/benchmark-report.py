@@ -494,7 +494,7 @@ class Worker:
 
         refs = []
         self.ts_references = refs
-        refs.append(SeriesHandle("throughput", "throughput_" + name, "Throughput", "Operations/second",
+        refs.append(SeriesHandle("throughput", "throughput_" + name, "Throughput", "Operations/sec",
                                  self.__load_throughput))
 
         refs.append(SeriesHandle("dstat", "memory_used", "Memory Used", "Memory used",
@@ -560,11 +560,11 @@ class Worker:
                                  self.__load_gc, args=[7, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "young_collected", "Young collected", "Collected",
                                  self.__load_gc, args=[8, True], is_bytes=True, is_points=True))
-        refs.append(SeriesHandle("gc", "young_collected_rate", "Young collection rate", "Collected/second",
+        refs.append(SeriesHandle("gc", "young_collected_rate", "Young collection rate", "Collected/sec",
                                  self.__load_gc, args=[9, True], is_bytes=True))
         refs.append(SeriesHandle("gc", "young_allocated", "Young allocated", "Allocation",
                                  self.__load_gc, args=[10, True], is_bytes=True, is_points=True))
-        refs.append(SeriesHandle("gc", "allocation_rate", "Allocation rate", "Allocated/second",
+        refs.append(SeriesHandle("gc", "allocation_rate", "Allocation rate", "Allocated/sec",
                                  self.__load_gc, args=[11, True], is_bytes=True))
 
         refs.append(SeriesHandle("gc", "heap_size_before_gc", "Heap size before gc", "Size",
@@ -575,11 +575,11 @@ class Worker:
                                  self.__load_gc, args=[14, False], is_bytes=True))
         refs.append(SeriesHandle("gc", "heap_collected", "Heap collected", "Size",
                                  self.__load_gc, args=[15, False], is_bytes=True, is_points=True))
-        refs.append(SeriesHandle("gc", "heap_collected_rate", "Heap collected rate", "Collected/second",
+        refs.append(SeriesHandle("gc", "heap_collected_rate", "Heap collected rate", "Collected/sec",
                                  self.__load_gc, args=[16, False], is_bytes=True))
         refs.append(SeriesHandle("gc", "promotion", "Promoted", "Size",
                                  self.__load_gc, args=[17, False], is_bytes=True, is_points=True))
-        refs.append(SeriesHandle("gc", "promotion_rate", "Promotion rate", "Promoted/second",
+        refs.append(SeriesHandle("gc", "promotion_rate", "Promotion rate", "Promoted/sec",
                                  self.__load_gc, args=[18, True], is_bytes=True))
 
         refs.append(SeriesHandle("gc", "old_size_before_gc", "Tenured size before gc", "Size",
