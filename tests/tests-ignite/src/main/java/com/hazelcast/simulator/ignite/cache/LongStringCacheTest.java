@@ -13,68 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.simulator.hz.map;
+package com.hazelcast.simulator.ignite.cache;
 
-import com.hazelcast.core.IMap;
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.ignite.IgniteTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
 
+import javax.cache.Cache;
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getOperationCountInformation;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
-public class LongStringMapTest extends AbstractTest {
+public class LongStringCacheTest extends IgniteTest {
 
     // properties
-    public int keyCount = 10000;
+    public int keyDomain = 10000;
     public int valueCount = 10000;
     public int valueLength = 10;
     public int minValueLength = valueLength;
     public int maxValueLength = valueLength;
 
-    private IMap<Long, String> map;
+    private Cache<Long, String> cache;
     private String[] values;
 
     @Setup
     public void setUp() {
-        map = targetInstance.getMap(name);
+        cache = ignite.getOrCreateCache(name);
     }
 
     @Prepare(global = true)
     public void prepare() {
         values = generateStrings(valueCount, minValueLength, maxValueLength);
-
         Random random = new Random();
-        for (long key = 0; key < keyCount; key++) {
+        for (long key = 0; key < keyDomain; key++) {
             String value = values[random.nextInt(valueCount)];
-            map.put(key, value);
+            cache.put(key, value);
         }
     }
 
     @TimeStep(prob = -1)
     public String get(ThreadState state) {
-        return map.get(state.randomKey());
+        return cache.get(state.randomKey());
     }
 
     @TimeStep(prob = 0.1)
-    public String put(ThreadState state) {
-        return map.put(state.randomKey(), state.randomValue());
-    }
-
-    @TimeStep(prob = 0)
-    public void set(ThreadState state) {
-        map.set(state.randomKey(), state.randomValue());
+    public void put(ThreadState state) {
+        cache.put(state.randomKey(), state.randomValue());
     }
 
     public class ThreadState extends BaseThreadState {
 
         private long randomKey() {
-            return randomLong(keyCount);
+            return randomLong(keyDomain);
         }
 
         private String randomValue() {
@@ -84,7 +77,6 @@ public class LongStringMapTest extends AbstractTest {
 
     @Teardown
     public void tearDown() {
-        map.destroy();
-        logger.info(getOperationCountInformation(targetInstance));
+        cache.close();
     }
 }
