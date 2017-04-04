@@ -38,6 +38,8 @@ parser.add_argument('--svg', help='SVG instead of PNG graphics.', action="store_
 args = parser.parse_args()
 benchmark_args = args.benchmarks
 
+gc_logs_found=False
+
 simulator_home = os.environ['SIMULATOR_HOME']
 
 if not args.output:
@@ -492,6 +494,10 @@ class Worker:
         self.name = name
         self.directory = directory
 
+        if os.path.exists(os.path.join(self.directory, "gc.csv")):
+            global gc_logs_found
+            gc_logs_found = True
+
         refs = []
         self.ts_references = refs
         refs.append(SeriesHandle("throughput", "throughput_" + name, "Throughput", "Operations/sec",
@@ -532,9 +538,9 @@ class Worker:
         refs.append(SeriesHandle("dstat", "net_send", "Net Send", "Sending/sec",
                                  self.__load_dstat, args=[14], is_bytes=True))
 
-        refs.append(SeriesHandle("dstat", "page_in", "Page in", "todo",
+        refs.append(SeriesHandle("dstat", "page_in", "Page in", "Pages/sec",
                                  self.__load_dstat, args=[15]))
-        refs.append(SeriesHandle("dstat", "page_out", "Page out", "todo",
+        refs.append(SeriesHandle("dstat", "page_out", "Page out", "Pages/sec",
                                  self.__load_dstat, args=[16]))
 
         refs.append(SeriesHandle("dstat", "system_interrupts", "System Interrupts", "System Interrupts/sec",
@@ -830,3 +836,6 @@ class Comparison:
 
 comparison = Comparison()
 comparison.compare()
+
+if not args.workerDiagrams and gc_logs_found:
+    print("gc.log files have been found. Run with -w option to get these plotted.")
