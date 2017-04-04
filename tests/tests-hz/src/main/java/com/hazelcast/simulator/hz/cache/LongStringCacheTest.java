@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.hz.cache;
 
-import com.hazelcast.simulator.test.AbstractTest;
+import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
@@ -29,7 +29,7 @@ import java.util.Random;
 import static com.hazelcast.simulator.tests.icache.helpers.CacheUtils.createCacheManager;
 import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 
-public class LongStringCacheTest extends AbstractTest {
+public class LongStringCacheTest extends HazelcastTest {
 
     // properties
     public int keyDomain = 10000;
