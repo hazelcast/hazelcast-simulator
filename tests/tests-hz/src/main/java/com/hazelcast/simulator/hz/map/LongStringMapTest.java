@@ -31,11 +31,10 @@ import static com.hazelcast.simulator.utils.GeneratorUtils.generateStrings;
 public class LongStringMapTest extends HazelcastTest {
 
     // properties
-    public int keyCount = 10000;
+    public int keyDomain = 10000;
     public int valueCount = 10000;
-    public int valueLength = 10;
-    public int minValueLength = valueLength;
-    public int maxValueLength = valueLength;
+    public int minValueLength = 10;
+    public int maxValueLength = 10;
 
     private IMap<Long, String> map;
     private String[] values;
@@ -50,7 +49,7 @@ public class LongStringMapTest extends HazelcastTest {
         values = generateStrings(valueCount, minValueLength, maxValueLength);
 
         Random random = new Random();
-        for (long key = 0; key < keyCount; key++) {
+        for (long key = 0; key < keyDomain; key++) {
             String value = values[random.nextInt(valueCount)];
             map.put(key, value);
         }
@@ -74,7 +73,7 @@ public class LongStringMapTest extends HazelcastTest {
     public class ThreadState extends BaseThreadState {
 
         private long randomKey() {
-            return randomLong(keyCount);
+            return randomLong(keyDomain);
         }
 
         private String randomValue() {
