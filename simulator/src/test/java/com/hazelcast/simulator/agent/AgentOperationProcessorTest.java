@@ -37,7 +37,7 @@ public class AgentOperationProcessorTest {
 
     @Test
     public void testCreateWorkerOperation() throws Exception {
-        CreateWorkerOperation op = new CreateWorkerOperation(new ArrayList<WorkerParameters>(), 1);
+        CreateWorkerOperation op = new CreateWorkerOperation(new WorkerParameters(), 1);
 
         processor.process(op, source, promise);
 

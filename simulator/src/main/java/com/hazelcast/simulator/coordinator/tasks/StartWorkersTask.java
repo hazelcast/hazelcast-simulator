@@ -36,6 +36,7 @@ import java.util.concurrent.Future;
 import static com.hazelcast.simulator.utils.CommonUtils.getElapsedSeconds;
 import static com.hazelcast.simulator.utils.FormatUtils.HORIZONTAL_RULER;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
@@ -59,6 +60,7 @@ public class StartWorkersTask {
     private final Map<String, String> tags;
     private long started;
     private List<WorkerData> result = new LinkedList<WorkerData>();
+    private int workerStartupIndex;
 
     public StartWorkersTask(
             Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan,
@@ -78,10 +80,10 @@ public class StartWorkersTask {
         echoStartWorkers();
 
         // first create all members
-        startWorkers(true, memberDeploymentPlan);
+        startWorkers(memberDeploymentPlan);
 
         // then create all clients
-        startWorkers(false, clientDeploymentPlan);
+        startWorkers(clientDeploymentPlan);
 
         client.invokeAll(registry.getAgents(), new StartTimeoutDetectionOperation(), MINUTES.toMillis(1));
 
@@ -108,20 +110,16 @@ public class StartWorkersTask {
         LOGGER.info(HORIZONTAL_RULER);
     }
 
-    private void startWorkers(boolean isMember, Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan) {
+    private void startWorkers(Map<SimulatorAddress, List<WorkerParameters>> deploymentPlan) {
         ThreadSpawner spawner = new ThreadSpawner("createWorkers", true);
-        int workerIndex = 0;
-        String workerType = isMember ? "member" : "client";
-
         for (Map.Entry<SimulatorAddress, List<WorkerParameters>> entry : deploymentPlan.entrySet()) {
+
             SimulatorAddress agentAddress = entry.getKey();
             AgentData agent = registry.getAgent(agentAddress);
-            List<WorkerParameters> workersSettings = entry.getValue();
 
-            spawner.spawn(new StartWorkersOnAgentTask(workersSettings, startupDelayMs * workerIndex, agent, workerType));
-
-            if (isMember) {
-                workerIndex++;
+            for (WorkerParameters workerParameters : entry.getValue()) {
+                spawner.spawn(new CreateWorkerOnAgentTask(workerParameters, startupDelayMs * workerStartupIndex, agent));
+                workerStartupIndex++;
             }
         }
         spawner.awaitCompletion();
@@ -156,37 +154,33 @@ public class StartWorkersTask {
         return result;
     }
 
-    private final class StartWorkersOnAgentTask implements Runnable {
+    private final class CreateWorkerOnAgentTask implements Runnable {
 
-        private final List<WorkerParameters> workerParametersList;
+        private final WorkerParameters workerParameters;
         private final AgentData agent;
-        private final String workerType;
         private final int startupDelayMs;
 
-        private StartWorkersOnAgentTask(List<WorkerParameters> workerParametersList,
-                                        int startupDelaysMs,
-                                        AgentData agent,
-                                        String workerType) {
+        private CreateWorkerOnAgentTask(WorkerParameters workerParameters, int startupDelaysMs, AgentData agent) {
             this.startupDelayMs = startupDelaysMs;
-            this.workerParametersList = workerParametersList;
+            this.workerParameters = workerParameters;
             this.agent = agent;
-            this.workerType = workerType;
         }
 
         @Override
         public void run() {
-            CreateWorkerOperation operation = new CreateWorkerOperation(workerParametersList, startupDelayMs);
+            CreateWorkerOperation operation = new CreateWorkerOperation(workerParameters, startupDelayMs);
             Future<String> f = client.submit(agent.getAddress(), operation);
             String r;
             try {
                 r = f.get();
             } catch (Exception e) {
-                throw new CommandLineExitException("Failed to create workers", e);
+                throw new CommandLineExitException("Failed to create worker", e);
             }
 
+            String workerType = workerParameters.getWorkerType();
+            String workerAddress = workerParameters.get("WORKER_ADDRESS");
             if (!"SUCCESS".equals(r)) {
-                LOGGER.fatal(format("Could not create %d %s Worker on %s:",
-                        workerParametersList.size(), workerType, agent.getAddress()));
+                LOGGER.fatal(format("Could not create %s Worker %s, reason: %s", workerType, workerAddress, r));
                 throw new CommandLineExitException("Failed to create workers");
             }
 
@@ -196,8 +190,8 @@ public class StartWorkersTask {
             finalTags.putAll(agent.getTags());
             finalTags.putAll(tags);
 
-            LOGGER.info(format("    Created %d %s Worker on %s", workerParametersList.size(), workerType, agent.getAddress()));
-            List<WorkerData> createdWorkers = registry.addWorkers(workerParametersList, finalTags);
+            LOGGER.info(format("    Created %s Worker %s", workerType, workerAddress));
+            List<WorkerData> createdWorkers = registry.addWorkers(asList(workerParameters), finalTags);
             result.addAll(createdWorkers);
         }
     }

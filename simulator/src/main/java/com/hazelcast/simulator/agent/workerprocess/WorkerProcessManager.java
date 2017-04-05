@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.hazelcast.simulator.common.FailureType.WORKER_CREATE_ERROR;
 import static com.hazelcast.simulator.protocol.core.SimulatorAddress.workerAddress;
@@ -67,12 +66,9 @@ public class WorkerProcessManager {
 
     // launching is done asynchronous so we don't block the calling thread (messaging thread)
     public void launch(CreateWorkerOperation op, Promise promise) throws Exception {
-        AtomicInteger remaining = new AtomicInteger(op.getWorkerParametersList().size());
-        for (WorkerParameters workerParameters : op.getWorkerParametersList()) {
-            WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, workerParameters);
-            LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, workerParameters, promise, remaining);
-            executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
-        }
+        WorkerProcessLauncher launcher = new WorkerProcessLauncher(WorkerProcessManager.this, op.getWorkerParameters());
+        LaunchSingleWorkerTask task = new LaunchSingleWorkerTask(launcher, op.getWorkerParameters(), promise);
+        executorService.schedule(task, op.getDelayMs(), MILLISECONDS);
     }
 
     public void add(SimulatorAddress workerAddress, WorkerProcess workerProcess) {
@@ -134,16 +130,13 @@ public class WorkerProcessManager {
 
         private final WorkerProcessLauncher launcher;
         private final WorkerParameters parameters;
-        private final AtomicInteger remaining;
         private final Promise promise;
 
         private LaunchSingleWorkerTask(WorkerProcessLauncher launcher,
                                        WorkerParameters parameters,
-                                       Promise promise,
-                                       AtomicInteger remaining) {
+                                       Promise promise) {
             this.launcher = launcher;
             this.parameters = parameters;
-            this.remaining = remaining;
             this.promise = promise;
         }
 
@@ -152,10 +145,8 @@ public class WorkerProcessManager {
             try {
                 launch();
 
-                if (remaining.decrementAndGet() == 0) {
-                    // it was the last worker needing to be created; so lets answer the promise.
-                    promise.answer("SUCCESS");
-                }
+                // it was the last worker needing to be created; so lets answer the promise.
+                promise.answer("SUCCESS");
             } catch (Exception e) {
                 LOGGER.error("Failed to start Worker:" + workerProcesses, e);
 
