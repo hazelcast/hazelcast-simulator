@@ -45,11 +45,11 @@ public class LongStringCacheTest extends HazelcastTest {
     public void setUp() {
         CacheManager cacheManager = createCacheManager(targetInstance);
         cache = cacheManager.getCache(name);
+        values = generateStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)
     public void prepare() {
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
         Random random = new Random();
         for (long key = 0; key < keyDomain; key++) {
             String value = values[random.nextInt(valueCount)];

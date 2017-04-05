@@ -42,11 +42,11 @@ public class LongStringCacheTest extends IgniteTest {
     @Setup
     public void setUp() {
         cache = ignite.getOrCreateCache(name);
+        values = generateStrings(valueCount, minValueLength, maxValueLength);
     }
 
     @Prepare(global = true)
     public void prepare() {
-        values = generateStrings(valueCount, minValueLength, maxValueLength);
         Random random = new Random();
         for (long key = 0; key < keyDomain; key++) {
             String value = values[random.nextInt(valueCount)];
