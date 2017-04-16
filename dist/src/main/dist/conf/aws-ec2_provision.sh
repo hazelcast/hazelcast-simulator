@@ -85,7 +85,7 @@ echo "%wheel ALL = (ALL) NOPASSWD:ALL" >> /etc/sudoers
 chmod 0440 /etc/sudoers
 
 # create the user
-useradd $SIMULATOR_USER
+useradd -m $SIMULATOR_USER
 
 # add the user to the sudo group
 sudo usermod -a -G wheel $SIMULATOR_USER
