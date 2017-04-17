@@ -77,15 +77,18 @@ start_instances(){
 exec > ~/init.out
 exec 2> ~/init.err
 
+addgroup wheel || true
+
 # fix the sudoers file. inspired by org.jclouds.scriptbuilder.statements.login.Sudoers
 rm -fr /etc/sudoers
+echo "Defaults    env_reset" >> /etc/sudoers1
 echo "Defaults    secure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" " >> /etc/sudoers
 echo "root ALL = (ALL) ALL" >> /etc/sudoers
 echo "%wheel ALL = (ALL) NOPASSWD:ALL" >> /etc/sudoers
 chmod 0440 /etc/sudoers
 
 # create the user
-useradd -m $SIMULATOR_USER
+useradd -m $SIMULATOR_USER -d /home/$SIMULATOR_USER/ -s /bin/bash
 
 # add the user to the sudo group
 sudo usermod -a -G wheel $SIMULATOR_USER
@@ -126,6 +129,7 @@ EOL
         $args \
         --user-data file://$temp_file \
         --output text \
+        --key-name peter \
         --query 'Instances[*].InstanceId')
 
     rm -fr $temp_file
