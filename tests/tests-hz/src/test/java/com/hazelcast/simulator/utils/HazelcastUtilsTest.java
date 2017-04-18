@@ -9,13 +9,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -24,8 +21,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.hazelcast.simulator.TestEnvironmentUtils.internalDistDirectory;
-import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
 import static com.hazelcast.simulator.utils.HazelcastUtils.getHazelcastAddress;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isMaster;
 import static com.hazelcast.simulator.utils.HazelcastUtils.isOldestMember;
@@ -50,22 +45,11 @@ public class HazelcastUtilsTest {
 
     private HazelcastInstance hazelcastInstance;
 
-    private Map<String, String> properties = new HashMap<String, String>();
     private Registry registry;
-
-    private String memberConfig;
-    private String clientConfig;
 
     @Before
     public void before() {
-        properties.put("VERSION_SPEC", "outofthebox");
-        properties.put("WORKER_PERFORMANCE_MONITOR_INTERVAL_SECONDS", "1234");
-        properties.put("JAVA_CMD", "java");
-
         registry = getComponentRegistryMock();
-
-        memberConfig = fileAsText(new File(internalDistDirectory(), "conf/hazelcast.xml"));
-        clientConfig = fileAsText(new File(internalDistDirectory(), "conf/client-hazelcast.xml"));
     }
 
     @AfterClass
@@ -80,40 +64,6 @@ public class HazelcastUtilsTest {
             assertTrue(addressConfig.contains("192.168.0." + i + ":6666"));
         }
     }
-
-//    @Test
-//    public void testInitMemberHzConfig() {
-//        properties.put("MANAGEMENT_CENTER_URL", "http://localhost:8080");
-//        properties.put("MANAGEMENT_CENTER_UPDATE_INTERVAL", "60");
-//
-//        assertTrue(memberConfig.contains("<!--MEMBERS-->"));
-//        assertTrue(memberConfig.contains("<!--LICENSE-KEY-->"));
-//        assertTrue(memberConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
-//
-//        String memberHzConfig = initMemberHzConfig(memberConfig, registry, "licenseKey2342", properties, false);
-//
-//        assertNotNull(memberHzConfig);
-//        assertTrue(memberHzConfig.contains("licenseKey2342"));
-//        assertTrue(memberHzConfig.contains("http://localhost:8080"));
-//
-//        assertFalse(memberHzConfig.contains("<!--MEMBERS-->"));
-//        assertFalse(memberHzConfig.contains("<!--LICENSE-KEY-->"));
-//        assertFalse(memberHzConfig.contains("<!--MANAGEMENT_CENTER_CONFIG-->"));
-//    }
-//
-//    @Test
-//    public void testInitClientHzConfig() {
-//        assertTrue(clientConfig.contains("<!--MEMBERS-->"));
-//        assertTrue(clientConfig.contains("<!--LICENSE-KEY-->"));
-//
-//        String clientHzConfig = initClientHzConfig(clientConfig, registry, properties, "licenseKey2342");
-//
-//        assertNotNull(clientHzConfig);
-//        assertTrue(clientHzConfig.contains("licenseKey2342"));
-//
-//        assertFalse(clientHzConfig.contains("<!--MEMBERS-->"));
-//        assertFalse(clientHzConfig.contains("<!--LICENSE-KEY-->"));
-//    }
 
     private Registry getComponentRegistryMock() {
         List<AgentData> agents = new ArrayList<AgentData>();
