@@ -92,8 +92,8 @@ class Wizard {
         echo("Will create working directory '%s' for cloud provider '%s'", workDir, cloudProvider);
         ensureExistingDirectory(workDir);
 
-        copyResourceFile(workDir, "run", "runScript");
-        copyResourceFile(workDir, "test.properties", "testSuite");
+        copyResourceFile(workDir, "runScript", "run");
+        copyResourceFile(workDir, "testSuite", "test.properties");
 
         if (isLocal(cloudProvider)) {
             return;
@@ -115,9 +115,9 @@ class Wizard {
         }
 
         if (isStatic(cloudProvider)) {
-            copyResourceFile(workDir, "prepare", "prepareScriptStatic");
+            copyResourceFile(workDir, "prepareScriptStatic", "prepare");
         } else {
-            copyResourceFile(workDir, "prepare", "prepareScriptCloud");
+            copyResourceFile(workDir, "prepareScriptCloud", "prepare");
         }
     }
 

@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.CommonUtils.rethrow;
 import static com.hazelcast.simulator.utils.FileUtils.ensureExistingFile;
-import static com.hazelcast.simulator.utils.FileUtils.getResourceFile;
+import static com.hazelcast.simulator.utils.FileUtils.toTextFromResourceFile;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static com.hazelcast.simulator.utils.NativeUtils.execute;
 import static java.lang.String.format;
@@ -43,9 +43,9 @@ final class WizardUtils {
     private WizardUtils() {
     }
 
-    static void copyResourceFile(File workDir, String targetName, String sourceName) {
-        File runScript = ensureExistingFile(workDir, targetName);
-        writeText(getResourceFile(sourceName), runScript);
+    static void copyResourceFile(File workDir, String sourceFileName, String destinationFileName) {
+        File runScript = ensureExistingFile(workDir, destinationFileName);
+        writeText(toTextFromResourceFile(sourceFileName), runScript);
         execute(format("chmod u+x %s", runScript.getAbsolutePath()));
     }
 

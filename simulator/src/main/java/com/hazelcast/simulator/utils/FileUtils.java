@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -38,6 +39,7 @@ import static com.hazelcast.simulator.utils.CommonUtils.closeQuietly;
 import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.Preconditions.checkNotNull;
 import static java.lang.String.format;
+import static java.nio.charset.Charset.forName;
 import static java.util.Collections.emptyList;
 
 @SuppressFBWarnings("DM_DEFAULT_ENCODING")
@@ -135,9 +137,14 @@ public final class FileUtils {
         }
     }
 
-    public static String getResourceFile(String fileName) {
+    public static String toTextFromResourceFile(String fileName) {
         ClassLoader classLoader = FileUtils.class.getClassLoader();
-        return new File(classLoader.getResource(fileName).getFile()).getAbsolutePath();
+        InputStream stream = classLoader.getResourceAsStream(fileName);
+        try {
+            return toTextFromStream(stream);
+        } finally {
+            closeQuietly(stream);
+        }
     }
 
     public static String fileAsText(String fileName) {
@@ -146,11 +153,21 @@ public final class FileUtils {
 
     public static String fileAsText(File file) {
         FileInputStream stream = null;
-        InputStreamReader streamReader = null;
-        BufferedReader reader = null;
         try {
             stream = new FileInputStream(file);
-            streamReader = new InputStreamReader(stream);
+            return toTextFromStream(stream);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            closeQuietly(stream);
+        }
+    }
+
+    private static String toTextFromStream(InputStream inputStream) {
+        InputStreamReader streamReader = null;
+        Reader reader = null;
+        try {
+            streamReader = new InputStreamReader(inputStream, forName("UTF-8"));
             reader = new BufferedReader(streamReader);
 
             StringBuilder builder = new StringBuilder();
@@ -163,7 +180,7 @@ public final class FileUtils {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {
-            closeQuietly(reader, streamReader, stream);
+            closeQuietly(reader, streamReader);
         }
     }
 
