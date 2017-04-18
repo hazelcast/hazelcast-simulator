@@ -23,12 +23,26 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 
 public class Probability {
+
     private static final int PROBABILITY_PRECISION = 3;
     private static final int PROBABILITY_LENGTH = (int) round(pow(10, PROBABILITY_PRECISION));
+
     private final double value;
 
     public Probability(double probability) {
         this.value = probability;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public Probability add(Probability that) {
+        return new Probability(this.value + that.value);
+    }
+
+    public Probability sub(Probability that) {
+        return new Probability(this.value - that.value);
     }
 
     public boolean isLargerThanZero() {
@@ -51,22 +65,6 @@ public class Probability {
         return toInt(value) == toInt(-1);
     }
 
-    public Probability add(Probability that) {
-        return new Probability(this.value + that.value);
-    }
-
-    public Probability sub(Probability that) {
-        return new Probability(this.value - that.value);
-    }
-
-    private int toInt(double v) {
-        return (int) round(v * PROBABILITY_LENGTH);
-    }
-
-    public double getValue() {
-        return value;
-    }
-
     @Override
     public String toString() {
         return Double.toString(value);
@@ -80,17 +78,20 @@ public class Probability {
         byte[] result = new byte[PROBABILITY_LENGTH];
         int index = 0;
 
-        for (int k = 0; k < activeMethods.size(); k++) {
-            Method method = activeMethods.get(k);
+        for (int methodIndex = 0; methodIndex < activeMethods.size(); methodIndex++) {
+            Method method = activeMethods.get(methodIndex);
             Probability probability = methods.get(method);
             for (int i = 0; i < round(probability.getValue() * result.length); i++) {
                 if (index < result.length) {
-                    result[index] = (byte) k;
+                    result[index] = (byte) methodIndex;
                     index++;
                 }
             }
         }
-
         return result;
+    }
+
+    private static int toInt(double v) {
+        return (int) round(v * PROBABILITY_LENGTH);
     }
 }
