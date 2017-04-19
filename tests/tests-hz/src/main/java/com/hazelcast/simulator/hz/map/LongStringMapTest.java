@@ -17,11 +17,14 @@ package com.hazelcast.simulator.hz.map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
+import com.hazelcast.simulator.probes.Probe;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
 import com.hazelcast.simulator.test.annotations.Setup;
+import com.hazelcast.simulator.test.annotations.StartNanos;
 import com.hazelcast.simulator.test.annotations.Teardown;
 import com.hazelcast.simulator.test.annotations.TimeStep;
+import com.hazelcast.spi.impl.SimpleExecutionCallback;
 
 import java.util.Random;
 
@@ -59,14 +62,44 @@ public class LongStringMapTest extends HazelcastTest {
         return map.get(state.randomKey());
     }
 
+    @TimeStep(prob = -1)
+    public void getAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
+        map.getAsync(state.randomKey()).andThen(new SimpleExecutionCallback<String>() {
+            @Override
+            public void notify(Object o) {
+                probe.done(startNanos);
+            }
+        });
+    }
+
     @TimeStep(prob = 0.1)
     public String put(ThreadState state) {
         return map.put(state.randomKey(), state.randomValue());
     }
 
+    @TimeStep(prob = 0.0)
+    public void putAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
+        map.putAsync(state.randomKey(), state.randomValue()).andThen(new SimpleExecutionCallback<String>() {
+            @Override
+            public void notify(Object o) {
+                probe.done(startNanos);
+            }
+        });
+    }
+
     @TimeStep(prob = 0)
     public void set(ThreadState state) {
         map.set(state.randomKey(), state.randomValue());
+    }
+
+    @TimeStep(prob = 0)
+    public void setAsync(ThreadState state, final Probe probe, @StartNanos final long startNanos) {
+        map.setAsync(state.randomKey(), state.randomValue()).andThen(new SimpleExecutionCallback<Void>() {
+            @Override
+            public void notify(Object o) {
+                probe.done(startNanos);
+            }
+        });
     }
 
     public class ThreadState extends BaseThreadState {
