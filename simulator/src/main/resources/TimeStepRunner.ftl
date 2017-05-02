@@ -57,9 +57,9 @@ public class ${className} extends TimeStepRunner {
         while (!testContext.isStopped()) {
 <#if probeClass??>
     <#if metronomeClass??>
-            long startNanos = metronome.waitForNext();
+            final long startNanos = metronome.waitForNext();
     <#else>
-            long startNanos = System.nanoTime();
+            final long startNanos = System.nanoTime();
     </#if>
 <#else>
     <#if metronomeClass??>
@@ -69,8 +69,13 @@ public class ${className} extends TimeStepRunner {
 
 <#if timeStepMethods?size==1>
     <#assign method=timeStepMethods?first>
-    <#if hasProbe(method)|| !probeClass??>
-            <@timestepMethodCall m=method/>;
+    <#assign resultType=method.getReturnType().getName()>
+    <#if hasProbe(method)|| !probeClass?? || isAsyncResult(resultType)>
+            <#assign resultName = "result">
+            <#if isAsyncResult(resultType)>${resultType} ${resultName} = </#if><@timestepMethodCall m=method/>;
+            <#if isAsyncResult(resultType)>
+                <@handleAsyncResult m=method/>
+            </#if>
     <#else>
             <@timestepMethodCall m=method/>;
             ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
@@ -79,9 +84,16 @@ public class ${className} extends TimeStepRunner {
 
             switch(probs[random.nextInt(probs.length)]){
     <#list timeStepMethods as method>
-                case ${method?counter-1}:
-        <#if hasProbe(method) || !probeClass??>
-                    <@timestepMethodCall m=method/>;
+        <#assign index = method?counter-1>
+                case ${index}:
+        <#assign resultType=method.getReturnType().getName()>
+        <#if hasProbe(method) || !probeClass?? || isAsyncResult(resultType)>
+            <#assign resultName = "result" + index>
+            <#if isAsyncResult(resultType)>
+                    ${resultType} ${resultName} = </#if><@timestepMethodCall m=method/>;
+            <#if isAsyncResult(resultType)>
+                    <@handleAsyncResult m=method/>
+            </#if>
         <#else>
                     <@timestepMethodCall m=method/>;
                     ${method.name}Probe.recordValue(System.nanoTime() - startNanos);
@@ -111,6 +123,16 @@ public class ${className} extends TimeStepRunner {
 </#if>
         }
     }
+
+<#macro handleAsyncResult m>
+                    ${resultName}.andThen(new com.hazelcast.spi.impl.SimpleExecutionCallback() {
+                        @Override
+                        public void notify(Object o) {
+                           ${m.getName()}Probe.recordValue(System.nanoTime() - startNanos);
+                         }
+                    });
+</#macro>
+
 <#macro timestepMethodCall m>
     <@compress single_line=true>
        testInstance.${m.getName()}(

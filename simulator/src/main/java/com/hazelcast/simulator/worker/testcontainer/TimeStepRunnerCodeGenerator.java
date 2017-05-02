@@ -22,6 +22,7 @@ import com.hazelcast.simulator.worker.metronome.Metronome;
 import freemarker.ext.util.WrapperTemplateModel;
 import freemarker.template.Configuration;
 import freemarker.template.SimpleNumber;
+import freemarker.template.SimpleScalar;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.TemplateMethodModelEx;
@@ -150,6 +151,7 @@ class TimeStepRunnerCodeGenerator {
             root.put("probeClass", getClassName(probeClass));
             root.put("isStartNanos", new IsStartNanos(timeStepModel));
             root.put("isAssignableFrom", new IsAssignableFromMethod());
+            root.put("isAsyncResult", new IsAsyncResult());
             root.put("Probe", Probe.class);
             root.put("threadStateClass", getClassName(timeStepModel.getThreadStateClass(executionGroup)));
             root.put("hasProbe", new HasProbeMethod());
@@ -231,6 +233,19 @@ class TimeStepRunnerCodeGenerator {
             }
 
             return ((Class) arg2).isAssignableFrom((Class) arg1);
+        }
+    }
+
+    private static final class IsAsyncResult implements TemplateMethodModelEx {
+        @Override
+        public Object exec(List list) throws TemplateModelException {
+            if (list.size() != 1) {
+                throw new TemplateModelException("Wrong number of arguments for method isAsyncResult()."
+                        + " Method has one required parameter: [String]. Found: " + list.size());
+            }
+
+            String resultTypeName = ((SimpleScalar) list.get(0)).getAsString();
+            return "com.hazelcast.core.ICompletableFuture".equals(resultTypeName);
         }
     }
 

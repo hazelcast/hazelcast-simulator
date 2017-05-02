@@ -15,6 +15,7 @@
  */
 package com.hazelcast.simulator.tests.map;
 
+import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import com.hazelcast.simulator.hz.HazelcastTest;
@@ -47,34 +48,34 @@ public class MapAsyncOpsTest extends HazelcastTest {
     }
 
     @TimeStep(prob = 0.2)
-    public void putAsync(ThreadState state) {
+    public ICompletableFuture<Object> putAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
         Object value = state.randomInt();
-        map.putAsync(key, value);
         count.putAsyncCount.incrementAndGet();
+        return map.putAsync(key, value);
     }
 
     @TimeStep(prob = 0.2)
-    public void putAsyncTTL(ThreadState state) {
+    public ICompletableFuture<Object> putAsyncTTL(ThreadState state) {
         int key = state.randomInt(keyCount);
         Object value = state.randomInt();
         int delay = 1 + state.randomInt(maxTTLExpirySeconds);
-        map.putAsync(key, value, delay, TimeUnit.SECONDS);
         count.putAsyncTTLCount.incrementAndGet();
+        return map.putAsync(key, value, delay, TimeUnit.SECONDS);
     }
 
     @TimeStep(prob = 0.2)
-    public void getAsync(ThreadState state) {
+    public ICompletableFuture<Object> getAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
-        map.getAsync(key);
         count.getAsyncCount.incrementAndGet();
+        return map.getAsync(key);
     }
 
     @TimeStep(prob = 0.2)
-    public void removeAsync(ThreadState state) {
+    public ICompletableFuture<Object> removeAsync(ThreadState state) {
         int key = state.randomInt(keyCount);
-        map.removeAsync(key);
         count.removeAsyncCount.incrementAndGet();
+        return map.removeAsync(key);
     }
 
     @TimeStep(prob = 0.2)
