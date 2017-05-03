@@ -17,9 +17,7 @@ package com.hazelcast.simulator.tests.network;
 
 import com.hazelcast.client.ClientEngine;
 import com.hazelcast.config.SSLConfig;
-import com.hazelcast.config.SocketInterceptorConfig;
 import com.hazelcast.config.SymmetricEncryptionConfig;
-import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.internal.ascii.TextCommandService;
 import com.hazelcast.internal.networking.ChannelFactory;
 import com.hazelcast.internal.networking.ChannelInboundHandler;
@@ -42,8 +40,11 @@ import com.hazelcast.spi.EventService;
 import com.hazelcast.spi.impl.PacketHandler;
 import com.hazelcast.spi.impl.packetdispatcher.PacketDispatcher;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +56,6 @@ public class MockIOService implements IOService {
     public final Address thisAddress;
     public final InternalSerializationService serializationService;
     public final LoggingService loggingService;
-    public final HazelcastThreadGroup hazelcastThreadGroup;
     public volatile PacketHandler packetHandler;
     public int inputThreadCount;
     public int outputThreadCount;
@@ -67,11 +67,6 @@ public class MockIOService implements IOService {
     public MockIOService(Address thisAddress, LoggingService loggingService) throws Exception {
         this.thisAddress = thisAddress;
         this.loggingService = loggingService;
-        hazelcastThreadGroup = new HazelcastThreadGroup(
-                "hz",
-                loggingService.getLogger(HazelcastThreadGroup.class),
-                getClass().getClassLoader());
-
         serverSocketChannel = ServerSocketChannel.open();
 
         ServerSocket serverSocket = serverSocketChannel.socket();
@@ -92,8 +87,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public HazelcastThreadGroup getHazelcastThreadGroup() {
-        return hazelcastThreadGroup;
+    public String getHazelcastName() {
+        return "hz";
     }
 
     @Override
@@ -108,11 +103,6 @@ public class MockIOService implements IOService {
 
     @Override
     public void onFatalError(Exception e) {
-    }
-
-    @Override
-    public SocketInterceptorConfig getSocketInterceptorConfig() {
-        return null;
     }
 
     @Override
@@ -195,23 +185,23 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public int getSocketLingerSeconds() {
-        return 0;
+    public void configureSocket(Socket socket) throws SocketException {
+
+    }
+
+    @Override
+    public void interceptSocket(Socket socket, boolean b) throws IOException {
+
+    }
+
+    @Override
+    public boolean isSocketInterceptorEnabled() {
+        return false;
     }
 
     @Override
     public int getSocketConnectTimeoutSeconds() {
         return 0;
-    }
-
-    @Override
-    public boolean getSocketKeepAlive() {
-        return true;
-    }
-
-    @Override
-    public boolean getSocketNoDelay() {
-        return socketNoDelay;
     }
 
     @Override
