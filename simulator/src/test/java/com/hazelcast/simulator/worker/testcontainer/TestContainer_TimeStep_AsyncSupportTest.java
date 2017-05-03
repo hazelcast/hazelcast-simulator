@@ -18,14 +18,36 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_AbstractTest {
 
     @Test
-    public void testWithoutMetronome() throws Exception {
-        TestContainer_TimeStep_AsyncSupportTest.StartAsyncTest testInstance = new TestContainer_TimeStep_AsyncSupportTest.StartAsyncTest();
+    public void testWithoutMetronome_withSingleAsyncMethod() throws Exception {
+        StartAsyncTest_withSingleAsyncMethod testInstance = new StartAsyncTest_withSingleAsyncMethod();
         int totalIterationCount = 50;
+        TestContainer container = createContainerAndRunTestInstance(testInstance, totalIterationCount);
+
+        long timeStepCount = getProbeTotalCount("timeStep", container);
+        assertProbeTotalCount("asyncTimeStep", (totalIterationCount - timeStepCount), container);
+    }
+
+    @Test
+    public void testWithoutMetronome_withMultipleAsyncMethod() throws Exception {
+        StartAsyncTest_withMultipleAsyncMethod testInstance = new StartAsyncTest_withMultipleAsyncMethod();
+        int totalIterationCount = 1000;
+        TestContainer container = createContainerAndRunTestInstance(testInstance, totalIterationCount);
+
+        long asyncTimeStep1 = getProbeTotalCount("asyncTimeStep1", container);
+        long asyncTimeStep2 = getProbeTotalCount("asyncTimeStep2", container);
+
+        assertTrue(asyncTimeStep1 > 0);
+        assertTrue(asyncTimeStep2 > 0);
+        assertEquals(totalIterationCount, asyncTimeStep1 + asyncTimeStep2);
+    }
+
+    private TestContainer createContainerAndRunTestInstance(Object testInstance, int totalIterationCount) throws Exception {
         TestCase testCase = new TestCase("test")
                 .setProperty("iterations", totalIterationCount)
                 .setProperty("threadCount", 1)
@@ -38,10 +60,7 @@ public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_Abstr
         for (TestPhase phase : TestPhase.values()) {
             container.invoke(phase);
         }
-
-        long timeStepCount = getProbeTotalCount("timeStep", container);
-        assertProbeTotalCount("asyncTimeStep", (totalIterationCount - timeStepCount), container);
-
+        return container;
     }
 
     private static void assertProbeTotalCount(String probeName, long count, TestContainer container) {
@@ -56,7 +75,7 @@ public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_Abstr
         return recorder.getIntervalHistogram().getTotalCount();
     }
 
-    public static class StartAsyncTest  {
+    public static class StartAsyncTest_withSingleAsyncMethod {
         @TimeStep(prob = 0.5)
         public void timeStep() {
 
@@ -64,6 +83,18 @@ public class TestContainer_TimeStep_AsyncSupportTest extends TestContainer_Abstr
 
         @TimeStep(prob = 0.5)
         public ICompletableFuture<Object> asyncTimeStep() {
+            return new DummyICompletableFuture();
+        }
+    }
+
+    public static class StartAsyncTest_withMultipleAsyncMethod {
+        @TimeStep(prob = 0.5)
+        public ICompletableFuture<Object> asyncTimeStep1() {
+            return new DummyICompletableFuture();
+        }
+
+        @TimeStep(prob = 0.5)
+        public ICompletableFuture<Object> asyncTimeStep2() {
             return new DummyICompletableFuture();
         }
     }
