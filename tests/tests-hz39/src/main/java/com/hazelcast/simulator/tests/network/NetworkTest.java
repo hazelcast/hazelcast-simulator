@@ -19,8 +19,8 @@ import com.hazelcast.core.ILock;
 import com.hazelcast.core.Member;
 import com.hazelcast.instance.Node;
 import com.hazelcast.internal.metrics.MetricsRegistry;
-import com.hazelcast.internal.networking.IOThreadingModel;
-import com.hazelcast.internal.networking.nonblocking.SelectorMode;
+import com.hazelcast.internal.networking.nio.NioEventLoopGroup;
+import com.hazelcast.internal.networking.nio.SelectorMode;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.Connection;
@@ -107,7 +107,7 @@ public class NetworkTest extends HazelcastTest {
             ioService.writeHandlerFactory = new TaggingWriteHandlerFactory();
         }
 
-        IOThreadingModel threadingModel = null;
+        NioEventLoopGroup threadingModel = null;
         switch (ioThreadingModel) {
 //            case NonBlocking:
 //                NonBlockingIOThreadingModel nonBlockingIOThreadingModel = new NonBlockingIOThreadingModel(
