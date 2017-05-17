@@ -15,27 +15,26 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.client.impl.protocol.ClientMessage;
+import com.hazelcast.client.ClientEngine;
 import com.hazelcast.config.SSLConfig;
 import com.hazelcast.config.SocketInterceptorConfig;
 import com.hazelcast.config.SymmetricEncryptionConfig;
 import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.internal.ascii.TextCommandService;
+import com.hazelcast.internal.networking.ChannelFactory;
+import com.hazelcast.internal.networking.ChannelInboundHandler;
+import com.hazelcast.internal.networking.ChannelOutboundHandler;
 import com.hazelcast.internal.networking.IOOutOfMemoryHandler;
-import com.hazelcast.internal.networking.ReadHandler;
-import com.hazelcast.internal.networking.SocketChannelWrapperFactory;
-import com.hazelcast.internal.networking.WriteHandler;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.nio.Address;
-import com.hazelcast.nio.Connection;
 import com.hazelcast.nio.IOService;
 import com.hazelcast.nio.MemberSocketInterceptor;
 import com.hazelcast.nio.Packet;
-import com.hazelcast.nio.tcp.DefaultSocketChannelWrapperFactory;
-import com.hazelcast.nio.tcp.MemberReadHandler;
+import com.hazelcast.nio.tcp.MemberChannelInboundHandler;
+import com.hazelcast.nio.tcp.PlainChannelFactory;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.EventFilter;
@@ -137,10 +136,6 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public void handleClientMessage(ClientMessage cm, Connection connection) {
-    }
-
-    @Override
     public TextCommandService getTextCommandService() {
         return null;
     }
@@ -200,11 +195,6 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public boolean isSocketBufferDirect() {
-        return false;
-    }
-
-    @Override
     public int getSocketClientReceiveBufferSize() {
         return 32;
     }
@@ -260,11 +250,6 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public boolean isClient() {
-        return false;
-    }
-
-    @Override
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     public void executeAsync(final Runnable runnable) {
         new Thread() {
@@ -294,8 +279,18 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public SocketChannelWrapperFactory getSocketChannelWrapperFactory() {
-        return new DefaultSocketChannelWrapperFactory();
+    public ClientEngine getClientEngine() {
+        return null;
+    }
+
+    @Override
+    public boolean useDirectSocketBuffer() {
+        return false;
+    }
+
+    @Override
+    public ChannelFactory getSocketChannelWrapperFactory() {
+        return new PlainChannelFactory();
     }
 
     @Override
@@ -304,8 +299,8 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public ReadHandler createReadHandler(final TcpIpConnection connection) {
-        return new MemberReadHandler(connection, new PacketDispatcher() {
+    public ChannelInboundHandler createReadHandler(final TcpIpConnection connection) {
+        return new MemberChannelInboundHandler(connection, new PacketDispatcher() {
             private ILogger logger = loggingService.getLogger("MockIOService");
 
             @Override
@@ -327,7 +322,7 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public WriteHandler createWriteHandler(TcpIpConnection connection) {
+    public ChannelOutboundHandler createWriteHandler(TcpIpConnection connection) {
         return writeHandlerFactory.create();
     }
 

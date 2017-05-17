@@ -15,12 +15,13 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.internal.networking.WriteHandler;
+import com.hazelcast.internal.networking.ChannelOutboundHandler;
+import com.hazelcast.nio.Packet;
 
 class TaggingWriteHandlerFactory implements WriteHandlerFactory {
 
     @Override
-    public WriteHandler create() {
-        return new TaggingPacketWriteHandler();
+    public ChannelOutboundHandler<Packet> create() {
+        return new TaggingPacketChannelOutboundHandler();
     }
 }

@@ -15,7 +15,7 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.internal.networking.WriteHandler;
+import com.hazelcast.internal.networking.ChannelOutboundHandler;
 import com.hazelcast.nio.Packet;
 
 import java.nio.ByteBuffer;
@@ -29,7 +29,7 @@ import static com.hazelcast.simulator.tests.network.PayloadUtils.addSequenceId;
  * This sequence-id is unique per connection and is totally ordered. So the receiver of these packets should
  * get an incremental stream of sequence-id's.
  */
-class TaggingPacketWriteHandler implements WriteHandler<Packet> {
+class TaggingPacketChannelOutboundHandler implements ChannelOutboundHandler<Packet> {
 
     // we keep track of the current packet because we need to know if the packet was already tagged before.
     // it can be that a packet is offered to the WriteHandler more than once if it can't be fully written

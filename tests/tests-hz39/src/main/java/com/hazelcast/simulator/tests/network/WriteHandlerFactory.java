@@ -15,9 +15,9 @@
  */
 package com.hazelcast.simulator.tests.network;
 
-import com.hazelcast.internal.networking.WriteHandler;
+import com.hazelcast.internal.networking.ChannelOutboundHandler;
 
 public interface WriteHandlerFactory {
 
-    WriteHandler create();
+    ChannelOutboundHandler create();
 }
