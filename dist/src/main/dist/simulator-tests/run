@@ -32,8 +32,8 @@ coordinator --dedicatedMemberMachines ${dedicatedMemberMachines} \
             --members ${members} \
             --clients ${clients} \
             --duration ${duration} \
-            --workerVmOptions "$memberJvmArgs" \
-            --clientWorkerVmOptions "$clientJvmArgs" \
+            --memberArgs "$memberJvmArgs" \
+            --clientArgs "$clientJvmArgs" \
             --parallel \
             ${testsuite}.properties
 exitCode=$?
