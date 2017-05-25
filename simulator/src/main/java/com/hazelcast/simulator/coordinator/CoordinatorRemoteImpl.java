@@ -46,7 +46,7 @@ public class CoordinatorRemoteImpl implements CoordinatorRemote {
             coordinator.download();
         } else if (op instanceof RcInstallOperation) {
             RcInstallOperation installOp = (RcInstallOperation) op;
-            coordinator.install(installOp.getVersionSpec());
+            coordinator.installVendor(installOp.getVersionSpec());
         } else if (op instanceof RcPrintLayoutOperation) {
             return coordinator.printLayout();
         } else if (op instanceof RcStopCoordinatorOperation) {

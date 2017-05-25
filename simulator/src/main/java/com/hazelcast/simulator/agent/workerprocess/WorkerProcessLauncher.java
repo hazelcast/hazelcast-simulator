@@ -186,14 +186,14 @@ public class WorkerProcessLauncher {
             return;
         }
 
-        String copyCommand = format("cp -rfv %s/%s/upload/* %s/%s/%s/ || true",
+        String copyCommand = format("cp -rfv %s/%s/upload %s/%s/%s/ || true",
                 workersHome,
                 sessionId,
                 workersHome,
                 sessionId,
                 workerId);
         execute(copyCommand);
-        LOGGER.info(format("Finished copying '%s' to Worker", workersHome));
+        LOGGER.info(format("Finished copying '%s' to Worker", uploadDirectory));
     }
 
     private boolean hasExited(WorkerProcess workerProcess) {

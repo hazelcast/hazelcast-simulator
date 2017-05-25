@@ -50,7 +50,7 @@ public class CoordinatorRemoteImplTest {
         String result = remote.execute(op);
 
         assertNull(result);
-        verify(coordinator).install(op.getVersionSpec());
+        verify(coordinator).installVendor(op.getVersionSpec());
     }
 
     @Test
