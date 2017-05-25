@@ -29,6 +29,7 @@ import com.hazelcast.simulator.coordinator.registry.TestData;
 import com.hazelcast.simulator.coordinator.registry.WorkerData;
 import com.hazelcast.simulator.coordinator.registry.WorkerQuery;
 import com.hazelcast.simulator.coordinator.tasks.DownloadTask;
+import com.hazelcast.simulator.coordinator.tasks.InstallUploadDirTask;
 import com.hazelcast.simulator.coordinator.tasks.KillWorkersTask;
 import com.hazelcast.simulator.coordinator.tasks.RunTestSuiteTask;
 import com.hazelcast.simulator.coordinator.tasks.StartWorkersTask;
@@ -112,7 +113,13 @@ public class Coordinator implements Closeable {
 
         startClient();
 
-        install(simulatorProperties.getVersionSpec());
+        new InstallUploadDirTask(
+                publicAddresses(registry.getAgents()),
+                simulatorProperties.asMap(),
+                new File(System.getProperty("user.dir"), "upload").getAbsoluteFile(),
+                parameters.getSessionId()).run();
+
+        installVendor(simulatorProperties.getVersionSpec());
 
         initCoordinatorRemote();
 
@@ -122,12 +129,12 @@ public class Coordinator implements Closeable {
     private void initCoordinatorRemote() throws RemoteException, AlreadyBoundException {
         int remotePort = simulatorProperties.getCoordinatorPort();
         if (remotePort != 0) {
-            java.rmi.registry.Registry registry = LocateRegistry.createRegistry(remotePort);
+            java.rmi.registry.Registry rmiRegistry = LocateRegistry.createRegistry(remotePort);
             CoordinatorRemote r = new CoordinatorRemoteImpl(this);
             Remote stub = UnicastRemoteObject.exportObject(r, 0);
 
             // Bind the remote object's stub in the registry
-            registry.bind("CoordinatorRemote", stub);
+            rmiRegistry.bind("CoordinatorRemote", stub);
         }
     }
 
@@ -246,7 +253,7 @@ public class Coordinator implements Closeable {
         }).start();
     }
 
-    public void install(String versionSpec) throws Exception {
+    public void installVendor(String versionSpec) throws Exception {
         loadVendorDriver(simulatorProperties.get("VENDOR"))
                 .setAll(simulatorProperties.asPublicMap())
                 .set("VERSION_SPEC", versionSpec)
