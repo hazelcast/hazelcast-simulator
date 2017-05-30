@@ -24,7 +24,7 @@ import com.hazelcast.internal.ascii.TextCommandService;
 import com.hazelcast.internal.networking.ChannelFactory;
 import com.hazelcast.internal.networking.ChannelInboundHandler;
 import com.hazelcast.internal.networking.ChannelOutboundHandler;
-import com.hazelcast.internal.networking.IOOutOfMemoryHandler;
+import com.hazelcast.internal.networking.nio.NioChannelFactory;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.serialization.impl.DefaultSerializationServiceBuilder;
 import com.hazelcast.logging.ILogger;
@@ -34,7 +34,6 @@ import com.hazelcast.nio.IOService;
 import com.hazelcast.nio.MemberSocketInterceptor;
 import com.hazelcast.nio.Packet;
 import com.hazelcast.nio.tcp.MemberChannelInboundHandler;
-import com.hazelcast.nio.tcp.PlainChannelFactory;
 import com.hazelcast.nio.tcp.TcpIpConnection;
 import com.hazelcast.simulator.test.TestException;
 import com.hazelcast.spi.EventFilter;
@@ -100,15 +99,6 @@ public class MockIOService implements IOService {
     @Override
     public LoggingService getLoggingService() {
         return loggingService;
-    }
-
-    @Override
-    public IOOutOfMemoryHandler getIoOutOfMemoryHandler() {
-        return new IOOutOfMemoryHandler() {
-            @Override
-            public void handle(OutOfMemoryError error) {
-            }
-        };
     }
 
     @Override
@@ -279,6 +269,11 @@ public class MockIOService implements IOService {
     }
 
     @Override
+    public ChannelFactory getChannelFactory() {
+        return new NioChannelFactory();
+    }
+
+    @Override
     public ClientEngine getClientEngine() {
         return null;
     }
@@ -289,17 +284,12 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public ChannelFactory getSocketChannelWrapperFactory() {
-        return new PlainChannelFactory();
-    }
-
-    @Override
     public MemberSocketInterceptor getMemberSocketInterceptor() {
         return null;
     }
 
     @Override
-    public ChannelInboundHandler createReadHandler(final TcpIpConnection connection) {
+    public ChannelInboundHandler createInboundHandler(final TcpIpConnection connection) {
         return new MemberChannelInboundHandler(connection, new PacketDispatcher() {
             private ILogger logger = loggingService.getLogger("MockIOService");
 
@@ -322,7 +312,7 @@ public class MockIOService implements IOService {
     }
 
     @Override
-    public ChannelOutboundHandler createWriteHandler(TcpIpConnection connection) {
+    public ChannelOutboundHandler createOutboundHandler(TcpIpConnection connection) {
         return writeHandlerFactory.create();
     }
 
