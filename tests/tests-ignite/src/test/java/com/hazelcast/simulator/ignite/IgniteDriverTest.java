@@ -8,6 +8,7 @@ import org.apache.ignite.Ignite;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import static com.hazelcast.simulator.utils.FileUtils.writeText;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertNotNull;
 
+@Ignore
 public class IgniteDriverTest {
 
     private AgentData agent;
