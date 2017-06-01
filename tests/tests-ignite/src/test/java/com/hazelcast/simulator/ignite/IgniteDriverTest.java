@@ -1,6 +1,5 @@
 package com.hazelcast.simulator.ignite;
 
-import com.hazelcast.simulator.TestEnvironmentUtils;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.registry.AgentData;
 import com.hazelcast.simulator.utils.SimulatorUtils;
@@ -14,23 +13,27 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Map;
 
+import static com.hazelcast.simulator.TestEnvironmentUtils.createAgentsFileWithLocalhost;
+import static com.hazelcast.simulator.TestEnvironmentUtils.setupFakeEnvironment;
+import static com.hazelcast.simulator.TestEnvironmentUtils.tearDownFakeEnvironment;
 import static com.hazelcast.simulator.utils.FileUtils.getUserDir;
 import static com.hazelcast.simulator.utils.FileUtils.writeText;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertNotNull;
 
 public class IgniteDriverTest {
+
     private AgentData agent;
 
     @BeforeClass
-    public static void beforeClass() throws Exception {
-        TestEnvironmentUtils.setupFakeEnvironment();
-        TestEnvironmentUtils.createAgentsFileWithLocalhost();
+    public static void beforeClass() {
+        setupFakeEnvironment();
+        createAgentsFileWithLocalhost();
     }
 
     @AfterClass
     public static void afterClass() {
-        TestEnvironmentUtils.tearDownFakeEnvironment();
+        tearDownFakeEnvironment();
     }
 
     @Before
@@ -41,7 +44,7 @@ public class IgniteDriverTest {
     @Test
     public void test() throws Exception {
          VendorDriver<Ignite> driverAtCoordinator = new IgniteDriver()
-                .setAgents(asList(agent));
+                .setAgents(singletonList(agent));
 
         WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member",agent.getAddressIndex());
         for(Map.Entry<String,String> entry: workerParameters.entrySet()){
