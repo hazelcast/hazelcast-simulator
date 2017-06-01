@@ -38,7 +38,6 @@ import com.hazelcast.spi.EventFilter;
 import com.hazelcast.spi.EventRegistration;
 import com.hazelcast.spi.EventService;
 import com.hazelcast.spi.impl.PacketHandler;
-import com.hazelcast.spi.impl.packetdispatcher.PacketDispatcher;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -280,11 +279,11 @@ public class MockIOService implements IOService {
 
     @Override
     public ChannelInboundHandler createInboundHandler(final TcpIpConnection connection) {
-        return new MemberChannelInboundHandler(connection, new PacketDispatcher() {
+        return new MemberChannelInboundHandler(connection, new PacketHandler() {
             private ILogger logger = loggingService.getLogger("MockIOService");
 
             @Override
-            public void dispatch(Packet packet) {
+            public void handle(Packet packet) {
                 try {
                     if (packet.getPacketType() == Packet.Type.BIND) {
                         connection.getConnectionManager().handle(packet);
