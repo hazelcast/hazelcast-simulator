@@ -37,17 +37,17 @@ public class IgniteDriverTest {
     }
 
     @Before
-    public void before(){
+    public void before() {
         agent = new AgentData(1, SimulatorUtils.localIp(), SimulatorUtils.localIp());
     }
 
     @Test
     public void test() throws Exception {
-         VendorDriver<Ignite> driverAtCoordinator = new IgniteDriver()
+        VendorDriver<Ignite> driverAtCoordinator = new IgniteDriver()
                 .setAgents(singletonList(agent));
 
-        WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member",agent.getAddressIndex());
-        for(Map.Entry<String,String> entry: workerParameters.entrySet()){
+        WorkerParameters workerParameters = driverAtCoordinator.loadWorkerParameters("member", agent.getAddressIndex());
+        for (Map.Entry<String, String> entry : workerParameters.entrySet()) {
             String key = entry.getKey();
             if (key.startsWith("file:")) {
                 writeText(entry.getValue(), new File(getUserDir(), key.substring(5, key.length())));
