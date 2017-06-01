@@ -84,6 +84,11 @@
         </attributes>
     </map>
 
+    <map name="backup_expiration">
+        <max-idle-seconds>10</max-idle-seconds>
+        <backup-count>2</backup-count>
+    </map>
+
     <map name="quorum-map"> 
         <backup-count>1</backup-count>
         <quorum-ref>map-quorum-ref</quorum-ref>
