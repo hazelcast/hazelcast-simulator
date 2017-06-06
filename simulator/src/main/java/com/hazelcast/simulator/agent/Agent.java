@@ -58,7 +58,6 @@ public class Agent implements Closeable {
         SimulatorAddress agentAddress = agentAddress(addressIndex);
 
         this.publicAddress = publicAddress;
-        Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
 
         this.broker = new Broker()
                 .setBrokerAddress(localIp(), port);
@@ -77,6 +76,8 @@ public class Agent implements Closeable {
                 processManager, workerLastSeenTimeoutSeconds);
 
         server.setProcessor(new AgentOperationProcessor(processManager, workerProcessFailureMonitor));
+
+        Runtime.getRuntime().addShutdownHook(new AgentShutdownThread(true));
     }
 
     private void createPidFile() {
