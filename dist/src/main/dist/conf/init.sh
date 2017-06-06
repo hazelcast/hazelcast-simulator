@@ -39,7 +39,7 @@ function installPackage {
     fi
 }
 
-function mount_ephemeral(){
+function mount_ephemeral {
     METADATA_URL_BASE="http://169.254.169.254/2012-01-12"
 
     root_drive=`df -h | grep -v grep | awk 'NR==2{print $1}'`
@@ -57,17 +57,17 @@ function mount_ephemeral(){
     #  - verify a matching device is available in /dev/
     drives=""
     ephemeral_count=0
-    ephemerals=$(curl --silent $METADATA_URL_BASE/meta-data/block-device-mapping/ | grep ephemeral)
-    for e in $ephemerals; do
+    ephemerals=$(curl --silent ${METADATA_URL_BASE}/meta-data/block-device-mapping/ | grep ephemeral)
+    for e in ${ephemerals}; do
         echo "Probing $e .."
-        device_name=$(curl --silent $METADATA_URL_BASE/meta-data/block-device-mapping/$e)
+        device_name=$(curl --silent ${METADATA_URL_BASE}/meta-data/block-device-mapping/$e)
         # might have to convert 'sdb' -> 'xvdb'
-        device_name=$(echo $device_name | sed "s/sd/$DRIVE_SCHEME/")
+        device_name=$(echo ${device_name} | sed "s/sd/$DRIVE_SCHEME/")
         device_path="/dev/$device_name"
 
         # test that the device actually exists since you can request more ephemeral drives than are available
         # for an instance type and the meta-data API will happily tell you it exists when it really does not.
-        if [ -b $device_path ]; then
+        if [ -b ${device_path} ]; then
             echo "Detected ephemeral disk: $device_path"
             drives="$drives $device_path"
             ephemeral_count=$((ephemeral_count + 1 ))
@@ -85,7 +85,7 @@ function mount_ephemeral(){
 installPackage dstat
 installPackage curl
 
-# Fix for a bug in an old Kernel on EC2 instances.
+# fix for a bug in an old Kernel on EC2 instances
 if [[ "${CLOUD_PROVIDER}" == "aws-ec2" ]]; then
     ver=$(awk -F. '{printf("%d%02d",$1,$2)}' <<< $(uname -r))
     if [ ${ver} -lt 319 ]; then
@@ -115,5 +115,3 @@ if [[ "${CLOUD_PROVIDER}" == "aws-ec2" ]]; then
         echo "[/mnt/ephemeral/] is not found. Skip linking workers to ephemeral drive."
     fi
 fi
-
-
