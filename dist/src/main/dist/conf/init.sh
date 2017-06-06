@@ -20,6 +20,12 @@ function installPackage {
         return 0
     fi
 
+    CAN_I_RUN_SUDO=$(sudo -n uptime 2>&1 | grep "load" | wc -l)
+    if [ ${CAN_I_RUN_SUDO} -le 0 ]; then
+        echo "Cannot install '$PACKAGE', since '$USER' is not allowed to use sudo!"
+        return 1
+    fi
+
     if hash apt-get 2>/dev/null; then
         echo "apt-get is available!"
         sudo apt-get update
@@ -28,7 +34,8 @@ function installPackage {
         echo "yum is available!"
         sudo yum -y install ${PACKAGE}
     else
-        echo "apt-get AND yum are not available!"
+        echo "Cannot install '$PACKAGE', since apt-get AND yum are not available!"
+        return 1
     fi
 }
 
