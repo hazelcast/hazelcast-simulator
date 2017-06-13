@@ -17,10 +17,7 @@ package com.hazelcast.simulator.tests.map;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.instance.Node;
-import com.hazelcast.map.impl.MapService;
-import com.hazelcast.map.impl.MapServiceContext;
-import com.hazelcast.map.impl.recordstore.RecordStore;
+import com.hazelcast.monitor.LocalMapStats;
 import com.hazelcast.simulator.hz.HazelcastTest;
 import com.hazelcast.simulator.test.BaseThreadState;
 import com.hazelcast.simulator.test.annotations.Prepare;
@@ -31,11 +28,9 @@ import com.hazelcast.simulator.tests.helpers.KeyLocality;
 import com.hazelcast.simulator.utils.AssertTask;
 import com.hazelcast.simulator.worker.loadsupport.Streamer;
 import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
-import com.hazelcast.spi.impl.NodeEngineImpl;
 
 import java.util.Random;
 
-import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.getNode;
 import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.waitClusterSize;
 import static com.hazelcast.simulator.tests.helpers.KeyUtils.generateIntKeys;
 import static com.hazelcast.simulator.utils.TestUtils.assertTrueEventually;
@@ -76,7 +71,7 @@ public class BackupExpirationMapTest extends HazelcastTest {
         return map.put(key, value);
     }
 
-    @TimeStep(prob = -1)
+    @TimeStep(prob = 0)
     public Integer get(ThreadState state) {
         int key = state.randomKey();
         return map.get(key);
@@ -87,30 +82,18 @@ public class BackupExpirationMapTest extends HazelcastTest {
         assertTrueEventually(new AssertTask() {
             @Override
             public void run() throws Exception {
-                int countOnNode = entryCountOnNode(name, targetInstance);
-                assertEquals("countOnNode=" + countOnNode, 0, countOnNode);
+                long totalEntryCount = totalEntryCountOnNode(name, targetInstance);
+                assertEquals("totalEntryCount=" + totalEntryCount, 0, totalEntryCount);
             }
         }, 600);
     }
 
-    /**
-     * @return number of entries in this maps recordstores on supplied node(regardless of owner or backup)
-     */
-    private static int entryCountOnNode(String mapName, HazelcastInstance hazelcastInstance) {
-        Node node = getNode(hazelcastInstance);
-        NodeEngineImpl nodeEngine = node.getNodeEngine();
-        MapService mapService = nodeEngine.getService(MapService.SERVICE_NAME);
-        MapServiceContext mapServiceContext = mapService.getMapServiceContext();
-        int partitionCount = nodeEngine.getPartitionService().getPartitionCount();
-
-        int size = 0;
-        for (int partitionID = 0; partitionID < partitionCount; partitionID++) {
-            RecordStore recordStore = mapServiceContext.getExistingRecordStore(partitionID, mapName);
-            if (recordStore != null) {
-                size += recordStore.size();
-            }
-        }
-        return size;
+    public static long totalEntryCountOnNode(String name, HazelcastInstance instance) {
+        IMap map = instance.getMap(name);
+        LocalMapStats localMapStats = map.getLocalMapStats();
+        long ownedEntryCount = localMapStats.getOwnedEntryCount();
+        long backupEntryCount = localMapStats.getBackupEntryCount();
+        return ownedEntryCount + backupEntryCount;
     }
 
     public class ThreadState extends BaseThreadState {
