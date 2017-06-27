@@ -18,6 +18,7 @@ package com.hazelcast.simulator.coordinator.registry;
 import com.hazelcast.simulator.agent.workerprocess.WorkerParameters;
 import com.hazelcast.simulator.coordinator.TargetType;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
 import static java.util.Collections.shuffle;
 
-public class WorkerQuery {
+public class WorkerQuery implements Serializable{
 
     private String versionSpec;
     private List<String> workerAddresses;
