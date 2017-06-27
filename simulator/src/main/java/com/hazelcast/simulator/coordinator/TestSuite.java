@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
@@ -41,7 +42,7 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonMap;
 
 @SuppressWarnings(value = "checkstyle:methodcount")
-public class TestSuite {
+public class TestSuite implements Serializable {
 
     private static final Pattern VALID_FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]+$");
 
