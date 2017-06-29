@@ -124,7 +124,7 @@ function addJavaHome {
 
     if grep -q "JAVA_HOME=" ~/.bashrc; then
         echo "Updating Java version to $TMP_JAVA_HOME"
-        sed -i '' "s|JAVA_HOME=.*|JAVA_HOME=${TMP_JAVA_HOME}|" ~/.bashrc
+        sed -i'' "s|JAVA_HOME=.*|JAVA_HOME=${TMP_JAVA_HOME}|" ~/.bashrc
     else
         echo "Installing Java version to $TMP_JAVA_HOME"
         prepend 'export PATH=$JAVA_HOME/bin:$PATH' ~/.bashrc
