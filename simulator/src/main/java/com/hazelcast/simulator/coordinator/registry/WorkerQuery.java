@@ -26,7 +26,7 @@ import java.util.Map;
 import static com.hazelcast.simulator.utils.TagUtils.matches;
 import static java.util.Collections.shuffle;
 
-public class WorkerQuery implements Serializable{
+public class WorkerQuery implements Serializable {
 
     private String versionSpec;
     private List<String> workerAddresses;
