@@ -32,6 +32,7 @@ import static com.hazelcast.simulator.tests.helpers.HazelcastTestUtils.isMemberN
 import static com.hazelcast.simulator.utils.CommonUtils.sleepTimeUnit;
 import static java.lang.String.format;
 
+@SuppressWarnings("WeakerAccess")
 public final class CacheUtils {
 
     private CacheUtils() {
@@ -58,18 +59,19 @@ public final class CacheUtils {
     }
 
     /**
-     * Obtain the default CacheManager
-     * @param hazelcastInstance
-     * @return a CacheManager for the default URI & ClassLoader running on the provided HazelcastInstance
+     * Obtains the default CacheManager.
+     *
+     * @param hazelcastInstance the HazelcastInstance to retrieve the CacheManager from
+     * @return a CacheManager for the default URI and ClassLoader running on the provided HazelcastInstance
      */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance) {
         return createCacheManager(hazelcastInstance, null);
     }
 
     /**
-     * @param hazelcastInstance
-     * @param uri
-     * @return the CacheManager for given URI and default ClassLoader.
+     * @param hazelcastInstance the HazelcastInstance to retrieve the CacheManager from
+     * @param uri               the URI to retrieve the CacheManager from
+     * @return the CacheManager for given URI and default ClassLoader
      */
     public static HazelcastCacheManager createCacheManager(HazelcastInstance hazelcastInstance, URI uri) {
         Properties properties = propertiesByInstanceItself(hazelcastInstance);
