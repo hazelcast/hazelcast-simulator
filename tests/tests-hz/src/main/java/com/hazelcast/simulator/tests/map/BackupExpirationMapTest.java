@@ -71,7 +71,7 @@ public class BackupExpirationMapTest extends HazelcastTest {
         return map.put(key, value);
     }
 
-    @TimeStep(prob = 0)
+    @TimeStep(prob = -1)
     public Integer get(ThreadState state) {
         int key = state.randomKey();
         return map.get(key);
@@ -88,7 +88,7 @@ public class BackupExpirationMapTest extends HazelcastTest {
         }, 600);
     }
 
-    public static long totalEntryCountOnNode(String name, HazelcastInstance instance) {
+    private static long totalEntryCountOnNode(String name, HazelcastInstance instance) {
         IMap map = instance.getMap(name);
         LocalMapStats localMapStats = map.getLocalMapStats();
         long ownedEntryCount = localMapStats.getOwnedEntryCount();
