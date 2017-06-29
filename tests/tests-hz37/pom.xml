@@ -14,7 +14,7 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
-        <hazelcast.test.version>3.7.5</hazelcast.test.version>
+        <hazelcast.test.version>3.7.6</hazelcast.test.version>
     </properties>
 
     <dependencies>

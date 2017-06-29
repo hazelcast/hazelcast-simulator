@@ -17,7 +17,6 @@ package com.hazelcast.simulator.tests.network;
 
 import com.hazelcast.core.ILock;
 import com.hazelcast.core.Member;
-import com.hazelcast.instance.HazelcastThreadGroup;
 import com.hazelcast.instance.Node;
 import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.hazelcast.internal.networking.IOThreadingModel;
@@ -89,7 +88,6 @@ public class NetworkTest extends AbstractTest {
         }
         MetricsRegistry metricsRegistry = node.nodeEngine.getMetricsRegistry();
         LoggingService loggingService = node.loggingService;
-        HazelcastThreadGroup threadGroup = node.getHazelcastThreadGroup();
 
         // we don't know the number of worker threads (damn hidden property), so lets assume 1000.. that should be enough
         packetHandler = new RequestPacketHandler(1000);
