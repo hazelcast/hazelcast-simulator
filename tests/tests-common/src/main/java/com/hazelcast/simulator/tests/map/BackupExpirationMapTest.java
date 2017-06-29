@@ -88,14 +88,13 @@ public class BackupExpirationMapTest extends AbstractTest {
         }, 600);
     }
 
-    public static long totalEntryCountOnNode(String name, HazelcastInstance instance) {
+    private static long totalEntryCountOnNode(String name, HazelcastInstance instance) {
         IMap map = instance.getMap(name);
         LocalMapStats localMapStats = map.getLocalMapStats();
         long ownedEntryCount = localMapStats.getOwnedEntryCount();
         long backupEntryCount = localMapStats.getBackupEntryCount();
         return ownedEntryCount + backupEntryCount;
     }
-
 
     public class ThreadState extends BaseThreadState {
 
