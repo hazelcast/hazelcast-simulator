@@ -29,5 +29,8 @@ coordinator --members ${members} \
             --clientWorkerVmOptions "${clientJvmArgs}" \
             --parallel \
              ${testsuite}.properties
+exitCode=$?
 
 coordinator --clean
+
+exit ${exitCode}
