@@ -45,6 +45,16 @@ uploadLibraryJar "junit*"
 uploadLibraryJar "log4j*"
 uploadLibraryJar "slf4j-log4j12-*"
 
+#hack to get hz enterprise working
+if [ "$VENDOR" = "hazelcast-enterprise" ]; then
+    uploadLibraryJar "netty-buffer-*"
+    uploadLibraryJar "netty-codec-*"
+    uploadLibraryJar "netty-common-*"
+    uploadLibraryJar "netty-handler-*"
+    uploadLibraryJar "netty-resolver-*"
+    uploadLibraryJar "netty-tcnative-boringssl-static-*"
+fi
+
 #hack to get ignite working
 if [ "$VENDOR" = "ignite" ]; then
     uploadLibraryJar "ignite-*"
