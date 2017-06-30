@@ -50,6 +50,7 @@ if [ "$VENDOR" = "ignite" ]; then
     uploadLibraryJar "ignite-*"
     uploadLibraryJar "spring-*"
     uploadLibraryJar "commons-logging-*"
+    uploadLibraryJar "h2-*"
 fi
 
 #hack to get infinispan working
