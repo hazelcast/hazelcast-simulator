@@ -70,6 +70,8 @@ prepare_using_maven() {
     sed -i'' "s|@hz-version|${version}|" pom.xml
     sed -i'' "s|@hz-output|${destination}|" pom.xml
 
+    cat pom.xml
+
     ${SIMULATOR_HOME}/conf/mvnw/mvnw dependency:copy-dependencies -Dmaven.repo.local=${SIMULATOR_HOME}/m2 -q -U
 
     rm pom.xml

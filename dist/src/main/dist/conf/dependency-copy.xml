@@ -12,6 +12,9 @@
             <id>release-repository</id>
             <name>Release Repository</name>
             <url>@hz-repo-release</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
 
         <repository>
