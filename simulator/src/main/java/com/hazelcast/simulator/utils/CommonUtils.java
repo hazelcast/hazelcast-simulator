@@ -34,6 +34,7 @@ import static com.hazelcast.simulator.utils.EmptyStatement.ignore;
 import static com.hazelcast.simulator.utils.FormatUtils.NEW_LINE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class CommonUtils {
 
@@ -152,9 +153,13 @@ public final class CommonUtils {
         }
     }
 
-    public static void sleepSeconds(int seconds) {
+    public static long currentTimeSeconds() {
+        return MILLISECONDS.toSeconds(System.currentTimeMillis());
+    }
+
+    public static void sleepSeconds(long seconds) {
         try {
-            TimeUnit.SECONDS.sleep(seconds);
+            SECONDS.sleep(seconds);
         } catch (InterruptedException ignore) {
             ignore(ignore);
         }
@@ -193,7 +198,7 @@ public final class CommonUtils {
 
     public static void sleepSecondsThrowException(int seconds) {
         try {
-            TimeUnit.SECONDS.sleep(seconds);
+            SECONDS.sleep(seconds);
         } catch (InterruptedException e) {
             throw rethrow(e);
         }

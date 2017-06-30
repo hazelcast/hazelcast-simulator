@@ -382,7 +382,13 @@ public class Coordinator implements Closeable {
 
         LOGGER.info(format("Killing %s...", workerQuery));
 
-        List<WorkerData> result = new KillWorkersTask(registry, client, op.getCommand(), workerQuery).run();
+        List<WorkerData> result = new KillWorkersTask(
+                registry,
+                client,
+                op.getCommand(),
+                workerQuery,
+                simulatorProperties.getInt("WAIT_FOR_WORKER_SHUTDOWN_TIMEOUT_SECONDS")
+        ).run();
 
         LOGGER.info("\n" + registry.printLayout());
 

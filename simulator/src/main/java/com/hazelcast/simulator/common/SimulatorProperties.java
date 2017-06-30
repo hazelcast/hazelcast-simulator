@@ -162,6 +162,10 @@ public class SimulatorProperties {
         return properties.containsKey(name);
     }
 
+    public int getInt(String property) {
+        return Integer.parseInt(get(property));
+    }
+
     public String getSshOptions() {
         return get("SSH_OPTIONS", "");
     }
