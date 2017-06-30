@@ -40,6 +40,7 @@ import static com.hazelcast.simulator.common.GitInfo.getCommitIdAbbrev;
 import static com.hazelcast.simulator.coordinator.DeploymentPlan.createDeploymentPlan;
 import static com.hazelcast.simulator.utils.CliUtils.initOptionsWithHelp;
 import static com.hazelcast.simulator.utils.CloudProviderUtils.isLocal;
+import static com.hazelcast.simulator.utils.CommonUtils.exit;
 import static com.hazelcast.simulator.utils.CommonUtils.exitWithError;
 import static com.hazelcast.simulator.utils.CommonUtils.getSimulatorVersion;
 import static com.hazelcast.simulator.utils.FileUtils.fileAsText;
@@ -220,7 +221,7 @@ final class CoordinatorCli {
             } else {
                 runMonolith.init(deploymentPlan);
                 boolean success = runMonolith.run(testSuite);
-                System.exit(success ? 0 : 1);
+                exit(success ? 0 : 1);
             }
         }
     }

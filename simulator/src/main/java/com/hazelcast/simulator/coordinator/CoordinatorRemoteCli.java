@@ -138,7 +138,7 @@ public final class CoordinatorRemoteCli implements Closeable {
                         + "worker-script   Executes a script on workers                                                \n"
                         + "worker-start    Starts workers                                                              ");
 
-        System.exit(1);
+        exitWithError();
     }
 
     @Override
